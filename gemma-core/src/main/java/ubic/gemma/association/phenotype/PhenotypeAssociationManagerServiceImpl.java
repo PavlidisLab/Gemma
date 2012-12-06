@@ -423,39 +423,27 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Removes an evidence
+     * Removes all the evidence that came from a specific metaAnalysis
      * 
-     * @param id The Evidence database id
-     * @throws Exception
+     * @param geneDifferentialExpressionMetaAnalysisId the geneDifferentialExpressionMetaAnalysis Id
+     * @return ValidateEvidenceValueObject flags of information to show user messages
      */
     @Override
-    public ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId )
-            throws Exception {
+    public ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         // checking if there is something to delete
-        DifferentialExpressionEvidence differentialExpressionEvidence = this.associationService
-                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
-        if ( differentialExpressionEvidence == null ) {
+        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.associationService
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId, null );
+        if ( differentialExpressionEvidence.isEmpty() ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setEvidenceNotFound( true );
             return validateEvidenceValueObject;
         }
 
-        // deletes all evidences that came from a specific meta analysis
-        this.associationService
-                .deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
-
-        // makes sure it works
-        differentialExpressionEvidence = this.associationService
-                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
-
-        if ( differentialExpressionEvidence != null ) {
-
-            throw new Exception(
-                    "The method removeAllEvidenceFromMetaAnalysis() failed to remove all evidence for the metaAnalysis: "
-                            + geneDifferentialExpressionMetaAnalysisId );
+        for ( DifferentialExpressionEvidence diffExpressionEvidence : differentialExpressionEvidence ) {
+            this.associationService.remove( diffExpressionEvidence );
         }
 
         return validateEvidenceValueObject;
@@ -828,10 +816,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .load( geneDifferentialExpressionMetaAnalysisId );
 
         // check that no evidence already exists with that metaAnalysis
-        DifferentialExpressionEvidence differentialExpressionEvidence = this.associationService
-                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.associationService
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId, 1L );
 
-        if ( differentialExpressionEvidence != null ) {
+        if ( !differentialExpressionEvidence.isEmpty() ) {
             ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
             return validateEvidenceValueObject;
@@ -875,10 +863,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId ) {
 
-        DifferentialExpressionEvidence differentialExpressionEvidence = this.associationService
-                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.associationService
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId, 1L );
 
-        return this.convertDifferentialExpressionEvidence2ValueObject( differentialExpressionEvidence );
+        if ( !differentialExpressionEvidence.isEmpty() ) {
+            return this.convertDifferentialExpressionEvidence2ValueObject( differentialExpressionEvidence.iterator()
+                    .next() );
+        }
+
+        return null;
     }
 
     /**

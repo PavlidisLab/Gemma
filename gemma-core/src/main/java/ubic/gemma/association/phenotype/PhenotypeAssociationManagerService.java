@@ -243,6 +243,12 @@ public interface PhenotypeAssociationManagerService {
     public abstract DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId );
 
+    /**
+     * Removes all the evidence that came from a specific metaAnalysis
+     * 
+     * @param geneDifferentialExpressionMetaAnalysisId the geneDifferentialExpressionMetaAnalysis Id
+     * @return ValidateEvidenceValueObject flags of information to show user messages
+     */
     public abstract ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis(
-            Long geneDifferentialExpressionMetaAnalysisId ) throws Exception;
+            Long geneDifferentialExpressionMetaAnalysisId );
 }

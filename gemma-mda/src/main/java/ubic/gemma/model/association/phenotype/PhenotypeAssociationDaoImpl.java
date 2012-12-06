@@ -442,36 +442,21 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    /** returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis) */
-    public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
-            Long geneDifferentialExpressionMetaAnalysisId ) {
+    /** returns a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis) */
+    public Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId, Long maxResults ) {
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
-        tpl.setMaxResults( 1 );
 
+        if ( maxResults != null ) {
+            tpl.setMaxResults( maxResults.intValue() );
+        }
         @SuppressWarnings("unchecked")
         List<DifferentialExpressionEvidence> differentialExpressionEvidenceCollection = tpl
                 .find( "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
                         + geneDifferentialExpressionMetaAnalysisId + ")" );
 
-        if ( !differentialExpressionEvidenceCollection.isEmpty() ) {
-            return differentialExpressionEvidenceCollection.iterator().next();
-        }
-
-        return null;
-    }
-
-    /** deletes all differentialExpressionEvidence from a specific metaAnalysis */
-    @Override
-    public void deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
-
-        // TODO MUST DELETE CHARACTERISTIC TOO BEFORE
-
-        this.getHibernateTemplate()
-                .bulkUpdate(
-                        "delete DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult.id in (select r.id from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
-                                + geneDifferentialExpressionMetaAnalysisId + ")" );
-
+        return differentialExpressionEvidenceCollection;
     }
 
     /** basic sql command to deal with security */

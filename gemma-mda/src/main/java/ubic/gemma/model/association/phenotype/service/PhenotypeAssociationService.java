@@ -153,13 +153,10 @@ public interface PhenotypeAssociationService {
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration();
 
     /**
-     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
-     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     * returns a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
+     * (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
-    public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
-            Long geneDifferentialExpressionMetaAnalysisId );
-
-    /** removes all differentialExpressionEvidence from a specific metaAnalysis */
-    public void deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId );
+    public Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId, Long maxResults );
 
 }

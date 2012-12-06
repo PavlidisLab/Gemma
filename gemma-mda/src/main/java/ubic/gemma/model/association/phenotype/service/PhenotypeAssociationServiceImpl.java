@@ -219,21 +219,14 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /**
-     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
-     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     * returns a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
+     * (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
     @Override
-    public DifferentialExpressionEvidence loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
-            Long geneDifferentialExpressionMetaAnalysisId ) {
-        return this.phenotypeAssociationDao
-                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
-    }
-
-    /** removes all differentialExpressionEvidence from a specific metaAnalysis */
-    @Override
-    public void deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
-        this.phenotypeAssociationDao
-                .deleteAllEvidenceFromDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+    public Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId, Long maxResults ) {
+        return this.phenotypeAssociationDao.loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+                geneDifferentialExpressionMetaAnalysisId, maxResults );
     }
 
 }
