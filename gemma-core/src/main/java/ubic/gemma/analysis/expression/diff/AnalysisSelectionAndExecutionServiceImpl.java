@@ -30,8 +30,11 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -71,33 +74,10 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
-        Collection<DifferentialExpressionAnalysis> analyses = this.getAnalyzer()
-                .run( expressionExperiment );
+        Collection<DifferentialExpressionAnalysis> analyses = this.getAnalyzer().run( expressionExperiment );
 
         return analyses;
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#analyze(ubic.gemma.model.expression.
-     * experiment.ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysisConfig config ) {
-        AnalysisType analyzer = determineAnalysis( expressionExperiment, config );
-
-        if ( analyzer == null ) {
-            throw new RuntimeException( "Could not locate an appropriate analyzer" );
-        }
-
-        Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
-                .run( expressionExperiment, config );
-
-        return analyses;
     }
 
     /*
@@ -165,22 +145,166 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     /*
      * (non-Javadoc)
      * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#analyze(ubic.gemma.model.expression.
+     * experiment.ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysisConfig config ) {
+        AnalysisType analyzer = determineAnalysis( expressionExperiment, config );
+
+        if ( analyzer == null ) {
+            throw new RuntimeException( "Could not locate an appropriate analyzer" );
+        }
+
+        Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
+                .run( expressionExperiment, config );
+
+        return analyses;
+    }
+
+    @Override
+    public DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
+            DifferentialExpressionAnalysisConfig config ) {
+        AnalysisType analyzer = determineAnalysis( subset, config );
+
+        if ( analyzer == null ) {
+            throw new RuntimeException( "Could not locate an appropriate analyzer" );
+        }
+
+        DifferentialExpressionAnalysis analysis = this.applicationContext.getBean( DiffExAnalyzer.class ).run( subset,
+                config );
+
+        return analysis;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#determineAnalysis(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment, java.util.Collection,
+     * ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     */
+    @Override
+    public AnalysisType determineAnalysis( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
+            ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible ) {
+
+        Collection<ExperimentalFactor> efsToUse = getFactorsToUse( bioAssaySet, experimentalFactors );
+
+        if ( subsetFactor != null ) {
+            /*
+             * Note that the interaction term might still get used (if selected), we just don't decide here.
+             */
+            return AnalysisType.GENERICLM;
+        }
+
+        assert !efsToUse.isEmpty();
+
+        if ( efsToUse.size() == 1 ) {
+
+            ExperimentalFactor experimentalFactor = efsToUse.iterator().next();
+            Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
+
+            /*
+             * Check that there is more than one value in at least one group
+             */
+            boolean ok = DifferentialExpressionAnalysisUtil.checkValidForLm( bioAssaySet, experimentalFactor );
+
+            if ( !ok ) {
+                return null;
+            }
+
+            if ( factorValues.isEmpty() )
+                throw new IllegalArgumentException(
+                        "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
+            if ( factorValues.size() == 1 ) {
+                // one sample t-test.
+                return AnalysisType.OSTTEST;
+            }
+
+            else if ( factorValues.size() == 2 ) {
+                /*
+                 * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
+                 * clarity.
+                 */
+                return AnalysisType.TTEST;
+            }
+
+            else {
+
+                /*
+                 * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
+                 * with two groups is just a t-test
+                 */
+                return AnalysisType.OWA;
+            }
+
+        }
+
+        else if ( efsToUse.size() == 2 ) {
+            /*
+             * Candidate for ANOVA
+             */
+            boolean okForInteraction = true;
+            Collection<QuantitationType> qts = getQts( bioAssaySet );
+            for ( ExperimentalFactor f : efsToUse ) {
+                Collection<FactorValue> factorValues = f.getFactorValues();
+                if ( factorValues.size() == 1 ) {
+
+                    boolean useIntercept = false;
+                    // check for a ratiometric quantitation type.
+                    for ( QuantitationType qt : qts ) {
+                        if ( qt.getIsPreferred() && qt.getIsRatio() ) {
+                            // use ANOVA but treat the intercept as a factor.
+                            useIntercept = true;
+                            break;
+                        }
+                    }
+
+                    if ( useIntercept ) {
+                        return AnalysisType.GENERICLM;
+                    }
+
+                    return null;
+                }
+                if ( BatchInfoPopulationServiceImpl.isBatchFactor( f ) ) {
+                    log.info( "One of the two factors is 'batch', not using it for an interaction" );
+                    okForInteraction = false;
+                }
+            }
+            /* Check for block design and execute two way ANOVA (with or without interactions). */
+            if ( !includeInteractionsIfPossible
+                    || !DifferentialExpressionAnalysisUtil.blockComplete( bioAssaySet, experimentalFactors )
+                    || !okForInteraction ) {
+                return AnalysisType.TWANI; // NO interactions
+            }
+            return AnalysisType.TWA;
+        } else {
+            /*
+             * Upstream we bail if there are too many factors.
+             */
+            return AnalysisType.GENERICLM;
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#determineAnalysis(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment, java.util.Collection,
      * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType,
      * ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysisConfig config ) {
+    public AnalysisType determineAnalysis( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config ) {
 
         if ( config.getFactorsToInclude().isEmpty() ) {
             throw new IllegalArgumentException( "Must provide at least one factor" );
         }
 
         if ( config.getAnalysisType() == null ) {
-            return determineAnalysis( expressionExperiment, config.getFactorsToInclude(), config.getSubsetFactor(),
-                    true );
+            return determineAnalysis( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(), true );
         }
 
         if ( config.getSubsetFactor() != null ) {
@@ -199,8 +323,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 return AnalysisType.OWA;
             case TWA:
                 validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
-                if ( !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment,
-                        config.getFactorsToInclude() ) ) {
+                if ( !DifferentialExpressionAnalysisUtil.blockComplete( bioAssaySet, config.getFactorsToInclude() ) ) {
                     throw new IllegalArgumentException(
                             "Experimental design must be block complete to run Two-way ANOVA with interactions" );
                 }
@@ -241,156 +364,9 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
     }
 
-    private void validateFactorsForTwoWayANOVA( Collection<ExperimentalFactor> factors ) {
-        if ( factors.size() != 2 ) {
-            throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
-        }
-        for ( ExperimentalFactor experimentalFactor : factors ) {
-            if ( experimentalFactor.getFactorValues().size() < 2 ) {
-                throw new IllegalArgumentException( "Need at least two levels per factor to run ANOVA" );
-            }
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#determineAnalysis(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment, java.util.Collection,
-     * ubic.gemma.model.expression.experiment.ExperimentalFactor)
-     */
     @Override
-    public AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor,
-            boolean includeInteractionsIfPossible ) {
-
-        Collection<ExperimentalFactor> efsToUse = getFactorsToUse( expressionExperiment, experimentalFactors );
-
-        if ( subsetFactor != null ) {
-            /*
-             * Note that the interaction term might still get used (if selected), we just don't decide here.
-             */
-            return AnalysisType.GENERICLM;
-        }
-
-        assert !efsToUse.isEmpty();
-
-        if ( efsToUse.size() == 1 ) {
-
-            ExperimentalFactor experimentalFactor = efsToUse.iterator().next();
-            Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
-
-            /*
-             * Check that there is more than one value in at least one group
-             */
-            boolean ok = DifferentialExpressionAnalysisUtil.checkValidForLm( expressionExperiment, experimentalFactor );
-
-            if ( !ok ) {
-                return null;
-            }
-
-            if ( factorValues.isEmpty() )
-                throw new IllegalArgumentException(
-                        "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
-            if ( factorValues.size() == 1 ) {
-                // one sample t-test.
-                return AnalysisType.OSTTEST;
-            }
-
-            else if ( factorValues.size() == 2 ) {
-                /*
-                 * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
-                 * clarity.
-                 */
-                return AnalysisType.TTEST;
-            }
-
-            else {
-
-                /*
-                 * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
-                 * with two groups is just a t-test
-                 */
-                return AnalysisType.OWA;
-            }
-
-        }
-
-        else if ( efsToUse.size() == 2 ) {
-            /*
-             * Candidate for ANOVA
-             */
-            boolean okForInteraction = true;
-            for ( ExperimentalFactor f : efsToUse ) {
-                Collection<FactorValue> factorValues = f.getFactorValues();
-                if ( factorValues.size() == 1 ) {
-
-                    boolean useIntercept = false;
-                    // check for a ratiometric quantitation type.
-                    for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
-                        if ( qt.getIsPreferred() && qt.getIsRatio() ) {
-                            // use ANOVA but treat the intercept as a factor.
-                            useIntercept = true;
-                            break;
-                        }
-                    }
-
-                    if ( useIntercept ) {
-                        return AnalysisType.GENERICLM;
-                    }
-
-                    return null;
-                }
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( f ) ) {
-                    log.info( "One of the two factors is 'batch', not using it for an interaction" );
-                    okForInteraction = false;
-                }
-            }
-            /* Check for block design and execute two way ANOVA (with or without interactions). */
-            if ( !includeInteractionsIfPossible
-                    || !DifferentialExpressionAnalysisUtil.blockComplete( expressionExperiment, experimentalFactors )
-                    || !okForInteraction ) {
-                return AnalysisType.TWANI; // NO interactions
-            }
-            return AnalysisType.TWA;
-        } else {
-            /*
-             * Upstream we bail if there are too many factors.
-             */
-            return AnalysisType.GENERICLM;
-        }
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param experimentalFactors
-     * @return
-     */
-    private Collection<ExperimentalFactor> getFactorsToUse( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors ) {
-        Collection<ExperimentalFactor> efsToUse = new HashSet<ExperimentalFactor>();
-        if ( experimentalFactors == null || experimentalFactors.isEmpty() ) {
-            efsToUse.addAll( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
-            if ( efsToUse.isEmpty() ) {
-                throw new IllegalStateException(
-                        "No factors given, nor in the experiment's design. Cannot execute differential expression analysis." );
-            }
-        } else {
-            efsToUse = experimentalFactors;
-            if ( efsToUse.isEmpty() ) {
-                throw new IllegalArgumentException(
-                        "No experimental factors.  Cannot execute differential expression analysis." );
-            }
-
-            // sanity check...
-            for ( ExperimentalFactor experimentalFactor : efsToUse ) {
-                if ( !experimentalFactor.getExperimentalDesign().getId()
-                        .equals( expressionExperiment.getExperimentalDesign().getId() ) ) {
-                    throw new IllegalArgumentException( "Factors must come from the experiment provided" );
-                }
-            }
-        }
-        return efsToUse;
+    public DiffExAnalyzer getAnalyzer() {
+        return this.applicationContext.getBean( DiffExAnalyzer.class );
     }
 
     /*
@@ -405,9 +381,71 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         this.applicationContext = applicationContext;
     }
 
-    @Override
-    public DiffExAnalyzer  getAnalyzer() {
-        return this.applicationContext.getBean( DiffExAnalyzer.class );
+    /**
+     * @param bioAssaySet
+     * @param experimentalFactors
+     * @return
+     */
+    private Collection<ExperimentalFactor> getFactorsToUse( BioAssaySet bioAssaySet,
+            Collection<ExperimentalFactor> experimentalFactors ) {
+        Collection<ExperimentalFactor> efsToUse = new HashSet<ExperimentalFactor>();
+
+        ExperimentalDesign design = null;
+
+        if ( bioAssaySet instanceof ExpressionExperiment ) {
+            design = ( ( ExpressionExperiment ) bioAssaySet ).getExperimentalDesign();
+        } else if ( bioAssaySet instanceof ExpressionExperimentSubSet ) {
+            design = ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getExperimentalDesign();
+        } else {
+            throw new UnsupportedOperationException( "Cannot deal with a " + bioAssaySet.getClass() );
+        }
+
+        if ( experimentalFactors == null || experimentalFactors.isEmpty() ) {
+            efsToUse.addAll( design.getExperimentalFactors() );
+            if ( efsToUse.isEmpty() ) {
+                throw new IllegalStateException(
+                        "No factors given, nor in the experiment's design. Cannot execute differential expression analysis." );
+            }
+        } else {
+            efsToUse = experimentalFactors;
+            if ( efsToUse.isEmpty() ) {
+                throw new IllegalArgumentException(
+                        "No experimental factors.  Cannot execute differential expression analysis." );
+            }
+
+            // sanity check...
+            for ( ExperimentalFactor experimentalFactor : efsToUse ) {
+                if ( !experimentalFactor.getExperimentalDesign().getId().equals( design.getId() ) ) {
+                    throw new IllegalArgumentException( "Factors must come from the experiment provided" );
+                }
+            }
+        }
+        return efsToUse;
+    }
+
+    /**
+     * @param bioAssaySet
+     * @return
+     */
+    private Collection<QuantitationType> getQts( BioAssaySet bioAssaySet ) {
+        if ( bioAssaySet instanceof ExpressionExperiment ) {
+            return ( ( ExpressionExperiment ) bioAssaySet ).getQuantitationTypes();
+        } else if ( bioAssaySet instanceof ExpressionExperimentSubSet ) {
+            return ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getQuantitationTypes();
+        } else {
+            throw new UnsupportedOperationException( "Cannot deal with a " + bioAssaySet.getClass() );
+        }
+    }
+
+    private void validateFactorsForTwoWayANOVA( Collection<ExperimentalFactor> factors ) {
+        if ( factors.size() != 2 ) {
+            throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
+        }
+        for ( ExperimentalFactor experimentalFactor : factors ) {
+            if ( experimentalFactor.getFactorValues().size() < 2 ) {
+                throw new IllegalArgumentException( "Need at least two levels per factor to run ANOVA" );
+            }
+        }
     }
 
 }

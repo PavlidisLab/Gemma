@@ -59,8 +59,7 @@ import ubic.gemma.util.NativeQueryUtils;
  * @author paul
  */
 @Repository
-public class DifferentialExpressionAnalysisDaoImpl extends
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase {
+public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressionAnalysisDaoBase {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -78,19 +77,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
-
-        // int up = this.countUpregulated( ears, threshold );
-        // int down = this.countDownregulated( ears, threshold );
-        // int result = up + down;
-        //
-        // if ( result > 0 ) {
-        // return result;
-        // }
-
-        /*
-         * Otherwise, perhaps we have not filled in the contrast information. Try alternative instead. This is basically
-         * a backwards compatibility fix, it can be removed once all data sets are analyzed with the new method.
-         */
 
         String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
 
@@ -536,6 +522,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return count.intValue();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getAnalysisValueObjects(java.lang
+     * .Long)
+     */
     @Override
     public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId ) {
         Collection<DifferentialExpressionAnalysisValueObject> summaries = new HashSet<DifferentialExpressionAnalysisValueObject>();

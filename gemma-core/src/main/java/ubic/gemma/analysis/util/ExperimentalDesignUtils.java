@@ -133,7 +133,7 @@ public class ExperimentalDesignUtils {
 
                 for ( FactorValue biomf : factorValuesOfFirstSample ) {
                     /*
-                     * the first biomaterial has the values used as baseline in R.
+                     * the first biomaterial has the values used as baseline
                      */
                     if ( biomf.getExperimentalFactor().equals( factor ) ) {
                         baselineConditions.put( factor, biomf );

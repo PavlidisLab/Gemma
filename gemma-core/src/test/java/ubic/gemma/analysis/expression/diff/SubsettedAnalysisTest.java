@@ -60,6 +60,7 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
             int numResults = resultSet.getResults().size();
 
             assertEquals( 100, numResults );
+
         }
     }
 

@@ -164,6 +164,9 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         }
 
         checkResults( refetched );
+
+        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched );
+
     }
 
     /**

@@ -41,8 +41,10 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -116,7 +118,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis copyMe ) {
-        Collection<DifferentialExpressionAnalysis> results;
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
 
         if ( !differentialExpressionAnalysisService.canDelete( copyMe ) ) {
             throw new IllegalArgumentException(
@@ -148,17 +150,30 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             }
 
         }
+
         if ( factorsFromOldExp.isEmpty() ) {
             throw new IllegalStateException( "Old analysis didn't have any factors" );
         }
 
         config.getFactorsToInclude().addAll( factorsFromOldExp );
-        results = this.runDifferentialExpressionAnalyses( ee, config );
-        if ( !results.isEmpty() ) {
-            // log.info( "Deleting old analysis" );
-            // differentialExpressionAnalysisService.delete( copyMe );
-            // The existing analysis will already have been deleted.
+
+        BioAssaySet experimentAnalyzed = copyMe.getExperimentAnalyzed();
+        assert experimentAnalyzed != null;
+
+        if ( experimentAnalyzed.equals( ee ) ) {
+            results = this.runDifferentialExpressionAnalyses( ee, config );
+        } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet
+                && ( ( ExpressionExperimentSubSet ) experimentAnalyzed ).getSourceExperiment().equals( ee ) ) {
+            DifferentialExpressionAnalysis subsetAnalysis = this.runDifferentialExpressionAnalysis(
+                    ( ExpressionExperimentSubSet ) experimentAnalyzed, config );
+
+            results.add( subsetAnalysis );
+        } else {
+            throw new IllegalStateException(
+                    "Cannot redo an analysis for one experiment if the analysis is for another (" + ee
+                            + " is the proposed target, but analysis is from " + experimentAnalyzed );
         }
+
         return results;
     }
 
@@ -189,6 +204,29 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             auditTrailService.addUpdateEvent( expressionExperiment,
                     FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
                     ExceptionUtils.getFullStackTrace( e ) );
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    public DifferentialExpressionAnalysis runDifferentialExpressionAnalysis( ExpressionExperimentSubSet subset,
+            DifferentialExpressionAnalysisConfig config ) {
+        try {
+            DifferentialExpressionAnalysis a = doDifferentialExpressionAnalysis( subset, config );
+
+            a = helperService.persistAnalysis( subset.getSourceExperiment(), a, config.getFactorsToInclude() );
+
+            /*
+             * Save histograms . Do this here, outside of the other transaction .
+             */
+
+            helperService.writeDistributions( subset.getSourceExperiment(), a );
+
+            return a;
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( subset.getSourceExperiment(),
+                    FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
+                    "Failed to run analysis on subset: " + subset, ExceptionUtils.getFullStackTrace( e ) );
             throw new RuntimeException( e );
         }
     }
@@ -253,6 +291,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
         return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors );
+    }
+
+    private DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperimentSubSet subset,
+            DifferentialExpressionAnalysisConfig config ) {
+        return analysisSelectionAndExecutionService.analyze( subset, config );
     }
 
     private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(

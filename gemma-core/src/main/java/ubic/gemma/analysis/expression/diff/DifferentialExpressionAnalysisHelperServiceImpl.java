@@ -189,13 +189,25 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
 
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
-
-            deleteOldAnalyses( expressionExperiment, analysis, factors );
-
-            DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis );
+            DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis,
+                    factors );
             results.add( persistentAnalysis );
         }
         return results;
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param analysis
+     * @param factors
+     * @return
+     */
+    @Override
+    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, Collection<ExperimentalFactor> factors ) {
+        deleteOldAnalyses( expressionExperiment, analysis, factors );
+        DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis );
+        return persistentAnalysis;
     }
 
     /**

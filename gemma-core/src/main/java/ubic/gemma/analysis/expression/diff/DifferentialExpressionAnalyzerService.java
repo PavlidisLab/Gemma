@@ -20,6 +20,7 @@ import java.util.Collection;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * @author Paul
@@ -32,6 +33,14 @@ public interface DifferentialExpressionAnalyzerService {
      * @return
      */
     public abstract Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @param ee
+     * @param copyMe
+     * @return
+     */
+    public abstract Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis copyMe );
 
     /**
      * Run the differential expression analysis. First deletes the matching existing differential expression analysis,
@@ -53,18 +62,18 @@ public interface DifferentialExpressionAnalyzerService {
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
 
     /**
+     * @param subset
+     * @param config
+     * @return
+     */
+    public abstract DifferentialExpressionAnalysis runDifferentialExpressionAnalysis(
+            ExpressionExperimentSubSet subset, DifferentialExpressionAnalysisConfig config );
+
+    /**
      * @param ee
      * @throws IOException
      */
     public abstract void updateScoreDistributionFiles( ExpressionExperiment ee ) throws IOException;
-
-    /**
-     * @param ee
-     * @param copyMe
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe );
 
     /**
      * Update the pvalue distributions and the hit count sizes, in cases where these are corrupted etc. One could use

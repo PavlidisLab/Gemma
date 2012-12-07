@@ -35,7 +35,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -59,8 +58,7 @@ public class DifferentialExpressionAnalysisUtil {
      * @param factors to consider completeness for.
      * @return boolean
      */
-    public static boolean blockComplete( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors ) {
+    public static boolean blockComplete( BioAssaySet expressionExperiment, Collection<ExperimentalFactor> factors ) {
 
         Collection<BioMaterial> biomaterials = getBioMaterials( expressionExperiment );
 
@@ -85,7 +83,7 @@ public class DifferentialExpressionAnalysisUtil {
      * @param factors
      * @return
      */
-    protected static boolean checkBiologicalReplicates( ExpressionExperiment expressionExperiment,
+    protected static boolean checkBiologicalReplicates( BioAssaySet expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
 
         Collection<BioMaterial> biomaterials = getBioMaterials( expressionExperiment );
@@ -444,12 +442,12 @@ public class DifferentialExpressionAnalysisUtil {
      * @return
      * @throws Exception
      */
-    private static List<BioMaterial> getBioMaterials( ExpressionExperiment ee ) {
+    private static List<BioMaterial> getBioMaterials( BioAssaySet ee ) {
 
         List<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
         /* look for 1 bioassay/matrix column and 1 biomaterial/bioassay */
-        for ( BioAssay assay : ee.getBioAssays() ) {
+        for ( BioAssay assay : ( Collection<BioAssay> ) ee.getBioAssays() ) {
             Collection<BioMaterial> materials = assay.getSamplesUsed();
             if ( materials.size() != 1 ) {
                 throw new RuntimeException( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "

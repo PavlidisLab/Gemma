@@ -20,8 +20,10 @@ import org.springframework.context.ApplicationContextAware;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * @author paul
@@ -64,24 +66,24 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
             Collection<ExperimentalFactor> factors, AnalysisType type );
 
     /**
-     * @param expressionExperiment
+     * @param bioAssaySet
      * @param config
      * @return
      */
-    public abstract AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
+    public abstract AnalysisType determineAnalysis( BioAssaySet bioAssaySet,
             DifferentialExpressionAnalysisConfig config );
 
     /**
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.
      * 
-     * @param expressionExperiment
+     * @param bioAssaySet
      * @param factors which factors to use, or null if to use all from the experiment
      * @param subsetFactor can be null
      * @param includeInteractions if possible
      * @return an appropriate analyzer
      * @throws an exception if the experiment doesn't have a valid experimental design.
      */
-    public abstract AnalysisType determineAnalysis( ExpressionExperiment expressionExperiment,
+    public abstract AnalysisType determineAnalysis( BioAssaySet bioAssaySet,
             Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor,
             boolean includeInteractions );
 
@@ -91,5 +93,13 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
      * @return
      */
     public abstract DiffExAnalyzer getAnalyzer();
+
+    /**
+     * @param subset
+     * @param config
+     * @return
+     */
+    public abstract DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
+            DifferentialExpressionAnalysisConfig config );
 
 }

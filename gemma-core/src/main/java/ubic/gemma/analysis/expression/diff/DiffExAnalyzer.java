@@ -26,6 +26,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -112,5 +113,16 @@ public interface DiffExAnalyzer {
 
     // this is needed so we can alter this in tests
     abstract void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService );
+
+    /**
+     * Note that normally when we run a subset analysis, the subsetting is done internally, so we pass in the expression
+     * experiment, not the subset. This method is used for exceptions to that.
+     * 
+     * @param subset
+     * @param config
+     * @return
+     */
+    abstract DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset,
+            DifferentialExpressionAnalysisConfig config );
 
 }

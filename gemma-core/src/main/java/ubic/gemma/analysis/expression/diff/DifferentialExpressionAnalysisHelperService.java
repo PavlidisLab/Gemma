@@ -63,4 +63,7 @@ public interface DifferentialExpressionAnalysisHelperService {
     public Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses, Collection<ExperimentalFactor> factors );
 
+    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, Collection<ExperimentalFactor> factors );
+
 }

@@ -146,6 +146,17 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     }
 
     /**
+     * This is for bug 3194, but you know, it's just not going to be worth it.
+     * 
+     * @param identifier
+     * @return
+     */
+    private String formSecondGuessRemoteFilePath( String identifier ) {
+        String seekFile = remoteBaseDir + "/" + identifier + "/" + identifier + "_non-normalized.txt.gz";
+        return seekFile;
+    }
+
+    /**
      * @throws ConfigurationException
      */
     @Override

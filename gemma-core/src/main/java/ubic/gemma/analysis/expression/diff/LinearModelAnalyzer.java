@@ -365,6 +365,63 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.
+     * ExpressionExperimentSubSet, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
+     */
+    @Override
+    public DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset,
+            DifferentialExpressionAnalysisConfig config ) {
+
+        /*
+         * Start by setting it up like the full experiment.
+         */
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( subset
+                .getSourceExperiment() );
+
+        ExperimentalFactor ef = config.getSubsetFactor();
+        Collection<BioMaterial> bmtmp = new HashSet<BioMaterial>();
+        for ( BioAssay ba : subset.getBioAssays() ) {
+            bmtmp.addAll( ba.getSamplesUsed() );
+        }
+
+        List<BioMaterial> samplesInSubset = new ArrayList<BioMaterial>( bmtmp );
+
+        FactorValue subsetFactorValue = null;
+        for ( BioMaterial bm : samplesInSubset ) {
+            Collection<FactorValue> fvs = bm.getFactorValues();
+            for ( FactorValue fv : fvs ) {
+                if ( fv.getExperimentalFactor().equals( ef ) ) {
+                    if ( subsetFactorValue == null ) {
+                        subsetFactorValue = fv;
+                    } else if ( !subsetFactorValue.equals( fv ) ) {
+                        throw new IllegalStateException(
+                                "This subset has more than one factor value for the supposed subsetfactor: " + fv
+                                        + " and " + subsetFactorValue );
+                    }
+                }
+            }
+        }
+
+        samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset,
+                config.getFactorsToInclude() );
+
+        // slice.
+        ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( samplesInSubset, dmatrix );
+
+        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config );
+
+        DifferentialExpressionAnalysis analysis = doAnalysis( subset, subsetConfig, subsetMatrix, samplesInSubset,
+                config.getFactorsToInclude(), subsetFactorValue );
+
+        if ( analysis == null ) {
+            throw new IllegalStateException( "Subset could not be analyzed with config: " + config );
+        }
+        return analysis;
+    }
+
     /**
      * @param expressionExperiment
      * @param dmatrix
@@ -944,7 +1001,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * Remove all configurations that have to do with factors that aren't in the selected factors
+     * Remove all configurations that have to do with factors that aren't in the selected factors.
      * 
      * @param factors the factors that will be included
      * @param config
@@ -1341,6 +1398,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
             String factorName = ExperimentalDesignUtils.nameForR( ef );
             String baselineFactorValue = ExperimentalDesignUtils.nameForR( baselineConditions.get( ef ), true );
+            assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) : baselineConditions.get( ef )
+                    + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );
         }
         return properDesignMatrix;

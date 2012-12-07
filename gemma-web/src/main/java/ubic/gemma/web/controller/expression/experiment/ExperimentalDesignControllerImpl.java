@@ -141,6 +141,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             // as a fail safe.
             InputStream is = new FileInputStream( f );
             experimentalDesignImporter.importDesign( ee, is );
+            this.experimentReportService.evictFromCache( ee.getId() );
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to import the design: " + e.getMessage() );
         }
@@ -271,10 +272,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         for ( ExperimentalFactor factorRemove : toDelete ) {
             experimentalFactorService.delete( factorRemove );
         }
-
-        // clear caches.
-
-        // TODO This code should probably be moved to the experimentalFactorService
 
         for ( ExperimentalFactor ef : toDelete ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
