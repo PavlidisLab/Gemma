@@ -103,11 +103,8 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 
 				resultPanel.clear();			
 
-				var numResultsRequired = -1;
-
                 var callParams = [];
                 callParams.push(resultSetIds);
-                callParams.push(numResultsRequired); // TODO: This should be removed after server code is updated not to require it.
                 callParams.push({
                     callback : function(data) {
                         var k = new Gemma.WaitHandler();

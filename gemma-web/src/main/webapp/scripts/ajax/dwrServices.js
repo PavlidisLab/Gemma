@@ -326,9 +326,9 @@ DifferentialExpressionSearchController.getDiffExpSearchTaskProgress = function(p
 if (DiffExMetaAnalyzerController == null)
 	var DiffExMetaAnalyzerController = {};
 DiffExMetaAnalyzerController._path = '/Gemma/dwr';
-DiffExMetaAnalyzerController.analyzeResultSets = function(p0, p1, callback) {
+DiffExMetaAnalyzerController.analyzeResultSets = function(p0, callback) {
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
-			'analyzeResultSets', p0, p1, callback);
+			'analyzeResultSets', p0, callback);
 };
 DiffExMetaAnalyzerController.findDetailMetaAnalysisById = function(p0, callback) {
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',

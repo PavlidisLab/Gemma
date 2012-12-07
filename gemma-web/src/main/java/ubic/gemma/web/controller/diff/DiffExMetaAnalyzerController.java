@@ -119,11 +119,10 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
 
     /**
      * @param analysisResultSetIds
-     * @param resultSetCount
      * @return
      */
-    public String analyzeResultSets( Collection<Long> analysisResultSetIds, int resultSetCount ) {
-        DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, resultSetCount );
+    public String analyzeResultSets( Collection<Long> analysisResultSetIds ) {
+        DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds );
         return super.run( cmd );
     }
 

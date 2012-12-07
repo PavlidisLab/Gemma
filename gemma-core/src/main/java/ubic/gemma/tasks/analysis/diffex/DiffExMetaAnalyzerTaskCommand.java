@@ -33,22 +33,20 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
     private static final long serialVersionUID = 1L;
 
     private Collection<Long> analysisResultSetIds;
-    private int resultSetCount;
     private String name;
     private String description;
     private boolean persist = false;
 
     public boolean isPersist() {
-        return persist;
+        return this.persist;
     }
 
     public void setPersist( boolean persist ) {
         this.persist = persist;
     }
 
-    public DiffExMetaAnalyzerTaskCommand( Collection<Long> analysisResultSetIds, int resultSetCount ) {
+    public DiffExMetaAnalyzerTaskCommand( Collection<Long> analysisResultSetIds ) {
         this.analysisResultSetIds = analysisResultSetIds;
-        this.resultSetCount = resultSetCount;
     }
 
     public DiffExMetaAnalyzerTaskCommand( Collection<Long> analysisResultSetIds, String name, String description,
@@ -61,10 +59,6 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
 
     public Collection<Long> getAnalysisResultSetIds() {
         return this.analysisResultSetIds;
-    }
-
-    public int getResultSetCount() {
-        return this.resultSetCount;
     }
 
     public String getName() {
