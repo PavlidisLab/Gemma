@@ -208,22 +208,10 @@ Gemma.HelpText.CommonErrors = {
 		text: "You cannot save an empty group. No changes have been saved.<br>"+
 				" Add experiments to group {0} or delete it."
 	},
-    accessDenied: {
-    	title: "Cannot {0}",
-    	text: 'Your access is denied.'
-    },
-    objectAlreadyRemoved: {
-    	title: "Cannot {0}",
-    	text: 'This {0} cannot be found because it has been removed by someone else.<br />Please reload the page to view the latest records.'
-    },
-    userNotLoggedIn: {
-    	title: "Cannot {0}",
-    	text: 'You are not logged in. Please log in to try again.'
-    },
-    errorUnknown: {
-    	title: "Cannot {0}",
-    	text: 'System error has occurred. Please contact the system administrator for assistance.'
-    }
+    accessDenied: 'Your access is denied.',
+    objectAlreadyRemoved: 'This record cannot be found because it has been removed by someone else.<br />Please reload the page to view the latest records.',
+    userNotLoggedIn: 'You are not logged in. Please log in to try again.',
+    errorUnknown: 'System error has occurred. Please contact the system administrator for assistance.'
 };
 
 Gemma.HelpText.WidgetDefaults = {
@@ -491,6 +479,28 @@ Gemma.HelpText.WidgetDefaults = {
 		groupInUseErrorText: 'Cannot delete group while permissions are set. Uncheck all checkboxes in the panel to the right, save your changes and try again.',
 		groupInUseErrorTitle: 'Group in use'
 	},
+	MetaAnalysisManagerGridPanel: {
+		ErrorTitle: {
+			saveMetaAnalysisAsEvidence: 'Cannot save meta-analysis as Neurocarta evidence',
+			removeMetaAnalysis: 'Cannot remove meta-analysis',
+			viewMetaAnalysisDetail: 'Cannot view meta-analysis detail'
+		}
+	},
+	MetaAnalysisShowResultPanel: {
+		ErrorTitle: {
+			resultSetsNotAnalyzed: 'Cannot analyze result sets',
+			resultSetsNotSaved: 'Cannot save result sets'
+		},
+		ErrorMessage: {
+			resultSetsNotAnalyzed: 'Result sets cannot be analyzed.',
+			resultSetsNotSaved: 'Result sets cannot be saved.'		
+		}	
+	},
+	MetaAnalysisSaveAsEvidenceWindow: {
+		ErrorMessage: {
+			qvalueThresholdOutOfRange: 'q-value threshold should be greater than {0}, and less than or equal to {1}.'
+		}	
+	},
 	MetaheatmapApplication:{
 		noGenesSelectedTitle: "No Genes Selected",
 		noGenesSelectedText: "Selection cannot be saved because no genes have been selected. "+
@@ -532,7 +542,7 @@ Gemma.HelpText.WidgetDefaults = {
 	PhenotypeAssociationForm: {
 		ErrorMessage: {
 			// The followings are from ValidateEvidenceValueObject.
-		    userNotLoggedIn: 'You have not logged in. Please log in to try again.',
+		    userNotLoggedIn: 'You are not logged in. Please log in to try again.',
 		    accessDenied: 'Your access is denied.',
 		    lastUpdateDifferent: 'This evidence has been modified by someone else. Please reload the page to view the updated version.',
 		    evidenceNotFound: 'This evidence cannot be found because it has been removed by someone else.<br />Please reload the page to view the latest phenotype association.',

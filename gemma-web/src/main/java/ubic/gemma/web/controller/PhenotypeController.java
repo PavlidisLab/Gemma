@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.SortedSet;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -221,5 +222,18 @@ public class PhenotypeController extends BaseController {
 
     public Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics() {
         return this.phenotypeAssociationManagerService.loadNeurocartaStatistics();
+    }
+
+    public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
+            Double selectionThreshold ) {
+        ValidateEvidenceValueObject validateEvidenceValueObject;
+        try {
+            validateEvidenceValueObject = this.phenotypeAssociationManagerService.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
+        			geneDifferentialExpressionMetaAnalysisId, phenotypes, selectionThreshold);
+        } catch ( Throwable throwable ) {
+            validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
+        }
+        return validateEvidenceValueObject;
     }
 }

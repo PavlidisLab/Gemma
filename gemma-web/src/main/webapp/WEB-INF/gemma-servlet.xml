@@ -382,6 +382,7 @@
 			<dwr:include method="validatePhenotypeAssociationForm" />
 			<dwr:include method="processPhenotypeAssociationForm" />
 			<dwr:include method="removePhenotypeAssociation" />
+			<dwr:include method="makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis" />
 		</dwr:remote>
 	</bean>
 

@@ -8,159 +8,26 @@ Ext.namespace('Gemma');
 
 Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 	title: 'Results',
+	metaAnalysis: null,
+	defaultQvalueThreshold: null,
+	numResultsShown: 500,
 	nextButtonText: 'Save results',
 	layout: 'border',
-	metaAnalysis: null,
-	numResultsShown: 500,
 	initComponent: function() {
-		var currentMetaAnalysis = this.metaAnalysis;
-
 		var nextButton = this.createNextButton();
 		
-		var summaryLabel = new Ext.form.Label();
-		
-		var limitDisplayCombo = new Ext.form.ComboBox({
-			width: 180,
-			editable: false,  			
-		    triggerAction: 'all',
-		    mode: 'local',
-		    store: new Ext.data.ArrayStore({
-		        fields: [ 'shouldLimit', 'displayText' ],
-		        data: [
-		        	[ true, 'Display top ' + this.numResultsShown + ' results'],
-		        	[ false, 'Display all results']
-		        ]
-		    }),
-		    value: true, // By default, we should limit number of results shown.
-		    valueField: 'shouldLimit',
-		    displayField: 'displayText',
-		    listeners: {
-		    	select: function(combo, record, index) {
-					if (!resultLabel.loadMask) {
-						resultLabel.loadMask = new Ext.LoadMask(resultLabel.getEl(), {
-							msg: "Loading ..."
-						});
-					}
-					resultLabel.loadMask.show();
-					
-					// Defer the call. Otherwise, the loading mask does not show.
-					Ext.defer(showResults, 1, this);
-		    	}
-		    }
-		});
-		
-		var headerPanel = new Ext.Panel({
-			region: 'north',
-			layout: 'vbox',
-			align: 'stretch',
-		 	border: false,
-		 	height: 90, // It must be set because it is in the north region.
-			defaults: {
-				margins: '10 0 0 10',
-				style: 'white-space: nowrap;'					
-			},
-		 	items: [
-		 		summaryLabel,
-		 		limitDisplayCombo
-		 	]
-		});
-		
-		var resultLabel = new Ext.form.Label({
-			region: 'center',
-			autoScroll: true,
-			style: 'background-color: #FFFFFF;' // By default, the background color is blue.
+		var resultPanel = new Gemma.MetaAnalysisResultPanel({
+			metaAnalysis: this.metaAnalysis,
+			defaultQvalueThreshold: this.defaultQvalueThreshold,
+			region: 'center'
 		});
 
 		var thisPanelItems = [ 
-			headerPanel,
-			resultLabel
+			resultPanel		
 		];
 
-		var showResults = function() {
-			var resultText = '';
-
-			if (resultLabel.loadMask) {
-				resultLabel.loadMask.hide();
-			}
-
-			if (currentMetaAnalysis) {
-				// Sort results by p-value.
-				currentMetaAnalysis.results.sort(function(result1, result2) {  
-		            return result1.metaPvalue < result2.metaPvalue ?
-		            	-1 :
-		            	result1.metaPvalue == result2.metaPvalue ?
-		            		0 :
-		            		1;  
-				});
-					
-				var shouldLimitDisplayComboBeShown = currentMetaAnalysis.results.length > this.numResultsShown; 
-
-				// Show limitDisplayCombo only when we have results more than this.numResultsShown.
-				if (shouldLimitDisplayComboBeShown) {
-					headerPanel.setHeight(80);
-					limitDisplayCombo.show();
-				} else {
-					headerPanel.setHeight(40);
-					limitDisplayCombo.hide();
-				}
-
-				summaryLabel.setText('<b>Number of genes analyzed</b>: ' + currentMetaAnalysis.numGenesAnalyzed + '<br />' +				
-									 '<b>Number of genes with q-value < 0.1</b>: ' + currentMetaAnalysis.results.length, false);
-
-				var stringStyle = 'style="padding: 0 10px 0 10px;"'; 
-				var numberStyle = 'style="padding: 0 10px 0 10px; text-align: right;"';
-				var directionStyle = 'style="padding: 0 10px 0 10px; text-align: center; font-size: 12px"';
-				
-				resultText += 
-					'<table>' +
-						'<tr>' +
-							'<th ' + stringStyle + '>Symbol</th>' +
-							'<th ' + stringStyle + '>Name</th>' +
-							'<th ' + numberStyle + '>p-value</th>' +
-							'<th ' + numberStyle + '>q-value</th>' +
-							'<th ' + stringStyle + '>Direction</th>' +
-						'</tr>';
-
-				var metaAnalysisMaxIndex = shouldLimitDisplayComboBeShown && limitDisplayCombo.getValue() ?
-					this.numResultsShown :
-					currentMetaAnalysis.results.length;
-					
-				var numCharactersForDisplay = 80;
-				
-				for (var i = 0; i < metaAnalysisMaxIndex; i++) {
-					result = currentMetaAnalysis.results[i];
-				
-					resultText += 
-						'<tr>' +
-							'<td ' + stringStyle + '>' + result.geneSymbol + '</td>' +
-							'<td ' + stringStyle + '>' + Ext.util.Format.ellipsis(result.geneName, numCharactersForDisplay, true) + '</td>' +
-							'<td ' + numberStyle + '>' + result.metaPvalue.toExponential(2) + '</td>' +
-							'<td ' + numberStyle + '>' + result.metaQvalue.toExponential(2) + '</td>' +
-							'<td ' + directionStyle + '>' + (result.upperTail ?
-								'&uarr;' :
-								'&darr;') + '</td>' +
-						'</tr>';	
-				}
-
-				resultText += '</table>';
-				
-				resultLabel.setText(resultText, false);
-				
-				nextButton.setDisabled(false);
-			} else {
-				summaryLabel.setText('<b>No results were significant.</b>', false);
-				nextButton.setDisabled(true);
-			}
-			
-			this.doLayout();
-			
-		}.createDelegate(this);		
-		
-		// If this panel is for showing meta-analysis, show its results.
-		// Otherwise, add buttons to the bottom panel for working on meta-analysis.
-		if (this.metaAnalysis) {
-			showResults(this.metaAnalysis);
-		} else {
+		// If this panel is not for showing meta-analysis, add buttons to the bottom panel for working on meta-analysis.
+		if (!this.metaAnalysis) {
 			thisPanelItems.push({
 			 	region: 'south',
 				layout: 'hbox',
@@ -206,15 +73,21 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
                                 callback : function(data) {
                                     var k = new Gemma.WaitHandler();
                                     k.handleWait(data, true);
-                                    k.on('done', function(geneDifferentialExpressionMetaAnalysis) {
-										// Assume if it is not null, saving result is successful.
-										if (geneDifferentialExpressionMetaAnalysis != null) {
+                                    k.on('done', function(metaAnalysisReturned) {
+										// Assume if it is null, saving result is NOT successful.
+										if (metaAnalysisReturned == null) {
+											Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorTitle.resultSetsNotSaved,
+														  Gemma.HelpText.CommonErrors.errorUnknown);
+										} else {
 											this.fireEvent('resultSaved');
 										}
                                     }.createDelegate(this));
+									k.on('fail', function(data) {
+										// Nothing to do because the popped up dialog with title "Job failed!" will let users know the problem.
+									}.createDelegate(this));
                                 }.createDelegate(this),
                                 errorHandler : function(error) {
-									Ext.Msg.alert("Result sets cannot be saved", error);
+									Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorTitle.resultSetsNotSaved, error);
                                 }.createDelegate(this)
                             });
                             DiffExMetaAnalyzerController.saveResultSets.apply(this, callParams);
@@ -228,10 +101,7 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 			setResultSetIds: function(resultSetIds) {
 				resultSetIdsToBeSaved = resultSetIds;
 
-				// Reset components responsible for displaying results.
-				summaryLabel.setText('', false);
-				limitDisplayCombo.hide();
-				resultLabel.setText('', false);
+				resultPanel.clear();			
 
 				var numResultsRequired = -1;
 
@@ -242,13 +112,19 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
                     callback : function(data) {
                         var k = new Gemma.WaitHandler();
                         k.handleWait(data, true);
-                        k.on('done', function(geneDifferentialExpressionMetaAnalysis) {
-							currentMetaAnalysis = geneDifferentialExpressionMetaAnalysis;
-                        	showResults();
+                        k.on('done', function(metaAnalysisReturned) {
+							resultPanel.setMetaAnalysis(metaAnalysisReturned);
+							nextButton.setDisabled(!metaAnalysisReturned);
                         }.createDelegate(this));
+						k.on('fail', function(data) {
+							// Argument data is not used because it just contains error message that has
+							// already been shown in the popped up dialog with title "Job failed!".
+							resultPanel.clear(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorMessage.resultSetsNotAnalyzed);
+							nextButton.setDisabled(true);
+						}.createDelegate(this));
                     }.createDelegate(this),
                     errorHandler : function(error) {
-						Ext.Msg.alert("Result sets cannot be analyzed", error);
+						Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorTitle.resultSetsNotAnalyzed, error);
                     }.createDelegate(this)
                 });
                 DiffExMetaAnalyzerController.analyzeResultSets.apply(this, callParams);

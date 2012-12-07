@@ -1103,6 +1103,9 @@ PhenotypeController.validatePhenotypeAssociationForm = function(p0, callback) {
 PhenotypeController.removePhenotypeAssociation = function(p0, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'removePhenotypeAssociation', p0, callback);
 }
+PhenotypeController.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis = function(p0, p1, p2, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis', p0, p1, p2, callback);
+}
 //=====================================================================================
 if (JavascriptLogger == null)
 	var JavascriptLogger = {};

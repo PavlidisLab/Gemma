@@ -8,6 +8,7 @@ Ext.namespace('Gemma');
 
 Gemma.MetaAnalysisWindow = Ext.extend(Ext.Window, {
 	metaAnalysis: null, // It can be set to use this window to display included result sets.
+	defaultQvalueThreshold: null,
 	layout: 'fit',
 	constrain: true,  // Should not be modal so that other window can be opened.
 	width: 740,
@@ -47,7 +48,8 @@ Gemma.MetaAnalysisWindow = Ext.extend(Ext.Window, {
 		
 		
 		var showResultPanel = new Gemma.MetaAnalysisShowResultPanel({
-			metaAnalysis: this.metaAnalysis,			
+			metaAnalysis: this.metaAnalysis,
+			defaultQvalueThreshold: this.defaultQvalueThreshold,			
 			listeners: {
 				modifySelectionButtonClicked: function() {
 					selectExperimentPanel.body.unmask();

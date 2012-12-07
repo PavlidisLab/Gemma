@@ -1,31 +1,20 @@
 Ext.namespace('Gemma');
 
-Gemma.alertUserToError = function(baseValueObject, formatArguments) {
+Gemma.alertUserToError = function(baseValueObject, title) {
 	// Set the minimum width of message box so that title is not wrapped if it is longer than message box body text. 
-	Ext.MessageBox.minWidth = 250;
+	Ext.MessageBox.minWidth = 430;
 	
 	if (baseValueObject.errorFound) {
 		if (baseValueObject.accessDenied) {
-			Ext.MessageBox.alert(
-				String.format(Gemma.HelpText.CommonErrors.accessDenied.title, formatArguments[0]),
-				Gemma.HelpText.CommonErrors.accessDenied.text
-			);
+			Ext.MessageBox.alert(title,	Gemma.HelpText.CommonErrors.accessDenied);
 		} else if (baseValueObject.objectAlreadyRemoved) {
-			Ext.MessageBox.alert(
-				String.format(Gemma.HelpText.CommonErrors.objectAlreadyRemoved.title, formatArguments[0]),
-				String.format(Gemma.HelpText.CommonErrors.objectAlreadyRemoved.text, formatArguments[1])
-			);
+			Ext.MessageBox.alert(title,	Gemma.HelpText.CommonErrors.objectAlreadyRemoved);
 		} else if (baseValueObject.userNotLoggedIn) {
-			Ext.MessageBox.alert(
-				String.format(Gemma.HelpText.CommonErrors.userNotLoggedIn.title, formatArguments[0]),
-				Gemma.HelpText.CommonErrors.userNotLoggedIn.text,
+			Ext.MessageBox.alert(title,	Gemma.HelpText.CommonErrors.userNotLoggedIn,
 				Gemma.AjaxLogin.showLoginWindowFn
 			); 
 		} else {
-			Ext.MessageBox.alert(
-				String.format(Gemma.HelpText.CommonErrors.errorUnknown.title, formatArguments[0]),
-				Gemma.HelpText.CommonErrors.errorUnknown.text
-			);
+			Ext.MessageBox.alert(title,	Gemma.HelpText.CommonErrors.errorUnknown);
 		}
 	}			
 };
