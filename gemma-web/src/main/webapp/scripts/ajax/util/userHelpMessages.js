@@ -496,7 +496,7 @@ Gemma.HelpText.WidgetDefaults = {
 			resultSetsNotSaved: 'Result sets cannot be saved.'		
 		}	
 	},
-	MetaAnalysisSaveAsEvidenceWindow: {
+	MetaAnalysisEvidenceWindow: {
 		ErrorMessage: {
 			qvalueThresholdOutOfRange: 'q-value threshold should be greater than {0}, and less than or equal to {1}.'
 		}	

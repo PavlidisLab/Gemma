@@ -66,7 +66,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		var showSaveAsEvidenceWindow = function(id, metaAnalysis, numGenesAnalyzed) {
 			metaAnalysis.numGenesAnalyzed = numGenesAnalyzed;
 
-			var saveAsEvidenceWindow = new Gemma.MetaAnalysisSaveAsEvidenceWindow({
+			var saveAsEvidenceWindow = new Gemma.MetaAnalysisEvidenceWindow({
 				metaAnalysisId: id,
 				metaAnalysis: metaAnalysis,
 				defaultQvalueThreshold: DEFAULT_THRESHOLD
@@ -81,7 +81,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				fields: [ 'id',
 					{ name: 'name', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
 					'description', 'numGenesAnalyzed', 'numResults', 'numResultSetsIncluded',
-					'public', 'shared', 'ownedByCurrentUser' ],
+					'public', 'shared', 'ownedByCurrentUser', 'diffExpressionEvidence' ],
 				idProperty: 'id',
 				sortInfo: { field: 'name', direction: 'ASC'	}
 			}),

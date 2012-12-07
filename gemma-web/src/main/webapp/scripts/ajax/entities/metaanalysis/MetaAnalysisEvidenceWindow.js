@@ -6,7 +6,7 @@
  */
 Ext.namespace('Gemma');
 
-Gemma.MetaAnalysisSaveAsEvidenceWindow = Ext.extend(Ext.Window, {
+Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 	metaAnalysisId: null,
 	metaAnalysis: null,
 	defaultQvalueThreshold: null,
@@ -139,7 +139,7 @@ Gemma.MetaAnalysisSaveAsEvidenceWindow = Ext.extend(Ext.Window, {
 									resultPanel.showResults(threshold);
 								} else {
 									thresholdErrorMessage = String.format(
-										Gemma.HelpText.WidgetDefaults.MetaAnalysisSaveAsEvidenceWindow.ErrorMessage.qvalueThresholdOutOfRange,
+										Gemma.HelpText.WidgetDefaults.MetaAnalysisEvidenceWindow.ErrorMessage.qvalueThresholdOutOfRange,
 											numberField.minValue, numberField.maxValue);
 									resultPanel.clear();
 								}
@@ -220,6 +220,6 @@ Gemma.MetaAnalysisSaveAsEvidenceWindow = Ext.extend(Ext.Window, {
 			]
 		});
 		
-		Gemma.MetaAnalysisSaveAsEvidenceWindow.superclass.initComponent.call(this);
+		Gemma.MetaAnalysisEvidenceWindow.superclass.initComponent.call(this);
 	}
 });
