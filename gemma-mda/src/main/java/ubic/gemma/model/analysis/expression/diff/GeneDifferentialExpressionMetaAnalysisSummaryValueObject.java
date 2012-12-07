@@ -21,6 +21,8 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.io.Serializable;
 
+import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
+
 /**
  * @author frances
  * @version $Id$
@@ -41,6 +43,8 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
     private boolean isOwnedByCurrentUser;
     private boolean isPublic;
     private boolean isShared;
+    
+    private DiffExpressionEvidenceValueObject diffExpressionEvidence; 
 
     public String getDescription() {
         return this.description;
@@ -112,5 +116,14 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
 
 	public void setShared(boolean isShared) {
 		this.isShared = isShared;
+	}
+
+	public DiffExpressionEvidenceValueObject getDiffExpressionEvidence() {
+		return this.diffExpressionEvidence;
+	}
+
+	public void setDiffExpressionEvidence(
+			DiffExpressionEvidenceValueObject diffExpressionEvidence) {
+		this.diffExpressionEvidence = diffExpressionEvidence;
 	}
 }

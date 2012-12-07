@@ -25,6 +25,7 @@ import java.util.HashSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
@@ -47,6 +48,9 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
 
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+
+    @Autowired
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @Autowired
     private SecurityService securityService;
@@ -92,7 +96,9 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
         Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> vos = this.geneDiffExMetaAnalysisService
                 .findMetaAnalyses( metaAnalysisIds );
         for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject vo : vos ) {
-            // Find meta-analysis so that its security settings can be applied to value object.
+        	vo.setDiffExpressionEvidence( this.phenotypeAssociationManagerService.loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( vo.getId() ) );
+        	
+            // Find meta-analysis so that its security settings can be copied to value object.
             for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
                 if ( vo.getId() == metaAnalysis.getId() ) {
                     vo.setOwnedByCurrentUser( this.securityService.isOwnedByCurrentUser( metaAnalysis ) );
