@@ -257,7 +257,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
-
+        session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis.getExperimentAnalyzed() );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
 
         if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
