@@ -2,7 +2,7 @@ Ext.namespace('Gemma');
 
 Gemma.alertUserToError = function(baseValueObject, title) {
 	// Set the minimum width of message box so that title is not wrapped if it is longer than message box body text. 
-	Ext.MessageBox.minWidth = 430;
+	Ext.MessageBox.minWidth = 250;
 	
 	if (baseValueObject.errorFound) {
 		if (baseValueObject.accessDenied) {
