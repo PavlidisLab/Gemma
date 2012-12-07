@@ -20,66 +20,29 @@ package ubic.gemma.analysis.expression.diff;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.basecode.util.r.RClient;
-import ubic.basecode.util.r.RConnectionFactory;
-import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.util.ConfigUtils;
 
 /**
- * An abstract analyzer to be extended by analyzers which will make use of R.
+ * Analyzer base class.
  * 
  * @author keshav
  * @version $Id$
  */
 public abstract class AbstractAnalyzer {
 
-    protected RClient rc = null;
-
     @Autowired
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
-    
+
     @Autowired
     protected CompositeSequenceService compositeSequenceService;
 
-    /**
-     * Connect to R.
-     * 
-     * @throws exception if no connection is obtained
-     */
-    public void connectToR() {
-
-        if ( rc != null && !rc.isConnected() && rc instanceof RServeClient ) {
-            ( ( RServeClient ) rc ).connect();
-        } else {
-            String hostname = ConfigUtils.getString( "gemma.rserve.hostname", "localhost" );
-            rc = RConnectionFactory.getRConnection( hostname );
-            if ( rc == null ) throw new RuntimeException( "R connection was not established" );
-        }
-
-        assert rc != null;
-    }
-
-    /**
-     * Disconnect from R, clean up objects. Good idea to call this at the end of any methods using R commands.
-     */
-    public void disconnectR() {
-        if ( rc == null || !rc.isConnected() ) {
-            return;
-        }
-        rc.voidEval( "rm(list = ls())" ); // this probably doesn't do much, but doesn't hurt.
-        if ( rc != null && rc instanceof RServeClient ) {
-            ( ( RServeClient ) rc ).disconnect();
-        }
-        rc = null;
-    }
-
-    /**
-     * @param expressionDataMatrixService
-     */
+    // needed for tests.
     public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
         this.expressionDataMatrixService = expressionDataMatrixService;
     }
 
+    /*
+     * TODO This used to contain code pertaining to R, it's no longer necessary so this class may eventually be removed.
+     */
 }

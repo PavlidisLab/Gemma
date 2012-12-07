@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,7 +75,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.ConfigUtils;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.jet.math.Functions;
@@ -101,8 +99,6 @@ import cern.jet.math.Functions;
 public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     private static Log log = LogFactory.getLog( LinearModelAnalyzer.class );
-
-    private static final boolean USE_R = ConfigUtils.getBoolean( "gemma.linearmodels.useR" );
 
     /**
      * Preset levels for which we will store the HitListSizes.
@@ -431,116 +427,108 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     @Override
     public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) {
-        try {
 
-            /*
-             * I apologize for this being so complicated. Basically there are four phases:
-             * 
-             * 1. Get the data matrix and factors
-             * 
-             * 2. Determine baseline groups; build model and contrasts
-             * 
-             * 3. Run the analysis
-             * 
-             * 4. Postprocess the analysis
-             * 
-             * By far the most complex is #2 -- it depends on which factors and what kind they are.
-             */
+        /*
+         * I apologize for this being so complicated. Basically there are four phases:
+         * 
+         * 1. Get the data matrix and factors
+         * 
+         * 2. Determine baseline groups; build model and contrasts
+         * 
+         * 3. Run the analysis
+         * 
+         * 4. Postprocess the analysis
+         * 
+         * By far the most complex is #2 -- it depends on which factors and what kind they are.
+         */
 
-            if ( USE_R ) {
-                connectToR();
+        /*
+         * Initialize our matrix and factor lists...
+         */
+        List<ExperimentalFactor> factors = config.getFactorsToInclude();
+
+        List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( dmatrix, factors );
+
+        dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix ); // enforce ordering
+
+        /*
+         * Do the analysis, by subsets if requested
+         */
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+
+        ExperimentalFactor subsetFactor = config.getSubsetFactor();
+        if ( subsetFactor != null ) {
+
+            if ( factors.contains( subsetFactor ) ) {
+                throw new IllegalStateException( "Subset factor cannot also be included in the analysis [ Factor was: "
+                        + subsetFactor + "]" );
             }
 
-            /*
-             * Initialize our matrix and factor lists...
-             */
-            List<ExperimentalFactor> factors = config.getFactorsToInclude();
-
-            List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( dmatrix, factors );
-
-            dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix ); // enforce ordering
+            Map<FactorValue, ExpressionDataDoubleMatrix> subsets = makeSubSets( config, dmatrix, samplesUsed,
+                    subsetFactor );
 
             /*
-             * Do the analysis, by subsets if requested
+             * Now analyze each subset
              */
-            Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+            for ( FactorValue subsetFactorValue : subsets.keySet() ) {
 
-            ExperimentalFactor subsetFactor = config.getSubsetFactor();
-            if ( subsetFactor != null ) {
+                log.info( "Analyzing subset: " + subsetFactorValue );
 
-                if ( factors.contains( subsetFactor ) ) {
-                    throw new IllegalStateException(
-                            "Subset factor cannot also be included in the analysis [ Factor was: " + subsetFactor + "]" );
-                }
-
-                Map<FactorValue, ExpressionDataDoubleMatrix> subsets = makeSubSets( config, dmatrix, samplesUsed,
-                        subsetFactor );
+                List<BioMaterial> bioMaterials = ExperimentalDesignUtils.getOrderedSamples(
+                        subsets.get( subsetFactorValue ), factors );
 
                 /*
-                 * Now analyze each subset
+                 * make a EESubSet
                  */
-                for ( FactorValue subsetFactorValue : subsets.keySet() ) {
+                ExpressionExperimentSubSet eesubSet = ExpressionExperimentSubSet.Factory.newInstance();
+                eesubSet.setSourceExperiment( expressionExperiment );
+                eesubSet.setName( "Subset for " + subsetFactorValue );
+                Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+                for ( BioMaterial bm : bioMaterials ) {
+                    bioAssays.addAll( bm.getBioAssaysUsedIn() );
+                }
+                eesubSet.getBioAssays().addAll( bioAssays );
 
-                    log.info( "Analyzing subset: " + subsetFactorValue );
+                Collection<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subsets.get( subsetFactorValue ),
+                        eesubSet, factors );
 
-                    List<BioMaterial> bioMaterials = ExperimentalDesignUtils.getOrderedSamples(
-                            subsets.get( subsetFactorValue ), factors );
+                DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config );
 
-                    /*
-                     * make a EESubSet
-                     */
-                    ExpressionExperimentSubSet eesubSet = ExpressionExperimentSubSet.Factory.newInstance();
-                    eesubSet.setSourceExperiment( expressionExperiment );
-                    eesubSet.setName( "Subset for " + subsetFactorValue );
-                    Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
-                    for ( BioMaterial bm : bioMaterials ) {
-                        bioAssays.addAll( bm.getBioAssaysUsedIn() );
-                    }
-                    eesubSet.getBioAssays().addAll( bioAssays );
-
-                    Collection<ExperimentalFactor> subsetFactors = fixFactorsForSubset(
-                            subsets.get( subsetFactorValue ), eesubSet, factors );
-
-                    DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config );
-
-                    if ( subsetFactors.isEmpty() ) {
-                        log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
-                        continue;
-                    }
-
-                    /*
-                     * Run analysis on the subset.
-                     */
-                    DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, subsetConfig,
-                            subsets.get( subsetFactorValue ), bioMaterials, factors, subsetFactorValue );
-
-                    if ( analysis == null ) {
-                        log.warn( "No analysis results were obtained for subset: " + subsetFactorValue );
-                        continue;
-                    }
-
-                    results.add( analysis );
-
+                if ( subsetFactors.isEmpty() ) {
+                    log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
+                    continue;
                 }
 
-            } else {
-
                 /*
-                 * Analyze the whole thing as one
+                 * Run analysis on the subset.
                  */
-                DifferentialExpressionAnalysis analysis = doAnalysis( expressionExperiment, config, dmatrix,
-                        samplesUsed, factors, null );
+                DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, subsetConfig,
+                        subsets.get( subsetFactorValue ), bioMaterials, factors, subsetFactorValue );
+
                 if ( analysis == null ) {
-                    log.warn( "No analysis results were obtained" );
-                } else {
-                    results.add( analysis );
+                    log.warn( "No analysis results were obtained for subset: " + subsetFactorValue );
+                    continue;
                 }
-            }
-            return results;
 
-        } finally {
-            disconnectR();
+                results.add( analysis );
+
+            }
+
+        } else {
+
+            /*
+             * Analyze the whole thing as one
+             */
+            DifferentialExpressionAnalysis analysis = doAnalysis( expressionExperiment, config, dmatrix, samplesUsed,
+                    factors, null );
+            if ( analysis == null ) {
+                log.warn( "No analysis results were obtained" );
+            } else {
+                results.add( analysis );
+            }
         }
+        return results;
+
     }
 
     /**
@@ -604,31 +592,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 for ( int i = 0; i < column.length; i++ ) {
                     colD[i] = ( Double ) column[i];
                 }
-                if ( USE_R ) rc.assign( factorName, colD );
             } else {
                 String[] colS = new String[column.length];
                 for ( int i = 0; i < column.length; i++ ) {
                     colS[i] = ( String ) column[i];
                 }
 
-                FactorValue baseLineFV = baselineConditions.get( factor );
-
-                String baselineFvName = ExperimentalDesignUtils.nameForR( baseLineFV, true );
-
-                if ( USE_R ) {
-                    rc.assignFactor( factorName, Arrays.asList( colS ) );
-                    List<String> stringListEval = rc.stringListEval( ( "levels(" + factorName + ")" ) );
-
-                    /*
-                     * The 'base' is the index of the baseline group in the list of levels: the result of
-                     * 'levels(factor)'. Default base is 1.
-                     */
-
-                    int indexOfBaseline = stringListEval.indexOf( baselineFvName ) + 1; // R is 1-based.
-
-                    rc.voidEval( "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
-                            + indexOfBaseline + ")" );
-                }
             }
         }
     }
@@ -910,14 +879,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                      */
 
                     assert factorsForName.size() == 1;
-                    ExperimentalFactor experimentalFactor = factorsForName.iterator().next(); // we know there is only
-                    // one.
-
-                    /*
-                     * Determine critical F statistic
-                     */
-                    // double
-                    // FDistribution f = new FDistributionImpl(/);
+                    ExperimentalFactor experimentalFactor = factorsForName.iterator().next();
 
                     if ( interceptFactor != null && factorsForName.size() == 1
                             && experimentalFactor.equals( interceptFactor ) ) {
@@ -1536,20 +1498,15 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
 
-        Future<?> f;
-        if ( USE_R ) {
-            // Note: this will probably no longer work if we provide constant factors (e.g., in invalid subset
-            // situations)
-            f = runAnalysisFuture( namedMatrix, factorNameMap, modelFormula, rawResults );
-        } else {
-            f = runAnalysisFutureJ( designMatrix, sNamedMatrix, rawResults );
-        }
+        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults );
 
         StopWatch timer = new StopWatch();
         timer.start();
         long lasttime = 0;
 
-        double updateIntervalMillis = 60000.00;
+        // this analysis should take just 10 or 20 seconds for most data sets.
+        double MAX_ANALYSIS_TIME = 60 * 1000 * 20; // 20 minutes.
+        double updateIntervalMillis = 60 * 1000;// 1 minute
         while ( !f.isDone() ) {
             try {
                 Thread.sleep( 1000 );
@@ -1562,6 +1519,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             } catch ( InterruptedException e ) {
                 log.warn( "Analysis interrupted!" );
                 return rawResults;
+            }
+
+            if ( timer.getTime() > MAX_ANALYSIS_TIME ) {
+                log.error( "Analysis is taking too long, something bad must have happened; cancelling" );
+                f.cancel( true );
+                throw new RuntimeException( "Analysis was taking too long, it was cancelled" );
             }
         }
 
@@ -1584,56 +1547,20 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param namedMatrix
-     * @param factorNameMap
-     * @param modelFormula
-     * @param rawResults
-     * @return
-     */
-    private Future<?> runAnalysisFuture( final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
-            final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
-            final Map<String, LinearModelSummary> rawResults ) {
-
-        if ( rc == null || !rc.isConnected() ) {
-            throw new IllegalStateException( "Don't call this method unless R is ready :(" );
-        }
-        final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
-
-        final String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
-        ExecutorService service = Executors.newSingleThreadExecutor();
-
-        Future<?> f = service.submit( new Runnable() {
-            @Override
-            public void run() {
-                Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
-                        .keySet().toArray( new String[] {} ) );
-                rawResults.putAll( res );
-
-            }
-        } );
-
-        service.shutdown();
-        return f;
-    }
-
-    /**
-     * Linear models solved using native Java implementation
+     * Linear models solved
      * 
      * @param designMatrix
      * @param data
      * @param rawResults
      * @return
      */
-    private Future<?> runAnalysisFutureJ( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
+    private Future<?> runAnalysisFuture( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
             final Map<String, LinearModelSummary> rawResults ) {
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<?> f = service.submit( new Runnable() {
             @Override
             public void run() {
-                /*
-                 * This part should be straightforward
-                 */
                 StopWatch timer = new StopWatch();
                 timer.start();
                 LeastSquaresFit fit = new LeastSquaresFit( designMatrix, data );
@@ -1644,6 +1571,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 Map<String, LinearModelSummary> res = fit.summarizeByKeys( true );
                 log.info( "Model summarize/ANOVA: " + timer.getTime() + "ms" );
                 rawResults.putAll( res );
+                log.info( "Analysis phase done ..." );
             }
         } );
 

@@ -21,13 +21,9 @@ package ubic.gemma.analysis.expression.diff;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -136,154 +132,6 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             return null;
         }
         return benjaminiHochberg.toArray();
-    }
-
-    /**
-     * Calls the Q value function in R.
-     * 
-     * @param pvalues Entries that are NaN or out of range [0,1] are ignored in the qvalue computation and rendered as
-     *        NaN qvalues.
-     * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani;
-     *         falls back on Benjamini-Hochberg if qvalue fails to return a result (this can happen if qvalue's fitting
-     *         procedure fails to converge).
-     */
-    protected double[] getQValues( Double[] pvalues ) {
-
-        if ( pvalues == null || pvalues.length == 0 ) {
-            throw new IllegalArgumentException( "No pvalues provided" );
-        }
-
-        if ( rc == null || !rc.isConnected() ) {
-            connectToR();
-        }
-        double[] qvalues = new double[pvalues.length];
-
-        /* Create a list with only the p-values that are not Double.NaN */
-        ArrayList<Double> pvaluesList = new ArrayList<Double>();
-        for ( int i = 0; i < pvalues.length; i++ ) {
-            qvalues[i] = Double.NaN; // initialize.
-
-            Double pvalue = pvalues[i];
-            if ( pvalue == null || pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) continue;
-            pvaluesList.add( pvalue );
-        }
-
-        if ( pvaluesList.isEmpty() ) {
-            throw new IllegalArgumentException( "No pvalues were valid numbers, returning null qvalues" );
-        }
-
-        /* convert to primitive array */
-        double[] pvaluesToUse = new double[pvaluesList.size()];
-        int j = 0;
-        for ( Double d : pvaluesList ) {
-            pvaluesToUse[j] = d;
-            j++;
-        }
-
-        boolean hasQValue = rc.loadLibrary( "qvalue" );
-        if ( !hasQValue ) {
-            List<String> stringListEval = rc.stringListEval( "Sys.getenv()" );
-            log.info( StringUtils.join( stringListEval, "\n" ) );
-            throw new IllegalStateException( "qvalue does not seem to be available" );
-        }
-
-        String pvalsName = "pvals_" + RandomStringUtils.randomAlphabetic( 10 );
-
-        rc.assign( pvalsName, pvaluesToUse );
-        String qvalueCommand = ( "qvalue(" + pvalsName + ")$qvalues" );
-
-        double[] qvaluesFromR = null;
-        Exception qve = null;
-        try {
-            qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
-        } catch ( Exception e ) {
-            qve = e;
-        }
-
-        if ( qvaluesFromR == null ) {
-            /*
-             * Qvalue will return an error in several conditions. 1)if the vector contains NaNs [we handle that
-             * already]; 2) p-values are out of range 0-1 [we handle that too]; 3) pi0 [proportion of unchanged genes]
-             * <= 0; 4) other invalid arguments which we don't set anyway. So we try the other method.
-             */
-
-            qvalueCommand = "qvalue(" + pvalsName + ", pi0.method=\"bootstrap\")$qvalues";
-            try {
-                qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
-            } catch ( Exception e ) {
-                log.error( e, e );
-                qve = e;
-            }
-
-            if ( qvaluesFromR == null ) {
-                String err = "";
-
-                if ( qve != null ) {
-                    err = "qvalue failed: " + qve.getMessage();
-                } else {
-                    err = "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "
-                            + qvalueCommand;
-                }
-
-                String path = savePvaluesForDebugging( pvaluesToUse );
-
-                /*
-                 * Fall back on Benjamni-Hochberg
-                 */
-
-                boolean hasMulttest = rc.loadLibrary( "globaltest" );
-                if ( hasMulttest ) {
-                    log.info( "qvalue failed; Falling back on Benjamini-Hochberg (error was: " + qve );
-                    qvalueCommand = "p.adjust(" + pvalsName + ", \"BH\")";
-                    qve = null;
-                    try {
-                        qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
-                    } catch ( Exception e ) {
-                        log.error( e, e );
-                        qve = e;
-                    }
-                } else {
-                    throw new IllegalStateException( err
-                            + ". Fallback to Benjamini-Hochberg failed due to missing library. "
-                            + "The pvalues that caused the problem are saved in: " + path
-                            + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
-                            + "\", header=F);\nsummary(qvalues(x));\n" );
-                }
-
-                if ( qvaluesFromR == null ) {
-                    if ( qve != null ) {
-                        err = "p.adjust failed (fallback for qvalue, which also failed): " + qve.getMessage();
-                    } else {
-                        err = "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "
-                                + qvalueCommand;
-                    }
-                    throw new IllegalStateException( err + ". The pvalues that caused the problem are saved in: "
-                            + path + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
-                            + "\", header=F);\nsummary(qvalues(x));\n" );
-
-                }
-
-            }
-        }
-
-        if ( qvaluesFromR.length != pvaluesToUse.length ) {
-            throw new IllegalStateException( "Number of q values and p values must match.  Qvalues - "
-                    + qvaluesFromR.length + ": Pvalues - " + pvaluesToUse.length );
-        }
-
-        /* Add the Double.NaN back in */
-        int k = 0;
-
-        for ( int i = 0; i < qvalues.length; i++ ) {
-            Double pvalue = pvalues[i];
-            if ( pvalue == null || pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) {
-                qvalues[i] = Double.NaN;
-            } else {
-                qvalues[i] = qvaluesFromR[k];
-                k++;
-            }
-        }
-        return qvalues;
     }
 
     protected DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet ) {
