@@ -252,12 +252,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      * @param differentialExpressionAnalysis
      * @param deep
      */
-    protected void doThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+    private void doThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         Session session = this.getSession();
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis );
-
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
+
+        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
 
         if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
             Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );

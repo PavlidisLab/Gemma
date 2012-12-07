@@ -90,7 +90,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private AuditTrailService auditTrailService = null;
 
     @Autowired
+    private CompositeSequenceService compositeSequenceService;
+
+    @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
     private DifferentialExpressionAnalysisHelperService helperService;
@@ -188,11 +194,44 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
         try {
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = doDifferentialExpressionAnalysis(
-                    expressionExperiment, factors );
+            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
+                    .analyze( expressionExperiment, factors );
 
             diffExpressionAnalyses = helperService.persistAnalyses( expressionExperiment, diffExpressionAnalyses,
                     factors );
+            /*
+             * Save histograms . Do this here, outside of the other transaction .
+             */
+            for ( DifferentialExpressionAnalysis a : diffExpressionAnalyses ) {
+                helperService.writeDistributions( expressionExperiment, a );
+            }
+            return diffExpressionAnalyses;
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( expressionExperiment,
+                    FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
+                    ExceptionUtils.getFullStackTrace( e ) );
+            throw new RuntimeException( e );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
+     * .gemma.model.expression.experiment.ExpressionExperiment,
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
+            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
+        try {
+            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
+                    .analyze( expressionExperiment, config );
+
+            diffExpressionAnalyses = helperService.persistAnalyses( expressionExperiment, diffExpressionAnalyses,
+                    config.getFactorsToInclude() );
+
             /*
              * Save histograms . Do this here, outside of the other transaction .
              */
@@ -212,7 +251,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalysis( ExpressionExperimentSubSet subset,
             DifferentialExpressionAnalysisConfig config ) {
         try {
-            DifferentialExpressionAnalysis a = doDifferentialExpressionAnalysis( subset, config );
+            
+            DifferentialExpressionAnalysis a = analysisSelectionAndExecutionService.analyze( subset, config );
 
             a = helperService.persistAnalysis( subset.getSourceExperiment(), a, config.getFactorsToInclude() );
 
@@ -227,39 +267,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             auditTrailService.addUpdateEvent( subset.getSourceExperiment(),
                     FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
                     "Failed to run analysis on subset: " + subset, ExceptionUtils.getFullStackTrace( e ) );
-            throw new RuntimeException( e );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment,
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        try {
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = doDifferentialExpressionAnalysis(
-                    expressionExperiment, config );
-
-            diffExpressionAnalyses = helperService.persistAnalyses( expressionExperiment, diffExpressionAnalyses,
-                    config.getFactorsToInclude() );
-
-            /*
-             * Save histograms . Do this here, outside of the other transaction .
-             */
-            for ( DifferentialExpressionAnalysis a : diffExpressionAnalyses ) {
-                helperService.writeDistributions( expressionExperiment, a );
-            }
-            return diffExpressionAnalyses;
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( expressionExperiment,
-                    FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
-                    ExceptionUtils.getFullStackTrace( e ) );
             throw new RuntimeException( e );
         }
     }
@@ -287,27 +294,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
     }
-
-    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
-        return analysisSelectionAndExecutionService.analyze( expressionExperiment, factors );
-    }
-
-    private DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperimentSubSet subset,
-            DifferentialExpressionAnalysisConfig config ) {
-        return analysisSelectionAndExecutionService.analyze( subset, config );
-    }
-
-    private Collection<DifferentialExpressionAnalysis> doDifferentialExpressionAnalysis(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        return analysisSelectionAndExecutionService.analyze( expressionExperiment, config );
-    }
-
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
-
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
 
     /*
      * (non-Javadoc)
