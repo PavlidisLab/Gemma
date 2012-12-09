@@ -654,6 +654,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     /**
      * AJAX
+     * <p>
+     * FIXME why is this using FactorValueValueObject? The constructor doesn't seem correct; should use
+     * ExperimentalFactorValueObject(factor).
      * 
      * @param eeId
      * @return a collection of factor value objects that represent the factors of a given experiment

@@ -44,6 +44,8 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -71,10 +73,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private ProcessedExpressionDataVectorService processedDataVectorService;
 
     @Autowired
-    ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
+    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
 
     @Autowired
-    ExpressionDataFileService expressionDataFileService;
+    private ExpressionDataFileService expressionDataFileService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     protected GeoService geoService;
@@ -159,6 +164,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         // this is kind of thrown in here
         LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = experimentalDesignVisualizationService
                 .getExperimentalDesignLayout( ee );
+
         assertEquals( 12, layout.size() );
     }
 
@@ -173,6 +179,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, ee.getExperimentalDesign().getExperimentalFactors() );
         assertTrue( !analyses.isEmpty() );
+        differentialExpressionAnalysisService.getAnalysisValueObjects( analyses.iterator().next().getId() );
+
         differentialExpressionAnalyzerHelperService.deleteAnalysis( ee, analyses.iterator().next() );
 
     }
@@ -199,6 +207,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .runDifferentialExpressionAnalyses( ee, config );
 
         assertTrue( !analyses.isEmpty() );
+
+        differentialExpressionAnalysisService.getAnalysisValueObjects( analyses.iterator().next().getId() );
+
         differentialExpressionAnalyzerHelperService.deleteAnalysis( ee, analyses.iterator().next() );
 
     }
@@ -271,6 +282,14 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertEquals( "Subsetting as not done correctly", subsetFactor, analysis.getSubsetFactorValue()
                 .getExperimentalFactor() );
         assertEquals( "Interaction was not retained in the analyzed subset", 3, analysis.getResultSets().size() );
+
+        Collection<DifferentialExpressionAnalysisValueObject> vos = differentialExpressionAnalysisService
+                .getAnalysisValueObjects( analysis.getId() );
+        for ( DifferentialExpressionAnalysisValueObject vo : vos ) {
+            assertTrue( !vo.getFactorValuesUsed().isEmpty() );
+            assertNotNull(vo.getSubsetFactor());
+            assertNotNull(vo.getSubsetFactorValue());
+        }
     }
 
     /**

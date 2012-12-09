@@ -142,7 +142,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         Hibernate.initialize( designElementDataVectors );
 
-        int count = 0;
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
@@ -218,15 +217,16 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         timer.reset();
         timer.start();
 
-        // thaw the designelements we saw.
+        // thaw the designelements we saw. SLOW
         long lastTime = 0;
+        int count = 0;
         for ( CompositeSequence de : cs ) {
             BioSequence seq = de.getBiologicalCharacteristic();
             if ( seq == null ) continue;
             session.buildLockRequest( LockOptions.NONE ).lock( seq );
-            // Note that these steps are not done in arrayDesign.thawLite; we're assuming this information is
-            // needed if you are thawing dedvs. That might not be true in all cases.
             Hibernate.initialize( seq );
+
+            // is this really necessary?
             ArrayDesign arrayDesign = de.getArrayDesign();
             Hibernate.initialize( arrayDesign );
 

@@ -29,28 +29,49 @@ public class FactorValueValueObject implements Serializable {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    private String factor;
+    /**
+     * @param fv
+     * @return
+     */
+    public static String getFactorValueString( FactorValue fv ) {
+        if ( fv == null ) return "null";
 
-    private Long id;
-
-    private Long factorId;
-
-    private String description;
+        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
+            String fvString = "";
+            for ( Characteristic c : fv.getCharacteristics() ) {
+                fvString += c.getValue() + " ";
+            }
+            return fvString;
+        } else if ( fv.getMeasurement() != null ) {
+            return fv.getMeasurement().getValue();
+        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
+            return fv.getValue();
+        } else
+            return "absent ";
+    }
 
     private String category;
 
     private String categoryUri;
 
-    private String value;
-
-    private String valueUri;
-
-    private boolean measurement = false;
-
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
     private Long charId;
+
+    private String description;
+
+    private String factor;
+
+    private Long factorId;
+
+    private Long id;
+
+    private boolean measurement = false;
+
+    private String value;
+
+    private String valueUri;
 
     public FactorValueValueObject() {
         super();
@@ -99,6 +120,18 @@ public class FactorValueValueObject implements Serializable {
         init( value, c );
     }
 
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        FactorValueValueObject other = ( FactorValueValueObject ) obj;
+        if ( id == null ) {
+            if ( other.id != null ) return false;
+        } else if ( !id.equals( other.id ) ) return false;
+        return true;
+    }
+
     /**
      * @return the category
      */
@@ -143,6 +176,14 @@ public class FactorValueValueObject implements Serializable {
 
     public String getValueUri() {
         return valueUri;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
     }
 
     public boolean isMeasurement() {
@@ -263,27 +304,6 @@ public class FactorValueValueObject implements Serializable {
             }
 
         }
-    }
-
-    /**
-     * @param fv
-     * @return
-     */
-    public static String getFactorValueString( FactorValue fv ) {
-        if ( fv == null ) return "null";
-
-        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-            String fvString = "";
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                fvString += c.getValue() + " ";
-            }
-            return fvString;
-        } else if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
-        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
-            return fv.getValue();
-        } else
-            return "absent ";
     }
 
 }

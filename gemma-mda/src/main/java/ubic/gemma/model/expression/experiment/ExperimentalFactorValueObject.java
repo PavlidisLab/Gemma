@@ -37,16 +37,17 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
      */
     private static final long serialVersionUID = -2615804031123874251L;
 
-    private long id;
-    private String name;
-    private String description;
     private String category;
     private String categoryUri;
+
+    private String description;
+
     private String factorValues;
+
+    private long id;
+    private String name;
     private int numValues = 0;
-
     private String type = "categorical"; // continuous or categorical.
-
     private Collection<FactorValueValueObject> values;
 
     public ExperimentalFactorValueObject() {
@@ -69,17 +70,18 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         if ( factor.getType() != null ) {
             this.type = factor.getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
         } else {
-            // Backwards compatibility: for old entries created prior to introduction of 'type' field in ExperimentalFactor entity.
+            // Backwards compatibility: for old entries created prior to introduction of 'type' field in
+            // ExperimentalFactor entity.
             // We have to take a guess.
-            if (factor.getFactorValues().isEmpty()) {
+            if ( factor.getFactorValues().isEmpty() ) {
                 this.type = "categorical";
             } else {
                 // Just use first factor value to make our guess.
-                if (factor.getFactorValues().iterator().next().getMeasurement() != null) {
+                if ( factor.getFactorValues().iterator().next().getMeasurement() != null ) {
                     this.type = "continuous";
                 } else {
-                    this.type = "categorical";                    
-                }                
+                    this.type = "categorical";
+                }
             }
         }
 
@@ -90,23 +92,23 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         this.numValues = factor.getFactorValues().size();
 
         for ( FactorValue value : factor.getFactorValues() ) {
-            
-//            if ( value.getMeasurement() != null ) {
-//                if ( this.type.equals( "categorical" ) ) {
-//                    throw new IllegalStateException(
-//                            "Violation of factor type requirement: factors with measurement must be be attached to factors of type 'continuous': "
-//                                    + factor );
-//                }
-//
-//                this.type = "continuous";
-//            } else {
-//                if ( this.type.equals( "continuous" ) ) {
-//                    throw new IllegalStateException(
-//                            "Violation of factor type requirement: factors without measurement must be be attached to factors of type 'categorical': "
-//                                    + factor );
-//                }
-//                this.type = "categorical";
-//            }
+
+            // if ( value.getMeasurement() != null ) {
+            // if ( this.type.equals( "categorical" ) ) {
+            // throw new IllegalStateException(
+            // "Violation of factor type requirement: factors with measurement must be be attached to factors of type 'continuous': "
+            // + factor );
+            // }
+            //
+            // this.type = "continuous";
+            // } else {
+            // if ( this.type.equals( "continuous" ) ) {
+            // throw new IllegalStateException(
+            // "Violation of factor type requirement: factors without measurement must be be attached to factors of type 'categorical': "
+            // + factor );
+            // }
+            // this.type = "categorical";
+            // }
 
             Characteristic c = value.getExperimentalFactor().getCategory();
             if ( c == null ) {
@@ -118,6 +120,16 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         }
 
         this.setValues( vals );
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        ExperimentalFactorValueObject other = ( ExperimentalFactorValueObject ) obj;
+        if ( id != other.id ) return false;
+        return true;
     }
 
     public String getCategory() {
@@ -157,6 +169,14 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
 
     public Collection<FactorValueValueObject> getValues() {
         return values;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
+        return result;
     }
 
     public void setCategory( String category ) {
