@@ -102,7 +102,7 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 					var stringStyle = 'style="padding: 0 10px 0 10px; vertical-align: top;"'; 
 					var numberStyle = 'style="padding: 0 10px 0 10px; vertical-align: top; text-align: right; white-space: nowrap;"';
 
-					var directionStyleProperties = 'padding: 0 10px 0 10px; text-align: center; font-size: 12px;';
+					var directionStyleProperties = 'padding: 0 10px 0 10px; text-align: center; font-size: 12px; vertical-align: top; ';
 					var upDirectionStyle = 'style="' + directionStyleProperties + ' color: #0B6138;"'; // green
 					var downDirectionStyle = 'style="' + directionStyleProperties + ' color: #FF0000;"'; // red
 					
@@ -120,7 +120,7 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 						this.numResultsShown :
 						this.metaAnalysis.results.length;
 						
-					var NUM_CHARACTERS_FOR_DISPLAY = 60;
+					var NUM_CHARACTERS_FOR_DISPLAY = 100;
 					
 					var numResultsDisplayed = 0;
 

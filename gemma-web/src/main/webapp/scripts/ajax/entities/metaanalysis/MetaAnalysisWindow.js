@@ -11,7 +11,7 @@ Gemma.MetaAnalysisWindow = Ext.extend(Ext.Window, {
 	defaultQvalueThreshold: null,
 	layout: 'fit',
 	constrain: true,  // Should not be modal so that other window can be opened.
-	width: 740,
+	width: 900,
 	height: 600,
 	shadow: true,
 	closeAction: 'close',
