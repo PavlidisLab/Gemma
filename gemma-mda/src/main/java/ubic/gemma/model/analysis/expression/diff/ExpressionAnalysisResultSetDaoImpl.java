@@ -88,7 +88,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
 
         List<ExpressionAnalysisResultSet> res = this.getHibernateTemplate().findByNamedParam(
                 "select r from ExpressionAnalysisResultSetImpl r join fetch r.results res "
-                        + "join fetch res.probe join fetch res.contrasts where r = :rs ", "rs", resultSet );
+                        + "join fetch res.probe left join fetch res.contrasts where r = :rs ", "rs", resultSet );
 
         if ( timer.getTime() > 1000 ) {
             Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
@@ -96,7 +96,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends
 
         if ( res.isEmpty() ) {
             // this could be due to replication lag. Bug 3034.
-            throw new IllegalStateException( "Failed to thaw the result set: " + resultSet.getId() );
+            throw new IllegalStateException( "Failed to thaw the result set: " + resultSet.getId()
+                    + "; data may be invalid?" );
         }
 
         return res.get( 0 );
