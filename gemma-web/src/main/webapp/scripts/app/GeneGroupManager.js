@@ -92,8 +92,9 @@ Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
 				this.geneGroupPanel.getSelectionModel().on('rowselect', function(model, rowindex, record) {
 							// keep user from messing up interface while we load (e.g., switching rows)
 							this.getEl().mask();
-							if (record.get('geneIds').length === 0) {
+							if (record.get('geneIds').length === 0) {								
 								this.geneChooserPanel.getStore().removeAll();
+								this.geneChooserPanel.lockInTaxon(record.data.taxonId);
 								this.getEl().unmask();
 							} else {
 								if (!record.phantom) {
