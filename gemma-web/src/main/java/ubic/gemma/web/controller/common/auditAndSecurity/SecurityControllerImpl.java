@@ -45,6 +45,7 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysi
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.Describable;
@@ -86,7 +87,7 @@ public class SecurityControllerImpl implements SecurityController {
 
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
-    
+
     @Autowired
     private GeneSetService geneSetService = null;
 
@@ -609,6 +610,18 @@ public class SecurityControllerImpl implements SecurityController {
             }
         }
 
+        // special case for neurocarta, changing the meta analysis, changes the permissions of all evidence linked
+        if ( s instanceof GeneDifferentialExpressionMetaAnalysis ) {
+
+            Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.phenotypeAssociationService
+                    .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( s.getId(), null );
+            for ( DifferentialExpressionEvidence d : differentialExpressionEvidence ) {
+                settings.setEntityId( d.getId() );
+                settings.setEntityClazz( d.getClass().getName() );
+                updatePermission( settings );
+            }
+        }
+
         log.info( "Updated permissions on " + s );
         return securable2VO( s );
     }
@@ -631,21 +644,21 @@ public class SecurityControllerImpl implements SecurityController {
     private Collection<String> getGroupsForCurrentUser() {
         return userManager.findGroupsForUser( userManager.getCurrentUsername() );
     }
-    private Collection<String> getGroupsForUser(String username) {
-        
-        if (username==null){
+
+    private Collection<String> getGroupsForUser( String username ) {
+
+        if ( username == null ) {
             return new HashSet<String>();
         }
-        
-        Collection <String> results;
-        
-        try{
+
+        Collection<String> results;
+
+        try {
             results = userManager.findGroupsForUser( username );
-        }
-        catch(UsernameNotFoundException e) {
+        } catch ( UsernameNotFoundException e ) {
             return new HashSet<String>();
         }
-        return results; 
+        return results;
     }
 
     /**
@@ -780,7 +793,7 @@ public class SecurityControllerImpl implements SecurityController {
         result.setGroupsThatCanWrite( securityService.getGroupsEditableBy( s ) );
         result.setShared( isShared );
         result.setOwner( new SidValueObject( securityService.getOwner( s ) ) );
-        result.setOwnersGroups( getGroupsForUser(result.getOwner().getAuthority()) );
+        result.setOwnersGroups( getGroupsForUser( result.getOwner().getAuthority() ) );
         result.setCurrentUserOwns( securityService.isOwnedByCurrentUser( s ) );
         result.setCurrentUserCanwrite( canWrite );
 

@@ -461,9 +461,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         EvidenceValueObject evidenceValueObject = convert2ValueObjects( phenotypeAssociation );
 
-        if ( evidenceValueObject != null ) {
-            findEvidencePermissions( phenotypeAssociation, evidenceValueObject );
-        }
         return evidenceValueObject;
     }
 
@@ -1361,8 +1358,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 EvidenceValueObject evidence = convert2ValueObjects( phe );
 
-                findEvidencePermissions( phe, evidence );
-
                 if ( evidence != null ) {
                     returnEvidenceVO.add( evidence );
                 }
@@ -1389,6 +1384,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
         } else if ( phe instanceof DifferentialExpressionEvidence ) {
             evidence = convertDifferentialExpressionEvidence2ValueObject( ( DifferentialExpressionEvidence ) phe );
+        }
+
+        if ( evidence != null ) {
+            findEvidencePermissions( phe, evidence );
         }
 
         return evidence;

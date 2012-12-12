@@ -33,6 +33,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerServiceImpl;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
@@ -42,7 +43,9 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatis
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject;
+import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * Controller for phenotype
@@ -60,6 +63,9 @@ public class PhenotypeController extends BaseController {
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private SecurityController securityController;
 
     private ValidateEvidenceValueObject generateValidateEvidenceValueObject( Throwable throwable ) {
         final ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
@@ -229,8 +235,18 @@ public class PhenotypeController extends BaseController {
             Double selectionThreshold ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
-            validateEvidenceValueObject = this.phenotypeAssociationManagerService.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
-        			geneDifferentialExpressionMetaAnalysisId, phenotypes, selectionThreshold);
+            validateEvidenceValueObject = this.phenotypeAssociationManagerService
+                    .makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
+                            geneDifferentialExpressionMetaAnalysisId, phenotypes, selectionThreshold );
+
+            // get the permission of the metaAnalaysis
+            EntityDelegator ed = new EntityDelegator();
+            ed.setId( geneDifferentialExpressionMetaAnalysisId );
+            ed.setClassDelegatingFor( GeneDifferentialExpressionMetaAnalysis.class.getName() );
+
+            // update the permission of the meta analysis,(this will update all evidence linked to it)
+            this.securityController.updatePermission( this.securityController.getSecurityInfo( ed ) );
+
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
         }
