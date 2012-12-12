@@ -130,9 +130,17 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
 
     showText : function() {
         var string = "";
-        this.getStore().each(function(r) {
+        var sels = this.getSelectionModel().getSelections();
+        
+        // If no experiments are selected, show all names; otherwise show the names of selected experiments
+        if (sels.length == 0) {
+        	this.getStore().each(function(r) {
                     string += r.get('shortName') + "\n";
                 });
+        }
+        else {
+        	for (var i = 0; i < sels.length; i++) string += sels[i].get('shortName') + "\n";
+        }
 
         var w = new Ext.Window({
                     modal : true,

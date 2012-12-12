@@ -52,6 +52,13 @@
 						}
 					}
 				},
+			}, {
+				id : 'show-as-text',
+				xtype : 'button',
+				icon : '/Gemma/images/icons/disk.png',
+				handler : function() {
+					grid.showAsText();
+				}
 			} ]
 
 		});

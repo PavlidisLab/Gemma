@@ -206,7 +206,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         sortable : true,
         width : 0.1
     }],
-
+        
     /**
      * private
      * 
@@ -316,6 +316,38 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         this.nowSubset();
 
     },
+    
+    /**
+     * Show a list of short names (GSE numbers) of all or selected experiments
+     * 
+     */
+    showAsText : function() {
+    	var gses = "";
+    	var sels = this.getSelectionModel().getSelections();
+    	if (sels.length == 0) {
+    		this.getStore().each(function(ee) {
+                gses += ee.get('shortName') + "\n";
+            });
+    	}
+    	else {
+    		for (var i = 0; i < sels.length; i++) gses += sels[i].get('shortName') + "\n";
+    	}
+    	
+    	var popup = new Ext.Window({
+    		modal : true,
+    		title : "You can copy this text",
+            html : gses,
+            height : 400,
+            width : 200,
+            autoScroll : true,
+            bodyCfg : {
+                tag : 'textarea',
+                style : 'background-color : white;font-size:smaller'
+            }
+    	});
+    	popup.show();
+    },
+    
     initComponent : function() {
 
         this.showAll = !(document.URL.indexOf("?") > -1 && (document.URL.indexOf("id=") > -1 || document.URL
@@ -420,6 +452,16 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                         window.location = "/Gemma/expressionExperimentsWithQC.html";
                     }
                 });
+        
+        // Button for downloading the shortNames of all or selected experiments as text
+        var asTextButton = new Ext.Button({
+        	icon : '/Gemma/images/icons/disk.png',
+            handler : function() {
+            	this.showAsText();
+            }.createDelegate(this),
+            tooltip : "Download as text",
+        });
+        
         this.nowSubset = function() {
             subsetText.show();
             showAllButton.show();
@@ -433,7 +475,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                 });
         Ext.apply(this, {
                     store : pageStore,
-                    tbar : [eeCombo, '->', subsetText, showAllButton, '-', editMine, QClinkButton],
+                    tbar : [eeCombo, '->', subsetText, showAllButton, '-', asTextButton, '-', editMine, QClinkButton],
                     bbar : mybbar
                 });
         if (this.rowExpander) {

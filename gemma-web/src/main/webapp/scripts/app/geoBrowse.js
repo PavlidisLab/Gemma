@@ -3,309 +3,326 @@
  */
 Ext.namespace('Gemma');
 
-Gemma.GeoBrowseGrid = Ext
-		.extend(
-				Gemma.GemmaGridPanel,
-				{
-					collapsible : false,
-					loadMask : true,
-					defaults : {
-						autoScroll : true
-					},
+Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
-					height : 500,
-					width : 1300,
-					autoScroll : true,
-					loadMask : true,
+	collapsible : false,
+	loadMask : true,
+	defaults : {
+		autoScroll : true
+	},
 
-					autoExpandColumn : 'description',
+	height : 500,
+	width : 1300,
+	autoScroll : true,
+	loadMask : true,
 
-					record : Ext.data.Record.create([ {
-						name : "usable",
-						type : "boolean"
-					}, {
-						name : "geoAccession"
-					}, {
-						name : "numSamples",
-						type : "int"
-					}, {
-						name : 'title'
-					}, {
-						name : 'correspondingExperiments'
-					}, {
-						name : "releaseDate",
-						type : "date"
-					}, {
-						name : "organisms"
-					}, {
-						name : "inGemma",
-						type : "boolean"
-					}, {
-						name : "usable",
-						type : "boolean"
-					}, {
-						name : "previousClicks",
-						type : "int"
-					} ]),
+	autoExpandColumn : 'description',
 
-					proceed : function(s) {
-						// new start
-						this.start = Number(s) > 0 ? this.start + Number(s)
-								: (this.start + this.count); 
+	record : Ext.data.Record.create([ {
+		name : "usable",
+		type : "boolean"
+	}, {
+		name : "geoAccession"
+	}, {
+		name : "numSamples",
+		type : "int"
+	}, {
+		name : 'title'
+	}, {
+		name : 'correspondingExperiments'
+	}, {
+		name : "releaseDate",
+		type : "date"
+	}, {
+		name : "organisms"
+	}, {
+		name : "inGemma",
+		type : "boolean"
+	}, {
+		name : "usable",
+		type : "boolean"
+	}, {
+		name : "previousClicks",
+		type : "int"
+	} ]),
 
-						this.store.load({
-							params : [ this.start, this.count ]
-						});
+	proceed : function(s) {
+		// new start
+		this.start = Number(s) > 0 ? this.start + Number(s)
+				: (this.start + this.count); 
 
-					},
+		this.store.load({
+			params : [ this.start, this.count ]
+		});
+		
+	},
 
-					/**
-					 * S is the skip.
-					 * 
-					 * @param s
-					 */
-					back : function(s) {
+	/**
+	 * S is the skip.
+	 * 
+	 * @param s
+	 */
+	back : function(s) {
+		// new start. Either go to the skip, or go back one
+		// 'page', make sure greater than zero.
+		this.start = Math.max(0, Number(s) > 0 ? this.start
+				- Number(s) : this.start - this.count); 
 
-						// new start. Either go to the skip, or go back one
-						// 'page', make sure greater than zero.
-						this.start = Math.max(0, Number(s) > 0 ? this.start
-								- Number(s) : this.start - this.count); 
+		this.store.load({
+			params : [ this.start, this.count ]
+		});
+		
+	},
 
-						this.store.load({
-							params : [ this.start, this.count ]
-						});
+	/** 
+	 * Download the short names of all/selected experiments as text
+	 */
+	showAsText : function() {
+		var string = "";
+		var sels = this.getSelectionModel().getSelections();
 
-					},
+		// If no experiments are selected, show all names; otherwise show the names of selected experiments
+		if (sels.length == 0) {
+			this.getStore().each(function(r) {
+				string += r.get('geoAccession') + "\n";
+			});
+		}
+		else {
+			for (var i = 0; i < sels.length; i++) string += sels[i].get('geoAccession') + "\n";
+		}
 
-					// initial starting point
-					start : 0,
+		// Throw popup window
+		var w = new Ext.Window({
+			modal : true,
+			title : "You can copy this text",
+			html : string,
+			height : 400,
+			width : 200,
+			autoScroll : true,
+			bodyCfg : {
+				tag : 'textarea',
+				style : 'background-color : white;font-size:smaller'
+			}
+		});
+		w.show();
+	},
 
-					// page size
-					count : 20,
+	// initial starting point
+	start : 0,
 
-					initComponent : function() {
+	// page size
+	count : 20,
 
-						Ext
-								.apply(
-										this,
+	initComponent : function() {
+
+		Ext.apply(this, {
+			store : new Ext.data.Store(
+					{
+						proxy : new Ext.data.DWRProxy(
+								{
+									apiActionToHandlerMap : {
+										read : {
+											dwrFunction : GeoRecordBrowserController.browse
+										}
+									},
+									getDwrArgsFunction : function(
+											request,
+											recordDataArray) {
+										return [
+										        this.start,
+										        this.count ];
+									}
+								}),
+								reader : new Ext.data.ListRangeReader(
 										{
-											store : new Ext.data.Store(
-													{
-														proxy : new Ext.data.DWRProxy(
-																{
-																	apiActionToHandlerMap : {
-																		read : {
-																			dwrFunction : GeoRecordBrowserController.browse
-																		}
-																	},
-																	getDwrArgsFunction : function(
-																			request,
-																			recordDataArray) {
-																		return [
-																				this.start,
-																				this.count ];
-																	}
-																}),
-														reader : new Ext.data.ListRangeReader(
-																{
-																	id : "id"
-																}, this.record)
-													})
-										});
+											id : "id"
+										}, this.record)
+					})
+		});
 
-						Ext
-								.apply(
-										this,
-										{
-											columns : [
-													{
-														header : "Accession",
-														dataIndex : "geoAccession",
-														scope : this,
-														renderer : this.geoAccessionRenderer
-													},
-													{
-														header : "Title",
-														dataIndex : "title",
-														renderer : this.titleRenderer,
-														width : 500
-													},
-													{
-														header : "Release date",
-														dataIndex : "releaseDate",
-														renderer : new Ext.util.Format.dateRenderer(
-																"M d, Y"),
-														width : 76
-													},
-													{
-														header : "numSamples",
-														dataIndex : "numSamples",
-														sortable : true,
-														width : 40
-													},
-													{
-														header : "In Gemma?",
-														dataIndex : "inGemma",
-														renderer : this.inGemmaRenderer,
-														width : 40
-													},
-													{
-														header : "taxa",
-														dataIndex : "organisms",
-														scope : this,
-														renderer : this.taxonRenderer
-													},
-													{
-														header : "Usable?",
-														dataIndex : "usable",
-														scope : this,
-														width : 30,
-														renderer : this.usableRenderer
-													},
-													{
-														header : "Examined",
-														dataIndex : "previousClicks",
-														scope : this,
-														width : 30,
-														renderer : this.clicksRenderer
-													} ]
-										});
+		Ext.apply(this, {
+			columns : [
+			           {
+			        	   header : "Accession",
+			        	   dataIndex : "geoAccession",
+			        	   scope : this,
+			        	   renderer : this.geoAccessionRenderer
+			           },
+			           {
+			        	   header : "Title",
+			        	   dataIndex : "title",
+			        	   renderer : this.titleRenderer,
+			        	   width : 500
+			           },
+			           {
+			        	   header : "Release date",
+			        	   dataIndex : "releaseDate",
+			        	   renderer : new Ext.util.Format.dateRenderer(
+			        	   "M d, Y"),
+			        	   width : 76
+			           },
+			           {
+			        	   header : "numSamples",
+			        	   dataIndex : "numSamples",
+			        	   sortable : true,
+			        	   width : 40
+			           },
+			           {
+			        	   header : "In Gemma?",
+			        	   dataIndex : "inGemma",
+			        	   renderer : this.inGemmaRenderer,
+			        	   width : 40
+			           },
+			           {
+			        	   header : "taxa",
+			        	   dataIndex : "organisms",
+			        	   scope : this,
+			        	   renderer : this.taxonRenderer
+			           },
+			           {
+			        	   header : "Usable?",
+			        	   dataIndex : "usable",
+			        	   scope : this,
+			        	   width : 30,
+			        	   renderer : this.usableRenderer
+			           },
+			           {
+			        	   header : "Examined",
+			        	   dataIndex : "previousClicks",
+			        	   scope : this,
+			        	   width : 30,
+			        	   renderer : this.clicksRenderer
+			           } ]
+		});
 
-						Gemma.GeoBrowseGrid.superclass.initComponent.call(this);
+		Gemma.GeoBrowseGrid.superclass.initComponent.call(this);
 
-						this.getStore().on(
-								"load",
-								function(store, records, options) {
+		this.getStore().on("load",
+				function(store, records, options) {
 
-									// there must be a better way of doing this.
-									Ext.DomHelper.overwrite(Ext
-											.getDom('numRecords'),
-											"<span id='numRecords'>"
-													+ records.length
-													+ "</span>");
+			// there must be a better way of doing this.
+			Ext.DomHelper.overwrite(Ext
+					.getDom('numRecords'),
+					"<span id='numRecords'>"
+					+ records.length
+					+ "</span>");
 
-								}, this);
+		}, this);
 
-						this.getSelectionModel().on('rowselect',
-								this.showDetails, this, {
-									buffer : 100
-								// keep from firing too many times at once
-								});
+		this.getSelectionModel().on('rowselect',
+				this.showDetails, this, {
+			buffer : 100
+			// keep from firing too many times at once
+		});
 
-						this.getStore().load({
-							params : [ this.start, this.count ]
-						});
+		this.getStore().load({
+			params : [ this.start, this.count ]
+		});
 
-					},
+	},
 
-					/**
-					 * Show some dots.
-					 */
-					clicksRenderer : function(value, metadata, record, row,
-							col, ds) {
-						var m = record.get('previousClicks');
-						var result = "";
-						for ( var i = 0; i < Math.min(m, 5); i++) {
-							result = result + "&bull;";
-						}
-						return result;
-					},
+	/**
+	 * Show some dots.
+	 */
+	clicksRenderer : function(value, metadata, record, row, col, ds) {
+		var m = record.get('previousClicks');
+		var result = "";
+		for ( var i = 0; i < Math.min(m, 5); i++) {
+			result = result + "&bull;";
+		}
+		return result;
+	},
 
-					geoAccessionRenderer : function(value, metadata, record,
-							row, col, ds) {
-						return "<a target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc="
-								+ record.get('geoAccession')
-								+ "'>"
-								+ record.get('geoAccession') + "</a>";
-					},
+	geoAccessionRenderer : function(value, metadata, record, row, col, ds) {
+		return "<a target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc="
+		+ record.get('geoAccession')
+		+ "'>"
+		+ record.get('geoAccession') + "</a>";
+	},
 
-					titleRenderer : function(value, metadata, record, row, col,
-							ds) {
-						return record.get('title');
-					},
+	titleRenderer : function(value, metadata, record, row, col, ds) {
+		return record.get('title');
+	},
 
-					inGemmaRenderer : function(value, metadata, record, row,
-							col, ds) {
+	inGemmaRenderer : function(value, metadata, record, row, col, ds) {
 
-						if (record.get('correspondingExperiments').length == 0) {
-							return "<input type=\"button\" value=\"Load\" "
-									+ "\" onClick=\"load('"
-									+ record.get('geoAccession') + "')\" >";
-						}
+		if (record.get('correspondingExperiments').length == 0) {
+			return "<input type=\"button\" value=\"Load\" "
+			+ "\" onClick=\"load('"
+			+ record.get('geoAccession') + "')\" >";
+		}
 
-						var r = "";
-						for ( var i = 0; i < record
-								.get('correspondingExperiments').length; i++) {
-							var ee = record.get('correspondingExperiments')[i];
-							r = r
-									+ "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?"
-									+ "id=" + ee + "\">"
-									+ record.get('geoAccession') + "</a>";
+		var r = "";
+		for ( var i = 0; i < record
+		.get('correspondingExperiments').length; i++) {
+			var ee = record.get('correspondingExperiments')[i];
+			r = r
+			+ "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?"
+			+ "id=" + ee + "\">"
+			+ record.get('geoAccession') + "</a>";
 
-						}
-						return r;
+		}
+		return r;
 
-					},
+	},
 
-					taxonRenderer : function(value, metadata, record, row, col,
-							ds) {
-						var r = "";
-						for ( var i = 0; i < record.get('organisms').length; i++) {
-							var ee = record.get('organisms')[i];
-							r = r + "&nbsp;" + ee;
+	taxonRenderer : function(value, metadata, record, row, col, ds) {
+		var r = "";
+		for ( var i = 0; i < record.get('organisms').length; i++) {
+			var ee = record.get('organisms')[i];
+			r = r + "&nbsp;" + ee;
 
-						}
-						return r;
-					},
+		}
+		return r;
+	},
 
-					usableRenderer : function(value, metadata, record, row,
-							col, ds) {
-						if (record.get('correspondingExperiments').length > 0) {
-							return "<img src=\"/Gemma/images/icons/gray-thumb.png\" width=\"16\" height=\"16\" alt=\"Already loaded\"/>";
-						}
-						if (record.get('usable')) {
-							return "<span id=\""
-									+ record.get('geoAccession')
-									+ "-rating\"  onClick=\"toggleUsability('"
-									+ record.get('geoAccession')
-									+ "')\"><img src=\"/Gemma/images/icons/thumbsup.png\"  width=\"16\" height=\"16\"   alt=\"Usable, click to toggle\" /></span>";
-						} else {
-							return "<span id=\""
-									+ record.get('geoAccession')
-									+ "-rating\"  onClick=\"toggleUsability('"
-									+ record.get('geoAccession')
-									+ "')\"  ><img src=\"/Gemma/images/icons/thumbsdown-red.png\"  alt=\"Judged unusable, click to toggle\"  width=\"16\" height=\"16\"  /></span>";
-						}
-					},
+	usableRenderer : function(value, metadata, record, row, col, ds) {
+		if (record.get('correspondingExperiments').length > 0) {
+			return "<img src=\"/Gemma/images/icons/gray-thumb.png\" width=\"16\" height=\"16\" alt=\"Already loaded\"/>";
+		}
+		if (record.get('usable')) {
+			return "<span id=\""
+			+ record.get('geoAccession')
+			+ "-rating\"  onClick=\"toggleUsability('"
+			+ record.get('geoAccession')
+			+ "')\"><img src=\"/Gemma/images/icons/thumbsup.png\"  width=\"16\" height=\"16\"   alt=\"Usable, click to toggle\" /></span>";
+		} else {
+			return "<span id=\""
+			+ record.get('geoAccession')
+			+ "-rating\"  onClick=\"toggleUsability('"
+			+ record.get('geoAccession')
+			+ "')\"  ><img src=\"/Gemma/images/icons/thumbsdown-red.png\"  alt=\"Judged unusable, click to toggle\"  width=\"16\" height=\"16\"  /></span>";
+		}
+	},
 
-					showDetails : function(model, rowindex, record) {
-						var callParams = [];
-						callParams.push(record.get('geoAccession'));
+	showDetails : function(model, rowindex, record) {
+		var callParams = [];
+		callParams.push(record.get('geoAccession'));
 
-						var delegate = handleSuccess.createDelegate(this, [],
-								true);
-						var errorHandler = handleFailure.createDelegate(this,
-								[], true);
+		var delegate = handleSuccess.createDelegate(this, [],
+				true);
+		var errorHandler = handleFailure.createDelegate(this,
+				[], true);
 
-						callParams.push({
-							callback : delegate,
-							errorHandler : errorHandler
-						});
+		callParams.push({
+			callback : delegate,
+			errorHandler : errorHandler
+		});
 
-						GeoRecordBrowserController.getDetails.apply(this,
-								callParams);
-						Ext.DomHelper.overwrite("messages", {
-							tag : 'img',
-							src : '/Gemma/images/default/tree/loading.gif'
-						});
-						Ext.DomHelper.append("messages", {
-							tag : 'span',
-							html : "&nbsp;Please wait..."
-						});
+		GeoRecordBrowserController.getDetails.apply(this,
+				callParams);
+		Ext.DomHelper.overwrite("messages", {
+			tag : 'img',
+			src : '/Gemma/images/default/tree/loading.gif'
+		});
+		Ext.DomHelper.append("messages", {
+			tag : 'span',
+			html : "&nbsp;Please wait..."
+		});
 
-					}
+	}
 
-				});
+});
 
 function handleSuccess(data) {
 	Ext.DomHelper.overwrite("messages", {
@@ -394,11 +411,11 @@ function load(accession) {
 	var callParams = [];
 
 	var commandObj = {
-		accession : accession,
-		suppressMatching : suppressMatching,
-		loadPlatformOnly : loadPlatformOnly,
-		arrayExpress : arrayExpress,
-		arrayDesignName : arrayDesign
+			accession : accession,
+			suppressMatching : suppressMatching,
+			loadPlatformOnly : loadPlatformOnly,
+			arrayExpress : arrayExpress,
+			arrayDesignName : arrayDesign
 	};
 
 	callParams.push(commandObj);
