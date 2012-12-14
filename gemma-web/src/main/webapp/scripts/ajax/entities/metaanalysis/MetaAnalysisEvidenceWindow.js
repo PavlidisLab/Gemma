@@ -9,12 +9,12 @@ Ext.namespace('Gemma');
 Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 	metaAnalysisId: null,
 	metaAnalysis: null,
+	diffExpressionEvidence: null,
 	defaultQvalueThreshold: null,
 	layout: 'fit',
-	title: 'Save as Neurocarta evidence',
 	modal: true,
 	constrain: true,
-	width: 700,
+	width: 900,	
 	height: 500,
 	shadow: true,
 	closeAction: 'close',
@@ -52,12 +52,12 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 			}
 		}
 
-		var submitForm = function() {
+		var submitEvidenceSavingForm = function() {
 		    if (formPanel.getForm().isValid()) {
 				var selectedPhenotypes = phenotypesSearchPanel.getSelectedPhenotypes();
 
 				if (selectedPhenotypes != null && selectedPhenotypes.length > 0) {
-					showLoadMask();
+					showLoadMask('Saving Neurocarta evidence ...');
 						
 					PhenotypeController.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(this.metaAnalysisId, selectedPhenotypes,
 						thresholdTextField.getValue(), function(validateEvidenceValueObject) {
@@ -65,7 +65,6 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 						hideLoadMask();						
 
 						if (validateEvidenceValueObject == null) {	
-			            	Ext.Msg.alert('Evidence saved', 'Evidence has been saved successfully.');
 							this.fireEvent('evidenceSaved');			            	
 					    	this.close();
 			            } else {
@@ -81,6 +80,36 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 					}.createDelegate(this));
 				}
 		    }
+		}.createDelegate(this);
+
+		var removeEvidence = function() {
+			Ext.MessageBox.confirm('Confirm',
+				'Are you sure you want to remove Neurocarta evidence?',
+				function(button) {
+					if (button === 'yes') {
+						showLoadMask('Removing Neurocarta evidence ...');
+	
+						PhenotypeController.removeAllEvidenceFromMetaAnalysis(this.metaAnalysisId, function(validateEvidenceValueObject) {
+							hideLoadMask();
+
+							if (validateEvidenceValueObject == null) {	
+								this.fireEvent('evidenceRemoved');			            	
+						    	this.close();
+				            } else {
+								Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisEvidenceWindow.ErrorTitle.removeEvidence,
+									Gemma.convertToEvidenceError(validateEvidenceValueObject).errorMessage,
+									function() {
+										if (validateEvidenceValueObject.userNotLoggedIn) {
+											Gemma.AjaxLogin.showLoginWindowFn();
+										}
+									}
+								);
+					        }
+							
+						}.createDelegate(this));
+					}
+				},
+				this);					    		
 		}.createDelegate(this);
 
 		var showLoadMask = function(msg) {
@@ -187,7 +216,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 							xtype: 'textfield', 
 							hidden: true,
 							validator: function() {
-								return !hasErrorMessages;
+								return !hasErrorMessages && resultPanel.getTotalNumberOfResults() > 0;
 							}
 						},						
 						phenotypesSearchPanel,
@@ -197,10 +226,14 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 				}],		
 				buttons: [
 					{
-					    text: 'OK',
+					    text: (this.diffExpressionEvidence ? 'Remove evidence' : 'Save as Neurocarta evidence'),
 					    formBind: true,
 					    handler: function() {
-							submitForm();							
+					    	if (this.diffExpressionEvidence) {
+					    		removeEvidence();
+					    	} else {
+								submitEvidenceSavingForm();
+					    	}
 					    },
 						scope: this
 					},
@@ -213,6 +246,32 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 					}
 				]
 		});
+
+		if (this.diffExpressionEvidence) {
+			phenotypesSearchPanel.selectPhenotypes(this.diffExpressionEvidence.phenotypes, null);
+			thresholdTextField.setValue(this.diffExpressionEvidence.selectionThreshold);
+			resultPanel.showResults(this.diffExpressionEvidence.selectionThreshold);
+			
+			formPanel.on('render', function(thisPanel) {
+				var setChildrenReadOnly = function(container) {
+					if (container.items && container.items.length > 0) {
+						Ext.each(container.items.items, function(item, index) {
+							if (item) {
+								if (item.items && item.items.length > 0) {
+									setChildrenReadOnly(item);
+								} else if (item instanceof Ext.Button) {
+									item.disable();
+								// Ext.form.ComboBox is a subclass of Ext.form.TextField. 
+								} else if (item instanceof Ext.form.TextField) {
+									item.setReadOnly(true);
+								}
+							}
+						});
+					}
+				};
+				setChildrenReadOnly(thisPanel);
+			});    	
+		}
 
     	Ext.apply(this, {
 			items: [

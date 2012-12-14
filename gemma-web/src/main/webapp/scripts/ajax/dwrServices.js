@@ -1106,6 +1106,9 @@ PhenotypeController.removePhenotypeAssociation = function(p0, callback) {
 PhenotypeController.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis = function(p0, p1, p2, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis', p0, p1, p2, callback);
 }
+PhenotypeController.removeAllEvidenceFromMetaAnalysis = function(p0, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'removeAllEvidenceFromMetaAnalysis', p0, callback);
+}
 //=====================================================================================
 if (JavascriptLogger == null)
 	var JavascriptLogger = {};

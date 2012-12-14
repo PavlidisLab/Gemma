@@ -177,9 +177,8 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 	    	items: [ 
 		    	rowsPanel,
 				{
-					xtype: 'compositefield',
 					border: false,
-					layout: 'form',
+					layout: 'hbox',
 					hideLabel: true,
 				    items: [
 						addPhenotypeRowButton,
@@ -187,7 +186,7 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend(Ext.Panel, {
 							xtype: 'displayfield',
 							value: 'To describe a complex phenotype, you can add more terms by clicking this button.',
 							style: 'color: grey;',
-							margins: '4 0 0 0'			
+							margins: '4 0 0 4'			
 						}
 				    ]
 				}

@@ -10,10 +10,12 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 	metaAnalysis: null,
 	defaultQvalueThreshold: null,
 	showLimitDisplayCombo: true,
-	numResultsShown: 500,
+	numResultsLimit: 500,
 	border: false,
 	layout: 'border',
 	initComponent: function() {
+		var totalNumberOfResults = 0;
+		
 		var summaryLabel = new Ext.form.Label();
 		
 		var limitDisplayCombo = this.showLimitDisplayCombo ? 
@@ -25,7 +27,7 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 			    store: new Ext.data.ArrayStore({
 			        fields: [ 'shouldLimit', 'displayText' ],
 			        data: [
-			        	[ true, 'Display top ' + this.numResultsShown + ' results'],
+			        	[ true, 'Display top ' + this.numResultsLimit + ' results'],
 			        	[ false, 'Display all results']
 			        ]
 			    }),
@@ -86,8 +88,8 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 			            		1;  
 					});
 						
-					// Show limitDisplayCombo only when we have results more than this.numResultsShown.
-					var shouldLimitDisplayComboBeShown = this.showLimitDisplayCombo && this.metaAnalysis.results.length > this.numResultsShown; 
+					// Show limitDisplayCombo only when we have results more than this.numResultsLimit.
+					var shouldLimitDisplayComboBeShown = this.showLimitDisplayCombo && this.metaAnalysis.results.length > this.numResultsLimit; 
 	
 					if (shouldLimitDisplayComboBeShown) {
 						headerPanel.setHeight(80);
@@ -117,7 +119,7 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 							'</tr>';
 	
 					var metaAnalysisMaxIndex = shouldLimitDisplayComboBeShown && limitDisplayCombo.getValue() ?
-						this.numResultsShown :
+						this.numResultsLimit :
 						this.metaAnalysis.results.length;
 						
 					var NUM_CHARACTERS_FOR_DISPLAY = 100;
@@ -147,15 +149,16 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 					
 					resultLabel.setText(resultText, false);
 					
+					totalNumberOfResults = (threshold == null ? 
+						this.metaAnalysis.results.length :
+						numResultsDisplayed);
+					
 					summaryLabel.setText('<b>Number of genes analyzed</b>: ' + this.metaAnalysis.numGenesAnalyzed + '<br />' +				
 										 '<b>Number of genes with q-value < ' + 
 										 	(threshold == null ? 
 										 		this.defaultQvalueThreshold :
 										 		threshold) + '</b>: ' +
-										 	(threshold == null ? 
-										 		this.metaAnalysis.results.length :
-										 		numResultsDisplayed)
-										 		, false);
+										 totalNumberOfResults, false);
 				}					
 			} else {
 				summaryLabel.setText('<b>No results were significant.</b>', false);
@@ -165,6 +168,9 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 		}.createDelegate(this);
 			
 		Ext.apply(this, {
+			getTotalNumberOfResults: function() {
+				return totalNumberOfResults;
+			},
 			setMetaAnalysis: function(metaAnalysis) {
 				this.metaAnalysis = metaAnalysis;
 				showResultsWithoutMask();
@@ -181,18 +187,22 @@ Gemma.MetaAnalysisResultPanel = Ext.extend(Ext.Panel, {
 				this.doLayout();
 			},
 			showResults: function(threshold) {
-				if (!resultLabel.loadMask) {
-					resultLabel.loadMask = new Ext.LoadMask(resultLabel.getEl(), {
-						msg: "Loading ..."
-					});
+				if (resultLabel.getEl()) {
+					if (!resultLabel.loadMask) {
+						resultLabel.loadMask = new Ext.LoadMask(resultLabel.getEl(), {
+							msg: "Loading ..."
+						});
+					}
+					resultLabel.loadMask.show();
+	
+					// Defer the call. Otherwise, the loading mask does not show.
+					Ext.defer(showResultsWithoutMask, // function to call
+						10,                           // delay in milliseconds
+						this,                         // scope
+						[ threshold ]);               // arguments to the function
+				} else {
+					showResultsWithoutMask(threshold);
 				}
-				resultLabel.loadMask.show();
-
-				// Defer the call. Otherwise, the loading mask does not show.
-				Ext.defer(showResultsWithoutMask, // function to call
-					10,                           // delay in milliseconds
-					this,                         // scope
-					[ threshold ]);               // arguments to the function
 			},
 			items: [
 				headerPanel,

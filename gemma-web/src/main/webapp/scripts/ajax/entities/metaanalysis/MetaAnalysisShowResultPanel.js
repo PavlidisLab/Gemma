@@ -10,7 +10,7 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 	title: 'Results',
 	metaAnalysis: null,
 	defaultQvalueThreshold: null,
-	numResultsShown: 500,
+	numResultsLimit: 500,
 	nextButtonText: 'Save results',
 	layout: 'border',
 	initComponent: function() {

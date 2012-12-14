@@ -216,6 +216,16 @@ public class PhenotypeController extends BaseController {
         return validateEvidenceValueObject;
     }
 
+    public ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis( Long metaAnalysisId ) {
+        ValidateEvidenceValueObject validateEvidenceValueObject;
+        try {
+            validateEvidenceValueObject = this.phenotypeAssociationManagerService.removeAllEvidenceFromMetaAnalysis( metaAnalysisId );
+        } catch ( Throwable throwable ) {
+            validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
+        }
+        return validateEvidenceValueObject;
+    }
+    
     public ValidateEvidenceValueObject removePhenotypeAssociation( Long evidenceId ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
