@@ -278,6 +278,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		        	'evidenceSource', 'isNegativeEvidence', 'lastUpdated', 'phenotypes', 'containQueryPhenotype',
 		        	// for GroupEvidenceValueObject
 		        	'literatureEvidences',
+					// for DiffExpressionEvidenceValueObject
+		        	'geneDifferentialExpressionMetaAnalysisSummaryValueObject', 'selectionThreshold',
 		        	// for ExperimentalEvidenceValueObject
 		 			'experimentCharacteristics', 'primaryPublicationCitationValueObject',
 		 			'relevantPublicationsCitationValueObjects',
@@ -292,11 +294,15 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							
 							switch (record.className) {
 								case 'DiffExpressionEvidenceValueObject' :
+									descriptionHtml += '<p>';
+									descriptionHtml += '<b>Name</b>: ' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name + '<br />';
+									descriptionHtml += '<b>Result sets included</b>: ' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numResultSetsIncluded + '<br />';
+									descriptionHtml += '<b>Genes analyzed</b>: ' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numGenesAnalyzed + '<br />';
+									descriptionHtml += '<b>q-value threshold</b>: ' + record.selectionThreshold + '<br />';
+									descriptionHtml += '</p>';
 									break;
 								
 								case 'ExperimentalEvidenceValueObject' :
-									var descriptionHtml = '';
-						
 						        	if (record.primaryPublicationCitationValueObject != null) {
 						        		descriptionHtml += '<p><b>Primary Publication</b>: ' +
 						        			record.primaryPublicationCitationValueObject.citation + ' ' +
