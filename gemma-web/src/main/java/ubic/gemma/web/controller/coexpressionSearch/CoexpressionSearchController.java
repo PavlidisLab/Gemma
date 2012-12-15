@@ -51,7 +51,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneLightWeightCache;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.tasks.search.CoexSearchTaskCommand;
+
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 
