@@ -38,6 +38,11 @@ import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.ConflictingTaskException;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
@@ -46,6 +51,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneLightWeightCache;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.tasks.search.CoexSearchTaskCommand;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 
@@ -54,7 +60,7 @@ import ubic.gemma.util.EntityUtils;
  * @version $Id$
  */
 @Controller
-public class CoexpressionSearchController {
+public class CoexpressionSearchController  {
 
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
 
@@ -96,6 +102,45 @@ public class CoexpressionSearchController {
 
     public GeneLightWeightCache getGeneLightWeightCache() {
         return geneLightWeightCache;
+    }
+    
+    @Autowired
+    protected TaskRunningService taskRunningService;
+    
+    /**
+     * Inner class used for doing a long running coex search
+     */
+    class CoexSearchJob extends BackgroundJob<TaskCommand> {
+
+        public CoexSearchJob(  CoexSearchTaskCommand command ) {
+            super( command );
+        }
+
+        @Override
+        public TaskResult processJob() {
+        	
+        	CoexSearchTaskCommand coexCommand = (CoexSearchTaskCommand) command;
+        	
+        	CoexpressionMetaValueObject results  = doSearchQuick2( coexCommand.getSearchOptions());
+            return new TaskResult( command, results );
+
+        }
+    }
+    
+    
+    public String doBackgroundCoexSearch( CoexpressionSearchCommand searchOptions ) {
+    	
+    	CoexSearchJob job = new CoexSearchJob( new CoexSearchTaskCommand( searchOptions) );
+
+        try {
+            taskRunningService.submitTask( job );
+        } catch ( ConflictingTaskException e ) {
+            throw new RuntimeException( "Sorry, it looks like you already have a task like that running (taskid="
+                    + e.getCollidingCommand().getTaskId() + ", submitted time="
+                    + e.getCollidingCommand().getSubmissionTime() + "  ) ", e );
+        }
+        return job.getTaskId();
+        
     }
 
     /**
@@ -212,9 +257,9 @@ public class CoexpressionSearchController {
 
         boolean skipCoexpressionDetails = false;
 
-        log.info( "Coexpression search: " + searchOptions );
+        log.info( "Coexpression search for " + searchOptions.getGeneIds().size()+" genes" );
         if ( queryGeneIds != null ) {
-            log.info( "This is a 'my genes only' Coexpression viz search original query gene ids: " + queryGeneIds );
+            log.debug( "This is a 'my genes only' Coexpression viz search original query gene ids: " + queryGeneIds );
             // we don't need to populate all the coex details for the viz, so set skip flag to true
             skipCoexpressionDetails = true;
         }
@@ -226,15 +271,14 @@ public class CoexpressionSearchController {
                 searchOptions.getEeIds(), genes, searchOptions.getStringency(), MAX_RESULTS,
                 searchOptions.getQueryGenesOnly(), skipCoexpressionDetails );
 
-        log.info( "Returned from coexpression search, size of results:" + geneResults.size() + " searchOptions:"
-                + searchOptions );
+        log.info( "Returned from coexpression search, size of results:" + geneResults.size() );
 
         result.setKnownGeneResults( geneResults );
 
         // if this is not a cytoscape coex vis query, then get 'query-genes-only' results for the query genes (only do
         // this if there is more than one query gene)
         if ( queryGeneIds == null && searchOptions.getGeneIds().size() > 1 ) {
-            log.info( "Coexpression search step 2: getting 'query genes only' results for genes: " + genes );
+            log.info( "Coexpression search step 2: getting 'query genes only' results for " + genes.size() + " genes" );
             Collection<CoexpressionValueObjectExt> queryGenesOnlyResults = geneCoexpressionService
                     .coexpressionSearchQuick( searchOptions.getEeIds(), genes, 2, MAX_RESULTS, true,
                             skipCoexpressionDetails );

@@ -250,6 +250,7 @@
 			<dwr:include method="doSearchQuick2" />
 			<dwr:include method="doSearchQuick" />
 			<dwr:include method="findExpressionExperiments" />
+			<dwr:include method="doBackgroundCoexSearch" />
 		</dwr:remote>
 	</bean>
 

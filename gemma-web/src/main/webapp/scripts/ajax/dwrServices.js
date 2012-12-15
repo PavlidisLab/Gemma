@@ -680,6 +680,11 @@ ExtCoexpressionSearchController.doSearchQuick = function(p0, callback) {
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick', p0,
 			callback);
 }
+
+ExtCoexpressionSearchController.doBackgroundCoexSearch = function(p0, callback) {
+	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doBackgroundCoexSearch', p0,
+			callback);
+}
 // ====================================================================================
 if (FileUploadController == null)
 	var FileUploadController = {};

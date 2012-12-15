@@ -503,11 +503,34 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 			};
 			this.restrictCoexSearch(csc);
 			this.lastCSC = csc;
+			
+			
+			
+			var callParams = [];
+            callParams.push(csc);
+            
+            callParams.push({
+                        callback : function(data) {
+                            var k = new Gemma.WaitHandler();
+                            k.handleWait(data, false);
+                            this.relayEvents(k, ['done', 'fail']);
+                            Ext.getBody().unmask();
+                            k.on('done', this.returnFromCoexSearch.createDelegate(this));
+                        }.createDelegate(this),
+                        errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
+                    });
+            ExtCoexpressionSearchController.doBackgroundCoexSearch.apply(this, callParams);
+			
+			
+			/*
+			 //non background task code TODO maybe make an option to choose
 			ExtCoexpressionSearchController.doSearchQuick2(csc, {
 						callback : this.returnFromCoexSearch.createDelegate(this),
 						timeout: 420000,						
 						errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
 					});
+					
+					*/
 		} else {
 			this.fireEvent('error', msg);
 		}
