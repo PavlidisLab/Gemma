@@ -76,6 +76,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
                 .getGeneDifferentialExpressionMetaAnalysisResult().getId();
         this.selectionThreshold = differentialExpressionEvidence.getSelectionThreshold();
         this.geneDifferentialExpressionMetaAnalysisSummaryValueObject = geneDifferentialExpressionMetaAnalysisSummaryValueObject;
+        this.geneDifferentialExpressionMetaAnalysisSummaryValueObject.setDiffExpressionEvidence( this );
     }
 
     public DiffExpressionEvidenceValueObject(
