@@ -231,7 +231,7 @@ public interface PhenotypeAssociationManagerService {
      */
     public abstract ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
-            Double thresholdChosen ) throws Exception;
+            Double thresholdChosen );
 
     /**
      * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to

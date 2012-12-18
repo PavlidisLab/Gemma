@@ -807,7 +807,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
-            Double selectionThreshold ) throws Exception {
+            Double selectionThreshold ) {
 
         GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis = this.geneDiffExMetaAnalysisService
                 .load( geneDifferentialExpressionMetaAnalysisId );
@@ -841,7 +841,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 if ( validateEvidenceValueObject != null ) {
                     // since this method created multiple evidence, if a problem is detected stop the transaction
-                    throw new Exception(
+                    throw new RuntimeException(
                             "makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis() problem detected" );
                 }
             }
