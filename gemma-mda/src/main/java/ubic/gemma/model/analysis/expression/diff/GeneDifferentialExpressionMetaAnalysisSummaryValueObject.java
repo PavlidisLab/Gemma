@@ -125,6 +125,9 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
 	public void setDiffExpressionEvidence(
 			DiffExpressionEvidenceValueObject diffExpressionEvidence) {
 		this.diffExpressionEvidence = diffExpressionEvidence;
-		this.diffExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisSummaryValueObject( this );
+		if(diffExpressionEvidence!=null){
+		    this.diffExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisSummaryValueObject( this );
+		}
+		
 	}
 }
