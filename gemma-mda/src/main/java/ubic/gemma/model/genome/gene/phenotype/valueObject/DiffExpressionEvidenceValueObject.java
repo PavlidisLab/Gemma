@@ -172,4 +172,30 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
         this.upperTail = upperTail;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime
+                * result
+                + ( ( this.geneDifferentialExpressionMetaAnalysisId == null ) ? 0 : this.geneDifferentialExpressionMetaAnalysisId
+                        .hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( !super.equals( obj ) ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        DiffExpressionEvidenceValueObject other = ( DiffExpressionEvidenceValueObject ) obj;
+        if ( this.geneDifferentialExpressionMetaAnalysisId == null ) {
+            if ( other.geneDifferentialExpressionMetaAnalysisId != null ) return false;
+        } else if ( !this.geneDifferentialExpressionMetaAnalysisId.equals( other.geneDifferentialExpressionMetaAnalysisId ) )
+            return false;
+        return true;
+    }
+    
+    
+
 }
