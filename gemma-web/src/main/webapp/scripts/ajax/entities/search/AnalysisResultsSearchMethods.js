@@ -505,32 +505,31 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 			this.lastCSC = csc;
 			
 			
+			if (csc.taxonId==1 || csc.taxonId==2){
 			
-			var callParams = [];
-            callParams.push(csc);
+				var callParams = [];
+				callParams.push(csc);
             
-            callParams.push({
+				callParams.push({
                         callback : function(data) {
                             var k = new Gemma.WaitHandler();
-                            k.handleWait(data, false);
+                            k.handleWait(data, false, true);
                             this.relayEvents(k, ['done', 'fail']);
                             Ext.getBody().unmask();
                             k.on('done', this.returnFromCoexSearch.createDelegate(this));
                         }.createDelegate(this),
                         errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
                     });
-            ExtCoexpressionSearchController.doBackgroundCoexSearch.apply(this, callParams);
-			
-			
-			/*
-			 //non background task code TODO maybe make an option to choose
-			ExtCoexpressionSearchController.doSearchQuick2(csc, {
+				ExtCoexpressionSearchController.doBackgroundCoexSearch.apply(this, callParams);
+			}else{
+				//Don't use background task if not human or mouse because it is quick enough
+				ExtCoexpressionSearchController.doSearchQuick2(csc, {
 						callback : this.returnFromCoexSearch.createDelegate(this),
 						timeout: 420000,						
 						errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
 					});
 					
-					*/
+			}
 		} else {
 			this.fireEvent('error', msg);
 		}

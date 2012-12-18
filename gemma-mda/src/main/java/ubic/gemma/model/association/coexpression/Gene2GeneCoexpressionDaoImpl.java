@@ -187,7 +187,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                     rawResults.addAll( getCoexpressionRelationshipsFromDB( batch, sourceAnalysis, className ) );
 
                     if ( timer.getTime() > 100 ) {
-                        log.info( "Fetching coexpression results from db for "+batch.size()+" genes took " + timer.getTime() + "ms" );
+                        log.info( "Fetching coexpression results for "+batch.size()+" genes took " + timer.getTime() + "ms" );
                     }
                     batch.clear();
                 }
@@ -199,7 +199,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 timer.start();
                 rawResults.addAll( getCoexpressionRelationshipsFromDB( batch, sourceAnalysis, className ) );
                 if ( timer.getTime() > 100 ) {
-                    log.info( "Fetching coexpression results from db for "+batch.size()+" genes took " + timer.getTime() + "ms" );
+                    log.info( "Fetching coexpression results for "+batch.size()+" genes took " + timer.getTime() + "ms" );
                 }
             }
         }

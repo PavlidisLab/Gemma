@@ -120,48 +120,37 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 	// layout : 'fit',
 	bodyBorder : false,
 	stateful : false,
+	
 	id : "progressWidget-panel",
 
 	showAllMessages : function(t) {
 		if (!this.allMessages) {
 			return;
 		}
-
-		var msgs = new Ext.Window({
-					id : 'all-messages-window',
-					title : t ? t : "Messages logged",
-					layout : 'fit',
-					width : 420,
-					closeAction : 'close',
-					items : [{
-								xtype : 'panel',
-								stateful : false,
-								height : 200,
-								autoScroll : true,
-								width : 400,
-								bodyStyle : 'padding:5px',
-								html : {
-									id : 'logs-view',
-									tag : 'pre',
-									style : 'font-size:smaller',
-									html : this.allMessages
-								}
-							}],
-					buttons : [{
-								text : "OK",
-								handler : function() {
-									Ext.getCmp('all-messages-window').close();
-								}
-							}]
-				});
+		
+		
+		if (!this.logsActive){
+			this.insert(1, new Ext.form.Label({
+				id: "logsProgressWidget",
+				html : this.allMessages			
+			}) );
+			this.logsActive=true;
+		}else{
+			this.remove(1,true);
+			this.logsActive=false;
+		}
+		
+		this.doLayout();
+		
 		this.on('message-received', function() {
-					Ext.DomHelper.overwrite('logs-view', {
-								id : 'logs-view',
-								tag : 'pre',
-								html : this.allMessages
-							});
-				});
-		msgs.show();
+			
+			Ext.DomHelper.overwrite('logsProgressWidget', {
+				id : 'logsProgressWidget',				
+				html : this.allMessages
+			});
+		});
+		
+
 	},
 
 	initComponent : function() {
@@ -175,13 +164,15 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 					items : [this.progressBar],
 					buttons : [{
 								text : "Logs",
+								id: "progresslogsbutton",
 								tooltip : "Show log messages",
 								handler : function() {
 									this.showAllMessages("Messages so far");
-								},
+								},								
 								scope : this
 							}, {
 								text : "Cancel Job",
+								id: "progresscancelbutton",
 								tooltip : "Attempt to stop the job.",
 								handler : function() {
 
@@ -197,10 +188,11 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 												icon : Ext.MessageBox.QUESTION
 											});
 
-								},
+								},								
 								scope : this
 							}, {
 								text : "Hide",
+								id: "progresshidebutton",
 								tooltip : "Remove the progress bar and return to the page",
 								handler : function() {
 									/*
@@ -360,7 +352,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 			/*
 			 * But put all messages in the logs.
 			 */
-			messagesToSave = messagesToSave + "<br/>" + d.description;
+			messagesToSave = messagesToSave  + d.description + "<br/>";
 
 			if (d.failed) {
 				return this.handleFailure(d);
@@ -446,6 +438,12 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
 		// try to get from hidden input field.
 		return dwr.util.getValue("taskId");
+	},
+	
+	hideLogsAndCancelButtons : function(){
+		
+		Ext.getCmp("progresslogsbutton").setVisible(false);
+		Ext.getCmp("progresscancelbutton").setVisible(false);
 	}
 
 });
