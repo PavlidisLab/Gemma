@@ -337,6 +337,7 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 		var geneSetValObjsToRegister = [];
 		var geneSetValObjsAlreadyRegistered = [];
 		var i;
+		var j;
 		var gsvo;
 		for (i = 0; i < geneSetValueObjects.length; i++) {
 			gsvo = geneSetValueObjects[i];

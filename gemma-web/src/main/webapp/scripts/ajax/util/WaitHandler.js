@@ -46,12 +46,16 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 				// Copy configured listeners into *this* object so that the base class's
 				// constructor will add them.
 				if (config) {
-					this.listeners = config.listeners;
-					this.throbberEl = config.throbberEl;
+					if (config.listeners){
+						this.listeners = config.listeners;
+					}
+					if (config.throbberEl){
+						this.throbberEl = config.throbberEl;
+					}
 				}
 
 				// Call our superclass constructor to complete construction process.
-				Gemma.WaitHandler.superclass.constructor.call(config)
+				Gemma.WaitHandler.superclass.constructor.call(config);
 			},
 
 			/**

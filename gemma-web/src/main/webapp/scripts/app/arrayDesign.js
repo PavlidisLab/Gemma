@@ -109,7 +109,15 @@ function updateArrayDesignReport(id, callerScope) {
 			});
 	callParams.push({
 				callback : function(data) {
-					var k = new Gemma.WaitHandler();
+					var config={};
+					var k;
+					//e.g. refresh icon from showAllArrayDesigns
+					if(callerScope){
+						config.throbberEl = callerScope.getEl();
+						k = new Gemma.WaitHandler(config);
+					}else{//e.g. refresh button on showArrayDesign.html 
+						k = new Gemma.WaitHandler();
+					}
 					k.handleWait(data, false);
 					k.on('done', function(payload) {
 								// this.fireEvent('reportUpdated', payload)
