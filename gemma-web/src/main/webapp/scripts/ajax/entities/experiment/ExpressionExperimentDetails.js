@@ -35,6 +35,10 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             var ad = arrayDesigns[i];
             result = result + '<a href="/Gemma/arrays/showArrayDesign.html?id=' + ad.id + '">' + ad.shortName
                     + '</a> - ' + ad.name;
+            
+            if (arrayDesigns[i].troubled){
+            	result = result +'<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="This platform has been flagged as troubled"/>';
+            }
             if (i < arrayDesigns.length - 1) {
                 result = result + "<br/>";
             }
