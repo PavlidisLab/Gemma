@@ -37,7 +37,8 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                     + '</a> - ' + ad.name;
             
             if (arrayDesigns[i].troubled){
-            	result = result +'<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="This platform has been flagged as troubled"/>';
+            	result = result +'<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
+                + arrayDesigns[i].troubleDetails + '"/>';
             }
             if (i < arrayDesigns.length - 1) {
                 result = result + "<br/>";
