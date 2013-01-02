@@ -88,14 +88,12 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive ) {
 
-        log.info( "Looking for old results to remove..." );
-        arrayDesignService.deleteAlignmentData( ad );
-
         Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
         if ( sensitive ) log.info( "Running in 'sensitive' mode if possible" );
 
         Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
+        boolean first = true;
         for ( Taxon taxon : taxa ) {
 
             Collection<BioSequence> sequencesToBlat = getSequences( ad, taxon );
@@ -116,6 +114,13 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
             int noresults = 0;
             int count = 0;
+
+            // We only delete the results here, after we have at least one set of blat results.
+            if ( first ) {
+                log.info( "Looking for old results to remove..." );
+                arrayDesignService.deleteAlignmentData( ad );
+            }
+
             for ( BioSequence sequence : sequencesToBlat ) {
                 if ( sequence == null ) {
                     log.warn( "Null sequence!" );
@@ -140,6 +145,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             }
 
             log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
+            first = false;
         }
 
         arrayDesignReportService.generateArrayDesignReport( ad.getId() );
