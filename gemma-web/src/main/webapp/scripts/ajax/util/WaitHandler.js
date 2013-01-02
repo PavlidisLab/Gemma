@@ -61,7 +61,7 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 			/**
 			 * Parameters are passed to ProgressWindow config
 			 */
-			handleWait : function(taskId, showAllMessages, hideLogsAndCancelButton) {
+			handleWait : function(taskId, showAllMessages, hideLogsButton, hideHideButton, noEmailOption) {
 				try {
 					var p = new Gemma.ProgressWindow({
 								taskId : taskId,
@@ -74,10 +74,12 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 								showAllMessages : showAllMessages
 							});
 					
-					if(hideLogsAndCancelButton){						
-						p.pBar.hideLogsAndCancelButtons();
+					if(hideLogsButton){						
+						p.pBar.hideLogsButton();
 					}
-					
+					if(hideHideButton){						
+						p.pBar.hideHideButton();
+					}
 					
 
 					if (this.throbberEl != undefined) {

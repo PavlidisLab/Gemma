@@ -260,9 +260,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			this.fireEvent('showCoexResults', this, result, this.runningExampleQuery);
 		}, this);
 				
-		this.searchMethods.on('aftersearch', function(result){
+		this.searchMethods.on('aftersearch', function(result, suppressNextEvent){
 			this.loadMask.hide();
 			this.fireEvent('aftersearch', this, result);
+			
 		}, this);
 
 		this.searchMethods.on('warning', function(msg, e){

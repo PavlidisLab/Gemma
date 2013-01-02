@@ -514,10 +514,11 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 				callParams.push({
                         callback : function(data) {
                             var k = new Gemma.WaitHandler();
-                            k.handleWait(data, false, true);
+                            k.handleWait(data, false, true,true);
                             this.relayEvents(k, ['done', 'fail']);
                             Ext.getBody().unmask();
                             k.on('done', this.returnFromCoexSearch.createDelegate(this));
+                            k.on('fail', this.cancelFromCoexSearch.createDelegate(this));
                         }.createDelegate(this),
                         errorHandler : this.timeoutFromCoexSearch.createDelegate(this)
                     });
@@ -846,6 +847,14 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 			datasetCount : experimentCount
 		};
 		return data;
+	},
+	
+	cancelFromCoexSearch : function(result) {
+		this.doneCoex = true;
+		
+		this.fireEvent('aftersearch', result, true);
+		
+		
 	},
 
 	returnFromCoexSearch : function(result) {

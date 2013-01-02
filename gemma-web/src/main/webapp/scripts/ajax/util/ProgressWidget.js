@@ -32,7 +32,7 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 
 				this.pBar = new Gemma.ProgressWidget({
 							taskId : this.taskId
-						});
+				});
 
 				Ext.apply(this, {
 							items : [this.pBar]
@@ -195,7 +195,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 								id: "progresshidebutton",
 								tooltip : "Remove the progress bar and return to the page",
 								handler : function() {
-									/*
+																		/*
 									 * FIXME add link to job listing
 									 */
 									var k = Ext.Msg.show({
@@ -440,10 +440,15 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 		return dwr.util.getValue("taskId");
 	},
 	
-	hideLogsAndCancelButtons : function(){
+	hideLogsButton : function(){
 		
 		Ext.getCmp("progresslogsbutton").setVisible(false);
-		Ext.getCmp("progresscancelbutton").setVisible(false);
+		
+	},
+	
+	hideHideButton : function(){		
+		
+		Ext.getCmp("progresshidebutton").setVisible(false);
 	}
 
 });
