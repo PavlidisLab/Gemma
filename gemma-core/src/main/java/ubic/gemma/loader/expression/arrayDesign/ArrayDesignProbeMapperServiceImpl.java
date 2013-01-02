@@ -429,14 +429,15 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                         existing = checkForAlias( geneProduct );
                         if ( existing == null ) {
                             /*
-                             * Temporary. We have to be careful not to cruft up the gene table now that I so carefully
+                             *  We have to be careful not to cruft up the gene table now that I so carefully
                              * cleaned it. But this is a problem if we aren't adding some other association to the gene
                              * at least. But generally the mRNAs that GP has that NCBI doesn't are "alternative" or
                              * "additional".
                              */
-                            log.warn( "New gene product from GoldenPath is not in Gemma: " + geneProduct
-                                    + " skipping association to " + ba.getBioSequence()
-                                    + " [TEMPORARY skipping policy in place]" );
+                            if ( log.isDebugEnabled() )
+                                log.debug( "New gene product from GoldenPath is not in Gemma: " + geneProduct
+                                        + " skipping association to " + ba.getBioSequence()
+                                        + " [skipping policy in place]" );
                             continue;
                         }
                     }
