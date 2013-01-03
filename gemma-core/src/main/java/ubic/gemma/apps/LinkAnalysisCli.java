@@ -32,6 +32,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysis;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
@@ -523,8 +524,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         try {
 
             if ( this.expressionExperiments.size() > 1 && linkAnalysisConfig.isTextOut() ) {
-                linkAnalysisConfig
-                        .setOutputFile( new File( ee.getShortName().replaceAll( "\\s", "_" ) + "-links.txt" ) );
+                linkAnalysisConfig.setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() )
+                        + "-links.txt" ) );
             }
 
             LinkAnalysis la = linkAnalysisService.doAnalysis( ee, linkAnalysisConfig, filterConfig );

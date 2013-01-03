@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -68,9 +69,9 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFilePrefix" ).withDescription(
-                "File prefix for saving the output (short name will be appended)" ).withLongOpt( "outFilePrefix" )
-                .create( 'o' );
+        Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFilePrefix" )
+                .withDescription( "File prefix for saving the output (short name will be appended)" )
+                .withLongOpt( "outFilePrefix" ).create( 'o' );
         addOption( outputFileOption );
     }
 
@@ -91,7 +92,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
                     ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
                     PrintWriter writer = new PrintWriter( outFileName + "_"
-                            + ( ( ExpressionExperiment ) ee ).getShortName().replaceAll( "\\s", "" ) + ".txt" );
+                            + FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() ) + ".txt" );
 
                     edWriter.write( writer, ( ExpressionExperiment ) ee, true, true );
                     writer.flush();

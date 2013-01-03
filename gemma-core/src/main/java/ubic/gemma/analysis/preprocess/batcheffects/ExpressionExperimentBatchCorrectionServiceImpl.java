@@ -34,6 +34,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
@@ -295,7 +296,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         DoubleMatrix2D results = comBat.run( parametric ); // false: NONPARAMETRIC
 
         // note these plots always reflect the parametric setup.
-        comBat.plot( ee.getId() + "." + ee.getShortName().replaceAll( "[\\W\\s]+", "_" ) ); // TEMPORARY?
+        comBat.plot( ee.getId() + "." + FileTools.cleanForFileName( ee.getShortName() ) ); // TEMPORARY?
 
         /*
          * Postprocess. Results is a raw matrix/
