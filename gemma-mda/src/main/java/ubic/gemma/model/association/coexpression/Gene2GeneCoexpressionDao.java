@@ -38,13 +38,13 @@ public interface Gene2GeneCoexpressionDao extends BaseDao<Gene2GeneCoexpression>
     /**
      * Returns a map of genes to coexpression results. Set maxResults to 0 to remove limits.
      */
-    public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
+    public java.util.Map<Long, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
             Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * Return coexpression relationships among the given genes.
      */
-    public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationships(
+    public java.util.Map<Long, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationships(
             Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**

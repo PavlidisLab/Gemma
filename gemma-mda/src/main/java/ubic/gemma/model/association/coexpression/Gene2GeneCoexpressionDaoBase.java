@@ -92,7 +92,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      *      int, int)
      */
     @Override
-    public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
+    public java.util.Map<Long, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
             final java.util.Collection<Gene> genes, final int stringency, final int maxResults,
             GeneCoexpressionAnalysis sourceAnalysis ) {
         return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis );
@@ -114,7 +114,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      *      int)
      */
     @Override
-    public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationships(
+    public java.util.Map<Long, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationships(
             final java.util.Collection<Gene> genes, final int stringency, GeneCoexpressionAnalysis sourceAnalysis ) {
         return this.handleFindInterCoexpressionRelationships( genes, stringency, sourceAnalysis );
     }
@@ -229,7 +229,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * Performs the core logic for {@link #findCoexpressionRelationships(java.util.Collection, int, int)}
      */
-    protected abstract java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
+    protected abstract java.util.Map<Long, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
             java.util.Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
@@ -241,7 +241,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     /**
      * Performs the core logic for {@link #findCoexpressionRelationships(java.util.Collection, int, int)}
      */
-    protected abstract java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationships(
+    protected abstract java.util.Map<Long, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationships(
             java.util.Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
 
 }

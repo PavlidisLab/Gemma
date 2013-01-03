@@ -75,7 +75,7 @@ public class Gene2GeneCoexpressionServiceImpl extends Gene2GeneCoexpressionServi
      * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    protected Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships( Collection<Gene> genes,
+    protected Map<Long, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships( Collection<Gene> genes,
             int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
         return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( genes, stringency, maxResults,
                 sourceAnalysis );
@@ -100,7 +100,7 @@ public class Gene2GeneCoexpressionServiceImpl extends Gene2GeneCoexpressionServi
      * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    protected Map<Gene, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationship(
+    protected Map<Long, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationship(
             Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis ) {
         return this.getGene2GeneCoexpressionDao()
                 .findInterCoexpressionRelationships( genes, stringency, sourceAnalysis );

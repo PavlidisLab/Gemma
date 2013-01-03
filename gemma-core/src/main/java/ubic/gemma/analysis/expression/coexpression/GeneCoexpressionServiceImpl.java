@@ -697,7 +697,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
          */
-        Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
+        Map<Long, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly );
 
         List<Long> filteredEeIds = ( List<Long> ) EntityUtils.getIds( eevos );
@@ -708,7 +708,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
-        queryGenes = geneService.thawLite( gg2gs.keySet() );
+        //queryGenes = geneService.thawLite( gg2gs.keySet() );
 
         // populate the value objects.
         StopWatch timer = new StopWatch();
@@ -734,7 +734,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             int linksMetPositiveStringency = 0;
             int linksMetNegativeStringency = 0;
 
-            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
+            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene.getId() );
 
             assert g2gs != null;
 
@@ -987,28 +987,31 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
          */
-        Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
+        Map<Long, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly );
 
         List<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
 
         Collection<Long> seenGene2Gene = new HashSet<Long>();
 
-        queryGenes = new HashSet<Gene>();
+        Collection<Long> queryGeneIds = gg2gs.keySet();
+        
+     // return empty collection if no coexpression results
+        if ( queryGeneIds.isEmpty() ) {
+            return ecvos;
+        }
 
         Collection<Long> gidsNeeded = new HashSet<Long>();
 
         StopWatch timerGeneLoad = new StopWatch();
 
-        for ( Gene g : gg2gs.keySet() ) {
+        for ( Long gid : queryGeneIds ) {
 
-            Element e = this.getGeneLightWeightCache().getCache().get( g.getId() );
-
-            if ( e != null ) {
-                queryGenes.add( ( Gene ) e.getValue() );
-            } else {
-                gidsNeeded.add( g.getId() );
-            }
+            Element e = this.getGeneLightWeightCache().getCache().get( gid );
+            
+            if ( e == null ) {           
+                gidsNeeded.add( gid );
+            }            
 
         }
 
@@ -1016,16 +1019,12 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
             Collection<Gene> justLoadedGenes = geneService.loadThawedLiter( gidsNeeded );
 
-            queryGenes.addAll( justLoadedGenes );
-
             for ( Gene g : justLoadedGenes ) {
+            	
                 this.getGeneLightWeightCache().getCache().put( new Element( g.getId(), g ) );
             }
         }
-        // return empty collection if no coexpression results
-        if ( queryGenes.isEmpty() ) {
-            return ecvos;
-        }
+        
 
         if ( timerGeneLoad.getTime() > 100 ) {
             log.info( "Loading and caching query genes took " + timerGeneLoad.getTime() + "ms" );
@@ -1037,13 +1036,13 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         gidsNeeded = new HashSet<Long>();
 
         // load all genes first
-        for ( Gene queryGene : queryGenes ) {
+        for ( Long queryGid : queryGeneIds ) {
 
-            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
+            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGid );
 
             for ( Gene2GeneCoexpression g2g : g2gs ) {
 
-                Gene foundGene = g2g.getFirstGene().getId().equals( queryGene.getId() ) ? g2g.getSecondGene() : g2g
+                Gene foundGene = g2g.getFirstGene().getId().equals( queryGid ) ? g2g.getSecondGene() : g2g
                         .getFirstGene();
 
                 if ( this.getGeneLightWeightCache().getCache().get( foundGene.getId() ) == null ) {
@@ -1072,16 +1071,18 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         StopWatch timer = new StopWatch();
         Collection<Long> allUsedGenes = new HashSet<Long>();
 
-        for ( Gene queryGene : queryGenes ) {
+        for ( Long queryGid : queryGeneIds ) {
             timer.reset();
             timer.start();
+            
+            Gene qGene = ( Gene ) this.getGeneLightWeightCache().getCache().get( queryGid ).getValue();
 
-            if ( !queryGene.getTaxon().equals( baseSet.getTaxon() ) ) {
+            if ( !qGene.getTaxon().equals( baseSet.getTaxon() ) ) {
                 throw new IllegalArgumentException(
                         "Mismatch between taxon for expression experiment set selected and gene queries" );
             }
 
-            allUsedGenes.add( queryGene.getId() );
+            allUsedGenes.add( queryGid );
 
             /*
              * For summary statistics
@@ -1091,7 +1092,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             Collection<Long> allDatasetsWithSpecificProbes = new HashSet<Long>();
             Collection<Long> allTestedDataSets = new HashSet<Long>();
 
-            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
+            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGid );
 
             assert g2gs != null;
 
@@ -1101,12 +1102,12 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
                 relevantEEIdList.retainAll( filteredEeIds );
             }
-            GeneValueObject queryGeneValueObject = new GeneValueObject( queryGene );
+            GeneValueObject queryGeneValueObject = new GeneValueObject( qGene );
 
             Map<Long, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Long, Collection<Gene2GeneCoexpression>>();
 
             if ( timer.getTime() > 100 ) {
-                log.info( "Postprocess " + queryGene.getOfficialSymbol() + " Phase I: " + timer.getTime() + "ms" );
+                log.info( "Postprocess " + qGene.getOfficialSymbol() + " Phase I: " + timer.getTime() + "ms" );
             }
             timer.stop();
             timer.reset();
@@ -1114,7 +1115,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
             for ( Gene2GeneCoexpression g2g : g2gs ) {
 
-                Gene foundGene = g2g.getFirstGene().getId().equals( queryGene.getId() ) ? g2g.getSecondGene() : g2g
+                Gene foundGene = g2g.getFirstGene().getId().equals( queryGid ) ? g2g.getSecondGene() : g2g
                         .getFirstGene();
 
                 allUsedGenes.add( foundGene.getId() );
@@ -1194,7 +1195,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                     if ( testForDuplicateFlag ) {
 
-                        testAndModifyDuplicateResultForOppositeStringency( ecvos, queryGene, foundGene,
+                        testAndModifyDuplicateResultForOppositeStringency( ecvos, qGene, foundGene,
                                 g2g.getEffect(), numSupportingDatasets, specificDatasets.size(), numTestingDatasets );
 
                         continue;
@@ -1238,7 +1239,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                     if ( testForDuplicateFlag ) {
 
-                        testAndModifyDuplicateResultForOppositeStringency( ecvos, queryGene, foundGene,
+                        testAndModifyDuplicateResultForOppositeStringency( ecvos, qGene, foundGene,
                                 g2g.getEffect(), numSupportingDatasets, null, null );
 
                         continue;
@@ -1274,7 +1275,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             }
 
             if ( timer.getTime() > 300 ) {
-                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol()
+                log.info( "Postprocess " + g2gs.size() + " results for " + qGene.getOfficialSymbol()
                         + " Phase II: " + timer.getTime() + "ms" );
             }
             timer.stop();
@@ -1348,9 +1349,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @param queryGenesOnly
      * @return
      */
-    private Map<Gene, Collection<Gene2GeneCoexpression>> getRawCoexpression( Collection<Gene> queryGenes,
+    private Map<Long, Collection<Gene2GeneCoexpression>> getRawCoexpression( Collection<Gene> queryGenes,
             int stringency, int maxResults, boolean queryGenesOnly ) {
-        Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        Map<Long, Collection<Gene2GeneCoexpression>> gg2gs = new HashMap<Long, Collection<Gene2GeneCoexpression>>();
 
         if ( queryGenes.size() == 0 ) {
             return gg2gs;

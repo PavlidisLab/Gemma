@@ -138,7 +138,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
      * .util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
+    protected java.util.Map<Long, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
             Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
         /*
@@ -150,7 +150,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
 
-        Map<Gene, Collection<Gene2GeneCoexpression>> finalResult = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        Map<Long, Collection<Gene2GeneCoexpression>> finalResult = new HashMap<Long, Collection<Gene2GeneCoexpression>>();
 
         // WARNING we assume the genes are from the same taxon.
         String className = getClassName( genes.iterator().next() );
@@ -227,28 +227,29 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
             if ( allGeneIds.contains( firstGene.getId() ) ) {
 
-                if ( !finalResult.containsKey( firstGene ) ) {
-                    finalResult.put( firstGene, new HashSet<Gene2GeneCoexpression>() );
-                } else if ( maxResults > 0 && finalResult.get( firstGene ).size() >= maxResults ) {
+                if ( !finalResult.containsKey( firstGene.getId() ) ) {
+                    finalResult.put( firstGene.getId(), new HashSet<Gene2GeneCoexpression>() );
+                } else if ( maxResults > 0 && finalResult.get( firstGene.getId() ).size() >= maxResults ) {
                     continue;
                 }
-                finalResult.get( firstGene ).add( g2g );
+                finalResult.get( firstGene.getId() ).add( g2g );
 
             } else if ( allGeneIds.contains( secondGene.getId() ) ) {
 
-                if ( !finalResult.containsKey( secondGene ) ) {
-                    finalResult.put( secondGene, new HashSet<Gene2GeneCoexpression>() );
-                } else if ( maxResults > 0 && finalResult.get( secondGene ).size() >= maxResults ) {
+                if ( !finalResult.containsKey( secondGene.getId() ) ) {
+                    finalResult.put( secondGene.getId(), new HashSet<Gene2GeneCoexpression>() );
+                } else if ( maxResults > 0 && finalResult.get( secondGene.getId() ).size() >= maxResults ) {
                     continue;
                 }
-                finalResult.get( secondGene ).add( g2g );
+                finalResult.get( secondGene.getId() ).add( g2g );
             }
         }
 
         if ( timer.getTime() > 100 ) {
             log.info( "Filtering " + rawResults.size() + " results took " + timer.getTime() + "ms" );
         }
-
+        
+       
         return finalResult;
     }
 
@@ -277,10 +278,10 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
      * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationships(
+    protected java.util.Map<Long, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationships(
             Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis ) {
 
-        if ( genes.size() == 0 ) return new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        if ( genes.size() == 0 ) return new HashMap<Long, Collection<Gene2GeneCoexpression>>();
 
         // we assume the genes are from the same taxon.
         String g2gClassName = getClassName( genes.iterator().next() );
@@ -411,22 +412,9 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
              * DO NOT populate the cache with these results, as they are limited by stringency and the second gene
              * choice.
              */
-        }
+        }       
 
-        StopWatch timerMapMaker = new StopWatch();
-        timerMapMaker.start();
-
-        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
-
-        for ( Gene g : genes ) {
-            result.put( g, resultById.get( g.getId() ) );
-        }
-
-        if ( timerMapMaker.getTime() > 1000 ) {
-            log.info( "Generating g2gcoex map took " + timerMapMaker.getTime() + "ms" );
-        }
-
-        return result;
+        return resultById;
 
     }
 

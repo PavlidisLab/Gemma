@@ -58,7 +58,7 @@ public interface Gene2GeneCoexpressionService {
      * Returns a map of genes to coexpression results.
      * </p>
      */
-    public Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships( Collection<Gene> genes,
+    public Map<Long, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships( Collection<Gene> genes,
             int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
@@ -83,7 +83,7 @@ public interface Gene2GeneCoexpressionService {
      * Return coexpression relationships among the given genes, in a map of query gene to coexpression objects.
      * </p>
      */
-    public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationship(
+    public java.util.Map<Long, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationship(
             Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
 
 }

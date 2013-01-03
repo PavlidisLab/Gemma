@@ -69,7 +69,7 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
      *      int, int)
      */
     @Override
-    public Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
+    public Map<Long, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
             final java.util.Collection<Gene> genes, final int stringency, final int maxResults,
             GeneCoexpressionAnalysis sourceAnalysis ) {
         return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis );
@@ -92,7 +92,7 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
      *      int)
      */
     @Override
-    public Map<Gene, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationship(
+    public Map<Long, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationship(
             final Collection<Gene> genes, final int stringency, GeneCoexpressionAnalysis sourceAnalysis ) {
         return this.handleFindInterCoexpressionRelationship( genes, stringency, sourceAnalysis );
     }
@@ -130,7 +130,7 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
     /**
      * Performs the core logic for {@link #findCoexpressionRelationships(java.util.Collection, int, int)}
      */
-    protected abstract Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
+    protected abstract Map<Long, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
             Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
@@ -142,7 +142,7 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
     /**
      * Performs the core logic for {@link #findInterCoexpressionRelationship(java.util.Collection, int)}
      */
-    protected abstract Map<Gene, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationship(
+    protected abstract Map<Long, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationship(
             java.util.Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
 
 }
