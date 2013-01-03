@@ -51,6 +51,8 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
      * </p>
      */
     public Collection<Gene> findByGoTerm( java.lang.String goId, Taxon taxon );
+    
+    public Collection<Gene> findByGoTerm( java.lang.String goId);
 
     /**
      * <p>

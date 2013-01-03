@@ -128,7 +128,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( goTerm == null ) {
             return null;
         }
-
+        //if taxon is null, this returns a geneset with genes from different taxons
         return goTermToGeneSet( goTerm, taxon );
     }
 
@@ -237,7 +237,11 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             /*
              * This is a slow step. We might want to defer it. Getting a count would be faster
              */
-            genes.addAll( this.gene2GoService.findByGOTerm( goId, taxon ) );
+            if (taxon!= null){
+            	genes.addAll( this.gene2GoService.findByGOTerm( goId, taxon ) );
+            } else{
+            	genes.addAll(this.gene2GoService.findByGOTerm( goId) );
+            }
         }
 
         GeneSet transientGeneSet = GeneSet.Factory.newInstance();

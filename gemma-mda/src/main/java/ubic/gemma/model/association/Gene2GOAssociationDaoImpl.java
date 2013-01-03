@@ -154,6 +154,28 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         }
         return results;
     }
+    
+    @Override
+    protected Collection<Gene> handleFindByGoTerm( String goId ) {
+
+        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+                + "where geneAss.ontologyEntry.value = :goID";
+
+        // need to turn the collection of goTerms into a collection of GOId's
+
+        Collection<Gene> results;
+
+        try {
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );            
+
+            results = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return results;
+    }
 
     /*
      * (non-Javadoc)

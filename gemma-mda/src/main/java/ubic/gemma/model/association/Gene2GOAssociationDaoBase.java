@@ -142,6 +142,12 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
         return this.handleFindByGoTerm( goId, taxon );
 
     }
+    
+    @Override
+    public java.util.Collection<Gene> findByGoTerm( final java.lang.String goId) {
+        return this.handleFindByGoTerm( goId);
+
+    }
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGOTerm(java.util.Collection,
@@ -317,6 +323,8 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      */
     protected abstract java.util.Collection<Gene> handleFindByGoTerm( java.lang.String goId,
             ubic.gemma.model.genome.Taxon taxon );
+    
+    protected abstract java.util.Collection<Gene> handleFindByGoTerm( java.lang.String goId);
 
     /**
      * Performs the core logic for {@link #findByGOTerm(java.util.Collection, ubic.gemma.model.genome.Taxon)}

@@ -312,38 +312,98 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * @param goSRDOs
      */
     private ArrayList<SearchResultDisplayObject> getGOGroupResults( String query, Taxon taxon, Integer maxGoTermsProcessed ) {
-        Collection<Taxon> taxaForGo = new ArrayList<Taxon>();
+        
         ArrayList<SearchResultDisplayObject> goSRDOs = new ArrayList<SearchResultDisplayObject>();
-        // if taxon isn't set, get go groups for each possible taxon
-        if ( taxon == null ) {
-            taxaForGo.addAll( taxonService.loadAllTaxaWithGenes() );
-        } else {
-            taxaForGo.add( taxon );
-        }
-
-        for ( Taxon taxonForGo : taxaForGo ) {
+       
+        if (taxon!=null){
+        
             if ( query.toUpperCase().startsWith( "GO" ) ) {
-                GeneSet goSet = geneSetSearch.findByGoId( query, taxonForGo );
+                GeneSet goSet = geneSetSearch.findByGoId( query, taxon );
                 if ( goSet != null && goSet.getMembers() != null && goSet.getMembers().size() > 0 ) {
-                    SearchResultDisplayObject sdo = makeGoGroupSearchResult( goSet, query, query, taxonForGo );
+                    SearchResultDisplayObject sdo = makeGoGroupSearchResult( goSet, query, query, taxon );
                     goSRDOs.add( sdo );
-                    //goSets.add( goSet );
                 }
             } else {
-                for ( GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxonForGo, maxGoTermsProcessed ) ) {
+                for ( GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxon, maxGoTermsProcessed ) ) {
                     // don't bother adding empty GO groups
                     // (should probably do this check elsewhere in case it speeds things up)
                     if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
-                        SearchResultDisplayObject sdo = makeGoGroupSearchResult( geneSet, null, query, taxonForGo );
-                        goSRDOs.add( sdo );
-                        //goSets.add( geneSet );
+                        SearchResultDisplayObject sdo = makeGoGroupSearchResult( geneSet, null, query, taxon );
+                        goSRDOs.add( sdo );                        
                     }
                 }
             }
         }
+        else{//taxon is null, search without taxon as a constraint and bag up the results based on taxon
+        	
+        	 if ( query.toUpperCase().startsWith( "GO" ) ) {
+                 GeneSet goSet = geneSetSearch.findByGoId( query, taxon );
+                 //this geneset has genes from all the different taxons, organize them
+                 Collection<GeneSet> taxonSpecificSets = organizeMultiTaxaSetIntoTaxonSpecificSets(goSet);
+                 
+                 for (GeneSet taxonGeneSet: taxonSpecificSets){
+                 
+                	 if ( taxonGeneSet != null && taxonGeneSet.getMembers() != null && taxonGeneSet.getMembers().size() > 0 ) {
+                		 SearchResultDisplayObject sdo = makeGoGroupSearchResult( taxonGeneSet, query, query, taxonGeneSet.getMembers().iterator().next().getGene().getTaxon() );
+                		 goSRDOs.add( sdo );                     
+                	 }
+                 }
+             } else {
+                 for ( GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxon, maxGoTermsProcessed ) ) {
+                	 
+                	 //geneSet will have genes from different taxons inside, organize them.
+                	 Collection<GeneSet> taxonSpecificSets = organizeMultiTaxaSetIntoTaxonSpecificSets(geneSet);
+                	 
+                	 for (GeneSet taxonGeneSet: taxonSpecificSets){
+                	 
+                		 if ( geneSet.getMembers() != null && taxonGeneSet.getMembers().size() != 0 ) {
+                			 SearchResultDisplayObject sdo = makeGoGroupSearchResult( taxonGeneSet, null, query, taxonGeneSet.getMembers().iterator().next().getGene().getTaxon() );
+                			 goSRDOs.add( sdo );                         
+                		 }
+                	 }
+                 }
+             }
+        	
+        	
+        	
+        	
+        }
 
         Collections.sort( goSRDOs );
         return goSRDOs;
+    }
+    
+    private Collection<GeneSet> organizeMultiTaxaSetIntoTaxonSpecificSets(GeneSet gs){
+    	
+    	HashMap<Long, GeneSet> taxonToGeneSetMap = new HashMap<Long, GeneSet>();
+    	
+    	
+    	for (GeneSetMember geneMember: gs.getMembers()){
+    		
+    		Long id = geneMember.getGene().getTaxon().getId();
+    		if ( taxonToGeneSetMap.get(id) == null ){
+    			
+    			GeneSet newTaxonSet = GeneSet.Factory.newInstance();
+    			
+    			newTaxonSet.setName(gs.getName());
+    			newTaxonSet.setDescription(gs.getDescription());
+    			Collection<GeneSetMember> members = new ArrayList<GeneSetMember>();
+    			members.add(geneMember);
+    			
+    			newTaxonSet.setMembers(members);
+    			
+    			taxonToGeneSetMap.put(id, newTaxonSet);
+    			
+    		}else{
+    			GeneSet existingTaxonSet = taxonToGeneSetMap.get(id);
+    			
+    			existingTaxonSet.getMembers().add(geneMember);
+    		}
+    		
+    	}
+    	
+    	
+    	return taxonToGeneSetMap.values();
     }
 
     /**

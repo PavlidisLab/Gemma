@@ -56,6 +56,8 @@ public interface Gene2GOAssociationService {
      * Returns all the genes that have the given GoTerms or any of the given goterms children.
      */
     public Collection<Gene> findByGOTerm( java.lang.String goID, ubic.gemma.model.genome.Taxon taxon );
+    
+    public Collection<Gene> findByGOTerm( java.lang.String goID);
 
     /**
      * 
