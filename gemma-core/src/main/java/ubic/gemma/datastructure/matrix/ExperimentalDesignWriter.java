@@ -165,7 +165,6 @@ public class ExperimentalDesignWriter {
 
         for ( ExperimentalFactor ef : factors ) {
             String efName = ef.getName();
-            // efName = efName.replaceAll( "\\s", "_" );
             buf.append( "\t" + efName );
         }
 
