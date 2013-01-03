@@ -42,6 +42,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
+import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -49,6 +51,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -105,7 +108,13 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private ProbeMapper probeMapper;
 
     @Autowired
-    ArrayDesignReportService arrayDesignReportService;
+    private ArrayDesignReportService arrayDesignReportService;
+
+    @Autowired
+    private ArrayDesignAnnotationService arrayDesignAnnotationService;
+
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
 
     /*
      * (non-Javadoc)
@@ -208,8 +217,27 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         }
 
         log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
-
+        try {
+            this.deleteOldFiles( arrayDesign );
+        } catch ( IOException e ) {
+            log.error( "Failed to delete all old files associated with " + arrayDesign
+                    + ", be sure to clean them up manually or regenerate them" );
+        }
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+
+    }
+
+    /**
+     * Delete outdated annotation and associated experiment files.
+     * 
+     * @param arrayDesign
+     */
+    private void deleteOldFiles( ArrayDesign arrayDesign ) throws IOException {
+        arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
+        Collection<ExpressionExperiment> ees4platform = arrayDesignService.getExpressionExperiments( arrayDesign );
+        for ( ExpressionExperiment ee : ees4platform ) {
+            expressionDataFileService.deleteAllFiles( ee );
+        }
 
     }
 
@@ -359,6 +387,9 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         }
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+
+        this.deleteOldFiles( arrayDesign );
+
         log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
         b.close();
     }
@@ -429,10 +460,9 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                         existing = checkForAlias( geneProduct );
                         if ( existing == null ) {
                             /*
-                             *  We have to be careful not to cruft up the gene table now that I so carefully
-                             * cleaned it. But this is a problem if we aren't adding some other association to the gene
-                             * at least. But generally the mRNAs that GP has that NCBI doesn't are "alternative" or
-                             * "additional".
+                             * We have to be careful not to cruft up the gene table now that I so carefully cleaned it.
+                             * But this is a problem if we aren't adding some other association to the gene at least.
+                             * But generally the mRNAs that GP has that NCBI doesn't are "alternative" or "additional".
                              */
                             if ( log.isDebugEnabled() )
                                 log.debug( "New gene product from GoldenPath is not in Gemma: " + geneProduct

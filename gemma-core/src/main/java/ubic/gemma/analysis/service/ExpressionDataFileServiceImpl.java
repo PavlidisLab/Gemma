@@ -111,7 +111,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
     @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
@@ -321,6 +321,39 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return buf.toString();
     }
 
+    @Override
+    public void deleteAllFiles( ExpressionExperiment ee ) throws IOException {
+        ee = this.expressionExperimentService.thawLite( ee );
+
+        // data files.
+        deleteAndLog( getOutputFile( ee, true ) );
+        deleteAndLog( getOutputFile( ee, false ) );
+
+        // diff ex files
+        Collection<DifferentialExpressionAnalysis> analyses = this.differentialExpressionAnalysisService
+                .getAnalyses( ee );
+
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+            String filename = getDiffExArchiveFileName( analysis );
+            deleteAndLog( getOutputFile( filename ) );
+        }
+
+        // coexpression file
+        deleteAndLog( getOutputFile( getCoexpressionDataFilename( ee ) ) );
+
+        // design file
+        deleteAndLog( getOutputFile( getDesignFileName( ee ) ) );
+    }
+
+    /**
+     * @param f1
+     */
+    private void deleteAndLog( File f1 ) {
+        if ( f1.canWrite() && f1.delete() ) {
+            log.info( "Deleted: " + f1 );
+        }
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -389,22 +422,31 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( !filtered ) {
             filteredAdd = ".unfilt";
         }
-        String filename = ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expmat" + filteredAdd
-                + DATA_FILE_SUFFIX;
+        String filename = getDataFileName( ee, filteredAdd );
         return getOutputFile( filename );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.service.ExpressionDataFileSerivce#getOutputFile(ubic.gemma.model.common.quantitationtype.
-     * QuantitationType)
+    /**
+     * @param ee
+     * @param filteredAdd
+     * @return Name, without full path.
      */
-    @Override
-    public File getOutputFile( QuantitationType type ) {
-        String filename = type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + DATA_FILE_SUFFIX;
+    private String getDataFileName( ExpressionExperiment ee, String filteredAdd ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expmat" + filteredAdd
+                + DATA_FILE_SUFFIX;
+    }
+
+    private File getOutputFile( QuantitationType type ) {
+        String filename = getOutputFilename( type );
         return getOutputFile( filename );
+    }
+
+    /**
+     * @param type
+     * @return Name, without full path.
+     */
+    private String getOutputFilename( QuantitationType type ) {
+        return type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + DATA_FILE_SUFFIX;
     }
 
     /*
@@ -445,8 +487,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         ee = expressionExperimentService.thawLite( ee );
 
-        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "[\\s\\/]+", "_" ) + "_coExp"
-                + DATA_FILE_SUFFIX;
+        String getCoexpressionDataFilename = getCoexpressionDataFilename( ee );
+        String filename = getCoexpressionDataFilename;
         try {
             File f = getOutputFile( filename );
             if ( !forceWrite && f.canRead() ) {
@@ -461,6 +503,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             throw new RuntimeException( e );
         }
 
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private String getCoexpressionDataFilename( ExpressionExperiment ee ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_coExp" + DATA_FILE_SUFFIX;
     }
 
     /*
@@ -532,8 +582,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         ee = expressionExperimentService.thawLite( ee );
 
-        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_expdesign"
-                + DATA_FILE_SUFFIX;
+        String filename = getDesignFileName( ee );
         try {
             File f = getOutputFile( filename );
             if ( !forceWrite && f.canRead() ) {
@@ -548,6 +597,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             throw new RuntimeException( e );
         }
 
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private String getDesignFileName( ExpressionExperiment ee ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign" + DATA_FILE_SUFFIX;
     }
 
     /*
@@ -726,8 +783,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             throw new UnsupportedOperationException( "Don't know about " + experimentAnalyzed.getClass().getName() );
         }
 
-        return experimentAnalyzed.getId() + "_" + ee.getShortName().replaceAll( "[\\s\\/]+", "_" )
-                + "_diffExpAnalysis_" + diff.getId() + DATA_ARCHIVE_FILE_SUFFIX;
+        return experimentAnalyzed.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_diffExpAnalysis_"
+                + diff.getId() + DATA_ARCHIVE_FILE_SUFFIX;
     }
 
     /**
@@ -811,7 +868,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @throws IOException
      */
     private File getJSONOutputFile( QuantitationType type ) throws IOException {
-        String filename = type.getName().replaceAll( "\\s+", "_" ) + JSON_FILE_SUFFIX;
+        String filename = getJSONOutputFilename( type );
         String fullFilePath = DATA_DIR + filename;
 
         File f = new File( fullFilePath );
@@ -825,6 +882,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( !parentDir.exists() ) parentDir.mkdirs();
         f.createNewFile();
         return f;
+    }
+
+    /**
+     * @param type
+     * @return Name, without full path.
+     */
+    private String getJSONOutputFilename( QuantitationType type ) {
+        return FileTools.cleanForFileName( type.getName() ) + JSON_FILE_SUFFIX;
     }
 
     /**

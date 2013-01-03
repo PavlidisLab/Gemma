@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -33,15 +32,54 @@ import ubic.gemma.util.ConfigUtils;
  */
 public interface ExpressionDataFileService {
 
-    public static final String DATA_FILE_SUFFIX = ".data.txt.gz";
     public static final String DATA_ARCHIVE_FILE_SUFFIX = ".archive.zip";
-
-    public static final String JSON_FILE_SUFFIX = ".data.json.gz";
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
+
+    public static final String DATA_FILE_SUFFIX = ".data.txt.gz";
     public static final String DISCLAIMER = "# If you use this file for your research, please cite: \n"
             + "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. "
             + "Bioinformatics, 2012. \n";
+    public static final String JSON_FILE_SUFFIX = ".data.json.gz";
+
+    /**
+     * @param results
+     * @param geneAnnotations
+     * @param buf
+     */
+    public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
+            Map<Long, String[]> geneAnnotations, StringBuilder buf );
+
+    /**
+     * @param ears
+     * @param geneAnnotations
+     * @param buf
+     * @param probe2String
+     * @param sortedFirstColumnOfResults
+     * @return
+     */
+    public List<DifferentialExpressionAnalysisResult> analysisResultSetToString( ExpressionAnalysisResultSet ears,
+            Map<Long, String[]> geneAnnotations, StringBuilder buf, Map<Long, StringBuilder> probe2String,
+            List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults );
+
+    /**
+     * Delete any existing coexpression, data, or differential expression data files.
+     * 
+     * @param ee
+     * @throws IOException
+     */
+    public void deleteAllFiles( ExpressionExperiment ee ) throws IOException;
+
+    /**
+     * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
+     * contains following files: - differential expression analysis file (q-values per factor) - file for each result
+     * set with contrasts info (such as fold change for each factor value)
+     * 
+     * @param analysis
+     * @param forceRewrite
+     * @return
+     */
+    public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
 
     /**
      * @param ee
@@ -51,27 +89,10 @@ public interface ExpressionDataFileService {
     public File getOutputFile( ExpressionExperiment ee, boolean filtered );
 
     /**
-     * @param type
-     * @return
-     */
-    public File getOutputFile( QuantitationType type );
-
-    /**
-     * @param filename
-     * @return
+     * @param filename without the path - that is, just the name of the file
+     * @return File, with location in the appropriate target directory.
      */
     public File getOutputFile( String filename );
-
-    /**
-     * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only). It will be gzip-compressed.
-     * 
-     * @param ee
-     * @param forceWrite
-     * @param filtered
-     * @return
-     */
-    public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
 
     /**
      * Create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -85,6 +106,26 @@ public interface ExpressionDataFileService {
      */
     public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException;
+
+    /**
+     * Write or located the coexpression data file for a given experiment
+     * 
+     * @param ee
+     * @param forceWrite
+     * @return
+     */
+    public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite );
+
+    /**
+     * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
+     * expression applied (currently supports default settings only). It will be gzip-compressed.
+     * 
+     * @param ee
+     * @param forceWrite
+     * @param filtered
+     * @return
+     */
+    public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -106,6 +147,15 @@ public interface ExpressionDataFileService {
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
 
     /**
+     * Locate or create the differential expression data file(s) for a given experiment.
+     * 
+     * @param ee
+     * @param forceWrite
+     * @return collection of files, one per analysis.
+     */
+    public Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite );
+
+    /**
      * @param ee
      * @param forceWrite
      * @param filtered if the data should be filtered.
@@ -119,54 +169,5 @@ public interface ExpressionDataFileService {
      * @param forceWrite
      */
     public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
-
-    /**
-     * Locate or create the differential expression data file(s) for a given experiment.
-     * 
-     * @param ee
-     * @param forceWrite
-     * @return collection of files, one per analysis.
-     */
-    public Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite );
-
-    /**
-     * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
-     * contains following files: - differential expression analysis file (q-values per factor) - file for each result
-     * set with contrasts info (such as fold change for each factor value)
-     * 
-     * @param analysis
-     * @param forceRewrite
-     * @return
-     */
-    public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
-
-    /**
-     * Write or located the coexpression data file for a given experiment
-     * 
-     * @param ee
-     * @param forceWrite
-     * @return
-     */
-    public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite );
-
-    /**
-     * @param results
-     * @param geneAnnotations
-     * @param buf
-     */
-    public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
-            Map<Long, String[]> geneAnnotations, StringBuilder buf );
-
-    /**
-     * @param ears
-     * @param geneAnnotations
-     * @param buf
-     * @param probe2String
-     * @param sortedFirstColumnOfResults
-     * @return
-     */
-    public List<DifferentialExpressionAnalysisResult> analysisResultSetToString( ExpressionAnalysisResultSet ears,
-            Map<Long, String[]> geneAnnotations, StringBuilder buf, Map<Long, StringBuilder> probe2String,
-            List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults );
 
 }

@@ -108,4 +108,10 @@ public interface ArrayDesignAnnotationService {
     public abstract Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite )
             throws IOException;
 
+    /**
+     * @param arrayDesign
+     * @throws IOException
+     */
+    public abstract void deleteExistingFiles( ArrayDesign arrayDesign ) throws IOException;
+
 }
