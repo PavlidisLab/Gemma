@@ -150,12 +150,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         File outputLocation = outputLocations.iterator().next();
 
-        log.info( outputLocation );
         DoubleMatrixReader r = new DoubleMatrixReader();
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
         assertEquals( 100, readIn.rows() );
         assertEquals( 6, readIn.columns() ); // interactions will be included by default.
+
+        expressionDataFileService.deleteAllFiles( ee );
 
         // / delete the analysis
         int numDeleted = differentialExpressionAnalyzerHelperService.deleteAnalyses( ee );
@@ -166,6 +167,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .getExperimentalDesignLayout( ee );
 
         assertEquals( 12, layout.size() );
+
     }
 
     /**
@@ -287,8 +289,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .getAnalysisValueObjects( analysis.getId() );
         for ( DifferentialExpressionAnalysisValueObject vo : vos ) {
             assertTrue( !vo.getFactorValuesUsed().isEmpty() );
-            assertNotNull(vo.getSubsetFactor());
-            assertNotNull(vo.getSubsetFactorValue());
+            assertNotNull( vo.getSubsetFactor() );
+            assertNotNull( vo.getSubsetFactorValue() );
         }
     }
 

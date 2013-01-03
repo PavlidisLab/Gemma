@@ -20,6 +20,7 @@ package ubic.gemma.analysis.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -80,7 +81,8 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
         assertEquals( 70, i );
         reader.close();
 
-        f1.delete();
+        expressionDataFileService.deleteAllFiles( ee );
+        assertTrue( !f1.exists() );
     }
 
     /**
@@ -111,6 +113,7 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
         assertEquals( 70, i );
         reader.close();
 
-        f1.delete();
+        expressionDataFileService.deleteAllFiles( ee );
+        assertTrue( !f1.exists() );
     }
 }
