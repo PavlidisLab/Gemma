@@ -171,6 +171,17 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
                             + th, th );
         }
     }
+    
+    @Override
+    public java.util.Collection<Gene> findByGOTerm( final java.lang.String goID) {
+        try {
+        	return this.getGene2GOAssociationDao().findByGoTerm( goID);
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findByGOTerm(java.lang.String goID, ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)
