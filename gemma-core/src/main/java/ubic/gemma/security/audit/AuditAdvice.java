@@ -299,7 +299,7 @@ public class AuditAdvice {
         if ( persister == null ) {
             throw new IllegalArgumentException( "No persister found for " + object.getClass().getName() );
         }
-
+        boolean hadErrors = false;
         CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
         String[] propertyNames = persister.getPropertyNames();
         try {
@@ -331,7 +331,9 @@ public class AuditAdvice {
                     } catch ( HibernateException e ) {
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
-                        log.warn( "What am I doing here? " + e.getMessage() );
+                        hadErrors = true;
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Hibernate error while processing " + auditable + ": " + e.getMessage() );
                     }
 
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
@@ -348,7 +350,10 @@ public class AuditAdvice {
                                     maybeAddCascadeCreateEvent( object, auditable, user );
                                     processAssociations( methodName, collectionMember, user );
                                 } catch ( HibernateException e ) {
-                                    log.warn( "What am I doing here? " + e.getMessage() );
+                                    hadErrors = true;
+                                    if ( log.isDebugEnabled() )
+                                        log.debug( "Hibernate error while processing " + auditable + ": "
+                                                + e.getMessage() );
                                     // If this happens, it means the object can't be 'new' so adding audit trail can't
                                     // be necessary. But keep checking.
                                 }
@@ -356,9 +361,11 @@ public class AuditAdvice {
                             }
                         }
                     } catch ( HibernateException e ) {
+                        hadErrors = true;
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
-                        log.warn( "What am I doing here? " + e.getMessage() );
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Hibernate error while processing " + object + ": " + e.getMessage() );
                     }
 
                 }
@@ -367,6 +374,10 @@ public class AuditAdvice {
             throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
             throw new RuntimeException( e );
+        }
+        if ( hadErrors ) {
+            // log.warn( "There were hibernate errors during association checking for " + object
+            // + "; probably not critical." );
         }
     }
 

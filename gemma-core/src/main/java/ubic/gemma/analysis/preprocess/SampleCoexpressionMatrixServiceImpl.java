@@ -65,25 +65,13 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
     }
 
     @Autowired
-    private SampleCoexpressionAnalysisDao sampleCoexpressionMatrixDao;
-
-    @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#findOrCreate(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment)
-     */
-    @Override
-    public DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment expressionExperiment ) {
-        return create( expressionExperiment, false );
-    }
+    @Autowired
+    private SampleCoexpressionAnalysisDao sampleCoexpressionMatrixDao;
 
     /*
      * (non-Javadoc)
@@ -138,6 +126,30 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
                 datamatrix.getExpressionExperiment() );
 
         return mat;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#delete(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment)
+     */
+    @Override
+    public void delete( ExpressionExperiment ee ) {
+        sampleCoexpressionMatrixDao.removeForExperiment( ee );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#findOrCreate(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment)
+     */
+    @Override
+    public DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment expressionExperiment ) {
+        return create( expressionExperiment, false );
     }
 
     /*

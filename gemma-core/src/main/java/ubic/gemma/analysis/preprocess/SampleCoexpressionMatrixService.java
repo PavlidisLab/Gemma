@@ -51,4 +51,6 @@ public interface SampleCoexpressionMatrixService {
 
     public abstract boolean hasMatrix( ExpressionExperiment ee );
 
+    public abstract void delete( ExpressionExperiment ee );
+
 }

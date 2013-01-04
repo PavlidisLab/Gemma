@@ -124,7 +124,7 @@ public interface ExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByBibliographicReference(
             ubic.gemma.model.common.description.BibliographicReference bibRef );
-    
+
     /**
      * Given a bioMaterial returns an expressionExperiment
      */
@@ -555,14 +555,25 @@ public interface ExpressionExperimentService {
             Collection<RawExpressionDataVector> vectors );
 
     /**
-     * Used when we want to replace the vectors. Does not take care of computing the processed data vectors, but it does
-     * clear them out.
+     * Used when we want to add data for a quantitation type. Does not delete any existing vectors.
      * 
      * @param ee
      * @param vectors
+     * @return
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
+    public ExpressionExperiment addVectors( ExpressionExperiment eeToUpdate, ArrayDesign ad,
+            Collection<RawExpressionDataVector> newVectors );
+
+    /**
+     * Remove raw vectors associated with the given quantitation type. It does not touch processed data.
+     * 
+     * @param ee
+     * @param qt
+     * @return number of vectors removed.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public int removeData( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * @param expressionExperiment
@@ -606,5 +617,5 @@ public interface ExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
- 
+
 }

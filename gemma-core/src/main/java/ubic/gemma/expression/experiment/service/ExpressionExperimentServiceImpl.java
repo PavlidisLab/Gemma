@@ -893,6 +893,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
 
+        // to attach to session correctly.
         ExpressionExperiment eeToUpdate = this.load( ee.getId() );
 
         // remove old vectors.
@@ -909,7 +910,20 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             quantitationTypeDao.remove( oldqt );
         }
 
-        // make new stuff.
+        return addVectors( eeToUpdate, ad, newVectors );
+    }
+
+    /**
+     * @param ee
+     * @param ad
+     * @param newVectors
+     * @return
+     */
+    @Override
+    public ExpressionExperiment addVectors( ExpressionExperiment ee, ArrayDesign ad,
+            Collection<RawExpressionDataVector> newVectors ) {
+
+        // ee = this.load( ee.getId() );
         Collection<BioAssayDimension> bads = new HashSet<BioAssayDimension>();
         Collection<QuantitationType> qts = new HashSet<QuantitationType>();
         for ( RawExpressionDataVector vec : newVectors ) {
@@ -927,7 +941,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         BioAssayDimension bad = bads.iterator().next();
-        bad = this.bioAssayDimensionDao.create( bad );
+
+        bad = this.bioAssayDimensionDao.findOrCreate( bad );
         assert bad.getBioAssays().size() > 0;
 
         QuantitationType newQt = qts.iterator().next();
@@ -940,11 +955,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             vec.setQuantitationType( newQt );
         }
 
-        eeToUpdate.getRawExpressionDataVectors().addAll( newVectors );
+        ee.getRawExpressionDataVectors().addAll( newVectors );
         ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
 
         if ( ad == null ) {
-            for ( BioAssay ba : eeToUpdate.getBioAssays() ) {
+            for ( BioAssay ba : ee.getBioAssays() ) {
                 if ( !vectorAd.equals( ba.getArrayDesignUsed() ) ) {
                     throw new IllegalArgumentException( "Vectors must use the array design as the bioassays" );
                 }
@@ -953,24 +968,45 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             throw new IllegalArgumentException( "Vectors must use the array design indicated" );
         }
 
-        for ( BioAssay ba : eeToUpdate.getBioAssays() ) {
+        for ( BioAssay ba : ee.getBioAssays() ) {
             ba.setArrayDesignUsed( ad );
         }
 
         // this is a denormalization; easy to forget to update this.
-        eeToUpdate.getQuantitationTypes().add( newQt );
+        ee.getQuantitationTypes().add( newQt );
 
-        this.update( eeToUpdate );
-        ee = eeToUpdate;
+        // this.update( ee ); // is this even necessary? should flush.
 
-        log.info( eeToUpdate.getRawExpressionDataVectors().size() + " vectors for experiment" );
+        log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
 
-        return eeToUpdate;
+        return ee;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService#removeData(ubic.gemma.model.expression.
+     * experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
     @Override
-    public void replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors ) {
-        this.replaceVectors( ee, null, vectors );
+    public int removeData( ExpressionExperiment ee, QuantitationType qt ) {
+        ExpressionExperiment eeToUpdate = this.load( ee.getId() );
+        Collection<RawExpressionDataVector> vecsToRemove = new ArrayList<RawExpressionDataVector>();
+        for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
+            if ( oldvec.getQuantitationType().equals( qt ) ) {
+                vecsToRemove.add( oldvec );
+            }
+        }
+
+        if ( vecsToRemove.isEmpty() ) {
+            throw new IllegalArgumentException( "No vectors to remove for quantitation type=" + qt );
+        }
+
+        eeToUpdate.getRawExpressionDataVectors().removeAll( vecsToRemove );
+        eeToUpdate.getQuantitationTypes().remove( qt );
+        // this.update( eeToUpdate ); // will flush.
+        // quantitationTypeDao.remove( qt );
+        return vecsToRemove.size();
     }
 
     /**

@@ -55,7 +55,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author paul
  * @version $Id$
  */
-public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
+public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
@@ -87,6 +87,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
     public void testAddAffyExonArrayDataExpressionExperiment() throws Exception {
 
         if ( !hasApt ) {
+            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
             return;
         }
 
@@ -113,6 +114,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
     @Test
     public void testAddAffyExonHuman() {
         if ( !hasApt ) {
+            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
             return;
         }
         ExpressionExperiment ee; // GSE22498
@@ -133,6 +135,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
     @Test
     public void testAddAffyExonRat() {
         if ( !hasApt ) {
+            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
             return;
         }
         ExpressionExperiment ee; // GSE33597
@@ -195,7 +198,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
          */
         for ( int i = 0; i < rawMatrix.rows(); i++ ) {
             for ( int j = 0; j < rawMatrix.columns(); j++ ) {
-                rawMatrix.set( i, j, ( i + 1 ) * ( j + 1 ) / 1000.0 );
+                rawMatrix.set( i, j, ( i + 1 ) * ( j + 1 ) * Math.random() / 100.0 );
             }
         }
 
@@ -204,7 +207,7 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         rawMatrix.setRowNames( probes );
         rawMatrix.setColumnNames( bms );
 
-        QuantitationType qt = makeQt();
+        QuantitationType qt = makeQt( true );
 
         ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
 
@@ -215,12 +218,20 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         /*
          * Replace it.
          */
-        dataUpdater.replaceData( ee, targetArrayDesign, data );
+        ee = dataUpdater.replaceData( ee, targetArrayDesign, data );
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+        }
 
         /*
          * Check
          */
-        ExpressionExperiment updatedee = experimentService.thaw( experimentService.load( ee.getId() ) );
+        ExpressionExperiment updatedee = experimentService.thaw( ee );
+
+        for ( BioAssay ba : updatedee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+        }
 
         assertEquals( 100, updatedee.getRawExpressionDataVectors().size() );
 
@@ -236,9 +247,27 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
             BioAssayDimension bad = v.getBioAssayDimension();
             assertEquals( 31, bad.getBioAssays().size() );
         }
+
+        /*
+         * Test adding data (non-preferred)
+         */
+        qt = makeQt( false );
+        ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( updatedee, qt, rawMatrix );
+        ee = dataUpdater.addData( updatedee, targetArrayDesign, moreData );
+
+        updatedee = experimentService.thaw( ee );
+        try {
+            // add preferred data twice.
+            dataUpdater.addData( updatedee, targetArrayDesign, data );
+            fail( "Should have gotten an exception" );
+        } catch ( IllegalArgumentException e ) {
+            // okay.
+        }
+
+        dataUpdater.deleteData( updatedee, qt );
     }
 
-    private QuantitationType makeQt() {
+    private QuantitationType makeQt( boolean preferred ) {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( "foo" );
         qt.setDescription( "bar" );
@@ -249,9 +278,8 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
         qt.setIsBackgroundSubtracted( true );
         qt.setIsNormalized( true );
         qt.setIsMaskedPreferred( true );
-        qt.setIsPreferred( true );
+        qt.setIsPreferred( preferred );
         qt.setIsBatchCorrected( false );
-        qt.setIsPreferred( true );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         return qt;

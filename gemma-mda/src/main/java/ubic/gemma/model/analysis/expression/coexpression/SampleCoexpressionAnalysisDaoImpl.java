@@ -144,6 +144,11 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         final List<BioAssay> bioAssays = ( List<BioAssay> ) matObj.getBioAssayDimension().getBioAssays();
         int numBa = bioAssays.size();
 
+        if ( numBa == 0 ) {
+            throw new IllegalArgumentException( "No bioassays in the bioassaydimension with id="
+                    + matObj.getBioAssayDimension().getId() );
+        }
+
         double[][] rawMatrix;
         try {
             rawMatrix = bac.byteArrayToDoubleMatrix( matrixBytes, numBa );

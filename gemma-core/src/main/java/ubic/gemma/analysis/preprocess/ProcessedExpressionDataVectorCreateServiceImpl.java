@@ -116,15 +116,11 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
             /*
              * Reorder?...
              */
+
             /*
              * Normalize?...
              */
-            /*
-             * SVD?...
-             */
-            /*
-             * Batch correct?...
-             */
+
             return result;
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),

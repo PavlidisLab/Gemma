@@ -35,12 +35,14 @@ import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -64,39 +66,41 @@ public class DataUpdater {
     private ArrayDesignService arrayDesignService;
 
     @Autowired
-    private ExpressionExperimentService experimentService;
-
-    @Autowired
-    private SVDService svdService;
-
-    @Autowired
-    private GeoService geoService;
+    private BioAssayDimensionService assayDimensionService;
 
     @Autowired
     private AuditTrailService auditTrailService;
 
     @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private ExpressionExperimentService experimentService;
 
     @Autowired
-    private BioAssayDimensionService assayDimensionService;
+    private GeoService geoService;
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
-    public void addAffyExonArrayData( ExpressionExperiment ee ) {
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
+    @Autowired
+    private SVDService svdService;
+
+    public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
             throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
         }
-        addAffyExonArrayData( ee, ads.iterator().next() );
+        return addAffyExonArrayData( ee, ads.iterator().next() );
     }
 
     /**
+     * Replaces any existing "preferred" dat.
+     * 
      * @param ee
      * @param ad
      */
-    public void addAffyExonArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
+    public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
 
         RawDataFetcher f = new RawDataFetcher();
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
@@ -121,7 +125,7 @@ public class DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        experimentService.replaceVectors( ee, targetPlatform, vectors );
+        ee = experimentService.replaceVectors( ee, targetPlatform, vectors );
 
         if ( !targetPlatform.equals( ad ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
@@ -130,10 +134,10 @@ public class DataUpdater {
                             + targetPlatform.getShortName() + ")" );
         }
 
-        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform );
+        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform, true );
 
         postprocess( ee );
-
+        return ee;
     }
 
     /**
@@ -179,14 +183,99 @@ public class DataUpdater {
                             + targetPlatform.getShortName() + ")" );
         }
 
-        audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform );
+        audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform, true );
 
         postprocess( ee );
 
     }
 
+    /**
+     * @param ee
+     * @param qt
+     * @return
+     */
+    public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
+        return this.experimentService.removeData( ee, qt );
+    }
+
+    /**
+     * Add an additional data (with associated quantitation type) to the selected experiment. Will do postprocessing if
+     * the data quantitationtype is 'preferred', but if there is already a preferred quantitation type, an error will be
+     * thrown.
+     * 
+     * @param ee
+     * @param targetPlatform
+     * @param data
+     */
+    public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+            ExpressionDataDoubleMatrix data ) {
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can only replace data for an experiment that uses one platform; "
+                    + "you must switch/merge first and then provide appropriate replacement data." );
+        }
+
+        if ( data.rows() == 0 ) {
+            throw new IllegalArgumentException( "Data had no rows" );
+        }
+
+        ArrayDesign originalArrayDesign = ads.iterator().next();
+        if ( !targetPlatform.equals( originalArrayDesign ) ) {
+            throw new IllegalArgumentException(
+                    "You can only add data for a platform that already is used for the experiment: "
+                            + originalArrayDesign + " != targeted " + targetPlatform );
+        }
+
+        Collection<QuantitationType> qts = data.getQuantitationTypes();
+
+        if ( qts.size() > 1 ) {
+            throw new IllegalArgumentException( "Only support a single quantitation type" );
+        }
+
+        if ( qts.isEmpty() ) {
+            throw new IllegalArgumentException( "Please supply a quantitation type with the data" );
+        }
+
+        QuantitationType qt = qts.iterator().next();
+
+        if ( qt.getIsPreferred() ) {
+            for ( QuantitationType existingQt : ee.getQuantitationTypes() ) {
+                if ( existingQt.getIsPreferred() ) {
+                    throw new IllegalArgumentException(
+                            "You cannot add 'preferred' data to an experiment that already has it. You should first make the existing data non-preferred." );
+                }
+            }
+        }
+
+        Collection<RawExpressionDataVector> vectors = makeNewVectors( ee, targetPlatform, data, qt );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "no vectors!" );
+        }
+
+        ee = experimentService.addVectors( ee, originalArrayDesign, vectors );
+
+        audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
+
+        if ( qt.getIsPreferred() ) {
+            postprocess( ee );
+        }
+
+        // debug code.
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assert ba.getArrayDesignUsed().equals( targetPlatform );
+        }
+
+        experimentService.update( ee );
+        return ee;
+    }
+
+    /**
+     * @param ee
+     */
     public void postprocess( ExpressionExperiment ee ) {
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        sampleCoexpressionMatrixService.delete( ee );
         sampleCoexpressionMatrixService.create( ee, true );
         svdService.svd( ee.getId() );
     }
@@ -198,10 +287,12 @@ public class DataUpdater {
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      * 
-     * @param ee
-     * @param data
+     * @param ee the experiment to be modified
+     * @param targetPlatform the platform for the new data
+     * @param data the data to be used
      */
-    public void replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
+    public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+            ExpressionDataDoubleMatrix data ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
             throw new IllegalArgumentException( "Can only replace data for an experiment that uses one platform; "
@@ -227,11 +318,72 @@ public class DataUpdater {
         QuantitationType qt = qts.iterator().next();
         qt.setIsPreferred( true );
 
+        Collection<RawExpressionDataVector> vectors = makeNewVectors( ee, targetPlatform, data, qt );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "no vectors!" );
+        }
+
+        ee = experimentService.replaceVectors( ee, targetPlatform, vectors );
+
+        // audit if we switched platforms.
+        if ( !targetPlatform.equals( originalArrayDesign ) ) {
+            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+            auditTrailService.addUpdateEvent(
+                    ee,
+                    eventType,
+                    "Switched in course of updating vectors using data input (from "
+                            + originalArrayDesign.getShortName() + " to " + targetPlatform.getShortName() + ")" );
+        }
+
+        audit( ee, "Data vector replacement for " + targetPlatform, true );
+
+        postprocess( ee );
+
+        // debug code.
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assert ba.getArrayDesignUsed().equals( targetPlatform );
+        }
+
+        experimentService.update( ee );
+
+        return ee;
+    }
+
+    /**
+     * @param ee
+     * @param note
+     * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
+     */
+    private void audit( ExpressionExperiment ee, String note, boolean replace ) {
+        AuditEventType eventType = null;
+
+        if ( replace ) {
+            eventType = DataReplacedEvent.Factory.newInstance();
+        } else {
+            eventType = DataAddedEvent.Factory.newInstance();
+        }
+
+        auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
+    /**
+     * @param ee
+     * @param targetPlatform
+     * @param data
+     * @param qt
+     * @return
+     */
+    private Collection<RawExpressionDataVector> makeNewVectors( ExpressionExperiment ee, ArrayDesign targetPlatform,
+            ExpressionDataDoubleMatrix data, QuantitationType qt ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
         Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
 
         BioAssayDimension bioAssayDimension = data.getBestBioAssayDimension();
+
+        assert bioAssayDimension != null;
+        assert !bioAssayDimension.getBioAssays().isEmpty();
 
         bioAssayDimension = assayDimensionService.findOrCreate( bioAssayDimension );
 
@@ -261,34 +413,7 @@ public class DataUpdater {
             vectors.add( vector );
 
         }
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "no vectors!" );
-        }
-
-        ee = experimentService.replaceVectors( ee, targetPlatform, vectors );
-
-        if ( !targetPlatform.equals( originalArrayDesign ) ) {
-            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent(
-                    ee,
-                    eventType,
-                    "Switched in course of updating vectors using data input (from "
-                            + originalArrayDesign.getShortName() + " to " + targetPlatform.getShortName() + ")" );
-        }
-
-        audit( ee, "Data vector replacement for " + targetPlatform );
-
-        postprocess( ee );
-
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = DataReplacedEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
+        return vectors;
     }
 
     /**
