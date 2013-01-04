@@ -266,7 +266,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         Collection<Gene> genes = new HashSet<Gene>();
         genes.add( gene );
-        return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis ).get( gene );
+        return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis ).get( gene.getId() );
     }
 
     /*
