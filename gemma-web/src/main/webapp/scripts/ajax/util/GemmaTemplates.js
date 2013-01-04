@@ -2,11 +2,11 @@ Ext.namespace('Gemma.Widget', 'Gemma.Common');
 
 Gemma.Widget.tpl = {
 	ArrayDesignsNonPagingGrid : {
-		rowDetails : '<p>Probes: <b>{designElementCount}</b></p>'
-				+ '<p>With sequences: <b>{numProbeSequences}</b> <span style="color:grey">(Number of probes with sequences)</span></p>'
-				+ '<p>With align: <b>{numProbeAlignments}</b> <span style="color:grey">(Number of probes with at least one genome alignment)</span></p>'
-				+ '<p>Mapped to genes: <b>{numProbesToGenes}</b> <span style="color:grey">(Number of probes mapped to genes</span></p>'
-				+ '<p>Unique genes: <b>{numGenes}</b> <span style="color:grey">(Number of unique genes represented by the platform)</span></p>'
+		rowDetails : '<p>Elements: <b>{designElementCount}</b></p>'
+				+ '<p>With sequences: <b>{numProbeSequences}</b> <span style="color:grey">(Number of elements with sequences)</span></p>'
+				+ '<p>With align: <b>{numProbeAlignments}</b> <span style="color:grey">(Number of elements with at least one genome alignment)</span></p>'
+				+ '<p>Mapped to genes: <b>{numProbesToGenes}</b> <span style="color:grey">(Number of elements mapped to genes)</span></p>'
+				+ '<p>Unique genes: <b>{numGenes}</b> <span style="color:grey">(Number of distinct genes represented by the platform)</span></p>'
 				+ '<p> (as of {dateCached})</p>'
 	}
 };
