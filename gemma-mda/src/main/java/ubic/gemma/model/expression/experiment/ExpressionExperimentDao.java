@@ -69,6 +69,12 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID );
 
     /**
+     * @param ba
+     * @return
+     */
+    public ExpressionExperiment findByBioAssay( BioAssay ba );
+
+    /**
      * 
      */
     public ExpressionExperiment findByBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bm );
@@ -256,6 +262,12 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 
     /**
+     * @param experiments
+     * @return
+     */
+    public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments );
+
+    /**
      * 
      */
     public Integer getProcessedExpressionVectorCount( Long expressionExperiment );
@@ -339,17 +351,14 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Thaws the BioAssays associated with the given ExpressionExperiment and their associations, but not the
      * DesignElementDataVectors.
-     * </p>
      */
     public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param expressionExperiment
+     * @return
+     */
     public ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
-
-    public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments );
-
-    ExpressionExperiment findByBioAssay( BioAssay ba );
-
 }

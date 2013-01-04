@@ -185,8 +185,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         for ( BioAssay assay : expExp.getBioAssays() ) {
             assay.setArrayDesignUsed( arrayDesign );
-            // bioAssayService.update( assay );
         }
+
         expExp.setDescription( expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName()
                 + " by Gemma]" );
 
