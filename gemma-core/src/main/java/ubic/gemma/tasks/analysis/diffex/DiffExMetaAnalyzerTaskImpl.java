@@ -48,11 +48,14 @@ public class DiffExMetaAnalyzerTaskImpl implements DiffExMetaAnalyzerTask {
     public TaskResult execute( DiffExMetaAnalyzerTaskCommand command ) {
         GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze( command
                 .getAnalysisResultSetIds() );
-        metaAnalysis.setName( command.getName() );
-        metaAnalysis.setDescription( command.getDescription() );
 
-        if ( command.isPersist() ) {
-            metaAnalysis = this.diffExMetaAnalyzerService.persist( metaAnalysis );
+        if (metaAnalysis != null) {
+        	metaAnalysis.setName( command.getName() );
+        	metaAnalysis.setDescription( command.getDescription() );
+
+	        if ( command.isPersist() ) {
+	            metaAnalysis = this.diffExMetaAnalyzerService.persist( metaAnalysis );
+	        }
         }
 
         GeneDifferentialExpressionMetaAnalysisDetailValueObject metaAnalysisVO = ( metaAnalysis == null ? null
