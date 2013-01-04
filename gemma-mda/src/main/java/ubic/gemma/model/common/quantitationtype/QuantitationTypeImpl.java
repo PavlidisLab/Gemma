@@ -21,6 +21,18 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
 
     private static final long serialVersionUID = -352202738189491165L;
 
+    public QuantitationTypeImpl() {
+        super();
+        // set some default so we don't have to remember to do this.
+        this.setIsPreferred( false );
+        this.setIsBatchCorrected( false );
+        this.setIsNormalized( false );
+        this.setIsBackgroundSubtracted( false );
+        this.setIsBackground( false );
+        this.setIsRatio( false );
+        this.setIsMaskedPreferred( false );
+    }
+
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
