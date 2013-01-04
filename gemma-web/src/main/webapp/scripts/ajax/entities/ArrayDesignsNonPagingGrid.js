@@ -304,7 +304,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			 },*/
 				this.rowExpander, {
 					id: 'name',
-					header: "Array Name",
+					header: "Platform Name",
 					dataIndex: 'name',
 					width: 0.3, //viewConfig.forceFit resizes based on relative widths,
 					renderer: function(value, metaData, record, rowIndex, colIndex, store){
