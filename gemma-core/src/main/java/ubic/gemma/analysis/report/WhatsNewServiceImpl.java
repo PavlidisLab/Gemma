@@ -353,6 +353,12 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         return count;
     }
 
+    /**
+     * Give breakdown by taxon. "Private" experiments are not included.
+     * 
+     * @param ees
+     * @return
+     */
     private Map<Taxon, Collection<Long>> getExpressionExperimentIdsByTaxon( Collection<ExpressionExperiment> ees ) {
         /*
          * Sort taxa by name.
@@ -374,9 +380,11 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         Taxon t = null;
 
         Collection<Long> ids;
-        // get counts of new experiments by taxon
         for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) {
             ee = it.next();
+            if ( securityService.isPrivate( ee ) ) {
+                continue;
+            }
             t = expressionExperimentService.getTaxon( ee );
             if ( t != null ) {
                 if ( eesPerTaxon.containsKey( t ) ) {
