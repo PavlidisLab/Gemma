@@ -179,6 +179,9 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         this.id = ee.getId();
         this.shortName = ee.getShortName();
         this.name = ee.getName();
+        /*
+         * FIXME this doesn't populate enough stuff.
+         */
     }
 
     /**
