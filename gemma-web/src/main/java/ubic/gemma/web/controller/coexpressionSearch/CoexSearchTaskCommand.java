@@ -39,6 +39,7 @@ public class CoexSearchTaskCommand extends TaskCommand {
     public CoexSearchTaskCommand( CoexpressionSearchCommand searchOptions ) {
         super();
         this.searchOptions = searchOptions;
+        this.setPersistJobDetails(false);
        
     }
     
