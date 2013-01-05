@@ -23,14 +23,14 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
 
     public QuantitationTypeImpl() {
         super();
-        // set some default so we don't have to remember to do this.
-        this.setIsPreferred( false );
-        this.setIsBatchCorrected( false );
-        this.setIsNormalized( false );
-        this.setIsBackgroundSubtracted( false );
-        this.setIsBackground( false );
-        this.setIsRatio( false );
-        this.setIsMaskedPreferred( false );
+        // // set some default so we don't have to remember to do this.
+        // this.setIsPreferred( false );
+        // this.setIsBatchCorrected( false );
+        // this.setIsNormalized( false );
+        // this.setIsBackgroundSubtracted( false );
+        // this.setIsBackground( false );
+        // this.setIsRatio( false );
+        // this.setIsMaskedPreferred( false );
     }
 
     @Override
