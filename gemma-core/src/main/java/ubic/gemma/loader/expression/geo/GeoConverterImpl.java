@@ -2441,10 +2441,12 @@ public class GeoConverterImpl implements GeoConverter {
             log.warn( "No technology type available for " + platform + ", provisionally setting to 'dual mode'" );
             arrayDesign.setTechnologyType( TechnologyType.DUALMODE );
         } else if ( technology.equals( PlatformType.MPSS ) ) {
-            arrayDesign.setTechnologyType( TechnologyType.SEQUENCE_COUNT );
+            // we don't support this directly
+            arrayDesign.setTechnologyType( TechnologyType.NONE );
         } else if ( technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII )
                 || technology.equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) ) {
-            arrayDesign.setTechnologyType( TechnologyType.SEQUENCE_COUNT );
+            // we don't support this directly
+            arrayDesign.setTechnologyType( TechnologyType.NONE );
         } else {
             throw new IllegalArgumentException( "Don't know how to interpret technology type " + technology );
         }

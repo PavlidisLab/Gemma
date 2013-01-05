@@ -49,6 +49,7 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -154,6 +155,11 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         assert config != null;
 
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) ) {
+            throw new IllegalArgumentException(
+                    "Do not use this service to process platforms that do not use an probe-based technology." );
+        }
+
         Collection<Taxon> taxa = arrayDesignService.getTaxa( arrayDesign.getId() );
 
         Taxon taxon = arrayDesign.getPrimaryTaxon();
@@ -255,6 +261,11 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         if ( taxon == null && !ncbiIds ) {
             throw new IllegalArgumentException( "You must provide a taxon unless passing ncbiIds = true" );
+        }
+
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) ) {
+            throw new IllegalArgumentException(
+                    "Do not use this service to process platforms that do not use an probe-based technology." );
         }
 
         BufferedReader b = new BufferedReader( new FileReader( source ) );

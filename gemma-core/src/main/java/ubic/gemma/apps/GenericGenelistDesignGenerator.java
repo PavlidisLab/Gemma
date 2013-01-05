@@ -29,6 +29,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
@@ -56,14 +57,20 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @version $Id$
  */
 public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
-    private Taxon taxon = null;
-    private TaxonService taxonService;
-    private BioSequenceService bioSequenceService;
-    private GeneService geneService;
-    private ArrayDesignService arrayDesignService;
-    private CompositeSequenceService compositeSequenceService;
+    public static void main( String[] args ) {
+        GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
+        b.doWork( args );
+    }
+
     private AnnotationAssociationService annotationAssociationService;
+    private ArrayDesignService arrayDesignService;
+    private BioSequenceService bioSequenceService;
+    private CompositeSequenceService compositeSequenceService;
     private ExternalDatabaseService externalDatabaseService;
+    private GeneService geneService;
+    private Taxon taxon = null;
+
+    private TaxonService taxonService;
 
     private boolean useNCBIIds = false;
 
@@ -90,29 +97,28 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         assert ensembl != null;
 
         /*
-         * Create the stub array design for the organism. The name and etc. are generated automatically.
+         * Create the stub array design for the organism. The name and etc. are generated automatically. If the design
+         * exists, we update it.
          */
-        String ncbiIdSuffix = useNCBIIds ? "_ncbiIds" : "";
+
+        String shortName = generateShortName();
+
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-        if ( StringUtils.isBlank( taxon.getCommonName() ) ) {
-            arrayDesign.setShortName( "Generic_" + StringUtils.strip( taxon.getScientificName() ).replaceAll( " ", "_" )
-                    + ncbiIdSuffix );
-        } else {
-            arrayDesign.setShortName( "Generic_" + StringUtils.strip( taxon.getCommonName() ).replaceAll( " ", "_" )
-                    + ncbiIdSuffix );
-        }
+        arrayDesign.setShortName( shortName );
 
         // common name
         arrayDesign.setPrimaryTaxon( taxon );
         String ncbiIDNameExtra = useNCBIIds ? ", indexed by NCBI IDs" : "";
         arrayDesign.setName( "Generic platform for " + taxon.getScientificName() + ncbiIDNameExtra );
         arrayDesign.setDescription( "Created by Gemma" );
+        arrayDesign.setTechnologyType( TechnologyType.NONE ); // this is key
 
         if ( arrayDesignService.find( arrayDesign ) != null ) {
-            log.info( "Array design for " + taxon + " already exists." );
+            log.info( "Array design for " + taxon + " already exists, will update" );
+            arrayDesign = arrayDesignService.find( arrayDesign );
+        } else {
+            arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
         }
-
-        arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
         arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         /*
@@ -121,12 +127,17 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         Collection<Gene> knownGenes = geneService.loadAll( taxon );
         log.info( knownGenes.size() + " genes" );
 
+        Map<Gene, CompositeSequence> existingGeneMap = getExistingGeneMap( arrayDesign );
+
         /*
          * Create a biosequence for each transcript, if there isn't one.
          */
         Map<GeneProduct, BioSequence> gp2bs = new HashMap<GeneProduct, BioSequence>();
         int count = 0;
         for ( Gene gene : knownGenes ) {
+
+            if ( existingGeneMap.containsKey( gene ) ) continue;
+
             boolean hasTranscript = false;
             gene = geneService.thaw( gene );
             Collection<GeneProduct> products = gene.getProducts();
@@ -219,7 +230,8 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 log.debug( "No transcript for " + gene );
             }
 
-            if ( ++count % 100 == 0 ) log.info( count + " genes processed; " + gp2bs.size() + " transcripts so far" );
+            if ( ++count % 100 == 0 )
+                log.info( count + " genes processed; " + gp2bs.size() + " transcripts added so far" );
         }
 
         arrayDesignService.update( arrayDesign );
@@ -254,8 +266,41 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         }
     }
 
-    public static void main( String[] args ) {
-        GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
-        b.doWork( args );
+    /**
+     * @return
+     */
+    private String generateShortName() {
+        String ncbiIdSuffix = useNCBIIds ? "_ncbiIds" : "";
+
+        String shortName = "";
+        if ( StringUtils.isBlank( taxon.getCommonName() ) ) {
+            shortName = "Generic_" + StringUtils.strip( taxon.getScientificName() ).replaceAll( " ", "_" )
+                    + ncbiIdSuffix;
+        } else {
+            shortName = "Generic_" + StringUtils.strip( taxon.getCommonName() ).replaceAll( " ", "_" ) + ncbiIdSuffix;
+        }
+        return shortName;
+    }
+
+    /**
+     * @param arrayDesign
+     * @return
+     */
+    private Map<Gene, CompositeSequence> getExistingGeneMap( ArrayDesign arrayDesign ) {
+
+        Map<Gene, CompositeSequence> existingElements = new HashMap<Gene, CompositeSequence>();
+
+        if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
+
+        Map<CompositeSequence, Collection<Gene>> genemap = compositeSequenceService.getGenes( arrayDesign
+                .getCompositeSequences() );
+        for ( CompositeSequence cs : genemap.keySet() ) {
+            Collection<Gene> genes = genemap.get( cs );
+            assert genes.size() == 1;
+            Gene g = genes.iterator().next();
+
+            existingElements.put( g, cs );
+        }
+        return existingElements;
     }
 }

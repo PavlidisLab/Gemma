@@ -30,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Taxon;
@@ -552,6 +553,15 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         if ( this.directAnnotationInputFileName != null ) {
             return true;
+        }
+
+        /*
+         * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
+         */
+        if ( !( arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE )
+                || arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) || arrayDesign.getTechnologyType()
+                .equals( TechnologyType.TWOCOLOR ) ) ) {
+            return false;
         }
 
         if ( !super.needToRun( skipIfLastRunLaterThan, arrayDesign, eventClass ) ) {
