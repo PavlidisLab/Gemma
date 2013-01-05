@@ -55,7 +55,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author paul
  * @version $Id$
  */
-public class DataUpdaterTest extends AbstractGeoServiceTest {
+public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
