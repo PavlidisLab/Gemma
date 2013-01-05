@@ -17,11 +17,13 @@
  *
  */
 
-package ubic.gemma.loader.expression.geo;
+package ubic.gemma.loader.expression;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +35,9 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.loader.expression.geo.DataUpdater;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -49,13 +54,12 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author paul
  * @version $Id$
  */
-public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
+public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
@@ -67,89 +71,6 @@ public class DataUpdaterIntegrationTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ProcessedExpressionDataVectorService dataVectorService;
-
-    private boolean hasApt = false;
-
-    @org.junit.Before
-    public void startup() {
-        String apt = ConfigUtils.getString( "affy.power.tools.exec" );
-        if ( new File( apt ).canExecute() ) {
-            hasApt = true;
-        }
-    }
-
-    /**
-     * Test method for
-     * {@link ubic.gemma.loader.expression.geo.DataUpdater#addAffyExonArrayData(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
-     * .
-     */
-    @Test
-    public void testAddAffyExonArrayDataExpressionExperiment() throws Exception {
-
-        if ( !hasApt ) {
-            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
-            return;
-        }
-
-        ExpressionExperiment ee;
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
-        }
-
-        /*
-         * Add the raw data.
-         */
-        dataUpdater.addAffyExonArrayData( ee );
-
-        ee = experimentService.load( ee.getId() );
-    }
-
-    /**
-     * 
-     */
-    @Test
-    public void testAddAffyExonHuman() {
-        if ( !hasApt ) {
-            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
-            return;
-        }
-        ExpressionExperiment ee; // GSE22498
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            Collection<?> results = geoService.fetchAndLoad( "GSE22498", false, false, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
-        }
-        dataUpdater.addAffyExonArrayData( ee );
-        ee = experimentService.load( ee.getId() );
-    }
-
-    /**
-     * 
-     */
-    @Test
-    public void testAddAffyExonRat() {
-        if ( !hasApt ) {
-            log.warn( "Test skipped due to lack of Affy Power Tools executable" );
-            return;
-        }
-        ExpressionExperiment ee; // GSE33597
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            Collection<?> results = geoService.fetchAndLoad( "GSE33597", false, false, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
-        }
-        dataUpdater.addAffyExonArrayData( ee );
-        ee = experimentService.load( ee.getId() );
-
-    }
 
     /**
      * @throws Exception
