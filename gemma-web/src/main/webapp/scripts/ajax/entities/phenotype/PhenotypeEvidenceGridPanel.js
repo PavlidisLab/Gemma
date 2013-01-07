@@ -45,8 +45,13 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
    		var DEFAULT_TITLE = this.title; // A constant title that will be used when we don't have current gene.
    		
+		var metaAnalysisUtilities = new Gemma.MetaAnalysisUtilities();
+		var DEFAULT_THRESHOLD = metaAnalysisUtilities.getDefaultThreshold();
+
    		var phenotypeAssociationFormWindow;
 
+		var metaAnalysisCache = [];
+   		
    		var loggedInColumns = [
    			{ columnId: 'owner', isAdminColumn: true },
    			{ columnId: 'lastUpdated', isAdminColumn: false },
@@ -250,7 +255,84 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			
 			return data;
 		}.createDelegate(this);	
+
+		var showLoadMask = function(msg) {
+			if (!this.loadMask) {
+				this.loadMask = new Ext.LoadMask(this.getEl());
+			}
+			this.loadMask.msg = msg 
+				? msg 
+				: "Loading ...";
+				
+			this.loadMask.show();
+		}.createDelegate(this);
+		
+		var hideLoadMask = function() {
+			this.loadMask.hide();
+		}.createDelegate(this);
+		
+		var showMetaAnalysisWindow = function(metaAnalysis, analysisName, numGenesAnalyzed) {
+			metaAnalysis.name = analysisName;
+			metaAnalysis.numGenesAnalyzed = numGenesAnalyzed;
+
+			var viewMetaAnalysisWindow = new Gemma.MetaAnalysisWindow({
+				title: 'View Meta-analysis for ' + analysisName,
+				metaAnalysis: metaAnalysis,
+				defaultQvalueThreshold: DEFAULT_THRESHOLD
+			});  
+			viewMetaAnalysisWindow.show();
+		};
+
+		var showViewEvidenceWindow = function(metaAnalysis, id) {
+			var record = this.getStore().getById(id);
+			if (record != null) {
+				metaAnalysis.name = record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name;
+				metaAnalysis.numGenesAnalyzed = record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numGenesAnalyzed;
 	
+				var viewEvidenceWindow = new Gemma.MetaAnalysisEvidenceWindow({
+					metaAnalysisId: id,
+					metaAnalysis: metaAnalysis,
+					showActionButton: record.data.evidenceSecurityValueObject.currentUserHasWritePermission,				
+					title: 'View Neurocarta evidence for ' + record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name,
+					diffExpressionEvidence: record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.diffExpressionEvidence,
+					modal: false,
+					listeners: {
+						evidenceRemoved: function() {
+							this.store.reload();
+						},
+						scope: this
+					}
+				});
+				viewEvidenceWindow.show();
+			}
+		};
+
+		var processMetaAnalysis = function(id, errorDialogTitle, callback, args) {
+			var metaAnalysisFound = metaAnalysisCache[id];
+			if (metaAnalysisFound) {
+				// Put metaAnalysisFound at the beginning of args.
+				args.splice(0, 0, metaAnalysisFound);
+
+				callback.apply(this, args);
+			} else {
+				showLoadMask();
+				DiffExMetaAnalyzerController.findDetailMetaAnalysisById(id, function(baseValueObject) {
+					hideLoadMask();				
+					
+					if (baseValueObject.errorFound) {						
+						Gemma.alertUserToError(baseValueObject,	errorDialogTitle);
+					} else {
+						metaAnalysisCache[id] = baseValueObject.valueObject;
+
+						// Put metaAnalysisFound at the beginning of args.
+						args.splice(0, 0, metaAnalysisCache[id]); 
+						
+						callback.apply(this, args);
+					}			
+				}.createDelegate(this));
+			}
+		}.createDelegate(this);
+
 		var evidenceStore = new Ext.data.Store({
 			autoLoad: this.storeAutoLoad,
 			proxy: this.evidenceStoreProxy == null ?
@@ -279,7 +361,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		        	// for GroupEvidenceValueObject
 		        	'literatureEvidences',
 					// for DiffExpressionEvidenceValueObject
-		        	'geneDifferentialExpressionMetaAnalysisSummaryValueObject', 'selectionThreshold',
+		        	'geneDifferentialExpressionMetaAnalysisSummaryValueObject', 'selectionThreshold', 'numEvidenceFromSameMetaAnalysis',
 		        	// for ExperimentalEvidenceValueObject
 		 			'experimentCharacteristics', 'primaryPublicationCitationValueObject',
 		 			'relevantPublicationsCitationValueObjects',
@@ -295,10 +377,32 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 							switch (record.className) {
 								case 'DiffExpressionEvidenceValueObject' :
 									descriptionHtml += '<p>';
-									descriptionHtml += '<b>Name</b>: ' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name + '<br />';
-									descriptionHtml += '<b>Result sets included</b>: ' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numResultSetsIncluded + '<br />';
-									descriptionHtml += '<b>Genes analyzed</b>: ' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numGenesAnalyzed + '<br />';
-									descriptionHtml += '<b>q-value threshold</b>: ' + record.selectionThreshold + '<br />';
+
+									descriptionHtml += '<b>Name</b>: ' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name + ' ' +
+										generateLink(
+											'eval(\'processMetaAnalysis(' +
+												record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.id + ', ' +
+												'\\\'Cannot view meta-analysis\\\', ' +
+												'showMetaAnalysisWindow, ' +
+												'[ \\\'' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name + '\\\', ' +
+													record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numGenesAnalyzed + ' ])\');',   
+											'/Gemma/images/icons/magnifier.png', 'View included result sets and results', 10, 10) +
+										' (' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numResultSetsIncluded + ' result sets included; ' +
+										record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numGenesAnalyzed + ' genes analyzed)<br />';
+
+									descriptionHtml += '<b>q-value threshold</b>: ' + record.selectionThreshold + ' (' + record.numEvidenceFromSameMetaAnalysis + ' genes ' +
+										generateLink(
+											'eval(\'processMetaAnalysis(' +
+												record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.id + ', ' +
+												'\\\'Cannot view Neurocarta evidence\\\', ' +
+												'showViewEvidenceWindow, ' +
+												'[ ' + record.id + ' ])\');',   
+											'/Gemma/images/icons/magnifier.png', 'View Neurocarta evidence', 10, 10) + ')<br />';
+
+									descriptionHtml += '<b>p-value</b>: ' + record.metaPvalue.toExponential(2) + '; ' +
+													   '<b>q-value</b>: ' + record.metaQvalue.toExponential(2) + '; ' +
+													   '<b>Direction</b>: ' + metaAnalysisUtilities.generateDirectionHtml(record.upperTail) + '<br />';
+
 									descriptionHtml += '</p>';
 									break;
 								
@@ -657,7 +761,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				});
 			});
 		}
-		
+
 		Ext.apply(this, {
 			store: evidenceStore,
 			plugins: rowExpander,
@@ -665,6 +769,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			tbar: [
 				createPhenotypeAssociationButton
 			],
+			eval: function(request) {
+				eval(request);
+			},			
 		    setCurrentData: function(currentFilters, currentPhenotypes, currentGene) {
 		    	this.currentPhenotypes = currentPhenotypes;
 

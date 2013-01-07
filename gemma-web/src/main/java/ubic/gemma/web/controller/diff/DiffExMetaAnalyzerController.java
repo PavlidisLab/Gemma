@@ -151,8 +151,8 @@ public class DiffExMetaAnalyzerController extends AbstractTaskService {
     /**
      * @return
      */
-	public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMyMetaAnalyses() {
-		return this.geneDiffExMetaAnalysisHelperService.findMyMetaAnalyses();
+	public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses() {
+		return this.geneDiffExMetaAnalysisHelperService.loadAllMetaAnalyses();
 	}
 
     /**

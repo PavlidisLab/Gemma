@@ -40,6 +40,7 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
     private Integer numResults;
     private Integer numResultSetsIncluded;
     
+    private boolean isEditable;
     private boolean isOwnedByCurrentUser;
     private boolean isPublic;
     private boolean isShared;
@@ -93,6 +94,14 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
     public void setNumResultSetsIncluded( Integer numResultSetsIncluded ) {
         this.numResultSetsIncluded = numResultSetsIncluded;
     }
+
+	public boolean isEditable() {
+		return this.isEditable;
+	}
+
+	public void setEditable(boolean isEditable) {
+		this.isEditable = isEditable;
+	}
 
 	public boolean isOwnedByCurrentUser() {
 		return this.isOwnedByCurrentUser;

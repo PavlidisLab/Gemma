@@ -40,10 +40,10 @@ public interface GeneDiffExMetaAnalysisHelperService {
     public GeneDifferentialExpressionMetaAnalysisDetailValueObject findDetailMetaAnalysisById(long metaAnalysisId);
 
     /**
-     * Find my meta-analyses.
+     * Load all meta-analyses.
      * @return a collection of summary value objects
      */
-    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMyMetaAnalyses();
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses();
 
     /**
      * Convert the given meta-analysis into detail value object. 

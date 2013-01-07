@@ -9,6 +9,7 @@ Ext.namespace('Gemma');
 Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 	metaAnalysisId: null,
 	metaAnalysis: null,
+	showActionButton: false,
 	diffExpressionEvidence: null,
 	defaultQvalueThreshold: null,
 	layout: 'fit',
@@ -83,8 +84,13 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 		}.createDelegate(this);
 
 		var removeEvidence = function() {
+			var numGenes = resultPanel.getTotalNumberOfResults();
+			
 			Ext.MessageBox.confirm('Confirm',
-				'Are you sure you want to remove Neurocarta evidence?',
+				'Are you sure you want to remove Neurocarta evidence for ' +
+					(numGenes === 1 ?
+						'this 1 gene?' :
+						'these ' + numGenes + ' genes?'),
 				function(button) {
 					if (button === 'yes') {
 						showLoadMask('Removing Neurocarta evidence ...');
@@ -147,7 +153,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 			decimalPrecision: 10,
 			value: this.defaultQvalueThreshold,
 			minValue: 0,			
-			maxValue: this.defaultQvalueThreshold,			
+			maxValue: this.defaultQvalueThreshold ? this.defaultQvalueThreshold : Number.MAX_VALUE,			
 			minLength: 1,
 			maxLength: 12,
 			allowBlank: false,
@@ -162,7 +168,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 						keyup: function(numberField, event) {
 							var threshold = numberField.getValue();
 							
-							if 	(threshold != currentThreshold) {
+							if 	(currentThreshold != null && threshold != currentThreshold) {
 								if (threshold > numberField.minValue && threshold <= numberField.maxValue) {
 									thresholdErrorMessage = '';
 									resultPanel.showResults(threshold);
@@ -189,9 +195,33 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 			anchor: HORIZONTAL_ANCHOR + ' -110',
 			metaAnalysis: this.metaAnalysis,
 			defaultQvalueThreshold: this.defaultQvalueThreshold,
-			showLimitDisplayCombo: false
+			showLimitDisplayCombo: false,
+			showDownloadButton: true
 		});			
-	
+
+		var formPanelButtons = [{
+		    text: 'Cancel',
+		    handler: function() {
+		    	this.close();
+		    },
+			scope: this
+		}];
+				
+		if (this.showActionButton) {
+			formPanelButtons.splice(0, 0, {
+			    text: (this.diffExpressionEvidence ? 'Remove evidence' : 'Save as Neurocarta evidence'),
+			    formBind: true,
+			    handler: function() {
+			    	if (this.diffExpressionEvidence) {
+			    		removeEvidence();
+			    	} else {
+						submitEvidenceSavingForm();
+			    	}
+			    },
+				scope: this
+			});
+		}
+		
 		var formPanel = new Ext.form.FormPanel({
 			layout: 'border',    	
 			monitorValid : true,
@@ -224,27 +254,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 						resultPanel
 					]
 				}],		
-				buttons: [
-					{
-					    text: (this.diffExpressionEvidence ? 'Remove evidence' : 'Save as Neurocarta evidence'),
-					    formBind: true,
-					    handler: function() {
-					    	if (this.diffExpressionEvidence) {
-					    		removeEvidence();
-					    	} else {
-								submitEvidenceSavingForm();
-					    	}
-					    },
-						scope: this
-					},
-					{
-					    text: 'Cancel',
-					    handler: function() {
-					    	this.close();
-					    },
-						scope: this
-					}
-				]
+				buttons: formPanelButtons
 		});
 
 		if (this.diffExpressionEvidence) {
@@ -269,7 +279,8 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 						});
 					}
 				};
-				setChildrenReadOnly(thisPanel);
+				setChildrenReadOnly(phenotypesSearchPanel);
+				thresholdTextField.setReadOnly(true);
 			});    	
 		}
 

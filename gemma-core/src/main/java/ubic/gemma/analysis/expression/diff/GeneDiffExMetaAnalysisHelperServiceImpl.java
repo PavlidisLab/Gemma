@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
@@ -81,12 +82,12 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService#findMyMetaAnalyses()
+     * @see ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService#loadAllMetaAnalyses()
      */
     @Override
-    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMyMetaAnalyses() {
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses() {
         Collection<GeneDifferentialExpressionMetaAnalysis> metaAnalyses = this.geneDiffExMetaAnalysisService
-                .loadMyAnalyses();
+        		.loadAll();
 
         Collection<Long> metaAnalysisIds = new HashSet<Long>( metaAnalyses.size() );
         for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
@@ -101,6 +102,15 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
             // Find meta-analysis so that its security settings can be copied to value object.
             for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
                 if ( vo.getId() == metaAnalysis.getId() ) {
+                	boolean isEditable = false;
+                	
+					try {
+						isEditable = this.securityService.isEditable( metaAnalysis );
+					} catch (AccessDeniedException e) {
+						// nothing to do
+					} 
+						
+					vo.setEditable( isEditable );
                     vo.setOwnedByCurrentUser( this.securityService.isOwnedByCurrentUser( metaAnalysis ) );
                     vo.setPublic( this.securityService.isPublic( metaAnalysis ) );
                     vo.setShared( this.securityService.isShared( metaAnalysis ) );

@@ -311,7 +311,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertNotNull( metaAnalysis.getId() );
 
         Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses = geneDiffExMetaAnalysisHelperService
-                .findMyMetaAnalyses();
+                .loadAllMetaAnalyses();
         assertTrue( myMetaAnalyses.size() > 0 );
 
         GeneDifferentialExpressionMetaAnalysisDetailValueObject mdvo = geneDiffExMetaAnalysisHelperService
@@ -354,7 +354,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     private void cleanup() {
 
         for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject vo : geneDiffExMetaAnalysisHelperService
-                .findMyMetaAnalyses() ) {
+                .loadAllMetaAnalyses() ) {
             analysisService.delete( vo.getId() );
         }
 

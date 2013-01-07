@@ -10,18 +10,26 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	title: "Meta-analysis Manager",
     autoScroll: true,
     stripeRows: true,
+	loadMask: true,
     viewConfig: {
         forceFit: true,
 		deferEmptyText: false,
 		emptyText: 'No meta-analysis to display'
     },
     initComponent: function() {
-    	var DEFAULT_THRESHOLD = 0.1;
+    	var DEFAULT_THRESHOLD = new Gemma.MetaAnalysisUtilities().getDefaultThreshold();
     	
 		var metaAnalysisCache = [];
 
     	var metaAnalysisWindow;
     	
+		Gemma.Application.currentUser.on("logIn", function() {
+			this.getStore().reload();
+		}, this);
+		Gemma.Application.currentUser.on("logOut", function() {
+			this.getStore().reload();
+		}, this);
+
 		var generateLink = function(methodWithArguments, imageSrc, description, width, height) {
 			return '<span class="link" onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments +
 						'"><img src="' + imageSrc + '" alt="' + description + '" ext:qtip="' + description + '" ' +
@@ -32,6 +40,10 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			
 		}.createDelegate(this);
     	
+		var generateLinkPlaceholder = function() {
+			return '<img src="/Gemma/images/s.gif" height="16" width="16">';
+		}
+
 		var showLoadMask = function(msg) {
 			if (!this.loadMask) {
 				this.loadMask = new Ext.LoadMask(this.getEl());
@@ -52,7 +64,21 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			return value;
     	};
     	
+		var showLogInWindow = function(callback, args) {
+			Gemma.AjaxLogin.showLoginWindowFn();
+		
+			Gemma.Application.currentUser.on("logIn",
+				function(userName, isAdmin) {	
+					callback.apply(this, args);
+				},
+				this,
+				{
+					single: true
+				});
+		};
+
 		var showMetaAnalysisWindow = function(metaAnalysis, analysisName, numGenesAnalyzed) {
+			metaAnalysis.name = analysisName;
 			metaAnalysis.numGenesAnalyzed = numGenesAnalyzed;
 
 			var viewMetaAnalysisWindow = new Gemma.MetaAnalysisWindow({
@@ -63,34 +89,17 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			viewMetaAnalysisWindow.show();
 		};
 
-		var showSaveAsEvidenceWindow = function(metaAnalysis, id, analysisName, numGenesAnalyzed) {
-			metaAnalysis.numGenesAnalyzed = numGenesAnalyzed;
-
-			var saveAsEvidenceWindow = new Gemma.MetaAnalysisEvidenceWindow({
-				metaAnalysisId: id,
-				metaAnalysis: metaAnalysis,
-				defaultQvalueThreshold: DEFAULT_THRESHOLD,
-				title: 'Save ' + analysisName + ' as Neurocarta evidence',
-				listeners: {
-					evidenceSaved: function() {
-						this.store.reload();
-					},
-					scope: this
-				}
-			});
-			saveAsEvidenceWindow.show();
-		};
-
-		var showViewEvidenceWindow = function(metaAnalysis, id, analysisName, numGenesAnalyzed) {
+		var showViewEvidenceWindow = function(metaAnalysis, id) {
 			var record = this.getStore().getById(id);
 			if (record != null) {
-				metaAnalysis.numGenesAnalyzed = numGenesAnalyzed;
+				metaAnalysis.name = record.data.name;
+				metaAnalysis.numGenesAnalyzed = record.data.numGenesAnalyzed;
 	
 				var viewEvidenceWindow = new Gemma.MetaAnalysisEvidenceWindow({
 					metaAnalysisId: id,
 					metaAnalysis: metaAnalysis,
-					defaultQvalueThreshold: DEFAULT_THRESHOLD,
-					title: 'View Neurocarta evidence for ' + analysisName,
+					showActionButton: record.data.editable,
+					title: 'View Neurocarta evidence for ' + record.data.name,
 					diffExpressionEvidence: record.data.diffExpressionEvidence,
 					modal: false,
 					listeners: {
@@ -133,45 +142,113 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		Ext.apply(this, {
 			store: new Ext.data.JsonStore({
 				autoLoad: true,
-				proxy: new Ext.data.DWRProxy(DiffExMetaAnalyzerController.findMyMetaAnalyses),
+				proxy: new Ext.data.DWRProxy(DiffExMetaAnalyzerController.loadAllMetaAnalyses),
 				fields: [ 'id',
 					{ name: 'name', sortType: Ext.data.SortTypes.asUCString }, // case-insensitively
 					'description', 'numGenesAnalyzed', 'numResults', 'numResultSetsIncluded',
-					'public', 'shared', 'ownedByCurrentUser', 'diffExpressionEvidence' ],
+					'editable', 'ownedByCurrentUser', 'public', 'shared', 'diffExpressionEvidence' ],
 				idProperty: 'id',
 				sortInfo: { field: 'name', direction: 'ASC'	}
 			}),
 			eval: function(request) {
 				eval(request);
-			},			
-			removeMetaAnalysis: function(id) {
-				var record = this.getStore().getById(id);
-				if (record != null) {
-					if (record.data.diffExpressionEvidence) {
-						Ext.MessageBox.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisManagerGridPanel.ErrorTitle.removeMetaAnalysis,
-							Gemma.HelpText.WidgetDefaults.MetaAnalysisManagerGridPanel.ErrorMessage.evidenceExist);
-					} else {
-						Ext.MessageBox.confirm('Confirm',
-							'Are you sure you want to remove meta-analysis "' + record.data.name + '"?',
-							function(button) {
-								if (button === 'yes') {
-									showLoadMask("Removing analysis ...");
+			},
+			showSaveAsEvidenceWindow: function(id) {
+				var doShowForLoggedInUser = function(id) {
+					var showSaveAsEvidenceWindowHelper = function(metaAnalysis) {
+						var record = this.getStore().getById(id);
+						if (record != null) {
+							metaAnalysis.name = record.data.name;
+							metaAnalysis.numGenesAnalyzed = record.data.numGenesAnalyzed;
 				
-									DiffExMetaAnalyzerController.removeMetaAnalysis(id, function(baseValueObject) {
-										hideLoadMask();
-				
-										if (baseValueObject.errorFound) {						
-											Gemma.alertUserToError(baseValueObject,
-												Gemma.HelpText.WidgetDefaults.MetaAnalysisManagerGridPanel.ErrorTitle.removeMetaAnalysis);
-										} else {
-											this.store.reload();
-										}
-									}.createDelegate(this));
+							var saveAsEvidenceWindow = new Gemma.MetaAnalysisEvidenceWindow({
+								metaAnalysisId: id,
+								metaAnalysis: metaAnalysis,
+								showActionButton: record.data.ownedByCurrentUser,
+								defaultQvalueThreshold: DEFAULT_THRESHOLD,
+								title: 'Save ' + record.data.name + ' as Neurocarta evidence',
+								listeners: {
+									evidenceSaved: function() {
+										this.store.reload();
+									},
+									scope: this
 								}
-							},
-							this);
+							});
+							saveAsEvidenceWindow.show();
+						}
+					}.createDelegate(this);
+			
+					var metaAnalysisFound = metaAnalysisCache[id];
+					if (metaAnalysisFound) {
+						showSaveAsEvidenceWindowHelper(metaAnalysisFound);				
+					} else {
+						showLoadMask();
+						DiffExMetaAnalyzerController.findDetailMetaAnalysisById(id, function(baseValueObject) {
+							hideLoadMask();				
+							
+							if (baseValueObject.errorFound) {						
+								Gemma.alertUserToError(baseValueObject,	'Cannot save meta-analysis as Neurocarta evidence');
+							} else {
+								metaAnalysisCache[id] = baseValueObject.valueObject;
+								showSaveAsEvidenceWindowHelper(metaAnalysisCache[id]);
+							}			
+						}.createDelegate(this));
 					}
-				}
+				}.createDelegate(this);
+				
+				SignupController.loginCheck({
+	                callback: function(result) {
+	                	if (result.loggedIn){
+							doShowForLoggedInUser(id);
+	                	}
+	                	else {
+							showLogInWindow.call(this, doShowForLoggedInUser, [ id ]);
+	                	}
+	                }.createDelegate(this)
+	            });	
+			},
+			removeMetaAnalysis: function(id) {
+				var doRemoveForLoggedInUser = function(id) {
+					var record = this.getStore().getById(id);
+					if (record != null) {
+						if (record.data.diffExpressionEvidence) {
+							Ext.MessageBox.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisManagerGridPanel.ErrorTitle.removeMetaAnalysis,
+								Gemma.HelpText.WidgetDefaults.MetaAnalysisManagerGridPanel.ErrorMessage.evidenceExist);
+						} else {
+							Ext.MessageBox.confirm('Confirm',
+								'Are you sure you want to remove meta-analysis "' + record.data.name + '"?',
+								function(button) {
+									if (button === 'yes') {
+										showLoadMask("Removing analysis ...");
+					
+										DiffExMetaAnalyzerController.removeMetaAnalysis(id, function(baseValueObject) {
+											hideLoadMask();
+					
+											if (baseValueObject.errorFound) {						
+												Gemma.alertUserToError(baseValueObject,
+													Gemma.HelpText.WidgetDefaults.MetaAnalysisManagerGridPanel.ErrorTitle.removeMetaAnalysis);
+											} else {
+												this.store.reload();
+											}
+										}.createDelegate(this));
+									}
+								},
+								this);
+						}
+					}
+				}.createDelegate(this);
+
+				SignupController.loginCheck({
+	                callback: function(result) {
+	                	if (result.loggedIn){
+							doRemoveForLoggedInUser(id);
+	                	}
+	                	else {
+							showLogInWindow.call(this, doRemoveForLoggedInUser, [ id ]);
+	                	}
+	                }.createDelegate(this)
+	            });	
+
 			},
 			columns:[{
 					header: 'Name',
@@ -183,7 +260,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 								'\\\'Cannot view meta-analysis\\\', ' +
 								'showMetaAnalysisWindow, ' +
 								'[ \\\'' + record.data.name + '\\\', ' + record.data.numGenesAnalyzed + ' ])\');',   
-							'/Gemma/images/icons/magnifier.png', 'View included result sets and results', 10, 10);		            	
+							'/Gemma/images/icons/magnifier.png', 'View included result sets and results', 10, 10);
 		            }
 				}, {
 					header: 'Description',
@@ -215,55 +292,75 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            	var adminLinks = '';
 
 						if (record.data.diffExpressionEvidence == null) {
-							adminLinks += generateLink('eval(\'processMetaAnalysis(' +
-									record.data.id + ', ' +
-									'\\\'Cannot save meta-analysis as Neurocarta evidence\\\', ' +
-									'showSaveAsEvidenceWindow, ' +
-									'[ ' + record.data.id + ', \\\'' + record.data.name + '\\\', ' + record.data.numGenesAnalyzed + ' ])\');',   
-								'/Gemma/images/icons/neurocarta-add.png', 'Save as Neurocarta evidence') + ' ';		            	
+							if (record.data.ownedByCurrentUser) {
+								adminLinks += generateLink('showSaveAsEvidenceWindow(' + record.data.id + ');',
+									'/Gemma/images/icons/neurocarta-add.png', 'Save as Neurocarta evidence');
+							} else {
+								adminLinks += generateLinkPlaceholder();
+							}
 						} else {
 							adminLinks += generateLink('eval(\'processMetaAnalysis(' +
 									record.data.id + ', ' +
-									'\\\'Cannot view meta-analysis\\\', ' +
+									'\\\'Cannot view Neurocarta evidence\\\', ' +
 									'showViewEvidenceWindow, ' +
-									'[ ' + record.data.id + ', \\\'' + record.data.name + '\\\', ' + record.data.numGenesAnalyzed + ' ])\');',   
-								'/Gemma/images/icons/neurocarta-check.png', 'View Neurocarta evidence') + ' ';		            	
+									'[ ' + record.data.id + ' ])\');',   
+								'/Gemma/images/icons/neurocarta-check.png', 'View Neurocarta evidence');		            	
 						}
+						adminLinks += ' ';
 
-	            		adminLinks += generateLink('removeMetaAnalysis(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove meta-analysis') + ' ';
-	            		
-	            		adminLinks += Gemma.SecurityManager.getSecurityLink(
-							'ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisImpl',
-							record.data.id,
-							record.data.public,
-							record.data.shared,
-							record.data.ownedByCurrentUser, // Can current user edit?
-							null,
-							null,
-							null, // It is title in Security dialog. Specify null to use the object name.
-							record.data.ownedByCurrentUser); // Is current user owner? 
+						if (record.data.editable) {
+		            		adminLinks += generateLink('removeMetaAnalysis(' + record.data.id + ');', '/Gemma/images/icons/cross.png', 'Remove meta-analysis');
+						} else {
+							adminLinks += generateLinkPlaceholder();
+						}
+						adminLinks += ' ';
 
+						if (Ext.get("hasUser") != null && Ext.get("hasUser").getValue()) {
+		            		adminLinks += Gemma.SecurityManager.getSecurityLink(
+								'ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisImpl',
+								record.data.id,
+								record.data.public,
+								record.data.shared,
+								record.data.editable, // Can current user edit?
+								null,
+								null,
+								null, // It is title in Security dialog. Specify null to use the object name.
+								record.data.ownedByCurrentUser); // Is current user owner? 
+						}
 						return adminLinks;
 		            },
 					sortable: false
 				}],
 			tbar: [{
 					handler: function() {
-						if (!metaAnalysisWindow || metaAnalysisWindow.hidden) {
-							metaAnalysisWindow = new Gemma.MetaAnalysisWindow({
-								title: 'Add New Meta-analysis',
-								defaultQvalueThreshold: DEFAULT_THRESHOLD,
-								listeners: {
-									resultSaved: function() {
-										metaAnalysisWindow.close();
-										this.store.reload();
-									},
-									scope: this
-								}
-							});  
-						}
+						var showAddMetaAnalysisWindowForLoggedInUser = function() {		
+							if (!metaAnalysisWindow || metaAnalysisWindow.hidden) {
+								metaAnalysisWindow = new Gemma.MetaAnalysisWindow({
+									title: 'Add New Meta-analysis',
+									defaultQvalueThreshold: DEFAULT_THRESHOLD,
+									listeners: {
+										resultSaved: function() {
+											metaAnalysisWindow.close();
+											this.store.reload();
+										},
+										scope: this
+									}
+								});  
+							}
+				
+							metaAnalysisWindow.show();
+						}.createDelegate(this);
 
-						metaAnalysisWindow.show();
+						SignupController.loginCheck({
+			                callback: function(result) {
+			                	if (result.loggedIn){
+			                		showAddMetaAnalysisWindowForLoggedInUser();
+			                	}
+			                	else {
+									showLogInWindow.call(this, showAddMetaAnalysisWindowForLoggedInUser, []);
+			                	}
+			                }.createDelegate(this)
+			            });	
 					},
 					scope: this,
 					icon: "/Gemma/images/icons/add.png",

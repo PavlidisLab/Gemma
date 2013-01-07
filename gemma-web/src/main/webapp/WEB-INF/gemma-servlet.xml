@@ -557,7 +557,7 @@
 		<dwr:remote javascript="DiffExMetaAnalyzerController">
 			<dwr:include method="analyzeResultSets" />
 			<dwr:include method="findDetailMetaAnalysisById" />
-			<dwr:include method="findMyMetaAnalyses" />
+			<dwr:include method="loadAllMetaAnalyses" />
 			<dwr:include method="removeMetaAnalysis" />
 			<dwr:include method="saveResultSets" />
 		</dwr:remote>

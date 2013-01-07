@@ -25,8 +25,8 @@
 </head>
 
 <body>
-	<input type="hidden" id="reloadOnLogin" value="true"/>  
-	<input type="hidden" id="reloadOnLogout" value="true" />
+	<input type="hidden" id="reloadOnLogin" value="false"/>  
+	<input type="hidden" id="reloadOnLogout" value="false" />
 	
 	<%-- The function fetchDiffExpressionData(analysisId) in eeDataFetch.js requires "messages" to be defined. --%>
 	<div id="messages"></div>	

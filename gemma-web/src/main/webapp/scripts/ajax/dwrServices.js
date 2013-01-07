@@ -334,9 +334,9 @@ DiffExMetaAnalyzerController.findDetailMetaAnalysisById = function(p0, callback)
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
 			'findDetailMetaAnalysisById', p0, callback);
 };
-DiffExMetaAnalyzerController.findMyMetaAnalyses = function(callback) {
+DiffExMetaAnalyzerController.loadAllMetaAnalyses = function(callback) {
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
-			'findMyMetaAnalyses', callback);
+			'loadAllMetaAnalyses', callback);
 };
 DiffExMetaAnalyzerController.removeMetaAnalysis = function(p0, callback) {
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',

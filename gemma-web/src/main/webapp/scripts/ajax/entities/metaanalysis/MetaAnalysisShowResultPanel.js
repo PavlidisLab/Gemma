@@ -17,9 +17,11 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 		var nextButton = this.createNextButton();
 		
 		var resultPanel = new Gemma.MetaAnalysisResultPanel({
+			region: 'center',
 			metaAnalysis: this.metaAnalysis,
 			defaultQvalueThreshold: this.defaultQvalueThreshold,
-			region: 'center'
+			showLimitDisplayCombo: true,
+			showDownloadButton: true
 		});
 
 		var thisPanelItems = [ 
@@ -83,7 +85,8 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 										}
                                     }.createDelegate(this));
 									k.on('fail', function(data) {
-										// Nothing to do because the popped up dialog with title "Job failed!" will let users know the problem.
+										Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorTitle.resultSetsNotSaved,
+													  data);
 									}.createDelegate(this));
                                 }.createDelegate(this),
                                 errorHandler : function(error) {
@@ -114,8 +117,7 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
 							nextButton.setDisabled(!metaAnalysisReturned);
                         }.createDelegate(this));
 						k.on('fail', function(data) {
-							// Argument data is not used because it just contains error message that has
-							// already been shown in the popped up dialog with title "Job failed!".
+							// Argument data is not used because data is Java exception class name which is not useful to the user.
 							resultPanel.clear(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorMessage.resultSetsNotAnalyzed);
 							nextButton.setDisabled(true);
 						}.createDelegate(this));
