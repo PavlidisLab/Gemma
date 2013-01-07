@@ -229,4 +229,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
                 geneDifferentialExpressionMetaAnalysisId, maxResults );
     }
 
+    /** counts the evidence that from neurocarta that came from a specific MetaAnalysis */
+    @Override
+    public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
+        return this.phenotypeAssociationDao
+                .countEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+    }
+
 }

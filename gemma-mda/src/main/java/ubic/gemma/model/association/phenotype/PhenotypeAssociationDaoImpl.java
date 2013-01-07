@@ -459,6 +459,17 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return differentialExpressionEvidenceCollection;
     }
 
+    @Override
+    /** counts the evidence that from neurocarta that came from a specific MetaAnalysis */
+    public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
+        Long numDifferentialExpressionEvidence = ( Long ) this
+                .getHibernateTemplate()
+                .find( "select count (d) from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
+                        + geneDifferentialExpressionMetaAnalysisId + ")" ).iterator().next();
+
+        return numDifferentialExpressionEvidence;
+    }
+
     /** basic sql command to deal with security */
     private String getPhenotypesGenesAssociationsBeginQuery() {
         String queryString = "";

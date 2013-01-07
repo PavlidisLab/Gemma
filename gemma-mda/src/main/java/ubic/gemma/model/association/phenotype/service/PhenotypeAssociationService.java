@@ -159,4 +159,7 @@ public interface PhenotypeAssociationService {
     public Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, Long maxResults );
 
+    /** counts the evidence that from neurocarta that came from a specific MetaAnalysis */
+    public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId );
+
 }

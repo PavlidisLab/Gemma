@@ -1411,6 +1411,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             diffExpressionEvidenceValueObject = new DiffExpressionEvidenceValueObject( differentialExpressionEvidence,
                     geneDiffExMetaAnalysisSummaryValueObject );
+
+            // set the count, how many evidences where created from the specific meta analysis
+            diffExpressionEvidenceValueObject.setNumEvidenceFromSameMetaAnalysis( this.associationService
+                    .countEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysis
+                            .getId() ) );
         }
 
         return diffExpressionEvidenceValueObject;

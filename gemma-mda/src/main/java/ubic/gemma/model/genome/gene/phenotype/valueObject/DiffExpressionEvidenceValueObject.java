@@ -50,6 +50,8 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
     private Long geneDifferentialExpressionMetaAnalysisResultId = 0L;
 
     private GeneDifferentialExpressionMetaAnalysisSummaryValueObject geneDifferentialExpressionMetaAnalysisSummaryValueObject = null;
+    
+    private Long numEvidenceFromSameMetaAnalysis = 0L;
 
     public DiffExpressionEvidenceValueObject() {
         super();
@@ -170,6 +172,14 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
 
     public void setUpperTail( Boolean upperTail ) {
         this.upperTail = upperTail;
+    }
+    
+    public Long getNumEvidenceFromSameMetaAnalysis() {
+        return this.numEvidenceFromSameMetaAnalysis;
+    }
+
+    public void setNumEvidenceFromSameMetaAnalysis( Long numEvidenceFromSameMetaAnalysis ) {
+        this.numEvidenceFromSameMetaAnalysis = numEvidenceFromSameMetaAnalysis;
     }
 
     @Override
