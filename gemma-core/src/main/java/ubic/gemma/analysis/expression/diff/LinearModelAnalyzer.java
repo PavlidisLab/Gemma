@@ -807,7 +807,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
         boolean warned = false;
+        int notUsable = 0;
+        int processed = 0;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
+
+            if ( ++processed % 5000 == 0 ) {
+                log.info( "Processed results for " + processed + " element ..." );
+            }
 
             LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
 
@@ -818,6 +824,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     log.warn( "No result for " + el + ", further warnings suppressed" );
                     warned = true;
                 }
+                notUsable++;
                 continue;
             }
 
@@ -857,7 +864,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     assert factorNames.length == factorsForName.size();
                     overallPValue = lm.getInteractionEffectP( factorNames );
 
-                    if ( overallPValue != null ) {
+                    if ( overallPValue != null && !Double.isNaN( overallPValue ) ) {
 
                         Map<String, Double> interactionContrastTStats = lm.getContrastTStats( factorName );
                         Map<String, Double> interactionContrastCoeffs = lm.getContrastCoefficients( factorName );
@@ -870,6 +877,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                                     interactionContrastTStats, interactionContrastCoeffs );
 
                         }
+                    } else {
+                        if ( !warned ) {
+                            log.warn( "Interaction could not be computed for " + el + ", further warnings suppressed" );
+                            warned = true;
+                        }
+                        notUsable++; // will over count?
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Interaction could not be computed for " + el + ", further warnings suppressed" );
                     }
 
                 } else {
@@ -889,23 +904,32 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     }
 
                     /*
-                     * Add contrasts, one for each FactorValue which is "significant."
+                     * Add contrasts unless overallpvalue is NaN
                      */
+                    if ( !Double.isNaN( overallPValue ) ) {
 
-                    Map<String, Double> mainEffectContrastTStats = lm.getContrastTStats( factorName );
+                        Map<String, Double> mainEffectContrastTStats = lm.getContrastTStats( factorName );
+                        Map<String, Double> mainEffectContrastPvalues = lm.getContrastPValues( factorName );
+                        Map<String, Double> mainEffectContrastCoeffs = lm.getContrastCoefficients( factorName );
 
-                    Map<String, Double> mainEffectContrastPvalues = lm.getContrastPValues( factorName );
-                    Map<String, Double> mainEffectContrastCoeffs = lm.getContrastCoefficients( factorName );
+                        for ( String term : mainEffectContrastPvalues.keySet() ) {
 
-                    for ( String term : mainEffectContrastPvalues.keySet() ) {
+                            Double contrastPvalue = mainEffectContrastPvalues.get( term );
 
-                        Double contrastPvalue = mainEffectContrastPvalues.get( term );
+                            makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
+                                    mainEffectContrastTStats, mainEffectContrastCoeffs );
 
-                        makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
-                                mainEffectContrastTStats, mainEffectContrastCoeffs );
-
+                        }
+                    } else {
+                        if ( !warned ) {
+                            log.warn( "ANOVA could not be done for " + experimentalFactor + " on " + el
+                                    + ", further warnings suppressed" );
+                            warned = true;
+                        }
+                        notUsable++; // will over count?
+                        if ( log.isDebugEnabled() )
+                            log.debug( "ANOVA could not be done for " + experimentalFactor + " on " + el );
                     }
-
                 }
 
                 probeAnalysisResult.setPvalue( nan2Null( overallPValue ) );
@@ -917,9 +941,16 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         getRanksAndQvalues( resultLists, pvaluesForQvalue );
 
+        if ( notUsable > 0 ) {
+            log.info( notUsable + " elements or results were not usable - model could not be fit, etc." );
+        }
+
         DifferentialExpressionAnalysis expressionAnalysis = makeAnalysisEntity( bioAssaySet, config, label2Factors,
                 baselineConditions, interceptFactor, interactionFactorLists, oneSampleTtest, resultLists,
                 subsetFactorValue );
+
+        log.info( "Analysis processing phase done ..." );
+
         return expressionAnalysis;
     }
 
