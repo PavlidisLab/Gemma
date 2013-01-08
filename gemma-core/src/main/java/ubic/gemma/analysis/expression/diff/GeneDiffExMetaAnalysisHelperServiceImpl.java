@@ -101,7 +101,7 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
         	
             // Find meta-analysis so that its security settings can be copied to value object.
             for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
-                if ( vo.getId() == metaAnalysis.getId() ) {
+                if (vo.getId().equals(metaAnalysis.getId())) {
                 	boolean isEditable = false;
                 	
 					try {
