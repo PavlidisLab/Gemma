@@ -348,7 +348,12 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
         if ( best == null ) return null;
 
-        assert best != null && best.getContrasts().size() == 1;
+        if ( best.getContrasts().isEmpty() ) {
+            throw new IllegalStateException( "There was no contrast for result with ID=" + best.getId() );
+        }
+
+        assert best.getContrasts().size() == 1;
+
         return best.getContrasts().iterator().next().getLogFoldChange();
     }
 
