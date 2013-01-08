@@ -551,7 +551,7 @@ Gemma.HelpText.WidgetDefaults = {
 		    userNotLoggedIn: 'You are not logged in. Please log in to try again.',
 		    accessDenied: 'Your access is denied.',
 		    lastUpdateDifferent: 'This evidence has been modified by someone else. Please reload the page to view the updated version.',
-		    evidenceNotFound: 'This evidence cannot be found because it has been removed by someone else.<br />Please reload the page to view the latest phenotype association.',
+		    evidenceNotFound: 'This evidence cannot be found because it has been removed by someone else.<br />Please reload the page to view the latest records.',
 		    pubmedIdInvalid: '{0} is not valid.',
 		    sameGeneAndPhenotypesAnnotated: 'An identical annotation (same gene and same phenotype(s)) already exists for this PubMed Id.',
 		    sameGeneAnnotated: 'An annotation for this gene already exists for this PubMed Id.',
