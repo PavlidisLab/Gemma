@@ -482,6 +482,8 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			    if (this.getForm().isValid()) {
 			    	var isCreating = (evidenceId == null);
 
+			    	this.loadMask.show();
+
 					PhenotypeController.processPhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {
 						this.loadMask.hide();
 
@@ -536,9 +538,13 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							
 							if (isValid && evidenceCodeComboBox.getValue() !== '') {
 								var evidenceValueObject = generateEvidenceValueObject(selectedPhenotypes);
-									
+
+								this.loadMask.show();
+
 								// Ask the controller to validate only after all fields are filled.
 								PhenotypeController.validatePhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {
+									this.loadMask.hide();
+
 									var hasError = false;								
 									var hasWarning = false;
 			
@@ -600,11 +606,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				    text: 'OK',
 				    formBind: true,
 				    handler: function() {
-						this.loadMask.show();
-
 						this.validateForm(true);
-
-						this.loadMask.hide();
 				    },
 					scope: this
 				},
