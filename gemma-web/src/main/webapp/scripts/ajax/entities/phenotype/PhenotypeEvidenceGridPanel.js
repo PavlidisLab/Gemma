@@ -283,14 +283,14 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			viewMetaAnalysisWindow.show();
 		};
 
-		var showViewEvidenceWindow = function(metaAnalysis, id) {
-			var record = this.getStore().getById(id);
+		var showViewEvidenceWindow = function(metaAnalysis, storeId, metaAnalysisId) {
+			var record = this.getStore().getById(storeId);
 			if (record != null) {
 				metaAnalysis.name = record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name;
 				metaAnalysis.numGenesAnalyzed = record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numGenesAnalyzed;
 	
 				var viewEvidenceWindow = new Gemma.MetaAnalysisEvidenceWindow({
-					metaAnalysisId: id,
+					metaAnalysisId: metaAnalysisId,
 					metaAnalysis: metaAnalysis,
 					showActionButton: record.data.evidenceSecurityValueObject.currentUserHasWritePermission,				
 					title: 'View Neurocarta evidence for ' + record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name,
@@ -396,7 +396,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 												record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.id + ', ' +
 												'\\\'Cannot view Neurocarta evidence\\\', ' +
 												'showViewEvidenceWindow, ' +
-												'[ ' + record.id + ' ])\');',   
+												'[ ' + record.id + ', ' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.id + ' ])\');',   
 											'/Gemma/images/icons/magnifier.png', 'View Neurocarta evidence', 10, 10) + ')<br />';
 
 									descriptionHtml += '<b>p-value</b>: ' + record.metaPvalue.toExponential(2) + '; ' +
