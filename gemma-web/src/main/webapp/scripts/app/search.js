@@ -223,7 +223,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 					var sq = url.substr(url.indexOf("?") + 1);
 					var params = Ext.urlDecode(sq);
 
-					if ((params.termUri) && (params.termUri.length !== 0)) {
+					if ((params.termUri) && (params.termUri.length !== 0) && (params.termUri!="null")) {
 						this.form.findField('query').setValue(params.termUri);
 					}
 					else 
