@@ -115,7 +115,7 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			var searchCharacteristics = true;
 			var searchGO = false;
 			var searchUsingPhenotypes = false;
-			if (Ext.get('hasAdmin').getValue()) {
+			if (Ext.get("hasUser") != null && Ext.get("hasUser").getValue()) {
 				searchDatabase = Ext.getCmp('search-database-chkbx').getValue();
 				searchIndices = Ext.getCmp('search-indices-chkbx').getValue();
 				searchCharacteristics = Ext.getCmp('search-characteristics-chkbx').getValue();
