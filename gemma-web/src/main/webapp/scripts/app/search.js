@@ -81,15 +81,15 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			
 			
 			// respond to the user logging in or out
-			Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
+			Gemma.Application.currentUser.on("logIn", function(userName){
 				// show/hide the advanced options section
-				this.form.adjustForIsAdmin(isAdmin);
+				this.form.adjustForIsLoggedIn(true);
 				northPan.setHeight(this.form.getHeight());
 				this.doLayout();
 				
 			},this);
 			Gemma.Application.currentUser.on("logOut", function(){
-				this.form.adjustForIsAdmin(false);
+				this.form.adjustForIsLoggedIn(false);
 				northPan.setHeight(this.form.getHeight());
 				this.doLayout();
 			},this);
@@ -292,9 +292,8 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 
 			},
 
-			initComponent : function() {
-
-				var showAdvancedOptions = Ext.get("hasAdmin").getValue();
+			initComponent : function() {				
+				var showAdvancedOptions = Ext.get("hasUser") != null && Ext.get("hasUser").getValue();
 				Ext.apply(this, {
 							items : [{
 										xtype : 'panel',
@@ -565,8 +564,8 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 				
 				
 			}, // end of initComponent
-			adjustForIsAdmin : function(isAdmin){
-				this.advancedSelects.setVisible(isAdmin);
+			adjustForIsLoggedIn : function(isLoggedIn){
+				this.advancedSelects.setVisible(isLoggedIn);
 			}
 		});
 
