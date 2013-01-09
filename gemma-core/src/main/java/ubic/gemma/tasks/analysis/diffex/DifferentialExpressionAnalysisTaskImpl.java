@@ -112,13 +112,14 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         if ( command.getToRedo() != null ) {
             if ( command.isUpdateStatsOnly() ) {
-                log.info("Refreshing stats");
+                log.info( "Refreshing stats" );
                 differentialExpressionAnalyzerService.updateSummaries( command.getToRedo() );
                 Collection<DifferentialExpressionAnalysis> result = new HashSet<DifferentialExpressionAnalysis>();
                 result.add( command.getToRedo() );
                 return result;
             } else {
-                log.info("Redoing analysis");
+                log.info( "Redoing analysis" );
+                ee = expressionExperimentService.thawLite( ee );
                 return differentialExpressionAnalyzerService.redoAnalysis( ee, command.getToRedo() );
             }
         }
