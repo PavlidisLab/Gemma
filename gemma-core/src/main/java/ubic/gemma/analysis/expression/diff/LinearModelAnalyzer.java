@@ -777,13 +777,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          * Initialize data structures we need to hold results
          */
 
-        Map<String, Collection<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, Collection<DifferentialExpressionAnalysisResult>>();
+        // this used to be a Set, but a List is much faster.
+        Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, List<DifferentialExpressionAnalysisResult>>();
         Map<String, List<Double>> pvaluesForQvalue = new HashMap<String, List<Double>>();
         for ( String factorName : label2Factors.keySet() ) {
             if ( properDesignMatrix.getDroppedFactors().contains( factorName ) ) {
                 continue;
             }
-            resultLists.put( factorName, new HashSet<DifferentialExpressionAnalysisResult>() );
+            resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
         }
         addinteraction: for ( String[] fs : interactionFactorLists ) {
@@ -793,7 +794,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 }
             }
             String intF = StringUtils.join( fs, ":" );
-            resultLists.put( intF, new HashSet<DifferentialExpressionAnalysisResult>() );
+            resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( intF, new ArrayList<Double>() );
         }
 
@@ -1102,7 +1103,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @return
      */
     private Map<CompositeSequence, Collection<Gene>> getProbeToGeneMap(
-            Map<String, Collection<DifferentialExpressionAnalysisResult>> resultLists ) {
+            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists ) {
         Map<CompositeSequence, Collection<Gene>> result = new HashMap<CompositeSequence, Collection<Gene>>();
 
         for ( Collection<DifferentialExpressionAnalysisResult> resultList : resultLists.values() ) {
@@ -1123,7 +1124,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param resultLists
      * @param pvaluesForQvalue Map of factorName to results.
      */
-    private void getRanksAndQvalues( Map<String, Collection<DifferentialExpressionAnalysisResult>> resultLists,
+    private void getRanksAndQvalues(
+            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists,
             Map<String, List<Double>> pvaluesForQvalue ) {
         /*
          * qvalues and ranks, requires second pass over the result objects.
@@ -1203,7 +1205,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             final Map<String, Collection<ExperimentalFactor>> label2Factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions, ExperimentalFactor interceptFactor,
             List<String[]> interactionFactorLists, boolean oneSampleTtest,
-            Map<String, Collection<DifferentialExpressionAnalysisResult>> resultLists, FactorValue subsetFactorValue ) {
+            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists,
+            FactorValue subsetFactorValue ) {
 
         DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( bioAssaySet );
 
@@ -1410,7 +1413,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             final Map<String, Collection<ExperimentalFactor>> label2Factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions, boolean oneSampleTtest,
             DifferentialExpressionAnalysis expressionAnalysis,
-            Map<String, Collection<DifferentialExpressionAnalysisResult>> resultLists ) {
+            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists ) {
 
         Map<CompositeSequence, Collection<Gene>> probeToGeneMap = getProbeToGeneMap( resultLists );
 
@@ -1421,7 +1424,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         for ( String fName : resultLists.keySet() ) {
             Collection<DifferentialExpressionAnalysisResult> results = resultLists.get( fName );
 
-            assert !( results instanceof List );
+            // assert !( results instanceof List );
 
             Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
             factorsUsed.addAll( label2Factors.get( fName ) );
@@ -1440,9 +1443,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             int numberOfGenesTested = getNumberOfGenesTested( results, probeToGeneMap );
 
-            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory
-                    .newInstance( factorsUsed, numberOfProbesTested, numberOfGenesTested, baselineGroup,
-                            expressionAnalysis, results, hitListSizes );
+            // make List into Set
+            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( factorsUsed,
+                    numberOfProbesTested, numberOfGenesTested, baselineGroup, expressionAnalysis,
+                    new HashSet<DifferentialExpressionAnalysisResult>( results ), hitListSizes );
             resultSets.add( resultSet );
 
         }
