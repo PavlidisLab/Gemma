@@ -250,7 +250,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         timer.start();
         List<Histogram> pvalueHistograms = new ArrayList<Histogram>();
         // List<Histogram> qvalueHistograms = new ArrayList<Histogram>();
-        List<Histogram> scoreHistograms = new ArrayList<Histogram>();
+        // List<Histogram> scoreHistograms = new ArrayList<Histogram>();
 
         List<ExpressionAnalysisResultSet> resultSetList = new ArrayList<ExpressionAnalysisResultSet>();
         resultSetList.addAll( diffExpressionAnalysis.getResultSets() );
@@ -292,11 +292,11 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         DoubleMatrix<String, String> pvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size() );
         // DoubleMatrix<String, String> qvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size()
         // );
-        DoubleMatrix<String, String> scoreDists = new DenseDoubleMatrix<String, String>( 200, resultSetList.size() );
+        // DoubleMatrix<String, String> scoreDists = new DenseDoubleMatrix<String, String>( 200, resultSetList.size() );
 
         fillDists( factorNames, pvalueHistograms, pvalueDists );
         // fillDists( factorNames, qvalueHistograms, qvalueDists );
-        fillDists( factorNames, scoreHistograms, scoreDists );
+        // fillDists( factorNames, scoreHistograms, scoreDists );
 
         saveDistributionMatrixToFile( "pvalues", pvalueDists, expressionExperiment, resultSetList );
         // saveDistributionMatrixToFile( "qvalues", qvalueDists, expressionExperiment, resultSetList );
