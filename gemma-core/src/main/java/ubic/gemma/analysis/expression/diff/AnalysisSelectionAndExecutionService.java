@@ -36,7 +36,9 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
      * 
      * @param expressionExperiment
      * @return
+     * @deprecated because it is not used.
      */
+    @Deprecated
     public abstract Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment );
 
     /**
@@ -61,7 +63,9 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
      * @param factors
      * @param type
      * @return
+     * @deprecated as it is not used
      */
+    @Deprecated
     public abstract Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type );
 
@@ -70,8 +74,7 @@ public interface AnalysisSelectionAndExecutionService extends ApplicationContext
      * @param config
      * @return
      */
-    public abstract AnalysisType determineAnalysis( BioAssaySet bioAssaySet,
-            DifferentialExpressionAnalysisConfig config );
+    public abstract AnalysisType determineAnalysis( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config );
 
     /**
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.

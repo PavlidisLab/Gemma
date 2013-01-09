@@ -114,7 +114,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     public Collection<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
         Collection<HitListSize> hitListSizes = new HashSet<HitListSize>();
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         double maxThreshold = MathUtil.max( qValueThresholdsForHitLists );
 
         assert probeToGeneMap != null;
@@ -227,6 +228,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             assert upGenes <= eitherGenes : "More genes upregulated than upregulated+downregulated";
             assert downGenes <= eitherGenes : "More genes downregulated than upregulated+downregulated";
 
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Hitlist computation: " + timer.getTime() + "ms" );
         }
         return hitListSizes;
     }
@@ -1420,11 +1425,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Result sets
          */
+        log.info( "Processing " + resultLists.size() + " resultSets" );
+        // StopWatch timer = new StopWatch();
+        // timer.start();
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
         for ( String fName : resultLists.keySet() ) {
             Collection<DifferentialExpressionAnalysisResult> results = resultLists.get( fName );
-
-            // assert !( results instanceof List );
 
             Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
             factorsUsed.addAll( label2Factors.get( fName ) );
@@ -1434,13 +1440,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 ExperimentalFactor factor = factorsUsed.iterator().next();
                 assert baselineConditions.containsKey( factor );
                 baselineGroup = baselineConditions.get( factor );
-                log.info( "Baseline group = " + baselineGroup );
             }
 
             Collection<HitListSize> hitListSizes = computeHitListSizes( results, probeToGeneMap );
 
             int numberOfProbesTested = results.size();
-
             int numberOfGenesTested = getNumberOfGenesTested( results, probeToGeneMap );
 
             // make List into Set
@@ -1448,6 +1452,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     numberOfProbesTested, numberOfGenesTested, baselineGroup, expressionAnalysis,
                     new HashSet<DifferentialExpressionAnalysisResult>( results ), hitListSizes );
             resultSets.add( resultSet );
+
+            log.info( "Finished with result set for " + fName );
 
         }
         return resultSets;
