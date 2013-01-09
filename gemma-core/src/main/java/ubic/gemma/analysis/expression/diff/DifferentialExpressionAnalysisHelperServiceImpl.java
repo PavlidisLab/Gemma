@@ -77,6 +77,9 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
 
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
@@ -106,10 +109,25 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
             differentialExpressionAnalysisService.delete( de );
 
             deleteStatistics( expressionExperiment, de );
+            deleteAnalysisFiles( de );
             result++;
         }
 
         return result;
+    }
+
+    /**
+     * Delete any flat files that might have been generated.
+     * 
+     * @param expressionExperiment
+     * @param de
+     */
+    private void deleteAnalysisFiles( DifferentialExpressionAnalysis analysis ) {
+        try {
+            expressionDataFileService.deleteDiffExArchiveFile( analysis );
+        } catch ( IOException e ) {
+            log.error( "Error during deletion of old files for analyses to be deleted: " + e.getMessage() );
+        }
     }
 
     /**
@@ -224,14 +242,14 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         /*
          * write histograms
          * 
-         * Of 1) pvalues, 2) scores, 3) qvalues
+         * Of 1) pvalues, // (following not used now) 2) scores, 3) qvalues
          * 
          * Put all pvalues in one file etc so we don't get 9 files for a 2x anova with interactions.
          */
         StopWatch timer = new StopWatch();
         timer.start();
         List<Histogram> pvalueHistograms = new ArrayList<Histogram>();
-        List<Histogram> qvalueHistograms = new ArrayList<Histogram>();
+        // List<Histogram> qvalueHistograms = new ArrayList<Histogram>();
         List<Histogram> scoreHistograms = new ArrayList<Histogram>();
 
         List<ExpressionAnalysisResultSet> resultSetList = new ArrayList<ExpressionAnalysisResultSet>();
@@ -255,21 +273,15 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
             Histogram pvalHist = new Histogram( factorName, 100, 0.0, 1.0 );
             pvalueHistograms.add( pvalHist );
 
-            Histogram qvalHist = new Histogram( factorName, 100, 0.0, 1.0 );
-            qvalueHistograms.add( qvalHist );
+            // Histogram qvalHist = new Histogram( factorName, 100, 0.0, 1.0 );
+            // qvalueHistograms.add( qvalHist );
 
-            Histogram scoreHist = new Histogram( factorName, 200, -20, 20 );
-            scoreHistograms.add( scoreHist );
+            // Histogram scoreHist = new Histogram( factorName, 200, -20, 20 );
+            // scoreHistograms.add( scoreHist );
 
             for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
-                Double correctedPvalue = result.getCorrectedPvalue();
-                if ( correctedPvalue != null ) qvalHist.fill( correctedPvalue );
-
-                /*
-                 * FIXME do contrasts?
-                 */
-                // Double effectSize = result.getEffectSize();
-                // if ( effectSize != null ) scoreHist.fill( effectSize );
+                // Double correctedPvalue = result.getCorrectedPvalue();
+                // if ( correctedPvalue != null ) qvalHist.fill( correctedPvalue );
 
                 Double pvalue = result.getPvalue();
                 if ( pvalue != null ) pvalHist.fill( pvalue );
@@ -278,16 +290,17 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         }
 
         DoubleMatrix<String, String> pvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size() );
-        DoubleMatrix<String, String> qvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size() );
+        // DoubleMatrix<String, String> qvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size()
+        // );
         DoubleMatrix<String, String> scoreDists = new DenseDoubleMatrix<String, String>( 200, resultSetList.size() );
 
         fillDists( factorNames, pvalueHistograms, pvalueDists );
-        fillDists( factorNames, qvalueHistograms, qvalueDists );
+        // fillDists( factorNames, qvalueHistograms, qvalueDists );
         fillDists( factorNames, scoreHistograms, scoreDists );
 
         saveDistributionMatrixToFile( "pvalues", pvalueDists, expressionExperiment, resultSetList );
-        saveDistributionMatrixToFile( "qvalues", qvalueDists, expressionExperiment, resultSetList );
-        saveDistributionMatrixToFile( "scores", scoreDists, expressionExperiment, resultSetList );
+        // saveDistributionMatrixToFile( "qvalues", qvalueDists, expressionExperiment, resultSetList );
+        // saveDistributionMatrixToFile( "scores", scoreDists, expressionExperiment, resultSetList );
 
         if ( timer.getTime() > 5000 ) {
             log.info( "Done writing distributions: " + timer.getTime() + "ms" );
@@ -304,14 +317,11 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
 
         File f = prepareDirectoryForDistributions( ee );
 
-        boolean deleted = false;
-
         String histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "."
                 + "pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         File oldf = new File( f, histFileName );
-        if ( oldf.exists() ) {
-            deleted = oldf.delete();
-            if ( !deleted ) {
+        if ( oldf.exists() && oldf.canWrite() ) {
+            if ( !oldf.delete() ) {
                 log.warn( "Could not delete: " + oldf );
             }
         }
@@ -319,18 +329,17 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "qvalues"
                 + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         oldf = new File( f, histFileName );
-        if ( oldf.exists() ) {
-            deleted = oldf.delete();
-            if ( !deleted ) {
+        if ( oldf.exists() && oldf.canWrite() ) {
+
+            if ( !oldf.delete() ) {
                 log.warn( "Could not delete: " + oldf );
             }
         }
         histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "scores"
                 + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         oldf = new File( f, histFileName );
-        if ( oldf.exists() ) {
-            deleted = oldf.delete();
-            if ( !deleted ) {
+        if ( oldf.exists() && oldf.canWrite() ) {
+            if ( !oldf.delete() ) {
                 log.warn( "Could not delete: " + oldf );
             }
         }

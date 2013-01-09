@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -169,5 +170,11 @@ public interface ExpressionDataFileService {
      * @param forceWrite
      */
     public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
+
+    /**
+     * @param analysis
+     * @throws IOException
+     */
+    void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) throws IOException;
 
 }
