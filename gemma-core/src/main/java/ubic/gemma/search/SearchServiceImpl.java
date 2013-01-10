@@ -1857,17 +1857,33 @@ public class SearchServiceImpl implements SearchService {
      */
     private Collection<SearchResult> filterCharacteristicOwnersByClass( Collection<Class<?>> classes,
             Map<Characteristic, Object> characteristic2entity ) {
+    	
+    	Collection<BioMaterial> biomaterials = new HashSet<BioMaterial>();
         Collection<SearchResult> results = new HashSet<SearchResult>();
         for ( Characteristic c : characteristic2entity.keySet() ) {
             Object o = characteristic2entity.get( c );
             for ( Class<?> clazz : classes ) {
                 if ( clazz.isAssignableFrom( o.getClass() ) ) {
                     String matchedText = c.getValue();
-                    if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
-                        matchedText = "Ontology term: " + matchedText;
+                    
+                    if ( o instanceof BioMaterial){
+                    	biomaterials.add((BioMaterial)o);
+                    	
+                    }else{
+                    
+                    	if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
+                    		matchedText = "Ontology term: " + matchedText;
+                    	}
+                    	results.add( new SearchResult( o, 1.0, matchedText ) );
                     }
-                    results.add( new SearchResult( o, 1.0, matchedText ) );
                 }
+            }
+        }
+        
+        if ( biomaterials.size() > 0 ) {
+            Collection<ExpressionExperiment> ees = expressionExperimentService.findByBioMaterials( biomaterials );
+            for ( ExpressionExperiment ee : ees ) {
+                results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "BioMaterial characteristic" ) );
             }
         }
         return results;
