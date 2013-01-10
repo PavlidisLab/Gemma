@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 
 /**
  * Service responsible of low level operations, used by PhenotypeAssociationManagerServiceImpl
@@ -234,6 +235,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
         return this.phenotypeAssociationDao
                 .countEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
+    }
+
+    /** find all phenotypes in Neurocarta */
+    @Override
+    public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
+        return this.phenotypeAssociationDao.loadAllNeurocartaPhenotypes();
     }
 
 }

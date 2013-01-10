@@ -27,6 +27,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidence
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 
@@ -219,6 +220,13 @@ public interface PhenotypeAssociationManagerService {
      * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
      */
     public abstract Collection<ExternalDatabaseStatisticsValueObject> loadNeurocartaStatistics();
+
+    /**
+     * load all the valueUri and value of phenotype present in Neurocarta
+     * 
+     * @return Collection<String> the valueUri of the phenotypes
+     */
+    public abstract Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
 
     /**
      * creates the DifferentialExpressionEvidences using an DiffExpressionMetaAnalysis

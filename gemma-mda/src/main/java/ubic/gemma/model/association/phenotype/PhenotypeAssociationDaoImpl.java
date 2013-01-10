@@ -42,6 +42,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.AbstractDao;
 
 @Repository
@@ -342,6 +343,24 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
         return phenotypesGenesAssociations;
+    }
+
+    /** find all phenotypes in Neurocarta */
+    @Override
+    public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
+
+        Collection<PhenotypeValueObject> phenotypeValueObjects = new HashSet<PhenotypeValueObject>();
+
+        @SuppressWarnings("unchecked")
+        Collection<Object[]> list = this.getHibernateTemplate().find(
+                "select distinct phe.value, phe.valueUri from PhenotypeAssociationImpl as p join p.phenotypes as phe" );
+
+        for ( Object[] row : list ) {
+            PhenotypeValueObject p = new PhenotypeValueObject( ( String ) row[0], ( String ) row[1] );
+            phenotypeValueObjects.add( p );
+        }
+
+        return phenotypeValueObjects;
     }
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */

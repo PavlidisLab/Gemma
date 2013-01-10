@@ -76,6 +76,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
@@ -898,6 +899,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName );
 
         return this.convert2ValueObjects( phenotypeAssociations );
+    }
+
+    /**
+     * load all the valueUri and value of phenotype present in Neurocarta
+     * 
+     * @return Collection<String> the valueUri of the phenotypes
+     */
+    @Override
+    public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
+        return this.associationService.loadAllNeurocartaPhenotypes();
     }
 
     /**
