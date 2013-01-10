@@ -1859,6 +1859,7 @@ public class SearchServiceImpl implements SearchService {
             Map<Characteristic, Object> characteristic2entity ) {
     	
     	Collection<BioMaterial> biomaterials = new HashSet<BioMaterial>();
+    	Collection<FactorValue> factorValues = new HashSet<FactorValue>();
         Collection<SearchResult> results = new HashSet<SearchResult>();
         for ( Characteristic c : characteristic2entity.keySet() ) {
             Object o = characteristic2entity.get( c );
@@ -1869,7 +1870,10 @@ public class SearchServiceImpl implements SearchService {
                     if ( o instanceof BioMaterial){
                     	biomaterials.add((BioMaterial)o);
                     	
-                    }else{
+                    }else if ( o instanceof FactorValue){
+                    	factorValues.add((FactorValue)o);                    	
+                    }
+                    else{
                     
                     	if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
                     		matchedText = "Ontology term: " + matchedText;
@@ -1877,6 +1881,14 @@ public class SearchServiceImpl implements SearchService {
                     	results.add( new SearchResult( o, 1.0, matchedText ) );
                     }
                 }
+            }
+        }
+        
+        if ( factorValues.size() > 0 ) {
+            Collection<ExpressionExperiment> ees = expressionExperimentService.findByFactorValues( factorValues );
+            for ( ExpressionExperiment ee : ees ) {
+                if ( log.isDebugEnabled() ) log.debug( ee );
+                results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "Factor characteristic" ) );
             }
         }
         
