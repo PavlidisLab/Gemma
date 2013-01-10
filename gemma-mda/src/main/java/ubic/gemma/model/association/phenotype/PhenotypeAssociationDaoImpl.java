@@ -351,12 +351,17 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Collection<PhenotypeValueObject> phenotypeValueObjects = new HashSet<PhenotypeValueObject>();
 
-        @SuppressWarnings("unchecked")
-        Collection<Object[]> list = this.getHibernateTemplate().find(
-                "select distinct phe.value, phe.valueUri from PhenotypeAssociationImpl as p join p.phenotypes as phe" );
+        String sqlQuery = "SELECT DISTINCT VALUE_URI,VALUE FROM CHARACTERISTIC WHERE PHENOTYPE_ASSOCIATION_FK is not null";
 
-        for ( Object[] row : list ) {
-            PhenotypeValueObject p = new PhenotypeValueObject( ( String ) row[0], ( String ) row[1] );
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+
+            String valueUri = ( String ) results.get( 0 );
+            String value = ( String ) results.get( 1 );
+
+            PhenotypeValueObject p = new PhenotypeValueObject( value, valueUri );
             phenotypeValueObjects.add( p );
         }
 
