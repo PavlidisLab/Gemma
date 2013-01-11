@@ -18,30 +18,17 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.DoubleType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
-
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -52,6 +39,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
+
+import java.math.BigInteger;
+import java.util.*;
 
 /**
  * This is a key class for queries to retrieve differential expression results (as well as standard CRUD aspects of
@@ -770,6 +760,34 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         return probeResults;
     }
+
+    @Override
+    public Collection<? extends DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids ) {
+        final String queryString = "from DifferentialExpressionAnalysisResultImpl dea left join fetch dea.contrasts where dea.id in (:ids)";
+
+        Collection<? extends DifferentialExpressionAnalysisResult> probeResults = new HashSet<DifferentialExpressionAnalysisResult>();
+
+        if ( ids.isEmpty() ) {
+            return probeResults;
+        }
+
+        int BATCH_SIZE = 1000; // previously: 500.
+
+        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
+            StopWatch timer = new StopWatch();
+            timer.start();
+            probeResults.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Fetch " + batch.size() + "/" + ids.size() + " results with contrasts: " + timer.getTime()
+                        + "ms; query was\n " + NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
+            }
+        }
+
+        return probeResults;
+    }
+
+
+
 
     /*
      * (non-Javadoc)

@@ -18,18 +18,15 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.stereotype.Repository;
-
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.BaseDao;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
@@ -137,5 +134,14 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      */
     java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene, double threshold, Integer limit );
+
+
+    /**
+     * Same as load(Collection<Long> ids) but eagerly fetches contrasts.
+     *
+     * @param ids
+     * @return
+     */
+    public Collection<? extends DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids );
 
 }

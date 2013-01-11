@@ -18,17 +18,14 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.stereotype.Service;
-
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author keshav
@@ -174,6 +171,12 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
         return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
                 .load( ids );
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids ) {
+        return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
+                .loadEagerContrasts( ids );
     }
 
 }

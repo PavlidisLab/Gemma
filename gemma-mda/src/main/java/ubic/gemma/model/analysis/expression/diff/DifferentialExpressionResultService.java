@@ -18,18 +18,15 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.security.access.annotation.Secured;
-
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author kelsey
@@ -140,6 +137,8 @@ public interface DifferentialExpressionResultService {
     public void thaw( Collection<DifferentialExpressionAnalysisResult> results );
 
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids );
+
+    public Collection<DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
