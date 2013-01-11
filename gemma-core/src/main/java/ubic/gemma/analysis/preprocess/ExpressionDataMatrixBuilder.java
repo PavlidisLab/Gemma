@@ -824,7 +824,7 @@ public class ExpressionDataMatrixBuilder {
             CompositeSequence d = v.getDesignElement();
             TechnologyType technologyType = d.getArrayDesign().getTechnologyType();
 
-            if ( technologyType.equals( TechnologyType.ONECOLOR ) ) {
+            if ( technologyType.equals( TechnologyType.ONECOLOR ) || technologyType.equals( TechnologyType.NONE ) ) {
                 continue;
             }
 

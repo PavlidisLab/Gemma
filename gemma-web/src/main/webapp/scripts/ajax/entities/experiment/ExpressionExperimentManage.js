@@ -570,7 +570,7 @@ Gemma.EEReportGridColumnRenderers = {
         /*
          * Offer missing value analysis if it's possible (this might need tweaking).
          */
-        if (record.get('technologyType') != 'ONECOLOR' && record.get('hasEitherIntensity')) {
+        if (record.get('technologyType') != 'ONECOLOR' && record.get('technologyType') != 'NONE' && record.get('hasEitherIntensity')) {
             if (record.get('dateMissingValueAnalysis')) {
                 var type = record.get('missingValueAnalysisEventType');
                 var color = "#000";

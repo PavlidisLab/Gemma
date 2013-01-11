@@ -121,6 +121,9 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         }
         arrayDesign = arrayDesignService.thaw( arrayDesign );
 
+        // temporary: making sure we set it, as it is new.
+        arrayDesign.setTechnologyType( TechnologyType.NONE );
+
         /*
          * Load up the genes for the organism, exclusing predicted genes (for now) and pars.
          */
@@ -155,6 +158,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     bioSequence.setPolymerType( PolymerType.RNA );
 
                     // FIXME miRNAs (though, we don't really use this field.)
+
                     bioSequence.setType( SequenceType.mRNA );
 
                     BioSequence existing = null;

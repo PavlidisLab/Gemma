@@ -94,12 +94,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends
             Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
         }
 
-        if ( res.isEmpty() ) {
-            // this could be due to replication lag. Bug 3034.
-            throw new IllegalStateException( "Failed to thaw the result set: " + resultSet.getId()
-                    + "; data may be invalid?" );
-        }
-
         return res.get( 0 );
 
     }

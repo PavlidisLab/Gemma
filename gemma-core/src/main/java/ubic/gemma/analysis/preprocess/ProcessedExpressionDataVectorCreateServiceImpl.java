@@ -417,7 +417,8 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
         ExpressionDataDoubleMatrix intensities;
 
-        if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
+        if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR )
+                && !arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) ) {
 
             /*
              * Get vectors needed to compute intensities.
@@ -471,5 +472,4 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
         return updatedVectors;
     }
-
 }

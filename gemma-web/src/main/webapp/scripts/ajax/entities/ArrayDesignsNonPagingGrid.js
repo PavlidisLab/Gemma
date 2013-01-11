@@ -393,11 +393,11 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					xtype: 'datecolumn',
 					format: 'Y-m-d'
 				}, {
-					header: "Color",
+					header: "Channels",
 					dataIndex: 'color',
 					width: 0.03,
 					renderer: function(value, metaData, record, rowIndex, colIndex, store){
-						return (value === "ONECOLOR") ? "1" : (value === "TWOCOLOR") ? "2" : '<span title="' + value + '">' + value + '</span>';
+						return (value === "ONECOLOR" || value === "NONE" ) ? "1" : (value === "TWOCOLOR") ? "2" : '<span title="' + value + '">' + value + '</span>';
 					}
 				}, this.action]
 			})

@@ -558,9 +558,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         /*
          * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
          */
-        if ( !( arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE )
-                || arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) || arrayDesign.getTechnologyType()
-                .equals( TechnologyType.TWOCOLOR ) ) ) {
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE )
+                || !( arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE )
+                        || arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) || arrayDesign
+                        .getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) ) {
             return false;
         }
 

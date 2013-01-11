@@ -428,6 +428,9 @@ public class ArrayExpressLoadServiceImpl implements ArrayExpressLoadService {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( arrayId );
+        /*
+         * FIXME make sure this handles "NONE".
+         */
         ad.setTechnologyType( isTwoColor ? TechnologyType.TWOCOLOR : TechnologyType.ONECOLOR );
         ad.setShortName( arrayId );
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();

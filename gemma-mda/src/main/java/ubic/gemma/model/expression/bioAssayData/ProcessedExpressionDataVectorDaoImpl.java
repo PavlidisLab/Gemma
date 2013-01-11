@@ -180,7 +180,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                         "Array designs must have a technology type assigned before processed vector computation" );
             }
 
-            if ( !technologyType.equals( TechnologyType.ONECOLOR ) ) {
+            if ( !technologyType.equals( TechnologyType.ONECOLOR ) && !technologyType.equals( TechnologyType.NONE ) ) {
                 isTwoChannel = true;
             }
         }

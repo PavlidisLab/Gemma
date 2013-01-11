@@ -749,11 +749,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             /*
              * This really shouldn't happen!
              */
-            log.warn( "Found " + list.size() + " expression experiment for the given bio assay: " + ba + " Only 1 returned." );
+            log.warn( "Found " + list.size() + " expression experiment for the given bio assay: " + ba
+                    + " Only 1 returned." );
         }
         return ( ExpressionExperiment ) list.iterator().next();
     }
-    
+
     @Override
     protected ExpressionExperiment handleFindByBioMaterial( BioMaterial bm ) {
 
@@ -1931,7 +1932,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setTechnologyType( type );
         }
 
-        if ( !type.equals( TechnologyType.ONECOLOR.toString() ) ) {
+        if ( !type.equals( TechnologyType.ONECOLOR.toString() ) && !type.equals( TechnologyType.NONE.toString() ) ) {
             Collection<QuantitationType> qts = qtMap.get( eeId );
 
             if ( qts == null ) {

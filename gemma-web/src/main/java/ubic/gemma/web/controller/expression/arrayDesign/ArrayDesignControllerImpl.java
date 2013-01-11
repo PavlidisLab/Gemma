@@ -866,20 +866,19 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
     private String formatTechnologyType( ArrayDesign arrayDesign ) {
         TechnologyType technologyType = arrayDesign.getTechnologyType();
 
+        String colorString = "Not specified";
         if ( technologyType == null ) {
-            return "Not specified";
+            return colorString;
         }
 
-        String techType = technologyType.getValue();
-        String colorString = "";
-        if ( techType.equalsIgnoreCase( "ONECOLOR" ) ) {
+        if ( technologyType.equals( TechnologyType.ONECOLOR ) ) {
             colorString = "one-color";
-        } else if ( techType.equalsIgnoreCase( "TWOCOLOR" ) ) {
+        } else if ( technologyType.equals( TechnologyType.TWOCOLOR ) ) {
             colorString = "two-color";
-        } else if ( techType.equalsIgnoreCase( "DUALMODE" ) ) {
+        } else if ( technologyType.equals( TechnologyType.DUALMODE ) ) {
             colorString = "dual mode";
-        } else {
-            colorString = "Not specified";
+        } else if ( technologyType.equals( TechnologyType.NONE ) ) {
+            colorString = "non-array-based";
         }
         return colorString;
     }

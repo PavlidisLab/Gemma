@@ -102,7 +102,7 @@ Gemma.ExpressionExperimentTools = Ext
                   /*
                    * Offer missing value analysis if it's possible (this might need tweaking).
                    */
-                  if ( ee.technologyType != 'ONECOLOR' && ee.hasEitherIntensity ) {
+                  if ( ee.technologyType != 'ONECOLOR' && ee.technologyType != 'NONE' && ee.hasEitherIntensity ) {
 
                      if ( ee.dateMissingValueAnalysis ) {
                         var type = ee.missingValueAnalysisEventType;
