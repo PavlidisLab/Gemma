@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -70,6 +71,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
     private BioSequenceService bioSequenceService;
     private CompositeSequenceService compositeSequenceService;
     private ExternalDatabaseService externalDatabaseService;
+    private ArrayDesignReportService arrayDesignReportService;
     private GeneService geneService;
 
     private Taxon taxon = null;
@@ -117,11 +119,12 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         arrayDesign.setTechnologyType( TechnologyType.NONE ); // this is key
 
         if ( arrayDesignService.find( arrayDesign ) != null ) {
-            log.info( "Array design for " + taxon + " already exists, will update" );
+            log.info( "Platform for " + taxon + " already exists, will update" );
             arrayDesign = arrayDesignService.find( arrayDesign );
             arrayDesignService.deleteGeneProductAssociations( arrayDesign );
 
         } else {
+            log.info( "Creating new 'generic' platform" );
             arrayDesign = arrayDesignService.create( arrayDesign );
         }
         arrayDesign = arrayDesignService.thaw( arrayDesign );
@@ -130,7 +133,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         arrayDesign.setTechnologyType( TechnologyType.NONE );
 
         /*
-         * Load up the genes for the organism, exclusing predicted genes (for now) and pars.
+         * Load up the genes for the organism.
          */
         Collection<Gene> knownGenes = geneService.loadAll( taxon );
         log.info( knownGenes.size() + " genes" );
@@ -140,7 +143,6 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         /*
          * Create a biosequence for each transcript, if there isn't one.
          */
-        Map<GeneProduct, BioSequence> gp2bs = new HashMap<GeneProduct, BioSequence>();
         int count = 0;
         int numWithNoTranscript = 0;
         int numNewGenes = 0;
@@ -148,18 +150,21 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         for ( Gene gene : knownGenes ) {
             gene = geneService.thaw( gene );
 
+            count++;
+
             if ( existingGeneMap.containsKey( gene ) ) {
 
                 if ( gene.getProducts().isEmpty() ) {
                     /*
-                     * We should delete this from the platform.
+                     * We should delete this from the platform. Not sure this will happen so just putting this here in
+                     * case.
                      */
-                    log.info( "Should delete from platform: " + existingGeneMap.get( gene ) );
+                    log.warn( "Should delete from platform: " + existingGeneMap.get( gene ) );
+                } else {
+                    if ( log.isDebugEnabled() ) log.debug( "Already have gene: " + gene );
                 }
 
                 continue;
-            } else {
-                numNewGenes++;
             }
 
             gene = geneService.thaw( gene );
@@ -171,6 +176,11 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 continue;
             }
 
+            numNewGenes++;
+
+            /*
+             * We arbitrarily link the "probe" to one of the gene's RNA transcripts.
+             */
             for ( GeneProduct geneProduct : products ) {
                 if ( !GeneProductType.RNA.equals( geneProduct.getType() ) ) {
                     continue;
@@ -208,11 +218,14 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     }
                     bioSequence.setSequenceDatabaseEntry( de );
                 } else {
-                    if ( accessions.size() > 1 ) {
-                        log.warn( "Ambiguous accessions for " + name );
-                    }
+                    // if ( accessions.size() > 1 ) {
+                    // log.warn( "Ambiguous accessions for GeneProduct " + name );
+                    // }
                     bioSequence.setSequenceDatabaseEntry( accessions.iterator().next() );
                     existing = bioSequenceService.findByAccession( accessions.iterator().next() );
+
+                    // FIXME It is possible that this sequence will have been aligned to the genome, which is a bit
+                    // confusing. So it will map to a gene. Worse case: it maps to more than one gene ...
 
                 }
                 if ( existing == null ) {
@@ -225,8 +238,6 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     log.info( "No DB entry for " + bioSequence + "(" + gene + "), skipping" );
                     continue;
                 }
-
-                gp2bs.put( geneProduct, bioSequence );
 
                 CompositeSequence cs = CompositeSequence.Factory.newInstance();
 
@@ -253,28 +264,23 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 aa.setBioSequence( bioSequence );
                 annotationAssociationService.create( aa );
 
-                /*
-                 * For now, only associate with a single transcript. Later we will refine our definition of transcripts
-                 * and fix this.
-                 */
-                if ( log.isDebugEnabled() ) log.debug( cs );
-
                 break;
             }
 
-            if ( ++count % 100 == 0 )
-                log.info( count + " genes processed; " + gp2bs.size() + " transcripts added so far; "
-                        + numWithNoTranscript + " had no transcript and were skipped; " + numNewGenes
-                        + " genes are new to the platform." );
+            if ( count % 100 == 0 )
+                log.info( count + " genes processed; " + numWithNoTranscript + " had no transcript and were skipped; "
+                        + numNewGenes + " genes are new to the platform." );
         }
 
         arrayDesignService.update( arrayDesign );
 
-        log.info( count + " genes processed; " + gp2bs.size() + " transcripts added so far; " + numWithNoTranscript
-                + " had no transcript and were skipped; " + numNewGenes + " genes are new to the platform." );
+        log.info( count + " genes processed; " + numWithNoTranscript + " had no transcript and were skipped; "
+                + numNewGenes + " genes are new to the platform." );
 
         log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
                 + " 'probes' associated with genes." );
+
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
         try {
             arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
@@ -300,6 +306,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         compositeSequenceService = getBean( CompositeSequenceService.class );
         annotationAssociationService = getBean( AnnotationAssociationService.class );
         externalDatabaseService = getBean( ExternalDatabaseService.class );
+        arrayDesignReportService = getBean( ArrayDesignReportService.class );
 
         if ( hasOption( 't' ) ) {
             String taxonName = getOptionValue( 't' );
