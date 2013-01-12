@@ -77,11 +77,11 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
     }
 
-    ArrayDesignAnnotationService arrayDesignAnnotationService;
+    private ArrayDesignAnnotationService arrayDesignAnnotationService;
 
-    CompositeSequenceService compositeSequenceService;
+    private CompositeSequenceService compositeSequenceService;
 
-    GeneOntologyService goService;
+    private GeneOntologyService goService;
 
     // file info
     String batchFileName;
@@ -216,13 +216,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             throws IOException {
 
         log.info( "Loading gene information for " + arrayDesign );
+        ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
 
-        if ( arrayDesign.getStatus().getTroubled() ) {
+        if ( thawed.getStatus().getTroubled() ) {
             log.warn( "Troubled: " + arrayDesign );
             return false;
         }
-
-        ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
 
         Collection<CompositeSequence> compositeSequences = thawed.getCompositeSequences();
 
@@ -239,7 +238,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
 
         if ( !hasAtLeastOneGene ) {
-            log.warn( "No genes: " + arrayDesign );
+            log.warn( "No genes: " + thawed );
             return false;
         }
 
