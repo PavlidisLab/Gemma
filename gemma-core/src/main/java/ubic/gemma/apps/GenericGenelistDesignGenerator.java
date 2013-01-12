@@ -346,6 +346,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
         if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
 
+        log.info( "Loading genes for existing platform ..." );
         Map<CompositeSequence, Collection<Gene>> genemap = compositeSequenceService.getGenes( arrayDesign
                 .getCompositeSequences() );
         for ( CompositeSequence cs : genemap.keySet() ) {
@@ -355,6 +356,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
             existingElements.put( g, cs );
         }
+        log.info( "Platform has " + existingElements.size() + " genes/elements" );
         return existingElements;
     }
 }
