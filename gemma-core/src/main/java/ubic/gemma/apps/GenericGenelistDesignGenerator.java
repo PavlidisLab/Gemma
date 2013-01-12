@@ -139,6 +139,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         log.info( knownGenes.size() + " genes" );
 
         Map<Gene, CompositeSequence> existingGeneMap = getExistingGeneMap( arrayDesign );
+        Map<String, CompositeSequence> existingSymbolmap = getExistingSymbolMap( arrayDesign );
 
         /*
          * Create a biosequence for each transcript, if there isn't one.
@@ -168,6 +169,18 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             }
 
             gene = geneService.thaw( gene );
+
+            CompositeSequence csForGene = null;
+            if ( useNCBIIds ) {
+                if ( existingSymbolmap.containsKey( gene.getNcbiGeneId() ) ) {
+                    csForGene = existingSymbolmap.get( gene.getNcbiGeneId() );
+                }
+            } else {
+                if ( existingSymbolmap.containsKey( gene.getOfficialSymbol() ) ) {
+                    csForGene = existingSymbolmap.get( gene.getOfficialSymbol() );
+                }
+            }
+
             Collection<GeneProduct> products = gene.getProducts();
 
             if ( products.isEmpty() ) {
@@ -239,22 +252,27 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     continue;
                 }
 
-                CompositeSequence cs = CompositeSequence.Factory.newInstance();
-
-                if ( useNCBIIds ) {
-                    if ( gene.getNcbiGeneId() == null ) {
-                        continue;
+                if ( csForGene == null ) {
+                    csForGene = CompositeSequence.Factory.newInstance();
+                    if ( useNCBIIds ) {
+                        if ( gene.getNcbiGeneId() == null ) {
+                            continue;
+                        }
+                        csForGene.setName( gene.getNcbiGeneId().toString() );
+                    } else {
+                        csForGene.setName( gene.getOfficialSymbol() );
                     }
-                    cs.setName( gene.getNcbiGeneId().toString() );
-                } else {
-                    cs.setName( gene.getOfficialSymbol() );
-                }
 
-                cs.setArrayDesign( arrayDesign );
-                cs.setBiologicalCharacteristic( bioSequence );
-                cs.setDescription( "Generic expression element for " + gene );
-                cs = compositeSequenceService.findOrCreate( cs );
-                arrayDesign.getCompositeSequences().add( cs );
+                    csForGene.setArrayDesign( arrayDesign );
+                    csForGene.setBiologicalCharacteristic( bioSequence );
+                    csForGene.setDescription( "Generic expression element for " + gene );
+                    csForGene = compositeSequenceService.create( csForGene );
+                    arrayDesign.getCompositeSequences().add( csForGene );
+                } else {
+                    csForGene.setBiologicalCharacteristic( bioSequence );
+                    csForGene.setDescription( "Generic expression element for " + gene );
+                    compositeSequenceService.update( csForGene );
+                }
 
                 assert bioSequence.getId() != null;
                 assert geneProduct.getId() != null;
@@ -334,6 +352,21 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             shortName = "Generic_" + StringUtils.strip( taxon.getCommonName() ).replaceAll( " ", "_" ) + ncbiIdSuffix;
         }
         return shortName;
+    }
+
+    private Map<String, CompositeSequence> getExistingSymbolMap( ArrayDesign arrayDesign ) {
+
+        Map<String, CompositeSequence> existingElements = new HashMap<String, CompositeSequence>();
+
+        if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
+
+        log.info( "Loading genes for existing platform ..." );
+
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+
+            existingElements.put( cs.getName(), cs );
+        }
+        return existingElements;
     }
 
     /**
