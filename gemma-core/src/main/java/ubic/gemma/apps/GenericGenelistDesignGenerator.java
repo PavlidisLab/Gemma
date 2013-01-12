@@ -14,6 +14,7 @@
  */
 package ubic.gemma.apps;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -63,11 +65,13 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
     }
 
     private AnnotationAssociationService annotationAssociationService;
+    private ArrayDesignAnnotationService arrayDesignAnnotationService;
     private ArrayDesignService arrayDesignService;
     private BioSequenceService bioSequenceService;
     private CompositeSequenceService compositeSequenceService;
     private ExternalDatabaseService externalDatabaseService;
     private GeneService geneService;
+
     private Taxon taxon = null;
 
     private TaxonService taxonService;
@@ -88,11 +92,10 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "Create a new 'platform' based on the genes for the organism", args );
+        super.processCommandLine( "Update or create a 'platform' based on the genes for the organism", args );
 
         ExternalDatabase genbank = externalDatabaseService.find( "Genbank" );
         ExternalDatabase ensembl = externalDatabaseService.find( "Ensembl" );
-
         assert genbank != null;
         assert ensembl != null;
 
@@ -116,8 +119,10 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         if ( arrayDesignService.find( arrayDesign ) != null ) {
             log.info( "Array design for " + taxon + " already exists, will update" );
             arrayDesign = arrayDesignService.find( arrayDesign );
+            arrayDesignService.deleteGeneProductAssociations( arrayDesign );
+
         } else {
-            arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
+            arrayDesign = arrayDesignService.create( arrayDesign );
         }
         arrayDesign = arrayDesignService.thaw( arrayDesign );
 
@@ -137,111 +142,147 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
          */
         Map<GeneProduct, BioSequence> gp2bs = new HashMap<GeneProduct, BioSequence>();
         int count = 0;
+        int numWithNoTranscript = 0;
+        int numNewGenes = 0;
+
         for ( Gene gene : knownGenes ) {
+            gene = geneService.thaw( gene );
 
-            if ( existingGeneMap.containsKey( gene ) ) continue;
+            if ( existingGeneMap.containsKey( gene ) ) {
 
-            boolean hasTranscript = false;
+                if ( gene.getProducts().isEmpty() ) {
+                    /*
+                     * We should delete this from the platform.
+                     */
+                    log.info( "Should delete from platform: " + existingGeneMap.get( gene ) );
+                }
+
+                continue;
+            } else {
+                numNewGenes++;
+            }
+
             gene = geneService.thaw( gene );
             Collection<GeneProduct> products = gene.getProducts();
+
+            if ( products.isEmpty() ) {
+                numWithNoTranscript++;
+                log.debug( "No transcript for " + gene );
+                continue;
+            }
+
             for ( GeneProduct geneProduct : products ) {
-                if ( GeneProductType.RNA.equals( geneProduct.getType() ) ) {
-                    /*
-                     * Name is usually the genbank or ensembl accession
-                     */
+                if ( !GeneProductType.RNA.equals( geneProduct.getType() ) ) {
+                    continue;
+                }
 
-                    String name = geneProduct.getName();
-                    BioSequence bioSequence = BioSequence.Factory.newInstance();
-                    Collection<DatabaseEntry> accessions = geneProduct.getAccessions();
-                    bioSequence.setName( name );
-                    bioSequence.setTaxon( taxon );
-                    bioSequence.setPolymerType( PolymerType.RNA );
+                /*
+                 * Name is usually the genbank or ensembl accession
+                 */
+                String name = geneProduct.getName();
+                BioSequence bioSequence = BioSequence.Factory.newInstance();
+                Collection<DatabaseEntry> accessions = geneProduct.getAccessions();
+                bioSequence.setName( name );
+                bioSequence.setTaxon( taxon );
 
-                    // FIXME miRNAs (though, we don't really use this field.)
+                bioSequence.setPolymerType( PolymerType.RNA );
+                // FIXME miRNAs (though, we don't really use this field.)
 
-                    bioSequence.setType( SequenceType.mRNA );
+                bioSequence.setType( SequenceType.mRNA );
+                BioSequence existing = null;
 
-                    BioSequence existing = null;
-
-                    if ( accessions.isEmpty() ) {
-                        // this should not be hit.
-                        log.warn( "No accession for " + name );
-                        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-                        de.setAccession( name );
-                        if ( name.startsWith( "ENS" ) && name.length() > 10 ) {
-                            de.setExternalDatabase( ensembl );
+                if ( accessions.isEmpty() ) {
+                    // this should not be hit.
+                    log.warn( "No accession for " + name );
+                    DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+                    de.setAccession( name );
+                    if ( name.startsWith( "ENS" ) && name.length() > 10 ) {
+                        de.setExternalDatabase( ensembl );
+                    } else {
+                        if ( name.matches( "^[A-Z]{1,2}(_?)[0-9]+(\\.[0-9]+)?$" ) ) {
+                            de.setExternalDatabase( genbank );
                         } else {
-                            if ( name.matches( "^[A-Z]{1,2}(_?)[0-9]+(\\.[0-9]+)?$" ) ) {
-                                de.setExternalDatabase( genbank );
-                            } else {
-                                log.info( "Name doesn't look like genbank or ensembl, skipping: " + name );
-                                continue;
-                            }
-                        }
-                        bioSequence.setSequenceDatabaseEntry( de );
-                    } else {
-                        if ( accessions.size() > 1 ) {
-                            log.warn( "Ambiguous accessions for " + name );
-                        }
-                        bioSequence.setSequenceDatabaseEntry( accessions.iterator().next() );
-                        existing = bioSequenceService.findByAccession( accessions.iterator().next() );
-
-                    }
-                    if ( existing == null ) {
-                        bioSequence = ( BioSequence ) getPersisterHelper().persist( bioSequence );
-                    } else {
-                        bioSequence = existing;
-                    }
-                    assert bioSequence != null;
-                    if ( bioSequence.getSequenceDatabaseEntry() == null ) {
-                        log.info( "No DB entry for " + bioSequence + "(" + gene + "), skipping" );
-                        continue;
-                    }
-
-                    gp2bs.put( geneProduct, bioSequence );
-
-                    CompositeSequence cs = CompositeSequence.Factory.newInstance();
-
-                    if ( useNCBIIds ) {
-                        if ( gene.getNcbiGeneId() == null ) {
+                            log.info( "Name doesn't look like genbank or ensembl, skipping: " + name );
                             continue;
                         }
-                        cs.setName( gene.getNcbiGeneId().toString() );
-                    } else {
-                        cs.setName( gene.getOfficialSymbol() );
                     }
-                    cs.setArrayDesign( arrayDesign );
-                    cs.setBiologicalCharacteristic( bioSequence );
-                    cs.setDescription( "Generic expression element for " + gene );
-                    cs = compositeSequenceService.findOrCreate( cs );
-                    arrayDesign.getCompositeSequences().add( cs );
+                    bioSequence.setSequenceDatabaseEntry( de );
+                } else {
+                    if ( accessions.size() > 1 ) {
+                        log.warn( "Ambiguous accessions for " + name );
+                    }
+                    bioSequence.setSequenceDatabaseEntry( accessions.iterator().next() );
+                    existing = bioSequenceService.findByAccession( accessions.iterator().next() );
 
-                    AnnotationAssociation aa = AnnotationAssociation.Factory.newInstance();
-                    aa.setGeneProduct( geneProduct );
-                    aa.setBioSequence( bioSequence );
-                    annotationAssociationService.create( aa );
-
-                    /*
-                     * For now, only associate with a single transcript. Later we will refine our definition of
-                     * transcripts and fix this.
-                     */
-                    log.debug( cs );
-                    hasTranscript = true;
-                    break;
                 }
-            }
-            if ( !hasTranscript ) {
-                log.debug( "No transcript for " + gene );
+                if ( existing == null ) {
+                    bioSequence = ( BioSequence ) getPersisterHelper().persist( bioSequence );
+                } else {
+                    bioSequence = existing;
+                }
+                assert bioSequence != null;
+                if ( bioSequence.getSequenceDatabaseEntry() == null ) {
+                    log.info( "No DB entry for " + bioSequence + "(" + gene + "), skipping" );
+                    continue;
+                }
+
+                gp2bs.put( geneProduct, bioSequence );
+
+                CompositeSequence cs = CompositeSequence.Factory.newInstance();
+
+                if ( useNCBIIds ) {
+                    if ( gene.getNcbiGeneId() == null ) {
+                        continue;
+                    }
+                    cs.setName( gene.getNcbiGeneId().toString() );
+                } else {
+                    cs.setName( gene.getOfficialSymbol() );
+                }
+
+                cs.setArrayDesign( arrayDesign );
+                cs.setBiologicalCharacteristic( bioSequence );
+                cs.setDescription( "Generic expression element for " + gene );
+                cs = compositeSequenceService.findOrCreate( cs );
+                arrayDesign.getCompositeSequences().add( cs );
+
+                assert bioSequence.getId() != null;
+                assert geneProduct.getId() != null;
+
+                AnnotationAssociation aa = AnnotationAssociation.Factory.newInstance();
+                aa.setGeneProduct( geneProduct );
+                aa.setBioSequence( bioSequence );
+                annotationAssociationService.create( aa );
+
+                /*
+                 * For now, only associate with a single transcript. Later we will refine our definition of transcripts
+                 * and fix this.
+                 */
+                if ( log.isDebugEnabled() ) log.debug( cs );
+
+                break;
             }
 
             if ( ++count % 100 == 0 )
-                log.info( count + " genes processed; " + gp2bs.size() + " transcripts added so far" );
+                log.info( count + " genes processed; " + gp2bs.size() + " transcripts added so far; "
+                        + numWithNoTranscript + " had no transcript and were skipped; " + numNewGenes
+                        + " genes are new to the platform." );
         }
 
         arrayDesignService.update( arrayDesign );
 
+        log.info( count + " genes processed; " + gp2bs.size() + " transcripts added so far; " + numWithNoTranscript
+                + " had no transcript and were skipped; " + numNewGenes + " genes are new to the platform." );
+
         log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
                 + " 'probes' associated with genes." );
+
+        try {
+            arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
+        } catch ( IOException e ) {
+            log.error( "Problem deleting old annotation files: " + e.getMessage() );
+        }
+
+        log.info( "Don't forget to update the annotation files" );
 
         return null;
 
@@ -252,12 +293,14 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         super.processOptions();
 
         geneService = this.getBean( GeneService.class );
+        arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
         taxonService = getBean( TaxonService.class );
         bioSequenceService = getBean( BioSequenceService.class );
         arrayDesignService = getBean( ArrayDesignService.class );
         compositeSequenceService = getBean( CompositeSequenceService.class );
         annotationAssociationService = getBean( AnnotationAssociationService.class );
         externalDatabaseService = getBean( ExternalDatabaseService.class );
+
         if ( hasOption( 't' ) ) {
             String taxonName = getOptionValue( 't' );
             this.taxon = taxonService.findByCommonName( taxonName );
