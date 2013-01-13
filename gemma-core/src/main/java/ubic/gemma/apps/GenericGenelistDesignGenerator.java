@@ -247,7 +247,9 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 } else {
                     bioSequence = existing;
                 }
-                assert bioSequence != null;
+
+                assert bioSequence != null && bioSequence.getId() != null;
+
                 if ( bioSequence.getSequenceDatabaseEntry() == null ) {
                     log.info( "No DB entry for " + bioSequence + "(" + gene + "), skipping" );
                     continue;
@@ -283,6 +285,8 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
                 assert bioSequence.getId() != null;
                 assert geneProduct.getId() != null;
+                assert csForGene.getBiologicalCharacteristic() != null
+                        && csForGene.getBiologicalCharacteristic().getId() != null;
 
                 AnnotationAssociation aa = AnnotationAssociation.Factory.newInstance();
                 aa.setGeneProduct( geneProduct );
