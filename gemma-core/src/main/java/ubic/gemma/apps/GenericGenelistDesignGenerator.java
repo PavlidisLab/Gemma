@@ -154,6 +154,9 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
             count++;
 
+            // this can be moved to after next block, here temporarily for debugging
+            gene = geneService.thaw( gene );
+
             if ( existingGeneMap.containsKey( gene ) ) {
 
                 if ( gene.getProducts().isEmpty() ) {
@@ -163,13 +166,12 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                      */
                     log.warn( "Should delete from platform: " + existingGeneMap.get( gene ) );
                 } else {
+                    assert existingGeneMap.get( gene ).getBiologicalCharacteristic() != null;
                     if ( log.isDebugEnabled() ) log.debug( "Already have gene: " + gene );
                 }
 
                 continue;
             }
-
-            gene = geneService.thaw( gene );
 
             CompositeSequence csForGene = null;
             if ( useNCBIIds ) {
