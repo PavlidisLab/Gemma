@@ -147,7 +147,8 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         int count = 0;
         int numWithNoTranscript = 0;
         int numNewGenes = 0;
-
+        int numNewElements = 0;
+        int numUpdatedElements = 0;
         for ( Gene gene : knownGenes ) {
             gene = geneService.thaw( gene );
 
@@ -253,6 +254,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 }
 
                 if ( csForGene == null ) {
+                    if ( log.isDebugEnabled() ) log.debug( "New element " + " with " + bioSequence + " for " + gene );
                     csForGene = CompositeSequence.Factory.newInstance();
                     if ( useNCBIIds ) {
                         if ( gene.getNcbiGeneId() == null ) {
@@ -268,10 +270,15 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     csForGene.setDescription( "Generic expression element for " + gene );
                     csForGene = compositeSequenceService.create( csForGene );
                     arrayDesign.getCompositeSequences().add( csForGene );
+                    numNewElements++;
                 } else {
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Updating existing element: " + csForGene + " with " + bioSequence + " for " + gene );
+                    csForGene.setArrayDesign( arrayDesign );
                     csForGene.setBiologicalCharacteristic( bioSequence );
                     csForGene.setDescription( "Generic expression element for " + gene );
                     compositeSequenceService.update( csForGene );
+                    numUpdatedElements++;
                 }
 
                 assert bioSequence.getId() != null;
@@ -286,13 +293,15 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             }
 
             if ( count % 100 == 0 )
-                log.info( count + " genes processed; " + numWithNoTranscript + " had no transcript and were skipped; "
+                log.info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
+                        + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped; "
                         + numNewGenes + " genes are new to the platform." );
         }
 
         arrayDesignService.update( arrayDesign );
 
-        log.info( count + " genes processed; " + numWithNoTranscript + " had no transcript and were skipped; "
+        log.info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
+                + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped; "
                 + numNewGenes + " genes are new to the platform." );
 
         log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
