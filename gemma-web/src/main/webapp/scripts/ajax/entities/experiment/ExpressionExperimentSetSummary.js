@@ -288,13 +288,12 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 			flex: 1
 		});
 		
-		/*this.experimentMembersGrid.loadMask = new Ext.LoadMask(this.experimentMembersGrid.getEl(), {
-					msg : "Loading experiments ..."
-				});
-		this.experimentMembersGrid.loadMask.show();*/
+		
+		
+		this.experimentMembersGrid = experimentMembersGrid;
 		
 		experimentMembersGrid.loadExperimentSetValueObject(e, function() {
-					//this.experimentMembersGrid.loadMask.hide();
+					this.experimentMembersGrid.hideLoadMask();
 				}.createDelegate(this, [], false));
 			
 						
@@ -307,7 +306,12 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 		experimentMembersGrid.on('experimentListCreated',function(eesvo){
 			Ext.getBody().mask('Loading new set');
 			window.location = "/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id="+eesvo.id;
-		});	
+		});
+		
+		experimentMembersGrid.on('afterrender', function(){
+			this.experimentMembersGrid.showLoadMask();
+			
+		}.createDelegate(this));
 		
 		this.add(experimentMembersGrid);
 		/* EO member's grid */
@@ -332,6 +336,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 		
         this.doLayout();
         this.fireEvent("ready");
+        
         
     }, // end of initComponent
     adjustForIsEditable: function(editable){

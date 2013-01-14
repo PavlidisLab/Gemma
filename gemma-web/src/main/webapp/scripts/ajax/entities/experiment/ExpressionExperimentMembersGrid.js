@@ -405,6 +405,19 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 
 	}, //EO init
+	
+	showLoadMask : function(){
+		this.loadMask = new Ext.LoadMask(this.getEl(), {
+			msg : "Loading experiments ..."
+		});
+		this.loadMask.show();
+	},
+	
+	hideLoadMask : function(){
+		if (this.loadMask){
+			this.loadMask.hide();
+		}
+	},
 
 	formatEE : function(value, metadata, record, row, col, ds) {
 		// fixme: this is duplicated code.
