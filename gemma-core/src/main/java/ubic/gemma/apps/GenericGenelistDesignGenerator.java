@@ -144,8 +144,8 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
         int count = 0;
         int numWithNoTranscript = 0;
-        int hasGeneAlready = 0;
-        int numNewGenes = 0;
+        // int hasGeneAlready = 0;
+        // int numNewGenes = 0;
         int numNewElements = 0;
         int numUpdatedElements = 0;
         for ( Gene gene : knownGenes ) {
@@ -160,26 +160,6 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             }
 
             count++;
-
-            // if ( existingGeneMap.containsKey( gene ) ) {
-            //
-            // if ( gene.getProducts().isEmpty() ) {
-            // /*
-            // * We should delete this from the platform. Not sure this will happen so just putting this here in
-            // * case.
-            // */
-            // log.warn( "Should delete from platform: " + existingGeneMap.get( gene ) + " for " + gene
-            // + " because it has no GeneProducts" );
-            // } else {
-            // // debug code, requires thawed gene
-            // assert existingGeneMap.get( gene ).getBiologicalCharacteristic() != null;
-            // if ( log.isDebugEnabled() ) log.debug( "Already have gene: " + gene );
-            // }
-            //
-            // hasGeneAlready++;
-            //
-            // continue;
-            // }
 
             CompositeSequence csForGene = null;
 
@@ -277,6 +257,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     csForGene.setBiologicalCharacteristic( bioSequence );
                     csForGene.setDescription( "Generic expression element for " + gene );
                     csForGene = compositeSequenceService.create( csForGene );
+                    assert csForGene.getId() != null;
                     arrayDesign.getCompositeSequences().add( csForGene );
                     numNewElements++;
                 } else {
@@ -289,6 +270,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
                     // making sure ...
                     csForGene = compositeSequenceService.load( csForGene.getId() );
+                    assert csForGene.getId() != null;
                     arrayDesign.getCompositeSequences().add( csForGene );
 
                     numUpdatedElements++;
@@ -304,25 +286,15 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 aa.setBioSequence( bioSequence );
                 annotationAssociationService.create( aa );
 
-                // we will be adding this gene.
-                numNewGenes++;
-
                 break;
             }
 
             if ( count % 100 == 0 )
-                log.info( count + " genes processed; " + hasGeneAlready
-                        + " genes were already represented and skipped; " + numNewElements + " new elements; "
-                        + numUpdatedElements + " updated elements; " + numWithNoTranscript
-                        + " genes had no transcript and were skipped; " + numNewGenes
-                        + " genes are new to the platform." );
+                log.info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
+                        + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
         }
 
         arrayDesignService.update( arrayDesign );
-
-        log.info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
-                + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped; "
-                + numNewGenes + " genes are new to the platform." );
 
         log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
                 + " 'probes' associated with genes." );
@@ -398,30 +370,4 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         return existingElements;
     }
 
-    // /**
-    // * @param arrayDesign
-    // * @return
-    // */
-    // private Map<Gene, CompositeSequence> getExistingGeneMap( ArrayDesign arrayDesign ) {
-    //
-    // Map<Gene, CompositeSequence> existingElements = new HashMap<Gene, CompositeSequence>();
-    //
-    // if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
-    //
-    // log.info( "Loading genes for existing platform ..." );
-    // Map<CompositeSequence, Collection<Gene>> genemap = compositeSequenceService.getGenes( arrayDesign
-    // .getCompositeSequences() );
-    //
-    // log.info( "Platform has genes already for " + genemap.size() + "/" + arrayDesign.getCompositeSequences().size()
-    // + " elements." );
-    //
-    // for ( CompositeSequence cs : genemap.keySet() ) {
-    // Collection<Gene> genes = genemap.get( cs );
-    // assert genes.size() == 1;
-    // Gene g = genes.iterator().next();
-    // existingElements.put( g, cs );
-    // }
-    //
-    // return existingElements;
-    // }
 }
