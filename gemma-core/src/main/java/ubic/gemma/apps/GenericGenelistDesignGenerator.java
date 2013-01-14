@@ -266,6 +266,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     csForGene.setArrayDesign( arrayDesign );
                     csForGene.setBiologicalCharacteristic( bioSequence );
                     csForGene.setDescription( "Generic expression element for " + gene );
+                    assert csForGene.getId() != null;
                     compositeSequenceService.update( csForGene );
 
                     // making sure ...
@@ -364,7 +365,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         log.info( "Loading genes for existing platform ..." );
 
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-
+            assert cs.getId() != null : "Null id for " + cs;
             existingElements.put( cs.getName(), cs );
         }
         return existingElements;
