@@ -299,6 +299,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					listeners: {
 						evidenceRemoved: function() {
 							this.store.reload();
+							this.fireEvent('phenotypeAssociationChanged');
 						},
 						scope: this
 					}
