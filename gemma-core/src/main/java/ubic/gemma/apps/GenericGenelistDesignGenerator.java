@@ -27,6 +27,7 @@ import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
@@ -174,7 +175,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             }
 
             if ( csForGene != null ) {
-                //
+                assert csForGene.getId() != null : "Null id for " + csForGene;
             }
 
             /*
@@ -301,7 +302,9 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 + " 'probes' associated with genes." );
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-
+        auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.Factory.newInstance(), count
+                + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
+                + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
         try {
             arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
         } catch ( IOException e ) {
@@ -356,13 +359,15 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         return shortName;
     }
 
+    /**
+     * @param arrayDesign
+     * @return
+     */
     private Map<String, CompositeSequence> getExistingProbeNameMap( ArrayDesign arrayDesign ) {
 
         Map<String, CompositeSequence> existingElements = new HashMap<String, CompositeSequence>();
 
         if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
-
-        log.info( "Loading genes for existing platform ..." );
 
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             assert cs.getId() != null : "Null id for " + cs;
