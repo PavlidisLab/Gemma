@@ -165,6 +165,9 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
             CompositeSequence csForGene = null;
 
             if ( useNCBIIds ) {
+                if ( gene.getNcbiGeneId() == null ) {
+                    log.info( "No NCBI ID for " + gene + ", skipping" );
+                }
                 if ( existingSymbolmap.containsKey( gene.getNcbiGeneId() ) ) {
                     csForGene = existingSymbolmap.get( gene.getNcbiGeneId() );
                 }
