@@ -174,12 +174,11 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 }
             }
 
-            if ( csForGene != null ) {
-                assert csForGene.getId() != null : "Null id for " + csForGene;
-            }
+            assert csForGene == null || csForGene.getId() != null : "Null id for " + csForGene;
 
             /*
-             * We arbitrarily link the "probe" to one of the gene's RNA transcripts.
+             * We arbitrarily link the "probe" to one of the gene's RNA transcripts. We could consider other strategies
+             * to pick the representative, but it generally doesn't matter.
              */
             for ( GeneProduct geneProduct : products ) {
                 if ( !GeneProductType.RNA.equals( geneProduct.getType() ) ) {
@@ -196,8 +195,8 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 bioSequence.setTaxon( taxon );
 
                 bioSequence.setPolymerType( PolymerType.RNA );
-                // FIXME miRNAs (though, we don't really use this field.)
 
+                // FIXME miRNAs (though, we don't really use this field.)
                 bioSequence.setType( SequenceType.mRNA );
                 BioSequence existing = null;
 
@@ -218,9 +217,6 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     }
                     bioSequence.setSequenceDatabaseEntry( de );
                 } else {
-                    // if ( accessions.size() > 1 ) {
-                    // log.warn( "Ambiguous accessions for GeneProduct " + name );
-                    // }
                     bioSequence.setSequenceDatabaseEntry( accessions.iterator().next() );
                     existing = bioSequenceService.findByAccession( accessions.iterator().next() );
 
@@ -228,6 +224,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     // confusing. So it will map to a gene. Worse case: it maps to more than one gene ...
 
                 }
+
                 if ( existing == null ) {
                     bioSequence = ( BioSequence ) getPersisterHelper().persist( bioSequence );
                 } else {
@@ -258,7 +255,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     csForGene.setBiologicalCharacteristic( bioSequence );
                     csForGene.setDescription( "Generic expression element for " + gene );
                     csForGene = compositeSequenceService.create( csForGene );
-                    assert csForGene.getId() != null;
+                    assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
                     arrayDesign.getCompositeSequences().add( csForGene );
                     numNewElements++;
                 } else {
@@ -267,7 +264,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                     csForGene.setArrayDesign( arrayDesign );
                     csForGene.setBiologicalCharacteristic( bioSequence );
                     csForGene.setDescription( "Generic expression element for " + gene );
-                    assert csForGene.getId() != null;
+                    assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
                     compositeSequenceService.update( csForGene );
 
                     // making sure ...
