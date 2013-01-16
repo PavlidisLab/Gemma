@@ -21,6 +21,8 @@ package ubic.gemma.model.expression.bioAssayData;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 /**
+ * This is used to represent missing value data.
+ * 
  * @author paul
  * @version $Id$
  */

@@ -275,10 +275,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			
 			var title = "Visualization of Probes ";
 
-			/*
-			 * FIXME properly handle subsets.
-			 */
-			var eeid = ee.sourceExperiment ? ee.sourceExperiment : ee.id;
+		 // ID passed is either for the EE or a subset.
 
 			var visDifWindow = new Gemma.VisualizationDifferentialWindow({
 						cascadeOnFirstShow: true,
@@ -288,7 +285,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 						readMethod: DEDVController.getDEDVForDiffExVisualizationByExperiment
 					});
 			visDifWindow.show({
-						params : [eeid, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
+						params : [ ee.id, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD, ee.sourceExperiment === null]
 					});
 		}
 	}

@@ -74,6 +74,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -174,11 +175,14 @@ public class DEDVController {
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
 
     @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+
+    @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
-     * of genes. The EE info is in the value object.
+     * of genes. The EE info is in the value object. FIXME handle subsets.
      */
     public Map<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>> getDEDV(
             Collection<Long> eeIds, Collection<Long> geneIds ) {
@@ -337,14 +341,20 @@ public class DEDVController {
      *        don't get the slice.
      * @param geneId
      * @param threshold (diff expression threshold)
+     * @param isSubset Set to true if the ID is for an EE subset.
      * @return
      */
     public VisualizationValueObject[] getDEDVForDiffExVisualizationByExperiment( Long eeId, Long geneId,
-            Double threshold ) {
+            Double threshold, boolean isSubset ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        BioAssaySet ee = null;
+        if ( isSubset ) {
+            ee = expressionExperimentSubSetService.load( eeId );
+        } else {
+            ee = expressionExperimentService.load( eeId );
+        }
 
         if ( ee == null ) return null; // access denied, etc.
 
@@ -370,7 +380,7 @@ public class DEDVController {
         watch.start();
 
         if ( time > 100 ) {
-            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ee.getShortName() + " and " + "one gene in " + time
+            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ee.getId() + " and " + "one gene in " + time
                     + " ms (times <100ms not reported)." );
         }
         Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;

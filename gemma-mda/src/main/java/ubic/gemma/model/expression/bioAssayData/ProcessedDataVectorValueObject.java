@@ -21,7 +21,9 @@ package ubic.gemma.model.expression.bioAssayData;
 /**
  * @author Paul
  * @version $Id$
+ * @deprecated as it is not used
  */
+@Deprecated
 public class ProcessedDataVectorValueObject extends DataVectorValueObject {
 
     /**

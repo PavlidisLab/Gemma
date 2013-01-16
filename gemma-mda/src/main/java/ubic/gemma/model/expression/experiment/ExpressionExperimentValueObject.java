@@ -45,9 +45,9 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
      * @return
      */
     public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
-            Collection<ExpressionExperiment> collection ) {
+            Collection<? extends BioAssaySet> collection ) {
         Collection<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
-        for ( ExpressionExperiment ee : collection ) {
+        for ( BioAssaySet ee : collection ) {
             result.add( new ExpressionExperimentValueObject( ee ) );
         }
         return result;
@@ -172,12 +172,28 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private boolean validated = false;
 
+    private boolean isSubset = false;
+
+    public boolean isSubset() {
+        return isSubset;
+    }
+
+    public void setSubset( boolean isSubset ) {
+        this.isSubset = isSubset;
+    }
+
     public ExpressionExperimentValueObject() {
     }
 
-    public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
+    public ExpressionExperimentValueObject( BioAssaySet ee ) {
         this.id = ee.getId();
-        this.shortName = ee.getShortName();
+        if ( ee instanceof ExpressionExperiment ) {
+            this.shortName = ( ( ExpressionExperiment ) ee ).getShortName();
+        } else {
+            assert ee instanceof ExpressionExperimentSubSet;
+            this.isSubset = true;
+        }
+
         this.name = ee.getName();
         /*
          * FIXME this doesn't populate enough stuff.
@@ -208,7 +224,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
                 otherBean.getMinPvalue(), otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(),
                 otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(), otherBean
                         .getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
-                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails() );
+                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
@@ -225,7 +241,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
             Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
             Long experimentalDesign, Date autoTagDate,
             Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses, Date batchAnalysisDate,
-            Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType, String troubleDetails ) {
+            Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType, String troubleDetails,
+            Boolean isSubset ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -277,6 +294,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         this.pcaAnalysisEventType = pcaAnalysisEventType;
         this.batchFetchEventType = batchFetchEventType;
         this.troubleDetails = troubleDetails;
+        this.isSubset = isSubset;
     }
 
     /**

@@ -33,7 +33,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -44,11 +46,42 @@ import cern.colt.list.DoubleArrayList;
  */
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        if ( super.getId() != null ) return super.hashCode();
+
+        int result = prime * ( ( sourceVectorId == null ) ? 0 : sourceVectorId.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( id != null ) {
+            return super.equals( obj );
+        }
+
+        if ( this == obj ) return true;
+        if ( !super.equals( obj ) ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+
+        DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
+        if ( sourceVectorId == null ) {
+            if ( other.sourceVectorId != null ) return false;
+        } else if ( !sourceVectorId.equals( other.sourceVectorId ) ) return false;
+        return true;
+    }
+
     private static final long serialVersionUID = -5116242513725297615L;
     private double[] data = null;
     private boolean masked = false;
 
     private boolean reorganized = false;
+    private boolean sliced = false;
+
+    public boolean isSliced() {
+        return sliced;
+    }
 
     private Double pvalue;
     private Double rank;
@@ -57,6 +90,9 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     private Double rankByMean;
 
+    /**
+     * Will only be non-null if the id is null, when we have a 'slice' of the data
+     */
     private Long sourceVectorId = null;
 
     /**
@@ -108,23 +144,28 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * Create a vector that is a slice of another one. The bioassays chosen are as given in the supplied
      * bioassaydimension.
      * 
+     * @param bioassayset, possibly a subset, which we are going to slice.
      * @param vec
      * @param bad
      */
-    public DoubleVectorValueObject( DoubleVectorValueObject vec, BioAssayDimension bad ) {
+    public DoubleVectorValueObject( BioAssaySet bioassayset, DoubleVectorValueObject vec, BioAssayDimension bad ) {
         this.masked = vec.masked;
         this.rankByMax = vec.rankByMax;
         this.rankByMean = vec.rankByMean;
         this.setGenes( vec.getGenes() );
         this.setDesignElement( vec.getDesignElement() );
 
-        this.expressionExperiment = vec.getExpressionExperiment(); // FIXME, this should be the EESET.
+        if ( !bioassayset.getId().equals( vec.getExpressionExperiment().getId() ) ) {
+            this.expressionExperiment = new ExpressionExperimentValueObject( bioassayset );
+        } else {
+            this.expressionExperiment = vec.getExpressionExperiment();
+        }
 
-        this.setId( null ); // because this is a 'sliced', not a persistent one.
+        this.setId( null ); // because this is a 'slice', not a persistent one.
         this.setQuantitationType( vec.getQuantitationType() );
         this.setBioAssayDimension( bad );
         this.sourceVectorId = vec.getId(); // so we can track this!
-
+        this.sliced = true;
         this.data = new double[bad.getBioAssays().size()];
 
         Collection<Double> values = new ArrayList<Double>();

@@ -51,7 +51,7 @@ public interface ProcessedExpressionDataVectorService {
     /**
      * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
      * @param genes
-     * @return
+     * @return vectors, which will be subsetted if the bioassayset is a subset.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
@@ -60,18 +60,20 @@ public interface ProcessedExpressionDataVectorService {
     /**
      * @param expressionExperiment
      * @return
+     * @deprecated because it is only used in tests
      */
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
-    /**
-     * @param expressionExperiment
-     * @param genes
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
-            Collection<Long> genes );
+    // /**
+    // * @param expressionExperiment
+    // * @param genes
+    // * @return
+    // */
+    // @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    // public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
+    // Collection<Long> genes );
 
     /**
      * @param expressionExperiments

@@ -99,22 +99,18 @@ import ubic.gemma.security.SecurityService;
 @Service
 public class ExpressionExperimentServiceImpl implements ExpressionExperimentService {
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
 
-    @Autowired
-    private SecurityService securityService;
-
-    @Autowired
-    private SearchService searchService;
-
-    @Autowired
-    private OntologyService ontologyService;
+    private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
 
     @Autowired
     private AuditEventDao auditEventDao;
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private BioAssayDimensionDao bioAssayDimensionDao;
 
     @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
@@ -126,19 +122,15 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+
+    @Autowired
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 
-    @Autowired
-    private RawExpressionDataVectorDao vectorDao;
+    private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
-    private ProcessedExpressionDataVectorDao processedVectorDao;
-
-    @Autowired
-    private BioAssayDimensionDao bioAssayDimensionDao;
-
-    @Autowired
-    private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
+    private OntologyService ontologyService;
 
     @Autowired
     private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
@@ -147,17 +139,94 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
 
     @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    private ProcessedExpressionDataVectorDao processedVectorDao;
 
     @Autowired
     private QuantitationTypeService quantitationTypeDao;
 
     @Autowired
+    private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
+
+    @Autowired
+    private SearchService searchService;
+
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
     private SVDService svdService;
 
-    private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
+    @Autowired
+    private RawExpressionDataVectorDao vectorDao;
 
-    private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
+    /**
+     * @param ee
+     * @param ad
+     * @param newVectors
+     * @return
+     */
+    @Override
+    public ExpressionExperiment addVectors( ExpressionExperiment ee, ArrayDesign ad,
+            Collection<RawExpressionDataVector> newVectors ) {
+
+        // ee = this.load( ee.getId() );
+        Collection<BioAssayDimension> bads = new HashSet<BioAssayDimension>();
+        Collection<QuantitationType> qts = new HashSet<QuantitationType>();
+        for ( RawExpressionDataVector vec : newVectors ) {
+            bads.add( vec.getBioAssayDimension() );
+            qts.add( vec.getQuantitationType() );
+        }
+
+        if ( bads.size() > 1 ) {
+            throw new IllegalArgumentException( "Vectors must share a common bioassaydimension" );
+        }
+
+        if ( qts.size() > 1 ) {
+            throw new UnsupportedOperationException(
+                    "Can only replace with one type of vector (only one quantitation type)" );
+        }
+
+        BioAssayDimension bad = bads.iterator().next();
+
+        bad = this.bioAssayDimensionDao.findOrCreate( bad );
+        assert bad.getBioAssays().size() > 0;
+
+        QuantitationType newQt = qts.iterator().next();
+
+        assert newQt.getId() == null;
+        newQt = this.quantitationTypeDao.create( newQt );
+
+        for ( RawExpressionDataVector vec : newVectors ) {
+            vec.setBioAssayDimension( bad );
+            vec.setQuantitationType( newQt );
+        }
+
+        ee.getRawExpressionDataVectors().addAll( newVectors );
+        ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
+
+        if ( ad == null ) {
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( !vectorAd.equals( ba.getArrayDesignUsed() ) ) {
+                    throw new IllegalArgumentException( "Vectors must use the array design as the bioassays" );
+                }
+            }
+        } else if ( !vectorAd.equals( ad ) ) {
+            throw new IllegalArgumentException( "Vectors must use the array design indicated" );
+        }
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.setArrayDesignUsed( ad );
+        }
+
+        // this is a denormalization; easy to forget to update this.
+        ee.getQuantitationTypes().add( newQt );
+
+        // this.update( ee ); // is this even necessary? should flush.
+
+        log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
+
+        return ee;
+    }
 
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
@@ -196,6 +265,14 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     public java.lang.Integer countAll() {
         return this.expressionExperimentDao.countAll();
+    }
+
+    /**
+     * @see ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
+     */
+    @Override
+    public Integer countProcessedDataVectors( final Long expressionExperiment ) {
+        return this.expressionExperimentDao.getProcessedExpressionVectorCount( expressionExperiment );
     }
 
     /**
@@ -287,19 +364,19 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
-        return this.expressionExperimentDao.findByBioMaterial( bm );
-    }
-
-    /**
      * @see ExpressionExperimentService#findByBioAssay(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     @Override
     public ExpressionExperiment findByBioAssay( final ubic.gemma.model.expression.bioAssay.BioAssay ba ) {
         return this.expressionExperimentDao.findByBioAssay( ba );
+    }
+
+    /**
+     * @see ExpressionExperimentService#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    @Override
+    public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
+        return this.expressionExperimentDao.findByBioMaterial( bm );
     }
 
     /**
@@ -486,6 +563,55 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return auditEventDao;
     }
 
+    /**
+     * @param ee
+     * @return String msg describing confound if it is present, null otherwise
+     */
+    @Override
+    public String getBatchConfound( ExpressionExperiment ee ) {
+        Collection<BatchConfoundValueObject> confounds;
+        try {
+            confounds = BatchConfound.test( ee );
+        } catch ( Exception e ) {
+            return null;
+        }
+        String result = null;
+
+        for ( BatchConfoundValueObject c : confounds ) {
+            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                String factorName = c.getEf().getName();
+                result = "Factor: " + factorName + " may be confounded with batches; p="
+                        + String.format( "%.2g", c.getP() ) + "<br />";
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param ee
+     * @return String msg describing effect if it is present, null otherwise
+     */
+    @Override
+    public String getBatchEffect( ExpressionExperiment ee ) {
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
+                if ( svd == null ) break;
+                for ( Integer component : svd.getFactorPvals().keySet() ) {
+                    Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
+
+                    Double pval = cmpEffects.get( ef.getId() );
+                    if ( pval != null && pval < BATCH_EFFECT_PVALTHRESHOLD ) {
+                        return "This data set may have a batch artifact (PC" + ( component + 1 ) + "); p="
+                                + String.format( "%.2g", pval ) + "<br />";
+                    }
+                }
+            }
+        }
+        return null;
+
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -539,6 +665,30 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     public DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
         return differentialExpressionAnalysisDao;
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect() {
+        List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
+        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
+                ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
+        Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
+        for ( ExpressionExperiment ee : entities ) {
+            if ( this.getBatchEffect( ee ) == null ) {
+                toRemove.add( ee );
+            }
+        }
+        entities.removeAll( toRemove );
+        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> getExperimentsWithEvent(
+            Class<? extends AuditEventType> auditEventClass ) {
+        List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
+        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
+                ExpressionExperiment.class, auditEventClass ) );
+        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
     }
 
     /**
@@ -675,14 +825,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
-     */
-    @Override
-    public Integer countProcessedDataVectors( final Long expressionExperiment ) {
-        return this.expressionExperimentDao.getProcessedExpressionVectorCount( expressionExperiment );
-    }
-
-    /**
      * @see ExpressionExperimentService#getQuantitationTypeCountById(java.lang.Long)
      */
     @Override
@@ -806,6 +948,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     @Override
+    public ExpressionExperiment loadBySubsetId( Long id ) {
+        return this.expressionExperimentSubSetService.load( id ).getSourceExperiment();
+    }
+
+    @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
         return this.expressionExperimentDao.loadLackingFactors();
     }
@@ -864,6 +1011,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return loadAll();
     }
 
+    @Override
+    public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
+        return this.expressionExperimentDao.loadValueObject( eeId );
+    }
+
     /**
      * @see ExpressionExperimentService#loadValueObjects(Collection, boolean)
      */
@@ -876,6 +1028,33 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
          */
         return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService#removeData(ubic.gemma.model.expression.
+     * experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    @Override
+    public int removeData( ExpressionExperiment ee, QuantitationType qt ) {
+        ExpressionExperiment eeToUpdate = this.load( ee.getId() );
+        Collection<RawExpressionDataVector> vecsToRemove = new ArrayList<RawExpressionDataVector>();
+        for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
+            if ( oldvec.getQuantitationType().equals( qt ) ) {
+                vecsToRemove.add( oldvec );
+            }
+        }
+
+        if ( vecsToRemove.isEmpty() ) {
+            throw new IllegalArgumentException( "No vectors to remove for quantitation type=" + qt );
+        }
+
+        eeToUpdate.getRawExpressionDataVectors().removeAll( vecsToRemove );
+        eeToUpdate.getQuantitationTypes().remove( qt );
+        // this.update( eeToUpdate ); // will flush.
+        // quantitationTypeDao.remove( qt );
+        return vecsToRemove.size();
     }
 
     /*
@@ -911,102 +1090,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         return addVectors( eeToUpdate, ad, newVectors );
-    }
-
-    /**
-     * @param ee
-     * @param ad
-     * @param newVectors
-     * @return
-     */
-    @Override
-    public ExpressionExperiment addVectors( ExpressionExperiment ee, ArrayDesign ad,
-            Collection<RawExpressionDataVector> newVectors ) {
-
-        // ee = this.load( ee.getId() );
-        Collection<BioAssayDimension> bads = new HashSet<BioAssayDimension>();
-        Collection<QuantitationType> qts = new HashSet<QuantitationType>();
-        for ( RawExpressionDataVector vec : newVectors ) {
-            bads.add( vec.getBioAssayDimension() );
-            qts.add( vec.getQuantitationType() );
-        }
-
-        if ( bads.size() > 1 ) {
-            throw new IllegalArgumentException( "Vectors must share a common bioassaydimension" );
-        }
-
-        if ( qts.size() > 1 ) {
-            throw new UnsupportedOperationException(
-                    "Can only replace with one type of vector (only one quantitation type)" );
-        }
-
-        BioAssayDimension bad = bads.iterator().next();
-
-        bad = this.bioAssayDimensionDao.findOrCreate( bad );
-        assert bad.getBioAssays().size() > 0;
-
-        QuantitationType newQt = qts.iterator().next();
-
-        assert newQt.getId() == null;
-        newQt = this.quantitationTypeDao.create( newQt );
-
-        for ( RawExpressionDataVector vec : newVectors ) {
-            vec.setBioAssayDimension( bad );
-            vec.setQuantitationType( newQt );
-        }
-
-        ee.getRawExpressionDataVectors().addAll( newVectors );
-        ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
-
-        if ( ad == null ) {
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( !vectorAd.equals( ba.getArrayDesignUsed() ) ) {
-                    throw new IllegalArgumentException( "Vectors must use the array design as the bioassays" );
-                }
-            }
-        } else if ( !vectorAd.equals( ad ) ) {
-            throw new IllegalArgumentException( "Vectors must use the array design indicated" );
-        }
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.setArrayDesignUsed( ad );
-        }
-
-        // this is a denormalization; easy to forget to update this.
-        ee.getQuantitationTypes().add( newQt );
-
-        // this.update( ee ); // is this even necessary? should flush.
-
-        log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
-
-        return ee;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService#removeData(ubic.gemma.model.expression.
-     * experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    @Override
-    public int removeData( ExpressionExperiment ee, QuantitationType qt ) {
-        ExpressionExperiment eeToUpdate = this.load( ee.getId() );
-        Collection<RawExpressionDataVector> vecsToRemove = new ArrayList<RawExpressionDataVector>();
-        for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
-            if ( oldvec.getQuantitationType().equals( qt ) ) {
-                vecsToRemove.add( oldvec );
-            }
-        }
-
-        if ( vecsToRemove.isEmpty() ) {
-            throw new IllegalArgumentException( "No vectors to remove for quantitation type=" + qt );
-        }
-
-        eeToUpdate.getRawExpressionDataVectors().removeAll( vecsToRemove );
-        eeToUpdate.getQuantitationTypes().remove( qt );
-        // this.update( eeToUpdate ); // will flush.
-        // quantitationTypeDao.remove( qt );
-        return vecsToRemove.size();
     }
 
     /**
@@ -1188,84 +1271,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         return troubleMap;
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> getExperimentsWithEvent(
-            Class<? extends AuditEventType> auditEventClass ) {
-        List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
-        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
-                ExpressionExperiment.class, auditEventClass ) );
-        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect() {
-        List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
-        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
-                ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
-        Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
-        for ( ExpressionExperiment ee : entities ) {
-            if ( this.getBatchEffect( ee ) == null ) {
-                toRemove.add( ee );
-            }
-        }
-        entities.removeAll( toRemove );
-        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
-    }
-
-    /**
-     * @param ee
-     * @return String msg describing confound if it is present, null otherwise
-     */
-    @Override
-    public String getBatchConfound( ExpressionExperiment ee ) {
-        Collection<BatchConfoundValueObject> confounds;
-        try {
-            confounds = BatchConfound.test( ee );
-        } catch ( Exception e ) {
-            return null;
-        }
-        String result = null;
-
-        for ( BatchConfoundValueObject c : confounds ) {
-            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
-                String factorName = c.getEf().getName();
-                result = "Factor: " + factorName + " may be confounded with batches; p="
-                        + String.format( "%.2g", c.getP() ) + "<br />";
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @param ee
-     * @return String msg describing effect if it is present, null otherwise
-     */
-    @Override
-    public String getBatchEffect( ExpressionExperiment ee ) {
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
-                if ( svd == null ) break;
-                for ( Integer component : svd.getFactorPvals().keySet() ) {
-                    Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
-
-                    Double pval = cmpEffects.get( ef.getId() );
-                    if ( pval != null && pval < BATCH_EFFECT_PVALTHRESHOLD ) {
-                        return "This data set may have a batch artifact (PC" + ( component + 1 ) + "); p="
-                                + String.format( "%.2g", pval ) + "<br />";
-                    }
-                }
-            }
-        }
-        return null;
-
-    }
-
-    @Override
-    public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
-        return this.expressionExperimentDao.loadValueObject( eeId );
     }
 
 }

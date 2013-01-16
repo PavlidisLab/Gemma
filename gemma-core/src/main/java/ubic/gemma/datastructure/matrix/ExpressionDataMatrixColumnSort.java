@@ -254,7 +254,8 @@ public class ExpressionDataMatrixColumnSort {
 
                 /*
                  * This assertion isn't right -- we now allow this, though we can only have ONE such constant factor.
-                 * See bug 2390.
+                 * See bug 2390. Unless we are dealing with a subset, in which case there can be any number of constant
+                 * factors within the subset.
                  */
                 // assert factors.size() == 1 :
                 // "It's possible to have just one factor value, but only if there is only one factor.";

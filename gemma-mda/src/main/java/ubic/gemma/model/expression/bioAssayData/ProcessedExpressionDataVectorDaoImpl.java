@@ -983,7 +983,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * 
      * @param ees
      * @param genes
-     * @return
+     * @return vectors, possibly subsetted.
      */
     private Collection<DoubleVectorValueObject> handleGetProcessedExpressionDataArrays(
             Collection<? extends BioAssaySet> ees, Collection<Long> genes ) {
@@ -1092,6 +1092,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
              */
 
             cacheResults( newResults );
+
+            newResults = sliceSubsets( ees, newResults );
             results.addAll( newResults );
         }
 
@@ -1218,7 +1220,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         bad.setName( "Subset of " + bioAssayDimension );
 
         for ( DoubleVectorValueObject vec : obs ) {
-            DoubleVectorValueObject s = new DoubleVectorValueObject( vec, bad );
+            DoubleVectorValueObject s = new DoubleVectorValueObject( ee, vec, bad );
             sliced.add( s );
         }
 
@@ -1243,8 +1245,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             if ( bas instanceof ExpressionExperimentSubSet ) {
 
                 for ( DoubleVectorValueObject d : vecs ) {
-                    if ( d.getExpressionExperiment().equals(
-                            ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment() ) ) {
+                    if ( d.getExpressionExperiment().getId()
+                            .equals( ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment().getId() ) ) {
 
                         Collection<DoubleVectorValueObject> ddvos = new HashSet<DoubleVectorValueObject>();
                         ddvos.add( d );
