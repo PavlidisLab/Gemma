@@ -1,4 +1,5 @@
 function handleFailure(data, e) {
+	
 	Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
 				src : '/Gemma/images/icons/warning.png'
@@ -7,6 +8,9 @@ function handleFailure(data, e) {
 				tag : 'span',
 				html : "&nbsp;There was an error:<br/>" + data + " " + (e ? e : "")
 			});
+	
+	Ext.MessageBox.alert("Error", data + " ");
+	
 }
 
 function handleDoneGeneratingFile(url) {
