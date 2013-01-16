@@ -509,6 +509,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                   } else {
                      // for continuous, show range like "(0 - 10)"
+                     var vals = [];
                      for ( var m = 0; m < fvu.size(); m++) {
                         vals[m] = fvu[m].value;
                      }
@@ -516,8 +517,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         vals.sort();
                         // FIXME if these are numbers we have to format better. But might not be numbers, don't
                         // assume.
-                        text = text + '&nbsp;(' + Ext.util.Format.ellipsis(vals[0]) + "&nbsp;&emdash;&nbsp;"
-                              + Ext.util.Format.ellipsis(vals[vals.size() - 1], abrLen, true) + ")";
+                        text = text + '&nbsp;' + Ext.util.Format.ellipsis(vals[0]) + "&nbsp;&ndash;&nbsp;"
+                              + Ext.util.Format.ellipsis(vals[vals.size() - 1], abrLen, true) ;
                      }
 
                   }
