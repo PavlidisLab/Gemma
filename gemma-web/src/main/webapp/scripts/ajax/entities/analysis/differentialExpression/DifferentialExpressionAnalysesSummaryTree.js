@@ -514,11 +514,19 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         vals[m] = fvu[m].value;
                      }
                      if ( vals.size() > 1 ) {
-                        vals.sort();
-                        // FIXME if these are numbers we have to format better. But might not be numbers, don't
-                        // assume.
-                        text = text + '&nbsp;' + Ext.util.Format.ellipsis(vals[0]) + "&nbsp;&ndash;&nbsp;"
-                              + Ext.util.Format.ellipsis(vals[vals.size() - 1], abrLen, true) ;
+                        // assume numeric, fall back on string.
+                        try {
+                           // numeric
+                           vals.sort(function(a, b) {
+                              return a - b;
+                           });
+
+                           text = Number(vals[0]).toPrecision(2) + "&nbsp;&ndash;&nbsp;" + Number(vals[vals.size() - 1]).toPrecision(2);
+                        } catch (err) {
+                           vals.sort(); // alpha
+                           text = Ext.util.Format.ellipsis(vals[0]) + "&nbsp;&ndash;&nbsp;"
+                                 + Ext.util.Format.ellipsis(vals[vals.size() - 1], abrLen, true);
+                        }
                      }
 
                   }
