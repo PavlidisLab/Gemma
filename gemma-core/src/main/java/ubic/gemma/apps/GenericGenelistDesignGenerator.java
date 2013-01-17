@@ -80,6 +80,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
     private TaxonService taxonService;
 
     private boolean useNCBIIds = false;
+    private boolean useEnsemblIds = false;
 
     @SuppressWarnings("static-access")
     @Override
@@ -90,6 +91,9 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
         addOption( OptionBuilder.withDescription( "use NCBI numeric IDs as the identifiers instead of gene symbols" )
                 .create( "ncbiids" ) );
+
+        addOption( OptionBuilder.withDescription( "use Ensembl identifiers instead of gene symbols" )
+                .create( "ensembl" ) );
 
     }
 
@@ -114,8 +118,11 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
         // common name
         arrayDesign.setPrimaryTaxon( taxon );
+        // fixme this is ugly just use one variable
         String ncbiIDNameExtra = useNCBIIds ? ", indexed by NCBI IDs" : "";
-        arrayDesign.setName( "Generic platform for " + taxon.getScientificName() + ncbiIDNameExtra );
+        String ensemblNameExtra = useEnsemblIds ? ", indexed by Ensembl IDs" : "";
+
+        arrayDesign.setName( "Generic platform for " + taxon.getScientificName() + ncbiIDNameExtra + ensemblNameExtra );
         arrayDesign.setDescription( "Created by Gemma" );
         arrayDesign.setTechnologyType( TechnologyType.NONE ); // this is key
 
@@ -171,6 +178,14 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 }
                 if ( existingSymbolmap.containsKey( gene.getNcbiGeneId() ) ) {
                     csForGene = existingSymbolmap.get( gene.getNcbiGeneId() );
+                }
+            } else if ( useEnsemblIds ) {
+                if ( gene.getEnsemblId() == null ) {
+                    log.info( "No Ense bl ID for " + gene + ", skipping" );
+                    continue;
+                }
+                if ( existingSymbolmap.containsKey( gene.getEnsemblId() ) ) {
+                    csForGene = existingSymbolmap.get( gene.getEnsemblId() );
                 }
             } else {
                 if ( existingSymbolmap.containsKey( gene.getOfficialSymbol() ) ) {
@@ -251,6 +266,11 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                             continue;
                         }
                         csForGene.setName( gene.getNcbiGeneId().toString() );
+                    } else if ( useEnsemblIds ) {
+                        if ( gene.getEnsemblId() == null ) {
+                            continue;
+                        }
+                        csForGene.setName( gene.getEnsemblId() );
                     } else {
                         csForGene.setName( gene.getOfficialSymbol() );
                     }
@@ -341,6 +361,12 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         }
         if ( hasOption( "ncbiids" ) ) {
             this.useNCBIIds = true;
+        } else if ( hasOption( "ensembl" ) ) {
+            this.useEnsemblIds = true;
+        }
+
+        if ( useNCBIIds && useEnsemblIds ) {
+            throw new IllegalArgumentException( "Choose one of ensembl or ncbi ids or gene symbols" );
         }
     }
 
@@ -349,13 +375,14 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
      */
     private String generateShortName() {
         String ncbiIdSuffix = useNCBIIds ? "_ncbiIds" : "";
-
+        String ensemblIdSuffix = useEnsemblIds ? "_ensemblIds" : "";
         String shortName = "";
         if ( StringUtils.isBlank( taxon.getCommonName() ) ) {
             shortName = "Generic_" + StringUtils.strip( taxon.getScientificName() ).replaceAll( " ", "_" )
                     + ncbiIdSuffix;
         } else {
-            shortName = "Generic_" + StringUtils.strip( taxon.getCommonName() ).replaceAll( " ", "_" ) + ncbiIdSuffix;
+            shortName = "Generic_" + StringUtils.strip( taxon.getCommonName() ).replaceAll( " ", "_" ) + ncbiIdSuffix
+                    + ensemblIdSuffix;
         }
         return shortName;
     }
