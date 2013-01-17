@@ -173,7 +173,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
             if ( useNCBIIds ) {
                 if ( gene.getNcbiGeneId() == null ) {
-                    log.info( "No NCBI ID for " + gene + ", skipping" );
+                    log.debug( "No NCBI ID for " + gene + ", skipping" );
                     continue;
                 }
                 if ( existingSymbolmap.containsKey( gene.getNcbiGeneId() ) ) {
@@ -181,7 +181,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                 }
             } else if ( useEnsemblIds ) {
                 if ( gene.getEnsemblId() == null ) {
-                    log.info( "No Ense bl ID for " + gene + ", skipping" );
+                    log.debug( "No Ensembl ID for " + gene + ", skipping" );
                     continue;
                 }
                 if ( existingSymbolmap.containsKey( gene.getEnsemblId() ) ) {
