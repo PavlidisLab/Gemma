@@ -284,8 +284,12 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
          * If possible: instead of using the probeLinkCoexpressionAnalyzer, Use a canned analysis with a filter.
          */
         Taxon taxon = genes.iterator().next().getTaxon();
-        ExpressionExperimentSet eeSet = geneCoexpressionAnalysisService.findCurrent( taxon )
-                .getExpressionExperimentSetAnalyzed();
+        GeneCoexpressionAnalysis currentSet = geneCoexpressionAnalysisService.findCurrent( taxon );
+
+        if ( currentSet == null ) {
+            return new HashSet<CoexpressionValueObjectExt>();
+        }
+        ExpressionExperimentSet eeSet = currentSet.getExpressionExperimentSetAnalyzed();
 
         assert !inputEeIds.isEmpty();
 
@@ -708,7 +712,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
-        //queryGenes = geneService.thawLite( gg2gs.keySet() );
+        // queryGenes = geneService.thawLite( gg2gs.keySet() );
 
         // populate the value objects.
         StopWatch timer = new StopWatch();
@@ -995,8 +999,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         Collection<Long> seenGene2Gene = new HashSet<Long>();
 
         Collection<Long> queryGeneIds = gg2gs.keySet();
-        
-     // return empty collection if no coexpression results
+
+        // return empty collection if no coexpression results
         if ( queryGeneIds.isEmpty() ) {
             return ecvos;
         }
@@ -1008,10 +1012,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         for ( Long gid : queryGeneIds ) {
 
             Element e = this.getGeneLightWeightCache().getCache().get( gid );
-            
-            if ( e == null ) {           
+
+            if ( e == null ) {
                 gidsNeeded.add( gid );
-            }            
+            }
 
         }
 
@@ -1020,11 +1024,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             Collection<Gene> justLoadedGenes = geneService.loadThawedLiter( gidsNeeded );
 
             for ( Gene g : justLoadedGenes ) {
-            	
+
                 this.getGeneLightWeightCache().getCache().put( new Element( g.getId(), g ) );
             }
         }
-        
 
         if ( timerGeneLoad.getTime() > 100 ) {
             log.info( "Loading and caching query genes took " + timerGeneLoad.getTime() + "ms" );
@@ -1074,7 +1077,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         for ( Long queryGid : queryGeneIds ) {
             timer.reset();
             timer.start();
-            
+
             Gene qGene = ( Gene ) this.getGeneLightWeightCache().getCache().get( queryGid ).getValue();
 
             if ( !qGene.getTaxon().equals( baseSet.getTaxon() ) ) {
@@ -1195,8 +1198,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                     if ( testForDuplicateFlag ) {
 
-                        testAndModifyDuplicateResultForOppositeStringency( ecvos, qGene, foundGene,
-                                g2g.getEffect(), numSupportingDatasets, specificDatasets.size(), numTestingDatasets );
+                        testAndModifyDuplicateResultForOppositeStringency( ecvos, qGene, foundGene, g2g.getEffect(),
+                                numSupportingDatasets, specificDatasets.size(), numTestingDatasets );
 
                         continue;
 
@@ -1239,8 +1242,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                     if ( testForDuplicateFlag ) {
 
-                        testAndModifyDuplicateResultForOppositeStringency( ecvos, qGene, foundGene,
-                                g2g.getEffect(), numSupportingDatasets, null, null );
+                        testAndModifyDuplicateResultForOppositeStringency( ecvos, qGene, foundGene, g2g.getEffect(),
+                                numSupportingDatasets, null, null );
 
                         continue;
 
@@ -1275,8 +1278,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             }
 
             if ( timer.getTime() > 300 ) {
-                log.info( "Postprocess " + g2gs.size() + " results for " + qGene.getOfficialSymbol()
-                        + " Phase II: " + timer.getTime() + "ms" );
+                log.info( "Postprocess " + g2gs.size() + " results for " + qGene.getOfficialSymbol() + " Phase II: "
+                        + timer.getTime() + "ms" );
             }
             timer.stop();
 
