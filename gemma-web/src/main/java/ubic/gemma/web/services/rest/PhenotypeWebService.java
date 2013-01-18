@@ -31,6 +31,7 @@ import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 
 /**
@@ -46,6 +47,13 @@ public class PhenotypeWebService {
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+
+    @GET
+    @Path("/load-all-neurocarta-phenotypes")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes( ) {
+        return this.phenotypeAssociationManagerService.loadAllNeurocartaPhenotypes( );
+    }
 
     @GET
     @Path("/load-all-phenotypes")
