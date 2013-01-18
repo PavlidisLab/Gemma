@@ -1110,7 +1110,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // creates the tree structure
         for ( String valueUri : allPhenotypesGenesAssociations ) {
 
-            // dont create the tree if it is already present in an other
+            // don't create the tree if it is already present in an other
             if ( phenotypeFoundInTree.get( valueUri ) != null ) {
                 // flag the node as phenotype found in database
                 phenotypeFoundInTree.get( valueUri ).setDbPhenotype( true );
@@ -1131,12 +1131,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
 
                     treesPhenotypes.add( treeCharacteristicValueObject );
-
+                    if ( log.isDebugEnabled() ) log.debug( "Added: " + ontologyTerm );
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
-                        log.error( "A valueUri found in the database was not found in the ontology" );
-                        log.error( "This can happen when a valueUri is updated in the ontology" );
-                        log.error( "valueUri: " + valueUri );
+                        log.error( "A valueUri found in the database was not found in the ontology; This can happen when a valueUri is updated in the ontology; valueUri: "
+                                + valueUri );
+                    } else {
+                        throw new RuntimeException( "Ontologies are not fully loaded yet, try again soon" );
+                        /*
+                         * FIXME there has to be a mechanism to try again? Or is it going to happen anyway.
+                         */
                     }
                 }
             }

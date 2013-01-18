@@ -44,23 +44,92 @@ public class PhenotypeAssoOntologyHelper {
     /** used to set the Ontology terms */
     public PhenotypeAssoOntologyHelper( OntologyService ontologyService ) {
         this.ontologyService = ontologyService;
-        AbstractOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        if ( diseaseOntologyService != null ) {
-            this.ontologies.add( diseaseOntologyService );
+        resetOntologies();
+    }
+
+    /** Gemma might be ready but the ontology thread not finish loading */
+    public boolean areOntologiesAllLoaded() {
+        return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded()
+                && this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
+                .getMammalianPhenotypeOntologyService().isOntologyLoaded() );
+    }
+
+    /** CharacteristicValueObject to Characteristic with no valueUri given */
+    public VocabCharacteristic characteristicValueObject2Characteristic(
+            CharacteristicValueObject characteristicValueObject ) {
+        if ( this.ontologies.isEmpty() ) {
+            resetOntologies();
         }
-        AbstractOntologyService mammalianPhenotypeOntologyService = ontologyService
-                .getMammalianPhenotypeOntologyService();
-        if ( mammalianPhenotypeOntologyService != null ) {
-            this.ontologies.add( mammalianPhenotypeOntologyService );
+        VocabCharacteristic characteristic = VocabCharacteristic.Factory.newInstance();
+        characteristic.setCategory( characteristicValueObject.getCategory() );
+        characteristic.setCategoryUri( characteristicValueObject.getCategoryUri() );
+        characteristic.setValue( characteristicValueObject.getValue() );
+
+        if ( characteristic.getValueUri() != null && !characteristic.getValueUri().equals( "" ) ) {
+            characteristic.setValueUri( characteristicValueObject.getValueUri() );
+        } else {
+
+            // format the query for lucene to look for ontology terms with an exact match for the value
+            String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " )
+                    + "\"";
+
+            Collection<OntologyTerm> ontologyTerms = this.ontologyService.findTerms( value );
+
+            for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+                if ( ontologyTerm.getLabel().equalsIgnoreCase( characteristicValueObject.getValue() ) ) {
+                    characteristic.setValueUri( ontologyTerm.getUri() );
+                    break;
+                }
+            }
         }
-        AbstractOntologyService humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
-        if ( humanPhenotypeOntologyService != null ) {
-            this.ontologies.add( humanPhenotypeOntologyService );
+        return characteristic;
+    }
+
+    /** Giving some Ontology terms return all valueUri of Ontology Terms + children */
+    public Set<String> findAllChildrenAndParent( Collection<OntologyTerm> ontologyTerms ) {
+        if ( this.ontologies.isEmpty() ) {
+            resetOntologies();
         }
+        Set<String> phenotypesFoundAndChildren = new HashSet<String>();
+
+        for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+            // add the parent term found
+            assert ontologyTerm.getUri() != null;
+            phenotypesFoundAndChildren.add( ontologyTerm.getUri() );
+
+            // add all children of the term
+            for ( OntologyTerm ontologyTermChildren : ontologyTerm.getChildren( false ) ) {
+                assert ontologyTermChildren.getUri() != null;
+                phenotypesFoundAndChildren.add( ontologyTermChildren.getUri() );
+            }
+        }
+        return phenotypesFoundAndChildren;
+    }
+
+    /** For a valueUri return the OntologyTerm found */
+    public OntologyTerm findOntologyTermByUri( String valueUri ) {
+        if ( this.ontologies.isEmpty() ) {
+            resetOntologies();
+        }
+        if ( valueUri.isEmpty() ) {
+            throw new IllegalArgumentException( "URI to load was blank." );
+        }
+
+        OntologyTerm ontologyTerm = null;
+        for ( AbstractOntologyService ontology : this.ontologies ) {
+            ontologyTerm = ontology.getTerm( valueUri );
+            if ( ontologyTerm != null ) return ontologyTerm;
+        }
+
+        throw new EntityNotFoundException( valueUri );
     }
 
     /** search the disease,hp and mp ontology for a searchQuery and return an ordered set of CharacteristicVO */
     public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) {
+
+        if ( this.ontologies.isEmpty() ) {
+            resetOntologies();
+        }
 
         HashMap<String, OntologyTerm> uniqueValueTerm = new HashMap<String, OntologyTerm>();
 
@@ -90,44 +159,11 @@ public class PhenotypeAssoOntologyHelper {
         return ontologyFound;
     }
 
-    /** Giving some Ontology terms return all valueUri of Ontology Terms + children */
-    public Set<String> findAllChildrenAndParent( Collection<OntologyTerm> ontologyTerms ) {
-
-        Set<String> phenotypesFoundAndChildren = new HashSet<String>();
-
-        for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-            // add the parent term found
-            assert ontologyTerm.getUri() != null;
-            phenotypesFoundAndChildren.add( ontologyTerm.getUri() );
-
-            // add all children of the term
-            for ( OntologyTerm ontologyTermChildren : ontologyTerm.getChildren( false ) ) {
-                assert ontologyTermChildren.getUri() != null;
-                phenotypesFoundAndChildren.add( ontologyTermChildren.getUri() );
-            }
-        }
-        return phenotypesFoundAndChildren;
-    }
-
-    /** For a valueUri return the OntologyTerm found */
-    public OntologyTerm findOntologyTermByUri( String valueUri ) {
-
-        if ( valueUri.isEmpty() ) {
-            throw new IllegalArgumentException( "URI to load was blank." );
-        }
-
-        OntologyTerm ontologyTerm = null;
-        for ( AbstractOntologyService ontology : this.ontologies ) {
-            ontologyTerm = ontology.getTerm( valueUri );
-            if ( ontologyTerm != null ) return ontologyTerm;
-        }
-
-        throw new EntityNotFoundException( valueUri );
-    }
-
     /** For a valueUri return the Characteristic (represents a phenotype) */
     public Characteristic valueUri2Characteristic( String valueUri ) {
-
+        if ( this.ontologies.isEmpty() ) {
+            resetOntologies();
+        }
         OntologyTerm o = findOntologyTermByUri( valueUri );
 
         if ( o == null ) return null;
@@ -155,40 +191,23 @@ public class PhenotypeAssoOntologyHelper {
         return characteristicsVO;
     }
 
-    /** CharacteristicValueObject to Characteristic with no valueUri given */
-    public VocabCharacteristic characteristicValueObject2Characteristic(
-            CharacteristicValueObject characteristicValueObject ) {
-
-        VocabCharacteristic characteristic = VocabCharacteristic.Factory.newInstance();
-        characteristic.setCategory( characteristicValueObject.getCategory() );
-        characteristic.setCategoryUri( characteristicValueObject.getCategoryUri() );
-        characteristic.setValue( characteristicValueObject.getValue() );
-
-        if ( characteristic.getValueUri() != null && !characteristic.getValueUri().equals( "" ) ) {
-            characteristic.setValueUri( characteristicValueObject.getValueUri() );
-        } else {
-
-            // format the query for lucene to look for ontology terms with an exact match for the value
-            String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " )
-                    + "\"";
-
-            Collection<OntologyTerm> ontologyTerms = this.ontologyService.findTerms( value );
-
-            for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-                if ( ontologyTerm.getLabel().equalsIgnoreCase( characteristicValueObject.getValue() ) ) {
-                    characteristic.setValueUri( ontologyTerm.getUri() );
-                    break;
-                }
-            }
+    /**
+     * @param ontologyService
+     */
+    private void resetOntologies() {
+        ontologies = new ArrayList<AbstractOntologyService>();
+        AbstractOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
+        if ( diseaseOntologyService != null ) {
+            this.ontologies.add( diseaseOntologyService );
         }
-        return characteristic;
-    }
-
-    /** Gemma might be ready but the ontology thread not finish loading */
-    public boolean areOntologiesAllLoaded() {
-
-        return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded()
-                && this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
-                .getMammalianPhenotypeOntologyService().isOntologyLoaded() );
+        AbstractOntologyService mammalianPhenotypeOntologyService = ontologyService
+                .getMammalianPhenotypeOntologyService();
+        if ( mammalianPhenotypeOntologyService != null ) {
+            this.ontologies.add( mammalianPhenotypeOntologyService );
+        }
+        AbstractOntologyService humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+        if ( humanPhenotypeOntologyService != null ) {
+            this.ontologies.add( humanPhenotypeOntologyService );
+        }
     }
 }
