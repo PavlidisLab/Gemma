@@ -35,20 +35,18 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * Object to store search results of different classes in a similar way for displaying to user (ex: enables genes and
- * gene sets to be entries in the same combo box) 
- * object types handled are: Gene, GeneSet, GeneSetValueObject, ExpressionExperiment and ExpressionExperimentSet
- * SearchObject is also handled if the object it holds is of any of those types 
- * 
- * for a gene or experiment, the memberIds field is a collection just containing the object's id
+ * gene sets to be entries in the same combo box) object types handled are: Gene, GeneSet, GeneSetValueObject,
+ * ExpressionExperiment and ExpressionExperimentSet SearchObject is also handled if the object it holds is of any of
+ * those types for a gene or experiment, the memberIds field is a collection just containing the object's id
  * 
  * @author thea
  * @version $Id$
  */
 public class SearchResultDisplayObject implements Comparable<SearchResultDisplayObject> {
-    
+
     private Class<?> resultClass;
-    
-    //private boolean isSession;
+
+    // private boolean isSession;
 
     private Boolean isGroup; // whether this search result represents a group of entities or not
 
@@ -62,23 +60,35 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     private Long taxonId;
 
+    // for grouping.
+    private Long parentTaxonId;
+
+    public Long getParentTaxonId() {
+        return parentTaxonId;
+    }
+
+    public void setParentTaxonId( Long parentTaxonId ) {
+        this.parentTaxonId = parentTaxonId;
+    }
+
     /**
      * for genes and experiments, the memeberIds field is a collection containing just their id
      */
-    private Collection<Long> memberIds = new HashSet<Long>(); 
+    private Collection<Long> memberIds = new HashSet<Long>();
 
     private Object resultValueObject;
-    
+
     private boolean userOwned = false;
-    
 
     /**
      * satisfy javaBean contract
      */
     public SearchResultDisplayObject() {
     }
+
     /**
      * this method does not set the publik variable for the returned object (cannot autowire security service from here)
+     * 
      * @param searchResult
      */
     public SearchResultDisplayObject( SearchResult searchResult ) {
@@ -99,7 +109,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
             ExpressionExperimentValueObject ee = ( ExpressionExperimentValueObject ) searchResult.getResultObject();
             setValues( ee );
         } else if ( searchResult.getResultObject() instanceof ExpressionExperimentSetValueObject ) {
-            ExpressionExperimentSetValueObject eeSet = ( ExpressionExperimentSetValueObject ) searchResult.getResultObject();
+            ExpressionExperimentSetValueObject eeSet = ( ExpressionExperimentSetValueObject ) searchResult
+                    .getResultObject();
             setValues( eeSet );
         } else {
             this.isGroup = false;
@@ -118,7 +129,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     public SearchResultDisplayObject( Gene gene ) {
         setValues( gene );
     }
-    
+
     /**
      * @param gene
      */
@@ -132,14 +143,14 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     public SearchResultDisplayObject( DatabaseBackedGeneSetValueObject geneSet ) {
         setValues( geneSet );
     }
-    
+
     /**
      * @param geneSet
      */
     public SearchResultDisplayObject( GeneSetValueObject geneSet ) {
         setValues( geneSet );
     }
-    
+
     /**
      * @param geneSet
      */
@@ -153,14 +164,13 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     public SearchResultDisplayObject( ExpressionExperimentValueObject expressionExperiment ) {
         setValues( expressionExperiment );
     }
-    
+
     /**
      * @param expressionExperimentSet
      */
     public SearchResultDisplayObject( ExpressionExperimentSetValueObject expressionExperimentSet ) {
         setValues( expressionExperimentSet );
     }
-
 
     /**
      * @param gene
@@ -169,16 +179,17 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         setResultValueObject( new GeneValueObject( gene ) );
         this.isGroup = false;
         this.size = 1;
-        if( gene.getTaxon() != null ){
+        if ( gene.getTaxon() != null ) {
             this.taxonId = gene.getTaxon().getId();
             this.taxonName = gene.getTaxon().getCommonName();
+
         }
-        
+
         this.name = gene.getOfficialSymbol();
         this.description = gene.getOfficialName();
-        this.memberIds.add(gene.getId());
+        this.memberIds.add( gene.getId() );
     }
-    
+
     /**
      * @param gene
      */
@@ -190,7 +201,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.taxonName = gene.getTaxonCommonName();
         this.name = gene.getOfficialSymbol();
         this.description = gene.getOfficialName();
-        this.memberIds.add(gene.getId());
+        this.memberIds.add( gene.getId() );
     }
 
     /**
@@ -206,7 +217,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.memberIds = geneSet.getGeneIds();
         this.setResultValueObject( geneSet );
     }
-    
+
     /**
      * @param geneSet
      */
@@ -215,6 +226,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.size = ( eeSet.getExpressionExperimentIds() != null ) ? eeSet.getExpressionExperimentIds().size() : null;
         this.taxonId = eeSet.getTaxonId();
         this.taxonName = eeSet.getTaxonName();
+
         this.name = eeSet.getName();
         this.description = eeSet.getDescription();
         this.memberIds = eeSet.getExpressionExperimentIds();
@@ -228,13 +240,15 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.isGroup = false;
         this.size = 1;
         this.taxonId = expressionExperiment.getTaxonId();
+
+        this.parentTaxonId = expressionExperiment.getParentTaxonId();
         this.taxonName = expressionExperiment.getTaxon();
         this.name = expressionExperiment.getShortName();
         this.description = expressionExperiment.getName();
-        this.memberIds.add(expressionExperiment.getId());
+        this.memberIds.add( expressionExperiment.getId() );
         setResultValueObject( expressionExperiment );
     }
-     
+
     public Class<?> getResultClass() {
         return this.resultClass;
     }
@@ -278,7 +292,6 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     public void setMemberIds( Collection<Long> memberIds ) {
         this.memberIds = memberIds;
     }
-    
 
     /**
      * @param resultValueObject the resultValueObject to set
@@ -310,9 +323,9 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     }
 
     /**
-     * Creates a collection of SearchResultDisplayObjects from a collection of objects. Object types handled are: GeneValueObject,
-     * GeneSetValueObject, ExpressionExperimentValueObject, ExpressionExperimentSetValueObject and SearchObjects containing 
-     * an object of any of those types
+     * Creates a collection of SearchResultDisplayObjects from a collection of objects. Object types handled are:
+     * GeneValueObject, GeneSetValueObject, ExpressionExperimentValueObject, ExpressionExperimentSetValueObject and
+     * SearchObjects containing an object of any of those types
      * 
      * @param results a collection of SearchResult objects to create SearchResultDisplayObjects for
      * @return a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
@@ -336,21 +349,21 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     @Override
     public int compareTo( SearchResultDisplayObject o ) {
-        if(o.name == null || o.description== null){
+        if ( o.name == null || o.description == null ) {
             return 1;
         }
-        if(this.name == null || this.description== null){
+        if ( this.name == null || this.description == null ) {
             return -1;
         }
         // sort GO groups by their text name, not their GO id
-        if(o.getResultValueObject() instanceof GOGroupValueObject){
+        if ( o.getResultValueObject() instanceof GOGroupValueObject ) {
             int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
-            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;    
+            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;
         }
         // sort experiments by their text name, not their GSE id
-        if(o.getResultValueObject() instanceof ExpressionExperimentValueObject){
+        if ( o.getResultValueObject() instanceof ExpressionExperimentValueObject ) {
             int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
-            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;    
+            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;
         }
         int result = this.name.toLowerCase().compareTo( o.name.toLowerCase() );
         return ( result == 0 ) ? this.description.toLowerCase().compareTo( o.description.toLowerCase() ) : result;

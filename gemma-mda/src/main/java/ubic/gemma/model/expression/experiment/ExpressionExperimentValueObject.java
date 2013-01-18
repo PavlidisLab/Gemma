@@ -164,6 +164,16 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private Long taxonId;
 
+    private Long parentTaxonId;
+
+    public Long getParentTaxonId() {
+        return parentTaxonId;
+    }
+
+    public void setParentTaxonId( Long parentTaxonId ) {
+        this.parentTaxonId = parentTaxonId;
+    }
+
     private String technologyType;
 
     private boolean troubled = false;
@@ -224,7 +234,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
                 otherBean.getMinPvalue(), otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(),
                 otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(), otherBean
                         .getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
-                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset() );
+                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset(), otherBean
+                        .getParentTaxonId() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
@@ -242,7 +253,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
             Long experimentalDesign, Date autoTagDate,
             Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses, Date batchAnalysisDate,
             Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType, String troubleDetails,
-            Boolean isSubset ) {
+            Boolean isSubset, Long parentTaxonId ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -295,6 +306,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
         this.batchFetchEventType = batchFetchEventType;
         this.troubleDetails = troubleDetails;
         this.isSubset = isSubset;
+        this.parentTaxonId = parentTaxonId;
     }
 
     /**

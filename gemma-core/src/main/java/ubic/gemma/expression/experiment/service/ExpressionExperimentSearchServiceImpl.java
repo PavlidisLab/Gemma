@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -148,14 +149,23 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         return displayResults;
     }
-    
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService#getAllTaxonExperimentGroup(java.lang
+     * .Long)
+     */
+    @Override
     public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
-        
+
         List<SearchResultDisplayObject> setResults = new LinkedList<SearchResultDisplayObject>();
-        
-        Taxon taxon = taxonService.load(taxonId);
-        
-        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName("All "+taxon.getCommonName());
+
+        Taxon taxon = taxonService.load( taxonId );
+
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName( "All "
+                + taxon.getCommonName() );
         SearchResultDisplayObject newSRDO = null;
         for ( ExpressionExperimentSet set : sets ) {
             expressionExperimentSetService.thaw( set );
@@ -170,9 +180,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             }
         }
 
-        
-
-        Collections.sort( setResults );        
+        Collections.sort( setResults );
 
         return setResults;
     }
@@ -231,9 +239,10 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         // get all expressionExperiment results and convert result object into a value object
         List<SearchResult> srEEs = results.get( ExpressionExperiment.class );
-        if( srEEs == null ){
+        if ( srEEs == null ) {
             srEEs = new ArrayList<SearchResult>();
         }
+
         for ( SearchResult sr : srEEs ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
             ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject( ee );
@@ -248,6 +257,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             }
 
             eevo.setTaxonId( taxon.getId() );
+            eevo.setParentTaxonId( taxon.getParentTaxon() == null ? null : taxon.getParentTaxon().getId() );
             eevo.setTaxon( taxon.getCommonName() );
             sr.setResultObject( eevo );
         }
@@ -286,17 +296,25 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
             // if an experiment was returned by both experiment and experiment set search, don't count it twice
             // (managed by set)
-            HashSet<Long> eeIds = new HashSet<Long>();
-            HashMap<Long, HashSet<Long>> eeIdsByTaxonId = new HashMap<Long, HashSet<Long>>();
+            Set<Long> eeIds = new HashSet<Long>();
+            Map<Long, HashSet<Long>> eeIdsByTaxonId = new HashMap<Long, HashSet<Long>>();
 
-            // add every individual experiment to the set
+            // add every individual experiment to the set, grouped by taxon and also altogether.
             for ( SearchResultDisplayObject srdo : experiments ) {
-                if ( !eeIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
-                    eeIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
+
+                // group by the Parent Taxon, for things like salmonid - see bug 3286
+                Long taxId = null;
+                if ( srdo.getParentTaxonId() != null ) {
+                    taxId = srdo.getParentTaxonId();
+                } else {
+                    taxId = srdo.getTaxonId();
+                }
+
+                if ( !eeIdsByTaxonId.containsKey( taxId ) ) {
+                    eeIdsByTaxonId.put( taxId, new HashSet<Long>() );
                 }
                 ExpressionExperimentValueObject eevo = ( ExpressionExperimentValueObject ) srdo.getResultValueObject();
-                eeIdsByTaxonId.get( srdo.getTaxonId() ).add( eevo.getId() );
-
+                eeIdsByTaxonId.get( taxId ).add( eevo.getId() );
                 eeIds.add( eevo.getId() );
             }
 
@@ -325,6 +343,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                 taxonId2 = entry.getKey();
                 Taxon taxon = taxonService.load( taxonId2 );
                 if ( taxon != null && entry.getValue().size() > 0 ) {
+
                     FreeTextExpressionExperimentResultsValueObject ftvo = new FreeTextExpressionExperimentResultsValueObject(
                             "All " + taxon.getCommonName() + " results for '" + query + "'", "All "
                                     + taxon.getCommonName() + " experiments found for your query", taxon.getId(),
