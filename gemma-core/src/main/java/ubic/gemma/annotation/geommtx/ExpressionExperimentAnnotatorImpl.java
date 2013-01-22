@@ -99,23 +99,23 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     }
 
     @Autowired
-    AuditTrailService auditTrailService;
+    private AuditTrailService auditTrailService;
 
     @Autowired
-    CacheManager cacheManager;
+    private CacheManager cacheManager;
 
     @Autowired
-    PredictedCharacteristicFactory charGen;
+    private PredictedCharacteristicFactory charGen;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    OntologyService ontologyService;
-
-    Map<String, Set<String>> rejectedFromReview;
+    private ExpressionExperimentService expressionExperimentService;
 
     private List<AbstractFilter> filters;
+
+    @Autowired
+    private OntologyService ontologyService;
+
+    private Map<String, Set<String>> rejectedFromReview;
 
     /*
      * (non-Javadoc)
