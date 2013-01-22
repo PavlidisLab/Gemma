@@ -19,6 +19,7 @@
 package ubic.gemma.ontology;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.InputStream;
@@ -109,6 +110,37 @@ public class OntologyIndexerTest {
         index.close();
     }
 
+    /**
+     * See bug 3269
+     * 
+     * @throws Exception
+     */
+    @Test
+    public final void testOmitBadPredicates2() throws Exception {
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/eftest.owl.xml" );
+        OntModel model = OntologyLoader.loadMemoryModel( is, "EFTEST", OntModelSpec.OWL_MEM_TRANS_INF );
+        is.close();
+
+        IndexLARQ index = OntologyIndexer.indexOntology( "EFTEST", model, true );
+
+        // positive control
+        Collection<OntologyTerm> searchResults = OntologySearch.matchClasses( model, index, "monocyte" );
+        assertTrue( "Should have found something for 'monocyte'", !searchResults.isEmpty() );
+        assertEquals( 1, searchResults.size() );
+
+        // this is a "definition" that we want to avoid leading to "Monocyte".
+        searchResults = OntologySearch.matchClasses( model, index, "liver" );
+        for ( OntologyTerm ontologyTerm : searchResults ) {
+            fail( "Should not have found " + ontologyTerm.toString() );
+        }
+        assertEquals( 0, searchResults.size() );
+
+        index.close();
+    }
+
+    /**
+     * @throws Exception
+     */
     @Test
     public final void testPersistance() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
