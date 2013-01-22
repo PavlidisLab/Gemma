@@ -2012,9 +2012,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
         } else {
             if ( taxon != null ) {
                 if ( eeIds == null ) {
-                    securedEEs = expressionExperimentService.findByTaxon( taxon, limit );
-
-                    if ( securedEEs.size() > limit && limit >= 0 ) {
+                	securedEEs = expressionExperimentService.findByTaxon( taxon, limit );
+                	
+                	if ( limit == null ) {
+                		;
+                	} else if ( securedEEs.size() > limit && limit >= 0 ) {
                         securedEEs = securedEEs.subList( 0, limit );
                     }
 
