@@ -1,0 +1,941 @@
+<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+    <!ENTITY efo "http://www.ebi.ac.uk/efo/" >
+    <!ENTITY CL "http://purl.org/obo/owl/CL#" >
+    <!ENTITY PATO "http://purl.org/obo/owl/PATO#" >
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY rdfns "http://www.orphanet.org/rdfns#" >
+    <!ENTITY obo "http://purl.obolibrary.org/obo/" >
+    <!ENTITY obo2 "http://purl.obolibrary.org/obo#" >
+    <!ENTITY OBO_REL "http://purl.org/obo/owl/OBO_REL#" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY NCBITaxon "http://purl.org/obo/owl/NCBITaxon#" >
+    <!ENTITY snap "http://www.ifomis.org/bfo/1.1/snap#" >
+    <!ENTITY span "http://www.ifomis.org/bfo/1.1/span#" >
+    <!ENTITY ro "http://www.obofoundry.org/ro/ro.owl#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+    <!ENTITY oboInOwl "http://www.geneontology.org/formats/oboInOwl#" >
+]>
+<rdf:RDF xmlns="http://www.ebi.ac.uk/efo/"
+     xml:base="http://www.ebi.ac.uk/efo/"
+     xmlns:PATO="http://purl.org/obo/owl/PATO#"
+     xmlns:ro="http://www.obofoundry.org/ro/ro.owl#"
+     xmlns:efo="http://www.ebi.ac.uk/efo/"
+     xmlns:snap="http://www.ifomis.org/bfo/1.1/snap#"
+     xmlns:NCBITaxon="http://purl.org/obo/owl/NCBITaxon#"
+     xmlns:obo2="http://purl.obolibrary.org/obo#"
+     xmlns:obo="http://purl.obolibrary.org/obo/"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:rdfns="http://www.orphanet.org/rdfns#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:OBO_REL="http://purl.org/obo/owl/OBO_REL#"
+     xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#"
+     xmlns:CL="http://purl.org/obo/owl/CL#"
+     xmlns:span="http://www.ifomis.org/bfo/1.1/span#">
+    <owl:Ontology rdf:about="http://www.ebi.ac.uk/efo/">
+        <obo:format-version rdf:datatype="&xsd;string">1.4</obo:format-version>
+        <owl:versionInfo rdf:datatype="&xsd;string">2.32.1</owl:versionInfo>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to BRENDA tissue / enzyme source (BTO) verunknown</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Cell type (CL) verunknown</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Chemical entities of biological interest (CHEBI) verunknown</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Drosophila gross anatomy (FBbt) ver2011-02-10</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Foundational Model of Anatomy (FMA) ver3.1</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Gene Ontology (GO) ver1.886</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Human disease (DOID) ver</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to International Classification of Diseases (ICD-9) ver9</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to MGED Ontology (MO) ver1.3.1.1</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Malaria Ontology (IDOMAL) ver1.22</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Mammalian phenotype (MP) vernull</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Medical Subject Headings (MSH) ver2011_2010_08_30</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Microarray experimental conditions (MO) ver1.3.1.1</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Minimal anatomical terminology (MAT) ver1.1</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Mosquito gross anatomy (TGMA) version unknown</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to NCBI organismal classification (NCBITaxon) ver1.2</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to NCI Thesaurus (NCIt) ver11.01e</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to NIFSTD (nif) ver2.2 - December 20, 2010</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Ontology for Biomedical Investigations (OBI) ver2010-10-26 Vancouver 2010 release, RC2</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Phenotypic quality (PATO) vernull</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to SNOMED Clinical Terms (SNOMEDCT) ver2010_07_31</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Teleost Anatomy Ontology (TAO) vernull</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Teleost anatomy and development (TAO) ver1.158</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Units of measurement (UO) vernull</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Bioportal mappings to Zebrafish anatomy and development (ZFA) verunknown</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Date: 16th January 2013</rdfs:comment>
+        <obo:saved-by rdf:datatype="&xsd;string">Drashtti</obo:saved-by>
+        <creator rdf:datatype="&xsd;string">Drashtti Vasant</creator>
+        <creator rdf:datatype="&xsd;string">Ele Holloway</creator>
+        <creator rdf:datatype="&xsd;string">Helen Parkinson</creator>
+        <creator rdf:datatype="&xsd;string">James Malone</creator>
+        <creator rdf:datatype="&xsd;string">Jon Ison</creator>
+        <rdfs:comment rdf:datatype="&xsd;string">Mappings to Plant structure (PO)</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Mappings: CRISP Thesaurus Version 2.5.2.0</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Mappings: The Jackson Lab</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string">Mappings:The Arabidopsis Information Resource (TAIR)</rdfs:comment>
+        <creator rdf:datatype="&xsd;string">Tomasz Adamusiak</creator>
+        <creator>Eleanor Williams</creator>
+        <creator>Emma Katherine Hastings</creator>
+        <creator>Dani Welter</creator>
+        <creator>Natalja Kurbatova</creator>
+        <creator>Simon Jupp</creator>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <owl:AnnotationProperty rdf:about="&obo2;InChI"/>
+    <owl:AnnotationProperty rdf:about="&efo;SRA_label"/>
+    <owl:AnnotationProperty rdf:about="&obo2;xref"/>
+    <owl:AnnotationProperty rdf:about="&obo;def"/>
+    <owl:AnnotationProperty rdf:about="&efo;reason_for_obsolescence"/>
+    <owl:AnnotationProperty rdf:about="&efo;source_definition"/>
+    <owl:AnnotationProperty rdf:about="&obo;comment"/>
+    <owl:AnnotationProperty rdf:about="&efo;definition_editor"/>
+    <owl:AnnotationProperty rdf:about="&efo;gwas_trait"/>
+    <owl:AnnotationProperty rdf:about="&obo2;Synonym"/>
+    <owl:AnnotationProperty rdf:about="&efo;bioportal_provenance"/>
+    <owl:AnnotationProperty rdf:about="&efo;branch_class"/>
+    <owl:AnnotationProperty rdf:about="&obo;synonym"/>
+    <owl:AnnotationProperty rdf:about="&efo;creator"/>
+    <owl:AnnotationProperty rdf:about="&efo;example_of_usage"/>
+    <owl:AnnotationProperty rdf:about="&obo2;SMILES"/>
+    <owl:AnnotationProperty rdf:about="&efo;alternative_term"/>
+    <owl:AnnotationProperty rdf:about="&obo2;InChIKey"/>
+    <owl:AnnotationProperty rdf:about="&obo;synonymtype"/>
+    <owl:AnnotationProperty rdf:about="&efo;definition"/>
+    <owl:AnnotationProperty rdf:about="&efo;organizational_class"/>
+    <owl:AnnotationProperty rdf:about="&efo;primary_source"/>
+    <owl:AnnotationProperty rdf:about="&efo;ArrayExpress_label"/>
+    <rdf:Description rdf:about="&efo;definition_citation">
+        <definition>A definition citation is a document, ontology class, person or organization from which the definition of the class is derived. It is used in the same sense as a citation in literature, in that the definition may have been derived from these sources or that this definition is related to these source.</definition>
+    </rdf:Description>
+    <owl:AnnotationProperty rdf:about="&obo;alt_id"/>
+    <owl:AnnotationProperty rdf:about="&obo;namespace"/>
+    <owl:AnnotationProperty rdf:about="&obo;xref"/>
+    <owl:AnnotationProperty rdf:about="&efo;EFO_URI"/>
+    <owl:AnnotationProperty rdf:about="&efo;obsoleted_in_version"/>
+    <owl:AnnotationProperty rdf:about="&efo;description"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Datatypes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.obolibrary.org/obo#has_role -->
+
+    <owl:ObjectProperty rdf:about="&obo2;has_role">
+        <rdf:type rdf:resource="&owl;InverseFunctionalProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">has_role</rdfs:label>
+        <definition rdf:datatype="&xsd;string">A relation between a continuant C and a role R. The reciprocal relation of role_of.</definition>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/has_role</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&OBO_REL;bearer_of"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;role_of"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo2;has_role"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;inheres_in"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/IAO_0000136 -->
+
+    <owl:ObjectProperty rdf:about="&obo;IAO_0000136">
+        <rdfs:label>is_about</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;IAO_0000136"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/OBI_0000293 -->
+
+    <owl:ObjectProperty rdf:about="&obo;OBI_0000293">
+        <rdfs:label rdf:datatype="&xsd;string">has_input</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/has_input</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&ro;has_participant"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000293"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000295"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;participates_in"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/OBI_0000295 -->
+
+    <owl:ObjectProperty rdf:about="&obo;OBI_0000295">
+        <rdfs:label rdf:datatype="&xsd;string">is_input_of</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/is_input_of</EFO_URI>
+        <owl:inverseOf rdf:resource="&obo;OBI_0000293"/>
+        <rdfs:subPropertyOf rdf:resource="&ro;participates_in"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000295"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;has_participant"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000293"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/OBI_0000298 -->
+
+    <owl:ObjectProperty rdf:about="&obo;OBI_0000298">
+        <rdf:type rdf:resource="&owl;InverseFunctionalProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">has_quality</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/has_quality</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&OBO_REL;bearer_of"/>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;inheres_in"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000298"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/OBI_0000299 -->
+
+    <owl:ObjectProperty rdf:about="&obo;OBI_0000299">
+        <rdfs:label>has_output</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&ro;has_participant"/>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;participates_in"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000299"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/OBI_0000300 -->
+
+    <owl:ObjectProperty rdf:about="&obo;OBI_0000300">
+        <rdfs:label rdf:datatype="&xsd;string">is_realized_by</rdfs:label>
+        <definition rdf:datatype="&xsd;string">Relation between a realizable entity and a process. Reciprocal relation of realizes</definition>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/is_realized_by</EFO_URI>
+        <owl:inverseOf rdf:resource="&obo;OBI_0000308"/>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000308"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000300"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/OBI_0000308 -->
+
+    <owl:ObjectProperty rdf:about="&obo;OBI_0000308">
+        <rdfs:label rdf:datatype="&xsd;string">realizes</rdfs:label>
+        <definition rdf:datatype="&xsd;string">Relation between a process and a material fulfilling a role (i.e. realizing a role within the context of the process).  For example a human realizing role of teacher within a lesson teching process.</definition>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/realizes</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000300"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo;OBI_0000308"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.org/obo/owl/OBO_REL#bearer_of -->
+
+    <owl:ObjectProperty rdf:about="&OBO_REL;bearer_of">
+        <rdf:type rdf:resource="&owl;InverseFunctionalProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">bearer_of</rdfs:label>
+        <definition rdf:datatype="&xsd;string">A relation between an entity and a dependent continuant; the reciprocal relation of inheres_in [GOC:cjm] example of usage: red eye bearer_of redness</definition>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/EFO_0001377</EFO_URI>
+        <owl:inverseOf rdf:resource="&OBO_REL;inheres_in"/>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;bearer_of"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;inheres_in"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.org/obo/owl/OBO_REL#inheres_in -->
+
+    <owl:ObjectProperty rdf:about="&OBO_REL;inheres_in">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">inheres_in</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/EFO_0000829</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;inheres_in"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;bearer_of"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.org/obo/owl/OBO_REL#role_of -->
+
+    <owl:ObjectProperty rdf:about="&OBO_REL;role_of">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">role_of</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/is_role_of</EFO_URI>
+        <owl:inverseOf rdf:resource="&obo2;has_role"/>
+        <rdfs:subPropertyOf rdf:resource="&OBO_REL;inheres_in"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&obo2;has_role"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;bearer_of"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;role_of"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000741 -->
+
+    <owl:ObjectProperty rdf:about="&efo;EFO_0000741">
+        <rdfs:label rdf:datatype="&xsd;string">has_tumor_type</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&efo;EFO_0000824"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000742"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000824"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000741"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000742 -->
+
+    <owl:ObjectProperty rdf:about="&efo;EFO_0000742">
+        <rdfs:label rdf:datatype="&xsd;string">is_tumor_of</rdfs:label>
+        <owl:inverseOf rdf:resource="&efo;EFO_0000741"/>
+        <rdfs:subPropertyOf rdf:resource="&efo;EFO_0000824"/>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000824"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000742"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000741"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000784 -->
+
+    <owl:ObjectProperty rdf:about="&efo;EFO_0000784">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">has_disease_location</rdfs:label>
+        <owl:inverseOf rdf:resource="&efo;EFO_0000785"/>
+        <rdfs:subPropertyOf rdf:resource="&efo;EFO_0000824"/>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000824"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000784"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000785"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000785 -->
+
+    <owl:ObjectProperty rdf:about="&efo;EFO_0000785">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">is_location_of_disease</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&efo;EFO_0000824"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000785"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000784"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000824"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000794 -->
+
+    <owl:ObjectProperty rdf:about="&efo;EFO_0000794">
+        <rdfs:label rdf:datatype="&xsd;string">is_broader_than</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&efo;EFO_0000824"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000794"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000824 -->
+
+    <owl:ObjectProperty rdf:about="&efo;EFO_0000824">
+        <rdfs:label rdf:datatype="&xsd;string">relationship</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000824"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001697 -->
+
+    <owl:ObjectProperty rdf:about="&efo;EFO_0001697">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">is_unit_of</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&efo;EFO_0000824"/>
+        <owl:inverseOf rdf:resource="&efo;EFO_0001698"/>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000824"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0001698"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0001697"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001698 -->
+
+    <owl:ObjectProperty rdf:about="&efo;EFO_0001698">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">has_unit</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&efo;EFO_0000824"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0001697"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0001698"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;EFO_0000824"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/has_flag -->
+
+    <owl:ObjectProperty rdf:about="&efo;has_flag">
+        <rdfs:label rdf:datatype="&xsd;string">has_flag</rdfs:label>
+        <definition rdf:datatype="&xsd;string">Relation to flag that an EFO class qualifies as an Atlas validation type</definition>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/has_flag</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;has_flag"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/is_executed_in -->
+
+    <owl:ObjectProperty rdf:about="&efo;is_executed_in">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">is_executed_in</rdfs:label>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&efo;is_executed_in"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#contained_in -->
+
+    <owl:ObjectProperty rdf:about="&ro;contained_in">
+        <rdf:type rdf:resource="&owl;InverseFunctionalProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">contained_in</rdfs:label>
+        <definition rdf:datatype="&xsd;string">Containment obtains in each case between material and immaterial continuants, for instance: lung contained_in thoracic cavity; bladder contained_in pelvic cavity. Hence containment is not a transitive relation. If c part_of c1 at t then we have also, by our definition and by the axioms of mereology applied to spatial regions, c located_in c1 at t. Thus, many examples of instance-level location relations for continuants are in fact cases of instance-level parthood. For material continuants location and parthood coincide. Containment is location not involving parthood, and arises only where some immaterial continuant is involved. To understand this relation, we first define overlap for continuants as follows: c1 overlap c2 at t =def for some c, c part_of c1 at t and c part_of c2 at t.</definition>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/contained_in</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&OBO_REL;bearer_of"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;contained_in"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;inheres_in"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;contains"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#contains -->
+
+    <owl:ObjectProperty rdf:about="&ro;contains">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">contains</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/contains</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&OBO_REL;inheres_in"/>
+        <owl:inverseOf rdf:resource="&ro;contained_in"/>
+        <rdfs:subPropertyOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&OBO_REL;bearer_of"/>
+            </rdf:Description>
+        </rdfs:subPropertyOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;contained_in"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;contains"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#derived_into -->
+
+    <owl:ObjectProperty rdf:about="&ro;derived_into">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">derived_into</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/derived_into</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;derives_from"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;derived_into"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#derives_from -->
+
+    <owl:ObjectProperty rdf:about="&ro;derives_from">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">derives_from</rdfs:label>
+        <definition rdf:datatype="&xsd;string">Derivation as a relation between instances. The temporal relation of derivation is more complex. Transformation, on the instance level, is just the relation of identity: each adult is identical to some child existing at some earlier time. Derivation on the instance-level is a relation holding between non-identicals. More precisely, it holds between distinct material continuants when one succeeds the other across a temporal divide in such a way that at least a biologically significant portion of the matter of the earlier continuant is inherited by the later. Thus we will have axioms to the effect that from c derives_from c1 we can infer that c and c1 are not identical and that there is some instant of time t such that c1 exists only prior to and c only subsequent to t. We will also be able to infer that the spatial region occupied by c as it begins to exist at t overlaps with the spatial region occupied by c1 as it ceases to exist in the same instant.</definition>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/derives_from</EFO_URI>
+        <owl:inverseOf rdf:resource="&ro;derived_into"/>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;derives_from"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;derived_into"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#has_part -->
+
+    <owl:ObjectProperty rdf:about="&ro;has_part">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">has_part</rdfs:label>
+        <rdfs:comment rdf:datatype="&xsd;string">EFO_0000823</rdfs:comment>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/has_part</EFO_URI>
+        <owl:inverseOf rdf:resource="&ro;part_of"/>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;has_part"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;part_of"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#has_participant -->
+
+    <owl:ObjectProperty rdf:about="&ro;has_participant">
+        <rdfs:label rdf:datatype="&xsd;string">has_participant</rdfs:label>
+        <definition rdf:datatype="&xsd;string">Has_participant is a primitive instance-level relation between a process, a continuant, and a time at which the A continuant participates in some way in the process. The relation obtains, for example, when this particular process of oxygen exchange across this particular alveolar membrane has_participant this particular sample of hemoglobin at this particular time.</definition>
+        <owl:inverseOf rdf:resource="&ro;participates_in"/>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;has_participant"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;participates_in"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#located_in -->
+
+    <owl:ObjectProperty rdf:about="&ro;located_in">
+        <rdfs:label rdf:datatype="&xsd;string">located_in</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/located_in</EFO_URI>
+        <owl:inverseOf rdf:resource="&ro;location_of"/>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;location_of"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;located_in"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#location_of -->
+
+    <owl:ObjectProperty rdf:about="&ro;location_of">
+        <rdfs:label rdf:datatype="&xsd;string">location_of</rdfs:label>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/location_of</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;location_of"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;located_in"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#part_of -->
+
+    <owl:ObjectProperty rdf:about="&ro;part_of">
+        <rdf:type rdf:resource="&owl;TransitiveProperty"/>
+        <rdfs:label rdf:datatype="&xsd;string">part_of</rdfs:label>
+        <rdfs:comment rdf:datatype="&xsd;string">EFO_0000822</rdfs:comment>
+        <definition rdf:datatype="&xsd;string">For continuants: C part_of C&#39; if and only if: given any c that instantiates C at a time t, there is some c&#39; such that c&#39; instantiates C&#39; at time t, and c *part_of* c&#39; at t. For processes: P part_of P&#39; if and only if: given any p that instantiates P at a time t, there is some p&#39; such that p&#39; instantiates P&#39; at time t, and p *part_of* p&#39; at t. (Here *part_of* is the instance-level part-relation.)</definition>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/part_of</EFO_URI>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;has_part"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;part_of"/>
+            </rdf:Description>
+        </owl:inverseOf>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.obofoundry.org/ro/ro.owl#participates_in -->
+
+    <owl:ObjectProperty rdf:about="&ro;participates_in">
+        <rdfs:label rdf:datatype="&xsd;string">participates_in</rdfs:label>
+        <definition rdf:datatype="&xsd;string">Participates in is a primitive instance-level relation between a continuant and a process in which it participates. For example a scanner participates in a scanning process at some specific time.</definition>
+        <rdfs:subPropertyOf rdf:resource="&owl;topObjectProperty"/>
+        <owl:inverseOf>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;participates_in"/>
+            </rdf:Description>
+        </owl:inverseOf>
+        <owl:equivalentProperty>
+            <rdf:Description>
+                <owl:inverseOf rdf:resource="&ro;has_participant"/>
+            </rdf:Description>
+        </owl:equivalentProperty>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+ 
+
+
+   
+  <owl:Class rdf:about="&CL;CL_0000576">
+        <rdfs:label rdf:datatype="&xsd;string">monocyte</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&CL;CL_0000766"/>
+        <definition rdf:datatype="&xsd;string">A mononuclear phagocytic leukocyte, 13 to 25 mm in diameter, with an ovoid or kidney-shaped nucleus, containing lacy, linear chromatin and abundant gray-blue cytoplasm filled with fine reddish and azurophilic granules. Formed in the bone marrow from promonocytes, monocytes are transported to tissues such as the lung and liver, where they develop into macrophages.</definition>
+        <bioportal_provenance rdf:datatype="&xsd;string">A mononuclear phagocytic leukocyte, 13 to 25 mm in diameter, with an ovoid or kidney-shaped nucleus, containing lacy, linear chromatin and abundant gray-blue cytoplasm filled with fine reddish and azurophilic granules. Formed in the bone marrow from promonocytes, monocytes are transported to tissues such as the lung and liver, where they develop into macrophages.[accessedResource: BTO:0000876][accessDate: 05-04-2011]</bioportal_provenance>
+        <definition_citation rdf:datatype="&xsd;string">BTO:0000876</definition_citation>
+        <definition_editor rdf:datatype="&xsd;string">James Malone</definition_editor>
+        <definition_citation rdf:datatype="&xsd;string">MSH:D009000</definition_citation>
+        <definition rdf:datatype="&xsd;string">Myeloid mononuclear recirculating leukocyte that can act as a precursor of tissue macrophages, osteoclasts and some populations of tissue dendritic cells.</definition>
+        <bioportal_provenance rdf:datatype="&xsd;string">Myeloid mononuclear recirculating leukocyte that can act as a precursor of tissue macrophages, osteoclasts and some populations of tissue dendritic cells.[accessedResource: CL:0000576][accessDate: 05-04-2011]</bioportal_provenance>
+        <definition_editor rdf:datatype="&xsd;string">Tomasz Adamusiak</definition_editor>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/EFO_0000593</EFO_URI>
+        <alternative_term rdf:datatype="&xsd;string">monocytes</alternative_term>
+        <alternative_term rdf:datatype="&xsd;string">mononuclear leukocyte</alternative_term>
+        <alternative_term rdf:datatype="&xsd;string">nongranular leukocyte</alternative_term>
+        <gwas_trait rdf:datatype="&xsd;string">true</gwas_trait>
+    </owl:Class>
+    
+    
+    
+    <!-- http://purl.org/obo/owl/CL#CL_0000766 -->
+
+    <owl:Class rdf:about="&CL;CL_0000766">
+        <rdfs:label rdf:datatype="&xsd;string">myeloid leukocyte</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&CL;CL_0000738"/>
+    </owl:Class>
+    
+    
+     <!-- http://purl.org/obo/owl/CL#CL_0000738 -->
+
+    <owl:Class rdf:about="&CL;CL_0000738">
+        <rdfs:label rdf:datatype="&xsd;string">leukocyte</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&CL;CL_0000988"/>
+        <definition rdf:datatype="&xsd;string">A nucleated cell of the myeloid or lymphoid lineages, found in blood or other tissue.</definition>
+        <definition rdf:datatype="&xsd;string">An achromatic cell of the myeloid or lymphoid lineages capable of ameboid movement, found in blood or other tissue.</definition>
+        <bioportal_provenance rdf:datatype="&xsd;string">An achromatic cell of the myeloid or lymphoid lineages capable of ameboid movement, found in blood or other tissue.[accessedResource: CL:0000738][accessDate: 05-04-2011]</bioportal_provenance>
+        <definition rdf:datatype="&xsd;string">Any of the blood cells that are colorless, lack hemoglobin, contain a nucleus, and include the lymphocytes, monocytes, neutrophils, eosinophils, and basophils.</definition>
+        <bioportal_provenance rdf:datatype="&xsd;string">Any of the blood cells that are colorless, lack hemoglobin, contain a nucleus, and include the lymphocytes, monocytes, neutrophils, eosinophils, and basophils.[accessedResource: BTO:0000751][accessDate: 05-04-2011]</bioportal_provenance>
+        <definition_citation rdf:datatype="&xsd;string">BTO:0000751</definition_citation>
+        <definition_editor rdf:datatype="&xsd;string">James Malone</definition_editor>
+        <alternative_term rdf:datatype="&xsd;string">PMN cell</alternative_term>
+        <alternative_term rdf:datatype="&xsd;string">PMNC</alternative_term>
+        <definition_editor rdf:datatype="&xsd;string">Tomasz Adamusiak</definition_editor>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/EFO_0000566</EFO_URI>
+        <alternative_term rdf:datatype="&xsd;string">immune cell</alternative_term>
+        <bioportal_provenance rdf:datatype="&xsd;string">immune cell[accessedResource: CL:0000738][accessDate: 05-04-2011]</bioportal_provenance>
+        <alternative_term rdf:datatype="&xsd;string">leucocyte</alternative_term>
+        <bioportal_provenance rdf:datatype="&xsd;string">leucocyte[accessedResource: CL:0000738][accessDate: 05-04-2011]</bioportal_provenance>
+        <alternative_term rdf:datatype="&xsd;string">polymorphonuclear cell</alternative_term>
+        <alternative_term rdf:datatype="&xsd;string">white blood cell</alternative_term>
+        <alternative_term rdf:datatype="&xsd;string">white blood cell type</alternative_term>
+        <alternative_term rdf:datatype="&xsd;string">white blood cell types</alternative_term>
+        <bioportal_provenance rdf:datatype="&xsd;string">white blood cell[accessedResource: CL:0000738][accessDate: 05-04-2011]</bioportal_provenance>
+    </owl:Class>
+    
+    
+    <!-- http://purl.org/obo/owl/CL#CL_0000988 -->
+
+    <owl:Class rdf:about="&CL;CL_0000988">
+        <rdfs:label rdf:datatype="&xsd;string">hematopoietic cell</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&efo;EFO_0000324"/>
+        <definition rdf:datatype="&xsd;string">A blood cell.</definition>
+        <bioportal_provenance rdf:datatype="&xsd;string">A blood cell.[accessedResource: BTO:0000574][accessDate: 05-04-2011]</bioportal_provenance>
+        <definition rdf:datatype="&xsd;string">A cell found predominately in the blood.</definition>
+        <bioportal_provenance rdf:datatype="&xsd;string">A cell found predominately in the blood.[accessedResource: CL:0000081][accessDate: 05-04-2011]</bioportal_provenance>
+        <definition rdf:datatype="&xsd;string">A cell of a hematopoietic lineage.</definition>
+        <bioportal_provenance rdf:datatype="&xsd;string">A cell of a hematopoietic lineage.[accessedResource: CL:0000988][accessDate: 05-04-2011]</bioportal_provenance>
+        <definition_citation rdf:datatype="&xsd;string">BTO:0000574</definition_citation>
+        <definition_editor rdf:datatype="&xsd;string">Tomasz Adamusiak</definition_editor>
+        <bioportal_provenance rdf:datatype="&xsd;string">blood cell[accessedResource: CL:0000081][accessDate: 05-04-2011]</bioportal_provenance>
+        <alternative_term rdf:datatype="&xsd;string">haematopoietic cell</alternative_term>
+        <bioportal_provenance rdf:datatype="&xsd;string">haematopoietic cell[accessedResource: CL:0000988][accessDate: 05-04-2011]</bioportal_provenance>
+        <alternative_term rdf:datatype="&xsd;string">haemopoietic cell</alternative_term>
+        <bioportal_provenance rdf:datatype="&xsd;string">haemopoietic cell[accessedResource: CL:0000988][accessDate: 05-04-2011]</bioportal_provenance>
+        <alternative_term rdf:datatype="&xsd;string">hemopoietic cell</alternative_term>
+        <bioportal_provenance rdf:datatype="&xsd;string">hemopoietic cell[accessedResource: CL:0000988][accessDate: 05-04-2011]</bioportal_provenance>
+        <EFO_URI rdf:datatype="&xsd;string">http://www.ebi.ac.uk/efo/EFO_0002436</EFO_URI>
+    </owl:Class>
+    
+      <!-- http://www.ebi.ac.uk/efo/EFO_0000324 -->
+
+    <owl:Class rdf:about="&efo;EFO_0000324">
+        <rdfs:label rdf:datatype="&xsd;string">cell type</rdfs:label>
+    <!--   <rdfs:subClassOf rdf:resource="&snap;MaterialEntity"/> -->  
+        <definition rdf:datatype="&xsd;string">A cell type is a distinct morphological or functional form of cell.  Examples are epithelial, glial etc.</definition>
+        <definition_editor rdf:datatype="&xsd;string">James Malone</definition_editor>
+        <definition_editor rdf:datatype="&xsd;string">Jie Zheng</definition_editor>
+        <definition_citation rdf:datatype="&xsd;string">MO_548</definition_citation>
+        <definition_editor rdf:datatype="&xsd;string">Tomasz Adamusiak</definition_editor>
+        <alternative_term rdf:datatype="&xsd;string">cell_type</alternative_term>
+        <bioportal_provenance rdf:datatype="&xsd;string">cell_type[accessedResource: MO_548][accessDate: 05-04-2011]</bioportal_provenance>
+        <example_of_usage rdf:datatype="&xsd;string">epithelial, glial.</example_of_usage>
+        <alternative_term rdf:datatype="&xsd;string">http://mged.sourceforge.net/ontologies/MGEDOntology.owl#cell_type</alternative_term>
+        <branch_class rdf:datatype="&xsd;string">true</branch_class>
+    </owl:Class> 
+</rdf:RDF>
