@@ -194,15 +194,15 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		}
 		
-		if(this.allowAdditions){
-			Ext.apply(this, {
-				tbar: new Gemma.ExperimentAndGroupAdderToolbar({
-					extraButtons: extraButtons,
-					ref: 'eeAdderTBar',
-					eeGrid : this
-				})
-			});
-		}
+		Ext.apply(this, {
+			tbar: new Gemma.ExperimentAndGroupAdderToolbar({
+				extraButtons: extraButtons,
+				ref: 'eeAdderTBar',
+				eeGrid : this,
+				allowAdditions: this.allowAdditions
+			})
+		});
+		
 		var columns = [];
 		if(this.sortableColumnsView){
 			Ext.apply(this, {
@@ -403,6 +403,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}.createDelegate(this));
 			}
 		});
+		
+	
 
 	}, //EO init
 	
@@ -799,6 +801,35 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					this.fireEvent('experimentListSavedOver');
 					this.fireEvent('doneModification');
 				}.createDelegate(this));
+	},
+	
+	filter : function() {
+		
+		var text = Ext.getCmp('ee-search-in-grid').getValue();
+		
+		var value;
+		
+		if (text && text.length > 1) {
+			value = new RegExp(Ext.escapeRe(text), 'i');
+		}
+		return function(r, id) {
+			
+			if (!value){
+				return true;
+			}else{
+			
+				var exshortname = (r.get("shortName"));
+				var exname = (r.get("name"));
+						
+			
+				if (value.test(exshortname)|| value.test(exname) ) {
+					return true;
+				}
+			
+			}
+
+			return false;
+		};
 	}
 });
 
@@ -812,6 +843,23 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 	initComponent: function(){
 	
 		Gemma.ExperimentAndGroupAdderToolbar.superclass.initComponent.call(this);
+		
+		this.searchTextField = new Ext.form.TextField({			
+			ref: 'eesearchInGrid',
+			id : 'ee-search-in-grid',			
+			enableKeyEvents : true,
+			emptyText : 'Find experiment in results',
+			listeners : {
+				"keyup" : {
+					fn : function(button, keyev){
+						
+						this.ownerCt.getStore().filterBy(this.ownerCt.filter(), this, 0);
+						},
+					scope : this,
+					delay : 400														
+				}
+			}
+		});
 		
 		this.eeCombo = new Gemma.ExperimentAndExperimentGroupCombo({
 			typeAhead: false,
@@ -850,7 +898,13 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 	},
 	afterRender: function(c, l){
 		Gemma.ExperimentAndGroupAdderToolbar.superclass.afterRender.call(this, c, l);
-		this.add(this.eeCombo, this.addBtn);
+		
+		this.add(this.searchTextField, new Ext.Spacer({width: 10}));
+		
+		if (this.allowAdditions){
+			this.add(this.eeCombo, this.addBtn);
+		}
+		
 		
 		this.addButton(this.extraButtons);
 		
