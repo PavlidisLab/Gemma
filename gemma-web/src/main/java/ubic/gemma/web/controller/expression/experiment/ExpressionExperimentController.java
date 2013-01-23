@@ -337,6 +337,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return
      */
     public JsonReaderResponse<ExpressionExperimentValueObject> browse( ListBatchCommand batch ) {
+    	
+    	if (batch.getLimit()==0){    		
+    		batch.setStart(0);
+    	}
 
         int limit = batch.getLimit();
         int origStart = batch.getStart();
@@ -356,6 +360,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         int start = origStart;
         int stop = Math.min( origStart + limit, records.size() );
+        
+        if (batch.getLimit()==0){    		
+    		stop=records.size();
+    	}
 
         List<ExpressionExperiment> recordsSubset = records.subList( start, stop );
 
@@ -379,7 +387,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param batch
      * @return
      */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {
+    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {    	
+    	
 
         int origLimit = batch.getLimit();
         int origStart = batch.getStart();
@@ -398,16 +407,25 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( !SecurityServiceImpl.isUserAdmin() ) {
             records = removeTroubledExperiments( records );
         }
+        
+        
+       
 
         /*
          * can't just do countAll because this will count experiments the user may not have access to Integer count =
          * expressionExperimentService.countAll();
          */
         int count = records.size();
+        
+        int pSize = Math.min( origStart + origLimit, records.size() );
+        
+        //batch.getLimit = 0 when download all as text
+        if (batch.getLimit()==0){
+    		pSize=count;
+    	}
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart,
-                        Math.min( origStart + origLimit, records.size() ) ) ) );
+                getExpressionExperimentValueObjects( records.subList( origStart, pSize) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -428,6 +446,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
      */
     public JsonReaderResponse<ExpressionExperimentValueObject> browseSpecificIds( ListBatchCommand batch,
             Collection<Long> ids ) {
+    	
+    	if (batch.getLimit()==0){
+    		batch.setLimit(ids.size());
+    		batch.setStart(0);
+    	}
+    	
         int origLimit = batch.getLimit();
         int origStart = batch.getStart();
 
@@ -438,10 +462,16 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( !SecurityServiceImpl.isUserAdmin() ) {
             records = removeTroubledExperiments( records );
         }
+        
+        int pSize = Math.min( origStart + origLimit, records.size() );
+        
+        //batch.getLimit = 0 when download all as text
+        if (batch.getLimit()==0){
+    		pSize=records.size();
+    	}
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart,
-                        Math.min( origStart + origLimit, records.size() ) ) ) );
+                getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {

@@ -254,6 +254,8 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         this.getBottomToolbar().bind(idsStore);
         // reconfigure grid to use new store
         this.reconfigure(idsStore, this.getColumnModel());
+        
+        this.setShowAsTextParams(null, eeIds);
         this.nowSubset();
     },
 
@@ -287,6 +289,83 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 
         return pageStore;
     },
+    
+    
+    getDownloadStore : function() {       
+        var pageStore = null;
+        if(this.downloadAsTextTaxonId){
+        	pageStore = new Gemma.ExperimentPagingStoreTaxon({
+                autoLoad : {
+                    params : {
+                        start : 0,
+                        limit : 0
+                    }
+                },
+                baseParams : {
+                    taxonId : this.downloadAsTextTaxonId
+                }
+            });
+
+        	
+        	
+        } else if(this.downloadAsTextSpecificIds){
+        	pageStore = new Gemma.ExperimentPagingStoreSelectedIds({
+                autoLoad : {
+                    params : {
+                        start : 0,
+                        limit : 0
+                    }
+                },
+                baseParams : {
+                    ids : this.downloadAsTextSpecificIds
+                }
+            });
+        	
+        }else{
+        	pageStore = new Gemma.ExperimentPagingStore({
+                autoLoad : {
+                    params : {
+                        start : 0,
+                        limit : 0
+                    }
+                }
+            });
+        }
+        
+        pageStore.on('load', function(store, records, options) {
+        	
+        	var gses = "";
+        	
+        	store.each(function(ee) {
+                    gses += ee.get('shortName') + "\t" + ee.get('taxon') + "\t" + ee.get('bioAssayCount') + "\t" + ee.get('name')+ "\n";
+                });
+        	
+        	        	
+        	var popup = new Ext.Window({
+        		modal : true,
+        		title : "You can copy this text",
+                html : gses,
+                height : 400,
+                width : 500,
+                autoScroll : true,
+                bodyCfg : {
+                    tag : 'textarea',
+                    style : 'background-color : white;font-size:smaller'
+                }
+        	});
+        	popup.show();
+        	
+        	
+        	
+        	this.downloadAsTextButton.setDisabled(false);
+        	this.downloadAsTextButton.setText("");
+            
+        }, this);
+        
+        
+
+        return pageStore;
+    },
     /**
      * Show the experiments indicated by the array of ids passed in
      * 
@@ -309,12 +388,22 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         // Always need to create new store for new queries, it seems.
 
         var store = this.getTaxonStore(taxonId);
+        
         // bind new store to paging toolbar
         this.getBottomToolbar().bind(store);
         // reconfigure grid to use new store
         this.reconfigure(store, this.getColumnModel());
+        
+        this.setShowAsTextParams(taxonId, null);
         this.nowSubset();
 
+    },
+    
+    
+    setShowAsTextParams : function(taxonId, specificIds) {
+    	this.downloadAsTextTaxonId=taxonId;
+        this.downloadAsTextSpecificIds=specificIds;
+    	
     },
     
     /**
@@ -322,30 +411,18 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
      * 
      */
     showAsText : function() {
-    	var gses = "";
-    	var sels = this.getSelectionModel().getSelections();
-    	if (sels.length == 0) {
-    		this.getStore().each(function(ee) {
-                gses += ee.get('shortName') + "\n";
-            });
-    	}
-    	else {
-    		for (var i = 0; i < sels.length; i++) gses += sels[i].get('shortName') + "\n";
-    	}
     	
-    	var popup = new Ext.Window({
-    		modal : true,
-    		title : "You can copy this text",
-            html : gses,
-            height : 400,
-            width : 200,
-            autoScroll : true,
-            bodyCfg : {
-                tag : 'textarea',
-                style : 'background-color : white;font-size:smaller'
-            }
-    	});
-    	popup.show();
+    	//disable this and add loading text
+    	    	
+    	this.downloadAsTextButton.setDisabled(true);
+    	this.downloadAsTextButton.setText("Loading");
+    	
+    	//this will autoload the results and display a popup after load
+    	var downloadStore = this.getDownloadStore();
+    	
+    	
+    	
+    	
     },
     
     initComponent : function() {
@@ -461,6 +538,10 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
             }.createDelegate(this),
             tooltip : "Download as text",
         });
+        
+        this.downloadAsTextButton = asTextButton;        
+        this.downloadAsTextTaxonId=null;
+        this.downloadAsTextSpecificIds=null;
         
         this.nowSubset = function() {
             subsetText.show();
