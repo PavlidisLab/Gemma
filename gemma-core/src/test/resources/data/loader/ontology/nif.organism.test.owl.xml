@@ -1,0 +1,469 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl2 "http://purl.org/obo/owl/" >
+    <!ENTITY obo "http://purl.org/obo/owl/obo#" >
+    <!ENTITY PATO "http://purl.org/obo/owl/PATO#" >
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY swrl "http://www.w3.org/2003/11/swrl#" >
+    <!ENTITY swrlb "http://www.w3.org/2003/11/swrlb#" >
+    <!ENTITY dc "http://purl.org/dc/elements/1.1/" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY j.1 "http://ontology.neuinfo.org/NIF/#" >
+    <!ENTITY snap "http://www.ifomis.org/bfo/1.1/snap#" >
+    <!ENTITY j.0 "http://www.w3.org/2004/02/skos/core#" >
+    <!ENTITY daml "http://www.daml.org/2001/03/daml+oil#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+    <!ENTITY oboInOwl "http://www.geneontology.org/formats/oboInOwl#" >
+    <!ENTITY protege "http://protege.stanford.edu/plugins/owl/protege#" >
+    <!ENTITY xsp "http://www.owl-ontologies.com/2005/08/07/xsp.owl#" >
+    <!ENTITY p13 "http://ontology.neuinfo.org/NIF/BiomaterialEntities/#" >
+    <!ENTITY p2 "http://ontology.neuinfo.org/NIF/Backend/nif_backend.owl#" >
+    <!ENTITY BIRNLex-OBO-UBO "http://ontology.neuinfo.org/NIF/Backend/BIRNLex-OBO-UBO.owl#" >
+    <!ENTITY p1 "http://ontology.neuinfo.org/NIF/Backend/obo-foundry-core.owl#" >
+    <!ENTITY p11 "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#" >
+    <!ENTITY j.3 "http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#" >
+    <!ENTITY j.2 "http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#" >
+    <!ENTITY p4 "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-NCBITax-Bridge.owl#" >
+]>
+
+
+<rdf:RDF xmlns="http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#"
+     xml:base="http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl"
+     xmlns:p4="http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-NCBITax-Bridge.owl#"
+     xmlns:p2="http://ontology.neuinfo.org/NIF/Backend/nif_backend.owl#"
+     xmlns:p1="http://ontology.neuinfo.org/NIF/Backend/obo-foundry-core.owl#"
+     xmlns:snap="http://www.ifomis.org/bfo/1.1/snap#"
+     xmlns:owl2="http://purl.org/obo/owl/"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:swrl="http://www.w3.org/2003/11/swrl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:PATO="&owl2;PATO#"
+     xmlns:protege="http://protege.stanford.edu/plugins/owl/protege#"
+     xmlns:BIRNLex-OBO-UBO="http://ontology.neuinfo.org/NIF/Backend/BIRNLex-OBO-UBO.owl#"
+     xmlns:xsp="http://www.owl-ontologies.com/2005/08/07/xsp.owl#"
+     xmlns:j.1="http://ontology.neuinfo.org/NIF/#"
+     xmlns:j.0="http://www.w3.org/2004/02/skos/core#"
+     xmlns:j.3="http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#"
+     xmlns:j.2="http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#"
+     xmlns:daml="http://www.daml.org/2001/03/daml+oil#"
+     xmlns:obo="&owl2;obo#"
+     xmlns:p13="http://ontology.neuinfo.org/NIF/BiomaterialEntities/#"
+     xmlns:p11="http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:swrlb="http://www.w3.org/2003/11/swrlb#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#">
+    <owl:Ontology rdf:about="http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl">
+        <owl:versionInfo rdf:datatype="&xsd;string">1.3</owl:versionInfo>
+        <dc:title rdf:datatype="&xsd;string">NIF-Organism: contains classes from NCBI Organismal Taxonomy and BIRNLex-OrganismalTaxonomy</dc:title>
+        <j.0:changeNote rdf:datatype="&xsd;string">v.1.0 (January, 2009) - Updated with simplified import hierarchy of upper level ontologies as part of the transition from NIFSTD 0.5 to 1.0.
+v.1.2 (October, 2011) - Imports NIF-NCBITaxonomy-Slim to incorportae a smaller list of organisms as well as English names as alternative labels. An equivalancy bridge module associates the mapping terms between NIF organisms and the organisms from the NCBI Taxonomy slim.
+v.1.3 (May, 2012) - Unusual synonyms and abbreviations are removed. </j.0:changeNote>
+        <owl:imports rdf:resource="http://ontology.neuinfo.org/NIF/Backend/nif_backend.owl"/>
+        <owl:imports rdf:resource="http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-NCBITax-Bridge.owl"/>
+        <owl:imports rdf:resource="http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-NCBITaxonomy-Slim.owl"/>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Datatypes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/obo/owl/obo#inheres_in -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/pato#inheres_in"/>
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://ontology.neuinfo.org/NIF/Backend/BIRNLex-OBO-UBO.owl#birnlex_2 -->
+
+    <owl:Class rdf:about="&BIRNLex-OBO-UBO;birnlex_2">
+        <rdfs:subClassOf rdf:resource="&j.2;_birnlex_retired_class"/>
+        <rdfs:comment rdf:datatype="&xsd;string">This class has been retired</rdfs:comment>
+        <j.2:isReplacedByClass rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_2</j.2:isReplacedByClass>
+        <j.2:hasFormerParentClass rdf:datatype="&xsd;string">http://www.ifomis.org/bfo/1.1/snap#Object</j.2:hasFormerParentClass>
+        <owl:deprecated rdf:datatype="&xsd;boolean">true</owl:deprecated>
+    </owl:Class>
+    
+
+
+    <!-- http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#_birnlex_retired_class -->
+
+    <owl:Class rdf:about="&j.2;_birnlex_retired_class"/>
+    
+
+
+    <!-- http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#EnumerationClass -->
+
+    <owl:Class rdf:about="&j.3;EnumerationClass"/>
+    
+  <owl:Class rdf:about="&p11;birnlex_398">
+        <rdfs:label rdf:datatype="&xsd;string">C57BL/6</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_197"/>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-05</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-08-20</j.3:modifiedDate>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">A substrain of C57bl inbred mouse. Inbr (J) 150. Origin: substrains 6 and 10 were separated prior to 1937. This substrain is now probably the most widely used of all inbred strains. Substrain 6 and 10 differ at the H9, Igh2 and Lv loci. Maint. by J,N, Ola.</j.3:externallySourcedDefinition>
+        <j.3:abbrev rdf:datatype="&xsd;string">B6</j.3:abbrev>
+        <j.2:bonfireID rdf:datatype="&xsd;string">BF_T0000258</j.2:bonfireID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C1521751</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">C57BL/6</j.0:prefLabel>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">C57BL/6 has an increased preference for alcohol and narcotics and is used in studies of the genetics of substance preference (Peirce, J.L., Derr, R., Shendure, J., Kolata, T. &amp; Silver, L.M. A major influence of sexspecific loci on alcohol preference in C57Bl/6 and DBA/2 inbred mice. Mamm. Genome 9, 942-948 (1998)).</j.3:externallySourcedDefinition>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">Jax subline 6 (Kaliss) of the Jax black subline derived from Little (1921) line which derived from original Lathrop stock (Beck, J.A., et al., Geneology of mouse inbred strains (2000), Nature, Jan2000, v24, p23).</j.3:externallySourcedDefinition>
+        <j.3:definingCitationID rdf:datatype="&xsd;string">PMID:10615122</j.3:definingCitationID>
+        <j.3:definingCitationID rdf:datatype="&xsd;string">PMID:9880657</j.3:definingCitationID>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.3:hasAbbrevSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#MGI</j.3:hasAbbrevSource>
+        <j.3:hasDefinitionSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#MGI_defSource</j.3:hasDefinitionSource>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Maryann_Martone</j.2:hasBirnlexCurator>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Rob_Williams</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#pending_final_vetting</j.2:hasCurationStatus>
+        <j.3:definingCitationURI rdf:datatype="&xsd;string">http://www.informatics.jax.org/external/festing/mouse/docs/C57BL.shtml</j.3:definingCitationURI>
+    </owl:Class>
+    
+    
+    <!-- http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_197 -->
+
+    <owl:Class rdf:about="&p11;birnlex_197">
+        <rdfs:label rdf:datatype="&xsd;string">C57BL</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_189"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_206"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_213"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_219"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_292"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_301"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_311"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_380"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_568"/>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-05</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-08-14</j.3:modifiedDate>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">A strain of laboratory mouse. It is probably the most widely used of all inbred strains, (substrain C57BL/6 alone accounts for over 14% of occasions on which an inbred strain is used) though in many ways it seems to be atypical of inbred strains of laboratory mice. In contrast to 36 other standard inbred strains, it carries a Y chromosome of Asian Mus musculus origin (c.f. AKR and SWR) (Tucker et al 1992), and a LINE-1 element derived from Mus spretus the frequency of which suggests that up to 6.5% of the genome may be of M. spretus origin (Rikke et al, 1995).</j.3:externallySourcedDefinition>
+        <j.0:prefLabel rdf:datatype="&xsd;string">C57BL</j.0:prefLabel>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">Jax black subline derived from Little (1921) line which derived from original Lathrop stock (Beck, J.A., et al., Geneology of mouse inbred strains (2000), Nature, Jan2000, v24, p23).</j.3:externallySourcedDefinition>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">One of the first inbred strains developed in the early 20th century, derived from the first inbred strain DBA. DBA was developed by Little in 1909 - D [&quot;dilute&quot;], B [&quot;brown&quot;], A[&quot;non-agouti&quot;]. (Staats, J. The laboratory mouse. in Biology of the Laboratory Mouse (ed. Green, E.L.) 1-9 (McGraw-Hill, New York, 1966)).</j.3:externallySourcedDefinition>
+        <j.3:definingCitationID rdf:datatype="&xsd;string">PMID:10615122</j.3:definingCitationID>
+        <j.3:definingCitationID rdf:datatype="&xsd;string">PMID:1353382</j.3:definingCitationID>
+        <j.3:definingCitationID rdf:datatype="&xsd;string">PMID:7713440</j.3:definingCitationID>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">The phenotypic and genotypic similarity between any two related strains depends on the extent to which the parental colony was inbred at the time the strains were separated, and whether other strains contributed to the parentage of either strain. For example, C57BL/6 and C57BL/10 were separated in 1921, at a time when the parental C57BL colony was substantially inbred, and no other strains are known to have contributed to the parentage of either strain. (Beck, J.A., et al., Geneology of mouse inbred strains (2000), Nature, Jan2000, v24, p23).</j.3:externallySourcedDefinition>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#MGI</j.3:hasExternalSource>
+        <j.3:hasAbbrevSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#MGI</j.3:hasAbbrevSource>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Maryann_Martone</j.2:hasBirnlexCurator>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Rob_Williams</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#pending_final_vetting</j.2:hasCurationStatus>
+    </owl:Class>
+    
+    <!-- http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_189 -->
+
+    <owl:Class rdf:about="&p11;birnlex_189">
+        <rdfs:label rdf:datatype="&xsd;string">Inbred mouse strain</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_224"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_388"/>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-05</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-08-05</j.3:modifiedDate>
+        <j.0:editorialNote rdf:datatype="&xsd;string">Currently (2006-10-07), the children of this class have been made mutually disjoint. In reality, there may be some mixing amongst strains - e.g., some strains and substrains were derived from crosses of other inbred strains. Ultimately, the disjoint sets will need to be worked out very carefully, but this approximately is kept for now as it will likely do no harm and serve as a reminder that this issue may require more thorough review in the future.</j.0:editorialNote>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">Genetically identical individuals developed from brother and sister matings which have been carried out for twenty or more generations, or by parent x offspring matings carried out with certain restrictions. All animals within an inbred strain trace back to a common ancestor in the twentieth generation.</j.3:externallySourcedDefinition>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Inbred mouse strain</j.0:prefLabel>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#uncurated</j.2:hasCurationStatus>
+        <j.3:hasDefinitionSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#MeSH_defSource</j.3:hasDefinitionSource>
+    </owl:Class>
+    
+    
+    <owl:Class rdf:about="&p11;birnlex_224">
+        <rdfs:label rdf:datatype="&xsd;string">Hybrid strains of mus musculus musculus x domesticus</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_167"/>
+        <j.2:gbifID rdf:datatype="&xsd;string">14749311</j.2:gbifID>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2008-04-23</j.3:modifiedDate>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">477815</j.2:ncbiTaxID>
+        <j.2:birnlexDefinition rdf:datatype="&xsd;string">Genomic polymorphism analysis (RFLP)
+         indicates &quot;these strains cannot be regarded as archetypes of M.m. domesticus as suggested
+         by protein polymorphisms and mitochondrial DNA sequence analysis, but rather as genetic
+         hybrids between the two subspecies&quot; (C.E. Bishop, et al., Most classical Mus musculus
+         domesticus laboratory mouse strains carry a Mus musculus musculus Y chromosome, Nature,
+         1985, v315, p70).</j.2:birnlexDefinition>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Hybrid strains of mus musculus musculus x domesticus</j.0:prefLabel>
+        <j.3:synonym rdf:datatype="&xsd;string">Mus musculus musculus x domesticus</j.3:synonym>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.0:scopeNote rdf:datatype="&xsd;string">listed as the Nothospecies &apos;Mus musculus musculus x domesticus&apos; in GBIF.  A Nothospecies is a hybrid that has received an official name.</j.0:scopeNote>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of  the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&p11;birnlex_167">
+        <rdfs:label rdf:datatype="&xsd;string">Mouse</rdfs:label>
+        <owl:equivalentClass rdf:resource="&owl2;NCBITaxon#NCBITaxon_10090"/>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_518"/>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">10090</j.2:ncbiTaxID>
+        <j.2:gbifID rdf:datatype="&xsd;string">13819904</j.2:gbifID>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-08-03</j.3:modifiedDate>
+        <j.2:gbifTaxonKeyID rdf:datatype="&xsd;string">241928</j.2:gbifTaxonKeyID>
+        <j.2:birnlexDefinition rdf:datatype="&xsd;string">A mammal of the rodent order and genus Mus (MM).</j.2:birnlexDefinition>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C0025914</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Mouse</j.0:prefLabel>
+        <j.3:misnomer rdf:datatype="&xsd;string">Mus muscaris</j.3:misnomer>
+        <j.3:synonym rdf:datatype="&xsd;string">Mus musculus</j.3:synonym>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Mus musculus</j.2:ncbiTaxScientificName>
+        <j.0:scopeNote rdf:datatype="&xsd;string">Strain information and hierarchy are largely based on the recommended nomenclature developed by the Mouse Genomics Institute of Jackson Laboratories. There is some confusion regarding the use of the &quot;J&quot; designation in some cases.</j.0:scopeNote>
+        <j.3:synonym rdf:datatype="&xsd;string">house mouse</j.3:synonym>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Maryann_Martone</j.2:hasBirnlexCurator>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Rob_Williams</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#pending_final_vetting</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <hasTaxonRank rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_791</hasTaxonRank>
+        <j.3:synonym rdf:datatype="&xsd;string">mouse</j.3:synonym>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    
+    <owl:Class rdf:about="&p11;birnlex_518">
+        <rdfs:label rdf:datatype="&xsd;string">Mus</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_166"/>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">* Any of numerous species of small rodents belonging to the genus Mus and various related genera of the family Muridae. (NCI)
+* The common name for the genus Mus. (MSH)</j.3:externallySourcedDefinition>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">10088</j.2:ncbiTaxID>
+        <j.2:gbifID rdf:datatype="&xsd;string">13184902</j.2:gbifID>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-08-20</j.3:modifiedDate>
+        <j.2:gbifTaxonKeyID rdf:datatype="&xsd;string">241927</j.2:gbifTaxonKeyID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C0026809</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Mus</j.0:prefLabel>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Mus</j.2:ncbiTaxScientificName>
+        <j.3:synonym rdf:datatype="&xsd;string">Nannomys</j.3:synonym>
+        <j.3:nifID rdf:datatype="&xsd;string">_6_3.3.4.1</j.3:nifID>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <j.3:hasDefinitionSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#UMLS_defSource</j.3:hasDefinitionSource>
+        <hasTaxonRank rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_7098</hasTaxonRank>
+        <j.3:synonym rdf:datatype="&xsd;string">mice</j.3:synonym>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&p11;birnlex_166">
+        <rdfs:label rdf:datatype="&xsd;string">Murinae</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_302"/>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2006-10-07</j.3:modifiedDate>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">39107</j.2:ncbiTaxID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C1007978</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Murinae</j.0:prefLabel>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Murinae</j.2:ncbiTaxScientificName>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <hasTaxonRank rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_787</hasTaxonRank>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    
+    <owl:Class rdf:about="&p11;birnlex_302">
+        <rdfs:label rdf:datatype="&xsd;string">Muridae</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_312"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_674"/>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">10066</j.2:ncbiTaxID>
+        <j.2:gbifID rdf:datatype="&xsd;string">13149097</j.2:gbifID>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-08-03</j.3:modifiedDate>
+        <j.2:gbifTaxonKeyID rdf:datatype="&xsd;string">241827</j.2:gbifTaxonKeyID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C0026802</j.3:UmlsCui>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Muridae</j.2:ncbiTaxScientificName>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Muridae</j.0:prefLabel>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <hasTaxonRank rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_786</hasTaxonRank>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    
+    <owl:Class rdf:about="&p11;birnlex_312">
+        <rdfs:label rdf:datatype="&xsd;string">Sciurognathi</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_263"/>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2006-10-07</j.3:modifiedDate>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">33553</j.2:ncbiTaxID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C1004570</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Sciurognathi</j.0:prefLabel>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Sciurognathi</j.2:ncbiTaxScientificName>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <hasTaxonRank rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_782</hasTaxonRank>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+      <!-- http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_263 -->
+
+    <owl:Class rdf:about="&p11;birnlex_263">
+        <rdfs:label rdf:datatype="&xsd;string">Rodent</rdfs:label>
+        <owl:equivalentClass rdf:resource="&owl2;NCBITaxon#NCBITaxon_9989"/>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_233"/>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">* A mammalian order which consists of 29 families and many genera. (MSH)
+* Taxonomic group that includes mice, rats, guinea pigs, squirrels, beavers, and many others. (NCI)
+* rodents; the largest order of placental mammals (class Eutheria), all possessing one pair of chisel-like upper incisors for gnawing and flat-crowned premolars and molars for grinding; it includes the mice, rats, guinea pigs, squirrels, beavers, and many more. (CSP)</j.3:externallySourcedDefinition>
+        <j.2:gbifID rdf:datatype="&xsd;string">13142118</j.2:gbifID>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-05</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-08-20</j.3:modifiedDate>
+        <j.2:gbifTaxonKeyID rdf:datatype="&xsd;string">241687</j.2:gbifTaxonKeyID>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">9989</j.2:ncbiTaxID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C0035804</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Rodent</j.0:prefLabel>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Rodentia</j.2:ncbiTaxScientificName>
+        <j.3:synonym rdf:datatype="&xsd;string">Rodentia</j.3:synonym>
+        <j.3:nifID rdf:datatype="&xsd;string">_6_3.3.4</j.3:nifID>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Maryann_Martone</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#graph_position_temporary</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <j.3:hasDefinitionSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#UMLS_defSource</j.3:hasDefinitionSource>
+        <hasTaxonRank rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_781</hasTaxonRank>
+        <j.2:ncbiTaxGenbankCommonName rdf:datatype="&xsd;string">rodents</j.2:ncbiTaxGenbankCommonName>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&p11;birnlex_233">
+        <rdfs:label rdf:datatype="&xsd;string">Glires</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_237"/>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2006-08-04</j.3:modifiedDate>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">314147</j.2:ncbiTaxID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C1640874</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Glires</j.0:prefLabel>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Glires</j.2:ncbiTaxScientificName>
+        <j.2:ncbiTaxGenbankCommonName rdf:datatype="&xsd;string">Rodents and rabbits</j.2:ncbiTaxGenbankCommonName>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    <owl:Class rdf:about="&p11;birnlex_237">
+        <rdfs:label rdf:datatype="&xsd;string">Euarchontoglires</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_605"/>
+        <owl:disjointWith rdf:resource="&p11;birnlex_496"/>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2006-10-07</j.3:modifiedDate>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">314146</j.2:ncbiTaxID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C1670686</j.3:UmlsCui>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Euarchontoglires</j.2:ncbiTaxScientificName>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Euarchontoglires</j.0:prefLabel>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <hasTaxonRank rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_780</hasTaxonRank>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    
+    <owl:Class rdf:about="&p11;birnlex_605">
+        <rdfs:label rdf:datatype="&xsd;string">Eutheria</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_485"/>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2006-10-07</j.3:modifiedDate>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">9347</j.2:ncbiTaxID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C0230956</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Eutheria</j.0:prefLabel>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Eutheria</j.2:ncbiTaxScientificName>
+        <j.3:synonym rdf:datatype="&xsd;string">Placentalia</j.3:synonym>
+        <j.3:taxonomicCommonName rdf:datatype="&xsd;string">eutherian mammals</j.3:taxonomicCommonName>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <j.3:taxonomicCommonName rdf:datatype="&xsd;string">placental mammals</j.3:taxonomicCommonName>
+        <j.3:taxonomicCommonName rdf:datatype="&xsd;string">placentals</j.3:taxonomicCommonName>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    
+    
+    <!-- http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_485 -->
+
+    <owl:Class rdf:about="&p11;birnlex_485">
+        <rdfs:label rdf:datatype="&xsd;string">Theria</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&p11;birnlex_252"/>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-06-03</j.3:modifiedDate>
+        <j.3:createdDate rdf:datatype="&xsd;string">2007-06-03</j.3:createdDate>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">32525</j.2:ncbiTaxID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C1081780</j.3:UmlsCui>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Theria</j.0:prefLabel>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Theria</j.2:ncbiTaxScientificName>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#pending_final_vetting</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+    </owl:Class>
+    
+    
+    <!-- http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_252 -->
+
+    <owl:Class rdf:about="&p11;birnlex_252">
+        <rdfs:label rdf:datatype="&xsd;string">Mammal</rdfs:label>
+        <owl:equivalentClass rdf:resource="&owl2;NCBITaxon#NCBITaxon_40674"/>
+        <j.3:externallySourcedDefinition rdf:datatype="&xsd;string">* Any warm-blooded vertebrate having the skin more or less covered with hair; young are born alive except for the small subclass of monotremes and nourished with milk. (NCI)
+* Warm-blooded vertebrate animals belonging to the class Mammalia, including all that possess hair and suckle their young. It includes three major groups: placentals and marsupials, which are viviparous, and monotremes, which are oviparous. (Dorland, 28th ed.) (MSH)
+* warm-blooded chordates with hair, 7 cervical vertebrates, 4 chambered heart, 5 or fewer digits on each limb, mammary glands with milk for feeding young; can be terrestrial, aerial or aquatic. (CSP)</j.3:externallySourcedDefinition>
+        <j.2:gbifID rdf:datatype="&xsd;string">13140957</j.2:gbifID>
+        <j.3:createdDate rdf:datatype="&xsd;string">2006-10-07</j.3:createdDate>
+        <j.3:modifiedDate rdf:datatype="&xsd;string">2007-08-04</j.3:modifiedDate>
+        <j.2:gbifTaxonKeyID rdf:datatype="&xsd;string">215038</j.2:gbifTaxonKeyID>
+        <j.2:ncbiTaxID rdf:datatype="&xsd;string">40674</j.2:ncbiTaxID>
+        <j.3:UmlsCui rdf:datatype="&xsd;string">C0024660</j.3:UmlsCui>
+        <j.2:ncbiTaxScientificName rdf:datatype="&xsd;string">Mammal</j.2:ncbiTaxScientificName>
+        <j.0:prefLabel rdf:datatype="&xsd;string">Mammal</j.0:prefLabel>
+        <j.3:synonym rdf:datatype="&xsd;string">Mammalia</j.3:synonym>
+        <j.3:nifID rdf:datatype="&xsd;string">_6_3.3</j.3:nifID>
+        <j.2:hasBirnlexCurator rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#Bill_Bug</j.2:hasBirnlexCurator>
+        <j.2:hasCurationStatus rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/BIRNLex_annotation_properties.owl#raw_import</j.2:hasCurationStatus>
+        <j.3:hasExternalSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#NCBI_Taxonomy</j.3:hasExternalSource>
+        <j.3:hasDefinitionSource rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/Backend/OBO_annotation_properties.owl#UMLS_defSource</j.3:hasDefinitionSource>
+        <hasTaxonRank rdf:datatype="&xsd;string">http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_779</hasTaxonRank>
+        <j.3:taxonomicCommonName rdf:datatype="&xsd;string">mammals</j.3:taxonomicCommonName>
+        <j.2:ncbiTaxGenbankCommonName rdf:datatype="&xsd;string">mammals</j.2:ncbiTaxGenbankCommonName>
+        <j.2:ncbiTaxBlastName rdf:datatype="&xsd;string">mammals</j.2:ncbiTaxBlastName>
+        <j.0:editorialNote xml:lang="en">This class is not intended to present a normative, comprehensive, taxonomic hierarchy, but rather is provided as an approximate indication of the phylogenetic relatedness amongst the taxonomic groups nested under it (BB).</j.0:editorialNote>
+    </owl:Class>
+    
+    </rdf:RDF>

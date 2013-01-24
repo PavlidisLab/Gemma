@@ -160,6 +160,40 @@ public class OntologyIndexerTest {
         index.close();
     }
 
+    @Test
+    public final void testOmitDefinitions2() throws Exception {
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/nif.organism.test.owl.xml" );
+        OntModel model = OntologyLoader.loadMemoryModel( is, "NIFORG_TEST", OntModelSpec.OWL_MEM_TRANS_INF );
+        is.close();
+
+        IndexLARQ index = OntologyIndexer.indexOntology( "NIFORG_TEST", model, true );
+
+        // positive control
+        Collection<OntologyTerm> searchResults = OntologySearch.matchClasses( model, index, "Mammal" );
+        assertTrue( "Should have found something for 'Mammal'", !searchResults.isEmpty() );
+
+        // this is a "definition" that we want to avoid leading to "acute leukemia".
+        searchResults = OntologySearch.matchClasses( model, index, "skin" );
+        for ( OntologyTerm ontologyTerm : searchResults ) {
+            fail( "Should not have found " + ontologyTerm.toString() + " for 'skin'" );
+        }
+        assertEquals( 0, searchResults.size() );
+
+        searchResults = OntologySearch.matchClasses( model, index, "approximate" );
+        for ( OntologyTerm ontologyTerm : searchResults ) {
+            fail( "Should not have found " + ontologyTerm.toString() + " for 'approximate'" );
+        }
+        assertEquals( 0, searchResults.size() );
+
+        searchResults = OntologySearch.matchClasses( model, index, "Bug" );
+        for ( OntologyTerm ontologyTerm : searchResults ) {
+            fail( "Should not have found " + ontologyTerm.toString() + " for 'Bug'" );
+        }
+        assertEquals( 0, searchResults.size() );
+
+        index.close();
+    }
+
     /**
      * @throws Exception
      */
