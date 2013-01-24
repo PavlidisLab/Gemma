@@ -1,0 +1,268 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://purl.obolibrary.org/obo/obi.owl#"
+     xml:base="http://purl.obolibrary.org/obo/obi.owl"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:obo="http://purl.obolibrary.org/obo/"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:protege="http://protege.stanford.edu/plugins/owl/protege#"
+     xmlns:doap="http://usefulinc.com/ns/doap#"
+     xmlns:iao="http://purl.obolibrary.org/obo/iao/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#">
+    <owl:Ontology rdf:about="http://purl.obolibrary.org/obo/obi.owl">
+        <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2012-07-01</owl:versionInfo>
+        <dc:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2012-07-09</dc:date>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This file is based on checkout of our SVN repository revision $Revision$</rdfs:comment>
+        <protege:defaultLanguage rdf:datatype="http://www.w3.org/2001/XMLSchema#string">en</protege:defaultLanguage>
+        <owl:versionInfo xml:lang="en">$Revision$</owl:versionInfo>
+        <dc:contributor>Alan Ruttenberg</dc:contributor>
+        <dc:source>Pierre Grenon and Barry Smith: &quot;SNAP and SPAN: Towards Geospatial Dynamics&quot;</dc:source>
+        <dc:contributor xml:lang="en">Advisors for this project come from the IFOMIS group, Saarbruecken and from the Co-ODE group in Manchester</dc:contributor>
+        <dc:creator xml:lang="en">Allyson Lister</dc:creator>
+        <rdfs:comment xml:lang="en">An information artifact is, loosely, a dependent continuant or its bearer that is created as the result of one or more intentional processes. Examples: uniprot, the english language, the contents of this document or a printout of it, the temperature measurements from a weather balloon. For more information, see the project home page at http://code.google.com/p/information-artifact-ontology/</rdfs:comment>
+        <dc:subject xml:lang="en">An ontology for the annotation of biomedical and functional genomics experiments.</dc:subject>
+        <dc:contributor>Andrew Spear</dc:contributor>
+        <dc:creator xml:lang="en">Barry Smith</dc:creator>
+        <dc:creator xml:lang="en">Bill Bug</dc:creator>
+        <dc:contributor>Chris Mungall</dc:contributor>
+        <dc:creator xml:lang="en">Bjoern Peters</dc:creator>
+        <dc:creator xml:lang="en">Carlo Torniai</dc:creator>
+        <dc:creator xml:lang="en">Chris Mungall</dc:creator>
+        <rdfs:comment>This document was an early experimental prototype of bfo2, not blessed by the working group. It is archived because it was used by some projects. There was very little change other than ids relative to earlier versions of BFO, and ids used here will be used in the ultimate release</rdfs:comment>
+        <dc:creator xml:lang="en">Alan Ruttenberg</dc:creator>
+        <dc:creator xml:lang="en">Chris Stoeckert</dc:creator>
+        <dc:creator xml:lang="en">Chris Taylor</dc:creator>
+        <dc:creator xml:lang="en">Cristian Cocos</dc:creator>
+        <dc:creator xml:lang="en">Daniel Rubin</dc:creator>
+        <dc:creator xml:lang="en">Daniel Schober</dc:creator>
+        <dc:creator xml:lang="en">Dawn Field</dc:creator>
+        <dc:creator xml:lang="en">Dirk Derom</dc:creator>
+        <dc:creator xml:lang="en">Elisabetta Manduchi</dc:creator>
+        <dc:format xml:lang="en">OWL-DL</dc:format>
+        <dc:title xml:lang="en">Ontology for Biomedical Investigation</dc:title>
+        <dc:creator xml:lang="en">Philip Lord</dc:creator>
+        <dc:creator xml:lang="en">Philippe Rocca-Serra</dc:creator>
+        <dc:creator xml:lang="en">Pierre Grenon</dc:creator>
+        <dc:creator xml:lang="en">Richard Bruskiewich</dc:creator>
+        <dc:creator xml:lang="en">Richard Scheuermann</dc:creator>
+        <dc:creator xml:lang="en">Robert Stevens</dc:creator>
+        <dc:creator xml:lang="en">Ryan R. Brinkman</dc:creator>
+        <dc:creator xml:lang="en">Stefan Wiemann</dc:creator>
+        <dc:creator xml:lang="en">Susanna-Assunta Sansone</dc:creator>
+        <dc:creator xml:lang="en">Tanya Gray</dc:creator>
+        <dc:description xml:lang="en">The Ontology for Biomedical Investigations (OBI) is build in a collaborative, international effort and will serve as a resource for annotating biomedical investigations, including the study design, protocols and instrumentation used, the data generated and the types of analysis performed on the data. This ontology arose from the Functional Genomics Investigation Ontology (FuGO) and will contain both terms that are common to all biomedical investigations, including functional genomics investigations and those that are more domain specific.</dc:description>
+        <dc:creator xml:lang="en">Tina Hernandez-Boussard</dc:creator>
+        <dc:creator xml:lang="en">Trish Whetzel</dc:creator>
+        <dc:creator xml:lang="en">Yongqun He</dc:creator>
+        <dc:rights xml:lang="en">free, no license required.</dc:rights>
+        <rdfs:seeAlso rdf:resource="http://code.google.com/p/information-artifact-ontology/"/>
+        <owl:versionIRI rdf:resource="http://purl.obolibrary.org/obo/obi/2012-07-01/obi.owl"/>
+    </owl:Ontology>
+  <!-- http://purl.obolibrary.org/obo/OBI_0000094 -->
+
+
+
+   
+  <doap:Project rdf:about="http://purl.obolibrary.org/obo/obi/project">
+   <doap:browse><owl:Thing rdf:about="http://purl.obolibrary.org/obo/obi/browse"/></doap:browse>
+   <doap:bug-database><owl:Thing rdf:about="http://purl.obolibrary.org/obo/obi/tracker"/></doap:bug-database>
+   <doap:homepage><owl:Thing rdf:about="http://purl.obolibrary.org/obo/obi"/></doap:homepage>
+   <doap:mailing-list><owl:Thing rdf:about="mailto:obi-users@googlegroups.com"/></doap:mailing-list>
+   <doap:release><owl:Thing rdf:about="http://purl.obolibrary.org/obo/obi/version-2012-07-01"/></doap:release>
+   <doap:repository><doap:SVNRepository rdf:about="http://purl.obolibrary.org/obo/obi/repository"/></doap:repository>
+   <doap:wiki><owl:Thing rdf:about="http://purl.obolibrary.org/obo/obi/wiki"/></doap:wiki>
+ </doap:Project>
+
+ <doap:Version rdf:about="http://purl.obolibrary.org/obo/obi/version-2012-07-01">
+   <rdfs:label>2012 summer release</rdfs:label>
+   <rdfs:seeAlso><owl:Thing rdf:about="http://purl.obolibrary.org/obo/obi/wiki/Releases/2012-07-01"/></rdfs:seeAlso>
+   <doap:file-release><owl:Thing rdf:about="http://purl.obolibrary.org/obo/obi/2012-07-01/obi.owl"/></doap:file-release>
+   <doap:file-release><owl:Ontology rdf:about="http://purl.obolibrary.org/obo/obi.owl"/></doap:file-release>
+   <doap:revision>SVN $Revision$</doap:revision>
+ </doap:Version>
+
+ <owl:Class rdf:about="http://usefulinc.com/ns/doap#Project"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+ </owl:Class> 
+ 
+ <owl:Class rdf:about="http://usefulinc.com/ns/doap#SVNRepository">
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+ </owl:Class> 
+
+ <owl:Class rdf:about="http://usefulinc.com/ns/doap#Version"> 
+   <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+ </owl:Class> 
+ 
+ <owl:ObjectProperty rdf:about="http://usefulinc.com/ns/doap#browse"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+  </owl:ObjectProperty> 
+ 
+  <owl:ObjectProperty rdf:about="http://usefulinc.com/ns/doap#bug-database"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+  </owl:ObjectProperty> 
+ 
+  <owl:ObjectProperty rdf:about="http://usefulinc.com/ns/doap#homepage"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+  </owl:ObjectProperty> 
+ 
+  <owl:ObjectProperty rdf:about="http://usefulinc.com/ns/doap#mailing-list"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+  </owl:ObjectProperty> 
+ 
+  <owl:ObjectProperty rdf:about="http://usefulinc.com/ns/doap#release"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+  </owl:ObjectProperty> 
+ 
+  <owl:ObjectProperty rdf:about="http://usefulinc.com/ns/doap#repository"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+  </owl:ObjectProperty> 
+ 
+  <owl:ObjectProperty rdf:about="http://usefulinc.com/ns/doap#wiki"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+  </owl:ObjectProperty> 
+ 
+  <owl:ObjectProperty rdf:about="http://usefulinc.com/ns/doap#file-release"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+  </owl:ObjectProperty> 
+
+ <owl:DatatypeProperty rdf:about="http://usefulinc.com/ns/doap#revision"> 
+    <rdfs:isDefinedBy rdf:resource="http://usefulinc.com/ns/doap"/> 
+ </owl:DatatypeProperty> 
+
+ <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#isDefinedBy"/> 
+
+ <owl:Thing rdf:about="http://usefulinc.com/ns/doap"/>
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+     
+      <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/OBI_0000293"><!-- has_specified_input -->
+        <rdfs:label xml:lang="en">has_specified_input</rdfs:label>
+        <obo:IAO_0000116 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">8/17/09: specified inputs of one process are not necessarily specified inputs of a larger process that it is part of. This is in contrast to how &#39;has participant&#39; works.</obo:IAO_0000116>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Bjoern Peters</obo:IAO_0000117>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Larry Hunter</obo:IAO_0000117>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Melanie Coutot</obo:IAO_0000117>
+        <obo:IAO_0000111 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_specified_input</obo:IAO_0000111>
+        <obo:IAO_0000115 xml:lang="en">A relation between a planned process and a continuant participating in that process that is not created during  the process. The presence of the continuant during the process is explicitly specified in the plan specification which the process realizes the concretization of.</obo:IAO_0000115>
+        <obo:IAO_0000117 xml:lang="en">PERSON: Alan Ruttenberg</obo:IAO_0000117>
+        <obo:IAO_0000112 xml:lang="en">see is_input_of example_of_usage</obo:IAO_0000112>
+    </owl:AnnotationProperty>
+
+  
+
+
+
+    <!-- http://purl.obolibrary.org/obo/OBI_0000299 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/OBI_0000299"><!-- has_specified_output -->
+        <rdfs:label xml:lang="en">has_specified_output</rdfs:label>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Bjoern Peters</obo:IAO_0000117>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Larry Hunter</obo:IAO_0000117>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Melanie Courtot</obo:IAO_0000117>
+        <obo:IAO_0000111 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has_specified_output</obo:IAO_0000111>
+        <obo:IAO_0000115 xml:lang="en">A relation between a planned process and a continuant participating in that process. The presence of the continuant at the end of the process is explicitly specified in the objective specification which the process realizes the concretization of.</obo:IAO_0000115>
+        <obo:IAO_0000117 xml:lang="en">PERSON: Alan Ruttenberg</obo:IAO_0000117>
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000057"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/OBI_0000011"/><!-- planned process -->
+        <owl:inverseOf rdf:resource="http://purl.obolibrary.org/obo/OBI_0000312"/><!-- is_specified_output_of -->
+    </owl:ObjectProperty>
+    
+
+
+
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/OBI_0000011"><!-- planned process -->
+        <rdfs:label xml:lang="en">planned process</rdfs:label>
+        <owl:equivalentClass>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000055"/>
+                <owl:someValuesFrom>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000059"/>
+                        <owl:someValuesFrom>
+                            <owl:Class>
+                                <owl:intersectionOf rdf:parseType="Collection">
+                                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/IAO_0000104"/>
+                                    <owl:Restriction>
+                                        <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000051"/>
+                                        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/IAO_0000005"/>
+                                    </owl:Restriction>
+                                </owl:intersectionOf>
+                            </owl:Class>
+                        </owl:someValuesFrom>
+                    </owl:Restriction>
+                </owl:someValuesFrom>
+            </owl:Restriction>
+        </owl:equivalentClass>
+       
+        <obo:IAO_0000116 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">&#39;Plan&#39; includes a future direction sense. That can be problematic if plans are changed during their execution. There are however implicit contingencies for protocols that an agent has in his mind that can be considered part of the plan, even if the agent didn&#39;t have them in mind before. Therefore, a planned process can diverge from what the agent would have said the plan was before executing it, by adjusting to problems encountered during execution (e.g. choosing another reagent with equivalent properties, if the originally planned one has run out.)</obo:IAO_0000116>
+        <obo:IAO_0000232 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">6/11/9: Edited at workshop. Used to include: is initiated by an agent</obo:IAO_0000232>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bjoern Peters</obo:IAO_0000117>
+        <obo:IAO_0000112 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Injecting mice with a vaccine in order to test its efficacy</obo:IAO_0000112>
+        <obo:IAO_0000116 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">We are only considering successfully completed planned processes. A plan may be modified, and details added during execution. For a given planned process, the associated realized plan specification is the one encompassing all changes made during execution. This means that all processes in which an agent acts towards achieving some 
+objectives is a planned process.</obo:IAO_0000116>
+        <obo:IAO_0000119 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">branch derived</obo:IAO_0000119>
+        <obo:IAO_0000115 xml:lang="en">A processual entity that realizes a plan which is the concretization of a plan specification.</obo:IAO_0000115>
+        <obo:IAO_0000232 xml:lang="en">This class merges the previously separated objective driven process and planned process, as they the separation proved hard to maintain. (1/22/09, branch call)</obo:IAO_0000232>
+        <obo:IAO_0000111 xml:lang="en">planned process</obo:IAO_0000111>
+        <obo:IAO_0000114 rdf:resource="http://purl.obolibrary.org/obo/IAO_0000122"/>
+    </owl:Class>
+
+
+
+
+
+
+
+
+
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/OBI_0000094"><!-- material processing -->
+        <rdfs:label xml:lang="en">material processing</rdfs:label>
+       
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/OBI_0000011"/><!-- planned process -->
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/OBI_0000293"/><!-- has_specified_input -->
+                <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+       
+        <obo:IAO_0000112 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A cell lysis, production of a cloning vector, creating a buffer.</obo:IAO_0000112>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Frank Gibson</obo:IAO_0000117>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Jennifer Fostel</obo:IAO_0000117>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Melanie Courtot</obo:IAO_0000117>
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PERSON: Philippe Rocca Serra</obo:IAO_0000117>
+        <obo:IAO_0000111 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">material processing</obo:IAO_0000111>
+        <obo:IAO_0000115 xml:lang="en">A planned process which results in physical changes in a specified input material</obo:IAO_0000115>
+        <obo:IAO_0000119 xml:lang="en">OBI branch derived</obo:IAO_0000119>
+        <obo:IAO_0000117 xml:lang="en">PERSON: Bjoern Peters</obo:IAO_0000117>
+        <obo:IAO_0000118 xml:lang="en">material transformation</obo:IAO_0000118>
+        <obo:IAO_0000114 rdf:resource="http://purl.obolibrary.org/obo/IAO_0000122"/>
+    </owl:Class>
+    
+
+    <!-- http://purl.obolibrary.org/obo/OBI_0302889 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/OBI_0302889"><!-- irradiation -->
+        <rdfs:label xml:lang="en">irradiation</rdfs:label>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/OBI_0000094"/><!-- material processing -->
+      
+   
+        <obo:IAO_0000117 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Philippe Rocca-Serra</obo:IAO_0000117>
+        <obo:IAO_0000119 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">adapted from wikipedia (http://en.wikipedia.org/wiki/Irradiation)</obo:IAO_0000119>
+        <obo:IAO_0000111 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">irradiation</obo:IAO_0000111>
+        <obo:IAO_0000112 xml:lang="en">PMID: 18563778.Histological and modeling study of skin thermal injury to 2.0 mum laser irradiation.Lasers Surg Med. 2008 Jun 18;40(5):358-370.</obo:IAO_0000112>
+        <obo:IAO_0000115 xml:lang="en">irradiation is a process by which a material entity is exposed to radiative energy, which could be ionizing radiation (such as gamma rays or X-rays)  or not such as UV light or microwaves</obo:IAO_0000115>
+        <obo:IAO_0000114 rdf:resource="http://purl.obolibrary.org/obo/IAO_0000120"/>
+    </owl:Class>
+    
+    </rdf:RDF>
+    

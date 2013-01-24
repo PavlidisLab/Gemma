@@ -194,6 +194,28 @@ public class OntologyIndexerTest {
         index.close();
     }
 
+    @Test
+    public final void testOmitDefinitions3() throws Exception {
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/obi.test.owl.xml" );
+        OntModel model = OntologyLoader.loadMemoryModel( is, "OBI_TEST", OntModelSpec.OWL_MEM_TRANS_INF );
+        is.close();
+
+        IndexLARQ index = OntologyIndexer.indexOntology( "OBI_TEST", model, true );
+
+        // positive control
+        Collection<OntologyTerm> searchResults = OntologySearch.matchClasses( model, index, "irradiation" );
+        assertTrue( "Should have found something for 'irradiation'", !searchResults.isEmpty() );
+
+        // this is a "definition" that we want to avoid leading to "acute leukemia".
+        searchResults = OntologySearch.matchClasses( model, index, "skin" );
+        for ( OntologyTerm ontologyTerm : searchResults ) {
+            fail( "Should not have found " + ontologyTerm.toString() + " for 'skin'" );
+        }
+        assertEquals( 0, searchResults.size() );
+
+        index.close();
+    }
+
     /**
      * @throws Exception
      */
