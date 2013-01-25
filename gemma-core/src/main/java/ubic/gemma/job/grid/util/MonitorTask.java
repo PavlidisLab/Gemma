@@ -19,13 +19,12 @@
 package ubic.gemma.job.grid.util;
 
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
 /**
  * @author paul
  * @version $Id$
  */
-public interface MonitorTask {
-
-    public TaskResult execute( MonitorTaskCommand command );
-
+@Deprecated
+public interface MonitorTask extends Task<TaskResult, MonitorTaskCommand> {
 }

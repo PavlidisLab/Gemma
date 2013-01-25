@@ -20,15 +20,7 @@
 package ubic.gemma.tasks.maintenance;
 
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
-/**
- * Update batches of Characteristics
- * 
- * @author paul
- * @version $Id$
- */
-public interface CharacteristicUpdateTask {
+public interface CharacteristicUpdateTask extends Task<TaskResult, CharacteristicUpdateCommand> {}
 
-    public TaskResult execute( CharacteristicUpdateCommand command );
-
-}

@@ -121,7 +121,61 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			this.doVisualization(null);
 		}
 	},
-	doVisualization : function() {	
+
+    _initBackgroundTaskProgress : function (taskId) {
+        var backgroundTask = new Gemma.WaitHandler();
+        backgroundTask.on( 'done', this._handleDiffExpSearchTaskResult, this );
+        backgroundTask.on( 'fail', this._handleFail, this );
+        backgroundTask.handleWait( taskId, false, true, true );
+    },
+
+    _handleDiffExpSearchTaskResult : function( data ) {
+        this.fireEvent("visualizationLoaded");
+
+        // If data is null, there was an error.
+        if (!data || data === null) {
+            if (this.applyToParam) {
+                Ext.DomHelper.overwrite(this.applyToParam, {
+                    html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, there was an error performing your search.'
+                });
+            }
+        }
+
+        // if no experiments were returned, don't show visualizer
+        else if (data.conditions.length === 0) {
+            if(this.applyToParam){
+                Ext.DomHelper.overwrite(this.applyToParam, {
+                    html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
+                });
+            }
+
+        } else {
+            var title = '<b>Differential Expression Visualisation</b>';
+            var config = {
+                toolbarTitle : title,
+                visualizationData : data,
+                showTutorial: this.param.showTutorial
+            };
+            if (this.applyToParam) {
+                Ext.apply(config, {
+                    applyTo : this.applyToParam
+                });
+            }
+            var _metaVizApp = new Gemma.Metaheatmap.Application(config);
+            _metaVizApp.doLayout();
+            _metaVizApp.refreshVisualization();
+        }
+    },
+
+    _handleFail : function (error) {
+        this.fireEvent("visualizationLoaded");
+
+        Ext.DomHelper.overwrite(this.applyToParam, {
+            html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, there was an error performing your search.'
+        });
+    },
+
+    doVisualization : function() {
 		
 		if (typeof this.param === 'undefined') { // if not loading text from search interface (ex: when using a bookmarked link)
 			var waitMsg = Ext.Msg.wait("", "Loading your visualization...");
@@ -159,87 +213,14 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			this.experimentSessionGroupQueries = this.initExperimentSessionGroupQueries;
 		}
 
-		
-		DifferentialExpressionSearchController.scheduleDiffExpSearchTask (this.taxonId,		
-																	 	  this.experimentGroupValueObjects,
-																	 	  this.geneGroupValueObjects,
-																	 	  this.initGeneSessionGroupQueries,
-																	 	  this.initExperimentSessionGroupQueries,
-																	 	  function (taskId) {
-			var me = this;
-			var progressWindow = Ext.MessageBox.progress("Search progress", "Initializing");
-			
-			var updateProgress = function() {
-				DifferentialExpressionSearchController.getDiffExpSearchTaskProgress ( taskId,
-																					  function (taskProgressObj) {	
-					var msg = taskProgressObj.currentStage;
-					var value = taskProgressObj.progressPercent / 100;
-					progressWindow.updateProgress (value, "", msg);				
-				
-					if (taskProgressObj.taskResult != null) {
-						
-						data = taskProgressObj.taskResult;
-						
-						if(waitMsg){
-							waitMsg.hide();
-						}
-
-						// To trigger loadmask on search form to hide
-						me.fireEvent('visualizationLoaded');
-						
-						Ext.TaskMgr.stop (progressUpdateTask);
-						progressWindow.hide();
-
-						// If data is null, there was an error.
-						if (!data || data === null) {
-							if(me.applyToParam){
-								Ext.DomHelper.overwrite(me.applyToParam, {
-									html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, there was an error performing your search.'
-								});
-							}	
-						}
-
-//						if no experiments were returned, don't show visualizer
-						else if (data.conditions.length === 0) {
-//							Ext.Msg.alert('<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.');
-							if(this.applyToParam){
-								Ext.DomHelper.overwrite(me.applyToParam, {
-									html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
-								});
-							}
-
-						} else {
-							var title = '<b>Differential Expression Visualisation</b>';
-							var config = {
-									toolbarTitle : title,
-									visualizationData : data,
-									showTutorial: me.param.showTutorial
-							};
-							if(me.applyToParam){
-								Ext.apply(config,{
-									applyTo : me.applyToParam
-								});
-							}
-							_metaVizApp = new Gemma.Metaheatmap.Application(config);
-
-//							so it can be rendered without rendering to a div (ex might want to add to a panel)
-//							this.fireEvent('visualizationReady', _metaVizApp);
-
-							_metaVizApp.doLayout();
-							_metaVizApp.refreshVisualization();
-						}
-					}				
-				
-				}.createDelegate(this));
-			}; 
-
-			var progressUpdateTask = Ext.TaskMgr.start({
-			    run: updateProgress,
-			    interval: 5000
-			});
-									
-		}.createDelegate(this));
-
+		DifferentialExpressionSearchController.scheduleDiffExpSearchTask (
+            this.taxonId,
+            this.experimentGroupValueObjects,
+            this.geneGroupValueObjects,
+            this.initGeneSessionGroupQueries,
+            this.initExperimentSessionGroupQueries,
+            this._initBackgroundTaskProgress.createDelegate(this)
+        );
 	},
 		/**
 	 * Restore state from the URL (e.g., bookmarkable link)

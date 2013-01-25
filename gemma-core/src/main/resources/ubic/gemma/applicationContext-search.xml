@@ -7,87 +7,6 @@
           http://www.springframework.org/schema/context 
           http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 	<!-- author: keshav $Id$ -->
-	<bean id="indexerTask" class="ubic.gemma.tasks.maintenance.IndexerTaskImpl">
-		<property name="expressionGps">
-			<ref bean="expressionGps" />
-		</property>
-		<property name="geneGps">
-			<ref bean="geneGps" />
-		</property>
-		<property name="arrayGps">
-			<ref bean="arrayGps" />
-		</property>
-		<property name="probeGps">
-			<ref bean="probeGps" />
-		</property>
-		<property name="bibliographicGps">
-			<ref bean="bibliographicGps" />
-		</property>
-		<property name="biosequenceGps">
-			<ref bean="biosequenceGps" />
-		</property>
-		<property name="geneSetGps">
-			<ref bean="geneSetGps" />
-		</property>
-		<property name="experimentSetGps">
-			<ref bean="experimentSetGps" />
-		</property>
-		<property name="compassExpression">
-			<ref bean="compassExpression" />
-		</property>
-		<property name="compassArray">
-			<ref bean="compassArray" />
-		</property>
-		<property name="compassProbe">
-			<ref bean="compassProbe" />
-		</property>
-		<property name="compassGene">
-			<ref bean="compassGene" />
-		</property>
-		<property name="compassBiosequence">
-			<ref bean="compassBiosequence" />
-		</property>
-		<property name="compassBibliographic">
-			<ref bean="compassBibliographic" />
-		</property>
-		<property name="compassGeneSet">
-			<ref bean="compassGeneSet" />
-		</property>
-		<property name="compassExperimentSet">
-			<ref bean="compassExperimentSet" />
-		</property>
-		<property name="mailEngine">
-			<ref bean="mailEngine" />
-		</property>
-	</bean>
-
-	<bean id="indexService" class="ubic.gemma.search.IndexServiceImpl">
-		<property name="indexerTask" ref="indexerTask" />
-		<property name="compassExpression">
-			<ref bean="compassExpression" />
-		</property>
-		<property name="compassArray">
-			<ref bean="compassArray" />
-		</property>
-		<property name="compassProbe">
-			<ref bean="compassProbe" />
-		</property>
-		<property name="compassGene">
-			<ref bean="compassGene" />
-		</property>
-		<property name="compassBiosequence">
-			<ref bean="compassBiosequence" />
-		</property>
-		<property name="compassBibliographic">
-			<ref bean="compassBibliographic" />
-		</property>
-		<property name="compassGeneSet">
-			<ref bean="compassGeneSet" />
-		</property>
-		<property name="compassExperimentSet">
-			<ref bean="compassExperimentSet" />
-		</property>
-	</bean>
 
 	<!-- Generic compass configuration beans -->
 	<bean id="hibernateGpsDevice" class="org.compass.gps.device.hibernate.HibernateGpsDevice" scope="prototype">
@@ -323,8 +242,7 @@
 	<bean id="compassBiosequence" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
-				<value>classpath:ubic/gemma/compass/biosequence_mappings.cpm.xml
-				</value>
+				<value>classpath:ubic/gemma/compass/biosequence_mappings.cpm.xml</value>
 			</list>
 		</property>
 		<property name="compassSettings">
@@ -354,8 +272,7 @@
 	<bean id="compassBibliographic" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
-				<value>classpath:ubic/gemma/compass/bibliographic_mappings.cpm.xml
-				</value>
+				<value>classpath:ubic/gemma/compass/bibliographic_mappings.cpm.xml</value>
 			</list>
 		</property>
 		<property name="compassSettings">

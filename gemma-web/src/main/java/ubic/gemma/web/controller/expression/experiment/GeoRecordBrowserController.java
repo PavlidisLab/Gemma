@@ -38,8 +38,8 @@ import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
 public class GeoRecordBrowserController {
 
     private static Logger log = LoggerFactory.getLogger( GeoRecordBrowserController.class );
-    @Autowired
-    private GeoBrowserService geoBrowserService;
+
+    @Autowired private GeoBrowserService geoBrowserService;
 
     /**
      * AJAX

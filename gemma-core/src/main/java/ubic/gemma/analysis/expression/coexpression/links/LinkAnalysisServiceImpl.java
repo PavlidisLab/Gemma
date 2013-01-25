@@ -138,29 +138,19 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private static final int LINK_BATCH_SIZE = 5000;
 
-    private static Log log = LogFactory.getLog( LinkAnalysisServiceImpl.class.getName() );
+    private static Log log = LogFactory.getLog( LinkAnalysisServiceImpl.class );
     private static final boolean useDB = true; // useful for debugging.
-    @Autowired
-    private AuditTrailService auditTrailService;
-    @Autowired
-    private CompositeSequenceService csService;
-    @Autowired
-    private ExpressionExperimentService eeService;
-    @Autowired
-    private ExpressionDataMatrixService expressionDataMatrixService;
-    @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService;
-    @Autowired
-    private Persister persisterHelper;
-    @Autowired
-    private Probe2ProbeCoexpressionService ppService;
-    @Autowired
-    private QuantitationTypeService quantitationTypeService;
-    @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    @Autowired
-    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
+    @Autowired private AuditTrailService auditTrailService;
+    @Autowired private CompositeSequenceService csService;
+    @Autowired private ExpressionExperimentService eeService;
+    @Autowired private ExpressionDataMatrixService expressionDataMatrixService;
+    @Autowired private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired private Persister persisterHelper;
+    @Autowired private Probe2ProbeCoexpressionService ppService;
+    @Autowired private QuantitationTypeService quantitationTypeService;
+    @Autowired private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
 
     /**
      * Perform the analysis. No hibernate session is used. This step is purely computational.

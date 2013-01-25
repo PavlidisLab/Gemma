@@ -19,12 +19,7 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
-/**
- * @author paul
- * @version $Id$
- */
-public interface TwoChannelMissingValueTask {
+interface TwoChannelMissingValueTask extends Task<TaskResult, TwoChannelMissingValueTaskCommand> {}
 
-    TaskResult execute( TwoChannelMissingValueTaskCommand jsCommand );
-}

@@ -88,38 +88,18 @@ import ubic.gemma.web.remote.JsonReaderResponse;
  */
 @Controller
 public class GeneralSearchControllerImpl extends BaseFormController implements GeneralSearchController {
-    @Autowired
-    private SearchService searchService;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private GeneService geneService;
-
-    @Autowired
-    private BibliographicReferenceService bibliographicReferenceService;
-
-    @Autowired
-    private TaxonService taxonService;
-
-    @Autowired
-    private AuditableUtil auditableUtil;
-
-    @Autowired
-    private GeneSetService geneSetService;
-
-    @Autowired
-    private ExpressionExperimentSetService experimentSetService;
-
-    @Autowired
-    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
-
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
+    @Autowired private SearchService searchService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ArrayDesignService arrayDesignService;
+    @Autowired private GeneService geneService;
+    @Autowired private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired private TaxonService taxonService;
+    @Autowired private AuditableUtil auditableUtil;
+    @Autowired private GeneSetService geneSetService;
+    @Autowired private ExpressionExperimentSetService experimentSetService;
+    @Autowired private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
+    @Autowired private CompositeSequenceService compositeSequenceService;
 
     /*
      * (non-Javadoc)

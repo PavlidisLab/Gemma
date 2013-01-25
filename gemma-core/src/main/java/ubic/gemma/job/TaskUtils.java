@@ -35,6 +35,13 @@ public class TaskUtils {
 
     private static int MAX_ATTEMPTS = 1000;
 
+
+    public static boolean canRunRemotely( TaskCommand command ) {
+        return  command.getTaskClass() != null;
+
+    }
+
+
     /**
      * @return a unique (since the JVM was started) task id.
      */

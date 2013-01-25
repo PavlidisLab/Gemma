@@ -115,14 +115,9 @@ public class ExpressionExperimentQCController extends BaseController {
     private static final int MAX_HEATMAP_CELLSIZE = 12;
     public static final int DEFAULT_QC_IMAGE_SIZE_PX = 200;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private SVDService svdService;
-
-    @Autowired
-    ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private SVDService svdService;
+    @Autowired ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     /**
      * @param id

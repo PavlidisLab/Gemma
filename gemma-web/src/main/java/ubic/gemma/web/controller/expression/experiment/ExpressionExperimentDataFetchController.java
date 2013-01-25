@@ -33,10 +33,9 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -51,9 +50,9 @@ import ubic.gemma.web.view.DownloadBinaryFileView;
  * @version $Id$
  */
 @Controller
-public class ExpressionExperimentDataFetchController extends AbstractTaskService {
+public class ExpressionExperimentDataFetchController {
 
-    class CoExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand> {
+    class CoExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand, TaskResult> {
 
         public CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
             super( eeId );
@@ -92,7 +91,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     /**
      * @author keshav
      */
-    class DataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand> {
+    class DataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand, TaskResult> {
 
         public DataWriterJob( ExpressionExperimentDataFetchCommand command ) {
             super( command );
@@ -209,7 +208,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     }
 
     // ==========================================================
-    class DiffExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand> {
+    class DiffExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand, TaskResult> {
 
         public DiffExpressionDataWriterJob( ExpressionExperimentDataFetchCommand command ) {
             super( command );
@@ -271,14 +270,10 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ExpressionDataFileService expressionDataFileService;
-
-    @Autowired
-    private QuantitationTypeService quantitationTypeService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionDataFileService expressionDataFileService;
+    @Autowired private QuantitationTypeService quantitationTypeService;
 
     /**
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
@@ -310,8 +305,8 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     public String getCoExpressionDataFile( Long eeId ) {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
         tc.setExpressionExperimentId( eeId );
-        CoExpressionDataWriterJob runner = new CoExpressionDataWriterJob( tc );
-        return startTask( runner );
+        CoExpressionDataWriterJob job = new CoExpressionDataWriterJob( tc );
+        return taskRunningService.submitLocalJob( job );
     }
 
     /**
@@ -323,8 +318,8 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
      * @throws InterruptedException
      */
     public String getDataFile( ExpressionExperimentDataFetchCommand command ) throws InterruptedException {
-        DataWriterJob runner = new DataWriterJob( command );
-        return startTask( runner );
+        DataWriterJob job = new DataWriterJob( command );
+        return taskRunningService.submitLocalJob( job );
     }
 
     /**
@@ -337,8 +332,8 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
     public String getDiffExpressionDataFile( Long analysisId ) {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
         tc.setAnalysisId( analysisId );
-        DiffExpressionDataWriterJob runner = new DiffExpressionDataWriterJob( tc );
-        return startTask( runner );
+        DiffExpressionDataWriterJob job = new DiffExpressionDataWriterJob( tc );
+        return taskRunningService.submitLocalJob( job );
     }
 
     /**
@@ -357,16 +352,6 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
 
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
         this.quantitationTypeService = quantitationTypeService;
-    }
-
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return null;
-    }
-
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
     }
 
 }

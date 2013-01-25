@@ -26,6 +26,7 @@ import ubic.gemma.job.TaskCommand;
  * @author paul
  * @version $Id$
  */
+@Deprecated
 public class MonitorTaskCommand extends TaskCommand {
 
     /**
@@ -33,7 +34,12 @@ public class MonitorTaskCommand extends TaskCommand {
      */
     private static final long serialVersionUID = 1L;
     private int runTimeMillis = 2000;
-    
+
+    @Override
+    public Class getTaskClass() {
+        return MonitorTask.class;
+    }
+
     public MonitorTaskCommand() {
         this.setPersistJobDetails( false );
     }

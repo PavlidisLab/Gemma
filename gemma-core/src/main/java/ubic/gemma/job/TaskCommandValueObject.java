@@ -20,23 +20,24 @@
 package ubic.gemma.job;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import ubic.gemma.job.TaskCommand;
 
 public class TaskCommandValueObject implements java.io.Serializable {
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = 6639263336536087102L;
+
+    private String taskId;
+    private String submitter;
+    private String taskClass;
 
     public static Collection<TaskCommandValueObject> convert2ValueObjects( Collection<TaskCommand> commands ) {
 
         Collection<TaskCommandValueObject> converted = new HashSet<TaskCommandValueObject>();
         if ( commands == null ) return converted;
 
-        for ( TaskCommand c : commands ) {
-            converted.add( new TaskCommandValueObject(c) );
+        for ( TaskCommand command : commands ) {
+            converted.add( new TaskCommandValueObject( command ) );
         }
 
         return converted;
@@ -47,82 +48,21 @@ public class TaskCommandValueObject implements java.io.Serializable {
 
     public TaskCommandValueObject( TaskCommand taskCommand ) {
         this.taskId = taskCommand.getTaskId();
-        this.submissionTime = taskCommand.getSubmissionTime();
-        this.startTime = taskCommand.getStartTime();
         this.submitter = taskCommand.getSubmitter();
-        this.taskInterface = taskCommand.getTaskInterface();
-        this.taskMethod = taskCommand.getTaskMethod();
-        this.willRunOnGrid = taskCommand.isWillRunOnGrid();
+        this.taskClass = taskCommand.getTaskClass() == null ? "Not specified" : taskCommand.getTaskClass().getSimpleName();
+
     }
 
-    private String taskId;
-
-    private java.util.Date submissionTime;
-
-    private java.util.Date startTime;
-
-    private String submitter;
-
-    private String taskInterface;
-
-    private String taskMethod;
-
-    private boolean willRunOnGrid;
+    public String getTaskClass() {
+        return taskClass;
+    }
 
     public String getTaskId() {
         return taskId;
     }
 
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
-    public java.util.Date getSubmissionTime() {
-        return submissionTime;
-    }
-
-    public void setSubmissionTime( java.util.Date submissionTime ) {
-        this.submissionTime = submissionTime;
-    }
-
-    public java.util.Date getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime( java.util.Date startTime ) {
-        this.startTime = startTime;
-    }
-
     public String getSubmitter() {
         return submitter;
-    }
-
-    public void setSubmitter( String submitter ) {
-        this.submitter = submitter;
-    }
-
-    public String getTaskInterface() {
-        return taskInterface;
-    }
-
-    public void setTaskInterface( String taskInterface ) {
-        this.taskInterface = taskInterface;
-    }
-
-    public String getTaskMethod() {
-        return taskMethod;
-    }
-
-    public void setTaskMethod( String taskMethod ) {
-        this.taskMethod = taskMethod;
-    }
-
-    public boolean isWillRunOnGrid() {
-        return willRunOnGrid;
-    }
-
-    public void setWillRunOnGrid( boolean willRunOnGrid ) {
-        this.willRunOnGrid = willRunOnGrid;
     }
 
 }

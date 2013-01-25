@@ -18,20 +18,20 @@
  */
 package ubic.gemma.web.controller;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.job.progress.ProgressData;
 import ubic.gemma.job.progress.ProgressStatusService;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.util.MockLongJobController;
+
+import static org.junit.Assert.*;
 
 /**
  * Test of long job control.
@@ -42,11 +42,9 @@ import ubic.gemma.web.util.MockLongJobController;
 @SuppressWarnings("null")
 public class TaskRunningTest extends BaseSpringWebTest {
 
-    @Autowired
-    ProgressStatusService progressStatusService;
-
-    @Autowired
-    MockLongJobController mockLongJobController;
+    @Autowired ProgressStatusService progressStatusService;
+    @Autowired TaskRunningService taskRunningService;
+    @Autowired MockLongJobController mockLongJobController;
 
     /**
      * @throws Exception
@@ -61,10 +59,12 @@ public class TaskRunningTest extends BaseSpringWebTest {
         // let it go a little while
         Thread.sleep( 100 );
 
-        // cancel it.
-        boolean cancelJob = progressStatusService.cancelJob( taskId );
-        assertTrue( cancelJob );
+        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
+        assertNotNull( task );
 
+        // cancel it.
+        task.cancel();
+        assertEquals( SubmittedTask.Status.CANCELLED, task.getStatus() );
     }
 
     /**
@@ -76,8 +76,8 @@ public class TaskRunningTest extends BaseSpringWebTest {
         // goes to the progress page...handleRequest
         TaskCommand taskCommand = new TaskCommand();
         taskCommand.setPersistJobDetails( false ); // we use this for 'die' in this test.
-        String taskId = mockLongJobController.runJob( taskCommand );
 
+        String taskId = mockLongJobController.runJob( taskCommand );
         assertNotNull( taskId );
 
         // wait for job to run
@@ -87,7 +87,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         wait: while ( true ) {
             Thread.sleep( 500 );
             List<ProgressData> result = progressStatusService.getProgressStatus( taskId );
-            if ( result.size() > 1 ) {
+            if ( result.size() > 0 ) {
 
                 for ( ProgressData lr : result ) {
                     lastResult = lr;
@@ -123,7 +123,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         wait: while ( true ) {
             Thread.sleep( 500 );
             List<ProgressData> result = progressStatusService.getProgressStatus( taskId );
-            if ( result.size() > 1 ) {
+            if ( result.size() > 0 ) {
                 for ( ProgressData lr : result ) {
                     lastResult = lr;
                     if ( lr.isDone() ) break wait;

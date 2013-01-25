@@ -35,7 +35,7 @@ public interface ProgressStatusService {
      * 
      * @param taskId
      */
-    public abstract void addEmailAlert( String taskId );
+    public void addEmailAlert( String taskId );
 
     /**
      * Attempt to cancel the job.
@@ -43,28 +43,7 @@ public interface ProgressStatusService {
      * @param taskId
      * @return true if cancelling was error-free, false otherwise.
      */
-    public abstract boolean cancelJob( String taskId );
-
-    /**
-     * @return
-     * @see ubic.gemma.job.TaskRunningServiceImpl#getCancelledTasks()
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public abstract Collection<TaskCommandValueObject> getCancelledTasks();
-
-    /**
-     * @return
-     * @see ubic.gemma.job.TaskRunningServiceImpl#getFailedTasks()
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public abstract Collection<TaskResult> getFailedTasks();
-
-    /**
-     * @return
-     * @see ubic.gemma.job.TaskRunningServiceImpl#getFinishedTasks()
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public abstract Collection<TaskResult> getFinishedTasks();
+    public boolean cancelJob( String taskId );
 
     /**
      * Get the latest information about how a job is doing.
@@ -72,13 +51,13 @@ public interface ProgressStatusService {
      * @param taskId
      * @return
      */
-    public abstract List<ProgressData> getProgressStatus( String taskId );
+    public List<ProgressData> getProgressStatus( String taskId );
 
     /**
      * @return
      * @see ubic.gemma.job.TaskRunningServiceImpl#getSubmittedTasks()
      */
     @Secured({ "GROUP_ADMIN" })
-    public abstract Collection<TaskCommandValueObject> getSubmittedTasks();
+    public Collection<SubmittedTaskValueObject> getSubmittedTasks();
 
 }

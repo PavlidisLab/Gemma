@@ -45,8 +45,7 @@ import ubic.gemma.image.aba.ImageSeries;
 @RemoteProxy(creator = BeanCreator.class, creatorParams = @Param(name = "bean", value = "linkOutController"), name = "LinkOutController")
 public class LinkOutController {
 
-    @Autowired
-    private AllenBrainAtlasService allenBrainAtlasService = null;
+    @Autowired private AllenBrainAtlasService allenBrainAtlasService;
 
     /**
      * AJAX METHOD Given a gene's official symbol will return value object with the link to use

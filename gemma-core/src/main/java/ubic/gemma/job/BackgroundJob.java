@@ -28,24 +28,24 @@ import org.apache.log4j.Logger;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import ubic.gemma.job.progress.ProgressAppender;
+import ubic.gemma.job.progress.LocalProgressAppender;
 
 /**
  * Implements a long-running task in its own thread. Implementations simply implement processJob.
- * 
+ *
+ * On the way out. Use Tasks instead.
+ *
  * @author klc
  * @version $Id$
  */
-public abstract class BackgroundJob<T extends TaskCommand> implements Callable<TaskResult> {
+@Deprecated
+public abstract class BackgroundJob<T extends TaskCommand, R extends TaskResult>  {
 
     protected T command;
     protected Log log = LogFactory.getLog( this.getClass().getName() );
     protected SecurityContext securityContext;
     protected String taskId;
 
-    /**
-     * @param command
-     */
     public BackgroundJob( T commandObj ) {
         assert commandObj != null;
 
@@ -54,57 +54,6 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
 
         this.command = commandObj;
         this.securityContext = SecurityContextHolder.getContext();
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.concurrent.Callable#call()
-     * 
-     * @see TaskMethodAdvice
-     */
-    @Override
-    public TaskResult call() throws Exception {
-        /*
-         * Do any preprocessing here
-         */
-        TaskResult result = new TaskResult( this.getCommand(), null );
-        ProgressAppender logAppender = null;
-        try {
-
-            if ( !this.getCommand().isWillRunOnGrid() ) {
-                /*
-                 * Set up a local logger. On the grid, logging is set up by the TaskMethodAdvice
-                 */
-                logAppender = new ProgressAppender( this.taskId );
-                Logger logger = LogManager.getLogger( "ubic.gemma" );
-                Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-                logger.addAppender( logAppender );
-                baseCodeLogger.addAppender( logAppender );
-            }
-
-            result = this.processJob();
-
-            /*
-             * Do any postprocessing here.
-             */
-
-        } catch ( Exception e ) {
-            result.setFailed( true );
-            throw e; // cancellation for example.
-        } finally {
-            /*
-             * Do any cleanup here.
-             */
-            if ( logAppender != null ) {
-                Logger logger = LogManager.getLogger( "ubic.gemma" );
-                Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-                logger.removeAppender( logAppender );
-                baseCodeLogger.removeAppender( logAppender );
-            }
-        }
-        return result;
 
     }
 
@@ -128,6 +77,6 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
      * 
      * @return result
      */
-    protected abstract TaskResult processJob();
+    protected abstract R processJob();
 
 }

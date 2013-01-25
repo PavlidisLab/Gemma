@@ -43,6 +43,8 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -66,10 +68,10 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentSearchServic
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -94,7 +96,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -130,7 +131,8 @@ import ubic.gemma.web.view.TextView;
  */
 @Controller
 @RequestMapping(value = { "/expressionExperiment", "/ee" })
-public class ExpressionExperimentController extends AbstractTaskService {
+public class ExpressionExperimentController {
+    private static final Log log = LogFactory.getLog(ExpressionExperimentController.class.getName());
 
     /**
      * Delete expression experiments.
@@ -138,7 +140,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @author pavlidis
      * @version $Id$
      */
-    private class RemoveExpressionExperimentJob extends BackgroundJob<TaskCommand> {
+    private class RemoveExpressionExperimentJob extends BackgroundJob<TaskCommand, TaskResult> {
 
         public RemoveExpressionExperimentJob( TaskCommand command ) {
             super( command );
@@ -155,7 +157,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
     }
 
-    private class RemovePubMed extends BackgroundJob<TaskCommand> {
+    private class RemovePubMed extends BackgroundJob<TaskCommand, TaskResult> {
 
         public RemovePubMed( TaskCommand command ) {
             super( command );
@@ -181,7 +183,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     }
 
-    private class UpdatePubMed extends BackgroundJob<UpdatePubMedCommand> {
+    private class UpdatePubMed extends BackgroundJob<UpdatePubMedCommand, TaskResult> {
 
         public UpdatePubMed( UpdatePubMedCommand command ) {
             super( command );
@@ -259,73 +261,30 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     private static final int TRIM_SIZE = 800;
 
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private AuditEventService auditEventService;
-
-    @Autowired
-    private BibliographicReferenceService bibliographicReferenceService;
-
-    @Autowired
-    private BioAssayService bioAssayService;
-
-    @Autowired
-    private BioMaterialService bioMaterialService;
-
-    @Autowired
-    private ExperimentalFactorService experimentalFactorService;
-
-    @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService = null;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
-    private ExpressionExperimentSearchService expressionExperimentSearchService = null;
-
-    @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService = null;
-
-    @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
-
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
-    @Autowired
-    private Persister persisterHelper = null;
-
-    @Autowired
-    private SearchService searchService;
-
-    @Autowired
-    private SecurityService securityService;
-
-    @Autowired
-    private TaxonService taxonService;
-
-    @Autowired
-    ExpressionDataMatrixService expressionDataMatrixService;
-
-    @Autowired
-    ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private SVDService svdService;
-
-    @Autowired
-    private WhatsNewService whatsNewService;
-
-    @Autowired
-    private SessionListManager sessionListManager;
-
-    @Autowired
-    private StatusService statusService;
-
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ArrayDesignService arrayDesignService;
+    @Autowired private AuditEventService auditEventService;
+    @Autowired private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired private BioAssayService bioAssayService;
+    @Autowired private BioMaterialService bioMaterialService;
+    @Autowired private ExperimentalFactorService experimentalFactorService;
+    @Autowired private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionExperimentSearchService expressionExperimentSearchService;
+    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    @Autowired private Persister persisterHelper;
+    @Autowired private SearchService searchService;
+    @Autowired private SecurityService securityService;
+    @Autowired private TaxonService taxonService;
+    @Autowired private ExpressionDataMatrixService expressionDataMatrixService;
+    @Autowired private SVDService svdService;
+    @Autowired private WhatsNewService whatsNewService;
+    @Autowired private SessionListManager sessionListManager;
+    @Autowired private StatusService statusService;
+    @Autowired private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -491,11 +450,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return msg if error occurred or empty string if successful
      */
     public void clearFromCaches( Long eeId ) {
-        experimentReportService.evictFromCache( eeId );
+        expressionExperimentReportService.evictFromCache( eeId );
     }
-
-    @Autowired
-    private ExpressionExperimentReportService experimentReportService;
 
     /**
      * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
@@ -522,8 +478,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public String deleteById( Long id ) {
         if ( id == null ) return null;
         RemoveExpressionExperimentJob job = new RemoveExpressionExperimentJob( new TaskCommand( id ) );
-        startTask( job );
-        return job.getTaskId();
+        return taskRunningService.submitLocalJob(job);
     }
 
     /**
@@ -1142,61 +1097,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @throws Exception
      */
     public String removePrimaryPublication( Long eeId ) throws Exception {
-        RemovePubMed runner = new RemovePubMed( new TaskCommand( eeId ) );
-        startTask( runner );
-        return runner.getTaskId();
+        RemovePubMed job = new RemovePubMed( new TaskCommand( eeId ) );
+        return taskRunningService.submitLocalJob( job );
     }
-
-    // /**
-    // * AJAX call for remote paging store
-    // *
-    // * @param batch
-    // * @return public JsonReaderResponse<ExpressionExperimentValueObject> browseTaxon( ListBatchCommand batch, Long
-    // * taxonId ) { List<ExpressionExperiment> records = loadAllOrdered( batch );
-    // * List<ExpressionExperimentValueObject> valueObjects = new
-    // * ArrayList<ExpressionExperimentValueObject>(getExpressionExperimentValueObjects( records ));
-    // * JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new
-    // * JsonReaderResponse<ExpressionExperimentValueObject>( valueObjects, ids.size() ); return returnVal; }
-    // */
-    // private List<ExpressionExperiment> getBatch( ListBatchCommand batch ) {
-    // return getBatch( batch, null );
-    // }
-
-    // private List<ExpressionExperiment> getBatch( ListBatchCommand batch, Collection<Long> ids ) {
-    // List<ExpressionExperiment> records;
-    // if ( StringUtils.isNotBlank( batch.getSort() ) ) {
-    //
-    // String o = batch.getSort();
-    //
-    // String orderBy = "name"; // default ordering
-    // if ( o.equals( "shortName" ) ) {
-    // orderBy = "shortName";
-    // } else if ( o.equals( "name" ) ) {
-    // orderBy = "name";
-    // } else if ( o.equals( "bioAssayCount" ) ) {
-    // orderBy = "bioAssayCount";
-    // } else if ( o.equals( "taxon" ) ) {
-    // orderBy = "taxon";
-    // } else {
-    // throw new IllegalArgumentException( "Unknown sort field: " + o );
-    // }
-    //
-    // boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
-    // if ( ids != null ) {
-    // records = expressionExperimentService.browseSpecificIds( batch.getStart(), batch.getLimit(), orderBy,
-    // descending, ids );
-    // } else {
-    // records = expressionExperimentService.browse( batch.getStart(), batch.getLimit(), orderBy, descending );
-    // }
-    // } else {
-    // if ( ids != null ) {
-    // records = expressionExperimentService.browseSpecificIds( batch.getStart(), batch.getLimit(), ids );
-    // } else {
-    // records = expressionExperimentService.browse( batch.getStart(), batch.getLimit() );
-    // }
-    // }
-    // return records;
-    // }
 
     /**
      * AJAX (used by experimentAndExperimentGroupCombo.js)
@@ -1565,9 +1468,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public String updatePubMed( Long eeId, String pubmedId ) throws Exception {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );
-        UpdatePubMed runner = new UpdatePubMed( command );
-        startTask( runner );
-        return runner.getTaskId();
+        UpdatePubMed job = new UpdatePubMed( command );
+        return taskRunningService.submitLocalJob(job);
     }
 
     /**
@@ -1588,16 +1490,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
         return ids;
-    }
-
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return null;
-    }
-
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
     }
 
     /*

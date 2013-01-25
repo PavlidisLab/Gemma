@@ -21,6 +21,8 @@ package ubic.gemma.web.controller.diff;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -30,19 +32,14 @@ import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImp
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
-import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
 import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * A controller to run differential expression analysis either locally or in a space.
@@ -51,63 +48,14 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 @Controller
-public class DifferentialExpressionAnalysisController extends AbstractTaskService {
+public class DifferentialExpressionAnalysisController {
+    protected static Log log = LogFactory.getLog(DifferentialExpressionAnalysisController.class.getName());
 
-    public DifferentialExpressionAnalysisController() {
-        super();
-        this.setBusinessInterface( DifferentialExpressionAnalysisTask.class );
-    }
-
-    /**
-     * Job that loads in a javaspace.
-     * 
-     * @author keshav
-     * @version $Id$
-     */
-    private class DiffAnalysisSpaceJob extends BackgroundJob<DifferentialExpressionAnalysisTaskCommand> {
-
-        final DifferentialExpressionAnalysisTask taskProxy = ( DifferentialExpressionAnalysisTask ) getProxy();
-
-        public DiffAnalysisSpaceJob( DifferentialExpressionAnalysisTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return taskProxy.execute( command );
-        }
-
-    }
-
-    /**
-     * Local task.
-     */
-    private class DiffAnalysisJob extends BackgroundJob<DifferentialExpressionAnalysisTaskCommand> {
-        public DiffAnalysisJob( DifferentialExpressionAnalysisTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return differentialExpressionAnalysisTask.execute( command );
-        }
-
-    }
-
-    @Autowired
-    private DifferentialExpressionAnalysisTask differentialExpressionAnalysisTask;
-
-    @Autowired
-    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
-    @Autowired
-    private ExpressionExperimentReportService experimentReportService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired private ExpressionExperimentReportService experimentReportService;
 
     /**
      * Ajax method. Pick the analysis type when we want it to be completely automated.
@@ -168,7 +116,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
                 toRemove );
         this.experimentReportService.evictFromCache( ee.getId() );
-        return super.run( cmd );
+        return taskRunningService.submitRemoteTask( cmd );
     }
 
     /**
@@ -191,7 +139,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         }
         this.experimentReportService.evictFromCache( ee.getId() );
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo, true );
-        return super.run( cmd );
+        return taskRunningService.submitRemoteTask( cmd );
     }
 
     /**
@@ -213,13 +161,12 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         this.experimentReportService.evictFromCache( ee.getId() );
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh,
                 false );
-        return super.run( cmd );
+        return taskRunningService.submitLocalTask( cmd );
     }
 
     /**
      * AJAX entry point when running completely automatically.
      * 
-     * @param cmd
      * @return
      * @throws Exception
      */
@@ -236,14 +183,13 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
                 .getExperimentalFactors() ) );
 
-        return super.run( cmd );
+        return taskRunningService.submitRemoteTask( cmd );
     }
 
     /**
      * AJAX entry point for 'customized' analysis.
      * 
      * @param id
-     * @param factorIds
      * @param includeInteractions
      * @param subsetFactorId optional
      * @return
@@ -312,32 +258,6 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
 
         log.info( "Initializing analysis" );
         this.experimentReportService.evictFromCache( ee.getId() );
-        return super.run( cmd );
+        return taskRunningService.submitRemoteTask( cmd );
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<DifferentialExpressionAnalysisTaskCommand> getInProcessRunner( TaskCommand command ) {
-        if ( ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" ) ) {
-            return null;
-        }
-        return new DiffAnalysisJob( ( DifferentialExpressionAnalysisTaskCommand ) command );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<DifferentialExpressionAnalysisTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new DiffAnalysisSpaceJob( ( DifferentialExpressionAnalysisTaskCommand ) command );
-
-    }
-
 }

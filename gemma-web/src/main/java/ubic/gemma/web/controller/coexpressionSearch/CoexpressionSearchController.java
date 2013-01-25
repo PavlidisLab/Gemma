@@ -79,38 +79,24 @@ public class CoexpressionSearchController  {
     private static final int MAX_RESULTS = ConfigUtils.getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene",
             DEFAULT_MAX_RESULTS );
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+    @Autowired private GeneCoexpressionService geneCoexpressionService;
+    @Autowired private GeneService geneService;
+    @Autowired private SearchService searchService;
+    @Autowired private GeneLightWeightCache geneLightWeightCache;
+    @Autowired private TaskRunningService taskRunningService;
 
-    @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
-
-    @Autowired
-    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
-
-    @Autowired
-    private GeneCoexpressionService geneCoexpressionService;
-
-    @Autowired
-    private GeneService geneService = null;
-
-    @Autowired
-    private SearchService searchService = null;
-
-    @Autowired
-    private GeneLightWeightCache geneLightWeightCache;
 
     public GeneLightWeightCache getGeneLightWeightCache() {
         return geneLightWeightCache;
     }
     
-    @Autowired
-    protected TaskRunningService taskRunningService;
-    
     /**
      * Inner class used for doing a long running coex search
      */
-    class CoexSearchJob extends BackgroundJob<TaskCommand> {
+    class CoexSearchJob extends BackgroundJob<TaskCommand, TaskResult> {
 
         public CoexSearchJob(  CoexSearchTaskCommand command ) {
             super( command );
@@ -132,14 +118,14 @@ public class CoexpressionSearchController  {
     	
     	CoexSearchJob job = new CoexSearchJob( new CoexSearchTaskCommand( searchOptions) );
 
-        try {
-            taskRunningService.submitTask( job );
-        } catch ( ConflictingTaskException e ) {
-            throw new RuntimeException( "Sorry, it looks like you already have a task like that running (taskid="
-                    + e.getCollidingCommand().getTaskId() + ", submitted time="
-                    + e.getCollidingCommand().getSubmissionTime() + "  ) ", e );
-        }
-        return job.getTaskId();
+//        try {
+          return taskRunningService.submitLocalJob( job );
+//        } catch ( ConflictingTaskException e ) {
+//            throw new RuntimeException( "Sorry, it looks like you already have a task like that running (taskid="
+//                    + e.getCollidingCommand().getTaskId() + ", submitted time="
+//                    + e.getCollidingCommand().getSubmissionTime() + "  ) ", e );
+//        }
+//        return job.getTaskId();
         
     }
 

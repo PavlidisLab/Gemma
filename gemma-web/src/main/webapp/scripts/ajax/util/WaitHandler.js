@@ -75,31 +75,28 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 							});
 					
 					if(hideLogsButton){						
-						p.pBar.hideLogsButton();
+						p.progressBar.hideLogsButton();
 					}
 					if(hideHideButton){						
-						p.pBar.hideHideButton();
+						p.progressBar.hideHideButton();
 					}
-					
 
-					if (this.throbberEl != undefined) {
-						/*
-						 * Doesn't work quite right ... implemented for 'report' update.
-						 */
-						var el = Ext.get(this.throbberEl);
+                    if (this.throbberEl === null) {
+                        p.show();
+                    } else {
+                        /*
+                         * Doesn't work quite right ... implemented for 'report' update.
+                         */
+                        var el = Ext.get( this.throbberEl );
+                        var id = Ext.id();
+                        Ext.DomHelper.append( this.throbberEl, '<span id="' + id
+                            + '"><img src="/Gemma/images/default/tree/loading.gif"/></span>');
 
-						var id = Ext.id();
-						Ext.DomHelper.append(this.throbberEl, '<span id="' + id
-										+ '"><img src="/Gemma/images/default/tree/loading.gif"/></span>');
-
-						this.on('done', function(data) {
-									Ext.DomHelper.overwrite(id, "");
-								});
-
-						p.start();
-					} else {
-						p.show();
-					}
+                        this.on('done', function (data) {
+                            Ext.DomHelper.overwrite(id, "");
+                        });
+                        p.start();
+                    }
 				} catch (e) {
 					Ext.Msg.alert("Error", e);
 				}

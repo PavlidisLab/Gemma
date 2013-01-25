@@ -58,14 +58,9 @@ public class PhenotypeController extends BaseController {
 
     private static Log logNeurocarta = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
 
-    @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-
-    @Autowired
-    private UserManager userManager;
-
-    @Autowired
-    private SecurityController securityController;
+    @Autowired private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    @Autowired private UserManager userManager;
+    @Autowired private SecurityController securityController;
 
     private ValidateEvidenceValueObject generateValidateEvidenceValueObject( Throwable throwable ) {
         final ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();

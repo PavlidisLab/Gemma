@@ -18,8 +18,6 @@
  */
 package ubic.gemma.util.progress;
 
-import java.util.Enumeration;
-
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -27,12 +25,15 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.progress.ProgressAppender;
-import ubic.gemma.job.progress.ProgressJob;
-import ubic.gemma.job.progress.ProgressManager;
+import ubic.gemma.job.progress.JobProgress;
+import ubic.gemma.job.progress.LocalProgressAppender;
 import ubic.gemma.testing.BaseSpringContextTest;
+
+import java.util.Enumeration;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * For this test to work you should have the appender configured in log4j.properties. If not it will be set up
@@ -43,13 +44,14 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ProgressAppenderTest extends BaseSpringContextTest {
 
-    ProgressJob job;
+    JobProgress job;
 
     // used to put things back as they were after the test.
     Level oldLevel;
 
     Logger log4jLogger;
 
+    Queue<String> updates = new ConcurrentLinkedDeque<String>();
     /*
      * (non-Javadoc)
      * 
@@ -66,21 +68,21 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
         Appender progressAppender = null;
         for ( ; appenders.hasMoreElements(); ) {
             Appender appender = appenders.nextElement();
-            if ( appender instanceof ProgressAppender ) {
+            if ( appender instanceof LocalProgressAppender) {
                 progressAppender = appender;
             }
         }
 
         if ( progressAppender == null ) {
             log.warn( "There is no progress appender configured; adding one for test" );
-            log4jLogger.addAppender( new ProgressAppender( "randomtaskidF" ) );
+            log4jLogger.addAppender( new LocalProgressAppender( "randomtaskidF", updates ) );
         }
 
         oldLevel = log4jLogger.getLevel();
 
         log4jLogger.setLevel( Level.INFO );
 
-        job = ProgressManager.createProgressJob( new TaskCommand() );
+        //job = ProgressManager.createProgressJob( new TaskCommand() );
     }
 
     /*
@@ -90,7 +92,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
      */
     @After
     public void teardown() {
-        ProgressManager.destroyProgressJob( job );
+        //ProgressManager.destroyProgressJob( job );
         log4jLogger.setLevel( oldLevel );
     }
 
@@ -100,13 +102,14 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
         String expectedValue = "la de da";
         log.info( expectedValue );
 
-        // assertEquals( expectedValue, job.getProgressData().getDescription() );
+        assertEquals( expectedValue, updates.peek() );
 
         log.debug( "pay no attention" ); // should not update the description.
-        // assertEquals( expectedValue, job.getProgressData().getDescription() );
+        assertEquals( expectedValue, updates.peek() );
 
+        updates.clear();
         log.warn( "listenToMe" );
-        // assertEquals( "listenToMe", job.getProgressData().getDescription() );
+        assertEquals( "listenToMe", updates.peek() );
     }
 
 }

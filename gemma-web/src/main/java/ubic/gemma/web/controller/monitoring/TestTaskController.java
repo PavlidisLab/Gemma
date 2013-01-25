@@ -20,10 +20,9 @@ package ubic.gemma.web.controller.monitoring;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.job.grid.util.MonitorTask;
 import ubic.gemma.job.grid.util.MonitorTaskCommand;
 
@@ -34,14 +33,10 @@ import ubic.gemma.job.grid.util.MonitorTaskCommand;
  * @version $Id$
  */
 @Component
-public class TestTaskController extends AbstractTaskService {
+public class TestTaskController {
 
-    @Autowired
-    private MonitorTask testTask;
-
-    public TestTaskController() {
-        this.setBusinessInterface( MonitorTask.class );
-    }
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private MonitorTask testTask;
 
     /**
      * AJAX method
@@ -62,30 +57,14 @@ public class TestTaskController extends AbstractTaskService {
         command.setFail( fail );
 
         if ( forceLocal ) {
-            return this.startTask( getInProcessRunner( command ) );
+            return taskRunningService.submitLocalJob( new BackgroundJob(command) {
+                @Override
+                protected TaskResult processJob() {
+                    return testTask.execute();
+                }
+            } );
         }
-        return super.run( command );
-    }
-
-    @Override
-    protected BackgroundJob<MonitorTaskCommand> getInProcessRunner( TaskCommand command ) {
-        return new BackgroundJob<MonitorTaskCommand>( ( MonitorTaskCommand ) command ) {
-            @Override
-            public TaskResult processJob() {
-                return testTask.execute( this.getCommand() );
-            }
-        };
-    }
-
-    @Override
-    protected BackgroundJob<MonitorTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new BackgroundJob<MonitorTaskCommand>( ( MonitorTaskCommand ) command ) {
-            @Override
-            public TaskResult processJob() {
-                MonitorTask task = ( MonitorTask ) getProxy();
-                return task.execute( this.getCommand() ); // makes the RMI call
-            }
-        };
+        return taskRunningService.submitRemoteTask( command );
     }
 
 }

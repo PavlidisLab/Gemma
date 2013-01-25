@@ -19,15 +19,17 @@
 package ubic.gemma.search;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import org.compass.core.spi.InternalCompass;
 
-import ubic.gemma.job.AbstractTaskService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.SubmittedTask;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.tasks.maintenance.IndexerResult;
-import ubic.gemma.tasks.maintenance.IndexerTask;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.util.CompassUtils;
 
@@ -37,157 +39,135 @@ import ubic.gemma.util.CompassUtils;
  * @author keshav
  * @version $Id$
  */
-public class IndexServiceImpl extends AbstractTaskService implements IndexService {
+@Component
+public class IndexServiceImpl implements IndexService {
+
+    @Autowired private TaskRunningService taskRunningService;
+
+    @Autowired @Qualifier("compassArray") private InternalCompass compassArray;
+    @Autowired @Qualifier("compassBibliographic") private InternalCompass compassBibliographic;
+    @Autowired @Qualifier("compassBiosequence") private InternalCompass compassBiosequence;
+    @Autowired @Qualifier("compassExperimentSet") private InternalCompass compassExperimentSet;
+    @Autowired @Qualifier("compassExpression") private InternalCompass compassExpression;
+    @Autowired @Qualifier("compassGene") private InternalCompass compassGene;
+    @Autowired @Qualifier("compassGeneSet") private InternalCompass compassGeneSet;
+    @Autowired @Qualifier("compassProbe") private InternalCompass compassProbe;
 
     /*
      * NOTE not configured using annotations because they get confused by the interfaces here.
      */
 
     /**
-     * Used for in-process.
-     * 
-     * @author klc
-     * @version $Id$
-     */
-    class IndexJob extends BackgroundJob<IndexerTaskCommand> {
-
-        /**
-         * @param commandObj
-         */
-        public IndexJob( IndexerTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return indexerTask.execute( this.command );
-            /*
-             * In-process we don't need to swap the indexes afterwards.
-             */
-        }
-    }
-
-    /**
      * Job that loads in a javaspace.
-     * 
+     *
      * @author Paul
      * @version $Id$
      */
-    private class IndexInSpaceJob extends BackgroundJob<IndexerTaskCommand> {
+    // This is started locally. Calls two job: ReIndex and SwapIndices if needed.
+    private class IndexerJob extends BackgroundJob<IndexerTaskCommand, IndexerResult> {
 
-        final IndexerTask indexGemmaTaskProxy = ( IndexerTask ) getProxy();
-
-        public IndexInSpaceJob( IndexerTaskCommand commandObj ) {
-            super( commandObj );
+        public IndexerJob( IndexerTaskCommand command ) {
+            super( command );
         }
 
         @Override
-        protected TaskResult processJob() {
-            IndexerResult result = indexGemmaTaskProxy.execute( this.command );
-
-            /*
-             * When the rebuild is done in another JVM, in the client the index must be 'swapped' to refer to the new
-             * one.
-             * 
-             * Put in multiple try catch blocks so that if one swapping fails they all don't fail :)
-             */
-
+        protected IndexerResult processJob() {
+            IndexerResult result = null;
+            String taskId = taskRunningService.submitRemoteTask( command );
+            SubmittedTask<IndexerResult> indexingTask = taskRunningService.getSubmittedTask( taskId );
             try {
-                if ( this.command.isIndexGene() && result.getPathToGeneIndex() != null )
-                    CompassUtils.swapCompassIndex( compassGene, result.getPathToGeneIndex() );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
+                result = indexingTask.getResult();
+            } catch (ExecutionException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            } catch (InterruptedException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
-
-            try {
-                if ( this.command.isIndexEE() && result.getPathToExpressionIndex() != null )
-                    CompassUtils.swapCompassIndex( compassExpression, result.getPathToExpressionIndex() );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-
-            try {
-                if ( this.command.isIndexAD() && result.getPathToArrayIndex() != null )
-                    CompassUtils.swapCompassIndex( compassArray, result.getPathToArrayIndex() );
-
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-
-            try {
-                if ( this.command.isIndexBibRef() && result.getPathToBibliographicIndex() != null )
-                    CompassUtils.swapCompassIndex( compassBibliographic, result.getPathToBibliographicIndex() );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-
-            try {
-                if ( this.command.isIndexBioSequence() && result.getPathToBiosequenceIndex() != null )
-                    CompassUtils.swapCompassIndex( compassBiosequence, result.getPathToBiosequenceIndex() );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-            try {
-                if ( this.command.isIndexProbe() && result.getPathToProbeIndex() != null )
-                    CompassUtils.swapCompassIndex( compassProbe, result.getPathToProbeIndex() );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-
-            try {
-                if ( this.command.isIndexGeneSet() && result.getPathToGeneSetIndex() != null )
-                    CompassUtils.swapCompassIndex( compassGeneSet, result.getPathToGeneSetIndex() );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-
-            try {
-                if ( this.command.isIndexExperimentSet() && result.getPathToExperimentSetIndex() != null )
-                    CompassUtils.swapCompassIndex( compassExperimentSet, result.getPathToExperimentSetIndex() );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
+            if ( indexingTask.isRunningRemotely() && result != null ) {
+                loadExternalIndices( command, result );
             }
 
             return result;
-
         }
     }
 
-    private IndexerTask indexerTask;
 
-    private InternalCompass compassArray;
+    private void loadExternalIndices( IndexerTaskCommand indexerTaskCommand, IndexerResult remoteIndexTaskResult ) {
+            /*
+             * When the rebuild is done in another JVM, in the client the index must be 'swapped' to refer to the new
+             * one.
+             *
+             * Put in multiple try catch blocks so that if one swapping fails they all don't fail :)
+             */
+        try {
+            if ( indexerTaskCommand.isIndexGene() && remoteIndexTaskResult.getPathToGeneIndex() != null )
+                CompassUtils.swapCompassIndex( compassGene, remoteIndexTaskResult.getPathToGeneIndex() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-    private InternalCompass compassBibliographic;
+        try {
+            if ( indexerTaskCommand.isIndexEE() && remoteIndexTaskResult.getPathToExpressionIndex() != null )
+                CompassUtils.swapCompassIndex( compassExpression, remoteIndexTaskResult.getPathToExpressionIndex() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-    private InternalCompass compassBiosequence;
+        try {
+            if ( indexerTaskCommand.isIndexAD() && remoteIndexTaskResult.getPathToArrayIndex() != null )
+                CompassUtils.swapCompassIndex( compassArray, remoteIndexTaskResult.getPathToArrayIndex() );
 
-    private InternalCompass compassExpression;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-    private InternalCompass compassGene;
+        try {
+            if ( indexerTaskCommand.isIndexBibRef() && remoteIndexTaskResult.getPathToBibliographicIndex() != null )
+                CompassUtils.swapCompassIndex( compassBibliographic, remoteIndexTaskResult.getPathToBibliographicIndex() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-    private InternalCompass compassProbe;
+        try {
+            if ( indexerTaskCommand.isIndexBioSequence() && remoteIndexTaskResult.getPathToBiosequenceIndex() != null )
+                CompassUtils.swapCompassIndex( compassBiosequence, remoteIndexTaskResult.getPathToBiosequenceIndex() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        try {
+            if ( indexerTaskCommand.isIndexProbe() && remoteIndexTaskResult.getPathToProbeIndex() != null )
+                CompassUtils.swapCompassIndex( compassProbe, remoteIndexTaskResult.getPathToProbeIndex() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-    private InternalCompass compassGeneSet;
+        try {
+            if ( indexerTaskCommand.isIndexGeneSet() && remoteIndexTaskResult.getPathToGeneSetIndex() != null )
+                CompassUtils.swapCompassIndex( compassGeneSet, remoteIndexTaskResult.getPathToGeneSetIndex() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-    private InternalCompass compassExperimentSet;
+        try {
+            if ( indexerTaskCommand.isIndexExperimentSet() && remoteIndexTaskResult.getPathToExperimentSetIndex() != null )
+                CompassUtils.swapCompassIndex( compassExperimentSet, remoteIndexTaskResult.getPathToExperimentSetIndex() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /**
      * @param compassGeneSet the compassGeneSet to set
      */
-    public void setCompassGeneSet( InternalCompass compassGeneSet ) {
-        this.compassGeneSet = compassGeneSet;
-    }
-
-    /**
-     * @param compassExperimentSet the compassExperimentSet to set
-     */
-    public void setCompassExperimentSet( InternalCompass compassExperimentSet ) {
-        this.compassExperimentSet = compassExperimentSet;
-    }
-
-    public IndexServiceImpl() {
-        this.setBusinessInterface( IndexerTask.class );
-    }
+//    public void setCompassGeneSet( InternalCompass compassGeneSet ) {
+//        this.compassGeneSet = compassGeneSet;
+//    }
+//
+//    /**
+//     * @param compassExperimentSet the compassExperimentSet to set
+//     */
+//    public void setCompassExperimentSet( InternalCompass compassExperimentSet ) {
+//        this.compassExperimentSet = compassExperimentSet;
+//    }
 
     /*
      * (non-Javadoc)
@@ -196,7 +176,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      */
     @Override
     public String index( IndexerTaskCommand command ) {
-        return this.run( command );
+        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
 
     /*
@@ -206,9 +186,9 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      */
     @Override
     public String indexAll() {
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setAll( true );
-        return this.run( c );
+        IndexerTaskCommand command = new IndexerTaskCommand();
+        command.setAll( true );
+        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
 
     /*
@@ -218,9 +198,9 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      */
     @Override
     public String indexArrayDesigns() {
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexAD( true );
-        return this.run( c );
+        IndexerTaskCommand command = new IndexerTaskCommand();
+        command.setIndexAD( true );
+        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
 
     /*
@@ -230,9 +210,9 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      */
     @Override
     public String indexBibligraphicReferences() {
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexBibRef( true );
-        return this.run( c );
+        IndexerTaskCommand command = new IndexerTaskCommand();
+        command.setIndexBibRef( true );
+        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
 
     /*
@@ -242,9 +222,9 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      */
     @Override
     public String indexBioSequences() {
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexBioSequence( true );
-        return this.run( c );
+        IndexerTaskCommand command = new IndexerTaskCommand();
+        command.setIndexBioSequence( true );
+        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
 
     /*
@@ -254,9 +234,9 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      */
     @Override
     public String indexExpressionExperiments() {
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexEE( true );
-        return this.run( c );
+        IndexerTaskCommand command = new IndexerTaskCommand();
+        command.setIndexEE( true );
+        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
 
     /*
@@ -266,9 +246,9 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      */
     @Override
     public String indexGenes() {
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexGene( true );
-        return this.run( c );
+        IndexerTaskCommand command = new IndexerTaskCommand();
+        command.setIndexGene( true );
+        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
 
     /*
@@ -278,81 +258,57 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
      */
     @Override
     public String indexProbes() {
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexProbe( true );
-        return this.run( c );
+        IndexerTaskCommand command = new IndexerTaskCommand();
+        command.setIndexProbe( true );
+        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
 
-    /**
-     * @param compassArray the compassArray to set
-     */
-    public void setCompassArray( InternalCompass compassArray ) {
-        this.compassArray = compassArray;
-    }
-
-    /**
-     * @param compassBibliographic the compassBibliographic to set
-     */
-    public void setCompassBibliographic( InternalCompass compassBibliographic ) {
-        this.compassBibliographic = compassBibliographic;
-    }
-
-    /**
-     * @param compassBiosequence the compassBiosequence to set
-     */
-    public void setCompassBiosequence( InternalCompass compassBiosequence ) {
-        this.compassBiosequence = compassBiosequence;
-    }
-
-    /**
-     * @param compassExpression the compassExpression to set
-     */
-    public void setCompassExpression( InternalCompass compassExpression ) {
-        this.compassExpression = compassExpression;
-    }
-
-    /**
-     * @param compassGene the compassGene to set
-     */
-    public void setCompassGene( InternalCompass compassGene ) {
-        this.compassGene = compassGene;
-    }
-
-    /**
-     * @param compassProbe the compassProbe to set
-     */
-    public void setCompassProbe( InternalCompass compassProbe ) {
-        this.compassProbe = compassProbe;
-    }
-
-    /**
-     * @param indexerTask the indexerTask to set
-     */
-    public void setIndexerTask( IndexerTask indexerTask ) {
-        this.indexerTask = indexerTask;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.AbstractSpacesProgressService#getRunner(ubic.gemma.grid.javaspaces.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<IndexerTaskCommand> getInProcessRunner( TaskCommand command ) {
-        return new IndexJob( ( IndexerTaskCommand ) command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
-     * org.springframework.security.core.context.SecurityContext, javax.servlet.http.HttpServletRequest,
-     * java.lang.Object, ubic.gemma.web.util.MessageUtil)
-     */
-    @Override
-    protected BackgroundJob<IndexerTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new IndexInSpaceJob( ( IndexerTaskCommand ) command );
-    }
-
+//    /**
+//     * @param compassArray the compassArray to set
+//     */
+//    public void setCompassArray( InternalCompass compassArray ) {
+//        this.compassArray = compassArray;
+//    }
+//
+//    /**
+//     * @param compassBibliographic the compassBibliographic to set
+//     */
+//    public void setCompassBibliographic( InternalCompass compassBibliographic ) {
+//        this.compassBibliographic = compassBibliographic;
+//    }
+//
+//    /**
+//     * @param compassBiosequence the compassBiosequence to set
+//     */
+//    public void setCompassBiosequence( InternalCompass compassBiosequence ) {
+//        this.compassBiosequence = compassBiosequence;
+//    }
+//
+//    /**
+//     * @param compassExpression the compassExpression to set
+//     */
+//    public void setCompassExpression( InternalCompass compassExpression ) {
+//        this.compassExpression = compassExpression;
+//    }
+//
+//    /**
+//     * @param compassGene the compassGene to set
+//     */
+//    public void setCompassGene( InternalCompass compassGene ) {
+//        this.compassGene = compassGene;
+//    }
+//
+//    /**
+//     * @param compassProbe the compassProbe to set
+//     */
+//    public void setCompassProbe( InternalCompass compassProbe ) {
+//        this.compassProbe = compassProbe;
+//    }
+//
+//    /**
+//     * @param indexerTask the indexerTask to set
+//     */
+//    public void setIndexerTask( IndexerTask indexerTask ) {
+//        this.indexerTask = indexerTask;
+//    }
 }

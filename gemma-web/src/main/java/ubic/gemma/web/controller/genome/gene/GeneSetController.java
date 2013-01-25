@@ -50,14 +50,9 @@ import ubic.gemma.security.SecurityService;
 @RequestMapping("/geneSet")
 public class GeneSetController {
 
-    @Autowired
-    private GeneSetService geneSetService = null;
-
-    @Autowired
-    private SecurityService securityService = null;
-
-    @Autowired
-    private SessionListManager sessionListManager;
+    @Autowired private GeneSetService geneSetService;
+    @Autowired private SecurityService securityService;
+    @Autowired private SessionListManager sessionListManager;
 
     /**
      * AJAX create an entities in the database based on the value objects passed in

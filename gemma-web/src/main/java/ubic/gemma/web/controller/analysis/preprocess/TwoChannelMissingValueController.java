@@ -23,12 +23,8 @@ import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTask;
 import ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTaskCommand;
 
 /**
@@ -38,48 +34,11 @@ import ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTaskCommand;
  * @version $Id$
  */
 @Controller
-public class TwoChannelMissingValueController extends AbstractTaskService {
+public class TwoChannelMissingValueController {
 
-    public TwoChannelMissingValueController() {
-        super();
-        this.setBusinessInterface( TwoChannelMissingValueTask.class );
-    }
-
-    @Autowired
-    TwoChannelMissingValueTask twoChannelMissingValueTask;
-
-    private class TwoChannelMissingValueJob extends BackgroundJob<TwoChannelMissingValueTaskCommand> {
-
-        public TwoChannelMissingValueJob( TwoChannelMissingValueTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        protected TaskResult processJob() {
-            return twoChannelMissingValueTask.execute( this.command );
-        }
-
-    }
-
-    private class TwoChannelMissingValueSpaceJob extends BackgroundJob<TwoChannelMissingValueTaskCommand> {
-
-        final TwoChannelMissingValueTask taskProxy = ( TwoChannelMissingValueTask ) getProxy();
-
-        public TwoChannelMissingValueSpaceJob( TwoChannelMissingValueTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        protected TaskResult processJob() {
-            return taskProxy.execute( this.command );
-        }
-
-    }
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
-    @Autowired
-    private ExpressionExperimentReportService experimentReportService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionExperimentReportService experimentReportService;
 
     /**
      * AJAX entry point. -- uses default settings
@@ -98,17 +57,7 @@ public class TwoChannelMissingValueController extends AbstractTaskService {
 
         TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( ee );
         experimentReportService.evictFromCache( id );
-        return super.run( cmd );
-    }
-
-    @Override
-    protected BackgroundJob<TwoChannelMissingValueTaskCommand> getInProcessRunner( TaskCommand command ) {
-        return new TwoChannelMissingValueJob( ( TwoChannelMissingValueTaskCommand ) command );
-    }
-
-    @Override
-    protected BackgroundJob<TwoChannelMissingValueTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new TwoChannelMissingValueSpaceJob( ( TwoChannelMissingValueTaskCommand ) command );
+        return taskRunningService.submitRemoteTask( cmd );
     }
 
 }

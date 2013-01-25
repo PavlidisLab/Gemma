@@ -21,13 +21,11 @@ package ubic.gemma.web.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.*;
 
 /**
  * Controller that does nothing except wait a while. Used for tests.
@@ -40,17 +38,18 @@ import ubic.gemma.job.TaskResult;
  * @version $Id$
  */
 @Controller
-public class MockLongJobControllerImpl extends AbstractTaskService implements MockLongJobController {
+public class MockLongJobControllerImpl implements MockLongJobController {
 
+    @Autowired private TaskRunningService taskRunningService;
     /* (non-Javadoc)
      * @see ubic.gemma.web.util.MockLongJobController#runJob(ubic.gemma.job.TaskCommand)
      */
     @Override
     public String runJob( TaskCommand command ) {
-        return run( command );
+        return taskRunningService.submitLocalJob( new WasteOfTime( command ) );
     }
 
-    static class WasteOfTime extends BackgroundJob<TaskCommand> {
+    static class WasteOfTime extends BackgroundJob<TaskCommand, TaskResult> {
 
         public WasteOfTime( TaskCommand command ) {
             super( command );
@@ -81,13 +80,4 @@ public class MockLongJobControllerImpl extends AbstractTaskService implements Mo
 
     }
 
-    @Override
-    protected BackgroundJob<TaskCommand> getInProcessRunner( TaskCommand command ) {
-        return new WasteOfTime( command );
-    }
-
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
-    }
 }

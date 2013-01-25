@@ -39,6 +39,7 @@ import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -51,9 +52,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.tasks.visualization.DifferentialExpressionSearchTaskCommand;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
-import ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService;
 
 /**
  * A controller used to get differential expression analysis and meta analysis results.
@@ -68,23 +69,13 @@ public class DifferentialExpressionSearchController {
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired private GeneDifferentialExpressionService geneDifferentialExpressionService;
+    @Autowired private GeneService geneService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired private TaskRunningService taskRunningService;
 
-    @Autowired
-    private GeneDifferentialExpressionService geneDifferentialExpressionService;
-
-    @Autowired
-    private GeneService geneService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
-
-    @Autowired
-    private DifferentialExpressionGeneConditionSearchService geneConditionSearchService;
 
     /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
@@ -251,19 +242,6 @@ public class DifferentialExpressionSearchController {
     }
 
     /**
-     * @param taskId
-     * @return
-     */
-    public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl.TaskProgress getDiffExpSearchTaskProgress(
-            String taskId ) {
-        return this.geneConditionSearchService.getDiffExpSearchTaskProgress( taskId );
-    }
-
-    public ExpressionExperimentSetService getExpressionExperimentSetService() {
-        return expressionExperimentSetService;
-    }
-
-    /**
      * AJAX entry.
      * <p>
      * Value objects returned contain experiments that have 2 factors and have had the diff analysis run on it.
@@ -375,8 +353,11 @@ public class DifferentialExpressionSearchController {
 
         log.info( "Got genes" );
 
-        String taskId = geneConditionSearchService.scheduleDiffExpSearchTask( genes, experiments, geneGroupNames,
-                datasetGroupNames );
+        final DifferentialExpressionSearchTaskCommand taskCommand = new DifferentialExpressionSearchTaskCommand(
+                                                                        genes, experiments,
+                                                                        geneGroupNames, datasetGroupNames );
+
+        String taskId = taskRunningService.submitLocalTask( taskCommand );
 
         log.info( "Scheduled search with task=" + taskId );
 
@@ -387,7 +368,6 @@ public class DifferentialExpressionSearchController {
      * Returns the results of the meta-analysis.
      * 
      * @param geneId
-     * @param eeIds
      * @param selectedFactors
      * @param threshold
      * @return
@@ -475,89 +455,4 @@ public class DifferentialExpressionSearchController {
         }
         return filteredIds;
     }
-
-    // TODO: Dead code?
-    // /*
-    // * Handles the case exporting results as text.
-    // *
-    // * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
-    // * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-    // */
-    // @Override
-    // protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-    // throws Exception {
-    //
-    // if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
-    //
-    // // -------------------------
-    // // Download diff expression data for a specific diff expresion search
-    //
-    // double threshold = DEFAULT_THRESHOLD;
-    // try {
-    // threshold = Double.parseDouble( request.getParameter( "t" ) );
-    // } catch ( NumberFormatException e ) {
-    // log.warn( "invalid threshold; using default " + threshold );
-    // }
-    //
-    // Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
-    //
-    // Long eeSetId = null;
-    // Collection<Long> eeIds = null;
-    // try {
-    // eeSetId = Long.parseLong( request.getParameter( "a" ) );
-    // } catch ( NumberFormatException e ) {
-    // //
-    // }
-    // if ( eeSetId == null ) {
-    // eeIds = extractIds( request.getParameter( "ees" ) );
-    // }
-    //
-    // String fs = request.getParameter( "fm" );
-    // Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
-    //
-    // DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
-    // command.setGeneIds( geneIds );
-    // command.setEeSetId( eeSetId );
-    // command.setEeIds( eeIds );
-    // command.setSelectedFactors( selectedFactors );
-    // command.setThreshold( threshold );
-    //
-    // Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
-    //
-    // ModelAndView mav = new ModelAndView( new TextView() );
-    //
-    // StringBuilder buf = new StringBuilder();
-    //
-    // for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
-    // buf.append( demavo );
-    // }
-    //
-    // String output = buf.toString();
-    //
-    // mav.addObject( "text", output.length() > 0 ? output : "no results" );
-    // return mav;
-    //
-    // }
-    //
-    //
-    // /**
-    // * Returns a collection of {@link Long} ids from strings.
-    // *
-    // * @param idString
-    // * @return
-    // */
-    // protected Collection<Long> extractIds( String idString ) {
-    // Collection<Long> ids = new ArrayList<Long>();
-    // if ( idString != null ) {
-    // for ( String s : idString.split( "," ) ) {
-    // try {
-    // ids.add( Long.parseLong( s.trim() ) );
-    // } catch ( NumberFormatException e ) {
-    // log.warn( "invalid id " + s );
-    // }
-    // }
-    // }
-    // return ids;
-    // }
-
 }

@@ -24,12 +24,10 @@ import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.analysis.expression.BatchInfoFetchTask;
+import ubic.gemma.tasks.analysis.expression.BatchInfoFetchTaskCommand;
 import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
 
 /**
@@ -39,59 +37,15 @@ import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
  * @version $Id$
  */
 @Controller
-public class BatchInfoFetchController extends AbstractTaskService {
+public class BatchInfoFetchController {
 
-    private class BatchInfoFetchJob extends BackgroundJob<ExpressionExperimentReportTaskCommand> {
-
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public BatchInfoFetchJob( ExpressionExperimentReportTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return batchInfoFetchTask.execute( command );
-        }
-
-    }
-    /**
-     * Job that loads in a javaspace.
-     */
-    private class BatchInfoFetchSpaceJob extends BatchInfoFetchJob {
-
-        final BatchInfoFetchTask taskProxy = ( BatchInfoFetchTask ) getProxy();
-
-        public BatchInfoFetchSpaceJob( ExpressionExperimentReportTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return taskProxy.execute( command );
-        }
-
-    }
-    @Autowired
-    private BatchInfoFetchTask batchInfoFetchTask;
-
-    @Autowired
-    private ExpressionExperimentReportService experimentReportService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    public BatchInfoFetchController() {
-        super();
-        this.setBusinessInterface( BatchInfoFetchTask.class );
-    }
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ExpressionExperimentReportService experimentReportService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
 
     /**
      * AJAX entry point.
      * 
-     * @param cmd
      * @return
      * @throws Exception
      */
@@ -110,30 +64,10 @@ public class BatchInfoFetchController extends AbstractTaskService {
                     "The experiment does not seem to be from an external source that would have batch information available." );
         }
 
-        ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( ee );
+        BatchInfoFetchTaskCommand cmd = new BatchInfoFetchTaskCommand( ee );
+
         experimentReportService.evictFromCache( id );
-        return super.run( cmd );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.AbstractTaskService#getInProcessRunner(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return new BatchInfoFetchJob( ( ExpressionExperimentReportTaskCommand ) command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.AbstractTaskService#getSpaceRunner(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return new BatchInfoFetchSpaceJob( ( ExpressionExperimentReportTaskCommand ) command );
-
+        return taskRunningService.submitRemoteTask( cmd );
     }
 
 }

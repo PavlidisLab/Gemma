@@ -53,14 +53,10 @@ import ubic.gemma.web.persistence.SessionListManager;
 @Controller
 @RequestMapping("/expressionExperimentSet")
 public class ExpressionExperimentSetController extends BaseController {
-    @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService;
 
-    @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService = null;
-
-    @Autowired
-    private SessionListManager sessionListManager;
+    @Autowired private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired private SessionListManager sessionListManager;
 
     /**
      * AJAX adds the Expression Experiment group to the session
@@ -298,8 +294,6 @@ public class ExpressionExperimentSetController extends BaseController {
 
     /**
      * AJAX Given a valid experiment group will remove it from the session.
-     * 
-     * @param groups
      */
     public Collection<SessionBoundExpressionExperimentSetValueObject> removeSessionGroups(
             Collection<SessionBoundExpressionExperimentSetValueObject> vos ) {
@@ -312,8 +306,6 @@ public class ExpressionExperimentSetController extends BaseController {
 
     /**
      * AJAX Given valid experiment groups will remove them from the session or the database appropriately.
-     * 
-     * @param groups
      */
     // TODO returning the entities that were removed is weird?
     public Collection<ExpressionExperimentSetValueObject> removeUserAndSessionGroups(
@@ -409,8 +401,6 @@ public class ExpressionExperimentSetController extends BaseController {
 
     /**
      * AJAX Updates the session group. TODO move to service?
-     * 
-     * @param groups
      */
     public Collection<SessionBoundExpressionExperimentSetValueObject> updateSessionGroups(
             Collection<SessionBoundExpressionExperimentSetValueObject> vos ) {
@@ -422,8 +412,6 @@ public class ExpressionExperimentSetController extends BaseController {
 
     /**
      * AJAX Updates the session group and user database groups.
-     * 
-     * @param groups
      */
     public Collection<ExpressionExperimentSetValueObject> updateUserAndSessionGroups(
             Collection<ExpressionExperimentSetValueObject> vos ) {

@@ -645,7 +645,7 @@
 		<dwr:remote javascript="SystemMonitorController">
 			<dwr:include method="getHibernateStatus" />
 			<dwr:include method="getCacheStatus" />
-			<dwr:include method="getSpaceStatus" />
+			<dwr:include method="getJMSBrokerStatus" />
 			<dwr:include method="clearCache" />
 			<dwr:include method="clearAllCaches" />
 			<dwr:include method="resetHibernateStatus" />
@@ -767,11 +767,11 @@
 		<dwr:convert type="bean"
 			class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject" javascript="ExternalDatabaseStatisticsValueObject" />
 
-		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Gene" />
+		<dwr:convert type="bean" class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Gene" />
 		<dwr:convert type="bean"
-			class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Condition" />
-		<dwr:convert type="bean" class="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Cell" />
+			class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Condition" />
+		<dwr:convert type="bean" class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Cell" />
 		<dwr:convert type="bean"
 			class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl$TaskProgress" />
 
@@ -840,7 +840,7 @@
 			<dwr:exclude method="technologyType" />
 		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.gemma.job.TaskCommandValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.job.progress.SubmittedTaskValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.tasks.maintenance.IndexerTaskCommand">
 			<dwr:exclude method="securityContext" />
@@ -859,7 +859,7 @@
 		</dwr:convert>
 
 		<dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.PrimitiveType" />
-		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadTaskCommand" />
 		<dwr:convert type="bean"
 			class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentCommandValidation" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentUploadResponse" />

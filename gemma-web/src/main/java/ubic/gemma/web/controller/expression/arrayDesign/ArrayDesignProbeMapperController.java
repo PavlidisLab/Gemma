@@ -21,14 +21,10 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.tasks.analysis.sequence.ArrayDesignProbeMapTaskCommand;
-import ubic.gemma.tasks.analysis.sequence.ArrayDesignProbeMapperTask;
 
 /**
  * A controller to run array design probe mapper either locally or in a space.
@@ -37,93 +33,25 @@ import ubic.gemma.tasks.analysis.sequence.ArrayDesignProbeMapperTask;
  * @version $Id$
  */
 @Controller
-public class ArrayDesignProbeMapperController extends AbstractTaskService {
+public class ArrayDesignProbeMapperController {
 
-    public ArrayDesignProbeMapperController() {
-        super();
-        this.setBusinessInterface( ArrayDesignProbeMapperTask.class );
-    }
-
-    @Autowired
-    ArrayDesignProbeMapperTask arrayDesignProbeMapperTask;
-
-    /**
-     * Regular (local) job.
-     */
-    private class ArrayDesignProbeMapperJob extends BackgroundJob<ArrayDesignProbeMapTaskCommand> {
-
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public ArrayDesignProbeMapperJob( ArrayDesignProbeMapTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        protected TaskResult processJob() {
-            return arrayDesignProbeMapperTask.execute( this.command );
-        }
-    }
-
-    /**
-     * Job that loads in a javaspace.
-     */
-    private class ArrayDesignProbeMapperSpaceJob extends ArrayDesignProbeMapperJob {
-
-        public ArrayDesignProbeMapperSpaceJob( ArrayDesignProbeMapTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        final ArrayDesignProbeMapperTask taskProxy = ( ArrayDesignProbeMapperTask ) getProxy();
-
-        @Override
-        protected TaskResult processJob() {
-            return taskProxy.execute( this.command );
-        }
-
-    }
-
-    @Autowired
-    private ArrayDesignService arrayDesignService = null;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ArrayDesignService arrayDesignService;
 
     /**
      * AJAX entry point.
      * 
-     * @param cmd
      * @return
      * @throws Exception
      */
     public String run( Long id ) throws Exception {
 
-        ArrayDesign ad = arrayDesignService.load( id );
-        ad = arrayDesignService.thaw( ad );
+        ArrayDesign arrayDesign = arrayDesignService.load( id );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         ArrayDesignProbeMapTaskCommand cmd = new ArrayDesignProbeMapTaskCommand();
-        cmd.setArrayDesign( ad );
+        cmd.setArrayDesign( arrayDesign );
 
-        return super.run( cmd );
+        return taskRunningService.submitRemoteTask( cmd );
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<ArrayDesignProbeMapTaskCommand> getInProcessRunner( TaskCommand command ) {
-        return new ArrayDesignProbeMapperJob( ( ArrayDesignProbeMapTaskCommand ) command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<ArrayDesignProbeMapTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new ArrayDesignProbeMapperSpaceJob( ( ArrayDesignProbeMapTaskCommand ) command );
-
-    }
-
 }

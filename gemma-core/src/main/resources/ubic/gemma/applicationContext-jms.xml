@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jms="http://www.springframework.org/schema/jms"
+       xmlns:amq="http://activemq.apache.org/schema/core"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.0.xsd
+       http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+    <!-- ActiveMQ broker, embedded into Gemma webapp  TODO: this shouldn't be picked up by Worker app context -->
+    <amq:broker useJmx="true" persistent="false">
+        <amq:transportConnectors>
+            <amq:transportConnector uri="tcp://localhost:61616" />
+        </amq:transportConnectors>
+        <amq:destinations>
+            <amq:queue physicalName="tasks.submit" />
+        </amq:destinations>
+        <amq:plugins>
+            <amq:statisticsBrokerPlugin/>
+        </amq:plugins>
+        <amq:destinationPolicy>
+            <amq:policyMap>
+                <amq:policyEntries>
+                    <amq:policyEntry queue="task.>" gcInactiveDestinations="true" inactiveTimoutBeforeGC="7000000"/>
+                </amq:policyEntries>
+            </amq:policyMap>
+        </amq:destinationPolicy>
+    </amq:broker>
+
+    <amq:queue id="taskSubmissionDestination" physicalName="tasks.submit" />
+    <!-- JMS ConnectionFactory to use, configuring the embedded broker using XML -->
+    <amq:connectionFactory id="jmsFactory" brokerURL="vm://localhost:61616"/>
+
+    <!-- Spring JMS Template -->
+    <bean id="amqJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory">
+            <!-- lets wrap in a pool to avoid creating a connection per send -->
+            <bean class="org.springframework.jms.connection.CachingConnectionFactory">
+                <property name="targetConnectionFactory">
+                    <ref local="jmsFactory" />
+                </property>
+                <property name="sessionCacheSize" value="7" />
+            </bean>
+        </property>
+    </bean>
+
+</beans>

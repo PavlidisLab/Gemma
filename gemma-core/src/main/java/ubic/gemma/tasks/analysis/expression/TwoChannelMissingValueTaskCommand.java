@@ -94,4 +94,8 @@ public class TwoChannelMissingValueTaskCommand extends TaskCommand {
         this.expressionExperiment = ee;
     }
 
+    @Override
+    public Class getTaskClass() {
+        return TwoChannelMissingValueTask.class;
+    }
 }

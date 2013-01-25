@@ -14,20 +14,11 @@
  */
 package ubic.gemma.tasks.analysis.expression;
 
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
 
-/**
- * Task to try to get 'batch' information about an experiment. This usually involves downloading raw data files from the
- * provider.
- * 
- * @see BatchInfoPopulationServiceImpl
- * @author paul
- * @version $Id$
- */
-public interface BatchInfoFetchTask {
 
-    TaskResult execute( ExpressionExperimentReportTaskCommand jsCommand );
-
+public interface BatchInfoFetchTask extends Task<TaskResult, BatchInfoFetchTaskCommand>{
 }
+

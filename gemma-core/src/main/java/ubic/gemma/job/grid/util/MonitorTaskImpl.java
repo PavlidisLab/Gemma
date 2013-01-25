@@ -20,8 +20,8 @@ package ubic.gemma.job.grid.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 
 /**
@@ -30,18 +30,26 @@ import ubic.gemma.job.TaskResult;
  * @author paul
  * @version $Id$
  */
+@Deprecated
 @Component
+@Scope("prototype")
 public class MonitorTaskImpl implements MonitorTask {
 
     private static Log log = LogFactory.getLog( MonitorTaskImpl.class );
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.grid.javaspaces.task.MonitorTask#execute(ubic.gemma.grid.javaspaces.task.MonitorTaskCommand)
-     */
+    private MonitorTaskCommand command;
+
     @Override
-    @TaskMethod
-    public TaskResult execute( MonitorTaskCommand command ) {
+    public void setCommand(MonitorTaskCommand command) {
+        this.command = command;
+    }
+
+    /*
+         * (non-Javadoc)
+         * @see ubic.gemma.grid.javaspaces.task.MonitorTask#execute(ubic.gemma.grid.javaspaces.task.MonitorTaskCommand)
+         */
+    @Override
+    public TaskResult execute() {
 
         if ( command.isFail() ) {
             throw new RuntimeException( "I was asked to fail on purpose" );

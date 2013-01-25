@@ -24,17 +24,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -60,27 +60,17 @@ import ubic.gemma.web.remote.ListBatchCommand;
  * @see ubic.gemma.web.controller.expression.experiment.AnnotationController for related methods.
  */
 @Controller
-public class CharacteristicBrowserController extends AbstractTaskService {
+public class CharacteristicBrowserController {
 
-    /**
-     * 
-     */
+    private static final Log log = LogFactory.getLog( CharacteristicBrowserController.class.getName() );
+
     private static final int MAX_RESULTS = 1000;
 
-    @Autowired
-    private ExperimentalDesignService experimentalDesignService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private FactorValueService factorValueService;
-
-    @Autowired
-    private CharacteristicService characteristicService;
-
-    @Autowired
-    private CharacteristicUpdateTask characteristicUpdateTask;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ExperimentalDesignService experimentalDesignService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private FactorValueService factorValueService;
+    @Autowired private CharacteristicService characteristicService;
 
     /**
      * @param valuePrefix
@@ -253,9 +243,7 @@ public class CharacteristicBrowserController extends AbstractTaskService {
         CharacteristicUpdateCommand c = new CharacteristicUpdateCommand();
         c.setAnnotationValueObjects( chars );
         c.setRemove( true );
-        characteristicUpdateTask.execute( c );
-        // return this.startTask( this.getInProcessRunner( c ) );
-
+        taskRunningService.submitLocalTask( c );
     }
 
     /**
@@ -268,8 +256,7 @@ public class CharacteristicBrowserController extends AbstractTaskService {
         CharacteristicUpdateCommand c = new CharacteristicUpdateCommand();
         c.setAnnotationValueObjects( avos );
         c.setRemove( false );
-        characteristicUpdateTask.execute( c );
-        // return this.startTask( this.getInProcessRunner( c ) );
+        taskRunningService.submitLocalTask( c );
     }
 
     /**
@@ -321,31 +308,6 @@ public class CharacteristicBrowserController extends AbstractTaskService {
             avo.setParentDescription( pa.getId().toString() );
             
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.AbstractTaskService#getInProcessRunner(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return new BackgroundJob<CharacteristicUpdateCommand>( ( CharacteristicUpdateCommand ) command ) {
-            @Override
-            protected TaskResult processJob() {
-                return characteristicUpdateTask.execute( command );
-            }
-        };
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.AbstractTaskService#getSpaceRunner(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
     }
 
 }

@@ -49,16 +49,13 @@ Ext.onReady(function() {
 					dataIndex : "submitter"
 				}, {
 					header : "Type",
-					dataIndex : "taskInterface",
+					dataIndex : "taskType",
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
 						return value.replace(/.*\./, '').replace(/Impl$/, '');
 					}
 				}, {
-					header : "Method",
-					dataIndex : "taskMethod"
-				}, {
-					header : "On grid",
-					dataIndex : "willRunOnGrid"
+					header : "Running remotely",
+					dataIndex : "runningRemotely"
 				}, {
 					header : "Cancel",
 					dataIndex : "taskId",
@@ -74,7 +71,7 @@ Ext.onReady(function() {
 				msg : 'Are you sure you want to cancel this task?',
 				buttons : Ext.Msg.YESNO,
 				fn : function(btn, text) {
-					if (btn == 'yes') {
+					if (btn === 'yes') {
 						ProgressStatusService.cancelJob(taskId, function(successfullyCancelled) {
 							if (!successfullyCancelled) {
 								Ext.Msg
@@ -114,13 +111,10 @@ Ext.onReady(function() {
 											name : "submitter",
 											type : "string"
 										}, {
-											name : "taskInterface",
+											name : "taskType",
 											type : "string"
 										}, {
-											name : "taskMethod",
-											type : "string"
-										}, {
-											name : "willRunOnGrid",
+											name : "runningRemotely",
 											type : "boolean"
 										}])
 							})

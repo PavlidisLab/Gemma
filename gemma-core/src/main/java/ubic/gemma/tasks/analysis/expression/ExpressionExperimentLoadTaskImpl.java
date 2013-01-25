@@ -1,64 +1,49 @@
-/*
- * The Gemma project
- * 
- * Copyright (c) 2006 University of British Columbia
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 package ubic.gemma.tasks.analysis.expression;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.analysis.preprocess.PreprocessorService;
-import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * @author keshav
  * @version $Id$
  */
 @Component
+@Scope("prototype")
 public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoadTask {
+
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
     @Autowired
-    private GeoService geoDatasetService = null;
+    private GeoService geoDatasetService;
+    @Autowired private ArrayExpressLoadService arrayExpressLoadService;
+    @Autowired private PreprocessorService preprocessorService;
 
-    @Autowired
-    private ArrayExpressLoadService arrayExpressLoadService;
+    private ExpressionExperimentLoadTaskCommand command;
 
-    @Autowired
-    private PreprocessorService preprocessorService;
+    @Override
+    public void setCommand(ExpressionExperimentLoadTaskCommand command) {
+        this.command = command;
+    }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
-     */
+                 * (non-Javadoc)
+                 *
+                 * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
+                 */
     @Override
-    @TaskMethod
-    public TaskResult execute( ExpressionExperimentLoadTaskCommand command ) {
+    public TaskResult execute() {
         ExpressionExperimentLoadTaskCommand jsEeLoadCommand = command;
 
         String accession = jsEeLoadCommand.getAccession();
@@ -131,7 +116,7 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
 
     /**
      * Do missing value and processed vector creation steps.
-     * 
+     *
      * @param ees
      */
     private void postProcess( Collection<ExpressionExperiment> ees ) {

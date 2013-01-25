@@ -26,23 +26,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -52,46 +50,15 @@ import ubic.gemma.web.util.EntityNotFoundException;
  */
 @Controller
 @RequestMapping("/bioAssay")
-public class BioAssayController extends AbstractTaskService {
-
-    private class RemoveBioAssayJob extends BackgroundJob<TaskCommand> {
-
-        public RemoveBioAssayJob( TaskCommand command ) {
-            super( command );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return bioAssayOutlierProcessingTask.execute( command );
-        }
-    }
-
-    private class RemoveBioAssaySpaceJob extends BackgroundJob<TaskCommand> {
-        final BioAssayOutlierProcessingTask taskProxy = ( BioAssayOutlierProcessingTask ) getProxy();
-
-        public RemoveBioAssaySpaceJob( TaskCommand command ) {
-            super( command );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return taskProxy.execute( command );
-        }
-    }
+public class BioAssayController {
 
     private static final String identifierNotFound = "You must provide a valid BioAssay identifier";
+    private static final Log log = LogFactory.getLog(BioAssayController.class.getName());
 
-    @Autowired
-    private BioAssayOutlierProcessingTask bioAssayOutlierProcessingTask;
-
-    @Autowired
-    private BioAssayService bioAssayService;
-
-    @Autowired
-    private ExpressionExperimentService eeService;
-
-    @Autowired
-    private AuditEventService auditEventService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private BioAssayService bioAssayService;
+    @Autowired private ExpressionExperimentService eeService;
+    @Autowired private AuditEventService auditEventService;
 
     /**
      * AJAX
@@ -100,14 +67,12 @@ public class BioAssayController extends AbstractTaskService {
      * @return
      */
     public String markOutlier( Long id ) {
-        RemoveBioAssayJob job = new RemoveBioAssayJob( new TaskCommand( id ) );
-        return super.startTask( job );
+        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( id ) );
     }
 
     /**
      * @param request
      * @param response
-     * @param errors
      * @return ModelAndView
      */
     @RequestMapping(value = { "/showBioAssay.html", "/" })
@@ -193,13 +158,4 @@ public class BioAssayController extends AbstractTaskService {
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssays );
     }
 
-    @Override
-    protected BackgroundJob<TaskCommand> getInProcessRunner( TaskCommand command ) {
-        return new RemoveBioAssayJob( command );
-    }
-
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return new RemoveBioAssaySpaceJob( command );
-    }
 }

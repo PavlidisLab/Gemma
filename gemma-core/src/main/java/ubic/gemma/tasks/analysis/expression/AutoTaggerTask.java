@@ -19,15 +19,9 @@
 
 package ubic.gemma.tasks.analysis.expression;
 
-import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
-/**
- * Run the semantic tagger.
- * 
- * @author paul
- * @version $Id$
- */
-public interface AutoTaggerTask {
-    TaskResult execute( TaskCommand command );
-}
+
+public interface AutoTaggerTask extends  Task<TaskResult, AutoTaggerTaskCommand> {}
+

@@ -21,18 +21,8 @@ package ubic.gemma.tasks.analysis.expression;
 
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
-/**
- * Handle 'flagging' a sample as an outlier. The sample will not be used in analyses.
- * 
- * @author paul
- * @version $Id$
- */
-public interface BioAssayOutlierProcessingTask {
-
-    /**
-     * @param command
-     * @return
-     */
-    TaskResult execute( TaskCommand command );
+public interface BioAssayOutlierProcessingTask extends Task<TaskResult, TaskCommand>{
 }
+

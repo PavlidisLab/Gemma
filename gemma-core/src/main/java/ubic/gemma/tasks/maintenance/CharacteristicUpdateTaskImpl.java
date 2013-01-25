@@ -1,38 +1,14 @@
-/*
- * The Gemma project
- * 
- * Copyright (c) 2010 University of British Columbia
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 package ubic.gemma.tasks.maintenance;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -47,33 +23,36 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.security.SecurityService;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * @author paul
  * @version $Id$
  */
 @Component
+@Scope("prototype")
 public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
 
-    private static Log log = LogFactory.getLog( CharacteristicUpdateTaskImpl.class );
+    private static Log log = LogFactory.getLog( CharacteristicUpdateTask.class );
 
     @Autowired
     private BioMaterialService bioMaterialService;
+    @Autowired private CharacteristicService characteristicService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private FactorValueService factorValueService;
+    @Autowired private SecurityService securityService;
 
-    @Autowired
-    private CharacteristicService characteristicService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private FactorValueService factorValueService;
-
-    @Autowired
-    private SecurityService securityService;
+    private CharacteristicUpdateCommand command;
 
     @Override
-    @TaskMethod
-    public TaskResult execute( CharacteristicUpdateCommand command ) {
+    public void setCommand(CharacteristicUpdateCommand command) {
+        this.command = command;
+    }
+
+    @Override
+    public TaskResult execute() {
         if ( command.isRemove() ) {
             return this.doRemove( command );
         }
@@ -81,16 +60,16 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
     }
 
     private void addToParent( Characteristic c, Object parent ) {
-        if ( parent instanceof ExpressionExperiment ) {
+        if ( parent instanceof ExpressionExperiment) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
             ee = expressionExperimentService.thawLite( ee );
             ee.getCharacteristics().add( c );
             expressionExperimentService.update( ee );
-        } else if ( parent instanceof BioMaterial ) {
+        } else if ( parent instanceof BioMaterial) {
             BioMaterial bm = ( BioMaterial ) parent;
             bm.getCharacteristics().add( c );
             bioMaterialService.update( bm );
-        } else if ( parent instanceof FactorValue ) {
+        } else if ( parent instanceof FactorValue) {
             FactorValue fv = ( FactorValue ) parent;
             fv.getCharacteristics().add( c );
             factorValueService.update( fv );
@@ -115,7 +94,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
 
     /**
      * Convert incoming AVOs into Characteristics (if the AVO objectClass is not FactorValue)
-     * 
+     *
      * @param avos
      * @return
      */
@@ -134,7 +113,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
 
     /**
      * This is used to handle the special case of FactorValues that are being updated to have a characteristic.
-     * 
+     *
      * @param avos
      * @return for each given AnnotationValueObject, the corresponding FactorValue with an associated persistent
      *         Characteristic.

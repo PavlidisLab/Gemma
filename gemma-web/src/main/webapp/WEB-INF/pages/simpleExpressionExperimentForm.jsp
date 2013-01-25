@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="simpleExpressionExperimentLoadCommand" scope="request"
-	class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />
+	class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadTaskCommand" />
 <head>
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />

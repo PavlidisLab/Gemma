@@ -49,6 +49,11 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
         this.arrayDesign = arrayDesign;
     }
 
+    @Override
+    public Class getTaskClass() {
+        return ArrayDesignProbeMapperTask.class;
+    }
+
     public ArrayDesignProbeMapTaskCommand() {
         super();
     }

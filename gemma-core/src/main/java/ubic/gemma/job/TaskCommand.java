@@ -32,24 +32,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * This class can be used directly, or extended to create a command object to pass parameters for a specific task. See
  * for example {@link ExpressionExperimentLoadTaskCommand}. A entityId field is provided as a convenience for the case
  * when a primary key is all that is really needed.
- * 
+ *
+ * TODO: Make sure it is immutable.
+ * TODO: Rename to TaskContext.
+ *
  * @author keshav
  * @version $Id$
  */
 public class TaskCommand implements Serializable {
-
-    /**
-     * How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
-     * cancelled. This does not include time spent queued.
-     */
-    public static final int MAX_RUNTIME_MINUTES = 60;
-
     private static final long serialVersionUID = 1L;
 
-    /**
-     * Set to false to force this job to run on the grid (or to not run at all). Default = true
-     */
-    private Boolean allowedToRunInProcess = true;
+    // For now, this how we map from TaskCommand to Task that actually runs it.
+    // We have to have this mapping somewhere until we make Tasks themselves serializable
+    // at which point TaskCommand can be deprecated(or remain as TaskContext).
+    public Class getTaskClass() {
+        return null;
+    }
 
     /**
      * Should an email be sent to the user when the job is done?
@@ -62,18 +60,6 @@ public class TaskCommand implements Serializable {
     private Long entityId = null;
 
     /**
-     * How long we will allow this task to be queued before giving up.
-     */
-    private Integer maxQueueMinutes = TaskRunningService.MAX_QUEUING_MINUTES;
-
-    private int maxRuntime = MAX_RUNTIME_MINUTES;
-
-    /**
-     * Used during task tracking to determine if a task is in trouble.
-     */
-    private boolean mayHaveFailed = false;
-
-    /**
      * If true, the jobDetails associated with this task will be persisted in the database. Consider setting to false
      * for test jobs or other super-frequent maintenance tasks.
      */
@@ -83,54 +69,35 @@ public class TaskCommand implements Serializable {
      * Used to propagate security to grid workers.
      */
     private SecurityContext securityContext;
-
-    /**
-     * The system time the job was actually started.
-     */
-    private Date startTime = null;
-
-    /**
-     * The time at which the job was first submitted to the running queue.
-     */
-    private Date submissionTime = null;
-
     private String submitter;
 
-    private String taskId = null;
+    private String taskId;
+
+    // How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
+    // cancelled. This does not include time spent queued.
+    public static final int MAX_RUNTIME_MINUTES = 60;
+
 
     /**
-     * Name of the task interface this task is firing against.
+     * How long we will allow this task to be queued before giving up.
      */
-    private String taskInterface;
+    private Integer maxQueueMinutes = TaskRunningService.MAX_QUEUING_MINUTES;
+    private int maxRuntime = MAX_RUNTIME_MINUTES;
 
-    /**
-     * Name of the method from the taskInterface.
-     */
-    private String taskMethod;
 
-    /**
-     * If this task is going to run on the grid (that is, that the grid is apparently available and/or the job is
-     * actually running on the grid)
-     */
-    private boolean willRunOnGrid = false;
-
-    /**
-     * The taskId is assigned on creation.
-     */
     public TaskCommand() {
+        //TODO: probably better generate at submission time
+        // The taskId is assigned on creation.
         this.taskId = TaskUtils.generateTaskId();
 
-        /*
-         * security details.
-         */
+        // security details.
         SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
         this.securityContext = context;
-        Authentication authentication = context.getAuthentication();
 
+        Authentication authentication = context.getAuthentication();
         // can happen in test situations.
         if ( authentication != null ) this.submitter = authentication.getName();
-
     }
 
     /**
@@ -147,19 +114,6 @@ public class TaskCommand implements Serializable {
         return entityId;
     }
 
-    /**
-     * @return
-     */
-    public Integer getMaxQueueMinutes() {
-        return maxQueueMinutes;
-    }
-
-    /**
-     * @return the maxRuntime in minutes
-     */
-    public int getMaxRuntime() {
-        return maxRuntime;
-    }
 
     /**
      * @return the persistJobDetails
@@ -172,19 +126,8 @@ public class TaskCommand implements Serializable {
         return this.securityContext;
     }
 
-    /**
-     * @return the startTime
-     */
-    public Date getStartTime() {
-        return startTime;
-    }
-
-    /**
-     * @return the submissionTime - when the job was submitted to the job queue. It may not have actually been started
-     *         immediately.
-     */
-    public Date getSubmissionTime() {
-        return submissionTime;
+    public boolean isEmailAlert() {
+        return emailAlert;
     }
 
     /**
@@ -195,52 +138,26 @@ public class TaskCommand implements Serializable {
     }
 
     /**
-     * @return
+     * @param taskId
      */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
+    }
+
+    public Integer getMaxQueueMinutes() {
+        return maxQueueMinutes;
+    }
+
+    /**
+     * @return the maxRuntime in minutes
+     */
+    public int getMaxRuntime() {
+        return maxRuntime;
+    }
+
+
     public String getTaskId() {
-        return taskId;
-    }
-
-    /**
-     * @return the taskInterface
-     */
-    public String getTaskInterface() {
-        return taskInterface;
-    }
-
-    /**
-     * @return the taskMethod
-     */
-    public String getTaskMethod() {
-        return taskMethod;
-    }
-
-    /**
-     * @return the allowedToRunInProcess
-     */
-    public Boolean isAllowedToRunInProcess() {
-        return allowedToRunInProcess;
-    }
-
-    public boolean isEmailAlert() {
-        return emailAlert;
-    }
-
-    public boolean isMayHaveFailed() {
-        return mayHaveFailed;
-    }
-
-    public boolean isWillRunOnGrid() {
-        return willRunOnGrid;
-    }
-
-    /**
-     * Set to false to force this job to run on the grid (or to not run at all). Default = true
-     * 
-     * @param allowedToRunInProcess
-     */
-    public void setAllowedToRunInProcess( Boolean allowedToRunInProcess ) {
-        this.allowedToRunInProcess = allowedToRunInProcess;
+        return this.taskId;
     }
 
     public void setEmailAlert( boolean emailAlert ) {
@@ -252,10 +169,16 @@ public class TaskCommand implements Serializable {
     }
 
     /**
+     * @param persistJobDetails the persistJobDetails to set
+     */
+    public void setPersistJobDetails( Boolean persistJobDetails ) {
+        this.persistJobDetails = persistJobDetails;
+    }
+
+    /**
      * How long we will allow this task to be queued before giving up. Default = TaskRunningService.MAX_QUEUING_MINUTES
-     * 
+     *
      * @param maxQueueMinutes
-     * @see ubic.gemma.job.TaskRunningServiceImpl.MAX_QUEUING_MINUTES
      */
     public void setMaxQueueMinutes( Integer maxQueueMinutes ) {
         this.maxQueueMinutes = maxQueueMinutes;
@@ -268,67 +191,8 @@ public class TaskCommand implements Serializable {
         this.maxRuntime = maxRuntime;
     }
 
-    public void setMayHaveFailed( boolean mayHaveFailed ) {
-        this.mayHaveFailed = mayHaveFailed;
-    }
-
-    /**
-     * @param persistJobDetails the persistJobDetails to set
-     */
-    public void setPersistJobDetails( Boolean persistJobDetails ) {
-        this.persistJobDetails = persistJobDetails;
-    }
-
-    /**
-     * Sets the start time to <em>Now</em>.
-     */
-    public void setStartTime() {
-        this.startTime = new Date();
-    }
-
-    /**
-     * Used to set the start time when we only find it out later.
-     * 
-     * @param date
-     */
-    public void setStartTime( Date date ) {
-        this.startTime = date;
-    }
-
-    /**
-     * Sets the submission time to <em>Now</em>.
-     */
-    public void setSubmissionTime() {
-        this.submissionTime = new Date();
-    }
-
-    /**
-     * @param taskId
-     */
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
-    /**
-     * @param taskInterface the taskInterface to set
-     */
-    public void setTaskInterface( String taskInterface ) {
-        this.taskInterface = taskInterface;
-    }
-
-    /**
-     * @param taskMethod the taskMethod to set
-     */
-    public void setTaskMethod( String taskMethod ) {
-        this.taskMethod = taskMethod;
-    }
-
-    /**
-     * @param willRunOnGrid
-     * @see willRunOnGrid
-     */
-    public void setWillRunOnGrid( boolean willRunOnGrid ) {
-        this.willRunOnGrid = willRunOnGrid;
+    public boolean getConfigRemoteRunValue () {
+        return false;
     }
 
 }

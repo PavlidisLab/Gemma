@@ -27,11 +27,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -45,28 +43,17 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
  * @author pavlidis
  * @version $Id$
  */
+// FIXME: dead code?
 @Controller
-public class ArrayDesignSequenceAddController extends AbstractTaskService {
+public class ArrayDesignSequenceAddController {
 
-    @Autowired
-    TaxonService taxonService;
+    @Autowired TaxonService taxonService;
+    @Autowired ArrayDesignService arrayDesignService;
+    @Autowired ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
 
-    @Autowired
-    ArrayDesignService arrayDesignService;
+    protected BackgroundJob<ArrayDesignSequenceAddCommand, TaskResult> getInProcessRunner( TaskCommand command ) {
 
-    @Autowired
-    ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-     * java.lang.Object, java.lang.String)
-     */
-    @Override
-    protected BackgroundJob<ArrayDesignSequenceAddCommand> getInProcessRunner( TaskCommand command ) {
-
-        BackgroundJob<ArrayDesignSequenceAddCommand> r = new BackgroundJob<ArrayDesignSequenceAddCommand>(
+        BackgroundJob<ArrayDesignSequenceAddCommand, TaskResult> r = new BackgroundJob<ArrayDesignSequenceAddCommand, TaskResult>(
                 ( ArrayDesignSequenceAddCommand ) command ) {
             @Override
             public TaskResult processJob() {
@@ -75,7 +62,7 @@ public class ArrayDesignSequenceAddController extends AbstractTaskService {
                 ArrayDesign arrayDesign = command.getArrayDesign();
                 SequenceType sequenceType = command.getSequenceType();
 
-                ProgressManager.setForwardingURL( taskId, "/Gemma/arrayDesign/associateSequences.html" );
+                //ProgressManager.setForwardingURL( taskId, "/Gemma/arrayDesign/associateSequences.html" );
 
                 String filePath = fileUpload.getLocalPath();
 
@@ -98,11 +85,6 @@ public class ArrayDesignSequenceAddController extends AbstractTaskService {
             }
         };
         return r;
-    }
-
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
     }
 
 }

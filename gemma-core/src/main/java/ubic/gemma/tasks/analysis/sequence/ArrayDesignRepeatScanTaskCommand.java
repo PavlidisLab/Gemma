@@ -64,4 +64,8 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
         this.arrayDesign = ad;
     }
 
+    @Override
+    public Class getTaskClass() {
+        return ArrayDesignRepeatScanTask.class;
+    }
 }

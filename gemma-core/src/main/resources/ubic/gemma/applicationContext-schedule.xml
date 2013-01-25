@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:task="http://www.springframework.org/schema/task"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans 
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
@@ -12,7 +13,6 @@
 	author: keshav   
 	$Id$ 
 -->
-
 
 	<!--
 		Note: we cannot use @Scheduled and @Async because the security context is not available to the runnables they create.
@@ -31,7 +31,7 @@
 				<ref local="whatsNewTrigger" />
 				<ref local="gene2CsUpdateTrigger" />
 				<!-- <ref local="viewTrigger" /> -->
-				<ref local="monitorSpaceTrigger" />
+				<!--<ref local="monitorSpaceTrigger" />-->
 			</list>
 		</property>
 	</bean>
@@ -95,16 +95,16 @@
 		</property>
 	</bean>
 -->
-	<bean id="monitorSpaceTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
-		<property name="jobDetail">
-			<ref bean="monitorSpaceJobDetail" />
-		</property>
-		<property name="repeatInterval">
-			<value>5000</value> 
-		</property>
+	<!--<bean id="monitorSpaceTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">-->
+		<!--<property name="jobDetail">-->
+			<!--<ref bean="monitorSpaceJobDetail" />-->
+		<!--</property>-->
+		<!--<property name="repeatInterval">-->
+			<!--<value>5000</value> -->
+		<!--</property>-->
 
-		<property name="startDelay" value="12" /> <!--  wait before beginning -->
-	</bean>
+		<!--<property name="startDelay" value="12" /> &lt;!&ndash;  wait before beginning &ndash;&gt;-->
+	<!--</bean>-->
 
 
 	<!-- Job details -->
@@ -166,13 +166,13 @@
 		</property>
 	</bean>
 -->
-	<bean id="monitorSpaceJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
-		<property name="targetObject">
-			<ref bean="spaceMonitor" />
-		</property>
-		<property name="concurrent" value="false" /><!-- set to true for interesting test -->
-		<property name="targetMethod">
-			<value>ping</value>
-		</property>
-	</bean>
+	<!--<bean id="monitorSpaceJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">-->
+		<!--<property name="targetObject">-->
+			<!--<ref bean="spaceMonitor" />-->
+		<!--</property>-->
+		<!--<property name="concurrent" value="false" />&lt;!&ndash; set to true for interesting test &ndash;&gt;-->
+		<!--<property name="targetMethod">-->
+			<!--<value>ping</value>-->
+		<!--</property>-->
+	<!--</bean>-->
 </beans>

@@ -15,18 +15,9 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.tasks.maintenance.SvdTaskCommand;
+import ubic.gemma.tasks.Task;
 
-/**
- * @author paul
- * @version $Id$
- */
-public interface SvdTask {
 
-    /**
-     * @param jsCommand
-     * @return
-     */
-    TaskResult execute( SvdTaskCommand jsCommand );
-
+public interface SvdTask extends Task<TaskResult, SvdTaskCommand>{
 }
+

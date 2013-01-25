@@ -50,6 +50,11 @@ public class IndexerTaskCommand extends TaskCommand {
 
     private boolean indexProbe;
 
+    @Override
+    public Class getTaskClass() {
+        return IndexerTask.class;
+    }
+
     public IndexerTaskCommand() {
         super();
         this.setMaxRuntime( INDEXER_MAX_RUNTIME );

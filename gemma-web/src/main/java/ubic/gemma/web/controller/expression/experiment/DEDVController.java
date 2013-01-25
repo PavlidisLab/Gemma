@@ -141,44 +141,19 @@ public class DEDVController {
         return factorColoursMap;
     }
 
-    @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
-
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
-
-    @Autowired
-    private DesignElementDataVectorService designElementDataVectorService;
-
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
-
-    @Autowired
-    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private SVDService svdService;
-
-    @Autowired
-    private GeneDifferentialExpressionService geneDifferentialExpressionService;
-
-    @Autowired
-    private GeneService geneService;
-
-    @Autowired
-    private FactorValueService factorValueService;
-
-    @Autowired
-    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
-
-    @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired private BioAssayDimensionService bioAssayDimensionService;
+    @Autowired private CompositeSequenceService compositeSequenceService;
+    @Autowired private DesignElementDataVectorService designElementDataVectorService;
+    @Autowired private DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private SVDService svdService;
+    @Autowired private GeneDifferentialExpressionService geneDifferentialExpressionService;
+    @Autowired private GeneService geneService;
+    @Autowired private FactorValueService factorValueService;
+    @Autowired private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
+    @Autowired private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
@@ -221,7 +196,6 @@ public class DEDVController {
      * AJAX exposed method
      * 
      * @param eeIds
-     * @param geneIds
      * @return
      */
     public VisualizationValueObject[] getDEDVForCoexpressionVisualization( Collection<Long> eeIds, Long queryGeneId,
@@ -837,7 +811,6 @@ public class DEDVController {
     }
 
     /**
-     * @param eeId
      * @param resultSetId
      * @param threshold
      * @return

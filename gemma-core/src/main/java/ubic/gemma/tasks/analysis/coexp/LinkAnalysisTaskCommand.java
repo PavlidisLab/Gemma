@@ -23,6 +23,7 @@ import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Command object for Link analysis
@@ -32,20 +33,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class LinkAnalysisTaskCommand extends TaskCommand {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
-    /**
-     * 
-     */
+
     private ExpressionExperiment expressionExperiment;
     private FilterConfig filterConfig;
     private LinkAnalysisConfig linkAnalysisConfig;
 
-    /**
-     * @param taskId
-     */
     public LinkAnalysisTaskCommand( ExpressionExperiment ee, LinkAnalysisConfig lac, FilterConfig fg ) {
         super();
         this.expressionExperiment = ee;
@@ -77,4 +70,15 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
     public FilterConfig getFilterConfig() {
         return this.filterConfig;
     }
+
+    @Override
+    public Class getTaskClass() {
+        return LinkAnalysisTask.class;
+    }
+
+    @Override
+    public boolean getConfigRemoteRunValue () {
+        return ConfigUtils.getBoolean("gemma.grid.gridonly.coexp");
+    }
+
 }

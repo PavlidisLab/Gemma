@@ -25,9 +25,8 @@ package ubic.gemma.web.controller;
  */
 public final class WebConstants {
 
-//    public static final String HOME_URL = "/Gemma/home.html";
     public static final String HOME_URL = "/Gemma/home.html";
-    
+
     public static final String HOME_PAGE = "/home.html";
 
     public static final String CLASSIC_HOME_PAGE = "/gemmaClassic.html";

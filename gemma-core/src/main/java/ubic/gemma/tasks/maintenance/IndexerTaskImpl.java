@@ -26,7 +26,10 @@ import org.compass.core.spi.InternalCompass;
 import org.compass.gps.impl.SingleCompassGps;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
-import ubic.gemma.job.TaskMethod;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.MailEngine;
 
@@ -34,57 +37,48 @@ import ubic.gemma.util.MailEngine;
  * @author klc
  * @version $Id$
  */
+@Component
+@Scope("prototype")
 public class IndexerTaskImpl implements IndexerTask {
 
     /*
      * NOTE not configured using annotations because they get confused by the interfaces here.
      */
-
     private static final String FILE = "file://";
-
     private static final String PATH_PROPERTY = "compass.engine.connection";
-
     private static final String PATH_SUFFIX = "/index/";
 
-    private SingleCompassGps arrayGps;
+    @Autowired @Qualifier("arrayGps") private SingleCompassGps arrayGps;
+    @Autowired @Qualifier("bibliographicGps") private SingleCompassGps bibliographicGps;
+    @Autowired @Qualifier("biosequenceGps") private SingleCompassGps biosequenceGps;
+    @Autowired @Qualifier("experimentSetGps") private SingleCompassGps experimentSetGps;
+    @Autowired @Qualifier("expressionGps") private SingleCompassGps expressionGps;
+    @Autowired @Qualifier("geneGps") private SingleCompassGps geneGps;
+    @Autowired @Qualifier("geneSetGps") private SingleCompassGps geneSetGps;
+    @Autowired @Qualifier("probeGps") private SingleCompassGps probeGps;
 
-    private SingleCompassGps bibliographicGps;
-
-    private SingleCompassGps biosequenceGps;
-
-    private InternalCompass compassArray;
-
-    private InternalCompass compassBibliographic;
-
-    private InternalCompass compassBiosequence;
-
-    private InternalCompass compassExperimentSet;
-
-    private InternalCompass compassExpression;
-
-    private InternalCompass compassGene;
-
-    private InternalCompass compassGeneSet;
-
-    private InternalCompass compassProbe;
-
-    private SingleCompassGps experimentSetGps;
-
-    private SingleCompassGps expressionGps;
-
-    private SingleCompassGps geneGps;
-
-    private SingleCompassGps geneSetGps;
+    @Autowired @Qualifier("compassArray") private InternalCompass compassArray;
+    @Autowired @Qualifier("compassBibliographic") private InternalCompass compassBibliographic;
+    @Autowired @Qualifier("compassBiosequence") private InternalCompass compassBiosequence;
+    @Autowired @Qualifier("compassExperimentSet") private InternalCompass compassExperimentSet;
+    @Autowired @Qualifier("compassExpression") private InternalCompass compassExpression;
+    @Autowired @Qualifier("compassGene") private InternalCompass compassGene;
+    @Autowired @Qualifier("compassGeneSet") private InternalCompass compassGeneSet;
+    @Autowired @Qualifier("compassProbe") private InternalCompass compassProbe;
 
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
-    private MailEngine mailEngine;
+    @Autowired private MailEngine mailEngine;
 
-    private SingleCompassGps probeGps;
+    private IndexerTaskCommand command;
 
     @Override
-    @TaskMethod
-    public IndexerResult execute( IndexerTaskCommand command ) {
+    public void setCommand(IndexerTaskCommand command) {
+        this.command = command;
+    }
+
+    @Override
+    public IndexerResult execute() {
         IndexerResult result = new IndexerResult( command );
 
         if ( command.isIndexEE() ) {

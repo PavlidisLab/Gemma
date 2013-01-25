@@ -18,19 +18,9 @@
  */
 package ubic.gemma.tasks.analysis.expression;
 
-import net.jini.space.JavaSpace;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
-/**
- * A task interface to wrap {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} type jobs. Tasks of this
- * type are submitted to a {@link JavaSpace} and taken from the space by a worker, run on a compute server, and the
- * results are returned to the space.
- * 
- * @author keshav
- * @version $Id$
- */
-public interface ExpressionExperimentLoadTask {
 
-    TaskResult execute( ExpressionExperimentLoadTaskCommand command );
+public interface ExpressionExperimentLoadTask extends Task<TaskResult, ExpressionExperimentLoadTaskCommand> {}
 
-}

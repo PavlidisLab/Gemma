@@ -27,6 +27,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionExperimentReportTaskCommand extends TaskCommand {
 
+    public Class getTaskClass() {
+        return ExpressionExperimentReportTask.class;
+    }
+
     private static final long serialVersionUID = 1L;
 
     private ExpressionExperiment expressionExperiment = null;

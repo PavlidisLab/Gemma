@@ -42,6 +42,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,10 +56,10 @@ import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
@@ -91,14 +93,14 @@ import ubic.gemma.web.util.EntityNotFoundException;
  */
 @Controller
 @RequestMapping("/arrays")
-public class ArrayDesignControllerImpl extends AbstractTaskService implements ArrayDesignController {
+public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Inner class used for building array design summary
      */
-    class GenerateSummary extends BackgroundJob<TaskCommand> {
+    class GenerateArraySummaryLocalJob extends BackgroundJob<TaskCommand, TaskResult> {
 
-        public GenerateSummary( TaskCommand command ) {
+        public GenerateArraySummaryLocalJob( TaskCommand command ) {
             super( command );
         }
 
@@ -121,9 +123,9 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
     /**
      * Inner class used for deleting array designs
      */
-    class RemoveArrayJob extends BackgroundJob<TaskCommand> {
+    class RemoveArrayLocalJob extends BackgroundJob<TaskCommand, TaskResult> {
 
-        public RemoveArrayJob( TaskCommand command ) {
+        public RemoveArrayLocalJob( TaskCommand command ) {
             super( command );
         }
 
@@ -139,6 +141,7 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
                     + " removed from Database." ) );
 
         }
+
     }
 
     private static boolean AJAX = true;
@@ -148,29 +151,17 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
      */
     private static final int NUM_PROBES_TO_SHOW = 500;
 
-    @Autowired
-    private ArrayDesignMapResultService arrayDesignMapResultService = null;
+    private static final Log log = LogFactory.getLog(ArrayDesignControllerImpl.class.getName());
 
-    @Autowired
-    private ArrayDesignReportService arrayDesignReportService = null;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService = null;
-
-    @Autowired
-    private AuditableUtil auditableUtil;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
-    private CompositeSequenceService compositeSequenceService = null;
-
-    @Autowired
-    private SearchService searchService;
-
-    @Autowired
-    private TaxonService taxonService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ArrayDesignMapResultService arrayDesignMapResultService;
+    @Autowired private ArrayDesignReportService arrayDesignReportService;
+    @Autowired private ArrayDesignService arrayDesignService;
+    @Autowired private AuditableUtil auditableUtil;
+    @Autowired private AuditTrailService auditTrailService;
+    @Autowired private CompositeSequenceService compositeSequenceService;
+    @Autowired private SearchService searchService;
+    @Autowired private TaxonService taxonService;
 
     /*
      * (non-Javadoc)
@@ -263,10 +254,9 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
                             + " can't be deleted. Dataset has a dependency on this Array." );
         }
 
-        RemoveArrayJob job = new RemoveArrayJob( new TaskCommand( arrayDesign.getId() ) );
-        super.startTask( job );
+        String taskId = taskRunningService.submitLocalTask( new TaskCommand( arrayDesign.getId() ) );
 
-        return new ModelAndView().addObject( "taskId", job.getTaskId() );
+        return new ModelAndView().addObject("taskId", taskId);
 
     }
 
@@ -395,20 +385,20 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
         String sId = request.getParameter( "id" );
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
-        GenerateSummary job;
+        GenerateArraySummaryLocalJob job;
         if ( StringUtils.isBlank( sId ) ) {
-            job = new GenerateSummary( new TaskCommand() );
-            startTask( job );
+            job = new GenerateArraySummaryLocalJob( new TaskCommand() );
+            String taskId = taskRunningService.submitLocalJob(job);
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "taskId", job.getTaskId() );
+                    "taskId", taskId );
         }
 
         try {
             Long id = Long.parseLong( sId );
-            job = new GenerateSummary( new TaskCommand( id ) );
-            startTask( job );
+            job = new GenerateArraySummaryLocalJob( new TaskCommand( id ) );
+            String taskId = taskRunningService.submitLocalJob(job);
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + sId ) )
-                    .addObject( "taskId", job.getTaskId() );
+                    .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Invalid ID: " + sId );
         }
@@ -585,11 +575,10 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
                     + ", it is used by an expression experiment" );
         }
 
-        RemoveArrayJob job = new RemoveArrayJob( new TaskCommand( arrayDesign.getId() ) );
+        RemoveArrayLocalJob job = new RemoveArrayLocalJob( new TaskCommand( arrayDesign.getId() ) );
 
-        super.startTask( job );
+        return taskRunningService.submitLocalJob(job);
 
-        return job.getTaskId();
     }
 
     /*
@@ -783,9 +772,8 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
      */
     @Override
     public String updateReport( EntityDelegator ed ) {
-        GenerateSummary runner = new GenerateSummary( new TaskCommand( ed.getId() ) );
-        super.startTask( runner );
-        return runner.getTaskId();
+        GenerateArraySummaryLocalJob job = new GenerateArraySummaryLocalJob( new TaskCommand( ed.getId() ) );
+        return taskRunningService.submitLocalJob( job );
     }
 
     /*
@@ -795,19 +783,8 @@ public class ArrayDesignControllerImpl extends AbstractTaskService implements Ar
      */
     @Override
     public String updateReportById( Long id ) {
-        GenerateSummary runner = new GenerateSummary( new TaskCommand( id ) );
-        super.startTask( runner );
-        return runner.getTaskId();
-    }
-
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return null;
-    }
-
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
+        GenerateArraySummaryLocalJob job = new GenerateArraySummaryLocalJob( new TaskCommand( id ) );
+        return taskRunningService.submitLocalJob( job );
     }
 
     /**

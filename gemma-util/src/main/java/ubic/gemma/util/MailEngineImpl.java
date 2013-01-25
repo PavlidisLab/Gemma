@@ -46,11 +46,8 @@ import org.springframework.ui.velocity.VelocityEngineUtils;
 public class MailEngineImpl implements MailEngine {
     protected static final Log log = LogFactory.getLog( MailEngineImpl.class );
 
-    @Autowired
-    private MailSender mailSender;
-
-    @Autowired
-    private VelocityEngine velocityEngine;
+    @Autowired private MailSender mailSender;
+    @Autowired private VelocityEngine velocityEngine;
 
     /**
      * @param msg

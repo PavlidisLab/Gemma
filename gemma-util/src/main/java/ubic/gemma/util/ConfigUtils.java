@@ -75,6 +75,8 @@ public class ConfigUtils {
 
     private static final String GRID_ENBALED_PROPERTY = "gemma.grid.enabled";
 
+    private static final String REMOTE_TASKS_PROPERTY = "gemma.remote-tasks.enabled";
+
     private static Log log = LogFactory.getLog( ConfigUtils.class.getName() );
 
     private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
@@ -653,6 +655,10 @@ public class ConfigUtils {
      */
     public static boolean isGridEnabled() {
         return getBoolean( GRID_ENBALED_PROPERTY, false );
+    }
+
+    public static boolean isRemoteTasksEnabled() {
+        return getBoolean( REMOTE_TASKS_PROPERTY, false );
     }
 
     /**

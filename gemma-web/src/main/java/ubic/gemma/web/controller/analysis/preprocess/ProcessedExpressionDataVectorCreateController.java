@@ -23,12 +23,8 @@ import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
 
 /**
@@ -38,65 +34,15 @@ import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateT
  * @version $Id$
  */
 @Controller
-public class ProcessedExpressionDataVectorCreateController extends AbstractTaskService {
+public class ProcessedExpressionDataVectorCreateController {
 
-    /**
-     *  
-     */
-    private class ProcessedExpressionDataVectorCreateJob extends
-            BackgroundJob<ProcessedExpressionDataVectorCreateTaskCommand> {
-
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public ProcessedExpressionDataVectorCreateJob( ProcessedExpressionDataVectorCreateTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return processedExpressionDataVectorCreateTask.execute( command );
-        }
-
-    }
-
-    /**
-     * Job that loads in a javaspace.
-     */
-    private class ProcessedExpressionDataVectorCreateSpaceJob extends ProcessedExpressionDataVectorCreateJob {
-
-        final ProcessedExpressionDataVectorCreateTask taskProxy = ( ProcessedExpressionDataVectorCreateTask ) getProxy();
-
-        public ProcessedExpressionDataVectorCreateSpaceJob( ProcessedExpressionDataVectorCreateTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return taskProxy.execute( command );
-        }
-
-    }
-
-    @Autowired
-    private ExpressionExperimentReportService experimentReportService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
-
-    public ProcessedExpressionDataVectorCreateController() {
-        super();
-        this.setBusinessInterface( ProcessedExpressionDataVectorCreateTask.class );
-    }
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ExpressionExperimentReportService experimentReportService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
 
     /**
      * AJAX entry point.
      * 
-     * @param cmd
      * @return
      * @throws Exception
      */
@@ -109,28 +55,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
         ee = expressionExperimentService.thawLite( ee );
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
         experimentReportService.evictFromCache( id );
-        return super.run( cmd );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<ProcessedExpressionDataVectorCreateTaskCommand> getInProcessRunner( TaskCommand command ) {
-        return new ProcessedExpressionDataVectorCreateJob( ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<ProcessedExpressionDataVectorCreateTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new ProcessedExpressionDataVectorCreateSpaceJob(
-                ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
+        return taskRunningService.submitRemoteTask( cmd );
     }
 
 }

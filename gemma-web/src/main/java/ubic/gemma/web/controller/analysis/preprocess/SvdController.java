@@ -24,13 +24,9 @@ import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.analysis.expression.SvdTask;
-import ubic.gemma.tasks.maintenance.SvdTaskCommand;
+import ubic.gemma.tasks.analysis.expression.SvdTaskCommand;
 
 /**
  * Run SVD on a data set.
@@ -39,62 +35,14 @@ import ubic.gemma.tasks.maintenance.SvdTaskCommand;
  * @version $Id$
  */
 @Controller
-public class SvdController extends AbstractTaskService {
-    private class SvdJob extends BackgroundJob<SvdTaskCommand> {
+public class SvdController {
 
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public SvdJob( SvdTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return svdTask.execute( command );
-        }
-
-    }
-
-    /**
-     * Job that loads in a javaspace.
-     */
-    private class SvdSpaceJob extends SvdJob {
-
-        final SvdTask taskProxy = ( SvdTask ) getProxy();
-
-        public SvdSpaceJob( SvdTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        public TaskResult processJob() {
-            return taskProxy.execute( command );
-        }
-
-    }
-
-    @Autowired
-    private SvdTask svdTask;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ExpressionExperimentReportService experimentReportService;
-
-    public SvdController() {
-        super();
-        this.setBusinessInterface( SvdTask.class );
-    }
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionExperimentReportService experimentReportService;
 
     /**
      * AJAX entry point.
-     * 
-     * @param id
-     * @return
-     * @throws Exception
      */
     public String run( Long id ) throws Exception {
         if ( id == null ) throw new IllegalArgumentException( "ID cannot be null" );
@@ -105,28 +53,6 @@ public class SvdController extends AbstractTaskService {
         experimentReportService.evictFromCache( id );
         SvdTaskCommand cmd = new SvdTaskCommand( ee );
 
-        return super.run( cmd );
+        return taskRunningService.submitRemoteTask( cmd );
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.AbstractTaskService#getInProcessRunner(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return new SvdJob( ( SvdTaskCommand ) command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.AbstractTaskService#getSpaceRunner(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return new SvdSpaceJob( ( SvdTaskCommand ) command );
-
-    }
-
 }

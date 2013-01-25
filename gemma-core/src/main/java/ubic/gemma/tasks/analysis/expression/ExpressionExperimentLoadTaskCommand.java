@@ -54,14 +54,15 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
      */
     private boolean suppressMatching = false;
 
+    @Override
+    public Class getTaskClass() {
+        return ExpressionExperimentLoadTask.class;
+    }
+
     public ExpressionExperimentLoadTaskCommand() {
         super();
     }
 
-    /**
-     * @param taskId
-     * @param command
-     */
     public ExpressionExperimentLoadTaskCommand( boolean loadPlatformOnly, boolean suppressMatching, String accession,
             boolean aggressiveQtRemoval, boolean isArrayExpress, String arrayDesignName ) {
         super();

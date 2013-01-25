@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2010 University of British Columbia
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,15 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
 /**
- * A task interface to wrap preprocessing expression data vectors.
+ * A "processed expression data vector create" task
  * 
  * @author keshav
  * @version $Id$
  */
-public interface ProcessedExpressionDataVectorCreateTask {
-    TaskResult execute( ProcessedExpressionDataVectorCreateTaskCommand jsCommand );
+
+public interface ProcessedExpressionDataVectorCreateTask extends Task<TaskResult, ProcessedExpressionDataVectorCreateTaskCommand>{
 }
+

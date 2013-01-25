@@ -1,58 +1,44 @@
-/*
- * The Gemma project
- * 
- * Copyright (c) 2010 University of British Columbia
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 package ubic.gemma.tasks.analysis.expression;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotatorImpl;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 /**
+ * Run the semantic tagger.
+ *
  * @author paul
  * @version $Id$
  */
 @Component
+@Scope("prototype")
 public class AutoTaggerTaskImpl implements AutoTaggerTask {
 
-    @Autowired
-    private ExpressionExperimentAnnotator expressionExperimentAnnotator;
+    @Autowired private ExpressionExperimentAnnotator expressionExperimentAnnotator;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    private AutoTaggerTaskCommand command;
+
+    @Override
+    public void setCommand(AutoTaggerTaskCommand command) {
+        this.command = command;
+    }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.tasks.analysis.expression.AutoTaggerTask#execute(ubic.gemma.job.TaskCommand)
-     */
+             * (non-Javadoc)
+             *
+             * @see ubic.gemma.tasks.analysis.expression.AutoTaggerTask#execute(ubic.gemma.job.TaskCommand)
+             */
     @Override
-    @TaskMethod
-    public TaskResult execute( TaskCommand command ) {
+    public TaskResult execute() {
 
         if ( !ExpressionExperimentAnnotatorImpl.ready() ) {
             throw new RuntimeException( "Sorry, the auto-tagger is not available." );

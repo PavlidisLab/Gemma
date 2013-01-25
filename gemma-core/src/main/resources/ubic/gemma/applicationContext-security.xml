@@ -6,9 +6,7 @@
           http://www.springframework.org/schema/security 
           http://www.springframework.org/schema/security/spring-security-3.0.xsd
           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd  
-          http://www.springframework.org/schema/context 
-          http://www.springframework.org/schema/context/spring-context-3.0.xsd
-           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+          http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
 	<bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
 
@@ -79,7 +77,7 @@
 		<s:authentication-provider ref="runAsAuthenticationProvider" />
 	</s:authentication-manager>
 
-	<bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
+    <bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
 		<property name="rolePrefix" value="GROUP_" />
 		<property name="key" value="${gemma.runas.password}" />
 	</bean>

@@ -24,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.TaskRunningService;
 
@@ -36,8 +37,7 @@ import ubic.gemma.job.TaskRunningService;
 @Controller
 public class TaskCompletionController {
 
-    @Autowired
-    TaskRunningService taskRunningService;
+    @Autowired TaskRunningService taskRunningService;
 
     /**
      * AJAX
@@ -46,7 +46,10 @@ public class TaskCompletionController {
      * @return
      */
     public Object checkResult( String taskId ) throws Exception {
-        TaskResult result = taskRunningService.checkResult( taskId );
+        SubmittedTask submittedTask = taskRunningService.getSubmittedTask(taskId);
+        if ( submittedTask == null ) return null;
+
+        TaskResult result = submittedTask.getResult();
 
         if ( result == null ) return null;
 
@@ -66,5 +69,4 @@ public class TaskCompletionController {
 
         return answer;
     }
-
 }

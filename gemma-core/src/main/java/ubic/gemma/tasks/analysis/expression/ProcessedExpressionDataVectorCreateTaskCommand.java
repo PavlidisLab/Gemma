@@ -77,4 +77,8 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
         this.expressionExperiment = expressionExperiment;
     }
 
+    @Override
+    public Class getTaskClass() {
+        return ProcessedExpressionDataVectorCreateTask.class;
+    }
 }

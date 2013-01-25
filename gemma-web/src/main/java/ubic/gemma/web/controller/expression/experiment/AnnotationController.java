@@ -22,15 +22,14 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
 import ubic.gemma.model.common.description.Characteristic;
@@ -42,7 +41,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.security.SecurityServiceImpl;
-import ubic.gemma.tasks.analysis.expression.AutoTaggerTask;
+import ubic.gemma.tasks.analysis.expression.AutoTaggerTaskCommand;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
@@ -53,53 +52,17 @@ import ubic.gemma.tasks.analysis.expression.AutoTaggerTask;
  * @see ubic.gemma.web.controller.common.CharacteristicBrowserController for related methods.
  */
 @Controller
-public class AnnotationController extends AbstractTaskService {
+public class AnnotationController {
 
-    private class TaggerJob extends BackgroundJob<TaskCommand> {
+    private static final Log log = LogFactory.getLog(AnnotationController.class.getName());
 
-        public TaggerJob( TaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        protected TaskResult processJob() {
-            return autoTagTask.execute( this.command );
-        }
-    }
-
-    private class TaggerSpaceJob extends BackgroundJob<TaskCommand> {
-
-        public TaggerSpaceJob( TaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        protected TaskResult processJob() {
-            AutoTaggerTask taskProxy = ( AutoTaggerTask ) getProxy();
-            return taskProxy.execute( command );
-        }
-    }
-
-    @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
-    private AutoTaggerTask autoTagTask;
-
-    @Autowired
-    private BioMaterialService bioMaterialService;
-
-    @Autowired
-    private CharacteristicService characteristicService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private OntologyService ontologyService;
-
-    @Autowired
-    private TaxonService taxonService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private AuditTrailService auditTrailService;
+    @Autowired private BioMaterialService bioMaterialService;
+    @Autowired private CharacteristicService characteristicService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private OntologyService ontologyService;
+    @Autowired private TaxonService taxonService;
 
     /**
      * @param eeId
@@ -111,7 +74,7 @@ public class AnnotationController extends AbstractTaskService {
             throw new IllegalArgumentException( "Id cannot be null" );
         }
 
-        return this.run( new TaskCommand( eeId ) );
+        return taskRunningService.submitRemoteTask( new AutoTaggerTaskCommand(eeId) );
     }
 
     public void createBiomaterialTag( Characteristic vc, Long id ) {
@@ -230,26 +193,6 @@ public class AnnotationController extends AbstractTaskService {
             return;
         }
         this.auditTrailService.addUpdateEvent( ee, ValidatedAnnotations.class, "", "" );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.AbstractTaskService#getInProcessRunner(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return new TaggerJob( command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.AbstractTaskService#getSpaceRunner(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return new TaggerSpaceJob( command );
     }
 
 }

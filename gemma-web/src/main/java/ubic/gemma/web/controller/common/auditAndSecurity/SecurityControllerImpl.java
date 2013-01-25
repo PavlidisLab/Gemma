@@ -76,32 +76,15 @@ public class SecurityControllerImpl implements SecurityController {
 
     private static Log log = LogFactory.getLog( SecurityControllerImpl.class );
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
-
-    @Autowired
-    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
-
-    @Autowired
-    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
-
-    @Autowired
-    private GeneSetService geneSetService = null;
-
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
-
-    @Autowired
-    private MailEngine mailEngine;
-
-    @Autowired
-    private SecurityService securityService = null;
-
-    @Autowired
-    private UserManager userManager = null;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+    @Autowired private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+    @Autowired private GeneSetService geneSetService;
+    @Autowired private PhenotypeAssociationService phenotypeAssociationService;
+    @Autowired private MailEngine mailEngine;
+    @Autowired private SecurityService securityService;
+    @Autowired private UserManager userManager;
 
     /*
      * (non-Javadoc)

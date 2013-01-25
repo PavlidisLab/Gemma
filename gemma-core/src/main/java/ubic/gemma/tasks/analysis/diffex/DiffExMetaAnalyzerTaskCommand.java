@@ -68,4 +68,9 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
     public String getDescription() {
         return this.description;
     }
+
+    @Override
+    public Class getTaskClass() {
+        return DiffExMetaAnalyzerTask.class;
+    }
 }

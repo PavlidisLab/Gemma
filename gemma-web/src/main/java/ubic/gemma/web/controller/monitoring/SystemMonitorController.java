@@ -18,22 +18,19 @@
  */
 package ubic.gemma.web.controller.monitoring;
 
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.job.grid.util.SpaceMonitor;
-import ubic.gemma.job.grid.util.SpacesUtilImpl;
-import ubic.gemma.job.grid.worker.SpacesRegistrationEntry;
+import org.springframework.web.servlet.ModelAndView;
+import ubic.gemma.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.util.monitor.CacheMonitor;
 import ubic.gemma.util.monitor.HibernateMonitor;
+
+import javax.jms.JMSException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Provide statistics about the system: hibernate, caches etc.
@@ -44,14 +41,9 @@ import ubic.gemma.util.monitor.HibernateMonitor;
 @Controller
 public class SystemMonitorController {
 
-    @Autowired
-    CacheMonitor cacheMonitor;
-
-    @Autowired
-    HibernateMonitor hibernateMonitor;
-
-    @Autowired
-    SpaceMonitor spaceMonitor;
+    @Autowired CacheMonitor cacheMonitor;
+    @Autowired HibernateMonitor hibernateMonitor;
+    @Autowired JMSBrokerMonitor jmsBrokerMonitor;
 
     /**
      * Flush (clear) all caches. Exposed to AJAX
@@ -63,7 +55,7 @@ public class SystemMonitorController {
     /**
      * Flush (clear) a cache.
      * 
-     * @param cache name Exposed to AJAX
+     * @param name of cache Exposed to AJAX
      */
     public void clearCache( String name ) {
         this.cacheMonitor.clearCache( name );
@@ -101,37 +93,24 @@ public class SystemMonitorController {
      * 
      * @return
      */
-    public String getSpaceStatus() {
+    public String getJMSBrokerStatus() {
         StringBuilder buf = new StringBuilder();
 
-        List<SpacesRegistrationEntry> registeredWorkers = SpacesUtilImpl.getRegisteredWorkers();
-
-        String lastStatusMessage = spaceMonitor.getLastStatusMessage();
-        Boolean lastStatusWasOK = spaceMonitor.getLastStatusWasOK();
-        Integer numPings = spaceMonitor.getNumberOfPings();
-        Integer numBadPings = spaceMonitor.getNumberOfBadPings();
-
         buf.append( "<p>" );
-        if ( !lastStatusWasOK ) {
-            buf.append( "<span style='color:red'>Grid error; monitor reports: " + lastStatusMessage + "</span>" );
-        } else {
-            buf.append( "Grid status is nominal " + lastStatusMessage );
-        }
-
+        buf.append( "JMS Broker is " );
+        buf.append( jmsBrokerMonitor.isRemoteTasksEnabled() ? "enabled" : "disabled" );
+        buf.append( " in the configuration file.");
         buf.append( "</p>" );
-
-        buf.append( "<p>" + numBadPings + "/" + numPings + " bad pings</p>" );
-
-        if ( registeredWorkers != null ) {
-            buf.append( "\n<h2>Workers</h2>" );
-            for ( SpacesRegistrationEntry e : registeredWorkers ) {
-                buf.append( e.registrationId + ( e.taskId != null ? " Was busy with task " + e.taskId : "" )
-                        + "</br>\n" );
+        if ( jmsBrokerMonitor.isRemoteTasksEnabled() ) {
+            buf.append( "<p>" );
+            buf.append( "Number of worker applications running: " );
+            try {
+                buf.append( jmsBrokerMonitor.getNumberOfWorkerHosts() );
+            } catch (JMSException e) {
+                buf.append( "Got exception: "+e.getMessage() );
             }
+            buf.append( "</p>" );
         }
-
-        buf.append( "\n<h2>Statistics</h2>" );
-        buf.append( "<pre>" + SpacesUtilImpl.logSpaceStatistics() + "</pre>" );
 
         return buf.toString();
     }
@@ -145,8 +124,8 @@ public class SystemMonitorController {
      */
     @RequestMapping("/gridStatus.html")
     public ModelAndView gridStatus( HttpServletRequest request, HttpServletResponse response ) {
-        String spaceStatus = getSpaceStatus();
-        return new ModelAndView( "systemNotices" ).addObject( "status", spaceStatus );
+        String brokerStatus = getJMSBrokerStatus();
+        return new ModelAndView( "systemNotices" ).addObject( "status", brokerStatus );
     }
 
     /**

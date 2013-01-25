@@ -96,4 +96,8 @@ public class UpdateEEDetailsCommand extends TaskCommand {
         this.removePrimaryPublication = removePrimaryPublication;
     }
 
+    @Override
+    public Class getTaskClass() {
+        return null; // No Task exists.
+    }
 }

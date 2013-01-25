@@ -78,35 +78,16 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 @RequestMapping("/experimentalDesign")
 public class ExperimentalDesignControllerImpl extends BaseController implements ExperimentalDesignController {
 
-    @Autowired
-    private BioMaterialService bioMaterialService = null;
-
-    @Autowired
-    private CharacteristicService characteristicService = null;
-
-    @Autowired
-    private ExperimentalDesignImporter experimentalDesignImporter = null;
-
-    @Autowired
-    private ExperimentalDesignService experimentalDesignService = null;
-
-    @Autowired
-    private ExperimentalFactorService experimentalFactorService = null;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
-    private ExpressionExperimentReportService experimentReportService;
-
-    @Autowired
-    private FactorValueDeletion factorValueDeletion = null;
-
-    @Autowired
-    private FactorValueService factorValueService = null;
-
-    @Autowired
-    private SecurityService securityService = null;
+    @Autowired private BioMaterialService bioMaterialService;
+    @Autowired private CharacteristicService characteristicService;
+    @Autowired private ExperimentalDesignImporter experimentalDesignImporter;
+    @Autowired private ExperimentalDesignService experimentalDesignService;
+    @Autowired private ExperimentalFactorService experimentalFactorService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ExpressionExperimentReportService experimentReportService;
+    @Autowired private FactorValueDeletion factorValueDeletion;
+    @Autowired private FactorValueService factorValueService;
+    @Autowired private SecurityService securityService;
 
     /*
      * (non-Javadoc)

@@ -30,6 +30,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,10 +42,9 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -59,11 +60,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 @Controller
-public class ExpressionDataFileUploadController extends AbstractTaskService {
+public class ExpressionDataFileUploadController {
 
-    private class SimpleEELoadJob extends BackgroundJob<SimpleExpressionExperimentLoadCommand> {
+    private class SimpleEELoadLocalJob extends BackgroundJob<SimpleExpressionExperimentLoadTaskCommand, TaskResult> {
 
-        public SimpleEELoadJob( SimpleExpressionExperimentLoadCommand commandObj ) {
+        public SimpleEELoadLocalJob( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
         }
 
@@ -91,8 +92,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
                 processedExpressionDataVectorCreateService.computeProcessedExpressionData( result );
 
                 // In theory we could do the link analysis right away. However, when a data set has new array designs,
-                // we
-                // won't be ready yet.
+                // we won't be ready yet.
 
                 ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
                 eeUploadResponse.setTaskId( result.getId() );
@@ -118,7 +118,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
         /**
          * @param commandObject
          */
-        private void populateCommandObject( SimpleExpressionExperimentLoadCommand commandObject ) {
+        private void populateCommandObject( SimpleExpressionExperimentLoadTaskCommand commandObject ) {
             Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
 
             // might have used instead of actual ADs.
@@ -152,9 +152,9 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
     /**
      *  
      */
-    private class SimpleEEValidateJob extends BackgroundJob<SimpleExpressionExperimentLoadCommand> {
+    private class SimpleEEValidateLocalJob extends BackgroundJob<SimpleExpressionExperimentLoadTaskCommand, TaskResult> {
 
-        public SimpleEEValidateJob( SimpleExpressionExperimentLoadCommand commandObj ) {
+        public SimpleEEValidateLocalJob( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
         }
 
@@ -165,30 +165,24 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
         }
     }
 
-    @Autowired
-    private ArrayDesignService arrayDesignService;
+    private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    @Autowired
-    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-
-    @Autowired
-    private TaxonService taxonService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ArrayDesignService arrayDesignService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    @Autowired private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+    @Autowired private TaxonService taxonService;
 
     /**
      * AJAX
      * 
-     * @param ed
+     * @param loadEECommand
      * @return the taskid
      */
-    public String load( SimpleExpressionExperimentLoadCommand ed ) {
-        ed.setValidateOnly( false );
-        return this.run( ed );
+    public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand) {
+        loadEECommand.setValidateOnly( false );
+        return taskRunningService.submitLocalJob(new SimpleEELoadLocalJob(loadEECommand));
     }
 
     /**
@@ -226,44 +220,31 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
     }
 
     /**
-     * @param ed
+     * @param command
      * @return taskId
      * @throws Exception
      */
-    public String validate( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
-        assert ed != null;
-        ed.setValidateOnly( true );
-        return this.run( ed );
-    }
-
-    @Override
-    protected BackgroundJob<SimpleExpressionExperimentLoadCommand> getInProcessRunner( TaskCommand command ) {
-        if ( ( ( SimpleExpressionExperimentLoadCommand ) command ).isValidateOnly() ) {
-            return new SimpleEEValidateJob( ( SimpleExpressionExperimentLoadCommand ) command );
-        }
-        return new SimpleEELoadJob( ( SimpleExpressionExperimentLoadCommand ) command );
-    }
-
-    @Override
-    protected BackgroundJob<SimpleExpressionExperimentLoadCommand> getSpaceRunner( TaskCommand command ) {
-        return null;
+    public String validate( SimpleExpressionExperimentLoadTaskCommand command ) throws Exception {
+        assert command != null;
+        command.setValidateOnly(true);
+        return taskRunningService.submitLocalJob(new SimpleEEValidateLocalJob( command ));
     }
 
     /**
-     * @param ed
+     * @param command
      * @return
      */
-    private SimpleExpressionExperimentCommandValidation doValidate( SimpleExpressionExperimentLoadCommand ed ) {
+    private SimpleExpressionExperimentCommandValidation doValidate( SimpleExpressionExperimentLoadTaskCommand command ) {
 
-        scrub( ed );
-        ExpressionExperiment existing = expressionExperimentService.findByShortName( ed.getShortName() );
+        scrub( command );
+        ExpressionExperiment existing = expressionExperimentService.findByShortName( command.getShortName() );
         SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
 
         log.info( "Checking for valid name and files" );
 
         result.setShortNameIsUnique( existing == null );
 
-        String localPath = ed.getServerFilePath();
+        String localPath = command.getServerFilePath();
         if ( StringUtils.isBlank( localPath ) ) {
             result.setDataFileIsValidFormat( false );
             result.setDataFileFormatProblemMessage( "File is missing" );
@@ -278,7 +259,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
             return result;
         }
 
-        Collection<Long> arrayDesignIds = ed.getArrayDesignIds();
+        Collection<Long> arrayDesignIds = command.getArrayDesignIds();
 
         if ( arrayDesignIds.isEmpty() ) {
             result.setArrayDesignMatchesDataFile( false );
@@ -348,7 +329,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
     /**
      * @param ed
      */
-    private File getFile( SimpleExpressionExperimentLoadCommand ed ) {
+    private File getFile( SimpleExpressionExperimentLoadTaskCommand ed ) {
         File file;
         String localPath = ed.getServerFilePath();
         if ( StringUtils.isBlank( localPath ) ) {
@@ -364,7 +345,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
         return file;
     }
 
-    private void scrub( SimpleExpressionExperimentLoadCommand o ) {
+    private void scrub( SimpleExpressionExperimentLoadTaskCommand o ) {
         o.setName( scrub( o.getName() ) );
         o.setDescription( scrub( o.getDescription() ) );
         o.setShortName( scrub( o.getShortName() ) );

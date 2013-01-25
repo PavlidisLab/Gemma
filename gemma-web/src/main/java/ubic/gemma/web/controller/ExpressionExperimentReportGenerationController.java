@@ -22,10 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTask;
 import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
@@ -35,58 +32,14 @@ import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
  * @version $Id$ *
  */
 @Controller
-public class ExpressionExperimentReportGenerationController extends AbstractTaskService {
+public class ExpressionExperimentReportGenerationController {
 
-    public ExpressionExperimentReportGenerationController() {
-        super();
-        this.setBusinessInterface( ExpressionExperimentReportTask.class );
-    }
-
-    /**
-     * @author klc
-     */
-    private class ExpressionExperimentReportJob extends BackgroundJob<ExpressionExperimentReportTaskCommand> {
-
-        public ExpressionExperimentReportJob( ExpressionExperimentReportTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        protected TaskResult processJob() {
-            return expressionExperimentReportTask.execute( this.command );
-        }
-    }
-
-    /**
-     * Job that loads in a javaspace.
-     * 
-     * @author keshav
-     * @version $Id$
-     */
-    private class ExpressionExperimentReportSpaceJob extends BackgroundJob<ExpressionExperimentReportTaskCommand> {
-
-        public ExpressionExperimentReportSpaceJob( ExpressionExperimentReportTaskCommand commandObj ) {
-            super( commandObj );
-        }
-
-        @Override
-        protected TaskResult processJob() {
-            ExpressionExperimentReportTask taskProxy = ( ExpressionExperimentReportTask ) getProxy();
-            return taskProxy.execute( command );
-        }
-
-    }
-
-    @Autowired
-    private ExpressionExperimentReportTask expressionExperimentReportTask;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
 
     /**
      * AJAX entry point.
      * 
-     * @param cmd
      * @return
      * @throws Exception
      */
@@ -98,7 +51,7 @@ public class ExpressionExperimentReportGenerationController extends AbstractTask
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( ee );
 
-        return super.run( cmd );
+        return taskRunningService.submitLocalTask( cmd );
     }
 
     /**
@@ -111,26 +64,8 @@ public class ExpressionExperimentReportGenerationController extends AbstractTask
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( true );
 
-        return super.run( cmd );
+        return taskRunningService.submitLocalTask( cmd );
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<ExpressionExperimentReportTaskCommand> getInProcessRunner( TaskCommand command ) {
-        return new ExpressionExperimentReportJob( ( ExpressionExperimentReportTaskCommand ) command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<ExpressionExperimentReportTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new ExpressionExperimentReportSpaceJob( ( ExpressionExperimentReportTaskCommand ) command );
     }
 
 }

@@ -29,6 +29,11 @@ public class UpdatePubMedCommand extends TaskCommand {
     private static final long serialVersionUID = 1L;
     private String pubmedId;
 
+    @Override
+    public Class getTaskClass() {
+        return null;
+    }
+
     public UpdatePubMedCommand() {
         super();
     }

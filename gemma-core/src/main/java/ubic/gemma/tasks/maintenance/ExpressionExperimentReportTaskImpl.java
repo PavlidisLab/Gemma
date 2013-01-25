@@ -3,34 +3,33 @@ package ubic.gemma.tasks.maintenance;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 
-/**
- * Handles delegation of report generation (to the space, or run locally)
- * 
- * @author klc
- * @version $Id$
- */
-
 @Component
+@Scope("prototype")
 public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentReportTask {
 
-    private Log log = LogFactory.getLog( ExpressionExperimentReportTaskImpl.class.getName() );
+    private Log log = LogFactory.getLog( ExpressionExperimentReportTask.class.getName() );
 
-    @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired private ExpressionExperimentReportService expressionExperimentReportService;
+
+    private ExpressionExperimentReportTaskCommand command;
+
+    @Override
+    public void setCommand(ExpressionExperimentReportTaskCommand command) {
+        this.command = command;
+    }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask#execute()
-     */
+             * (non-Javadoc)
+             *
+             * @see ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask#execute()
+             */
     @Override
-    @TaskMethod
-    public TaskResult execute( ExpressionExperimentReportTaskCommand command ) {
+    public TaskResult execute() {
 
         TaskResult result = new TaskResult( command, null );
 

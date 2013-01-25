@@ -78,6 +78,7 @@ import ubic.gemma.util.CompassUtils;
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/testDataSource.xml",
         "classpath*:ubic/gemma/applicationContext-security.xml", "classpath*:ubic/gemma/applicationContext-search.xml",
         "classpath*:ubic/gemma/applicationContext-hibernate.xml",
+        "classpath*:ubic/gemma/applicationContext-jms.xml",
         "classpath*:ubic/gemma/applicationContext-serviceBeans.xml",
         "classpath*:ubic/gemma/applicationContext-schedule.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {

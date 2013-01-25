@@ -60,17 +60,10 @@ public class BioMaterialController {
 
     private static Log log = LogFactory.getLog( BioMaterialController.class.getName() );
 
-    @Autowired
-    private BioMaterialService bioMaterialService = null;
-
-    @Autowired
-    private OntologyService ontologyService = null;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private FactorValueService factorValueService;
+    @Autowired private BioMaterialService bioMaterialService;
+    @Autowired private OntologyService ontologyService;
+    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired private FactorValueService factorValueService;
 
     private boolean AJAX = true;
 

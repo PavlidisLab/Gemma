@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.tasks.maintenance.IndexerTask;
+import ubic.gemma.tasks.maintenance.IndexerTaskImpl;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -76,7 +77,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     OntologyService ontologyService;
 
     @Autowired
-    IndexerTask indexService;
+    IndexerTask indexerTask;
 
     private ExpressionExperiment ee;
     private Gene gene;
@@ -162,7 +163,9 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         IndexerTaskCommand c = new IndexerTaskCommand();
         c.setIndexBibRef( true );
-        indexService.execute( c );
+
+        indexerTask.setCommand( c );
+        indexerTask.execute();
 
         SearchSettings settings = new SearchSettings();
         settings.noSearches();

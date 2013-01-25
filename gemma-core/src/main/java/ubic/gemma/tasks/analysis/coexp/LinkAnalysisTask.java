@@ -17,15 +17,10 @@
  *
  */
 package ubic.gemma.tasks.analysis.coexp;
- 
 
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
-/**
- * @author Paul
- * @version $Id$
- */
-public interface LinkAnalysisTask {
 
-    TaskResult execute( LinkAnalysisTaskCommand c );
-}
+interface LinkAnalysisTask extends Task<TaskResult, LinkAnalysisTaskCommand>{}
+

@@ -67,4 +67,8 @@ public class CharacteristicUpdateCommand extends TaskCommand {
         return remove;
     }
 
+    @Override
+    public Class getTaskClass() {
+        return CharacteristicUpdateTask.class;
+    }
 }

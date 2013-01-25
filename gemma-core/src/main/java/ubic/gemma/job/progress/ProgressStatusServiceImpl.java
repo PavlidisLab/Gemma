@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.job.TaskCommandValueObject;
@@ -39,25 +40,14 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
 
     private static Log log = LogFactory.getLog( ProgressStatusServiceImpl.class.getName() );
 
-    @Autowired
-    private TaskRunningService taskRunningService;
+    @Autowired private TaskRunningService taskRunningService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.progress.ProgressStatusService#addEmailAlert(java.lang.String)
-     */
     @Override
     public synchronized void addEmailAlert( String taskId ) {
         if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
-        taskRunningService.addEmailAlert( taskId );
+        taskRunningService.getSubmittedTask( taskId ).addEmailAlert();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.progress.ProgressStatusService#cancelJob(java.lang.String)
-     */
     @Override
     public boolean cancelJob( String taskId ) {
         if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
@@ -70,51 +60,14 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.progress.ProgressStatusService#getCancelledTasks()
-     */
-    @Override
-    public Collection<TaskCommandValueObject> getCancelledTasks() {
-        return TaskCommandValueObject.convert2ValueObjects(taskRunningService.getCancelledTasks());
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.progress.ProgressStatusService#getFailedTasks()
-     */
-    @Override
-    public Collection<TaskResult> getFailedTasks() {
-        return taskRunningService.getFailedTasks();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.progress.ProgressStatusService#getFinishedTasks()
-     */
-    @Override
-    public Collection<TaskResult> getFinishedTasks() {
-        return taskRunningService.getFinishedTasks();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.progress.ProgressStatusService#getProgressStatus(java.lang.String)
-     */
     @Override
     public synchronized List<ProgressData> getProgressStatus( String taskId ) {
         if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
 
         List<ProgressData> statusObjects = new Vector<ProgressData>();
 
-        ProgressJob job = ProgressManager.getJob( taskId );
-
-        if ( job == null ) {
-
+        if ( task == null ) {
             log.warn( "It looks like job " + taskId + " has gone missing; assuming it is dead or finished already" );
 
             // We should assume it is dead.
@@ -127,27 +80,30 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
             return statusObjects;
         }
 
-        // normal situation: deal with accumulated results.
-        Queue<ProgressData> pd = job.getProgressData();
+        assert task.getTaskId() != null;
+        assert task.getTaskId().equals( taskId );
 
-        boolean didCleanup = false;
-        while ( !pd.isEmpty() ) {
-            ProgressData data = pd.poll();
+        Queue<String> updates = task.getProgressUpdates();
+        String progressMessage = "";
+        while ( !updates.isEmpty() ) {
+            String update = updates.poll();
+            progressMessage += update +"\n";
+        }
 
-            assert data.getTaskId() != null;
-            assert data.getTaskId().equals( taskId );
-
-            statusObjects.add( data );
-
-            if ( !didCleanup && data.isDone() ) {
+        if (task.isDone()) {
+            ProgressData data;
+            if ( task.getStatus() == SubmittedTask.Status.DONE ) {
                 log.debug( "Job " + taskId + " is done" );
-                if ( data.getForwardingURL() != null ) {
-                    log.debug( "forward to " + data.getForwardingURL() );
-                }
-                ProgressManager.cleanupJob( taskId );
-                didCleanup = true;
-                // Do not break, even if the job is done. keep adding any stored data to the results.
+                data = new ProgressData( taskId, 1, progressMessage+"Done!", true );
+            } else if ( task.getStatus() == SubmittedTask.Status.FAILED ) {
+                data = new ProgressData( taskId, 1, progressMessage+"Failed!", true );
+                data.setFailed( true );
+            } else {
+                data = new ProgressData( taskId, 1, progressMessage+"Possibly canceled.", true );
             }
+            statusObjects.add( data );
+        } else {
+            statusObjects.add( new ProgressData( taskId, 1, progressMessage, false ) );
         }
 
         return statusObjects;
@@ -159,8 +115,8 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
      * @see ubic.gemma.job.progress.ProgressStatusService#getSubmittedTasks()
      */
     @Override
-    public Collection<TaskCommandValueObject> getSubmittedTasks() {
-        return TaskCommandValueObject.convert2ValueObjects( taskRunningService.getSubmittedTasks());
+    public Collection<SubmittedTaskValueObject> getSubmittedTasks() {
+        return SubmittedTaskValueObject.convert2ValueObjects( taskRunningService.getSubmittedTasks());
     }
 
 }

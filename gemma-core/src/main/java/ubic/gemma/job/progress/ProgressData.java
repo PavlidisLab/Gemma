@@ -67,10 +67,6 @@ public class ProgressData implements Serializable {
         done = finished;
     }
 
-    /**
-     * @param percent int
-     * @param description String
-     */
     public ProgressData( String taskId, int per, String descrip ) {
         this( taskId, per, descrip, false );
     }
@@ -103,9 +99,6 @@ public class ProgressData implements Serializable {
         return percent;
     }
 
-    /**
-     * @param per int value of percent
-     */
     public void setPercent( int percent ) {
         this.percent = percent;
     }

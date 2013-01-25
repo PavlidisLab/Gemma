@@ -17,17 +17,10 @@
  *
  */
 package ubic.gemma.tasks.analysis.diffex;
- 
+
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
-/**
- * A task interface to wrap differential expression type jobs. Tasks of this type are submitted to a {@link JavaSpace}
- * and taken from the space by a worker, run on a compute server, and the results are returned to the space.
- * 
- * @author keshav
- * @version $Id$
- */ 
-public interface DifferentialExpressionAnalysisTask {
 
-    TaskResult execute( DifferentialExpressionAnalysisTaskCommand diffCommand );
-}
+public interface DifferentialExpressionAnalysisTask extends Task<TaskResult, DifferentialExpressionAnalysisTaskCommand>{}
+

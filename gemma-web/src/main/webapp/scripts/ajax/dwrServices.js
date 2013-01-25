@@ -1,4 +1,3 @@
-
 /**
  * dwrServices.js
  * 
@@ -299,29 +298,12 @@ DifferentialExpressionSearchController.getFactors = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getFactors', p0, callback);
 }
-DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch = function(p0, p1, p2, p3, p4, callback) {
-	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'differentialExpressionAnalysisVisualizationSearch', p0, p1, p2, p3, p4, callback);
-}
-DifferentialExpressionSearchController.geneConditionSearch = function(p0, p1, p2, p3, p4, callback) {
-	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'geneConditionSearch', p0, p1, p2, p3, p4, callback); // FIXME not used?
-}
 
 DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function(p0, p1, p2, p3, p4, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'scheduleDiffExpSearchTask', p0, p1, p2, p3, p4, callback);
 }
 
-DifferentialExpressionSearchController.getDiffExpSearchResult = function(p0, callback) {
-	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'getDiffExpSearchResult', p0, callback);
-}
-
-DifferentialExpressionSearchController.getDiffExpSearchTaskProgress = function(p0, callback) {
-	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'getDiffExpSearchTaskProgress', p0, callback);
-}
 // ====================================================================================
 if (DiffExMetaAnalyzerController == null)
 	var DiffExMetaAnalyzerController = {};
@@ -912,7 +894,7 @@ SystemMonitorController.getHibernateStatus = function(callback) {
 	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getHibernateStatus', callback);
 }
 SystemMonitorController.getSpaceStatus = function(callback) {
-	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getSpaceStatus', callback);
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getJMSBrokerStatus', callback);
 }
 SystemMonitorController.getCacheStatus = function(callback) {
 	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getCacheStatus', callback);
@@ -991,15 +973,6 @@ ProgressStatusService.addEmailAlert = function(p0, callback) {
 }
 ProgressStatusService.getSubmittedTasks = function(callback) {
 	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getSubmittedTasks', callback);
-}
-ProgressStatusService.getFailedTasks = function(p0, callback) {
-	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getFailedTasks', callback);
-}
-ProgressStatusService.getCancelledTasks = function(p0, callback) {
-	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getCancelledTasks', callback);
-}
-ProgressStatusService.getFinishedTasks = function(p0, callback) {
-	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getFinishedTasks', callback);
 }
 // ====================================================================================
 

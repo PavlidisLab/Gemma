@@ -36,10 +36,9 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
@@ -52,7 +51,7 @@ import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 /**
  * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX,
  * either in the webapp or in a javaspaces grid. The choice depends on how the system and client is configured. In
- * either case the job runs in its own thread, firing a ProgressJob that the client can monitor.
+ * either case the job runs in its own thread, firing a JobProgress that the client can monitor.
  * 
  * @author pavlidis
  * @author keshav
@@ -61,11 +60,10 @@ import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
  *      loaded.
  */
 @Controller
-public class ExpressionExperimentLoadController extends AbstractTaskService {
+public class ExpressionExperimentLoadController {
 
     public ExpressionExperimentLoadController() {
         super();
-        this.setBusinessInterface( ExpressionExperimentLoadTask.class );
     }
 
     @RequestMapping("/admin/loadExpressionExperiment.html")
@@ -80,14 +78,11 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
      * @author Paul
      * @version $Id$
      */
-    private class LoadInSpaceJob extends LoadJob {
+    private class LoadRemoteJob extends LoadLocalJob {
 
-        final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) getProxy();
+        ExpressionExperimentLoadTask eeLoadTask;
 
-        /**
-         * @param commandObj
-         */
-        public LoadInSpaceJob( ExpressionExperimentLoadTaskCommand commandObj ) {
+        public LoadRemoteJob(ExpressionExperimentLoadTaskCommand commandObj) {
             super( commandObj );
 
         }
@@ -98,11 +93,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             return super.processArrayExpressResult( ( ExpressionExperiment ) result.getAnswer() );
         }
 
-        /**
-         * @param model
-         * @param list
-         * @return
-         */
         @Override
         protected TaskResult processGEODataJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
             TaskResult result = this.process( eeLoadCommand );
@@ -115,14 +105,10 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result.getAnswer() );
         }
 
-        /**
-         * @param cmd
-         * @return
-         */
         private TaskResult process( ExpressionExperimentLoadTaskCommand cmd ) {
             cmd.setTaskId( this.taskId );
             try {
-                TaskResult result = eeTaskProxy.execute( cmd );
+                TaskResult result = eeLoadTask.execute();
                 return result;
             } catch ( Exception e ) {
                 throw new RuntimeException( e );
@@ -134,15 +120,9 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
     /**
      * Regular job.
      */
-    private class LoadJob extends BackgroundJob<ExpressionExperimentLoadTaskCommand> {
+    private class LoadLocalJob extends BackgroundJob<ExpressionExperimentLoadTaskCommand, TaskResult> {
 
-        /**
-         * @param taskId
-         * @param parentSecurityContext
-         * @param commandObj
-         * @param messenger
-         */
-        public LoadJob( ExpressionExperimentLoadTaskCommand commandObj ) {
+        public LoadLocalJob(ExpressionExperimentLoadTaskCommand commandObj) {
             super( commandObj );
             if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
                 geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -188,8 +168,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
 
         /**
          * @param expressionExperimentLoadCommand
-         * @param accesionNum
-         * @param model
          * @return
          * @throws IOException
          */
@@ -217,12 +195,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
                     "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ) ) );
         }
 
-        /**
-         * @param accesionNum
-         * @param doSampleMatching
-         * @param aggressiveQtRemoval
-         * @return
-         */
         protected TaskResult processGEODataJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
 
             String accession = getAccession( expressionExperimentLoadCommand );
@@ -245,10 +217,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             return processGeoLoadResult( result );
         }
 
-        /**
-         * @param result
-         * @return
-         */
         protected TaskResult processGeoLoadResult( Collection<ExpressionExperiment> result ) {
             Map<Object, Object> model = new HashMap<Object, Object>();
             if ( result == null || result.size() == 0 ) {
@@ -272,14 +240,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
 
         /**
          * For when we're only loading the platform.
-         * 
-         * @param job
-         * @param accesionNum
-         * @param doSampleMatching
-         * @param aggressiveQtRemoval
-         * @param model
-         * @param list
-         * @return
          */
         protected TaskResult processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
             String accession = getAccession( expressionExperimentLoadCommand );
@@ -349,20 +309,12 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
         }
     }
 
-    @Autowired
-    GeoService geoDatasetService;
-
-    @Autowired
-    ArrayExpressLoadService arrayExpressLoadService;
-
-    @Autowired
-    ExpressionExperimentService eeService;
-
-    @Autowired
-    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    @Autowired
-    TwoChannelMissingValues twoChannelMissingValueService;
+    @Autowired private TaskRunningService taskRunningService;
+    @Autowired private GeoService geoDatasetService;
+    @Autowired private ArrayExpressLoadService arrayExpressLoadService;
+    @Autowired private ExpressionExperimentService eeService;
+    @Autowired private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    @Autowired private TwoChannelMissingValues twoChannelMissingValueService;
 
     /**
      * Main entry point for AJAX calls.
@@ -378,7 +330,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             throw new IllegalArgumentException( "Must provide an accession" );
         }
 
-        return super.run( command );
+        return taskRunningService.submitRemoteTask( command );
     }
 
     /**
@@ -406,27 +358,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
 
     public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
         this.twoChannelMissingValueService = twoChannelMissingValueService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<ExpressionExperimentLoadTaskCommand> getInProcessRunner( TaskCommand command ) {
-
-        return new LoadJob( ( ExpressionExperimentLoadTaskCommand ) command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundJob<ExpressionExperimentLoadTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new LoadInSpaceJob( ( ExpressionExperimentLoadTaskCommand ) command );
     }
 
 }

@@ -54,19 +54,16 @@ import ubic.gemma.security.authentication.ManualAuthenticationService;
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     protected AuditTrailService auditTrailService;
-
     protected AuditEventService auditEventService;
 
-    protected BeanFactory ctx = null;
+    protected BeanFactory ctx;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
-    private boolean forceGigaSpacesOn = false;
-    private Persister persisterHelper = null;
+    private Persister persisterHelper;
 
     public AbstractSpringAwareCLI() {
         super();
 
         CompassUtils.deleteCompassLocks();
-
     }
 
     @Override
@@ -74,9 +71,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         return "";
     }
 
-    public boolean isForceGigaSpacesOn() {
-        return forceGigaSpacesOn;
-    }
 
     /**
      * @param ctx
@@ -286,7 +280,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /**
      * check if using test or production contexts
      */
-    void createSpringContext() {
+    protected void createSpringContext() {
 
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false /* webapp */,
                 getAdditionalSpringConfigLocations() );

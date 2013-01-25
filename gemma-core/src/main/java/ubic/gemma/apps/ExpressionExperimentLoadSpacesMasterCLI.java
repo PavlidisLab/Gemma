@@ -20,7 +20,6 @@ package ubic.gemma.apps;
 
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
-import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
 
 import org.apache.commons.lang.StringUtils;
@@ -29,14 +28,11 @@ import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.grid.util.SpacesUtil;
-import ubic.gemma.job.progress.grid.SpacesProgressEntry;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
 import com.j_spaces.core.client.ExternalEntry;
-import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * This is an example of a CLI that makes use of the grid. This command line interface (CLI) serves as a handy tool/test
@@ -46,6 +42,7 @@ import com.j_spaces.core.client.NotifyModifiers;
  * @author keshav
  * @version $Id$
  */
+//TODO:   This needs to be changed due to deprecation of gigaspaces.
 public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
 
     /**
@@ -66,7 +63,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
         }
     }
 
-    private SpacesUtil spacesUtil = null;
+//    private SpacesUtil spacesUtil = null;
 
     private GigaSpacesTemplate template = null;
 
@@ -142,8 +139,8 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
      */
     protected void init() throws Exception {
 
-        spacesUtil = this.getBean( SpacesUtil.class );
-        ApplicationContext updatedContext = spacesUtil.addGemmaSpacesToApplicationContext();
+//        spacesUtil = this.getBean( SpacesUtil.class );
+        ApplicationContext updatedContext = null; // spacesUtil.addGemmaSpacesToApplicationContext();
 
         if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
             throw new RuntimeException( "GemmaSpaces beans could not be loaded. Cannot start master." );
@@ -188,20 +185,20 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
                 /* configure this client to receive notifications */
                 try {
-
-                    template.addNotifyDelegatorListener( this, new SpacesProgressEntry(), null, true, Lease.FOREVER,
-                            NotifyModifiers.NOTIFY_ALL );
+// FIXME: JMS migration
+//                    template.addNotifyDelegatorListener( this, new SpacesProgressEntry(), null, true, Lease.FOREVER,
+//                            NotifyModifiers.NOTIFY_ALL );
 
                 } catch ( Exception e ) {
                     throw new RuntimeException( e );
                 }
 
-                if ( !spacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName() ) ) continue;
+//                if ( !spacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName() ) ) continue;
 
                 ExpressionExperimentLoadTaskCommand command = new ExpressionExperimentLoadTaskCommand( platformOnly,
                         !doMatching, accession, aggressive, false, null );
 
-                res = proxy.execute( command );
+               // res = proxy.execute( command );
 
                 stopwatch.stop();
                 long wt = stopwatch.getTime();

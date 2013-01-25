@@ -17,18 +17,9 @@
  *
  */
 package ubic.gemma.tasks.analysis.sequence;
- 
 
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
-/**
- * A task interface to wrap array design repeat scan type jobs. Tasks of this type are submitted to a {@link JavaSpace}
- * and taken from the space by a worker, run on a compute server, and the results are returned to the space.
- * 
- * @author keshav
- * @version $Id$
- */ 
-public interface ArrayDesignRepeatScanTask {
+public interface ArrayDesignRepeatScanTask extends Task<TaskResult, ArrayDesignRepeatScanTaskCommand> {}
 
-    TaskResult execute( ArrayDesignRepeatScanTaskCommand c );
-}

@@ -71,23 +71,12 @@ import ubic.gemma.web.remote.EntityDelegator;
 @RequestMapping("/compositeSequence")
 public class CompositeSequenceController extends BaseController {
 
-    @Autowired
-    private ArrayDesignMapResultService arrayDesignMapResultService = null;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService = null;
-
-    @Autowired
-    private BlatResultService blatResultService = null;
-
-    @Autowired
-    private CompositeSequenceService compositeSequenceService = null;
-
-    @Autowired
-    private SearchService searchService;
-
-    @Autowired
-    private BioSequenceService bioSequenceService;
+    @Autowired private ArrayDesignMapResultService arrayDesignMapResultService;
+    @Autowired private ArrayDesignService arrayDesignService;
+    @Autowired private BlatResultService blatResultService;
+    @Autowired private CompositeSequenceService compositeSequenceService;
+    @Autowired private SearchService searchService;
+    @Autowired private BioSequenceService bioSequenceService;
 
     /**
      * Search for probes.

@@ -17,16 +17,19 @@
  *
  */
 package ubic.gemma.tasks.analysis.diffex;
- 
-import ubic.gemma.job.TaskResult;
 
-/**
- * A task interface to wrap differential expression meta-analysis jobs. Tasks of this type are submitted to a {@link JavaSpace}
- * and taken from the space by a worker, run on a compute server, and the results are returned to the space.
- * 
- * @author frances
- * @version $Id$
- */ 
-public interface DiffExMetaAnalyzerTask {
-    TaskResult execute( DiffExMetaAnalyzerTaskCommand diffCommand );
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import ubic.gemma.analysis.expression.diff.DiffExMetaAnalyzerService;
+import ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
+import ubic.gemma.tasks.Task;
+
+public interface DiffExMetaAnalyzerTask extends Task<TaskResult, DiffExMetaAnalyzerTaskCommand>{
+
 }
+
