@@ -31,7 +31,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 import java.util.Enumeration;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -51,7 +51,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
     Logger log4jLogger;
 
-    Queue<String> updates = new ConcurrentLinkedDeque<String>();
+    Queue<String> updates = new ConcurrentLinkedQueue<String>();
     /*
      * (non-Javadoc)
      * 
