@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.bioAssay;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,7 +36,10 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -53,12 +57,16 @@ import ubic.gemma.web.util.EntityNotFoundException;
 public class BioAssayController {
 
     private static final String identifierNotFound = "You must provide a valid BioAssay identifier";
-    private static final Log log = LogFactory.getLog(BioAssayController.class.getName());
+    private static final Log log = LogFactory.getLog( BioAssayController.class.getName() );
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private BioAssayService bioAssayService;
-    @Autowired private ExpressionExperimentService eeService;
-    @Autowired private AuditEventService auditEventService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private BioAssayService bioAssayService;
+    @Autowired
+    private ExpressionExperimentService eeService;
+    @Autowired
+    private AuditEventService auditEventService;
 
     /**
      * AJAX
@@ -115,11 +123,26 @@ public class BioAssayController {
 
         ee = eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
+
+        Map<Auditable, AuditEvent> outlierEvents = auditEventService.getLastEvent( ee.getBioAssays(),
+                SampleRemovalEvent.class );
+        /*
+         * Allow for the possibility that it isn't an outlier any more.
+         */
+        AuditEvent lastProcessedDataComputation = auditEventService.getLastEvent( ee,
+                ProcessedVectorComputationEvent.class );
+
         for ( BioAssay assay : ee.getBioAssays() ) {
 
             BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
+            AuditEvent outlierEvent = outlierEvents.get( assay );
 
-            bioAssayValueObject.setOutlier( auditEventService.hasEvent( assay, SampleRemovalEvent.class ) );
+            if ( outlierEvent != null ) {
+                // re-running processed data overwrites the status.
+                boolean isStillAnOutlier = lastProcessedDataComputation == null
+                        || ( lastProcessedDataComputation.getDate().before( outlierEvent.getDate() ) );
+                bioAssayValueObject.setOutlier( isStillAnOutlier );
+            }
 
             result.add( bioAssayValueObject );
         }
