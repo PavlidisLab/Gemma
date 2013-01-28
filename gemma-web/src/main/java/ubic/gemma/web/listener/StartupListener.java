@@ -109,7 +109,7 @@ public class StartupListener extends ContextLoaderListener {
 
         servletContext.setAttribute( Constants.CONFIG, config );
 
-        if ( ConfigUtils.isGridEnabled() ) copyWorkerJars( servletContext );
+        if ( ConfigUtils.isRemoteTasksEnabled() ) copyWorkerJars( servletContext );
 
         initializeHomologene( ctx );
 

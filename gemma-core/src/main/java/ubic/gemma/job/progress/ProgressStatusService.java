@@ -20,9 +20,6 @@ import java.util.List;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.TaskCommandValueObject;
-
 /**
  * @author paul
  * @version $Id$

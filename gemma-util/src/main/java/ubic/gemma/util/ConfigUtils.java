@@ -650,13 +650,6 @@ public class ConfigUtils {
         }
     }
 
-    /**
-     * @return true if the compute grid (e.g., JavaSpaces) is enabled by the user's configuration
-     */
-    public static boolean isGridEnabled() {
-        return getBoolean( GRID_ENBALED_PROPERTY, false );
-    }
-
     public static boolean isRemoteTasksEnabled() {
         return getBoolean( REMOTE_TASKS_PROPERTY, false );
     }

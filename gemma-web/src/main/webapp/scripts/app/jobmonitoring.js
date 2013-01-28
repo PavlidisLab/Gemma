@@ -45,6 +45,10 @@ Ext.onReady(function() {
 					},
 					width : 120
 				}, {
+                    header : "Status",
+                    dataIndex : "taskStatus",
+                    width : 60
+                }, {
 					header : "Submitter",
 					dataIndex : "submitter"
 				}, {
@@ -108,9 +112,12 @@ Ext.onReady(function() {
 											name : "startTime",
 											type : "date"
 										}, {
-											name : "submitter",
+											name : "taskStatus",
 											type : "string"
 										}, {
+                                            name : "submitter",
+                                            type : "string"
+                                        }, {
 											name : "taskType",
 											type : "string"
 										}, {

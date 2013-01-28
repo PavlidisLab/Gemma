@@ -1,7 +1,6 @@
 package ubic.gemma.job.progress;
 
 import ubic.gemma.job.SubmittedTask;
-import ubic.gemma.job.TaskCommandValueObject;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -16,8 +15,7 @@ public class SubmittedTaskValueObject implements Serializable {
     private String submitter;
     private String taskType;
     private boolean runningRemotely;
-
-//    private TaskCommandValueObject taskCommandValueObject;
+    private String taskStatus;
 
     public SubmittedTaskValueObject() {
     }
@@ -29,7 +27,11 @@ public class SubmittedTaskValueObject implements Serializable {
         this.submissionTime = submittedTask.getSubmissionTime();
         this.startTime = submittedTask.getStartTime();
         this.runningRemotely = submittedTask.isRunningRemotely();
-//        this.taskCommandValueObject = new TaskCommandValueObject( submittedTask.getCommand() );
+        this.taskStatus = submittedTask.getStatus().name();
+    }
+
+    public String getTaskStatus() {
+        return taskStatus;
     }
 
     public Date getSubmissionTime() {
@@ -55,10 +57,6 @@ public class SubmittedTaskValueObject implements Serializable {
     public String getTaskType() {
         return taskType;
     }
-
-//    public TaskCommandValueObject getTaskCommandValueObject() {
-//        return taskCommandValueObject;
-//    }
 
     public static Collection<SubmittedTaskValueObject> convert2ValueObjects(Collection<SubmittedTask> submittedTasks) {
 

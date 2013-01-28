@@ -223,6 +223,8 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         return task;
     }
 
+
+    //TODO: One idea to move this to the web app is to send jms messages on a special topic which mailengine would listen on.
     private void emailNotifyCompletionOfTask( TaskCommand taskCommand, ExecutingTask executingTask ) {
         if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
             User user = userService.findByUserName( taskCommand.getSubmitter() );
