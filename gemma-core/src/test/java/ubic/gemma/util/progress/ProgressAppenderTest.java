@@ -93,6 +93,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
     public void teardown() {
         //ProgressManager.destroyProgressJob( job );
         log4jLogger.setLevel( oldLevel );
+        MDC.remove("taskId");
     }
 
     @Test
