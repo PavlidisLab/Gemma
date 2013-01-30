@@ -18,6 +18,7 @@
  */
 package ubic.gemma.job;
 
+import org.apache.log4j.MDC;
 import ubic.gemma.tasks.Task;
 
 import java.io.Serializable;
@@ -37,15 +38,19 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
     private volatile boolean emailAlert;
     private Queue<String> localProgressQueue;
 
+    private String taskId;
+
     // Pass taskId to progressAppender
     // Must be called before executing the task.
     // If not called then we don't care about progress updates.
-    ExecutingTask (Task task) {
+    ExecutingTask (Task task, String taskId) {
         this.task = task;
+        this.taskId = taskId;
     }
 
     ExecutingTask (BackgroundJob job) {
         this.job = job;
+        this.taskId = job.getCommand().getTaskId();
     }
 
     public Queue<String> getLocalProgressQueue() {
@@ -110,9 +115,12 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
 
     private void setup() {
         progressAppender.initialize();
+        MDC.put( "taskId", taskId );
+
     }
 
     private void cleanup() {
         progressAppender.tearDown();
+        MDC.remove( "taskId" );
     }
 }

@@ -208,6 +208,7 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
     @Override
     public void addEmailAlert() {
         emailAlert = true;
+        //TODO: send control message
     }
 
     // TODO: this code is shared in a few places, extract it.

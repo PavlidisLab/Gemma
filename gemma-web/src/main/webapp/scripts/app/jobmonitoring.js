@@ -10,9 +10,9 @@ Ext.onReady(function() {
 	var v = new Ext.grid.GridPanel({
 		renderTo : 'submittedTasks',
 		id : 'submittedTaskGrid',
-		height : 300,
+		height : 500,
 		autoScroll : true,
-		width : 800,
+		width : 1300,
 		loadMask : true,
 		viewConfig : {
 			forceFit : true
@@ -21,7 +21,7 @@ Ext.onReady(function() {
 					header : "TaskId",
 					dataIndex : "taskId",
 					sortable : true,
-					width : 100
+					width : 60
 				}, {
 					header : "Submitted",
 					dataIndex : "submissionTime",
@@ -43,11 +43,10 @@ Ext.onReady(function() {
 							return "Queued for " + (new Date() - record.get("submissionTime")) / 1000;
 						}
 					},
-					width : 120
+					width : 100
 				}, {
                     header : "Status",
-                    dataIndex : "taskStatus",
-                    width : 60
+                    dataIndex : "taskStatus"
                 }, {
 					header : "Submitter",
 					dataIndex : "submitter"
@@ -58,7 +57,7 @@ Ext.onReady(function() {
 						return value.replace(/.*\./, '').replace(/Impl$/, '');
 					}
 				}, {
-					header : "Running remotely",
+					header : "Remote?",
 					dataIndex : "runningRemotely"
 				}, {
 					header : "Cancel",

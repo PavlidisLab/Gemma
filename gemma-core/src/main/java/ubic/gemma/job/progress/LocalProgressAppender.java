@@ -41,7 +41,6 @@ public class LocalProgressAppender extends AppenderSkeleton {
          * This has to be set at construction time.
          */
         this.taskId = taskId;
-        MDC.put( "taskId", taskId );
 
         this.progressUpdates = progressUpdates;
     }

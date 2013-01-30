@@ -134,7 +134,6 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             @Override public void initialize() {
                 Logger logger = LogManager.getLogger( "ubic.gemma" );
                 Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-                MDC.put("taskId", taskId);
                 logger.addAppender( logAppender );
                 baseCodeLogger.addAppender( logAppender );
             }
@@ -147,7 +146,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             }
         };
 
-        final ExecutingTask executingTask = new ExecutingTask( task );
+        final ExecutingTask executingTask = new ExecutingTask( task, taskId );
         executingTask.setProgressAppender( progressUpdateAppender );
         executingTask.setLocalProgressQueue ( progressUpdatesQueueLocal );
 

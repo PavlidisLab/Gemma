@@ -1,6 +1,7 @@
 package ubic.gemma.tasks.analysis.sequence;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -15,6 +16,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * @version $Id$
  */
 @Component
+@Scope("prototype")
 public class ArrayDesignProbeMapperTaskImpl implements ArrayDesignProbeMapperTask {
 
     @Autowired
