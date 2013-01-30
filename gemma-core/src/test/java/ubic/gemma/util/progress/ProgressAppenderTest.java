@@ -18,10 +18,7 @@
  */
 package ubic.gemma.util.progress;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.log4j.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,6 +72,8 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
         if ( progressAppender == null ) {
             log.warn( "There is no progress appender configured; adding one for test" );
+
+            MDC.put("taskId", "randomtaskidF");
             log4jLogger.addAppender( new LocalProgressAppender( "randomtaskidF", updates ) );
         }
 
