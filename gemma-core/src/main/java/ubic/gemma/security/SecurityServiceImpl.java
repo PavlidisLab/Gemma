@@ -1502,7 +1502,8 @@ public class SecurityServiceImpl implements SecurityService {
         }
 
         if ( toremove.isEmpty() ) {
-            log.warn( "No changes, didn't remove: " + authority );
+            // this can happen commonly, no big deal.
+            if ( log.isDebugEnabled() ) log.debug( "No changes, didn't remove: " + authority );
         } else if ( toremove.size() >= 1 ) {
 
             numberAclsToRemove = toremove.size();
