@@ -463,7 +463,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         HashMap<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
 
         int numResultSetBatchesDone = 0;
-        int numGeneBatchesDone = 0;
+
         for ( Collection<Long> resultSetIdBatch : new BatchIterator<Long>( resultSetsNeeded, resultSetBatchSize ) ) {
 
             if ( log.isDebugEnabled() )
@@ -478,7 +478,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                     resultSetIds, resultSetIdsToArrayDesignsUsed, resultSetIdBatch );
 
             queryObject.setParameterList( "rs_ids", resultSetIdBatch );
-
+            int numGeneBatchesDone = 0;
             final int numGeneBatches = ( int ) Math.ceil( cs2GeneIdMap.size() / geneBatchSize );
             for ( Collection<Long> probeBatch : new BatchIterator<Long>( cs2GeneIdMap.keySet(), geneBatchSize ) ) {
 
@@ -785,9 +785,6 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         return probeResults;
     }
-
-
-
 
     /*
      * (non-Javadoc)
