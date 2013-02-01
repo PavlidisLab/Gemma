@@ -73,8 +73,6 @@ public class ConfigUtils {
      */
     private static final String GEMMA_LIB_DIR = "gemma.lib.dir";
 
-    private static final String GRID_ENBALED_PROPERTY = "gemma.grid.enabled";
-
     private static final String REMOTE_TASKS_PROPERTY = "gemma.remote-tasks.enabled";
 
     private static Log log = LogFactory.getLog( ConfigUtils.class.getName() );

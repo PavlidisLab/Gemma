@@ -166,21 +166,21 @@ public class StartupListener extends ContextLoaderListener {
         Map<String, String> appConfig = ( Map<String, String> ) servletContext.getAttribute( "appConfig" );
         String version = appConfig.get( "version" );
 
-        File targetLibdir = null;
-        String libpath = ConfigUtils.getLibDirectoryPath();
-        if ( StringUtils.isNotBlank( libpath ) ) {
-            targetLibdir = new File( libpath );
-            if ( !targetLibdir.exists() ) {
-                if ( !targetLibdir.mkdirs() ) {
-                    log.warn( "destination directory " + targetLibdir
+        File destinationLibDir;
+        String destinationLibPath = ConfigUtils.getLibDirectoryPath();
+        if ( StringUtils.isNotBlank( destinationLibPath ) ) {
+            destinationLibDir = new File( destinationLibPath );
+            if ( !destinationLibDir.exists() ) {
+                if ( !destinationLibDir.mkdirs() ) {
+                    log.warn( "destination directory " + destinationLibDir
                             + " does not exist and could not be created; using " );
                     return;
                 }
             }
         } else {
-            targetLibdir = new File( System.getProperty( "java.io.tmpdir" ) + "Gemma" + File.separator + "lib" );
-            targetLibdir.mkdirs();
-            log.info( "Using " + targetLibdir + " as worker jar file target location" );
+            destinationLibDir = new File( System.getProperty( "java.io.tmpdir" ) + "Gemma" + File.separator + "lib" );
+            destinationLibDir.mkdirs();
+            log.info( "Using " + destinationLibDir + " as worker jar file target location" );
         }
 
         Collection<File> jars = new HashSet<File>();
@@ -188,7 +188,7 @@ public class StartupListener extends ContextLoaderListener {
         /*
          * Locate all the dependency jar files in the webapp's lib directory.
          */
-        File sourceLibdir = null;
+        File sourceLibDir = null;
         for ( Enumeration<?> e = servletContext.getAttributeNames(); e.hasMoreElements(); ) {
             String key = ( String ) e.nextElement();
             // Looking for something like org.apache.catalina.jsp_classpath.
@@ -197,18 +197,10 @@ public class StartupListener extends ContextLoaderListener {
                 String classpath = ( String ) servletContext.getAttribute( key );
                 for ( String entry : classpath.split( File.pathSeparator ) ) {
                     if ( entry.endsWith( "jar" ) ) {
-                        /*
-                         * exclude the JSpaces jars, because they are provided by the space server as well, which can
-                         * cause conflicts.
-                         */
-                        if ( entry.matches( ".*Gemma/WEB-INF/lib.*JSpaces.*\\.jar" ) ) {
-                            // log.info( "Skipping: " + entry );
-                            continue;
-                        }
                         File jar = new File( entry );
                         jars.add( jar );
                         if ( entry.matches( ".*Gemma/WEB-INF/lib.*\\.jar" ) ) {
-                            sourceLibdir = jar.getParentFile();
+                            sourceLibDir = jar.getParentFile();
                         }
                     }
                 }
@@ -216,9 +208,9 @@ public class StartupListener extends ContextLoaderListener {
         }
 
         boolean foundAppJars = false;
-        if ( sourceLibdir != null ) {
+        if ( sourceLibDir != null ) {
             for ( String module : modules ) {
-                File jar = new File( sourceLibdir, String.format( appName + "-%s-%s.jar", module, version ) );
+                File jar = new File( sourceLibDir, String.format( appName + "-%s-%s.jar", module, version ) );
                 if ( jar.canRead() && jars.contains( jar ) ) {
                     // jars.add( jar );
                     // log.info( "Gemma jar: " + jar );
@@ -268,11 +260,11 @@ public class StartupListener extends ContextLoaderListener {
 
         Collection<File> copiedJars = new HashSet<File>();
 
-        clearOldJars( targetLibdir );
+        clearOldJars( destinationLibDir );
 
         for ( File sourceJar : jars ) {
             try {
-                File targetJar = new File( targetLibdir, sourceJar.getName() );
+                File targetJar = new File( destinationLibDir, sourceJar.getName() );
                 if ( sourceJar.exists() ) {
                     FileUtils.copyFile( sourceJar, targetJar );
                     copiedJars.add( targetJar );
@@ -280,7 +272,7 @@ public class StartupListener extends ContextLoaderListener {
                     log.warn( "Grid config: Cannot locate " + sourceJar );
                 }
             } catch ( IOException e ) {
-                log.error( "Error copying " + sourceJar + " to " + targetLibdir + ": " + e );
+                log.error( "Error copying " + sourceJar + " to " + destinationLibDir + ": " + e );
             }
         }
 
@@ -288,15 +280,15 @@ public class StartupListener extends ContextLoaderListener {
          * Create a text file that contains the list of jar files in java classpath format.
          */
         try {
-            File classpathFile = new File( targetLibdir, "CLASSPATH" );
+            File classpathFile = new File( destinationLibDir, "CLASSPATH" );
 
             String classpath = StringUtils.join( copiedJars, File.pathSeparator );
             FileUtils.writeStringToFile( classpathFile, classpath, null );
         } catch ( IOException e ) {
-            log.error( "Error creating classpath file in " + targetLibdir );
+            log.error( "Error creating classpath file in " + destinationLibDir );
         }
 
-        log.info( copiedJars.size() + " jar files copied to " + targetLibdir + " for grid configuration" );
+        log.info( copiedJars.size() + " jar files copied to " + destinationLibDir + " for grid configuration" );
     }
 
     /**
