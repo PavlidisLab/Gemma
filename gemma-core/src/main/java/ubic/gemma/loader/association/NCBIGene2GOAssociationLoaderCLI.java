@@ -128,6 +128,8 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
         log.info( "Done, loading new ones" );
         gene2GOAssLoader.load( gene2Gofile );
 
+        log.info( "Don't forget to update the annotation files for platforms." );
+
         return null;
     }
 }
