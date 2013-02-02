@@ -2081,7 +2081,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if ( fillObjects ) {
-            /**
+            /*
              * Now retrieve the entities and put them in the SearchResult. Entities that are filtered out by the
              * SecurityInterceptor will be removed at this stage.
              */
