@@ -1037,7 +1037,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         getHibernateTemplate().deleteAll(
                 getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
 
-        log.info( "Done deleting  BlatResults for " + arrayDesign );
+        log.info( "Done deleting BlatResults for " + arrayDesign );
 
     }
 
@@ -1045,15 +1045,17 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @param arrayDesign
      */
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
+        // this query is polymorphic, id gets the annotation associations
         final String queryString = "select ba from CompositeSequenceImpl  cs "
                 + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProductImpl ba "
                 + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
         List<?> blatAssociations = getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign );
         if ( !blatAssociations.isEmpty() ) {
             getHibernateTemplate().deleteAll( blatAssociations );
-            log.info( "Done deleting " + blatAssociations.size() + "  BlatAssociations for " + arrayDesign );
+            log.info( "Done deleting " + blatAssociations.size() + "  Associations for " + arrayDesign );
         }
 
+        // FIXME this is probably not doing anything.
         final String annotationAssociationQueryString = "select ba from CompositeSequenceImpl cs "
                 + " inner join cs.biologicalCharacteristic bs, AnnotationAssociationImpl ba "
                 + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
@@ -1066,6 +1068,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         }
     }
 
+    /**
+     * @param queryString
+     * @return
+     */
     protected Collection<ArrayDesign> handleFindByAlternateName( String queryString ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select ad from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q", "q", queryString );
