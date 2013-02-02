@@ -580,6 +580,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
         // No database calls.
         if ( log.isDebugEnabled() ) log.debug( "Start processing hits for result sets." );
         try {
+            boolean warned = false; // avoid too many warnings ...
             for ( Long geneId : geneToProbeResult.keySet() ) {
                 DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
 
@@ -614,13 +615,24 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
 
                 for ( ContrastResult cr : deaResult.getContrasts() ) {
                     FactorValue factorValue = cr.getFactorValue();
-                    assert factorValue != null : "Null factor value for contrast with id=" + cr.getId();
                     if ( factorValue == null ) {
-                        log.error( "Data Integrity: Null factor value for contrast with id=" + cr.getId() );
+                        if ( !warned ) {
+                            log.error( "Data Integrity: Null factor value for contrast with id=" + cr.getId()
+                                    + "(additional warnings may be suppressed, but additional results will be omitted)" );
+                            warned = true;
+                        }
                         continue;
                     }
+
                     String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
                             resultSet.getId(), factorValue.getId() );
+
+                    if ( cr.getLogFoldChange() == null && !warned ) {
+                        log.warn( "Fold change was null for " + cr + " associated with " + deaResult + " for "
+                                + resultSet + "(additional warnings may be suppressed)" );
+                        warned = true;
+                    }
+
                     searchResult.addCell( geneId, conditionId, correctedPvalue, cr.getLogFoldChange(), numberOfProbes,
                             numberOfProbesDiffExpressed, uncorrectedPvalue );
                 }

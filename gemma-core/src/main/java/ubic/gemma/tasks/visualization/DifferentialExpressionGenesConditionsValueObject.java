@@ -117,13 +117,11 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
         private Integer numberOfGenesTested;
         private Integer numberOfGenesDiffExpressed;
-        
+
         private Long factorValueId;
 
-        public Condition( ExpressionExperiment experiment,
-                          DifferentialExpressionAnalysis analysis,
-                          ExpressionAnalysisResultSet resultSet,
-                          FactorValue factorValue ) {
+        public Condition( ExpressionExperiment experiment, DifferentialExpressionAnalysis analysis,
+                ExpressionAnalysisResultSet resultSet, FactorValue factorValue ) {
             this( resultSet.getId(), factorValue.getId() );
             numberOfProbesOnArray = resultSet.getNumberOfProbesTested();
             numberOfGenesTested = resultSet.getNumberOfGenesTested();
@@ -487,8 +485,9 @@ public class DifferentialExpressionGenesConditionsValueObject {
      * @param numProbesDiffExpressed
      * @param correctedPvalue
      */
-    public void addCell( Long geneId, String conditionId, double correctedPValue, double foldChange, int numProbes,
-            int numProbesDiffExpressed, Double uncorrectedPvalue ) {
+    public void addCell( Long geneId, String conditionId, Double correctedPValue, Double foldChange, Integer numProbes,
+            Integer numProbesDiffExpressed, Double uncorrectedPvalue ) {
+
         Cell cell = new Cell();
         cell.isProbeMissing = false;
         cell.correctedPValue = correctedPValue;
