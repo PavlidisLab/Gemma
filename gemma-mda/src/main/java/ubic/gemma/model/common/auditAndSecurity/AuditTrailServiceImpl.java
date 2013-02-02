@@ -215,6 +215,12 @@ public class AuditTrailServiceImpl implements AuditTrailService {
         return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getEntitiesWithEvent(java.lang.Class,
+     * java.lang.Class)
+     */
     @Override
     public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
             Class<? extends AuditEventType> auditEventClass ) {

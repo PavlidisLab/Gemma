@@ -123,8 +123,13 @@ public interface AuditTrailService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public List<AuditEvent> getEvents( Auditable auditable );
 
+    /**
+     * @param entityClass
+     * @param auditEventClass
+     * @return FIXME this returns a list, but there is no particular ordering enforced?
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass, Class<? extends AuditEventType> auditEventClass );
-    
+    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
+            Class<? extends AuditEventType> auditEventClass );
 
 }

@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 
@@ -45,6 +44,39 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
     @Autowired
     public AuditTrailDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
+    }
+
+    /**
+     * FIXME this returns a list, but there is no particular ordering enforced?
+     * 
+     * @param entityClass
+     * @param auditEventClass
+     * @return
+     */
+    @Override
+    public Collection<Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
+            Class<? extends AuditEventType> auditEventClass ) {
+
+        String entityCanonicalName = entityClass.getName();
+        entityCanonicalName = entityCanonicalName.endsWith( "Impl" ) ? entityClass.getName() : entityClass.getName()
+                + "Impl";
+
+        String eventCanonicalName = auditEventClass.getName();
+        eventCanonicalName = eventCanonicalName.endsWith( "Impl" ) ? auditEventClass.getName() : auditEventClass
+                .getName() + "Impl";
+
+        String queryString = "select distinct auditableEntity from " + entityCanonicalName + " auditableEntity "
+                + " inner join auditableEntity.auditTrail trail inner join trail.events auditEvents "
+                + " inner join auditEvents.eventType et where et.class = " + eventCanonicalName;
+
+        // FIXME add order by clause?
+
+        /*
+         * This might be the best place to embody rules that determine if the event is still 'live'.
+         */
+
+        Query queryObject = super.getSession().createQuery( queryString );
+        return queryObject.list();
     }
 
     @Override
@@ -133,34 +165,6 @@ public class AuditTrailDaoImpl extends AuditTrailDaoBase {
         assert results.size() == 1;
         Object result = results.iterator().next();
         return ( User ) result;
-    }
-
-    /**
-     * @param entityClass
-     * @param auditEventClass
-     * @return
-     */
-    @Override
-    public java.util.Collection<Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
-            Class<? extends AuditEventType> auditEventClass ) {
-
-        String entityCanonicalName = entityClass.getName();
-        entityCanonicalName = entityCanonicalName.endsWith( "Impl" ) ? entityClass.getName() : entityClass.getName()
-                + "Impl";
-
-        String eventCanonicalName = auditEventClass.getName();
-        eventCanonicalName = eventCanonicalName.endsWith( "Impl" ) ? auditEventClass.getName() : auditEventClass
-                .getName() + "Impl";
-
-        Collection<Auditable> result = new ArrayList<Auditable>();
-        String queryString = "select distinct auditableEntity from " + entityCanonicalName + " auditableEntity "
-                + " inner join auditableEntity.auditTrail trail " + " inner join trail.events auditEvents "
-                + " inner join auditEvents.eventType et where et.class = " + eventCanonicalName;
-
-        Query queryObject = super.getSession().createQuery( queryString );
-        result.addAll( queryObject.list() );
-
-        return result;
     }
 
 }

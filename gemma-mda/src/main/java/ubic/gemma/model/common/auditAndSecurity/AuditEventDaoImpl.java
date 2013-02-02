@@ -42,7 +42,6 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
@@ -326,14 +325,10 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         /*
          * For the = operator to work in hibernate the class or class name can't be passed in as a parameter :type -
          * also queryObject.setParameter("type", type.getClass()); doesn't work. Although technically this is now
-         * vunerable to an sql injection attack, it seems moot as an attacker would have to have access to the JVM to
+         * vulnerable to an sql injection attack, it seems moot as an attacker would have to have access to the JVM to
          * inject a malformed AuditEventType class name and if they had access to the JVM then sql injection is the
          * least of our worries. The real annoyance here is dealing with subclasses of event types.
          */
-
-        if ( type.equals( ArrayDesignGeneMappingEvent.class ) ) {
-            log.info( "woah" );
-        }
 
         List<String> classes = getClassHierarchy( type );
 
@@ -346,24 +341,19 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                 + "fetch all properties where trail = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
                 + ") order by event.date desc ";
 
-        try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-            queryObject.setCacheable( true );
-            queryObject.setReadOnly( true );
-            queryObject.setParameter( "trail", auditTrail );
-            queryObject.setMaxResults( 1 );
+        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        queryObject.setCacheable( true );
+        queryObject.setReadOnly( true );
+        queryObject.setParameter( "trail", auditTrail );
+        queryObject.setMaxResults( 1 );
 
-            Collection<AuditEvent> results = queryObject.list();
+        Collection<AuditEvent> results = queryObject.list();
 
-            if ( results == null || results.isEmpty() ) return null;
+        if ( results == null || results.isEmpty() ) return null;
 
-            AuditEvent result = results.iterator().next();
-            Hibernate.initialize( result.getPerformer() ); // Hit performer to make hibernate initialize it.
-            return result;
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        AuditEvent result = results.iterator().next();
+        Hibernate.initialize( result.getPerformer() ); // Hit performer to make hibernate initialize it.
+        return result;
 
     }
 
