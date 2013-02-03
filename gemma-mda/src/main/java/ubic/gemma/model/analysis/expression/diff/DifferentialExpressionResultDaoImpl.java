@@ -495,7 +495,14 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 List<?> queryResult = queryObject.list();
                 innerQt.stop();
                 if ( innerQt.getTime() > 1000 ) {
-                    log.info( "Query was slow ..." + queryObject.getQueryString() );
+                    // show the actual query with params.
+                    log.info( "Query was slow: "
+                            + innerQt.getTime()
+                            + "ms:\n "
+                            + queryObject.getQueryString().replace(
+                                    ":probe_ids",
+                                    StringUtils.join( probeBatch, "," ).replace( ":rs_ids",
+                                            StringUtils.join( resultSetIdBatch, "," ) ) ) );
                 }
                 innerQt.reset();
 
