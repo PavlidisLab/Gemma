@@ -628,8 +628,9 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
                             resultSet.getId(), factorValue.getId() );
 
                     if ( cr.getLogFoldChange() == null && !warned ) {
-                        log.warn( "Fold change was null for " + cr + " associated with " + deaResult + " for "
-                                + resultSet + "(additional warnings may be suppressed)" );
+                        log.warn( "Fold change was null for contrast " + cr.getId() + " associated with diffexresult "
+                                + deaResult.getId() + " for resultset " + resultSet.getId()
+                                + ". (additional warnings may be suppressed)" );
                         warned = true;
                     }
 
