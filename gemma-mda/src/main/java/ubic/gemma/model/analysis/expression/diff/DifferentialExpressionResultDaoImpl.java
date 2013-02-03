@@ -444,10 +444,10 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         int geneBatchSize = 1;
 
         if ( resultSetsNeeded.size() > geneIds.size() ) {
-            log.info( "Batching by result sets" );
+            log.info( "Batching by result sets (" + resultSetsNeeded.size() + " resultSets)" );
             resultSetBatchSize = 100;
         } else {
-            log.info( "Batching by genes" );
+            log.info( "Batching by genes (" + geneIds.size() + " genes)" );
             geneBatchSize = 100;
         }
 
@@ -480,6 +480,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             queryObject.setParameterList( "rs_ids", resultSetIdBatch );
             int numGeneBatchesDone = 0;
             final int numGeneBatches = ( int ) Math.ceil( cs2GeneIdMap.size() / geneBatchSize );
+
+            StopWatch innerQt = new StopWatch();
             for ( Collection<Long> probeBatch : new BatchIterator<Long>( cs2GeneIdMap.keySet(), geneBatchSize ) ) {
 
                 if ( log.isDebugEnabled() )
@@ -489,7 +491,13 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 // queryObject.setParameterList( "gene_ids", geneBatch );
                 queryObject.setParameterList( "probe_ids", probeBatch );
 
+                innerQt.start();
                 List<?> queryResult = queryObject.list();
+                innerQt.stop();
+                if ( innerQt.getTime() > 1000 ) {
+                    log.info( "Query was slow ..." + queryObject.getQueryString() );
+                }
+                innerQt.reset();
 
                 // Get probe result with the best pValue, in the give result set.
                 for ( Object o : queryResult ) {
@@ -525,7 +533,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 if ( timer.getTime() > 5000 && log.isInfoEnabled() ) {
                     log.info( "Fetched DiffEx " + numResults + " results so far. " + numResultSetBatchesDone + "/"
                             + numResultSetBatches + " resultset batches completed. " + numGeneBatchesDone + "/"
-                            + numGeneBatches + " gene batches done." );
+                            + numGeneBatches + " gene batches done. last query was:\n" + queryObject.getQueryString() );
                     timer.reset();
                     timer.start();
                 }
