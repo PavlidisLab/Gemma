@@ -488,8 +488,11 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                     log.debug( "Starting batch of probes: "
                             + StringUtils.abbreviate( StringUtils.join( probeBatch, "," ), 100 ) );
 
-                // queryObject.setParameterList( "gene_ids", geneBatch );
-                queryObject.setParameterList( "probe_ids", probeBatch );
+                // would it help to sort the probeBatch
+                List<Long> pbL = new Vector<Long>( probeBatch );
+                Collections.sort( pbL );
+
+                queryObject.setParameterList( "probe_ids", pbL );
 
                 innerQt.start();
                 List<?> queryResult = queryObject.list();
@@ -499,10 +502,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                     log.info( "Query was slow: "
                             + innerQt.getTime()
                             + "ms:\n "
-                            + queryObject.getQueryString().replace(
-                                    ":probe_ids",
-                                    StringUtils.join( probeBatch, "," ).replace( ":rs_ids",
-                                            StringUtils.join( resultSetIdBatch, "," ) ) ) );
+                            + queryObject.getQueryString().replace( ":probe_ids", StringUtils.join( probeBatch, "," ) )
+                                    .replace( ":rs_ids", StringUtils.join( resultSetIdBatch, "," ) ) );
                 }
                 innerQt.reset();
 
@@ -540,7 +541,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 if ( timer.getTime() > 5000 && log.isInfoEnabled() ) {
                     log.info( "Fetched DiffEx " + numResults + " results so far. " + numResultSetBatchesDone + "/"
                             + numResultSetBatches + " resultset batches completed. " + numGeneBatchesDone + "/"
-                            + numGeneBatches + " gene batches done. last query was:\n" + queryObject.getQueryString() );
+                            + numGeneBatches + " gene batches done." );
                     timer.reset();
                     timer.start();
                 }
