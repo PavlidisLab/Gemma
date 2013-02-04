@@ -22,16 +22,12 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ubic.gemma.job.progress.grid.ProgressUpdateCallback;
 import ubic.gemma.job.progress.grid.RemoteProgressAppender;
@@ -51,6 +47,16 @@ import java.util.concurrent.*;
 /**
  * This will run on remote worker jvm
  *
+ * CompletionService backed by ThreadPoolExecutor is used to execute tasks.
+ *
+ *
+ *
+ *
+ * ActiveMQ communication.
+ *
+ * ApplicationContext is injectected and is used to load classes implementing Tasks.
+ *
+ *
  */
 @Component
 public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
@@ -62,13 +68,14 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
 
     @Autowired private ApplicationContext applicationContext;
 
-    //TODO: expire these after some time
-    private final Map<String,Future> taskIdToFuture = new ConcurrentHashMap<String,Future>();
+    private final Map<String,Future> taskIdToFuture = new ConcurrentHashMap<String, Future>();
     private final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
 
     private final ExecutorService executorService = new ThreadPoolExecutor(3, 15, 10, TimeUnit.MINUTES, workQueue);
     private final CompletionService<TaskResult> completionService = new ExecutorCompletionService<TaskResult>(executorService);
 
+
+    // TODO: I think this is a good case where Guava's ListenableFuture will make it cleaner.
     @PostConstruct
     void startTaskResultProcessingThread() {
         ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
@@ -79,8 +86,13 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
                 while (!Thread.currentThread().isInterrupted()) {
                     // Take completed Task and send its result to the SubmittedTaskProxy.
                     try {
+                        // Get completed future
                         Future<TaskResult> future = completionService.take();
                         TaskResult taskResult = future.get();
+
+                        // Clean up taskIdToFuture map
+                        taskIdToFuture.remove( taskResult.getTaskID() );
+
                         Destination resultDestination = new ActiveMQQueue( "task.result." + taskResult.getTaskID() );
                         sendMessage( resultDestination, taskResult );
                     } catch (InterruptedException e) {
@@ -126,41 +138,34 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             }
         };
 
-        final RemoteProgressAppender logAppender = new RemoteProgressAppender( taskId, progressUpdateCallback );
 
-        //TODO: this kind of setup can be moved to subclasses (local, remote) of executing task?
+        //TODO: this kind of setup can be moved to subclasses?
         // Set up logger for remote task.
         ExecutingTask.ProgressUpdateAppender progressUpdateAppender = new ExecutingTask.ProgressUpdateAppender() {
+            private final RemoteProgressAppender logAppender = new RemoteProgressAppender( taskId, progressUpdateCallback );
+
             @Override public void initialize() {
-                Logger logger = LogManager.getLogger( "ubic.gemma" );
-                Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-                logger.addAppender( logAppender );
-                baseCodeLogger.addAppender( logAppender );
+                logAppender.initialize();
             }
 
             @Override public void tearDown() {
-                Logger logger = LogManager.getLogger( "ubic.gemma" );
-                Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-                logger.removeAppender( logAppender );
-                baseCodeLogger.removeAppender( logAppender );
+                logAppender.close();
             }
         };
 
-        final ExecutingTask executingTask = new ExecutingTask( task, taskId );
+        final ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
         executingTask.setProgressAppender( progressUpdateAppender );
         executingTask.setLocalProgressQueue ( progressUpdatesQueueLocal );
 
-        ExecutingTask.TaskLifecycleCallback statusRemoteCallback = new ExecutingTask.TaskLifecycleCallback() {
-            @Override public void beforeRun() {
+        ExecutingTask.TaskLifecycleHandler statusRemoteCallback = new ExecutingTask.TaskLifecycleHandler() {
+            @Override public void onStart() {
                 TaskStatusUpdate statusUpdate = new TaskStatusUpdate( SubmittedTask.Status.RUNNING, new Date() );
                 sendMessage( lifeCycleQueue, statusUpdate );
-                SecurityContextHolder.setContext( taskCommand.getSecurityContext() );
             }
-            @Override public void afterRun() {
+            @Override public void onFinish() {
                 TaskStatusUpdate statusUpdate = new TaskStatusUpdate( SubmittedTask.Status.DONE, new Date() );
                 sendMessage( lifeCycleQueue, statusUpdate );
-                SecurityContextHolder.clearContext();
-
+                //FIXME: shouldn't be in task status update code
                 if (executingTask.isEmailAlert()) {
                     emailNotifyCompletionOfTask( taskCommand, executingTask );
                 }
@@ -168,8 +173,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             @Override public void onFailure( Throwable e ) {
                 TaskStatusUpdate statusUpdate = new TaskStatusUpdate( SubmittedTask.Status.FAILED, new Date() );
                 sendMessage( lifeCycleQueue, statusUpdate );
-                SecurityContextHolder.clearContext();
-
+                //FIXME: shouldn't be in task status update code
                 if (executingTask.isEmailAlert()) {
                     emailNotifyCompletionOfTask( taskCommand, executingTask );
                 }
@@ -185,6 +189,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
     @Override
     public void cancelQueuedTask( String taskId ) {
         // TODO: It wasn't possible in the past. This a new feature.
+        throw new UnsupportedOperationException( "cancelQueuedTask is not currently implemented" );
     }
 
     @Override

@@ -23,7 +23,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.TaskRunningService;
@@ -34,6 +33,7 @@ import ubic.gemma.job.TaskRunningService;
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 @Controller
 public class TaskCompletionController {
 

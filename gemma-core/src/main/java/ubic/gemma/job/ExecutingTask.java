@@ -18,38 +18,57 @@
  */
 package ubic.gemma.job;
 
-import org.apache.log4j.MDC;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.tasks.Task;
 
 import java.io.Serializable;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 
+/**
+ *
+ *
+ * Task Lifecycle Hooks
+ *
+ *
+ *
+ * ProgressUpdateAppender -
+ *
+ *
+ *
+ * @param <T>
+ */
 public class ExecutingTask<T extends TaskResult> implements Callable<T>, Serializable {
 
     private Task<T, ?> task;
     private BackgroundJob<?,T> job;
 
     // Does not survive serialization.
-    private transient TaskLifecycleCallback statusCallback;
+    private transient TaskLifecycleHandler statusCallback;
     private transient ProgressUpdateAppender progressAppender;
 
     // Written by TaskControlListener thread and read by task thread.
     private volatile boolean emailAlert;
+
     private Queue<String> localProgressQueue;
 
     private String taskId;
+    private TaskCommand taskCommand;
+
+    private Exception taskExecutionException;
 
     // Pass taskId to progressAppender
     // Must be called before executing the task.
     // If not called then we don't care about progress updates.
-    ExecutingTask (Task task, String taskId) {
+    ExecutingTask (Task task, TaskCommand taskCommand) {
         this.task = task;
-        this.taskId = taskId;
+        this.taskId = taskCommand.getTaskId();
+        this.taskCommand = taskCommand;
     }
 
     ExecutingTask (BackgroundJob job) {
         this.job = job;
+        this.taskCommand = job.getCommand();
         this.taskId = job.getCommand().getTaskId();
     }
 
@@ -68,13 +87,13 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
     }
 
     // These hooks can be used to update status of the running task.
-    interface TaskLifecycleCallback {
-        public void beforeRun();
-        public void afterRun();
+    interface TaskLifecycleHandler {
+        public void onStart();
+        public void onFinish();
         public void onFailure( Throwable e );
     }
 
-    void setStatusCallback(TaskLifecycleCallback statusCallback) {
+    void setStatusCallback(TaskLifecycleHandler statusCallback) {
         this.statusCallback = statusCallback;
     }
 
@@ -84,10 +103,11 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
 
     @Override
     public final T call() throws Exception {
-        statusCallback.beforeRun();
+        statusCallback.onStart();
         setup();
+         // From here we are running as user who submitted the task
 
-        T result;
+        T result = null;
         try {
             if (this.task != null) {
                 result = this.task.execute();
@@ -96,13 +116,20 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
             }
         } catch (Exception e) {
             statusCallback.onFailure( e );
-            throw e;
+            taskExecutionException = e;
         } finally {
             cleanup();
         }
+        // SecurityContext is cleared, running as anonymous?
 
-        statusCallback.afterRun();
-        return result;
+        if ( taskExecutionException == null ) {
+            statusCallback.onFinish();
+            return result;
+        } else {
+            result = (T) new TaskResult( taskId );
+            result.setException( taskExecutionException );
+            return result;
+        }
     }
 
     public void addEmailAlert() {
@@ -115,12 +142,13 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
 
     private void setup() {
         progressAppender.initialize();
-        MDC.put( "taskId", taskId );
 
+        SecurityContextHolder.setContext( taskCommand.getSecurityContext() );
     }
 
     private void cleanup() {
+        SecurityContextHolder.clearContext();
+
         progressAppender.tearDown();
-        MDC.remove( "taskId" );
     }
 }

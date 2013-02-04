@@ -18,12 +18,11 @@
  */
 package ubic.gemma.job.progress.grid;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
+import org.apache.log4j.*;
 import org.apache.log4j.spi.LoggingEvent;
 
 /**
- * This appender is used by workers to send progress notifications to the space. The information for these notifications
+ * This appender is used by remote tasks to send progress notifications to the webapp. The information for these notifications
  * is retrieved from the {@link LoggingEvent}. This information comes from regular logging statements inlined in the
  * source code (ie. log.info("the text")).
  * 
@@ -36,7 +35,9 @@ public class RemoteProgressAppender extends AppenderSkeleton {
     private final ProgressUpdateCallback progressUpdatesCallback;
 
     public RemoteProgressAppender( String taskId, ProgressUpdateCallback progressUpdatesCallback ) {
+        super();
         assert taskId != null;
+        assert progressUpdatesCallback != null;
 
         this.taskId = taskId;
         this.progressUpdatesCallback = progressUpdatesCallback;
@@ -54,25 +55,31 @@ public class RemoteProgressAppender extends AppenderSkeleton {
         }
     }
 
-   /*
-    * (non-Javadoc)
-    *
+    public void initialize() {
+        MDC.put( "taskId", taskId );
+        Logger logger = LogManager.getLogger( "ubic.gemma" );
+        Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
+        logger.addAppender( this );
+        baseCodeLogger.addAppender( this );
+    }
+
+    /*
     * @see org.apache.log4j.Appender#close()
     */
     @Override
     public void close() {
-        // no-op
+        Logger logger = LogManager.getLogger( "ubic.gemma" );
+        Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
+        logger.removeAppender( this );
+        baseCodeLogger.removeAppender( this );
+        MDC.remove( "taskId" );
     }
 
     /*
-     * (non-Javadoc)
-     *
      * @see org.apache.log4j.Appender#requiresLayout()
      */
     @Override
     public boolean requiresLayout() {
         return true;
     }
-
-
 }

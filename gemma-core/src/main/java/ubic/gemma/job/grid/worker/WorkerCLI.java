@@ -42,7 +42,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         public void run() {
             log.info( "Remote task executor is shutting down...");
             log.info( "Attempting to cancel all running tasks...");
-            // executor.shutdownNow();
             taskRunningService.shutdown();
             log.info( "Shutdown sequence completed.");
         }
@@ -66,6 +65,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
+//        Option mmtxOption = OptionBuilder.withDescription( "Set to force MMTX to be initialized" ).create( "mmtx" );
+//        super.addOption( mmtxOption );
     }
 
     /*
@@ -96,6 +97,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     @Override
     protected void processOptions() {
         super.processOptions();
+        //FIXME
 //        if ( this.hasOption( "mmtx" ) ) {
 //            ExpressionExperimentAnnotator eeAnnotator = this.getBean( ExpressionExperimentAnnotator.class );
 //            eeAnnotator.init();
@@ -127,28 +129,4 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
          */
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
     }
-
-    // TODO: we don't really need hearbeat thread anymore, we can just monitor number of consumers/producers on the queues
-    // TODO: to see who's alive
-//    private Future startHeartbeatThread() {
-//
-//        ExecutorService service = Executors.newSingleThreadExecutor();
-//        Runnable heartBeatTask = new Runnable() {
-//            @Override
-//            public void run()  {
-//                try {
-//                    Thread.sleep( HEARTBEAT_INTERVAL_MILLIS );
-//                    amqWorkerJmsTemplate.convertAndSend( "tasks.worker.heartbeat", "beep beep beep" );
-//                } catch (InterruptedException e) {
-//                    return;
-//                }
-//            }
-//        };
-//
-//        Future future = service.submit( heartBeatTask );
-//        service.shutdown(); // blocks until all submitted tasks complete
-//
-//        return future;
-//    }
-
 }

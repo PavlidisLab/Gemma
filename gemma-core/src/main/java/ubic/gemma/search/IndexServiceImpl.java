@@ -18,11 +18,7 @@
  */
 package ubic.gemma.search;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-
 import org.compass.core.spi.InternalCompass;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -32,6 +28,9 @@ import ubic.gemma.job.TaskRunningService;
 import ubic.gemma.tasks.maintenance.IndexerResult;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.util.CompassUtils;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Services for updating the search indexes.
@@ -154,20 +153,6 @@ public class IndexServiceImpl implements IndexService {
             throw new RuntimeException( e );
         }
     }
-
-    /**
-     * @param compassGeneSet the compassGeneSet to set
-     */
-//    public void setCompassGeneSet( InternalCompass compassGeneSet ) {
-//        this.compassGeneSet = compassGeneSet;
-//    }
-//
-//    /**
-//     * @param compassExperimentSet the compassExperimentSet to set
-//     */
-//    public void setCompassExperimentSet( InternalCompass compassExperimentSet ) {
-//        this.compassExperimentSet = compassExperimentSet;
-//    }
 
     /*
      * (non-Javadoc)

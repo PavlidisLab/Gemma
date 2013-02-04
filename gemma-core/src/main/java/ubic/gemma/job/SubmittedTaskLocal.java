@@ -18,7 +18,8 @@
  */
 package ubic.gemma.job;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -91,13 +92,7 @@ public class SubmittedTaskLocal<T extends TaskResult> implements SubmittedTask<T
      */
     @Override
     public T getResult() throws ExecutionException, InterruptedException {
-        T result;
-        try {
-            result = this.future.get();
-        } catch (ExecutionException e) {
-            throw e;
-        }
-        return result;
+        return this.future.get();
     }
 
     @Override

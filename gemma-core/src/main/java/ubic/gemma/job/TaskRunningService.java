@@ -16,9 +16,11 @@ package ubic.gemma.job;
 
 import java.util.Collection;
 
-import org.springframework.beans.factory.InitializingBean;
-
 /**
+ *
+ *
+ *
+ *
  * @author paul
  * @version $Id$
  */
@@ -30,16 +32,16 @@ public interface TaskRunningService {
     public static final int MAX_QUEUING_MINUTES = 60 * 2;
 
     /**
-     * Signal that a task should be cancelled.
-     * 
-     * @param taskId
-     */
-    public boolean cancelTask( String taskId );
-
-    /**
      * @return the submittedTasks
      */
     public Collection<SubmittedTask> getSubmittedTasks(); //TODO: Make this user specific
+
+    /**
+     *
+     *
+     * @param taskId
+     * @return
+     */
     public SubmittedTask getSubmittedTask(String taskId);
 
     /**
@@ -52,6 +54,14 @@ public interface TaskRunningService {
      *         the same type by the same user).
      */
     public String submitLocalTask( TaskCommand taskCommand ) throws ConflictingTaskException;
+
+    /**
+     *
+     *
+     * @param taskCommand
+     * @return
+     * @throws ConflictingTaskException
+     */
     public String submitRemoteTask( TaskCommand taskCommand ) throws ConflictingTaskException;
 
     public String submitLocalJob( BackgroundJob job ) throws ConflictingTaskException;

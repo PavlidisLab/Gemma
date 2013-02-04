@@ -21,15 +21,12 @@ package ubic.gemma.job;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ubic.gemma.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.job.progress.LocalProgressAppender;
@@ -48,7 +45,7 @@ import java.util.Queue;
 import java.util.concurrent.*;
 
 /**
- * Handles the execution of tasks in threads that can be check by clients later.
+ * Handles the execution of tasks in threads that can be checked by clients later.
  * 
  * @author pavlidis
  * @version $Id$
@@ -56,19 +53,21 @@ import java.util.concurrent.*;
 @Component
 public class TaskRunningServiceImpl implements TaskRunningService {
 
-    private static Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
+    private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
 
-    private final Map<String,SubmittedTask> submittedTasks= new ConcurrentHashMap<String, SubmittedTask>();
-
+    @Autowired private ApplicationContext applicationContext;
     @Autowired private MailEngine mailEngine;
     @Autowired private UserManager userService;
     @Autowired private JMSBrokerMonitor jmsBrokerMonitor;
     @Autowired @Qualifier("amqJmsTemplate") private JmsTemplate jmsTemplate;
-
-    @Autowired private ApplicationContext applicationContext;
-
     @Autowired @Qualifier("taskSubmissionDestination") private Destination taskSubmissionQueue;
 
+    /**
+     *
+     */
+    private final Map<String, SubmittedTask> submittedTasks= new ConcurrentHashMap<String, SubmittedTask>();
+
+    //TODO: make spring manage this thread, probably just schedule to run it at certain interval
     @PostConstruct
     public void initMaintenanceThread() {
         // Start a thread to monitor finished tasks that have not been retrieved.
@@ -78,11 +77,6 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         maintenanceThread.start();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.job.TaskRunningService#getSubmittedTasks()
-     */
     @Override
     public Collection<SubmittedTask> getSubmittedTasks() {
         return submittedTasks.values();
@@ -91,26 +85,6 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     @Override
     public SubmittedTask getSubmittedTask(String taskId) {
         return submittedTasks.get( taskId );
-    }
-
-    /*
- * (non-Javadoc)
- *
- * @see ubic.gemma.job.TaskRunningService#cancelTask(java.lang.String)
- */
-    @Override
-    public boolean cancelTask( String taskId ) {
-        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
-
-        log.debug( "Cancelling " + taskId );
-        boolean cancelled = false;
-
-        SubmittedTask submittedTask = this.submittedTasks.get( taskId );
-        if (submittedTask == null) throw new IllegalArgumentException("couldn't find task with task id:"+taskId);
-
-        submittedTask.cancel();
-
-        return cancelled;
     }
 
     @Override
@@ -126,39 +100,31 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         assert taskCommand.getTaskId() != null;
 
         final Queue<String> progressUpdates = new ConcurrentLinkedQueue<String>();
-        final LocalProgressAppender logAppender = new LocalProgressAppender( taskId, progressUpdates );
 
         ExecutingTask.ProgressUpdateAppender progressUpdateAppender = new ExecutingTask.ProgressUpdateAppender() {
+            private final LocalProgressAppender logAppender = new LocalProgressAppender( taskId, progressUpdates );
+
             @Override public void initialize() {
-                Logger logger = LogManager.getLogger( "ubic.gemma" );
-                Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-                logger.addAppender( logAppender );
-                baseCodeLogger.addAppender( logAppender );
+                logAppender.initialize();
             }
 
             @Override public void tearDown() {
-                Logger logger = LogManager.getLogger( "ubic.gemma" );
-                Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-                logger.removeAppender( logAppender );
-                baseCodeLogger.removeAppender( logAppender );
+                logAppender.close();
             }
         };
 
         final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( taskCommand, progressUpdates );
 
-        ExecutingTask.TaskLifecycleCallback statusCallback = new ExecutingTask.TaskLifecycleCallback() {
-            @Override public void beforeRun() {
+        ExecutingTask.TaskLifecycleHandler statusCallback = new ExecutingTask.TaskLifecycleHandler() {
+            @Override public void onStart() {
                 submittedTask.setStatus( SubmittedTask.Status.RUNNING );
                 submittedTask.setStartTime( new Date() );
-
-                SecurityContextHolder.setContext( taskCommand.getSecurityContext() );
             }
-            @Override public void afterRun() {
+            @Override public void onFinish() {
                 submittedTask.setStatus( SubmittedTask.Status.DONE );
                 submittedTask.setFinishTime( new Date() );
 
-                SecurityContextHolder.clearContext();
-
+                //FIXME: move
                 if (submittedTask.isEmailAlert()) {
                     emailNotifyCompletionOfTask( taskCommand );
                 }
@@ -167,8 +133,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
                 submittedTask.setStatus( SubmittedTask.Status.FAILED );
                 submittedTask.setFinishTime( new Date() );
 
-                SecurityContextHolder.clearContext();
-
+                // FIXME: move
                 if (submittedTask.isEmailAlert()) {
                     emailNotifyCompletionOfTask( taskCommand );
                 }
@@ -273,7 +238,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
                 msg.setTo( emailAddress );
                 msg.setFrom( ConfigUtils.getAdminEmailAddress() );
                 msg.setSubject( "Gemma task completed" );
-                SubmittedTask submittedTask =this.getSubmittedTask( taskCommand.getTaskId() );
+                SubmittedTask submittedTask = this.getSubmittedTask( taskCommand.getTaskId() );
 
                 String logs = "Event logs:\n";
                 if ( submittedTask != null ) {

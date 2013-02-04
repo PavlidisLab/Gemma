@@ -15,17 +15,21 @@
  */
 package ubic.gemma.job.progress;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Queue;
-import java.util.Vector;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.job.SubmittedTask;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.TaskRunningService;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Queue;
+import java.util.Vector;
 
 /**
  * This class exposes methods for AJAX calls.
@@ -36,7 +40,7 @@ import ubic.gemma.job.TaskRunningService;
 @Component
 public class ProgressStatusServiceImpl implements ProgressStatusService {
 
-    private static Log log = LogFactory.getLog( ProgressStatusServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( ProgressStatusServiceImpl.class.getName() );
 
     @Autowired private TaskRunningService taskRunningService;
 
@@ -50,12 +54,13 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
     public boolean cancelJob( String taskId ) {
         if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
 
-        try {
-            return taskRunningService.cancelTask( taskId );
-        } catch ( Exception e ) {
-            log.error( e, e );
-            return false;
-        }
+        SubmittedTask submittedTask = taskRunningService.getSubmittedTask( taskId );
+        if ( submittedTask == null ) throw new IllegalArgumentException( "Couldn't find task with task id: " + taskId );
+
+        submittedTask.cancel();
+        //FIXME: we can't really say if it is cancelled or not, since task can be running remotely. Client should check
+        //FIXME: task status some time after this call to see if task got cancelled
+        return true;
     }
 
     @Override
@@ -115,6 +120,38 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
     @Override
     public Collection<SubmittedTaskValueObject> getSubmittedTasks() {
         return SubmittedTaskValueObject.convert2ValueObjects( taskRunningService.getSubmittedTasks());
+    }
+
+    /**
+     * AJAX
+     *
+     * @param taskId
+     * @return
+     */
+    @Override
+    public Object checkResult( String taskId ) throws Exception {
+        SubmittedTask submittedTask = taskRunningService.getSubmittedTask(taskId);
+        if ( submittedTask == null ) return null;
+
+        TaskResult result = submittedTask.getResult();
+
+        if ( result == null ) return null;
+
+        Object answer = result.getAnswer();
+
+        if ( answer instanceof ModelAndView) {
+            View view = ( ( ModelAndView ) answer ).getView();
+            if ( view instanceof RedirectView) {
+                return ( ( RedirectView ) view ).getUrl();
+            }
+            return null;
+        }
+
+        if ( answer instanceof Exception ) {
+            throw ( Exception ) answer;
+        }
+
+        return answer;
     }
 
 }

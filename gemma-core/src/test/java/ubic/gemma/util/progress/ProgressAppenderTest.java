@@ -18,19 +18,21 @@
  */
 package ubic.gemma.util.progress;
 
-import org.apache.log4j.*;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ubic.gemma.job.progress.JobProgress;
 import ubic.gemma.job.progress.LocalProgressAppender;
 import ubic.gemma.testing.BaseSpringContextTest;
 
-import java.util.Enumeration;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * For this test to work you should have the appender configured in log4j.properties. If not it will be set up
@@ -41,17 +43,15 @@ import static junit.framework.Assert.assertEquals;
  */
 public class ProgressAppenderTest extends BaseSpringContextTest {
 
-    JobProgress job;
+    LocalProgressAppender progressAppender;
 
-    // used to put things back as they were after the test.
+    // Used to put things back as they were after the test.
     Level oldLevel;
 
     Logger log4jLogger;
 
-    Queue<String> updates = new ConcurrentLinkedQueue<String>();
+    Deque<String> updates = new LinkedBlockingDeque<String>();
     /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Before
@@ -60,56 +60,40 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
         String loggerName = "ubic.gemma";
         log4jLogger = LogManager.exists( loggerName );
 
-        Enumeration<Appender> appenders = log4jLogger.getAllAppenders();
-
-        Appender progressAppender = null;
-        for ( ; appenders.hasMoreElements(); ) {
-            Appender appender = appenders.nextElement();
-            if ( appender instanceof LocalProgressAppender) {
-                progressAppender = appender;
-            }
-        }
-
-        if ( progressAppender == null ) {
-            log.warn( "There is no progress appender configured; adding one for test" );
-
-            MDC.put("taskId", "randomtaskidF");
-            log4jLogger.addAppender( new LocalProgressAppender( "randomtaskidF", updates ) );
-        }
+        progressAppender = new LocalProgressAppender( "randomtaskidF", updates );
+        log4jLogger.addAppender( progressAppender );
 
         oldLevel = log4jLogger.getLevel();
 
         log4jLogger.setLevel( Level.INFO );
-
-        //job = ProgressManager.createProgressJob( new TaskCommand() );
     }
 
     /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
      */
     @After
     public void teardown() {
-        //ProgressManager.destroyProgressJob( job );
         log4jLogger.setLevel( oldLevel );
-        MDC.remove("taskId");
     }
 
     @Test
     public void testProgressLogging() {
+        progressAppender.initialize();
+        assertTrue( "MDC should be set.", MDC.get( "taskId" ) != null );
 
         String expectedValue = "la de da";
         log.info( expectedValue );
 
-        assertEquals( expectedValue, updates.peek() );
+        assertEquals( expectedValue, updates.peekLast() );
 
         log.debug( "pay no attention" ); // should not update the description.
-        assertEquals( expectedValue, updates.peek() );
+        assertEquals( expectedValue, updates.peekLast() );
 
-        updates.clear();
         log.warn( "listenToMe" );
-        assertEquals( "listenToMe", updates.peek() );
+        assertEquals( "listenToMe", updates.peekLast() );
+
+        progressAppender.close();
+        assertTrue( "MDC should be cleaned up.", MDC.get( "taskId" ) == null );
     }
 
 }

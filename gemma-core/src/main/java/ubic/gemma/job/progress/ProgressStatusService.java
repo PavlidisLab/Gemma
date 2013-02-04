@@ -14,16 +14,21 @@
  */
 package ubic.gemma.job.progress;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
+ * These methods are exposed to front-end.
+ *
  * @author paul
  * @version $Id$
  */
+//TODO: rename it controller or AJAXService or something else. We need some clear way to mark things as exposed to
+//TODO: to the front end
+//TODO: Also, there background task related methods should be consolidated in one class. see TaskCompletionController
 @Component
 public interface ProgressStatusService {
 
@@ -56,5 +61,8 @@ public interface ProgressStatusService {
      */
     @Secured({ "GROUP_ADMIN" })
     public Collection<SubmittedTaskValueObject> getSubmittedTasks();
+
+
+    public Object checkResult (String taskId) throws Exception;
 
 }

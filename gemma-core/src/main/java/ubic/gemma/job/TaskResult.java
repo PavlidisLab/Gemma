@@ -19,7 +19,6 @@
 package ubic.gemma.job;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * This class describes the result of long-running task.
@@ -51,6 +50,11 @@ public class TaskResult implements Serializable {
      * The task id
      */
     private String taskID;
+
+    public TaskResult( String taskId ) {
+        assert taskId != null;
+        this.taskID = taskId;
+    }
 
     public TaskResult( TaskCommand command, Object answer ) {
         assert command != null;
