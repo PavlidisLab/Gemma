@@ -18,11 +18,6 @@
  */
 package ubic.gemma.util;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -33,6 +28,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Methods to create Spring contexts for Gemma. This is not used for webapps except under Test environments. It is
@@ -184,7 +184,9 @@ public class SpringContextUtil {
         paths.add( "classpath*:ubic/gemma/applicationContext-security.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-hibernate.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-serviceBeans.xml" );
-        paths.add( "classpath*:ubic/gemma/applicationContext-schedule.xml" );
+        if ( isWebapp ) {
+            paths.add( "classpath*:ubic/gemma/applicationContext-schedule.xml" );
+        }
 
         /*
          * When using a web application, we get the config locations from the web.xml files --- not using this class.

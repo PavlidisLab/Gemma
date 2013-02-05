@@ -18,10 +18,13 @@
  */
 package ubic.gemma.job;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+
+//TODO: synchronization! many threads access this
 
 /**
  * Returned to client by local task running service.
@@ -30,26 +33,29 @@ import java.util.concurrent.Future;
  */
 public class SubmittedTaskLocal<T extends TaskResult> implements SubmittedTask<T> {
 
+    TaskRunningService taskRunningService;
+
     // We have to make sure only one thread writes this field.
     private volatile Status status = Status.QUEUED;
 
     private Queue<String> progressUpdates;
-    private Future<T> future;
+    private ListenableFuture<T> future;
     private TaskCommand taskCommand;
 
-    private boolean emailAlert;
+    private volatile boolean emailAlert;
 
     /**
      * The time at which the job was first submitted to the running queue.
      * The time the job was actually started.
      * The time at which job completed/failed.
      */
-    private Date submissionTime;
-    private Date startTime;
-    private Date finishTime;
+    private volatile Date submissionTime;
+    private volatile Date startTime;
+    private volatile Date finishTime;
     // TODO: one idea is to associate these to Status transitions in a more general way.
 
-    public SubmittedTaskLocal( TaskCommand taskCommand, Queue<String> progressUpdates ) {
+    public SubmittedTaskLocal( TaskCommand taskCommand, Queue<String> progressUpdates, TaskRunningService taskRunningService ) {
+        this.taskRunningService = taskRunningService;
         this.taskCommand = taskCommand;
         this.progressUpdates = progressUpdates;
         setSubmissionTime( new Date() );
@@ -98,7 +104,10 @@ public class SubmittedTaskLocal<T extends TaskResult> implements SubmittedTask<T
     @Override
     public void cancel() {
         boolean isCancelled = this.future.cancel (true);
-        if (isCancelled) status = Status.CANCELLED;
+        if (isCancelled) {
+            status = Status.CANCELLED;
+            finishTime = new Date();
+        }
     }
 
     @Override
@@ -128,7 +137,9 @@ public class SubmittedTaskLocal<T extends TaskResult> implements SubmittedTask<T
 
     @Override
     public void addEmailAlert() {
-        this.emailAlert = true;
+        if ( emailAlert == true ) return;
+        emailAlert = true;
+        taskRunningService.addEmailNotificationFutureCallback( (ListenableFuture<TaskResult>) future );
     }
 
     @Override
@@ -136,7 +147,7 @@ public class SubmittedTaskLocal<T extends TaskResult> implements SubmittedTask<T
         return this.future.isDone();
     }
 
-    void setFuture(Future<T> future) {
+    void setFuture(ListenableFuture<T> future) {
         this.future = future;
     }
 

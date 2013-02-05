@@ -14,6 +14,8 @@
  */
 package ubic.gemma.job;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import java.util.Collection;
 
 /**
@@ -35,6 +37,8 @@ public interface TaskRunningService {
      * @return the submittedTasks
      */
     public Collection<SubmittedTask> getSubmittedTasks(); //TODO: Make this user specific
+
+
 
     /**
      *
@@ -72,4 +76,6 @@ public interface TaskRunningService {
      * @param task
      */
     void cancelTask( SubmittedTask task );
+
+    void addEmailNotificationFutureCallback( ListenableFuture<TaskResult> future );
 }

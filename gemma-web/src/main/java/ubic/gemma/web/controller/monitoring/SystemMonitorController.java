@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.util.monitor.CacheMonitor;
@@ -105,13 +104,20 @@ public class SystemMonitorController {
             buf.append( "<p>" );
             buf.append( "Number of worker applications running: " );
             try {
-                buf.append( jmsBrokerMonitor.getNumberOfWorkerHosts() );
+                int numWorkers = jmsBrokerMonitor.getNumberOfWorkerHosts();
+                if ( numWorkers == 0 ) {
+                    buf.append( "<img src=\"/Gemma/images/icons/exclamation.png\" /> No workers found!" );
+                } else {
+                    buf.append( "("+numWorkers+")" );
+                    for (int i=0; i < numWorkers; i++) {
+                        buf.append("<img src=\"/Gemma/images/icons/server.png\" />");
+                    }
+                }
             } catch (JMSException e) {
                 buf.append( "Got exception: "+e.getMessage() );
             }
             buf.append( "</p>" );
         }
-
         return buf.toString();
     }
 

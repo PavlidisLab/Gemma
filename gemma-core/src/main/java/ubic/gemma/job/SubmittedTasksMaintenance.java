@@ -3,17 +3,24 @@ package ubic.gemma.job;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.Map;
 
 /**
+ * TODO: finish!
  * Remove entries that's been executing or waiting for their results to be picked up for too long.
+ *  monitor finished tasks that have not been retrieved.
  */
-public class SubmittedTasksMaintenanceThread implements Runnable {
+@Component
+public class SubmittedTasksMaintenance {
 
-    private static Log log = LogFactory.getLog( SubmittedTasksMaintenanceThread.class );
+    private static Log log = LogFactory.getLog( SubmittedTasksMaintenance.class );
+
+    @Autowired private TaskRunningService taskRunningService;
 
     /**
      * How often we look for tasks to cleanup (milliseconds). This should be set to be longer than the grid monitor task
@@ -30,37 +37,16 @@ public class SubmittedTasksMaintenanceThread implements Runnable {
 
 
     /**
-     * Map to work on. Assumes ConcurrentHashMap because it requires weakly consistent iterator with remove support.
-     */
-    private Map<String, SubmittedTask> submittedTasks;
-    private TaskRunningService taskRunningService;
-
-    public SubmittedTasksMaintenanceThread( Map<String, SubmittedTask> submittedTasks,
-                                            TaskRunningService taskRunningService ) {
-        this.submittedTasks = submittedTasks;
-        this.taskRunningService = taskRunningService;
-    }
-
-    @Override
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                Thread.sleep( TASK_CLEANUP_FREQUENCY );
-            } catch (InterruptedException e) {
-                return;
-            }
-            checkSubmittedTasks();
-        }
-    }
-
-    /**
      * Check if a task has been running or queued for too long, and cancel it if necessary. Email alert will always be
      * sent in that case.
      *
      */
-    private void checkSubmittedTasks() {
-        // Weakly consistent iterator, supports remove
-        Collection<SubmittedTask> tasks = submittedTasks.values();
+    @Scheduled(fixedDelay = 60000 )
+    public void doSubmittedTasksMaintenance() {
+        log.info( "Doing submitted tasks maintenance." );
+        // Assumes collection implementing weakly consistent iterator with remove support.
+        Collection<SubmittedTask> tasks = taskRunningService.getSubmittedTasks();
+
         for (SubmittedTask task : tasks) {
             switch (task.getStatus()) {
                 case QUEUED:
@@ -110,7 +96,6 @@ public class SubmittedTasksMaintenanceThread implements Runnable {
 
                     break;
             }
-            if (Thread.currentThread().isInterrupted()) return;
         }
     }
 }

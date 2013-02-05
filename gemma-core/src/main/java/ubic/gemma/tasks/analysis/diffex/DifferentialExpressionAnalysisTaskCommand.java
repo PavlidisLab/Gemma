@@ -18,14 +18,14 @@
  */
 package ubic.gemma.tasks.analysis.diffex;
 
-import java.util.Collection;
-
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
+
+import java.util.Collection;
 
 /**
  * A command object to be used by spaces.
@@ -165,7 +165,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.updateStatsOnly = updateStatsOnly;
     }
 
-    @Override
+    //TODO: drop this or not?
     public boolean getConfigRemoteRunValue() {
         return ConfigUtils.getBoolean("gemma.grid.gridonly.diff");
     }

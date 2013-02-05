@@ -18,21 +18,18 @@
  */
 package ubic.gemma.apps;
 
+import com.j_spaces.core.client.EntryArrivedRemoteEvent;
+import com.j_spaces.core.client.ExternalEntry;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.space.JavaSpace;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.springframework.context.ApplicationContext;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
-
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
-
-import com.j_spaces.core.client.EntryArrivedRemoteEvent;
-import com.j_spaces.core.client.ExternalEntry;
 
 /**
  * This is an example of a CLI that makes use of the grid. This command line interface (CLI) serves as a handy tool/test
@@ -202,7 +199,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
                 stopwatch.stop();
                 long wt = stopwatch.getTime();
-                log.info( "Job with id " + res.getTaskID() + " completed in " + wt
+                log.info( "Job with id " + res.getTaskId() + " completed in " + wt
                         + " ms.  Number of expression experiments persisted: " + res.getAnswer() + "." );
 
             }

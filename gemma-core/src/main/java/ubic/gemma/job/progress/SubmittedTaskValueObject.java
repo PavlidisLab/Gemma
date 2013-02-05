@@ -12,9 +12,12 @@ public class SubmittedTaskValueObject implements Serializable {
     private String taskId;
     private Date submissionTime;
     private Date startTime;
+    private Date finishTime;
     private String submitter;
     private String taskType;
     private boolean runningRemotely;
+    private boolean done;
+    private boolean emailAlert;
     private String taskStatus;
 
     public SubmittedTaskValueObject() {
@@ -26,8 +29,11 @@ public class SubmittedTaskValueObject implements Serializable {
         this.submitter = submittedTask.getCommand().getSubmitter();
         this.submissionTime = submittedTask.getSubmissionTime();
         this.startTime = submittedTask.getStartTime();
+        this.finishTime = submittedTask.getFinishTime();
         this.runningRemotely = submittedTask.isRunningRemotely();
         this.taskStatus = submittedTask.getStatus().name();
+        this.done = submittedTask.isDone();
+        this.emailAlert = submittedTask.isEmailAlert();
     }
 
     public String getTaskStatus() {
@@ -42,8 +48,20 @@ public class SubmittedTaskValueObject implements Serializable {
         return startTime;
     }
 
+    public Date getFinishTime() {
+        return finishTime;
+    }
+
     public boolean getRunningRemotely() {
         return runningRemotely;
+    }
+
+    public boolean getDone() {
+        return done;
+    }
+
+    public boolean getEmailAlert() {
+        return emailAlert;
     }
 
     public String getTaskId() {

@@ -8,7 +8,9 @@
        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <!-- JMS ConnectionFactory to use, configuring the embedded broker using XML -->
-    <amq:connectionFactory id="jmsFactory" brokerURL="${gemma.jms.brokerURL}"/>
+    <amq:connectionFactory id="jmsFactory"
+                           brokerURL="${gemma.jms.brokerURL}" />
+                           <!--TODO: Add exceptionListener="jmsExceptionListener"-->
 
     <!-- Spring JMS Template -->
     <bean id="amqJmsTemplate" class="org.springframework.jms.core.JmsTemplate">

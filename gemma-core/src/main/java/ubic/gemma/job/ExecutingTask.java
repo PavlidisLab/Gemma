@@ -47,9 +47,6 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
     private transient TaskLifecycleHandler statusCallback;
     private transient ProgressUpdateAppender progressAppender;
 
-    // Written by TaskControlListener thread and read by task thread.
-    private volatile boolean emailAlert;
-
     private Queue<String> localProgressQueue;
 
     private String taskId;
@@ -57,9 +54,6 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
 
     private Exception taskExecutionException;
 
-    // Pass taskId to progressAppender
-    // Must be called before executing the task.
-    // If not called then we don't care about progress updates.
     ExecutingTask (Task task, TaskCommand taskCommand) {
         this.task = task;
         this.taskId = taskCommand.getTaskId();
@@ -124,20 +118,14 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
 
         if ( taskExecutionException == null ) {
             statusCallback.onFinish();
+            result.setTaskCommand ( taskCommand ); //TODO: cleaner way?
             return result;
         } else {
             result = (T) new TaskResult( taskId );
             result.setException( taskExecutionException );
+            result.setTaskCommand ( taskCommand );
             return result;
         }
-    }
-
-    public void addEmailAlert() {
-        this.emailAlert = true;
-    }
-
-    public boolean isEmailAlert() {
-        return this.emailAlert;
     }
 
     private void setup() {

@@ -18,57 +18,79 @@ Ext.onReady(function() {
 			forceFit : true
 		},
 		columns : [{
-					header : "TaskId",
-					dataIndex : "taskId",
-					sortable : true,
-					width : 60
+                    header : "Submitted",
+                    dataIndex : "submissionTime",
+                    renderer : Ext.util.Format.dateRenderer('g:i:s l'),
+                    sortable : true,
+                    width : 100
 				}, {
-					header : "Submitted",
-					dataIndex : "submissionTime",
-					renderer : Ext.util.Format.dateRenderer('g:i:s l'),
-					width : 120
-				}, {
+                    header : "Type",
+                    dataIndex : "taskType",
+                    sortable : true,
+                    width : 200,
+                    renderer : function(value, metaData, record, rowIndex, colIndex, store) {
+                        return value.replace(/.*\./, '').replace(/Impl$/, '');
+                    }
+                }, {
+                    header : "TaskId",
+                    dataIndex : "taskId",
+                    width : 40
+                }, {
 					header : "Started",
 					dataIndex : "startTime",
 					renderer : Ext.util.Format.dateRenderer('g:i:s l'),
-					width : 120
+					width : 100
 				}, {
 					header : "Runtime (s)",
 					tooltip : "How long the job has been running",
 					dataIndex : "startTime",
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-						if (record.get("startTime")) {
-							return (new Date() - record.get("startTime")) / 1000;
-						} else {
+						if (record.get("startTime") && record.get("finishTime")) {
+							return (record.get("finishTime") - record.get("startTime")) / 1000;
+						} else if (record.get("startTime")) {
+                            return (new Date() - record.get("startTime")) / 1000;
+                        } else {
 							return "Queued for " + (new Date() - record.get("submissionTime")) / 1000;
 						}
 					},
 					width : 100
 				}, {
+                    header : "Finished",
+                    dataIndex : "finishTime",
+                    renderer : Ext.util.Format.dateRenderer('g:i:s l'),
+                    width : 100
+                }, {
                     header : "Status",
                     dataIndex : "taskStatus"
                 }, {
 					header : "Submitter",
 					dataIndex : "submitter"
 				}, {
-					header : "Type",
-					dataIndex : "taskType",
-					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-						return value.replace(/.*\./, '').replace(/Impl$/, '');
-					}
-				}, {
 					header : "Remote?",
 					dataIndex : "runningRemotely"
 				}, {
-					header : "Cancel",
+					header : "Actions",
 					dataIndex : "taskId",
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-						return '<span class="link" onClick="Ext.getCmp(\'submittedTaskGrid\').cancelTask(\'' + value
-								+ '\')"><img src="/Gemma/images/icons/stop.png" /></span>';
+                        var actions = '';
+                        var completed = record.get("done");
+                        var emailAlert = record.get("emailAlert");
+                        if (!completed) {
+                            actions += '<span class="link" onClick="Ext.getCmp(\'submittedTaskGrid\').cancelTask(\'' +
+                                        value +
+                                        '\')"><img src="/Gemma/images/icons/cross.png" /></span>';
+                        }
+                        if (!emailAlert && !completed) {
+                            actions += '<span class="link" onClick="Ext.getCmp(\'submittedTaskGrid\').addEmailAlert(\'' +
+                                value +
+                                '\')"><img src="/Gemma/images/icons/email.png" /></span>';
+                        }
+
+                        return actions;
 					}
 				}],
 
-		cancelTask : function(taskId) {
+		cancelTask : function( taskId ) {
 			Ext.Msg.show({
 				title : 'Are you sure?',
 				msg : 'Are you sure you want to cancel this task?',
@@ -81,7 +103,7 @@ Ext.onReady(function() {
 										.alert("Couldn't cancel",
 												"Sorry, the job couldn't be cancelled; perhaps it finished or was cancelled already?");
 							} else {
-								this.store.load();
+								v.store.load();
 							}
 						});
 					}
@@ -90,7 +112,24 @@ Ext.onReady(function() {
 			});
 		},
 
-		store : new Ext.data.Store({
+        addEmailAlert : function( taskId ) {
+            Ext.Msg.show({
+                title : 'Add email notification.',
+                msg : 'This will send email notification to the task submitter once task is completed.',
+                buttons : Ext.Msg.YESNO,
+                fn : function(btn, text) {
+                    if (btn === 'yes') {
+                        ProgressStatusService.addEmailAlert(taskId, function() {
+                            v.store.load();
+                        });
+                    }
+                },
+                scope : this
+            });
+        },
+
+
+        store : new Ext.data.Store({
 					proxy : new Ext.data.DWRProxy({
 								apiActionToHandlerMap : {
 									read : {
@@ -110,7 +149,10 @@ Ext.onReady(function() {
 										}, {
 											name : "startTime",
 											type : "date"
-										}, {
+                                        }, {
+                                            name : "finishTime",
+                                            type : "date"
+                                        }, {
 											name : "taskStatus",
 											type : "string"
 										}, {
@@ -119,7 +161,13 @@ Ext.onReady(function() {
                                         }, {
 											name : "taskType",
 											type : "string"
-										}, {
+                                        }, {
+                                            name : "done",
+                                            type : "boolean"
+                                        }, {
+                                            name : "emailAlert",
+                                            type : "boolean"
+                                        }, {
 											name : "runningRemotely",
 											type : "boolean"
 										}])

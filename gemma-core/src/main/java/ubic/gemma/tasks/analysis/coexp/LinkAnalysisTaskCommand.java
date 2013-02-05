@@ -23,7 +23,6 @@ import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Command object for Link analysis
@@ -74,11 +73,6 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
     @Override
     public Class getTaskClass() {
         return LinkAnalysisTask.class;
-    }
-
-    @Override
-    public boolean getConfigRemoteRunValue () {
-        return ConfigUtils.getBoolean("gemma.grid.gridonly.coexp");
     }
 
 }

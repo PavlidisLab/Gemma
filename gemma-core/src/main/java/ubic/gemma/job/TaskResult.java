@@ -40,16 +40,10 @@ public class TaskResult implements Serializable {
     private Exception exception;
 
     /**
-     * True if it was run using the grid.
-     */
-    private Boolean ranInSpace = true;
-
-    private boolean sendEmailIfNotRetrieved = false;
-
-    /**
      * The task id
      */
     private String taskID;
+    private TaskCommand taskCommand;
 
     public TaskResult( String taskId ) {
         assert taskId != null;
@@ -63,7 +57,6 @@ public class TaskResult implements Serializable {
         this.answer = answer;
     }
 
-
     public Object getAnswer() {
         return answer;
     }
@@ -75,19 +68,8 @@ public class TaskResult implements Serializable {
         return exception;
     }
 
-    public Boolean getRanInSpace() {
-        return ranInSpace;
-    }
-
-    public String getTaskID() {
+    public String getTaskId() {
         return taskID;
-    }
-
-    /**
-     * @return the sendEmailIfNotRetrieved
-     */
-    public boolean isSendEmailIfNotRetrieved() {
-        return sendEmailIfNotRetrieved;
     }
 
     /**
@@ -97,15 +79,11 @@ public class TaskResult implements Serializable {
         this.exception = exception;
     }
 
-    public void setRanInSpace( Boolean ranInSpace ) {
-        this.ranInSpace = ranInSpace;
+    public TaskCommand getTaskCommand() {
+        return this.taskCommand;
     }
 
-    /**
-     * @param sendEmailIfNotRetrieved the sendEmailIfNotRetrieved to set
-     */
-    public void setSendEmailIfNotRetrieved( boolean sendEmailIfNotRetrieved ) {
-        this.sendEmailIfNotRetrieved = sendEmailIfNotRetrieved;
+    public void setTaskCommand( TaskCommand taskCommand ) {
+        this.taskCommand = taskCommand;
     }
-
 }

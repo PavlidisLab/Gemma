@@ -19,7 +19,6 @@ public interface SubmittedTask <T extends TaskResult> {
      */
     public void cancel();
 
-
     public Date getStartTime();
     public Date getSubmissionTime();
     public Date getFinishTime();

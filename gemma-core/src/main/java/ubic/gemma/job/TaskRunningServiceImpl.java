@@ -18,7 +18,7 @@
  */
 package ubic.gemma.job;
 
-import org.apache.commons.lang.StringUtils;
+import com.google.common.util.concurrent.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,23 +26,21 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 import ubic.gemma.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.job.progress.LocalProgressAppender;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.tasks.Task;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.MailEngine;
+import ubic.gemma.util.MailUtils;
 
-import javax.annotation.PostConstruct;
 import javax.jms.*;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
 
 /**
  * Handles the execution of tasks in threads that can be checked by clients later.
@@ -56,26 +54,18 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
 
     @Autowired private ApplicationContext applicationContext;
-    @Autowired private MailEngine mailEngine;
-    @Autowired private UserManager userService;
+    @Autowired private MailUtils mailUtils;
+
     @Autowired private JMSBrokerMonitor jmsBrokerMonitor;
     @Autowired @Qualifier("amqJmsTemplate") private JmsTemplate jmsTemplate;
     @Autowired @Qualifier("taskSubmissionDestination") private Destination taskSubmissionQueue;
+
+    private ListeningExecutorService executorService = MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( 20 ) );
 
     /**
      *
      */
     private final Map<String, SubmittedTask> submittedTasks= new ConcurrentHashMap<String, SubmittedTask>();
-
-    //TODO: make spring manage this thread, probably just schedule to run it at certain interval
-    @PostConstruct
-    public void initMaintenanceThread() {
-        // Start a thread to monitor finished tasks that have not been retrieved.
-        Thread maintenanceThread = new Thread( new SubmittedTasksMaintenanceThread( submittedTasks, this ) );
-        maintenanceThread.setDaemon( true );
-        maintenanceThread.setName( "TaskSweepup" );
-        maintenanceThread.start();
-    }
 
     @Override
     public Collection<SubmittedTask> getSubmittedTasks() {
@@ -113,7 +103,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             }
         };
 
-        final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( taskCommand, progressUpdates );
+        final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( taskCommand, progressUpdates, this );
 
         ExecutingTask.TaskLifecycleHandler statusCallback = new ExecutingTask.TaskLifecycleHandler() {
             @Override public void onStart() {
@@ -123,20 +113,10 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             @Override public void onFinish() {
                 submittedTask.setStatus( SubmittedTask.Status.DONE );
                 submittedTask.setFinishTime( new Date() );
-
-                //FIXME: move
-                if (submittedTask.isEmailAlert()) {
-                    emailNotifyCompletionOfTask( taskCommand );
-                }
             }
             @Override public void onFailure( Throwable e ) {
                 submittedTask.setStatus( SubmittedTask.Status.FAILED );
                 submittedTask.setFinishTime( new Date() );
-
-                // FIXME: move
-                if (submittedTask.isEmailAlert()) {
-                    emailNotifyCompletionOfTask( taskCommand );
-                }
             }
         };
 
@@ -144,9 +124,13 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         executingTask.setStatusCallback( statusCallback );
         executingTask.setProgressAppender( progressUpdateAppender );
 
-        // Run the task in its own thread.
-        ExecutorService service = Executors.newSingleThreadExecutor();
-        Future<?> future = service.submit( executingTask );
+        ListenableFuture<TaskResult> future = executorService.submit( executingTask );
+        // Adding post-processing steps, they will run on future completion.
+        // Currently we have only email notification.
+        if ( taskCommand.isEmailAlert() ) {
+            Futures.addCallback( future, emailNotifcationFutureCallback );
+        }
+
         submittedTask.setFuture( future );
 
         submittedTasks.put( taskId, submittedTask );
@@ -157,6 +141,27 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     public void cancelTask( SubmittedTask task ) {
         task.cancel();
     }
+
+    @Override
+    public void addEmailNotificationFutureCallback( ListenableFuture<TaskResult> future ) {
+        Futures.addCallback( future, emailNotifcationFutureCallback );
+    }
+
+    // Reused by multiple threads.
+    private FutureCallback<TaskResult> emailNotifcationFutureCallback = new FutureCallback<TaskResult>() {
+
+        @Override
+        public void onSuccess( TaskResult taskResult ) {
+            mailUtils.sendTaskCompletedNotificationEmail( taskResult );
+        }
+
+        @Override
+        public void onFailure( Throwable throwable ) {
+            log.error( "Shouldn't happen since we take care of exceptions inside ExecutingTask. "
+                    + throwable.getMessage() );
+        }
+
+    };
 
     @Override
     public String submitLocalTask( TaskCommand taskCommand ) throws ConflictingTaskException {
@@ -215,46 +220,41 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         return task;
     }
 
-    /**
-     * Test whether the job can be run at this time. Checks for already-running tasks of the same type owned by the same
-     * user etc.
-     */
-
-    /**
-     * @param taskId
-     * @param result. If the submitter is blank, this doesn't do anything.
-     */
-    private void emailNotifyCompletionOfTask( TaskCommand taskCommand ) {
-        if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
-            User user = userService.findByUserName( taskCommand.getSubmitter() );
-
-            assert user != null;
-
-            String emailAddress = user.getEmail();
-
-            if ( emailAddress != null ) {
-                log.debug( "Sending email notification to " + emailAddress );
-                SimpleMailMessage msg = new SimpleMailMessage();
-                msg.setTo( emailAddress );
-                msg.setFrom( ConfigUtils.getAdminEmailAddress() );
-                msg.setSubject( "Gemma task completed" );
-                SubmittedTask submittedTask = this.getSubmittedTask( taskCommand.getTaskId() );
-
-                String logs = "Event logs:\n";
-                if ( submittedTask != null ) {
-                    logs += StringUtils.join( submittedTask.getProgressUpdates(), "\n" );
-                }
-
-                msg.setText( "A job you started on Gemma is completed (taskid=" + taskCommand.getTaskId() + ", "
-                        + taskCommand.getTaskClass().getSimpleName() + ")\n\n" + logs + "\n" );
-
-                /*
-                 * TODO provide a link to something relevant something like:
-                 */
-                String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskCommand.getTaskId();
-
-                mailEngine.send( msg );
-            }
-        }
-    }
+//    /**
+//     * @param taskId
+//     * @param result. If the submitter is blank, this doesn't do anything.
+//     */
+//    private void emailNotifyCompletionOfTask( TaskCommand taskCommand ) {
+//        if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
+//            User user = userService.findByUserName( taskCommand.getSubmitter() );
+//
+//            assert user != null;
+//
+//            String emailAddress = user.getEmail();
+//
+//            if ( emailAddress != null ) {
+//                log.debug( "Sending email notification to " + emailAddress );
+//                SimpleMailMessage msg = new SimpleMailMessage();
+//                msg.setTo( emailAddress );
+//                msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+//                msg.setSubject( "Gemma task completed" );
+//                SubmittedTask submittedTask = this.getSubmittedTask( taskCommand.getTaskId() );
+//
+//                String logs = "Event logs:\n";
+//                if ( submittedTask != null ) {
+//                    logs += StringUtils.join( submittedTask.getProgressUpdates(), "\n" );
+//                }
+//
+//                msg.setText( "A job you started on Gemma is completed (taskid=" + taskCommand.getTaskId() + ", "
+//                        + taskCommand.getTaskClass().getSimpleName() + ")\n\n" + logs + "\n" );
+//
+//                /*
+//                 * TODO provide a link to something relevant something like:
+//                 */
+//                String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskCommand.getTaskId();
+//
+//                mailEngine.send( msg );
+//            }
+//        }
+//    }
 }

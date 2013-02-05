@@ -19,6 +19,7 @@
 package ubic.gemma.job.grid.worker;
 
 import org.quartz.impl.StdScheduler;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.job.RemoteTaskRunningService;
@@ -122,7 +123,12 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     protected void createSpringContext() {
         ctx = SpringContextUtil.getRemoteWorkerApplicationContext( hasOption( "testing" ) );
 
-        QuartzUtils.disableQuartzScheduler( this.getBean( StdScheduler.class ) );
+        try {
+            QuartzUtils.disableQuartzScheduler( this.getBean( StdScheduler.class ) );
+        } catch ( NoSuchBeanDefinitionException exception) {
+            //This is ok. I've removed quartz from worker/cli context.
+            log.info( exception.getMessage() );
+        }
 
         /*
          * Important to ensure that threads get permissions from their context - not global!

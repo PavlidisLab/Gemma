@@ -18,12 +18,11 @@
  */
 package ubic.gemma.job;
 
-import java.io.Serializable;
-import java.util.Date;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.io.Serializable;
 
 /**
  * This command class is used to allow communication of parameters for a task between a client and task running service,
@@ -189,10 +188,6 @@ public class TaskCommand implements Serializable {
      */
     public void setMaxRuntime( int maxRuntime ) {
         this.maxRuntime = maxRuntime;
-    }
-
-    public boolean getConfigRemoteRunValue () {
-        return false;
     }
 
 }

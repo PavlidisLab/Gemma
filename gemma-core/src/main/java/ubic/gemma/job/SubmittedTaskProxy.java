@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.core.SessionCallback;
+import ubic.gemma.job.grid.util.JMSBroker;
 
 import javax.jms.*;
 import java.io.Serializable;
@@ -47,6 +48,7 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
     private Queue controlQueue;
 
     @Autowired @Qualifier("amqJmsTemplate") private JmsTemplate amqJmsTemplate;
+    @Autowired private JMSBroker jmsBroker;
 
     //TODO: two separate locks: result and updates shouldn't block each other off.
     // Use case where one thread is waiting on the result.
@@ -54,12 +56,14 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
     public SubmittedTaskProxy(TaskCommand taskCommand, JmsTemplate jmsTemplate) {
         this.taskId = taskCommand.getTaskId();
         this.taskCommand = taskCommand;
+        this.emailAlert = taskCommand.isEmailAlert();
+
         this.amqJmsTemplate = jmsTemplate;
 
         lifeCycleQueue = new ActiveMQQueue( "task.lifeCycle."+taskId );
         resultQueue = new ActiveMQQueue( "task.result."+taskId );
         progressUpdatesQueue = new ActiveMQQueue( "task.progress."+taskId );
-        controlQueue = new ActiveMQQueue( "task.control."+taskId );
+        controlQueue = new ActiveMQQueue( "tasks.control" );
 
         this.status = Status.QUEUED;
         this.submissionTime = new Date();
@@ -207,8 +211,9 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
 
     @Override
     public void addEmailAlert() {
+        if ( emailAlert == true ) return; // Trying to prevent multiple email notifications being added.
         emailAlert = true;
-        //TODO: send control message
+        sendMessage( controlQueue, new TaskControl( taskId, TaskControl.Request.ADD_EMAIL_NOTIFICATION ) );
     }
 
     // TODO: this code is shared in a few places, extract it.
@@ -221,6 +226,4 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
             }
         } );
     }
-
-
 }
