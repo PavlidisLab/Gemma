@@ -33,16 +33,14 @@ import javax.jms.*;
 
 /**
  * TODO
- *
- *
- *
- *
  */
 @Component
 public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
-    protected static Log log = LogFactory.getLog( JMSBrokerMonitorImpl.class.getName());
+    protected static Log log = LogFactory.getLog( JMSBrokerMonitorImpl.class.getName() );
 
-    @Autowired @Qualifier("amqJmsTemplate") private JmsTemplate jmsTemplate;
+    @Autowired(required = false)
+    @Qualifier("amqJmsTemplate")
+    private JmsTemplate jmsTemplate;
 
     @Override
     public boolean isRemoteTasksEnabled() {
@@ -53,8 +51,8 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
     public boolean canServiceRemoteTasks() {
         boolean isAnyWorkerHostAlive;
         try {
-             isAnyWorkerHostAlive = getNumberOfWorkerHosts() > 0;
-        } catch (JMSException e) {
+            isAnyWorkerHostAlive = getNumberOfWorkerHosts() > 0;
+        } catch ( JMSException e ) {
             // Broker is probably down.
             isAnyWorkerHostAlive = false;
         }
@@ -64,25 +62,25 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
     @Override
     public int getNumberOfWorkerHosts() throws JMSException {
         MapMessage reply = sendTaskSubmissionQueueDiagnosticMessage();
-        return (int) reply.getLong( "consumerCount" );
+        return ( int ) reply.getLong( "consumerCount" );
     }
 
     @Override
     public int getTaskSubmissionQueueLength() throws JMSException {
         MapMessage reply = sendTaskSubmissionQueueDiagnosticMessage();
-        return (int) reply.getLong( "enqueueCount" );
+        return ( int ) reply.getLong( "enqueueCount" );
     }
 
     @Override
     public String getTaskSubmissionQueueDiagnosticMessage() throws JMSException {
         MapMessage reply = sendTaskSubmissionQueueDiagnosticMessage();
 
-        if (reply ==  null) return "Statistics plugin appears to be turned off or is too slow";
+        if ( reply == null ) return "Statistics plugin appears to be turned off or is too slow";
 
         String message = "";
-        for (Enumeration e = reply.getMapNames();e.hasMoreElements();) {
+        for ( Enumeration e = reply.getMapNames(); e.hasMoreElements(); ) {
             String name = e.nextElement().toString();
-            message += name + "=" + reply.getObject(name) + "\n";
+            message += name + "=" + reply.getObject( name ) + "\n";
         }
 
         return message;
@@ -99,7 +97,7 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
                 MessageProducer producer = session.createProducer( queryQueue );
                 MessageConsumer consumer = session.createConsumer( replyTo );
                 producer.send( message );
-                return (MapMessage) consumer.receive( 5000 );
+                return ( MapMessage ) consumer.receive( 5000 );
             }
         }, true );
         return reply;

@@ -63,7 +63,8 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     @Autowired(required = false)
     @Qualifier("amqJmsTemplate")
     private JmsTemplate jmsTemplate;
-    @Autowired
+
+    @Autowired(required = false)
     @Qualifier("taskSubmissionDestination")
     private Destination taskSubmissionQueue;
 
