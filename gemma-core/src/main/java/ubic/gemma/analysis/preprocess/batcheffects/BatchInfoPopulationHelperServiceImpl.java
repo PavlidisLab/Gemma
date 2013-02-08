@@ -183,15 +183,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
         int batchNum = 1;
         DateFormat df = DateFormat.getDateInstance( DateFormat.SHORT );
-
         String batchDateString = "";
-
-        // apply sanity limit on number of batches. Completely arbitrary but guards against possible errors in getting
-        // the dates in the first place.
-        if ( lDates.size() > 99 ) {
-            log.warn( "There are too many batches: " + lDates.size() );
-            return null;
-        }
 
         boolean mergedAnySingletons = false;
 
