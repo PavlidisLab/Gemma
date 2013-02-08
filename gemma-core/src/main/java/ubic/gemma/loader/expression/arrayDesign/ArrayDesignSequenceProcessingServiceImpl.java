@@ -849,6 +849,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                     continue;
                 }
                 sequence = createOrUpdateGenbankSequence( sequence, force );
+                sequence = this.bioSequenceService.thaw( sequence );
                 String accession = sequence.getSequenceDatabaseEntry().getAccession();
                 found.put( accession, sequence );
                 accessionsToFetch.remove( accession );
