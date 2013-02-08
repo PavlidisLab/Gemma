@@ -35,7 +35,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.SequenceManipulation;
@@ -62,7 +62,7 @@ import ubic.gemma.persistence.Persister;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequenceProcessingService {
 
     /**
@@ -566,7 +566,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         while ( versionNumber < MAX_VERSION_NUMBER ) {
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
 
-            // we can loop through the taxons as we can ignore sequence when retrieved and arraydesign taxon not match.
+            // we can loop through the taxa as we can ignore sequence when retrieved and arraydesign taxon not match.
 
             Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxaOnArray,
                     force );
