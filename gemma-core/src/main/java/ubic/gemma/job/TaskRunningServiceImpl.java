@@ -53,19 +53,27 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
 
-    @Autowired private ApplicationContext applicationContext;
-    @Autowired private MailUtils mailUtils;
+    @Autowired
+    private ApplicationContext applicationContext;
+    @Autowired
+    private MailUtils mailUtils;
 
-    @Autowired private JMSBrokerMonitor jmsBrokerMonitor;
-    @Autowired @Qualifier("amqJmsTemplate") private JmsTemplate jmsTemplate;
-    @Autowired @Qualifier("taskSubmissionDestination") private Destination taskSubmissionQueue;
+    @Autowired
+    private JMSBrokerMonitor jmsBrokerMonitor;
+    @Autowired(required = false)
+    @Qualifier("amqJmsTemplate")
+    private JmsTemplate jmsTemplate;
+    @Autowired
+    @Qualifier("taskSubmissionDestination")
+    private Destination taskSubmissionQueue;
 
-    private ListeningExecutorService executorService = MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( 20 ) );
+    private ListeningExecutorService executorService = MoreExecutors.listeningDecorator( Executors
+            .newFixedThreadPool( 20 ) );
 
     /**
      *
      */
-    private final Map<String, SubmittedTask> submittedTasks= new ConcurrentHashMap<String, SubmittedTask>();
+    private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<String, SubmittedTask>();
 
     @Override
     public Collection<SubmittedTask> getSubmittedTasks() {
@@ -73,7 +81,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     @Override
-    public SubmittedTask getSubmittedTask(String taskId) {
+    public SubmittedTask getSubmittedTask( String taskId ) {
         return submittedTasks.get( taskId );
     }
 
@@ -94,11 +102,13 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         ExecutingTask.ProgressUpdateAppender progressUpdateAppender = new ExecutingTask.ProgressUpdateAppender() {
             private final LocalProgressAppender logAppender = new LocalProgressAppender( taskId, progressUpdates );
 
-            @Override public void initialize() {
+            @Override
+            public void initialize() {
                 logAppender.initialize();
             }
 
-            @Override public void tearDown() {
+            @Override
+            public void tearDown() {
                 logAppender.close();
             }
         };
@@ -106,15 +116,20 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( taskCommand, progressUpdates, this );
 
         ExecutingTask.TaskLifecycleHandler statusCallback = new ExecutingTask.TaskLifecycleHandler() {
-            @Override public void onStart() {
+            @Override
+            public void onStart() {
                 submittedTask.setStatus( SubmittedTask.Status.RUNNING );
                 submittedTask.setStartTime( new Date() );
             }
-            @Override public void onFinish() {
+
+            @Override
+            public void onFinish() {
                 submittedTask.setStatus( SubmittedTask.Status.DONE );
                 submittedTask.setFinishTime( new Date() );
             }
-            @Override public void onFailure( Throwable e ) {
+
+            @Override
+            public void onFailure( Throwable e ) {
                 submittedTask.setStatus( SubmittedTask.Status.FAILED );
                 submittedTask.setFinishTime( new Date() );
             }
@@ -167,7 +182,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     public String submitLocalTask( TaskCommand taskCommand ) throws ConflictingTaskException {
         final Task task = matchTaskCommandToTask( taskCommand );
 
-        BackgroundJob<TaskCommand, TaskResult> job = new BackgroundJob<TaskCommand, TaskResult>(taskCommand) {
+        BackgroundJob<TaskCommand, TaskResult> job = new BackgroundJob<TaskCommand, TaskResult>( taskCommand ) {
             @Override
             protected TaskResult processJob() {
                 return task.execute();
@@ -179,8 +194,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     /**
      * Run remotely if possible, otherwise run locally.
-     *
-     *
+     * 
      * @param taskCommand
      * @return
      * @throws ConflictingTaskException
@@ -189,7 +203,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     public String submitRemoteTask( final TaskCommand taskCommand ) throws ConflictingTaskException {
 
         if ( ConfigUtils.isRemoteTasksEnabled() && jmsBrokerMonitor.canServiceRemoteTasks() ) {
-            jmsTemplate.send(taskSubmissionQueue, new MessageCreator() {
+            jmsTemplate.send( taskSubmissionQueue, new MessageCreator() {
                 @Override
                 public Message createMessage( Session session ) throws JMSException {
                     ObjectMessage message = session.createObjectMessage( taskCommand );
@@ -208,53 +222,53 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     private Task matchTaskCommandToTask( TaskCommand taskCommand ) {
         Class taskClass = taskCommand.getTaskClass();
-        if (taskClass == null) throw new IllegalArgumentException( "Task is not set for "
-                + taskCommand.getClass().getSimpleName() );
+        if ( taskClass == null )
+            throw new IllegalArgumentException( "Task is not set for " + taskCommand.getClass().getSimpleName() );
 
         // TODO: Try using @Configurable and new operator in the future.
-        Task task = (Task) applicationContext.getBean( taskClass );
-        if (task == null) throw new IllegalArgumentException( "Task bean is not found for "
-                + taskClass.getSimpleName() );
+        Task task = ( Task ) applicationContext.getBean( taskClass );
+        if ( task == null )
+            throw new IllegalArgumentException( "Task bean is not found for " + taskClass.getSimpleName() );
 
         task.setCommand( taskCommand );
         return task;
     }
 
-//    /**
-//     * @param taskId
-//     * @param result. If the submitter is blank, this doesn't do anything.
-//     */
-//    private void emailNotifyCompletionOfTask( TaskCommand taskCommand ) {
-//        if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
-//            User user = userService.findByUserName( taskCommand.getSubmitter() );
-//
-//            assert user != null;
-//
-//            String emailAddress = user.getEmail();
-//
-//            if ( emailAddress != null ) {
-//                log.debug( "Sending email notification to " + emailAddress );
-//                SimpleMailMessage msg = new SimpleMailMessage();
-//                msg.setTo( emailAddress );
-//                msg.setFrom( ConfigUtils.getAdminEmailAddress() );
-//                msg.setSubject( "Gemma task completed" );
-//                SubmittedTask submittedTask = this.getSubmittedTask( taskCommand.getTaskId() );
-//
-//                String logs = "Event logs:\n";
-//                if ( submittedTask != null ) {
-//                    logs += StringUtils.join( submittedTask.getProgressUpdates(), "\n" );
-//                }
-//
-//                msg.setText( "A job you started on Gemma is completed (taskid=" + taskCommand.getTaskId() + ", "
-//                        + taskCommand.getTaskClass().getSimpleName() + ")\n\n" + logs + "\n" );
-//
-//                /*
-//                 * TODO provide a link to something relevant something like:
-//                 */
-//                String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskCommand.getTaskId();
-//
-//                mailEngine.send( msg );
-//            }
-//        }
-//    }
+    // /**
+    // * @param taskId
+    // * @param result. If the submitter is blank, this doesn't do anything.
+    // */
+    // private void emailNotifyCompletionOfTask( TaskCommand taskCommand ) {
+    // if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
+    // User user = userService.findByUserName( taskCommand.getSubmitter() );
+    //
+    // assert user != null;
+    //
+    // String emailAddress = user.getEmail();
+    //
+    // if ( emailAddress != null ) {
+    // log.debug( "Sending email notification to " + emailAddress );
+    // SimpleMailMessage msg = new SimpleMailMessage();
+    // msg.setTo( emailAddress );
+    // msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+    // msg.setSubject( "Gemma task completed" );
+    // SubmittedTask submittedTask = this.getSubmittedTask( taskCommand.getTaskId() );
+    //
+    // String logs = "Event logs:\n";
+    // if ( submittedTask != null ) {
+    // logs += StringUtils.join( submittedTask.getProgressUpdates(), "\n" );
+    // }
+    //
+    // msg.setText( "A job you started on Gemma is completed (taskid=" + taskCommand.getTaskId() + ", "
+    // + taskCommand.getTaskClass().getSimpleName() + ")\n\n" + logs + "\n" );
+    //
+    // /*
+    // * TODO provide a link to something relevant something like:
+    // */
+    // String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskCommand.getTaskId();
+    //
+    // mailEngine.send( msg );
+    // }
+    // }
+    // }
 }

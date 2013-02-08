@@ -40,33 +40,27 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 /**
- * This will run on remote worker jvm
- *
- * CompletionService backed by ThreadPoolExecutor is used to execute tasks.
- *
- *
- *
- *
- * ActiveMQ communication.
- *
- * ApplicationContext is injectected and is used to load classes implementing Tasks.
- *
- *
+ * This will run on remote worker jvm CompletionService backed by ThreadPoolExecutor is used to execute tasks. ActiveMQ
+ * communication. ApplicationContext is injectected and is used to load classes implementing Tasks.
  */
 @Component
 public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
     private static Log log = LogFactory.getLog( RemoteTaskRunningServiceImpl.class );
 
-    @Autowired @Qualifier("amqJmsTemplate") private JmsTemplate amqJmsTemplate;
-    @Autowired private MailUtils mailUtils;
+    @Autowired(required = false)
+    @Qualifier("amqJmsTemplate")
+    private JmsTemplate amqJmsTemplate;
+    @Autowired
+    private MailUtils mailUtils;
 
-    @Autowired private ApplicationContext applicationContext;
+    @Autowired
+    private ApplicationContext applicationContext;
 
-    private final Map<String,ListenableFuture> taskIdToFuture = new ConcurrentHashMap<String, ListenableFuture>();
+    private final Map<String, ListenableFuture> taskIdToFuture = new ConcurrentHashMap<String, ListenableFuture>();
     private final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
 
-    private final ListeningExecutorService executorService =
-            MoreExecutors.listeningDecorator( new ThreadPoolExecutor( 3, 15, 10, TimeUnit.MINUTES, workQueue ) );
+    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator( new ThreadPoolExecutor(
+            3, 15, 10, TimeUnit.MINUTES, workQueue ) );
 
     // Take completed Task and send its result to the SubmittedTaskProxy.
     private FutureCallback<TaskResult> sendTaskResultCallback = new FutureCallback<TaskResult>() {
@@ -87,19 +81,21 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
     // maintains task submission queue
     @Override
     public void submit( final TaskCommand taskCommand ) {
-        if ( taskCommand == null ) throw new NullPointerException("taskCommand cannot be null.");
+        if ( taskCommand == null ) throw new NullPointerException( "taskCommand cannot be null." );
 
         final String taskId = taskCommand.getTaskId();
         assert taskId != null;
 
         final Task task = matchTaskCommandToTask( taskCommand );
-        if (task == null) throw new IllegalArgumentException( "Can't find bean for Task "+ taskCommand.getTaskClass().getSimpleName() );
+        if ( task == null )
+            throw new IllegalArgumentException( "Can't find bean for Task "
+                    + taskCommand.getTaskClass().getSimpleName() );
         task.setCommand( taskCommand );
 
-        //TODO: somehow make sure they are set in the same spot for this AND proxy object on the client side
-        //TODO: config file? properties?
-        final Destination lifeCycleQueue = new ActiveMQQueue( "task.lifeCycle."+taskId );
-        final Destination progressUpdatesQueue = new ActiveMQQueue( "task.progress."+taskId );
+        // TODO: somehow make sure they are set in the same spot for this AND proxy object on the client side
+        // TODO: config file? properties?
+        final Destination lifeCycleQueue = new ActiveMQQueue( "task.lifeCycle." + taskId );
+        final Destination progressUpdatesQueue = new ActiveMQQueue( "task.progress." + taskId );
 
         final java.util.Queue<String> progressUpdatesQueueLocal = new ConcurrentLinkedQueue<String>();
 
@@ -112,35 +108,42 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             }
         };
 
-
-        //TODO: this kind of setup can be moved to subclasses?
+        // TODO: this kind of setup can be moved to subclasses?
         // Set up logger for remote task.
         ExecutingTask.ProgressUpdateAppender progressUpdateAppender = new ExecutingTask.ProgressUpdateAppender() {
-            private final RemoteProgressAppender logAppender = new RemoteProgressAppender( taskId, progressUpdateCallback );
+            private final RemoteProgressAppender logAppender = new RemoteProgressAppender( taskId,
+                    progressUpdateCallback );
 
-            @Override public void initialize() {
+            @Override
+            public void initialize() {
                 logAppender.initialize();
             }
 
-            @Override public void tearDown() {
+            @Override
+            public void tearDown() {
                 logAppender.close();
             }
         };
 
         final ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
         executingTask.setProgressAppender( progressUpdateAppender );
-        executingTask.setLocalProgressQueue ( progressUpdatesQueueLocal );
+        executingTask.setLocalProgressQueue( progressUpdatesQueueLocal );
 
         ExecutingTask.TaskLifecycleHandler statusRemoteCallback = new ExecutingTask.TaskLifecycleHandler() {
-            @Override public void onStart() {
+            @Override
+            public void onStart() {
                 TaskStatusUpdate statusUpdate = new TaskStatusUpdate( SubmittedTask.Status.RUNNING, new Date() );
                 sendMessage( lifeCycleQueue, statusUpdate );
             }
-            @Override public void onFinish() {
+
+            @Override
+            public void onFinish() {
                 TaskStatusUpdate statusUpdate = new TaskStatusUpdate( SubmittedTask.Status.DONE, new Date() );
                 sendMessage( lifeCycleQueue, statusUpdate );
             }
-            @Override public void onFailure( Throwable e ) {
+
+            @Override
+            public void onFailure( Throwable e ) {
                 TaskStatusUpdate statusUpdate = new TaskStatusUpdate( SubmittedTask.Status.FAILED, new Date() );
                 sendMessage( lifeCycleQueue, statusUpdate );
             }
@@ -184,21 +187,21 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         } );
     }
 
-    //TODO: these methods below are shared by both local and remote task running services -> extract into separate class
+    // TODO: these methods below are shared by both local and remote task running services -> extract into separate
+    // class
     private Task matchTaskCommandToTask( TaskCommand taskCommand ) {
         Class taskClass = taskCommand.getTaskClass();
-        if (taskClass == null) throw new IllegalArgumentException( "Task is not set for "
-                + taskCommand.getClass().getSimpleName() );
+        if ( taskClass == null )
+            throw new IllegalArgumentException( "Task is not set for " + taskCommand.getClass().getSimpleName() );
 
         // TODO: Try using @Configurable and new operator in the future.
-        Task task = (Task) applicationContext.getBean( taskClass );
-        if (task == null) throw new IllegalArgumentException( "Task bean is not found for "
-                + taskClass.getSimpleName() );
+        Task task = ( Task ) applicationContext.getBean( taskClass );
+        if ( task == null )
+            throw new IllegalArgumentException( "Task bean is not found for " + taskClass.getSimpleName() );
 
         task.setCommand( taskCommand );
         return task;
     }
-
 
     private FutureCallback<TaskResult> emailNotificationCallback = new FutureCallback<TaskResult>() {
         @Override
@@ -213,37 +216,38 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         }
     };
 
-        //TODO: One idea to move this to the web app is to send jms messages on a special topic which mailengine would listen on.
-//    private void emailNotifyCompletionOfTask( TaskCommand taskCommand, ExecutingTask executingTask ) {
-//        if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
-//            User user = userService.findByUserName( taskCommand.getSubmitter() );
-//
-//            assert user != null;
-//
-//            String emailAddress = user.getEmail();
-//
-//            if ( emailAddress != null ) {
-//                log.debug( "Sending email notification to " + emailAddress );
-//                SimpleMailMessage msg = new SimpleMailMessage();
-//                msg.setTo( emailAddress );
-//                msg.setFrom( ConfigUtils.getAdminEmailAddress() );
-//                msg.setSubject( "Gemma task completed" );
-//
-//                String logs = "Event logs:\n";
-//                if ( executingTask != null ) {
-//                    logs += StringUtils.join( executingTask.getLocalProgressQueue(), "\n" );
-//                }
-//
-//                msg.setText( "A job you started on Gemma is completed (taskid=" + taskCommand.getTaskId() + ", "
-//                        + taskCommand.getTaskClass().getSimpleName() + ")\n\n" + logs + "\n" );
-//
-//                /*
-//                 * TODO provide a link to something relevant something like:
-//                 */
-//                String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskCommand.getTaskId();
-//
-//                mailEngine.send( msg );
-//            }
-//        }
-//    }
+    // TODO: One idea to move this to the web app is to send jms messages on a special topic which mailengine would
+    // listen on.
+    // private void emailNotifyCompletionOfTask( TaskCommand taskCommand, ExecutingTask executingTask ) {
+    // if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
+    // User user = userService.findByUserName( taskCommand.getSubmitter() );
+    //
+    // assert user != null;
+    //
+    // String emailAddress = user.getEmail();
+    //
+    // if ( emailAddress != null ) {
+    // log.debug( "Sending email notification to " + emailAddress );
+    // SimpleMailMessage msg = new SimpleMailMessage();
+    // msg.setTo( emailAddress );
+    // msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+    // msg.setSubject( "Gemma task completed" );
+    //
+    // String logs = "Event logs:\n";
+    // if ( executingTask != null ) {
+    // logs += StringUtils.join( executingTask.getLocalProgressQueue(), "\n" );
+    // }
+    //
+    // msg.setText( "A job you started on Gemma is completed (taskid=" + taskCommand.getTaskId() + ", "
+    // + taskCommand.getTaskClass().getSimpleName() + ")\n\n" + logs + "\n" );
+    //
+    // /*
+    // * TODO provide a link to something relevant something like:
+    // */
+    // String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskCommand.getTaskId();
+    //
+    // mailEngine.send( msg );
+    // }
+    // }
+    // }
 }

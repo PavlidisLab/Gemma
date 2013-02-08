@@ -15,11 +15,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Client gets instance of this class in case when task is going to be run on remote worker host.
- * The implementation relies on 4 jms queues to send/receive data from remote worker.
- *
- * This proxy is synced with remote state only when used by a client. The state is stored in messages on the jms queues.
- *
+ * Client gets instance of this class in case when task is going to be run on remote worker host. The implementation
+ * relies on 4 jms queues to send/receive data from remote worker. This proxy is synced with remote state only when used
+ * by a client. The state is stored in messages on the jms queues.
  */
 public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T> {
     // Synced state fields
@@ -47,22 +45,26 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
     // This is used to send 'cancel' request.
     private Queue controlQueue;
 
-    @Autowired @Qualifier("amqJmsTemplate") private JmsTemplate amqJmsTemplate;
-    @Autowired private JMSBroker jmsBroker;
+    @Autowired(required = false)
+    @Qualifier("amqJmsTemplate")
+    private JmsTemplate amqJmsTemplate;
 
-    //TODO: two separate locks: result and updates shouldn't block each other off.
+    @Autowired
+    private JMSBroker jmsBroker;
+
+    // TODO: two separate locks: result and updates shouldn't block each other off.
     // Use case where one thread is waiting on the result.
 
-    public SubmittedTaskProxy(TaskCommand taskCommand, JmsTemplate jmsTemplate) {
+    public SubmittedTaskProxy( TaskCommand taskCommand, JmsTemplate jmsTemplate ) {
         this.taskId = taskCommand.getTaskId();
         this.taskCommand = taskCommand;
         this.emailAlert = taskCommand.isEmailAlert();
 
         this.amqJmsTemplate = jmsTemplate;
 
-        lifeCycleQueue = new ActiveMQQueue( "task.lifeCycle."+taskId );
-        resultQueue = new ActiveMQQueue( "task.result."+taskId );
-        progressUpdatesQueue = new ActiveMQQueue( "task.progress."+taskId );
+        lifeCycleQueue = new ActiveMQQueue( "task.lifeCycle." + taskId );
+        resultQueue = new ActiveMQQueue( "task.result." + taskId );
+        progressUpdatesQueue = new ActiveMQQueue( "task.progress." + taskId );
         controlQueue = new ActiveMQQueue( "tasks.control" );
 
         this.status = Status.QUEUED;
@@ -76,20 +78,20 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
     }
 
     private void syncProgressUpdates() {
-        synchronized (lifeCycleStateLock) {
+        synchronized ( lifeCycleStateLock ) {
             amqJmsTemplate.execute( new SessionCallback<Object>() {
                 @Override
                 public Object doInJms( Session session ) throws JMSException {
                     MessageConsumer consumer = session.createConsumer( progressUpdatesQueue );
                     Message progressMessage;
-                    while ( (progressMessage = consumer.receiveNoWait()) != null ) {
-                        ObjectMessage objectMessage = (ObjectMessage) progressMessage;
-                        String message = (String) objectMessage.getObject();
+                    while ( ( progressMessage = consumer.receiveNoWait() ) != null ) {
+                        ObjectMessage objectMessage = ( ObjectMessage ) progressMessage;
+                        String message = ( String ) objectMessage.getObject();
                         syncedProgressUpdates.add( message );
                     }
                     return null;
                 }
-            });
+            } );
         }
     }
 
@@ -100,15 +102,15 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
     }
 
     private synchronized void syncLifeCycle() {
-        synchronized (lifeCycleStateLock) {
+        synchronized ( lifeCycleStateLock ) {
             amqJmsTemplate.execute( new SessionCallback<Object>() {
                 @Override
                 public Object doInJms( Session session ) throws JMSException {
                     MessageConsumer consumer = session.createConsumer( lifeCycleQueue );
                     Message lifeCycleMessage;
-                    while ((lifeCycleMessage = consumer.receiveNoWait()) != null) {
-                        ObjectMessage objectMessage = (ObjectMessage) lifeCycleMessage;
-                        TaskStatusUpdate statusUpdate = (TaskStatusUpdate) objectMessage.getObject();
+                    while ( ( lifeCycleMessage = consumer.receiveNoWait() ) != null ) {
+                        ObjectMessage objectMessage = ( ObjectMessage ) lifeCycleMessage;
+                        TaskStatusUpdate statusUpdate = ( TaskStatusUpdate ) objectMessage.getObject();
 
                         applyStatusUpdate( statusUpdate );
                     }
@@ -124,7 +126,9 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
             case RUNNING:
                 startTime = statusUpdate.getStatusChangeTime();
                 break;
-            case FAILED: case DONE: case CANCELLED:
+            case FAILED:
+            case DONE:
+            case CANCELLED:
                 finishTime = statusUpdate.getStatusChangeTime();
                 break;
         }
@@ -156,21 +160,21 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
     @Override
     public T getResult() throws ExecutionException, InterruptedException {
         syncResult(); // blocks until result is available.
-        return (T) taskResult;
+        return ( T ) taskResult;
     }
 
     // This blocks until result is received.
     private void syncResult() {
-        synchronized (resultLock) {
-            if (taskResult != null) return; // There could only be one result. Nothing to wait for.
+        synchronized ( resultLock ) {
+            if ( taskResult != null ) return; // There could only be one result. Nothing to wait for.
 
             amqJmsTemplate.execute( new SessionCallback<Object>() {
                 @Override
                 public Object doInJms( Session session ) throws JMSException {
                     MessageConsumer consumer = session.createConsumer( resultQueue );
                     Message resultMessage = consumer.receive();
-                    ObjectMessage objectMessage = (ObjectMessage) resultMessage;
-                    taskResult = (TaskResult) objectMessage.getObject();
+                    ObjectMessage objectMessage = ( ObjectMessage ) resultMessage;
+                    taskResult = ( TaskResult ) objectMessage.getObject();
                     return null;
                 }
             }, true );
@@ -179,7 +183,7 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
 
     @Override
     public void cancel() {
-        sendMessage( controlQueue, new TaskControl( taskId, TaskControl.Request.CANCEL) );
+        sendMessage( controlQueue, new TaskControl( taskId, TaskControl.Request.CANCEL ) );
     }
 
     @Override
@@ -196,7 +200,7 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
 
     /**
      * Since this a proxy it is always a remote task.
-     *
+     * 
      * @return true
      */
     @Override
