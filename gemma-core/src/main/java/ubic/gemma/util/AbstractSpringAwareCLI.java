@@ -29,7 +29,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -70,7 +69,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     public String getShortDesc() {
         return "";
     }
-
 
     /**
      * @param ctx
@@ -285,7 +283,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false /* webapp */,
                 getAdditionalSpringConfigLocations() );
 
-        QuartzUtils.disableQuartzScheduler( this.getBean( StdScheduler.class ) );
+        // QuartzUtils.disableQuartzScheduler( this.getBean( StdScheduler.class ) );
 
         /*
          * Guarantee that the security settings are uniform throughout the application (all threads).
