@@ -1876,7 +1876,7 @@ public class SearchServiceImpl implements SearchService {
                     else{
                     
                     	if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
-                    		matchedText = "Ontology term: " + matchedText;
+                    		matchedText = "Ontology term: <a href=\"/Gemma/searcher.html?query="+( ( VocabCharacteristic ) c ).getValueUri() +"\">" + matchedText+"</a>";
                     	}
                     	results.add( new SearchResult( o, 1.0, matchedText ) );
                     }
