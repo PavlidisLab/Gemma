@@ -18,8 +18,6 @@
  */
 package ubic.gemma.job.grid.util;
 
-import java.util.Enumeration;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +28,14 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.util.ConfigUtils;
 
 import javax.jms.*;
+import java.util.Enumeration;
 
 /**
  * TODO
  */
 @Component
 public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
-    protected static Log log = LogFactory.getLog( JMSBrokerMonitorImpl.class.getName() );
+    protected static Log log = LogFactory.getLog( JMSBrokerMonitorImpl.class );
 
     @Autowired(required = false)
     @Qualifier("amqJmsTemplate")

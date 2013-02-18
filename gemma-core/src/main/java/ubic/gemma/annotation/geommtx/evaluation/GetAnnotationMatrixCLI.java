@@ -18,10 +18,6 @@
  */
 package ubic.gemma.annotation.geommtx.evaluation;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import ubic.GEOMMTx.ParentFinder;
 import ubic.GEOMMTx.evaluation.MakeHistogramData;
 import ubic.basecode.dataStructure.StringToStringSetMap;
@@ -30,14 +26,18 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A class to extract Gemma experiment annotations and write them to a file in R data format.
  * 
  * @author leon
  */
-public class GetAnnotationMatrixCLI extends AbstractSpringAwareCLI {
+public class GetAnnotationMatrixCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void buildOptions() {

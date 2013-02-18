@@ -20,9 +20,9 @@ package ubic.gemma.web.controller.monitoring;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.job.executor.common.BackgroundJob;
+import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.job.grid.util.MonitorTask;
 import ubic.gemma.job.grid.util.MonitorTaskCommand;
 

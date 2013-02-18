@@ -19,14 +19,14 @@
 
 package ubic.gemma.apps;
 
-import java.util.Collection;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.util.Collection;
 
 /**
  * Update the primary publication for experiments.
@@ -34,7 +34,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentPrimaryPubCli extends AbstractSpringAwareCLI {
+public class ExpressionExperimentPrimaryPubCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();

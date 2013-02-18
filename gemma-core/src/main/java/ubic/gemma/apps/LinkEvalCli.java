@@ -19,35 +19,12 @@
 
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-
+import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix;
 import ubic.basecode.math.RandomChooser;
@@ -65,16 +42,17 @@ import ubic.gemma.ontology.GoMetric.Metric;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl.GOAspect;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.ConfigUtils;
-import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * @author meeta
  * @version $Id$
  */
-public class LinkEvalCli extends AbstractSpringAwareCLI {
+public class LinkEvalCli extends AbstractCLIContextCLI {
 
     private static class GeneComparator implements Comparator<Gene> {
 

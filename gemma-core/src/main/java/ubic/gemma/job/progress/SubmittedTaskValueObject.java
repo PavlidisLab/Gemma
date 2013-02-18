@@ -25,8 +25,8 @@ public class SubmittedTaskValueObject implements Serializable {
 
     public SubmittedTaskValueObject( SubmittedTask submittedTask ) {
         this.taskId = submittedTask.getTaskId();
-        this.taskType = submittedTask.getCommand().getTaskClass() == null ? "Not specified" : submittedTask.getCommand().getTaskClass().getSimpleName();
-        this.submitter = submittedTask.getCommand().getSubmitter();
+        this.taskType = submittedTask.getTaskCommand().getTaskClass() == null ? "Not specified" : submittedTask.getTaskCommand().getTaskClass().getSimpleName();
+        this.submitter = submittedTask.getTaskCommand().getSubmitter();
         this.submissionTime = submittedTask.getSubmissionTime();
         this.startTime = submittedTask.getStartTime();
         this.finishTime = submittedTask.getFinishTime();

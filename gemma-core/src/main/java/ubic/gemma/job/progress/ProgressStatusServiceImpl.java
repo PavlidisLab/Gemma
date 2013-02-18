@@ -24,7 +24,7 @@ import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.job.executor.webapp.TaskRunningService;
 
 import java.util.Collection;
 import java.util.List;
@@ -57,7 +57,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
         SubmittedTask submittedTask = taskRunningService.getSubmittedTask( taskId );
         if ( submittedTask == null ) throw new IllegalArgumentException( "Couldn't find task with task id: " + taskId );
 
-        submittedTask.cancel();
+        submittedTask.requestCancellation();
         //FIXME: we can't really say if it is cancelled or not, since task can be running remotely. Client should check
         //FIXME: task status some time after this call to see if task got cancelled
         return true;
@@ -95,7 +95,7 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
 
         if (task.isDone()) {
             ProgressData data;
-            if ( task.getStatus() == SubmittedTask.Status.DONE ) {
+            if ( task.getStatus() == SubmittedTask.Status.COMPLETED) {
                 log.debug( "Job " + taskId + " is done" );
                 data = new ProgressData( taskId, 1, progressMessage+"Done!", true );
             } else if ( task.getStatus() == SubmittedTask.Status.FAILED ) {

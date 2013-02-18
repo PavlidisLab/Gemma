@@ -18,19 +18,19 @@
  */
 package ubic.gemma.apps;
 
-import java.util.Collection;
-
 import ubic.gemma.loader.genome.taxon.TaxonFetcher;
 import ubic.gemma.loader.genome.taxon.TaxonLoader;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.util.Collection;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class TaxonLoaderCli extends AbstractSpringAwareCLI {
+public class TaxonLoaderCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         TaxonLoaderCli p = new TaxonLoaderCli();

@@ -18,13 +18,12 @@
  */
 package ubic.gemma.apps;
 
-import java.io.File;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.loader.entrez.pubmed.PubMedService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.File;
 
 /**
  * Load PubMed files from XML files -- not used routinely!
@@ -32,7 +31,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedLoaderCli extends AbstractSpringAwareCLI {
+public class PubMedLoaderCli extends AbstractCLIContextCLI {
 
     /**
      * @param args

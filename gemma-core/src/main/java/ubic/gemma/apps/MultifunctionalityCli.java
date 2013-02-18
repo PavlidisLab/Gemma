@@ -16,17 +16,16 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.analysis.service.GeneMultifunctionalityPopulationService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
 
 /**
  * @author paul
  * @version $Id$
  */
-public class MultifunctionalityCli extends AbstractSpringAwareCLI {
+public class MultifunctionalityCli extends AbstractCLIContextCLI {
 
     private Taxon taxon;
 

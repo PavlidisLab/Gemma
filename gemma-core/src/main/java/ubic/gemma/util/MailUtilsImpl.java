@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
+import ubic.gemma.job.EmailNotificationContext;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserService;
@@ -26,10 +27,11 @@ public class MailUtilsImpl implements MailUtils {
     @Autowired UserService userService;
 
     @Override
-    public void sendTaskCompletedNotificationEmail( TaskResult taskResult ) {
-        String taskId = taskResult.getTaskCommand().getTaskId();
-        String submitter = taskResult.getTaskCommand().getSubmitter();
-        String taskName = taskResult.getTaskCommand().getTaskClass().getSimpleName();
+    public void sendTaskCompletedNotificationEmail( EmailNotificationContext emailNotificationContext,
+                                                    TaskResult taskResult ) {
+        String taskId = emailNotificationContext.getTaskId();
+        String submitter = emailNotificationContext.getSubmitter();
+        String taskName = emailNotificationContext.getTaskName();
 
         if ( StringUtils.isNotBlank( submitter ) ) {
             User user = userService.findByUserName( submitter );
@@ -64,4 +66,38 @@ public class MailUtilsImpl implements MailUtils {
             }
         }
     }
+
+    //    private void emailNotifyCompletionOfTask( TaskCommand taskCommand, ExecutingTask executingTask ) {
+//        if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
+//            User user = userService.findByUserName( taskCommand.getSubmitter() );
+//
+//            assert user != null;
+//
+//            String emailAddress = user.getEmail();
+//
+//            if ( emailAddress != null ) {
+//                log.debug( "Sending email notification to " + emailAddress );
+//                SimpleMailMessage msg = new SimpleMailMessage();
+//                msg.setTo( emailAddress );
+//                msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+//                msg.setSubject( "Gemma task completed" );
+//
+//                String logs = "Event logs:\n";
+//                if ( executingTask != null ) {
+//                    logs += StringUtils.join( executingTask.getLocalProgressQueue(), "\n" );
+//                }
+//
+//                msg.setText( "A job you started on Gemma is completed (taskid=" + taskCommand.getTaskId() + ", "
+//                        + taskCommand.getTaskClass().getSimpleName() + ")\n\n" + logs + "\n" );
+//
+//                /*
+//                 * TODO provide a link to something relevant something like:
+//                 */
+//                String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskCommand.getTaskId();
+//
+//                mailEngine.send( msg );
+//            }
+//        }
+//    }
+
 }

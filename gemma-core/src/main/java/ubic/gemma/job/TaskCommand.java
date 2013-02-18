@@ -76,16 +76,20 @@ public class TaskCommand implements Serializable {
     // cancelled. This does not include time spent queued.
     public static final int MAX_RUNTIME_MINUTES = 60;
 
+    /**
+     * How long we will queue a task before giving up and cancelling it (default value)
+     */
+     public static final int MAX_QUEUING_MINUTES = 60 * 2;
 
     /**
      * How long we will allow this task to be queued before giving up.
      */
-    private Integer maxQueueMinutes = TaskRunningService.MAX_QUEUING_MINUTES;
+    private Integer maxQueueMinutes = MAX_QUEUING_MINUTES;
     private int maxRuntime = MAX_RUNTIME_MINUTES;
 
 
     public TaskCommand() {
-        //TODO: probably better generate at submission time
+        // TODO: probably better to generate at submission time?
         // The taskId is assigned on creation.
         this.taskId = TaskUtils.generateTaskId();
 

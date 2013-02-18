@@ -1,4 +1,4 @@
-package ubic.gemma.job.progress.grid;
+package ubic.gemma.job.executor.common;
 
 /**
  * Created with IntelliJ IDEA.

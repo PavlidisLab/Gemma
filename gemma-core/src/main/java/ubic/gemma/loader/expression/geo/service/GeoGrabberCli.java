@@ -14,17 +14,16 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
+import org.apache.commons.lang.StringUtils;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
-
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * Scans GEO for experiments that are not GEO.
@@ -32,7 +31,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author paul
  * @version $Id$
  */
-public class GeoGrabberCli extends AbstractSpringAwareCLI {
+public class GeoGrabberCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         GeoGrabberCli d = new GeoGrabberCli();

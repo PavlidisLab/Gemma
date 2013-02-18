@@ -18,14 +18,13 @@
  */
 package ubic.gemma.apps;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.analysis.report.DatabaseViewGenerator;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * Simple driver of DatabaseViewGenerator. Developed to support NIF and other external data consumers.
@@ -34,7 +33,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @version $Id$
  * @see DatabaseViewGenerator.
  */
-public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
+public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     /**
      * @param args

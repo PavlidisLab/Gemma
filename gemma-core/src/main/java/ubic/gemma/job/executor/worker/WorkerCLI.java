@@ -16,13 +16,11 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.job.grid.worker;
+package ubic.gemma.job.executor.worker;
 
 import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.job.RemoteTaskRunningService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.QuartzUtils;
 import ubic.gemma.util.SpringContextUtil;
@@ -35,7 +33,6 @@ import ubic.gemma.util.SpringContextUtil;
  */
 public class WorkerCLI extends AbstractSpringAwareCLI {
 
-    private JmsTemplate amqWorkerJmsTemplate;
     private RemoteTaskRunningService taskRunningService;
 
     public class ShutdownHook extends Thread {
@@ -114,9 +111,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         ShutdownHook shutdownHook = new ShutdownHook();
         Runtime.getRuntime().addShutdownHook( shutdownHook );
 
-        amqWorkerJmsTemplate = ctx.getBean( JmsTemplate.class );
         taskRunningService = ctx.getBean( RemoteTaskRunningService.class );
-//        startHeartbeatThread();
     }
 
     @Override

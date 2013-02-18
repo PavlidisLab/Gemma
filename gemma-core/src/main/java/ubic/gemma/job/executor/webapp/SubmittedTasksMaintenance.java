@@ -1,4 +1,4 @@
-package ubic.gemma.job;
+package ubic.gemma.job.executor.webapp;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import ubic.gemma.job.SubmittedTask;
 
 import java.util.Collection;
 import java.util.Date;
@@ -51,44 +52,46 @@ public class SubmittedTasksMaintenance {
             switch (task.getStatus()) {
                 case QUEUED:
                     Date submissionTime = task.getSubmissionTime();
-                    Integer maxQueueWait = task.getCommand().getMaxQueueMinutes();
+                    Integer maxQueueWait = task.getTaskCommand().getMaxQueueMinutes();
                     assert submissionTime != null;
                     assert maxQueueWait != null;
 
                     if (submissionTime.before( DateUtils.addMinutes( new Date(), -maxQueueWait ) )) {
-                        log.warn( "Submitted task " + task.getCommand().getClass().getSimpleName()
+                        log.warn( "Submitted task " + task.getTaskCommand().getClass().getSimpleName()
                                 + " has been queued for too long (max=" + maxQueueWait
                                 + "minutes), attempting to cancel: " + task.getTaskId() );
 
                         task.addEmailAlert();
                         // -> email admin? is worker dead?
 
-                        taskRunningService.cancelTask( task );
+                        task.requestCancellation();
                     }
                     break;
                 case RUNNING:
                     Date startTime = task.getStartTime();
-                    int maxRunTime = task.getCommand().getMaxRuntime();
+                    int maxRunTime = task.getTaskCommand().getMaxRuntime();
                     assert startTime != null;
 
                     if (startTime.before( DateUtils.addMinutes( new Date(), -maxRunTime ) )) {
                         log.warn( "Running task is taking too long, attempting to cancel: " + task.getTaskId()
-                                + " " + task.getCommand().getClass().getSimpleName() );
+                                + " " + task.getTaskCommand().getClass().getSimpleName() );
 
                         task.addEmailAlert();
 
-                        task.cancel();
+                        task.requestCancellation();
                     }
                     break;
+                case CANCELLING:
+
+                    break;
                 case FAILED:
-                case DONE:
-                case CANCELLED:
+                case COMPLETED:
                     if (task.getFinishTime().before(
                             DateUtils.addMinutes( new Date(),
                                     -MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES ) )) {
                         log.debug( task.getStatus().name() + " task result not retrieved, timing out: "
                                 + task.getTaskId() + " "
-                                + task.getCommand().getClass().getSimpleName() );
+                                + task.getTaskCommand().getClass().getSimpleName() );
                         tasks.remove( task );
                     }
                     break;

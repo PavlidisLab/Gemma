@@ -1,29 +1,20 @@
 package ubic.gemma.apps;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.apache.commons.lang.StringUtils;
-
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.EntityUtils;
+
+import java.util.*;
 
 /**
  * @author paul
  * @version $Id$
  */
-public class ExperimentalDesignViewCli extends AbstractSpringAwareCLI {
+public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
     /**
      * @param args

@@ -37,13 +37,12 @@ public class TaskResult implements Serializable {
     /**
      * Set if failed.
      */
-    private Exception exception;
+    private Throwable exception;
 
     /**
      * The task id
      */
     private String taskID;
-    private TaskCommand taskCommand;
 
     public TaskResult( String taskId ) {
         assert taskId != null;
@@ -64,7 +63,7 @@ public class TaskResult implements Serializable {
     /**
      * @return the exception
      */
-    public Exception getException() {
+    public Throwable getException() {
         return exception;
     }
 
@@ -75,15 +74,8 @@ public class TaskResult implements Serializable {
     /**
      * @param exception the exception to set
      */
-    public void setException( Exception exception ) {
+    public void setException( Throwable exception ) {
         this.exception = exception;
     }
 
-    public TaskCommand getTaskCommand() {
-        return this.taskCommand;
-    }
-
-    public void setTaskCommand( TaskCommand taskCommand ) {
-        this.taskCommand = taskCommand;
-    }
 }

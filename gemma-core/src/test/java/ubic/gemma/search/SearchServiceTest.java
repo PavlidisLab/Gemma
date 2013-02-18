@@ -19,21 +19,11 @@
 
 package ubic.gemma.search;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -45,9 +35,17 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.tasks.maintenance.IndexerTask;
-import ubic.gemma.tasks.maintenance.IndexerTaskImpl;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.testing.BaseSpringContextTest;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author kelsey

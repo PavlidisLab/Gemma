@@ -1,33 +1,23 @@
 package ubic.gemma.association.phenotype.fileUpload;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
-import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
-import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
-import ubic.basecode.ontology.providers.NIFSTDOntologyService;
-import ubic.basecode.ontology.providers.ObiService;
+import ubic.basecode.ontology.providers.*;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
 
-public abstract class EvidenceImporterAbstractCLI extends AbstractSpringAwareCLI {
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.*;
+
+public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
 
     protected PhenotypeAssociationManagerService phenotypeAssociationService = null;
     protected GeneService geneService = null;

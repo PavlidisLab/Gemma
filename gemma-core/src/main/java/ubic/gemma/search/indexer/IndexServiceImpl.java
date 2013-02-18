@@ -16,15 +16,15 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.search;
+package ubic.gemma.search.indexer;
 
 import org.compass.core.spi.InternalCompass;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.SubmittedTask;
-import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.job.executor.common.BackgroundJob;
+import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.tasks.maintenance.IndexerResult;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.util.CompassUtils;
@@ -51,10 +51,6 @@ public class IndexServiceImpl implements IndexService {
     @Autowired @Qualifier("compassGene") private InternalCompass compassGene;
     @Autowired @Qualifier("compassGeneSet") private InternalCompass compassGeneSet;
     @Autowired @Qualifier("compassProbe") private InternalCompass compassProbe;
-
-    /*
-     * NOTE not configured using annotations because they get confused by the interfaces here.
-     */
 
     /**
      * Job that loads in a javaspace.
@@ -157,7 +153,7 @@ public class IndexServiceImpl implements IndexService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.search.IndexService#index(ubic.gemma.grid.javaspaces.task.index.IndexerTaskCommand)
+     * @see ubic.gemma.search.indexer.IndexService#index(ubic.gemma.grid.javaspaces.task.index.IndexerTaskCommand)
      */
     @Override
     public String index( IndexerTaskCommand command ) {
@@ -167,7 +163,7 @@ public class IndexServiceImpl implements IndexService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.search.IndexService#indexAll()
+     * @see ubic.gemma.search.indexer.IndexService#indexAll()
      */
     @Override
     public String indexAll() {
@@ -179,7 +175,7 @@ public class IndexServiceImpl implements IndexService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.search.IndexService#indexArrayDesigns()
+     * @see ubic.gemma.search.indexer.IndexService#indexArrayDesigns()
      */
     @Override
     public String indexArrayDesigns() {
@@ -191,7 +187,7 @@ public class IndexServiceImpl implements IndexService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.search.IndexService#indexBibligraphicReferences()
+     * @see ubic.gemma.search.indexer.IndexService#indexBibligraphicReferences()
      */
     @Override
     public String indexBibligraphicReferences() {
@@ -203,7 +199,7 @@ public class IndexServiceImpl implements IndexService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.search.IndexService#indexBioSequences()
+     * @see ubic.gemma.search.indexer.IndexService#indexBioSequences()
      */
     @Override
     public String indexBioSequences() {
@@ -215,7 +211,7 @@ public class IndexServiceImpl implements IndexService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.search.IndexService#indexExpressionExperiments()
+     * @see ubic.gemma.search.indexer.IndexService#indexExpressionExperiments()
      */
     @Override
     public String indexExpressionExperiments() {
@@ -227,7 +223,7 @@ public class IndexServiceImpl implements IndexService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.search.IndexService#indexGenes()
+     * @see ubic.gemma.search.indexer.IndexService#indexGenes()
      */
     @Override
     public String indexGenes() {
@@ -239,7 +235,7 @@ public class IndexServiceImpl implements IndexService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.search.IndexService#indexProbes()
+     * @see ubic.gemma.search.indexer.IndexService#indexProbes()
      */
     @Override
     public String indexProbes() {
@@ -247,53 +243,4 @@ public class IndexServiceImpl implements IndexService {
         command.setIndexProbe( true );
         return taskRunningService.submitLocalJob( new IndexerJob( command ) );
     }
-
-//    /**
-//     * @param compassArray the compassArray to set
-//     */
-//    public void setCompassArray( InternalCompass compassArray ) {
-//        this.compassArray = compassArray;
-//    }
-//
-//    /**
-//     * @param compassBibliographic the compassBibliographic to set
-//     */
-//    public void setCompassBibliographic( InternalCompass compassBibliographic ) {
-//        this.compassBibliographic = compassBibliographic;
-//    }
-//
-//    /**
-//     * @param compassBiosequence the compassBiosequence to set
-//     */
-//    public void setCompassBiosequence( InternalCompass compassBiosequence ) {
-//        this.compassBiosequence = compassBiosequence;
-//    }
-//
-//    /**
-//     * @param compassExpression the compassExpression to set
-//     */
-//    public void setCompassExpression( InternalCompass compassExpression ) {
-//        this.compassExpression = compassExpression;
-//    }
-//
-//    /**
-//     * @param compassGene the compassGene to set
-//     */
-//    public void setCompassGene( InternalCompass compassGene ) {
-//        this.compassGene = compassGene;
-//    }
-//
-//    /**
-//     * @param compassProbe the compassProbe to set
-//     */
-//    public void setCompassProbe( InternalCompass compassProbe ) {
-//        this.compassProbe = compassProbe;
-//    }
-//
-//    /**
-//     * @param indexerTask the indexerTask to set
-//     */
-//    public void setIndexerTask( IndexerTask indexerTask ) {
-//        this.indexerTask = indexerTask;
-//    }
 }

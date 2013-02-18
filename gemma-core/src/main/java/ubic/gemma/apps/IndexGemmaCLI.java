@@ -23,8 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
-
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.CompassUtils;
 
 /**
@@ -33,7 +32,7 @@ import ubic.gemma.util.CompassUtils;
  * @author klc
  * @version $Id$
  */
-public class IndexGemmaCLI extends AbstractSpringAwareCLI {
+public class IndexGemmaCLI extends AbstractCLIContextCLI {
 
     /**
      * @param args

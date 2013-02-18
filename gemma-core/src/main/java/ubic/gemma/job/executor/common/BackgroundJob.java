@@ -17,18 +17,14 @@
  *
  */
 
-package ubic.gemma.job;
-
-import java.util.concurrent.Callable;
+package ubic.gemma.job.executor.common;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import ubic.gemma.job.progress.LocalProgressAppender;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 
 /**
  * Implements a long-running task in its own thread. Implementations simply implement processJob.

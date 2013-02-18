@@ -18,18 +18,14 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
 import ubic.gemma.model.common.description.Characteristic;
@@ -42,6 +38,9 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.tasks.analysis.expression.AutoTaggerTaskCommand;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to

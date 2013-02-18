@@ -18,12 +18,6 @@
  */
 package ubic.gemma.testing;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,7 +42,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.SimpleJdbcTestUtils;
-
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -69,6 +62,11 @@ import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.CompassUtils;
 
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * subclass for tests that need the container and use the database
  * 
@@ -76,8 +74,10 @@ import ubic.gemma.util.CompassUtils;
  * @version $Id$
  */
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/testDataSource.xml",
-        "classpath*:ubic/gemma/applicationContext-security.xml", "classpath*:ubic/gemma/applicationContext-search.xml",
+        "classpath*:ubic/gemma/applicationContext-security.xml",
+        "classpath*:ubic/gemma/applicationContext-search.xml",
         "classpath*:ubic/gemma/applicationContext-hibernate.xml",
+        "classpath*:ubic/gemma/applicationContext-component-scan.xml",
         "classpath*:ubic/gemma/applicationContext-jms.xml",
         "classpath*:ubic/gemma/applicationContext-serviceBeans.xml",
         "classpath*:ubic/gemma/applicationContext-schedule.xml" })

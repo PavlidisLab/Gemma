@@ -14,20 +14,19 @@
  */
 package ubic.gemma.apps;
 
-import java.io.File;
-
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-
 import ubic.gemma.loader.pazar.PazarLoader;
 import ubic.gemma.model.association.TfGeneAssociationService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.File;
 
 /**
  * @author paul
  * @version $Id$
  */
-public class PazarLoaderCli extends AbstractSpringAwareCLI {
+public class PazarLoaderCli extends AbstractCLIContextCLI {
 
     private File file = null;
 

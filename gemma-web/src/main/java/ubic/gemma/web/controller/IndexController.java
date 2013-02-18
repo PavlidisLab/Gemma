@@ -2,8 +2,7 @@ package ubic.gemma.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
-import ubic.gemma.search.IndexService;
+import ubic.gemma.search.indexer.IndexService;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 
 @Controller

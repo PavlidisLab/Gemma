@@ -16,10 +16,9 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.search;
+package ubic.gemma.search.indexer;
 
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 
 /**

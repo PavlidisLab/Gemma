@@ -18,31 +18,23 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import net.sf.ehcache.Element;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
 import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.job.BackgroundJob;
-import ubic.gemma.job.ConflictingTaskException;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.job.executor.common.BackgroundJob;
+import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
@@ -51,9 +43,13 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneLightWeightCache;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchService;
-
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * @author luke

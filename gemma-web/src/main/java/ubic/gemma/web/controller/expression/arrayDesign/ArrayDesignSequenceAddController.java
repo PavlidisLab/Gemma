@@ -18,24 +18,23 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import java.io.InputStream;
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
+
+import java.io.InputStream;
+import java.util.Collection;
 
 /**
  * Controller for associating sequences with an existing arrayDesign.

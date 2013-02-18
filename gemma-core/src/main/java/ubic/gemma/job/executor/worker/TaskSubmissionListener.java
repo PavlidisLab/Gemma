@@ -1,10 +1,9 @@
-package ubic.gemma.job.grid.worker;
+package ubic.gemma.job.executor.worker;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.job.RemoteTaskRunningService;
 import ubic.gemma.job.TaskCommand;
 
 import javax.jms.JMSException;

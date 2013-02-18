@@ -13,7 +13,7 @@ WORKERS=$@
 JAVACMD="${JAVA_HOME}/bin/java $JAVA_OPTS"
 
 
-CMD="$JAVACMD $JAVA_OPTS -classpath $GIGASPACEJAR:${GEMMA_LIB}:${JARS} ubic.gemma.job.grid.worker.WorkerCLI -workers  $WORKERS"
+CMD="$JAVACMD $JAVA_OPTS -classpath $GIGASPACEJAR:${GEMMA_LIB}:${JARS} ubic.gemma.job.executor.worker.WorkerCLI -workers  $WORKERS"
 $CMD
 
 

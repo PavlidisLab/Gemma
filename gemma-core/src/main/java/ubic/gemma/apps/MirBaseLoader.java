@@ -18,12 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.io.InputStream;
-import java.util.Collection;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -31,7 +27,10 @@ import ubic.gemma.loader.genome.GffParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.InputStream;
+import java.util.Collection;
 
 /**
  * Import genes from MirBASE files (http://microrna.sanger.ac.uk/sequences/ftp.shtml). You have to download the file.
@@ -41,7 +40,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @deprecated because we get these genes from NCBI
  */
 @Deprecated
-public class MirBaseLoader extends AbstractSpringAwareCLI {
+public class MirBaseLoader extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         MirBaseLoader p = new MirBaseLoader();

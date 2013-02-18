@@ -19,20 +19,10 @@
 
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -45,7 +35,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.*;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Command Line tools for loading the expression experiment in flat files
@@ -53,7 +47,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author xiangwan
  * @version $Id$
  */
-public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
+public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
     private String fileName = null;
     private String dirName = "./";

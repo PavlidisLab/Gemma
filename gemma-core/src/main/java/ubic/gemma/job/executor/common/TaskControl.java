@@ -1,4 +1,4 @@
-package ubic.gemma.job;
+package ubic.gemma.job.executor.common;
 
 import java.io.Serializable;
 

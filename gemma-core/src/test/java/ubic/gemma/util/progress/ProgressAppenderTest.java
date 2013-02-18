@@ -25,7 +25,8 @@ import org.apache.log4j.MDC;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ubic.gemma.job.progress.LocalProgressAppender;
+import ubic.gemma.job.executor.common.LogBasedProgressAppender;
+import ubic.gemma.job.executor.common.ProgressUpdateCallback;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 import java.util.Deque;
@@ -43,7 +44,7 @@ import static junit.framework.Assert.assertTrue;
  */
 public class ProgressAppenderTest extends BaseSpringContextTest {
 
-    LocalProgressAppender progressAppender;
+    LogBasedProgressAppender progressAppender;
 
     // Used to put things back as they were after the test.
     Level oldLevel;
@@ -60,7 +61,12 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
         String loggerName = "ubic.gemma";
         log4jLogger = LogManager.exists( loggerName );
 
-        progressAppender = new LocalProgressAppender( "randomtaskidF", updates );
+        progressAppender = new LogBasedProgressAppender( "randomtaskidF", new ProgressUpdateCallback() {
+            @Override
+            public void addProgressUpdate( String message ) {
+                updates.add( message );
+            }
+        } );
         log4jLogger.addAppender( progressAppender );
 
         oldLevel = log4jLogger.getLevel();

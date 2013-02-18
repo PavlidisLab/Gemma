@@ -9,7 +9,7 @@
 
     <!-- JMS ConnectionFactory to use, configuring the embedded broker using XML -->
     <amq:connectionFactory id="jmsFactory"
-                           brokerURL="${gemma.jms.brokerURL}" />
+                           brokerURL="tcp://${gemma.jms.brokerURL}" />
                            <!--TODO: Add exceptionListener="jmsExceptionListener"-->
 
     <!-- Spring JMS Template -->
@@ -25,15 +25,15 @@
         </property>
     </bean>
 
-    <amq:queue id="taskSubmissionDestination" physicalName="tasks.submit"/>
-
     <!-- The Spring message listener container configuration -->
     <jms:listener-container
             container-type="default"
             connection-factory="jmsFactory"
             acknowledge="auto">
-        <jms:listener destination="tasks.submit" ref="taskSubmissionListener" method="onMessage" />
-        <jms:listener destination="tasks.control" ref="taskControlListener" method="onMessage" />
+        <jms:listener destination="${gemma.remoteTasks.taskSubmissionQueue}"
+                      ref="taskSubmissionListener" method="onMessage" />
+        <jms:listener destination="${gemma.remoteTasks.controlQueue}"
+                      ref="taskControlListener" method="onMessage" />
     </jms:listener-container>
 
 </beans>

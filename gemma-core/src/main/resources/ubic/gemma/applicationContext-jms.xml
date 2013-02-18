@@ -9,10 +9,10 @@
     <!-- ActiveMQ broker, embedded into Gemma webapp. This shouldn't be picked up by Worker app context -->
     <amq:broker useJmx="true" persistent="false">
         <amq:transportConnectors>
-            <amq:transportConnector uri="tcp://localhost:61616" />
+            <amq:transportConnector uri="tcp://${gemma.jms.brokerURL}" />
         </amq:transportConnectors>
         <amq:destinations>
-            <amq:queue physicalName="tasks.submit" />
+            <amq:queue physicalName="${gemma.remoteTasks.taskSubmissionQueue}" />
         </amq:destinations>
         <amq:plugins>
             <amq:statisticsBrokerPlugin/>
@@ -26,9 +26,11 @@
         </amq:destinationPolicy>
     </amq:broker>
 
-    <amq:queue id="taskSubmissionDestination" physicalName="tasks.submit" />
+    <amq:queue id="taskSubmissionQueue" physicalName="${gemma.remoteTasks.taskSubmissionQueue}" />
+    <amq:queue id="taskControlQueue" physicalName="${gemma.remoteTasks.controlQueue}" />
+
     <!-- JMS ConnectionFactory to use, configuring the embedded broker using XML -->
-    <amq:connectionFactory id="jmsFactory" brokerURL="vm://localhost:61616"/>
+    <amq:connectionFactory id="jmsFactory" brokerURL="vm://${gemma.jms.brokerURL}"/>
 
     <!-- Spring JMS Template -->
     <bean id="amqJmsTemplate" class="org.springframework.jms.core.JmsTemplate">

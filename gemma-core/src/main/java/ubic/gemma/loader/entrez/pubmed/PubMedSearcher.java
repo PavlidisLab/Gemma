@@ -18,15 +18,13 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
-import java.io.IOException;
-import java.util.Collection;
+import org.xml.sax.SAXException;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.util.AbstractCLIContextCLI;
 
 import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Simple application to perform pubmed searches from a list of terms, and persist the results in the database.
@@ -34,7 +32,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedSearcher extends AbstractSpringAwareCLI {
+public class PubMedSearcher extends AbstractCLIContextCLI {
     static PubMedSearch pms = new PubMedSearch();
 
     public PubMedSearcher() {

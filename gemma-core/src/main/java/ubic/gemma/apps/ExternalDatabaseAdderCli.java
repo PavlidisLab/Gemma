@@ -24,7 +24,7 @@ import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
 
 /**
  * Add a new external database, but requires editing the code to do so. It can be done by SQL manually as well.
@@ -32,7 +32,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author paul
  * @version $Id$
  */
-public class ExternalDatabaseAdderCli extends AbstractSpringAwareCLI {
+public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
 
     /**
      * @param args

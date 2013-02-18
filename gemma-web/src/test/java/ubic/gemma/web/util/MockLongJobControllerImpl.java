@@ -18,14 +18,16 @@
  */
 package ubic.gemma.web.util;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.executor.common.BackgroundJob;
+import ubic.gemma.job.executor.webapp.TaskRunningService;
 
-import ubic.gemma.job.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Controller that does nothing except wait a while. Used for tests.

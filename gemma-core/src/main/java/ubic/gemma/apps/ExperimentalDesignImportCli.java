@@ -18,27 +18,22 @@
  */
 package ubic.gemma.apps;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.ontology.providers.MgedOntologyService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.*;
 
 /**
  * @author Paul
  * @version $Id$
  * @see ExperimentalDesignImporter, which this is just an interface for.
  */
-public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
+public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
     /**
      * @param args

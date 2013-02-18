@@ -18,22 +18,11 @@
  */
 package ubic.gemma.annotation.geommtx.evaluation;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.hp.hpl.jena.query.*;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.vocabulary.DC_11;
 import ubic.GEOMMTx.LabelLoader;
 import ubic.GEOMMTx.OntologyTools;
 import ubic.GEOMMTx.ProjectRDFModelTools;
@@ -41,9 +30,9 @@ import ubic.GEOMMTx.evaluation.CheckHighLevelSpreadSheet;
 import ubic.GEOMMTx.evaluation.DescriptionExtractor;
 import ubic.GEOMMTx.filters.BIRNLexFMANullsFilter;
 import ubic.GEOMMTx.filters.UninformativeFilter;
-import ubic.GEOMMTx.mappers.NIFSTDMapper;
 import ubic.GEOMMTx.mappers.DiseaseOntologyMapper;
 import ubic.GEOMMTx.mappers.FMALiteMapper;
+import ubic.GEOMMTx.mappers.NIFSTDMapper;
 import ubic.GEOMMTx.util.SetupParameters;
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotatorImpl;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -51,18 +40,10 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
 
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.vocabulary.DC_11;
+import java.io.*;
+import java.util.*;
 
 /**
  * TODO Document Me
@@ -70,7 +51,7 @@ import com.hp.hpl.jena.vocabulary.DC_11;
  * @author lfrench
  * @version $Id$
  */
-public class CompareToManualCLI extends AbstractSpringAwareCLI {
+public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     public static Map<String, Integer> listToFrequencyMap( List<String> input ) {
         Map<String, Integer> result = new HashMap<String, Integer>();

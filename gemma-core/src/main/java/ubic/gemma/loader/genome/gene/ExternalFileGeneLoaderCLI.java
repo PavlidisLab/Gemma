@@ -19,12 +19,11 @@
 
 package ubic.gemma.loader.genome.gene;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import ubic.gemma.util.AbstractCLIContextCLI;
 
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import java.io.IOException;
 
 /**
  * CLI for loading genes from a non NCBI files. A taxon and gene file should be supplied as command line arguments. File
@@ -33,7 +32,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author ldonnison
  * @version $Id$
  */
-public class ExternalFileGeneLoaderCLI extends AbstractSpringAwareCLI {
+public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
 
     private ExternalFileGeneLoaderService loader;
     private String directGeneInputFileName = null;

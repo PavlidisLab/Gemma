@@ -14,15 +14,9 @@
  */
 package ubic.gemma.apps;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -46,7 +40,12 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Creates an array design based on the current set of transcripts for a taxon.
@@ -60,7 +59,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author paul
  * @version $Id$
  */
-public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
+public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     public static void main( String[] args ) {
         GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
         b.doWork( args );

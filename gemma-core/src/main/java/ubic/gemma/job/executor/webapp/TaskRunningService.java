@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2012 University of British Columbia
+ * Copyright (c) 2013 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,14 +12,17 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.job;
+package ubic.gemma.job.executor.webapp;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import ubic.gemma.job.ConflictingTaskException;
+import ubic.gemma.job.SubmittedTask;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.executor.common.BackgroundJob;
 
 import java.util.Collection;
 
 /**
- *
+ * TODO: document me
  *
  *
  *
@@ -29,24 +32,18 @@ import java.util.Collection;
 public interface TaskRunningService {
 
     /**
-     * How long we will queue a task before giving up and cancelling it (default value)
-     */
-    public static final int MAX_QUEUING_MINUTES = 60 * 2;
-
-    /**
      * @return the submittedTasks
      */
-    public Collection<SubmittedTask> getSubmittedTasks(); //TODO: Make this user specific
-
-
+    public Collection<SubmittedTask> getSubmittedTasks();
+    //TODO: Make this user specific. Probably in a controller with a session scoped collection.
+    //TODO: at that level (WebAwareTaskRunnningService) have a rate limiter for task submission by the same user
+    //TODO: this is to detect duplicate task submission (e.g. within a few seconds)
 
     /**
-     *
-     *
-     * @param taskId
+     * @param taskId id of the task
      * @return
      */
-    public SubmittedTask getSubmittedTask(String taskId);
+    public SubmittedTask getSubmittedTask( String taskId );
 
     /**
      * Submit a task and track its progress. When it is finished, the results can be retrieved with checkResult(). Tasks
@@ -54,13 +51,13 @@ public interface TaskRunningService {
      * 
      * @param taskCommand The command to run. The submissionTime of the task is set after this call. This does not mean that the job
      *        has started - it might be queued.
-     * @throws ConflictingTaskException if the task is disallowed due to another conflicting task (e.g., two tasks of
+     * @throws ubic.gemma.job.ConflictingTaskException if the task is disallowed due to another conflicting task (e.g., two tasks of
      *         the same type by the same user).
      */
     public String submitLocalTask( TaskCommand taskCommand ) throws ConflictingTaskException;
 
     /**
-     *
+     * Run task remotely if possible, otherwise run locally.
      *
      * @param taskCommand
      * @return
@@ -68,14 +65,6 @@ public interface TaskRunningService {
      */
     public String submitRemoteTask( TaskCommand taskCommand ) throws ConflictingTaskException;
 
+    @Deprecated
     public String submitLocalJob( BackgroundJob job ) throws ConflictingTaskException;
-
-    /**
-     * Attempt to cancel task
-     *
-     * @param task
-     */
-    void cancelTask( SubmittedTask task );
-
-    void addEmailNotificationFutureCallback( ListenableFuture<TaskResult> future );
 }

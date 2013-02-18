@@ -18,23 +18,15 @@
  */
 package ubic.gemma.util;
 
-import java.io.File;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Properties;
-
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.SystemConfiguration;
+import org.apache.commons.configuration.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.*;
 
 /**
  * Convenience class to access Gemma properties defined in a resource. Methods will look in Gemma.properties,
@@ -73,7 +65,7 @@ public class ConfigUtils {
      */
     private static final String GEMMA_LIB_DIR = "gemma.lib.dir";
 
-    private static final String REMOTE_TASKS_PROPERTY = "gemma.remote-tasks.enabled";
+    private static final String REMOTE_TASKS_ENABLED_PROPERTY = "gemma.remoteTasks.enabled";
 
     private static Log log = LogFactory.getLog( ConfigUtils.class.getName() );
 
@@ -649,7 +641,27 @@ public class ConfigUtils {
     }
 
     public static boolean isRemoteTasksEnabled() {
-        return getBoolean( REMOTE_TASKS_PROPERTY, false );
+        return getBoolean( REMOTE_TASKS_ENABLED_PROPERTY, false );
+    }
+
+    public static String getTaskSubmissionQueue() {
+        return getString( "gemma.remoteTasks.taskSubmissionQueue" );
+    }
+
+    public static String getTaskControlQueue() {
+        return getString( "gemma.remoteTasks.controlQueue" );
+    }
+
+    public static String getTaskLifeCycleQueuePrefix() {
+        return getString( "gemma.remoteTasks.lifeCycleQueuePrefix" );
+    }
+
+    public static String getTaskResultQueuePrefix() {
+        return getString( "gemma.remoteTasks.resultQueuePrefix" );
+    }
+
+    public static String getTaskProgressQueuePrefix() {
+        return getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" );
     }
 
     /**

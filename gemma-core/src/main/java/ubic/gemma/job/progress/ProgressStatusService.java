@@ -57,7 +57,7 @@ public interface ProgressStatusService {
 
     /**
      * @return
-     * @see ubic.gemma.job.TaskRunningServiceImpl#getSubmittedTasks()
+     * @see ubic.gemma.job.executor.webapp.TaskRunningServiceImpl#getSubmittedTasks()
      */
     @Secured({ "GROUP_ADMIN" })
     public Collection<SubmittedTaskValueObject> getSubmittedTasks();

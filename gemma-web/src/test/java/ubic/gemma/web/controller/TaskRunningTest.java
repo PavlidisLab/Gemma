@@ -18,18 +18,17 @@
  */
 package ubic.gemma.web.controller;
 
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.job.progress.ProgressData;
 import ubic.gemma.job.progress.ProgressStatusService;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.util.MockLongJobController;
+
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -43,7 +42,8 @@ import static org.junit.Assert.*;
 public class TaskRunningTest extends BaseSpringWebTest {
 
     @Autowired ProgressStatusService progressStatusService;
-    @Autowired TaskRunningService taskRunningService;
+    @Autowired
+    TaskRunningService taskRunningService;
     @Autowired MockLongJobController mockLongJobController;
 
     /**
@@ -63,8 +63,8 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertNotNull( task );
 
         // cancel it.
-        task.cancel();
-        assertEquals( SubmittedTask.Status.CANCELLED, task.getStatus() );
+        task.requestCancellation();
+        assertEquals( SubmittedTask.Status.CANCELLING, task.getStatus() );
     }
 
     /**

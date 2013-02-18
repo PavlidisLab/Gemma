@@ -18,19 +18,18 @@
  */
 package ubic.gemma.apps;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-
 import ubic.gemma.externalDb.GoldenPathDumper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.IOException;
 
 /**
  * Bulk load BioSequence instances taken from GoldenPath.
@@ -38,7 +37,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
+public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         GoldenPathBioSequenceLoaderCLI p = new GoldenPathBioSequenceLoaderCLI();

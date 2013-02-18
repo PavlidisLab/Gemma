@@ -46,8 +46,6 @@ public class SpringContextUtil {
 
     private static BeanFactory ctx = null;
 
-    public static final String GRID_SPRING_BEAN_CONFIG = "ubic/gemma/gigaspaces.xml";
-
     /**
      * @param testing If true, it will get a test configured-BeanFactory
      * @param isWebApp If true, configuration specific to the web application will be included.
@@ -185,6 +183,7 @@ public class SpringContextUtil {
         paths.add( "classpath*:ubic/gemma/applicationContext-hibernate.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-serviceBeans.xml" );
         if ( isWebapp ) {
+            paths.add( "classpath*:ubic/gemma/applicationContext-component-scan.xml" );
             paths.add( "classpath*:ubic/gemma/applicationContext-schedule.xml" );
         }
 
@@ -221,6 +220,7 @@ public class SpringContextUtil {
     private static String[] getRemoteWorkerConfigLocations() {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/workerContext-jms.xml" );
+        paths.add( "classpath*:ubic/gemma/workerContext-component-scan.xml" );
         return paths.toArray( new String[] {} );
     }
 

@@ -5,10 +5,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ubic.gemma.job.executor.common.ExecutingTask;
+import ubic.gemma.job.executor.common.ProgressUpdateAppender;
+import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.tasks.Task;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,11 +42,12 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     private AtomicBoolean appenderInitialized = new AtomicBoolean( false );
     private AtomicBoolean appenderTakenDown = new AtomicBoolean( false );
 
-    private AtomicBoolean securityContextInitilized;
-    private AtomicBoolean securityContextCleared;
+    private SecurityContext securityContextAfterInitialize;
+    private SecurityContext securityContextAfterFinish;
+    private SecurityContext securityContextAfterFail;
 
 
-    private ExecutingTask.ProgressUpdateAppender progressAppender = new ExecutingTask.ProgressUpdateAppender() {
+    private ProgressUpdateAppender progressAppender = new ProgressUpdateAppender() {
         @Override
         public void initialize() {
             appenderInitialized.set( true );
@@ -67,6 +75,25 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
             onFailureRan.set( true );
         }
     };
+
+
+    private ExecutingTask.TaskLifecycleHandler statusSecurityContextCheckerHandler = new ExecutingTask.TaskLifecycleHandler() {
+        @Override
+        public void onStart() {
+            securityContextAfterInitialize = SecurityContextHolder.getContext();
+        }
+
+        @Override
+        public void onFinish() {
+            securityContextAfterFinish = SecurityContextHolder.getContext();
+        }
+
+        @Override
+        public void onFailure( Throwable e ) {
+            securityContextAfterFinish = SecurityContextHolder.getContext();
+        }
+    };
+
 
     private static class SuccessTestTask implements Task<TaskResult, TaskCommand> {
         TaskCommand command;
@@ -96,14 +123,6 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         }
     }
 
-    private boolean isSecurityContextInitialized() {
-        return false;
-    }
-
-    private boolean isSecurityContextCleared() {
-        return false;
-    }
-
     @Before
     public void setUp() throws Exception {
         onStartRan.set( false );
@@ -113,13 +132,9 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         appenderInitialized.set( false );
         appenderTakenDown.set( false );
 
-//        try {
-//            this.userManager.loadUserByUsername( "testUser" );
-//        } catch ( UsernameNotFoundException e ) {
-//            this.userManager.createUser( new UserDetailsImpl( "foo", "testUser", true, null, "fooUser@chibi.ubc.ca", "key",
-//                    new Date() ) );
-//        }
-
+        securityContextAfterInitialize = null;
+        securityContextAfterFinish = null;
+        securityContextAfterFail = null;
     }
 
     @After
@@ -127,13 +142,48 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
     }
 
-    //TODO: Test order of life cycle hooks
+
+    @Test
+    public void testSecurityContextManagement() {
+        try {
+            this.userManager.loadUserByUsername( "ExecutingTaskTestUser" );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo", "ExecutingTaskTestUser", true, null, "fooUser@chibi.ubc.ca", "key",
+                    new Date() ) );
+        }
+
+        runAsUser( "ExecutingTaskTestUser" );
+        TaskCommand taskCommand = new TaskCommand();
+        runAsAdmin();
+
+        Task task = new SuccessTestTask();
+        task.setCommand( taskCommand );
+
+        ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
+        executingTask.setProgressAppender( progressAppender );
+        executingTask.setStatusCallback( statusSecurityContextCheckerHandler );
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Future<TaskResult> future = executorService.submit( executingTask );
+        try {
+            TaskResult taskResult = future.get();
+            String answer = (String) taskResult.getAnswer();
+            assertEquals( "SUCCESS", answer );
+        } catch (InterruptedException e) {
+            fail();
+        } catch (ExecutionException e) {
+            fail();
+        }
+
+        assertEquals( taskCommand.getSecurityContext(), securityContextAfterInitialize );
+        assertNotSame( taskCommand.getSecurityContext(), securityContextAfterFinish );
+        assertEquals( null, securityContextAfterFail );
+    }
+
     //TODO: Test security context under different failure scenarios
     //  - exception in the task
     //  - exception in the lifecycle hook
     //  - exception in progress appender setup/teardown hook
-    //TODO: Test if thread doesn't have security context from previous task.
-
     @Test
     public void testOrderOfExecutionSuccess() {
         TaskCommand taskCommand = new TaskCommand();
@@ -178,7 +228,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Future<TaskResult> future = executorService.submit( executingTask );
         try {
             TaskResult taskResult = future.get();
-            Exception exception = taskResult.getException();
+            Throwable exception = taskResult.getException();
             assertEquals( AccessDeniedException.class, exception.getClass() );
             assertEquals( "Test!", exception.getMessage() );
         } catch (InterruptedException e) {

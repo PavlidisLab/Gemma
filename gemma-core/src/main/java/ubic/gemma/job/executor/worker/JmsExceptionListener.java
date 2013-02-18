@@ -1,4 +1,4 @@
-package ubic.gemma.job.grid;
+package ubic.gemma.job.executor.worker;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -8,11 +8,9 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 
 /**
- * Created with IntelliJ IDEA.
- * User: anton
- * Date: 05/02/13
- * Time: 9:34 AM
- * To change this template use File | Settings | File Templates.
+ * TODO: implement me! do something reasonable.
+ * This is a way for listeners(TaskControlListener, TaskSubmissionListener) to be notified of connection problems.
+ *
  */
 @Component("jmsExceptionListener")
 public class JmsExceptionListener implements ExceptionListener {

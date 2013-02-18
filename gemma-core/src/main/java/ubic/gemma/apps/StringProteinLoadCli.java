@@ -19,21 +19,20 @@
 
 package ubic.gemma.apps;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.protein.StringProteinInteractionLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Cli to load protein protein interaction data from STRING using biomart as an ensembl gene entrez gene mapper. String
@@ -61,7 +60,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author ldonnison
  * @version $Id$
  */
-public class StringProteinLoadCli extends AbstractSpringAwareCLI {
+public class StringProteinLoadCli extends AbstractCLIContextCLI {
 
     TaxonService taxonService = null;
     GeneService geneService = null;

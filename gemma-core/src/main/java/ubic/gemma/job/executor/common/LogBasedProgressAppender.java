@@ -16,37 +16,33 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.job.progress;
+package ubic.gemma.job.executor.common;
 
 import org.apache.log4j.*;
 import org.apache.log4j.spi.LoggingEvent;
 
-import java.util.Queue;
-
 /**
- * Logging appender for log4j that puts messages in the current thread progress updates queue.
+ * This appender is used by remote tasks to send progress notifications to the webapp. The information for these notifications
+ * is retrieved from the {@link LoggingEvent}. This information comes from regular logging statements inlined in the
+ * source code (ie. log.info("the text")).
  * 
- * @author pavlidis
+ * @author keshav
  * @version $Id$
  */
-public class LocalProgressAppender extends AppenderSkeleton {
+public class LogBasedProgressAppender extends AppenderSkeleton implements ProgressUpdateAppender {
 
-    public LocalProgressAppender( String taskId, Queue<String> progressUpdates ) {
+    private final String taskId;
+    private final ProgressUpdateCallback progressUpdatesCallback;
+
+    public LogBasedProgressAppender( String taskId, ProgressUpdateCallback progressUpdatesCallback ) {
         super();
-
         assert taskId != null;
-        assert progressUpdates != null;
+        assert progressUpdatesCallback != null;
 
         this.taskId = taskId;
-        this.progressUpdates = progressUpdates;
+        this.progressUpdatesCallback = progressUpdatesCallback;
     }
 
-    protected String taskId;
-    private Queue<String> progressUpdates;
-
-    /*
-     * @see org.apache.log4j.AppenderSkeleton#append(org.apache.log4j.spi.LoggingEvent)
-     */
     @Override
     protected void append( LoggingEvent event ) {
 
@@ -54,12 +50,12 @@ public class LocalProgressAppender extends AppenderSkeleton {
             return;
         }
 
-        if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null
-                && !event.getMessage().toString().contains( "[Remote task:" ) ) {
-            progressUpdates.add( event.getMessage().toString() );
+        if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
+            progressUpdatesCallback.addProgressUpdate( event.getMessage().toString() );
         }
     }
 
+    @Override
     public void initialize() {
         MDC.put( "taskId", taskId );
         Logger logger = LogManager.getLogger( "ubic.gemma" );
@@ -68,9 +64,14 @@ public class LocalProgressAppender extends AppenderSkeleton {
         baseCodeLogger.addAppender( this );
     }
 
+    @Override
+    public void tearDown() {
+        close();
+    }
+
     /*
-     * @see org.apache.log4j.Appender#close()
-     */
+    * @see org.apache.log4j.Appender#close()
+    */
     @Override
     public void close() {
         Logger logger = LogManager.getLogger( "ubic.gemma" );

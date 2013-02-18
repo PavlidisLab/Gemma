@@ -16,13 +16,14 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.job;
+package ubic.gemma.job.executor.common;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
 import java.io.Serializable;
-import java.util.Queue;
 import java.util.concurrent.Callable;
 
 /**
@@ -47,59 +48,44 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
     private transient TaskLifecycleHandler statusCallback;
     private transient ProgressUpdateAppender progressAppender;
 
-    private Queue<String> localProgressQueue;
-
     private String taskId;
     private TaskCommand taskCommand;
 
-    private Exception taskExecutionException;
+    private Throwable taskExecutionException;
 
-    ExecutingTask (Task task, TaskCommand taskCommand) {
+    public ExecutingTask (Task task, TaskCommand taskCommand) {
         this.task = task;
         this.taskId = taskCommand.getTaskId();
         this.taskCommand = taskCommand;
     }
 
-    ExecutingTask (BackgroundJob job) {
+    public ExecutingTask (BackgroundJob job) {
         this.job = job;
         this.taskCommand = job.getCommand();
         this.taskId = job.getCommand().getTaskId();
     }
 
-    public Queue<String> getLocalProgressQueue() {
-        return localProgressQueue;
-    }
-
-    public void setLocalProgressQueue( Queue<String> localProgressQueue ) {
-        this.localProgressQueue = localProgressQueue;
-    }
-
-    // These hooks can be used to setup/tear down progress appender.
-    interface ProgressUpdateAppender {
-        public void initialize();
-        public void tearDown();
-    }
-
     // These hooks can be used to update status of the running task.
-    interface TaskLifecycleHandler {
+    public interface TaskLifecycleHandler {
         public void onStart();
         public void onFinish();
         public void onFailure( Throwable e );
     }
 
-    void setStatusCallback(TaskLifecycleHandler statusCallback) {
+    public void setStatusCallback(TaskLifecycleHandler statusCallback) {
         this.statusCallback = statusCallback;
     }
 
-    void setProgressAppender(ProgressUpdateAppender progressAppender) {
+    public void setProgressAppender(ProgressUpdateAppender progressAppender) {
         this.progressAppender = progressAppender;
     }
 
     @Override
     public final T call() throws Exception {
-        statusCallback.onStart();
         setup();
-         // From here we are running as user who submitted the task
+        // From here we are running as user who submitted the task.
+
+        statusCallback.onStart();
 
         T result = null;
         try {
@@ -108,22 +94,20 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
             } else {
                 result = this.job.processJob();
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             statusCallback.onFailure( e );
             taskExecutionException = e;
         } finally {
             cleanup();
         }
-        // SecurityContext is cleared, running as anonymous?
+        // SecurityContext is cleared at this point.
 
         if ( taskExecutionException == null ) {
             statusCallback.onFinish();
-            result.setTaskCommand ( taskCommand ); //TODO: cleaner way?
             return result;
         } else {
             result = (T) new TaskResult( taskId );
             result.setException( taskExecutionException );
-            result.setTaskCommand ( taskCommand );
             return result;
         }
     }
@@ -131,7 +115,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T>, Seriali
     private void setup() {
         progressAppender.initialize();
 
-        SecurityContextHolder.setContext( taskCommand.getSecurityContext() );
+        SecurityContextHolder.setContext( taskCommand.getSecurityContext() ); //TODO: one idea is to have SecurityContextAwareExecutorClass.
     }
 
     private void cleanup() {

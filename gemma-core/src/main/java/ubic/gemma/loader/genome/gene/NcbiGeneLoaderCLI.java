@@ -18,16 +18,15 @@
  */
 package ubic.gemma.loader.genome.gene;
 
-import java.io.File;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.File;
 
 /**
  * Command line interface to gene parsing and loading
@@ -35,7 +34,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author joseph
  * @version $Id$
  */
-public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
+public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     private NcbiGeneLoader loader;
 
     private String GENEINFO_FILE = "gene_info.gz";

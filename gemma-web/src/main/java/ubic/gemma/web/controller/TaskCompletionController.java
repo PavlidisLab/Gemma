@@ -25,7 +25,7 @@ import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.TaskRunningService;
+import ubic.gemma.job.executor.webapp.TaskRunningService;
 
 /**
  * Generic controller that looks for a finished job. Used when a job is done to get the result.
@@ -37,7 +37,8 @@ import ubic.gemma.job.TaskRunningService;
 @Controller
 public class TaskCompletionController {
 
-    @Autowired TaskRunningService taskRunningService;
+    @Autowired
+    TaskRunningService taskRunningService;
 
     /**
      * AJAX

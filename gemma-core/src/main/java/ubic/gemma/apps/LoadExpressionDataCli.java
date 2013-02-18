@@ -18,17 +18,10 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
@@ -44,7 +37,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractCLIContextCLI;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collection;
 
 /**
  * Simple command line to load expression experiments, either singly or in batches defined on the command line or in a
@@ -53,7 +52,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author pavlidis
  * @version $Id$
  */
-public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
+public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
     private enum Formats {
         AE, GEO
