@@ -70,7 +70,7 @@
 							<td colspan="2" align="center"></td>
 						</tr>
 						<tr>
-							<td>Probes</td>
+							<td>Elements</td>
 							<td align="right">${numCompositeSequences}</td>
 						</tr>
 						<tr>
@@ -136,8 +136,8 @@
 		<td><c:out value="${taxon}" /></td>
 	</tr>
 	<tr>
-		<td class="label">Number of probes</td>
-		<td><c:out value="${numCompositeSequences}" /> &nbsp; <a title="Show details of probes"
+		<td class="label">Number of elements</td>
+		<td><c:out value="${numCompositeSequences}" /> &nbsp; <a title="Show details of elements/probes"
 			href="/Gemma/arrays/showCompositeSequenceSummary.html?id=<jsp:getProperty name="arrayDesign" property="id" />"><img
 				src="/Gemma/images/magnifier.png" /> </a></td>
 	</tr>
