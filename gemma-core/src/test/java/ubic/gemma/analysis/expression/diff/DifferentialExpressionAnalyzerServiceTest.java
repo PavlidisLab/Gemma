@@ -281,16 +281,18 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertEquals( "Should have quietly ignored one of the subsets that is not analyzable", 1, analyses.size() );
 
         DifferentialExpressionAnalysis analysis = analyses.iterator().next();
-        assertEquals( "Subsetting as not done correctly", subsetFactor, analysis.getSubsetFactorValue()
+        assertEquals( "Subsetting was not done correctly", subsetFactor, analysis.getSubsetFactorValue()
                 .getExperimentalFactor() );
         assertEquals( "Interaction was not retained in the analyzed subset", 3, analysis.getResultSets().size() );
 
+        // check that we read it back correctly.
         Collection<DifferentialExpressionAnalysisValueObject> vos = differentialExpressionAnalysisService
-                .getAnalysisValueObjects( analysis.getId() );
+                .getAnalysisValueObjects( analysis.getExperimentAnalyzed().getId() );
+        assertEquals( 1, vos.size() );
         for ( DifferentialExpressionAnalysisValueObject vo : vos ) {
-            assertTrue( !vo.getFactorValuesUsed().isEmpty() );
             assertNotNull( vo.getSubsetFactor() );
             assertNotNull( vo.getSubsetFactorValue() );
+            assertTrue( !vo.getFactorValuesUsed().isEmpty() );
         }
     }
 
