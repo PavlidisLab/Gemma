@@ -24,8 +24,8 @@ public class JMSBrokerImpl implements JMSBroker {
         amqJmsTemplate.send( destination, new MessageCreator() {
             @Override
             public Message createMessage( Session session ) throws JMSException {
-                ObjectMessage message = session.createObjectMessage( object );
-                return message;
+                ObjectMessage msg = session.createObjectMessage( object );
+                return msg;
             }
         } );
     }
