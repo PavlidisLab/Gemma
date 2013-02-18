@@ -126,8 +126,7 @@ public class SubmittedTaskProxy<T extends TaskResult> implements SubmittedTask<T
             case RUNNING:
                 startTime = statusUpdate.getStatusChangeTime();
                 break;
-            case FAILED:
-            case DONE:
+            case FAILED: case DONE:
             case CANCELLED:
                 finishTime = statusUpdate.getStatusChangeTime();
                 break;

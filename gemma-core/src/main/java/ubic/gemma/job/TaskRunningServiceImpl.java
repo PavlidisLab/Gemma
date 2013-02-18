@@ -60,7 +60,6 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     @Autowired
     private JMSBrokerMonitor jmsBrokerMonitor;
-    @Autowired(required = false)
     @Qualifier("amqJmsTemplate")
     private JmsTemplate jmsTemplate;
 
