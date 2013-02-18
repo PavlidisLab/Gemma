@@ -43,6 +43,14 @@ public interface GeoBrowserService {
      * @throws ParseException 
      */
     public abstract List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException;
+    
+    /**
+     * @param searchString
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     */
+    public abstract List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException, ParseException;
 
     /**
      * @param accession

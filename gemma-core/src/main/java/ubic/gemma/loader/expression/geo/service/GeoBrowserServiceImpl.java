@@ -159,8 +159,27 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         List<GeoRecord> records = browser.getRecentGeoRecords( start, count );
 
         if ( records.isEmpty() ) return records;
+        
+        return filterGeoRecords( records );
+    }
+    
+    
+    @Override
+	public List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException, ParseException {
+		GeoBrowser browser = new GeoBrowser();
+		// Change this method to browser.getGeoRecordsBySearchTerm when implemented in GeoBrowser.java
+		List<GeoRecord> records = browser.getGeoRecordsBySearchTerm( searchString, start, count );
+		
+		return filterGeoRecords( records );
+	}
 
-        ExternalDatabase geo = externalDatabaseService.find( "GEO" );
+	/*
+     * 
+     * @param records
+     * @return
+     */
+    private List<GeoRecord> filterGeoRecords(List<GeoRecord> records) {
+    	ExternalDatabase geo = externalDatabaseService.find( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<GeoRecord>();
         assert geo != null;
         rec: for ( GeoRecord record : records ) {
@@ -209,11 +228,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         for ( GeoRecord record : toRemove ) {
             records.remove( record );
         }
-
+        
         return records;
-    }
+		
+	}
 
-    /*
+	/*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.loader.expression.geo.service.GeoBrowserService#toggleUsability(java.lang.String)

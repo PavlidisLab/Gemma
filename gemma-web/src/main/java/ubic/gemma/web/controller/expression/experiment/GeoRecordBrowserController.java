@@ -50,8 +50,10 @@ public class GeoRecordBrowserController {
      * @throws IOException
      * @throws ParseException
      */
-    public Collection<GeoRecord> browse( int start, int count ) throws IOException, ParseException {
-        if ( count == 0 ) {
+    public Collection<GeoRecord> browse( int start, int count, String searchString ) throws IOException, ParseException {
+        Collection<GeoRecord> geoRecords;
+    	
+    	if ( count == 0 ) {
             count = 20; // sorry.
         }
         if ( start < 0 ) {
@@ -59,9 +61,21 @@ public class GeoRecordBrowserController {
         }
 
         int startPage = start / count + 1;
-
-        Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
-        log.debug( "Returning " + geoRecords.size() + " records on page=" + startPage );
+        
+        if (searchString.isEmpty()) {
+        	// No search term entered
+        	geoRecords = geoBrowserService.getRecentGeoRecords( startPage, count );
+        	// TEST log
+        	log.info("getRecentGeoRecords fired from Controller.browse");
+        } else {
+        	// Search term entered; FIX ME
+        	geoRecords = geoBrowserService.searchGeoRecords( searchString, start, count );
+        	// TEST log
+        	log.info("searchGeoRecords fired from Controller.browse");
+        }
+        
+        log./*debug*/info( "Returning " + geoRecords.size() + " records on page=" + startPage 
+        		+ ", search term=" + searchString);
         return geoRecords;
     }
 

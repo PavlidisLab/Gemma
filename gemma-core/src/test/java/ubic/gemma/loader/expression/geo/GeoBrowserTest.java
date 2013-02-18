@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,4 +54,47 @@ public class GeoBrowserTest {
             throw e;
         }
     }
+    
+    @Test
+    public void testGetGeoRecordsBySearchTerm() throws Exception {
+    	GeoBrowser b = new GeoBrowser();
+    	
+    	try {
+            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10 );
+            // Check that the search has returned at least one record
+            assertTrue( res.size() > 0 );
+            
+            Iterator<GeoRecord> iterator = res.iterator();
+            
+            // Print out accession numbers etc.; check that the records returned match the search term
+            while ( iterator.hasNext() ) {
+               	GeoRecord record = iterator.next();
+               	System.out.println( "Accession: " + record.getGeoAccession() );
+               	System.out.println( "Title : " + record.getTitle() );
+               	System.out.println( "Number of samples: " + record.getNumSamples() );
+               	System.out.println( "Date: " + record.getReleaseDate() );
+               	assertTrue(record.getOrganisms().contains( "Homo sapiens" ));
+               }
+    	
+    	 } catch ( IOException e ) {
+             if ( e.getMessage().contains( "GEO returned an error" ) ) {
+                 log.warn( "GEO returned an error, skipping test." );
+                 return;
+             }
+             throw e;
+    	 }
+    }
+    
+    /* Make the method public to run this test */
+//    @Test
+//    public void testGetTaxonCollection() throws Exception {
+//    	GeoBrowser b = new GeoBrowser();
+//    	Collection<String> oneTaxon = b.getTaxonCollection( "Homo sapiens" );
+//    	assertTrue(oneTaxon.size() == 1);
+//    	Collection<String> twoTaxa = b.getTaxonCollection( "Homo sapiens; Mus musculus" );
+//    	assertTrue(twoTaxa.size() == 2);
+//    	assertTrue(twoTaxa.contains( "Homo sapiens" ));
+//    	assertTrue(twoTaxa.contains( "Mus musculus" ));
+//    }
+
 }

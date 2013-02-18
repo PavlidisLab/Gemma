@@ -12,7 +12,7 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	height : 500,
-	width : 1300,
+//	width : 1300,
 	autoScroll : true,
 	loadMask : true,
 
@@ -52,7 +52,7 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				: (this.start + this.count); 
 
 		this.store.load({
-			params : [ this.start, this.count ]
+			params : [ this.start, this.count, this.searchString ]
 		});
 		
 	},
@@ -69,9 +69,20 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				- Number(s) : this.start - this.count); 
 
 		this.store.load({
-			params : [ this.start, this.count ]
+			params : [ this.start, this.count, this.searchString ]
 		});
 		
+	},
+	
+	/**
+	 * 
+	 * @param s
+	 */
+	search : function(s) {
+		this.searchString = String(s);
+		this.store.load({
+			params : [ this.start, this.count, this.searchString ]
+		});
 	},
 
 	/** 
@@ -109,9 +120,12 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	// initial starting point
 	start : 0,
-
+	
 	// page size
 	count : 20,
+	
+	// empty search term
+	searchString : '',
 
 	initComponent : function() {
 
@@ -128,9 +142,7 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 									getDwrArgsFunction : function(
 											request,
 											recordDataArray) {
-										return [
-										        this.start,
-										        this.count ];
+										return [this.start, this.count, this.searchString ];
 									}
 								}),
 								reader : new Ext.data.ListRangeReader(
@@ -138,6 +150,38 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 											id : "id"
 										}, this.record)
 					})
+		});
+		
+		// Toolbar for navigation and search
+		Ext.apply(this, {
+			tbar : new Gemma.GeoBrowseToolbar ({
+				listeners : {
+					'back' : {
+						fn : function(s) {
+							this.back(s);
+						},
+						scope : this
+					},
+					'proceed' : {
+						fn : function(s) {
+							this.proceed(s);
+						},
+						scope : this
+					},
+					'search' : {
+						fn : function(s) {
+							this.search(s);
+						},
+						scope : this
+					},
+					'showText' : {
+						fn : function() {
+							this.showAsText();
+						},
+						scope : this
+					}
+				}
+			})
 		});
 
 		Ext.apply(this, {
@@ -216,7 +260,7 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		});
 
 		this.getStore().load({
-			params : [ this.start, this.count ]
+			params : [ this.start, this.count, this.searchString ]
 		});
 
 	},
@@ -437,3 +481,56 @@ function load(accession) {
 	ExpressionExperimentLoadController.load.apply(this, callParams);
 
 }
+
+Gemma.GeoBrowseToolbar = Ext.extend(Ext.Toolbar, {
+
+	initComponent : function() {
+		Ext.apply(this, {
+			items : [ {
+				id : 'skipfield',
+				xtype : 'textfield',
+				name : 'Skip',
+				emptyText: 'Skip',
+				width : 80
+			}, {
+				id : 'back',
+				xtype : 'button',
+				text : 'Back',
+				handler : function() {
+					this.fireEvent('back', [Ext.get('skipfield').getValue()]);
+					Ext.get('skipfield').setValue('');
+				}.createDelegate(this),
+				width : 50
+			}, {
+				id : 'next',
+				xtype : 'button',
+				text : 'Next',
+				handler : function() {
+					this.fireEvent('proceed', [Ext.get('skipfield').getValue()]);
+				}.createDelegate(this),
+				width : 50
+			}, '-', {
+				id : 'searchfield',
+				xtype : 'textfield',
+				emptyText: 'Enter search term',
+				width : 200
+			}, {
+				id : 'searchbutton',
+				xtype : 'button',
+				text : 'Search',
+				width : 60,
+				handler : function(){
+					this.fireEvent('search', [Ext.get('searchfield').getValue()]);
+				}.createDelegate(this)
+			}, {
+				id : 'show-as-text',
+				xtype : 'button',
+				icon : '/Gemma/images/icons/disk.png',
+				handler : function() {
+					this.fireEvent('showText');
+				}.createDelegate(this)
+			}],
+		});
+		Gemma.GeoBrowseToolbar.superclass.initComponent.call(this);
+	}
+});

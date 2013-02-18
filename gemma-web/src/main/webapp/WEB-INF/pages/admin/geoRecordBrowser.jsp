@@ -16,56 +16,11 @@
 
 		var grid = new Gemma.GeoBrowseGrid({});
 
-		var form = new Ext.form.FormPanel({
-			width : 300,
-			height : 100,
-			bodyStyle : 'padding:5px',
-			items : [ {
-				id : 'back',
-				xtype : 'button',
-				text : 'Back',
-				handler : function() {
-					grid.back(Ext.get('skip-field').getValue());
-					Ext.getCmp('skip-field').setValue('');
-				},
-				width : 50
-			}, {
-				id : 'next',
-				xtype : 'button',
-				text : 'Next',
-				handler : function() {
-					grid.proceed(Ext.get('skip-field').getValue());
-					Ext.getCmp('skip-field').setValue('');
-				},
-				width : 50
-			}, {
-				id : 'skip-field',
-				xtype : 'textfield',
-				name : 'Skip',
-				fieldLabel : 'Skip',
-				width : 80,
-				listeners : {
-					specialKey : function(field, eventObj) {
-						if (eventObj.getKey() == Ext.EventObject.ENTER) {
-							grid.proceed(field.getValue());
-							field.setValue('');
-						}
-					}
-				},
-			}, {
-				id : 'show-as-text',
-				xtype : 'button',
-				icon : '/Gemma/images/icons/disk.png',
-				handler : function() {
-					grid.showAsText();
-				}
-			} ]
-
-		});
+		
 
 		new Ext.Panel({
 			renderTo : 'geostuff',
-			items : [ form, grid ]
+			items : [ grid ]
 		})
 
 	});
@@ -76,13 +31,12 @@
 
 	<div id="messages" style="margin: 10px; width: 600px"></div>
 
-	<div id="progress-area" style="padding: 5px;"></div>
+	<div id="progress-area" style="padding: 20px; "></div>
 
 	<p>
 		Displaying <b> <span id="numRecords" />
 		</b> GEO records.
 	</p>
-
 
 	<div id="geostuff" style="padding: 20px; margin: 10px;" />
 
@@ -94,5 +48,9 @@
 		available from GEO, including information about platforms. This information is often not available for a day or two
 		after the data sets becomes publicly available.
 	</p>
+	<p>
+	    To search GEO, type your query in the 'Search' field, e.g. <i>Mus+musculus[ORGN]+AND+brain[ALL]</i>.
+	    For more information on how to construct queries, go to the <a href="http://www.ncbi.nlm.nih.gov/geo/info/qqtutorial.html">NCBI website</a>.
+	</p>	    
 	<div id="taskId" style="display: none;"></div>
 </body>
