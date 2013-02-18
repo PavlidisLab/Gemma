@@ -60,7 +60,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
     private final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
 
     private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator( new ThreadPoolExecutor(
-            3, 15, 10, TimeUnit.MINUTES, workQueue ) );
+            3, 15, 11, TimeUnit.MINUTES, workQueue ) );
 
     // Take completed Task and send its result to the SubmittedTaskProxy.
     private FutureCallback<TaskResult> sendTaskResultCallback = new FutureCallback<TaskResult>() {
