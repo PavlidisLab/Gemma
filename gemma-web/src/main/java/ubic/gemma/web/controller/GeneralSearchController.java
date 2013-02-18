@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.search.SearchResult;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
 /**

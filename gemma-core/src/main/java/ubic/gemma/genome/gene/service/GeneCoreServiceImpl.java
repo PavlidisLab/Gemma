@@ -16,6 +16,8 @@ import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -27,7 +29,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 
 /** core service for Gene */
 @Service
@@ -147,7 +148,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
      * @param details
      */
     private void getAssociatedExperimentsCount( GeneValueObject details ) {
-        SearchSettings s = new SearchSettings();
+        SearchSettingsImpl s = new SearchSettingsImpl();
         s.setTermUri( "http://purl.org/commons/record/ncbi_gene/" + details.getNcbiId() );
         s.noSearches();
         s.setSearchExperiments( true );
@@ -172,7 +173,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
-        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
+        SearchSettings settings = SearchSettingsImpl.geneSearch( query, taxon );
         List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<Gene>();

@@ -60,6 +60,8 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -69,7 +71,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 
 import com.hp.hpl.jena.rdf.model.ModelMaker;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
@@ -1000,7 +1001,7 @@ public class OntologyServiceImpl implements OntologyService {
             /*
              * Kick into a special search for genes. The user will have to deal with choosing one from the right taxon.
              */
-            SearchSettings ss = new SearchSettings();
+            SearchSettings ss = SearchSettings.Factory.newInstance();
             ss.setQuery( queryString );
             ss.noSearches();
             ss.setTaxon( taxon );

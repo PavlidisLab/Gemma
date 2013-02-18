@@ -337,10 +337,18 @@ public interface ExpressionExperimentService {
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             Collection<QuantitationType> quantitationTypes );
 
-    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect();
+    /**
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> getExperimentsWithBatchEffect();
 
-    public List<ExpressionExperimentValueObject> getExperimentsWithEvent(
-            Class<? extends AuditEventType> auditEventClass );
+    /**
+     * @param auditEventClass
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass );
 
     /**
      * @param expressionExperiments

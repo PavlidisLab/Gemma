@@ -102,7 +102,12 @@ public class FactorValueValueObject implements Serializable {
      */
     public FactorValueValueObject( FactorValue fv ) {
         super();
-        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() == 1 ) {
+        if ( fv.getCharacteristics().size() == 1 ) {
+            init( fv, fv.getCharacteristics().iterator().next() );
+        } else if ( fv.getCharacteristics().size() > 1 ) {
+            /*
+             * Inadequate! Want to capture them all.
+             */
             init( fv, fv.getCharacteristics().iterator().next() );
         } else {
             init( fv, null );

@@ -31,6 +31,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyService;
@@ -165,7 +166,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         indexerTask.setCommand( c );
         indexerTask.execute();
 
-        SearchSettings settings = new SearchSettings();
+        SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.noSearches();
         settings.setQuery( id );
         settings.setSearchExperiments( true );
@@ -188,7 +189,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @Test
     public void testGeneralSearch4Brain() {
 
-        SearchSettings settings = new SearchSettings();
+        SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.noSearches();
         settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
         settings.setSearchExperiments( true );
@@ -211,7 +212,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @Test
     public void testGeneUriSearch() {
 
-        SearchSettings settings = new SearchSettings();
+        SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.setQuery( GENE_URI + this.geneNcbiId );
         settings.setSearchGenes( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
@@ -232,7 +233,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testURIChildSearch() {
-        SearchSettings settings = new SearchSettings();
+        SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.setQuery( "http://purl.org/obo/owl/FMA#FMA_83153" ); // OrganComponent of Neuraxis; superclass of
                                                                       // 'spinal cord'.
         settings.setSearchExperiments( true );
@@ -252,7 +253,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testURISearch() {
-        SearchSettings settings = new SearchSettings();
+        SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.setQuery( SPINAL_CORD );
         settings.setSearchExperiments( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );

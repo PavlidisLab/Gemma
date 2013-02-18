@@ -40,10 +40,14 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -72,6 +76,9 @@ import cern.colt.list.DoubleArrayList;
 public class ProcessedExpressionDataVectorCreateServiceImpl implements ProcessedExpressionDataVectorCreateService {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateServiceImpl.class.getName() );
+
+    @Autowired
+    private AuditEventService auditEventService;
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -290,6 +297,20 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
     private void audit( ExpressionExperiment ee, String note ) {
         AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( ee, eventType, note );
+
+        AuditEvent sampleRemoval = auditEventService.getLastEvent( ee, SampleRemovalEvent.class );
+        if ( sampleRemoval != null ) {
+
+            AuditEvent reversion = auditEventService.getLastEvent( ee, SampleRemovalReversionEvent.class );
+
+            if ( reversion == null || reversion.getDate().before( sampleRemoval.getDate() ) ) {
+                // if it was before, it means we removed a sample more recently.
+                auditTrailService.addUpdateEvent( ee, SampleRemovalReversionEvent.Factory.newInstance(),
+                        "Removed samples reverted by regenerating processed data vector" );
+            }
+
+        }
+
     }
 
     /**

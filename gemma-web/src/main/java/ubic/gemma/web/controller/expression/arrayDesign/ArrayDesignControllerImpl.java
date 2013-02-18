@@ -40,6 +40,7 @@ import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -47,7 +48,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
@@ -320,7 +320,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     "message", "No search criteria provided" );
         }
 
-        Collection<SearchResult> searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
+        Collection<SearchResult> searchResults = searchService.search( SearchSettingsImpl.arrayDesignSearch( filter ) )
                 .get( ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {

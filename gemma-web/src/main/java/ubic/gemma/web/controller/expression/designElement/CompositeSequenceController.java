@@ -41,6 +41,7 @@ import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -57,7 +58,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -170,7 +170,7 @@ public class CompositeSequenceController extends BaseController {
          */
         ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
 
-        Map<Class<?>, List<SearchResult>> search = searchService.search( SearchSettings.compositeSequenceSearch(
+        Map<Class<?>, List<SearchResult>> search = searchService.search( SearchSettingsImpl.compositeSequenceSearch(
                 searchString, arrayDesign ) );
 
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();

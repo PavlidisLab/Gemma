@@ -115,6 +115,7 @@
 				<value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Status.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/search/SearchSettings.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvalue.hbm.xml</value>

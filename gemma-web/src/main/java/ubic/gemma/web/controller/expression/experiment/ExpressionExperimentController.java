@@ -18,7 +18,28 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.IOException;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import net.sf.json.JSONObject;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -30,6 +51,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -37,7 +59,6 @@ import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
@@ -51,12 +72,24 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.Status;
 import ubic.gemma.model.common.auditAndSecurity.StatusService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.*;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CitationValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -66,7 +99,16 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.search.SearchResultDisplayObject;
@@ -84,12 +126,6 @@ import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.util.*;
-
 /**
  * @author keshav
  * @version $Id$
@@ -97,7 +133,7 @@ import java.util.*;
 @Controller
 @RequestMapping(value = { "/expressionExperiment", "/ee" })
 public class ExpressionExperimentController {
-    private static final Log log = LogFactory.getLog(ExpressionExperimentController.class.getName());
+    private static final Log log = LogFactory.getLog( ExpressionExperimentController.class.getName() );
 
     /**
      * Delete expression experiments.
@@ -228,28 +264,49 @@ public class ExpressionExperimentController {
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ArrayDesignService arrayDesignService;
-    @Autowired private AuditEventService auditEventService;
-    @Autowired private BibliographicReferenceService bibliographicReferenceService;
-    @Autowired private BioAssayService bioAssayService;
-    @Autowired private BioMaterialService bioMaterialService;
-    @Autowired private ExperimentalFactorService experimentalFactorService;
-    @Autowired private ExpressionExperimentReportService expressionExperimentReportService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private ExpressionExperimentSearchService expressionExperimentSearchService;
-    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired private ExpressionExperimentSubSetService expressionExperimentSubSetService;
-    @Autowired private Persister persisterHelper;
-    @Autowired private SearchService searchService;
-    @Autowired private SecurityService securityService;
-    @Autowired private TaxonService taxonService;
-    @Autowired private ExpressionDataMatrixService expressionDataMatrixService;
-    @Autowired private SVDService svdService;
-    @Autowired private WhatsNewService whatsNewService;
-    @Autowired private SessionListManager sessionListManager;
-    @Autowired private StatusService statusService;
-    @Autowired private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private AuditEventService auditEventService;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private BioAssayService bioAssayService;
+    @Autowired
+    private BioMaterialService bioMaterialService;
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentSearchService expressionExperimentSearchService;
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    @Autowired
+    private Persister persisterHelper;
+    @Autowired
+    private SearchService searchService;
+    @Autowired
+    private SecurityService securityService;
+    @Autowired
+    private TaxonService taxonService;
+
+    @Autowired
+    private SVDService svdService;
+    @Autowired
+    private WhatsNewService whatsNewService;
+    @Autowired
+    private SessionListManager sessionListManager;
+    @Autowired
+    private StatusService statusService;
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -261,10 +318,10 @@ public class ExpressionExperimentController {
      * @return
      */
     public JsonReaderResponse<ExpressionExperimentValueObject> browse( ListBatchCommand batch ) {
-    	
-    	if (batch.getLimit()==0){    		
-    		batch.setStart(0);
-    	}
+
+        if ( batch.getLimit() == 0 ) {
+            batch.setStart( 0 );
+        }
 
         int limit = batch.getLimit();
         int origStart = batch.getStart();
@@ -284,10 +341,10 @@ public class ExpressionExperimentController {
 
         int start = origStart;
         int stop = Math.min( origStart + limit, records.size() );
-        
-        if (batch.getLimit()==0){    		
-    		stop=records.size();
-    	}
+
+        if ( batch.getLimit() == 0 ) {
+            stop = records.size();
+        }
 
         List<ExpressionExperiment> recordsSubset = records.subList( start, stop );
 
@@ -311,8 +368,7 @@ public class ExpressionExperimentController {
      * @param batch
      * @return
      */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {    	
-    	
+    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {
 
         int origLimit = batch.getLimit();
         int origStart = batch.getStart();
@@ -331,25 +387,22 @@ public class ExpressionExperimentController {
         if ( !SecurityServiceImpl.isUserAdmin() ) {
             records = removeTroubledExperiments( records );
         }
-        
-        
-       
 
         /*
          * can't just do countAll because this will count experiments the user may not have access to Integer count =
          * expressionExperimentService.countAll();
          */
         int count = records.size();
-        
+
         int pSize = Math.min( origStart + origLimit, records.size() );
-        
-        //batch.getLimit = 0 when download all as text
-        if (batch.getLimit()==0){
-    		pSize=count;
-    	}
+
+        // batch.getLimit = 0 when download all as text
+        if ( batch.getLimit() == 0 ) {
+            pSize = count;
+        }
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart, pSize) ) );
+                getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -370,12 +423,12 @@ public class ExpressionExperimentController {
      */
     public JsonReaderResponse<ExpressionExperimentValueObject> browseSpecificIds( ListBatchCommand batch,
             Collection<Long> ids ) {
-    	
-    	if (batch.getLimit()==0){
-    		batch.setLimit(ids.size());
-    		batch.setStart(0);
-    	}
-    	
+
+        if ( batch.getLimit() == 0 ) {
+            batch.setLimit( ids.size() );
+            batch.setStart( 0 );
+        }
+
         int origLimit = batch.getLimit();
         int origStart = batch.getStart();
 
@@ -386,13 +439,13 @@ public class ExpressionExperimentController {
         if ( !SecurityServiceImpl.isUserAdmin() ) {
             records = removeTroubledExperiments( records );
         }
-        
+
         int pSize = Math.min( origStart + origLimit, records.size() );
-        
-        //batch.getLimit = 0 when download all as text
-        if (batch.getLimit()==0){
-    		pSize=records.size();
-    	}
+
+        // batch.getLimit = 0 when download all as text
+        if ( batch.getLimit() == 0 ) {
+            pSize = records.size();
+        }
 
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
                 getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
@@ -443,7 +496,7 @@ public class ExpressionExperimentController {
     public String deleteById( Long id ) {
         if ( id == null ) return null;
         RemoveExpressionExperimentJob job = new RemoveExpressionExperimentJob( new TaskCommand( id ) );
-        return taskRunningService.submitLocalJob(job);
+        return taskRunningService.submitLocalJob( job );
     }
 
     /**
@@ -947,26 +1000,55 @@ public class ExpressionExperimentController {
      */
     public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
 
-        List<ExpressionExperimentValueObject> sampleRemovedEEs = expressionExperimentService
+        Collection<ExpressionExperiment> sampleRemovedEEs = expressionExperimentService
                 .getExperimentsWithEvent( SampleRemovalEvent.class );
+
+        Collection<ExpressionExperiment> eesWithRevertedSampleRemovals = expressionExperimentService
+                .getExperimentsWithEvent( SampleRemovalReversionEvent.class );
 
         // List<ExpressionExperimentValueObject> batchEffectEEs =
         // expressionExperimentService.getExperimentsWithBatchEffect();
-        List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
+        // List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
 
-        HashSet<ExpressionExperimentValueObject> ees = new HashSet<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.addAll( sampleRemovedEEs );
-        ees.addAll( batchEffectEEs );
+        // ees.addAll( batchEffectEEs );
 
         List<JSONObject> jsonRecords = new ArrayList<JSONObject>();
 
-        for ( ExpressionExperimentValueObject ee : ees ) {
+        for ( ExpressionExperiment ee : ees ) {
             JSONObject record = new JSONObject();
             record.element( "id", ee.getId() );
             record.element( "shortName", ee.getShortName() );
             record.element( "name", ee.getName() );
-            record.element( "sampleRemoved", sampleRemovedEEs.contains( ee ) );
-            record.element( "batchEffect", batchEffectEEs.contains( ee ) );
+
+            if ( sampleRemovedEEs.contains( ee ) ) {
+
+                boolean hasOutlier = true;
+
+                // check if the outliers were reverted.
+                if ( eesWithRevertedSampleRemovals.contains( ee ) ) {
+
+                    // figure out if it was later.
+                    AuditEvent sampleRemoval = auditEventService.getLastEvent( ee, SampleRemovalEvent.class );
+
+                    assert sampleRemoval != null;
+
+                    AuditEvent reversion = auditEventService.getLastEvent( ee, SampleRemovalReversionEvent.class );
+
+                    assert reversion != null;
+
+                    if ( reversion.getDate().after( sampleRemoval.getDate() ) ) {
+                        continue;
+                    }
+
+                } else {
+                    record.element( "sampleRemoved", hasOutlier );
+                }
+
+            }
+
+            // record.element( "batchEffect", batchEffectEEs.contains( ee ) );
             jsonRecords.add( record );
         }
 
@@ -1434,7 +1516,7 @@ public class ExpressionExperimentController {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );
         UpdatePubMed job = new UpdatePubMed( command );
-        return taskRunningService.submitLocalJob(job);
+        return taskRunningService.submitLocalJob( job );
     }
 
     /**
@@ -1841,7 +1923,7 @@ public class ExpressionExperimentController {
         timer.start();
 
         /*
-         * FIXME remove troubled? Needs to be optional. For dataset managment page, don't.
+         * FIXME remove troubled? Needs to be optional. For dataset management page, don't.
          */
 
         /* Filtering for security happens here. */

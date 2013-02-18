@@ -29,13 +29,13 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.EntityUtils;
 
@@ -368,7 +368,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) {
         Set<BioAssaySet> ees = new HashSet<BioAssaySet>();
         Collection<SearchResult> eeSearchResults = searchService.search(
-                SearchSettings.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
+                SearchSettingsImpl.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
 
         log.info( ees.size() + " Expression experiments matched '" + query + "'" );
 

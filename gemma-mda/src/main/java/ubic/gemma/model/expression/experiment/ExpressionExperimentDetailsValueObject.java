@@ -46,26 +46,24 @@ public class ExpressionExperimentDetailsValueObject extends
 
     private String parentTaxon;
 
-    private Long parentTaxonId;
-
     private Boolean hasMultiplePreferredQuantitationTypes = false;
 
     private Boolean hasMultipleTechnologyTypes = false;
-    
+
     private String QChtml;
-    
+
     private boolean hasBatchInformation;
-    
+
     private String batchConfound;
-    
+
     private String batchEffect;
-    
+
     private String lastArrayDesignUpdateDate;
-    
+
     private boolean canCurrentUserEditExperiment;
 
     private boolean doesCurrentUserOwnExperiment;
-    
+
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
 
     public Boolean getHasMultipleTechnologyTypes() {
@@ -161,14 +159,6 @@ public class ExpressionExperimentDetailsValueObject extends
 
     public String getParentTaxon() {
         return parentTaxon;
-    }
-
-    public void setParentTaxonId( Long parentTaxonId ) {
-        this.parentTaxonId = parentTaxonId;
-    }
-
-    public Long getParentTaxonId() {
-        return parentTaxonId;
     }
 
     public void setQChtml( String qChtml ) {

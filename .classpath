@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-core/src/main/java"/>
+	<classpathentry kind="src" path="gemma-core/src/main/groovy"/>
 	<classpathentry kind="src" output="test-build" path="gemma-web/src/test/resources"/>
 	<classpathentry excluding="default.properties" kind="src" output="test-build" path="gemma-util/src/test/resources"/>
 	<classpathentry excluding="**/*.class|**/*.xml|**/empty.file|**/gemma*.jar|scripts/*|styles/**" including="**/*.jar|**/version.properties" kind="src" output="build/Gemma" path="gemma-web/target/Gemma"/>
@@ -61,7 +62,7 @@
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-core/2.5.2/ehcache-core-2.5.2.jar" sourcepath="/M2_REPO/net/sf/ehcache/ehcache-core/2.5.2/ehcache-core-2.5.2-sources.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="http://ehcache.sourceforge.net/javadoc/"/>
+			<attribute name="javadoc_location" value="http://ehcache.org/apidocs/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/javax/transaction/jta/1.0.1B/jta-1.0.1B.jar"/>
@@ -80,9 +81,9 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/ognl/ognl/2.6.7/ognl-2.6.7.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-core/3.6.7.Final/hibernate-core-3.6.7.Final.jar" sourcepath="/M2_REPO/org/hibernate/hibernate-core/3.6.7.Final/hibernate-core-3.6.7.Final-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-core/3.6.7.Final/hibernate-core-3.6.7.Final.jar" sourcepath="/M2_REPO/org/hibernate/hibernate-core/3.6.7.Final/hibernate-core-3.6.7.Final.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="http://docs.jboss.org/hibernate/stable/core/api/"/>
+			<attribute name="javadoc_location" value="http://docs.jboss.org/hibernate/core/3.6/javadocs/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/mage/MAGEstk/2006-07-v1.x-compatible/MAGEstk-2006-07-v1.x-compatible.jar">
@@ -290,7 +291,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/ws/spring-xml/1.5.8/spring-xml-1.5.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/activemq/activemq-core/5.7.0/activemq-core-5.7.0.jar"/>
-    <classpathentry kind="var" path="M2_REPO/org/springframework/spring-jms/3.0.5.RELEASE/spring-jms-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-jms/3.0.5.RELEASE/spring-jms-3.0.5.RELEASE.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/aspectj/aspectjrt/1.6.6/aspectjrt-1.6.6.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.eclipse.org/aspectj/doc/released/aspectj5rt-api/"/>
@@ -344,16 +345,21 @@
 	<classpathentry kind="var" path="M2_REPO/org/hibernate/javax/persistence/hibernate-jpa-2.0-api/1.0.1.Final/hibernate-jpa-2.0-api-1.0.1.Final.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GEOMMTx"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/retry/spring-retry/1.0.1.RELEASE/spring-retry-1.0.1.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/retry/spring-retry/1.0.1.RELEASE/spring-retry-1.0.1.RELEASE-sources.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre6">
-		<attributes>
-			<attribute name="owner.project.facets" value="java"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v7.0">
+	<classpathentry kind="var" path="M2_REPO/classmexer/classmexer/0.03/classmexer-0.03.jar"/>
+	<classpathentry kind="con" path="GROOVY_SUPPORT"/>
+	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v6.0">
 		<attributes>
 			<attribute name="owner.project.facets" value="jst.web"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/classmexer/classmexer/0.03/classmexer-0.03.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.6.0_33">
+		<attributes>
+			<attribute name="owner.project.facets" value="java"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/com/google/guava/guava/13.0.1/guava-13.0.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/xbean/xbean-spring/3.11.1/xbean-spring-3.11.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/activemq/protobuf/activemq-protobuf/1.1/activemq-protobuf-1.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/geronimo/specs/geronimo-j2ee-management_1.1_spec/1.0.1/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

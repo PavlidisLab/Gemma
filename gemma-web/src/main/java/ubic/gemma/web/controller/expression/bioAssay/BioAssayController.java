@@ -30,8 +30,8 @@ import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -127,8 +127,7 @@ public class BioAssayController {
         /*
          * Allow for the possibility that it isn't an outlier any more.
          */
-        AuditEvent lastProcessedDataComputation = auditEventService.getLastEvent( ee,
-                ProcessedVectorComputationEvent.class );
+        AuditEvent reversion = auditEventService.getLastEvent( ee, SampleRemovalReversionEvent.class );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
 
@@ -137,8 +136,7 @@ public class BioAssayController {
 
             if ( outlierEvent != null ) {
                 // re-running processed data overwrites the status.
-                boolean isStillAnOutlier = lastProcessedDataComputation == null
-                        || ( lastProcessedDataComputation.getDate().before( outlierEvent.getDate() ) );
+                boolean isStillAnOutlier = reversion == null || ( reversion.getDate().before( outlierEvent.getDate() ) );
                 bioAssayValueObject.setOutlier( isStillAnOutlier );
             }
 

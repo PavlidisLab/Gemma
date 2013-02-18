@@ -39,6 +39,8 @@ import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -46,7 +48,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.util.EntityUtils;
@@ -90,7 +91,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     @Override
     public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
 
-        SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
+        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
         List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
 
         if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
@@ -208,8 +209,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         /*
          * GET EXPERIMENTS AND SETS
          */
-        SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
-        settings.setGeneralSearch( true ); // add a general search
+        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
         settings.setSearchExperimentSets( true ); // add searching for experimentSets
         Taxon taxonParam = null;
         if ( taxonLimited ) {

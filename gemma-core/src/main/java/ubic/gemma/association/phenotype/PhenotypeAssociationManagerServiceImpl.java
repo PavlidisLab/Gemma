@@ -59,6 +59,8 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -84,7 +86,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueO
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserManager;
@@ -659,7 +660,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
-        SearchSettings settings = SearchSettings.geneSearch( newQuery, taxon );
+        SearchSettings settings = SearchSettingsImpl.geneSearch( newQuery, taxon );
         List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<Gene>();

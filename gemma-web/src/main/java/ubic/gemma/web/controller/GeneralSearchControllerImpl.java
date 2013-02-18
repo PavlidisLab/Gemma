@@ -53,6 +53,8 @@ import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -71,7 +73,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
@@ -89,17 +90,28 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 @Controller
 public class GeneralSearchControllerImpl extends BaseFormController implements GeneralSearchController {
 
-    @Autowired private SearchService searchService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private ArrayDesignService arrayDesignService;
-    @Autowired private GeneService geneService;
-    @Autowired private BibliographicReferenceService bibliographicReferenceService;
-    @Autowired private TaxonService taxonService;
-    @Autowired private AuditableUtil auditableUtil;
-    @Autowired private GeneSetService geneSetService;
-    @Autowired private ExpressionExperimentSetService experimentSetService;
-    @Autowired private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
-    @Autowired private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private SearchService searchService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private GeneService geneService;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private TaxonService taxonService;
+    @Autowired
+    private AuditableUtil auditableUtil;
+    @Autowired
+    private GeneSetService geneSetService;
+    @Autowired
+    private ExpressionExperimentSetService experimentSetService;
+    @Autowired
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
 
     /*
      * (non-Javadoc)
@@ -222,7 +234,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @SuppressWarnings("deprecation")
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        SearchSettings searchSettings = new SearchSettings();
+        SearchSettingsImpl searchSettings = new SearchSettingsImpl();
         // Reset default settings.
         searchSettings.noSearches();
         return searchSettings;
@@ -282,7 +294,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                             csc.setSearchProbes( true );
                             break;
                         case 'A':
-                            csc.setSearchArrays( true );
+                            csc.setSearchPlatforms( true );
                             break;
                         case 'M':
                             csc.setSearchGeneSets( true );
@@ -294,9 +306,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                             break;
                     }
                 }
-            } else {
-                csc.setGeneralSearch( true );
-            }
+            }  
 
             return this.doSearch( request, response, csc, errors );
         }
@@ -311,7 +321,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      *         same order as the entities.
      */
     @SuppressWarnings("unchecked")
-    private void fillValueObjects( Map<Class<?>, List<SearchResult>> results, SearchSettings settings ) {
+    private void fillValueObjects( Map<Class<?>, List<SearchResult>> results, SearchSettingsImpl settings ) {
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<?> vos = null;

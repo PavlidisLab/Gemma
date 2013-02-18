@@ -802,7 +802,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.FactorProfile" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.GeneExpressionProfile" />
 		<dwr:convert type="bean" class="ubic.gemma.web.feed.NewsItem" />
-		<dwr:convert type="bean" class="ubic.gemma.search.SearchSettings" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.search.SearchSettings" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.VisualizationValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.TaxonValueObject" />

@@ -18,6 +18,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import ubic.gemma.model.common.search.SearchSettings;
+
 /**
  * @author paul
  * @version $Id$
@@ -67,11 +69,11 @@ public interface SearchService {
 
     /**
      * convenience method to return only search results from one class
+     * 
      * @param settings
      * @param resultClass
      * @return
      */
     public abstract List<?> search( SearchSettings settings, Class<?> resultClass );
-
 
 }

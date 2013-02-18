@@ -30,13 +30,15 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Add (or possibly replace) the data associated with an experiment. Cases include Affymetrix exon arrays, RNA-seq data.
+ * Add (or possibly replace) the data associated with an experiment. Cases include Affymetrix exon arrays, RNA-seq
+ * data.+
  * 
  * @author paul
  * @version $Id$
  */
 public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
 
+    private static final String ADD_OPT = "add";
     private static final String APT_FILE_OPT = "aptFile";
     private String aptFile = null;
 
@@ -45,6 +47,9 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
         super.buildOptions();
         super.addOption( APT_FILE_OPT, true,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
+
+        // dinstead of apt file, perhaps we just need the generic file.
+        super.addOption( ADD_OPT, false, "Add the data, rather than replace it." );
     }
 
     @Override
@@ -115,8 +120,8 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
                     serv.addAffyExonArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
                 } else {
-                    log.warn( thawedEe + ": Don't know how to add data to this yet" );
-                    this.errorObjects.add( thawedEe + ": Don't know how to add data to this yet" );
+                    // need to have an input file.
+
                 }
             } catch ( Exception e ) {
                 this.errorObjects.add( ee + " " + e.getLocalizedMessage() );

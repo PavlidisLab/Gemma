@@ -31,37 +31,43 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
 
     private static final long serialVersionUID = 1L;
 
+    private boolean correlationMatrixOnly = false;
+
     private ExpressionExperiment expressionExperiment = null;
 
-    private boolean correlationMatrixOnly = false;
+    private boolean restoreMissingSamples = true;
 
     public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment ee ) {
         super();
         this.expressionExperiment = ee;
     }
 
-    public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment expressionExperiment,
-            boolean correlationMatrixOnly ) {
-        super();
-        this.expressionExperiment = expressionExperiment;
-        this.correlationMatrixOnly = correlationMatrixOnly;
-    }
-
     /**
      * @param taskId
+     * @param expressionExperiment
+     * @param restoreMissing if any missing values should be restored (default = TRUE)
      */
-    public ProcessedExpressionDataVectorCreateTaskCommand( String taskId, ExpressionExperiment expressionExperiment ) {
-        super();
-        this.setTaskId( taskId );
-        this.expressionExperiment = expressionExperiment;
+    public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment expressionExperiment,
+            boolean restoreMissing ) {
+        this( expressionExperiment );
+        this.restoreMissingSamples = restoreMissing;
     }
 
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
     }
 
+    @Override
+    public Class getTaskClass() {
+        return ProcessedExpressionDataVectorCreateTask.class;
+    }
+
     public boolean isCorrelationMatrixOnly() {
         return correlationMatrixOnly;
+    }
+
+    public boolean isRestoreMissingSamples() {
+        return restoreMissingSamples;
     }
 
     /**
@@ -77,8 +83,7 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
         this.expressionExperiment = expressionExperiment;
     }
 
-    @Override
-    public Class getTaskClass() {
-        return ProcessedExpressionDataVectorCreateTask.class;
+    public void setRestoreMissingSamples( boolean restoreMissingSamples ) {
+        this.restoreMissingSamples = restoreMissingSamples;
     }
 }

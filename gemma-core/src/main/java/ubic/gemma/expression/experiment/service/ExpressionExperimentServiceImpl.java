@@ -64,6 +64,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -87,7 +88,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 
 /**
@@ -317,7 +317,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     public Collection<Long> filter( String searchString ) {
 
-        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
+        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettingsImpl
                 .expressionExperimentSearch( searchString ) );
 
         assert searchResultsMap != null;
@@ -668,7 +668,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> getExperimentsWithBatchEffect() {
+    public Collection<ExpressionExperiment> getExperimentsWithBatchEffect() {
         List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
         entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
                 ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
@@ -679,16 +679,15 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             }
         }
         entities.removeAll( toRemove );
-        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
+        return entities;
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> getExperimentsWithEvent(
-            Class<? extends AuditEventType> auditEventClass ) {
+    public Collection<ExpressionExperiment> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass ) {
         List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
         entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
                 ExpressionExperiment.class, auditEventClass ) );
-        return ExpressionExperimentValueObject.convert2ValueObjectsOrdered( entities );
+        return entities;
     }
 
     /**

@@ -27,9 +27,9 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -268,7 +268,7 @@ public class BibliographicReferenceServiceImpl extends
     @Override
     public List<BibliographicReferenceValueObject> search( String query ) {
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search(
-                SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
+                SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
         List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
         for ( BibliographicReference entity : resultEntities ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
