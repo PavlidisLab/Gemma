@@ -35,9 +35,12 @@ import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateT
 @Controller
 public class ProcessedExpressionDataVectorCreateController {
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ExpressionExperimentReportService experimentReportService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * AJAX entry point.
