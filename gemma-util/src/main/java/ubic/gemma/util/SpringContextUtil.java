@@ -98,7 +98,6 @@ public class SpringContextUtil {
         return getApplicationContext( testing, isWebApp, new String[] {} );
     }
 
-
     public static ApplicationContext getRemoteWorkerApplicationContext( boolean testing ) {
         String[] paths = getConfigLocations( testing, false );
         paths = addPaths( getRemoteWorkerConfigLocations(), paths );
@@ -109,11 +108,9 @@ public class SpringContextUtil {
         ApplicationContext applicationContext = new ClassPathXmlApplicationContext( paths );
 
         timer.stop();
-        if ( applicationContext != null ) {
-            log.info( "Got context in " + timer.getTime() + "ms" );
-        } else {
-            log.fatal( "Failed to load context!" );
-        }
+
+        log.info( "Got context in " + timer.getTime() + "ms" );
+
         return applicationContext;
     }
 
