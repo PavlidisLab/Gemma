@@ -29,7 +29,8 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.security.authorization.SecureValueObject;
+import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
+
 
 /**
  * @author kelsey

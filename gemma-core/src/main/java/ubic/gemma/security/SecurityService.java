@@ -26,7 +26,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.security.authorization.SecureValueObject;
+import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
+
 import ubic.gemma.util.AuthorityConstants;
 
 /**

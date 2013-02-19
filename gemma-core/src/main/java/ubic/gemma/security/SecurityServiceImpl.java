@@ -60,10 +60,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authentication.UserService;
-import ubic.gemma.security.authorization.SecureValueObject;
+
 import ubic.gemma.security.authorization.acl.AclService;
 import ubic.gemma.util.AuthorityConstants;
 

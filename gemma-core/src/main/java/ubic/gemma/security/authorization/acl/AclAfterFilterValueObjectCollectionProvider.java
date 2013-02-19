@@ -35,8 +35,9 @@ import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.Authentication;
 
+import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.security.authorization.SecureValueObject;
+
 
 
 

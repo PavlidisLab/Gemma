@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.security.authorization;
+package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 
