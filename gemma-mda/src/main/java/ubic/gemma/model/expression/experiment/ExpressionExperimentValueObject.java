@@ -28,17 +28,23 @@ import java.util.List;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.security.authorization.SecureValueObject;
 
 /**
  * @author kelsey
  * @version $Id$
  */
 public class ExpressionExperimentValueObject implements java.io.Serializable,
-        Comparable<ExpressionExperimentValueObject> {
+        Comparable<ExpressionExperimentValueObject>, SecureValueObject {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -5678747537830051610L;
+    
+    public Class<? extends Securable> getSecurableClass(){
+    	return ExpressionExperimentImpl.class;    	
+    }
 
     /**
      * @param collection
