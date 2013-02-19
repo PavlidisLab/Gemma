@@ -117,6 +117,7 @@
 		<s:after-invocation-provider ref="afterAclMyDataRead" />
 		<s:after-invocation-provider ref="afterAclMyPrivateDataRead" />
 		<s:after-invocation-provider ref="afterAclAllMyData" />
+		<s:after-invocation-provider ref="afterAclValueObjectCollection" />
 		<s:after-invocation-provider ref="afterAclMapRead" />
 		<s:after-invocation-provider ref="afterAclMapValuesRead" />
 		<s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->
@@ -418,6 +419,20 @@
 		</constructor-arg>
 		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
 	</bean>
+	
+	<bean id="afterAclValueObjectCollection" class="ubic.gemma.security.authorization.acl.AclAfterFilterValueObjectCollectionProvider">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
+			<list>
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
+			</list>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+	</bean>
+	
+	
 
 	<!-- needed for the use of @Post.. -->
 	<bean id="postInvocationAdviceProvider" class="org.springframework.security.access.prepost.PostInvocationAdviceProvider">

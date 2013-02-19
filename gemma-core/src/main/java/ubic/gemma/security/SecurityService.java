@@ -15,14 +15,18 @@
 package ubic.gemma.security;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.security.authorization.SecureValueObject;
 import ubic.gemma.util.AuthorityConstants;
 
 /**
@@ -341,4 +345,6 @@ public interface SecurityService {
     public abstract void setOwner( Securable s, String userName );
 
     public String getGroupAuthorityNameFromGroupName( String groupName );
+    
+    public boolean hasPermission( SecureValueObject svo, List<Permission> requiredPermissions, Authentication authentication );
 }

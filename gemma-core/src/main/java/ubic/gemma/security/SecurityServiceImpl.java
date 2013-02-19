@@ -63,6 +63,7 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authentication.UserService;
+import ubic.gemma.security.authorization.SecureValueObject;
 import ubic.gemma.security.authorization.acl.AclService;
 import ubic.gemma.util.AuthorityConstants;
 
@@ -73,6 +74,7 @@ import ubic.gemma.util.AuthorityConstants;
  * @author paul
  * @version $Id$
  */
+
 @Service
 public class SecurityServiceImpl implements SecurityService {
 
@@ -1355,6 +1357,25 @@ public class SecurityServiceImpl implements SecurityService {
             acl = aclService.readAclById( objectIdentity, sids );
             // administrative mode = true
             return acl.isGranted( requiredPermissions, sids, true );
+        } catch ( NotFoundException ignore ) {
+            return false;
+        }
+    }
+    
+    
+    public boolean hasPermission( SecureValueObject svo, List<Permission> requiredPermissions, Authentication authentication ) {
+
+        List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
+
+        Acl acl = null;
+
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl(svo.getSecurableClass(), svo.getId());
+        
+        try {
+            // Lookup only ACLs for SIDs we're interested in (this actually get them all)
+            acl = aclService.readAclById( objectIdentity, sids );
+            // administrative mode = false
+            return acl.isGranted( requiredPermissions, sids, false);
         } catch ( NotFoundException ignore ) {
             return false;
         }

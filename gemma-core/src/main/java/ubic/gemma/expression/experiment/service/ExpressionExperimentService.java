@@ -580,6 +580,7 @@ public interface ExpressionExperimentService {
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      * @return
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
     /**
