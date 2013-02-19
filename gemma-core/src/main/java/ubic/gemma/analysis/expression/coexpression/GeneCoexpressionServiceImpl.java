@@ -1407,16 +1407,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @return
      */
     private List<ExpressionExperimentValueObject> getSortedEEvos( Collection<Long> eeIds ) {
-
-        /* security will filter experiments */
-        Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
-
-        Collection<Long> filteredIds = new HashSet<Long>();
-        for ( ExpressionExperiment ee : experiments ) {
-            filteredIds.add( ee.getId() );
-        }
+        
+    	//expressionExperimentService.loadValueObjects is secured
         List<ExpressionExperimentValueObject> securityFilteredEevos = new ArrayList<ExpressionExperimentValueObject>(
-                expressionExperimentService.loadValueObjects( filteredIds, false ) );
+                expressionExperimentService.loadValueObjects( eeIds, false ) );
 
         List<ExpressionExperimentValueObject> eevos = new ArrayList<ExpressionExperimentValueObject>();
 
