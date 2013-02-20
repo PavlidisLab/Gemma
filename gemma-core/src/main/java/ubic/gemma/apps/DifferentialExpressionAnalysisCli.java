@@ -329,8 +329,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             successObjects.add( ee.toString() );
 
         } catch ( Exception e ) {
-            log.error( "Error while processing " + e + ": " + e.getMessage() );
-            log.error( e, e );
+            log.error( "Error while processing " + ee + ": " + e.getMessage() );
+
             errorObjects.add( ee + ": " + e.getMessage() );
         }
 
