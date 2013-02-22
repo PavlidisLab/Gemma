@@ -439,40 +439,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Query query = this.getSession().createQuery( qs );
         return query.list();
     }
-
-    @Override
-    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
-        String qs = "select distinct ee from ExpressionExperimentImpl as ee " + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample ";
-        String where = " where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
-
-        Query query = this.getSession().createQuery( qs + where );
-        query.setParameter( "taxon", taxon );
-        return query.list();
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
-        String qs = "select distinct ee from ExpressionExperimentImpl as ee " + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample ";
-        String where = " where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
-
-        if ( orderField.equals( "taxon" ) ) {
-            qs += where + " order by sample.sourceTaxon " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "bioAssayCount" ) ) {
-            qs += where + "group by ee.id order by count(distinct ba) " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "troubled" ) ) {
-            qs += "inner join ee.status as status " + where + "order by status.troubled " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "dateLastUpdated" ) ) {
-            qs += "inner join ee.status as s " + where + " order by s.lastUpdateDate " + ( descending ? "desc" : "" );
-        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
-            qs += where + " order by ee." + orderField + " " + ( descending ? "desc" : "" );
-        }
-        Query query = this.getSession().createQuery( qs );
-        query.setParameter( "taxon", taxon );
-        return query.list();
-    }
-
+    
     /*
      * (non-Javadoc)
      * 
@@ -509,28 +476,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return this.getHibernateTemplate().find(
                 "select e from ExpressionExperimentImpl e where e.characteristics.size = 0" );
     }
-
-    @Override
-    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
-        String qs = "Select distinct ee from ExpressionExperimentImpl ee ";
-        if ( orderField.equals( "taxon" ) ) {
-            qs += "inner join ee.bioAssays as ba " + "inner join ba.samplesUsed as sample " + "where ee.id in (:ids) "
-                    + "order by sample.sourceTaxon " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "bioAssayCount" ) ) {
-            qs += "inner join ee.bioAssays as ba " + "where ee.id in (:ids) " + "group by ee.id "
-                    + "order by count(ba) " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "dateLastUpdated" ) ) {
-            qs += "inner join ee.status as s " + "where ee.id in (:ids) " + "group by ee.id "
-                    + "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
-        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
-            qs += " where ee.id in (:ids) ";
-            qs += " order by ee." + orderField + " " + ( descending ? "desc" : "" );
-        }
-        Query query = this.getSession().createQuery( qs );
-        query.setParameterList( "ids", ids );
-        return query.list();
-    }
-
+    
     @Override
     public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
         Collection<Long> ids = new HashSet<Long>();
@@ -1679,7 +1625,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
     	
-    	String idRestrictionClause = "where taxon.id = (:tid) ";
+    	String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
     	
     	final String queryString = getLoadValueObjectsQueryString(idRestrictionClause, null);
     	
@@ -1707,7 +1653,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
     	
-    	String idRestrictionClause = "where taxon.id = (:tid) ";
+    	String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid)";
     	
     	final String queryString = getLoadValueObjectsQueryString(idRestrictionClause, orderByClause);
     	

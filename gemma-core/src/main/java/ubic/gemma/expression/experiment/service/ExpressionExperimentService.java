@@ -508,10 +508,7 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperiment> loadLackingTags();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> loadMultiple( Collection<Long> ids );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
+    public Collection<ExpressionExperiment> loadMultiple( Collection<Long> ids );    
 
     /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the

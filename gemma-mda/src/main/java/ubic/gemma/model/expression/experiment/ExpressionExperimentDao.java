@@ -323,10 +323,6 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<Long> getUntroubled( Collection<Long> ids );
 
     public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
-
-    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
-
-    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
     
     public List<ExpressionExperimentValueObject> loadAllValueObjects();
     
@@ -339,8 +335,6 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ExpressionExperiment> loadLackingFactors();
 
     public Collection<ExpressionExperiment> loadLackingTags();
-
-    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
 
     /**
      * @param eeId

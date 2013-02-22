@@ -968,11 +968,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.load( ids );
     }
 
-    @Override
-    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadMultipleOrdered( orderField, descending, ids );
-    }
-
     /*
      * Note: implemented via SpringSecurity.
      * 
