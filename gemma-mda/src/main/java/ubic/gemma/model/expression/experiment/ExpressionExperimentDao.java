@@ -327,6 +327,14 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
 
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
+    
+    public List<ExpressionExperimentValueObject> loadAllValueObjects();
+    
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
+
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
+
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending, Taxon taxon );
 
     public Collection<ExpressionExperiment> loadLackingFactors();
 
@@ -344,6 +352,8 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      */
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
+    
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered(String orderField, boolean descending, Collection<Long> ids  );
 
     /**
      * 

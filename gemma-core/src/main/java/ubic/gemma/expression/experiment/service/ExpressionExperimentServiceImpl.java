@@ -923,28 +923,27 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public Collection<ExpressionExperiment> loadAll() {
         return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.loadAll();
     }
-
+    
     @Override
-    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
-        return this.expressionExperimentDao.loadAllOrdered( orderField, descending );
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
-        return this.expressionExperimentDao.loadAllTaxon( taxon );
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
-        return this.expressionExperimentDao.loadAllTaxonOrdered( orderField, descending, taxon );
-    }
-
-    /**
-     * @see ExpressionExperimentService#loadAllValueObjects()
-     */
     public Collection<ExpressionExperimentValueObject> loadAllValueObjects() {
-        return this.handleLoadAllValueObjects();
+        return this.expressionExperimentDao.loadAllValueObjects();
     }
+
+    @Override
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
+        return this.expressionExperimentDao.loadAllValueObjectsOrdered( orderField, descending );
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
+        return this.expressionExperimentDao.loadAllValueObjectsTaxon( taxon );
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
+        return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
+    }
+
 
     @Override
     public ExpressionExperiment loadBySubsetId( Long id ) {
@@ -1027,6 +1026,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
          */
         return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
 
+    }
+    @Override
+    public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending, Collection<Long> ids ){
+    	
+    	return new ArrayList(this.expressionExperimentDao.loadValueObjectsOrdered(orderField, descending, ids));
+    	
     }
 
     /*
@@ -1202,27 +1207,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         this.expressionExperimentDao.remove( ee );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAllValueObjects()
-     */
-    protected Collection<ExpressionExperimentValueObject> handleLoadAllValueObjects() {
-
-        /* security will filter for us */
-        // FIXME I'm not sure if this filtering actually works. See note for handleLoadValueObjects.
-        Collection<ExpressionExperiment> experiments = this.loadAll();
-
-        List<Long> filteredIds = new LinkedList<Long>();
-        for ( ExpressionExperiment ee : experiments ) {
-            filteredIds.add( ee.getId() );
-        }
-
-        /* now load the value objects for the filtered ids */
-        return this.loadValueObjects( filteredIds, false );
-
     }
 
     /**

@@ -493,16 +493,7 @@ public interface ExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadAll();
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
-
+    
     /**
      * @param id of a subset of an experiment
      * @return the experiment, or null if there isn't one.
@@ -573,15 +564,32 @@ public interface ExpressionExperimentService {
     public ExpressionExperimentValueObject loadValueObject( Long eeId );
 
     /**
-     * Note: does not fill in security info fields (isPublic, shared, currentUserHasWritePermission, etc) TODO SECURE:
+     * Note: does not fill in security info fields   (isPublic, shared, currentUserHasWritePermission, etc) TODO SECURE:
      * How to secure value objects, should take a secured EE or a collection of secured EE's....?
      * 
      * @param ids
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      * @return
+     * 
+     * TODO fill in the security info (see above)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjects();
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending, Taxon taxon );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending, Collection<Long> ids );
 
     /**
      * Remove raw vectors associated with the given quantitation type. It does not touch processed data.

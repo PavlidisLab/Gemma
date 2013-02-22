@@ -326,11 +326,11 @@ public class ExpressionExperimentController {
         int limit = batch.getLimit();
         int origStart = batch.getStart();
         // have to load entities instead of directly loading value objects because we need security filtering
-        List<ExpressionExperiment> records = loadAllOrdered( batch );
+        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch );
 
         // if user is not admin, remove troubled experiments
         if ( !SecurityServiceImpl.isUserAdmin() ) {
-            records = removeTroubledExperiments( records );
+            records = removeTroubledExperimentVOs( records );
         }
 
         /*
@@ -346,18 +346,19 @@ public class ExpressionExperimentController {
             stop = records.size();
         }
 
-        List<ExpressionExperiment> recordsSubset = records.subList( start, stop );
+        List<ExpressionExperimentValueObject> recordsSubset = records.subList( start, stop );
 
-        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( recordsSubset ) );
+        //this populates securityInfo TODO populate security info in filter
+        //List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+        //        getExpressionExperimentValueObjects( recordsSubset ) );
 
         // if admin, want to show why experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( valueObjects );
+            expressionExperimentReportService.getEventInformation( recordsSubset );
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                valueObjects, count );
+                recordsSubset, count );
 
         return returnVal;
     }
@@ -381,11 +382,11 @@ public class ExpressionExperimentController {
                     + ", but this id is invalid. Browsing without taxon restriction." );
             return browse( batch );
         }
-        List<ExpressionExperiment> records = loadAllOrdered( batch, taxon );
+        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch, taxon );
 
         // if user is not admin, remove troubled experiments
         if ( !SecurityServiceImpl.isUserAdmin() ) {
-            records = removeTroubledExperiments( records );
+            records = removeTroubledExperimentVOs( records );
         }
 
         /*
@@ -400,17 +401,19 @@ public class ExpressionExperimentController {
         if ( batch.getLimit() == 0 ) {
             pSize = count;
         }
+        
+        List<ExpressionExperimentValueObject> recordsSubset =  records.subList( origStart, pSize );
 
-        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
+        //List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+        //        getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( valueObjects );
+            expressionExperimentReportService.getEventInformation( recordsSubset );
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                valueObjects, count );
+        		recordsSubset, count );
 
         return returnVal;
     }
@@ -433,11 +436,11 @@ public class ExpressionExperimentController {
         int origStart = batch.getStart();
 
         Set<Long> noDupIds = new HashSet<Long>( ids );
-        List<ExpressionExperiment> records = loadAllOrdered( batch, noDupIds );
+        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch, noDupIds );
 
         // if user is not admin, remove troubled experiments
         if ( !SecurityServiceImpl.isUserAdmin() ) {
-            records = removeTroubledExperiments( records );
+            records = removeTroubledExperimentVOs( records );
         }
 
         int pSize = Math.min( origStart + origLimit, records.size() );
@@ -447,16 +450,18 @@ public class ExpressionExperimentController {
             pSize = records.size();
         }
 
-        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-                getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
+        List<ExpressionExperimentValueObject> recordsSubset = records.subList( origStart, pSize );
+        
+        //List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+        //        getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( valueObjects );
+            expressionExperimentReportService.getEventInformation( recordsSubset );
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                valueObjects, records.size() );
+        		recordsSubset, records.size() );
         return returnVal;
     }
 
@@ -1917,6 +1922,10 @@ public class ExpressionExperimentController {
     private List<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
             Collection<Long> eeIds, boolean filterDataForUser, Integer limit, boolean showPublic ) {
 
+    	//TODO this can be cleaned up substantially by using new loading valueobject through secured methods
+    	
+    	
+    	
         List<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
 
         StopWatch timer = new StopWatch();
@@ -2052,16 +2061,16 @@ public class ExpressionExperimentController {
         return eventDates;
     }
 
-    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch ) {
-        return loadAllOrdered( batch, null, null );
+    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch ) {
+        return loadAllValueObjectsOrdered( batch, null, null );
     }
 
-    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Collection<Long> ids ) {
-        return loadAllOrdered( batch, ids, null );
+    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Collection<Long> ids ) {
+        return loadAllValueObjectsOrdered( batch, ids, null );
     }
 
-    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Collection<Long> ids, Taxon taxon ) {
-        List<ExpressionExperiment> records;
+    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Collection<Long> ids, Taxon taxon ) {
+        List<ExpressionExperimentValueObject> records;
         if ( StringUtils.isNotBlank( batch.getSort() ) ) {
 
             String o = batch.getSort();
@@ -2086,49 +2095,42 @@ public class ExpressionExperimentController {
             }
 
             if ( ids != null ) {
-                records = expressionExperimentService.loadMultipleOrdered( orderBy, descending, ids );
+                records = expressionExperimentService.loadValueObjectsOrdered( orderBy, descending, ids );
             } else if ( taxon != null ) {
-                records = expressionExperimentService.loadAllTaxonOrdered( orderBy, descending, taxon );
+                records = expressionExperimentService.loadAllValueObjectsTaxonOrdered( orderBy, descending, taxon );
             } else {
-                records = expressionExperimentService.loadAllOrdered( orderBy, descending );
+                records = expressionExperimentService.loadAllValueObjectsOrdered( orderBy, descending );
             }
         } else {
             if ( ids != null ) {
-                records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadMultiple( ids ) );
+                records = new ArrayList<ExpressionExperimentValueObject>( expressionExperimentService.loadValueObjects( ids, true ) );
             } else if ( taxon != null ) {
-                records = expressionExperimentService.loadAllTaxon( taxon );
+                records = expressionExperimentService.loadAllValueObjectsTaxon( taxon );
             } else {
-                records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadAll() );
+                records = new ArrayList<ExpressionExperimentValueObject>( expressionExperimentService.loadAllValueObjects() );
             }
         }
         return records;
     }
 
-    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Taxon taxon ) {
-        return loadAllOrdered( batch, null, taxon );
+    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Taxon taxon ) {
+        return loadAllValueObjectsOrdered( batch, null, taxon );
     }
+    
+    
+    
+    
+    private List<ExpressionExperimentValueObject> removeTroubledExperimentVOs( List<ExpressionExperimentValueObject> records ) {
+        List<ExpressionExperimentValueObject> untroubled = new ArrayList<ExpressionExperimentValueObject>( records );
+        
+        Collection<ExpressionExperimentValueObject> toRemove = new ArrayList<ExpressionExperimentValueObject>();
+        for ( ExpressionExperimentValueObject record : records ) {
 
-    /**
-     * Return a version of the passed in list where all troubled experiments have been removed
-     * 
-     * @param records
-     * @return filtered list of records
-     */
-    private List<ExpressionExperiment> removeTroubledExperiments( List<ExpressionExperiment> records ) {
-        List<ExpressionExperiment> untroubled = new ArrayList<ExpressionExperiment>( records );
-        // Map<Long, AuditEvent> troubleEvents = expressionExperimentReportService.getTroubledEvents( records );
-        // Long id = null;
-        Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
-        for ( ExpressionExperiment record : records ) {
-
-            Status s = statusService.getStatus( record );
-            if ( s != null && s.getTroubled() ) {
+            
+            if ( record.getTroubled() ) {
                 toRemove.add( record );
             }
-            // id = record.getId();
-            // if ( troubleEvents.containsKey( id ) ) {
-            // toRemove.add( record );
-            // }
+            
         }
         untroubled.removeAll( toRemove );
         return untroubled;

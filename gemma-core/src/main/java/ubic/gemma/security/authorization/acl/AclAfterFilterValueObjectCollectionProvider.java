@@ -43,7 +43,7 @@ import ubic.gemma.security.SecurityService;
 
 /**
  * @author cmcdonald
- *
+ *TODO add info for security related fields here if applicable (e.g. for ExpressionExperimentValueObject: currentUserHasWritePermission, currentUserIsOwner etc.)
  */
 public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProvider {
     
