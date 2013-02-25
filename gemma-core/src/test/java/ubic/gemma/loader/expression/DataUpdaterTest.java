@@ -42,6 +42,7 @@ import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -131,6 +132,15 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         for ( BioAssay ba : updatedee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+            BioMaterial bm = ba.getSamplesUsed().iterator().next();
+            assertTrue( bm.getCharacteristics().size() > 0 );
+            boolean found = false;
+            for ( Characteristic c : bm.getCharacteristics() ) {
+                if ( c.getCategory().equals( "count" ) ) {
+                    found = true;
+                }
+            }
+            assertTrue( found );
         }
 
         assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );

@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.analysis.expression.AnalysisUtilService;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -45,6 +48,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -53,13 +57,16 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * Update the data associated with an experiment. Primary designed for filling in data that we can't or don't want to
@@ -80,10 +87,19 @@ public class DataUpdater {
     private BioAssayDimensionService assayDimensionService;
 
     @Autowired
+    private BioMaterialService bioMaterialService;
+
+    @Autowired
+    private BioAssayService bioAssayService;
+
+    @Autowired
     private AuditTrailService auditTrailService;
 
     @Autowired
     private ExpressionExperimentService experimentService;
+
+    @Autowired
+    private AnalysisUtilService analysisUtilService;
 
     @Autowired
     private GeoService geoService;
@@ -304,6 +320,7 @@ public class DataUpdater {
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
+
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
             throw new IllegalArgumentException( "Can only replace data for an experiment that uses one platform; "
@@ -334,6 +351,11 @@ public class DataUpdater {
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "no vectors!" );
         }
+
+        /*
+         * delete all analyses, etc.
+         */
+        analysisUtilService.deleteOldAnalyses( ee );
 
         ee = experimentService.replaceVectors( ee, targetPlatform, vectors );
 
@@ -366,50 +388,78 @@ public class DataUpdater {
      * 
      * @param ee
      * @param targetArrayDesign
-     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided)
-     * @param rpkmMatrix Representing per-gene normalized data, which is treated as the 'preferred' data. If this is
-     *        provided, all the other data will be removed.
+     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
+     *        data. If this is provided, all the other data will be removed.
+     * @param rpkmMatrix Representing per-gene normalized data, optional.
      */
     public void addCountDataMatricesToExperiment( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix ) {
         // make the proper matrices we need for loading.
 
-        if ( countMatrix == null && rpkmMatrix == null )
-            throw new IllegalArgumentException( "You must provide either counts or rpkm or both" );
+        if ( countMatrix == null )
+            throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
+
+        /*
+         * Treat this as the preferred data, so we have to do it first.
+         */
+        DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = matchElementsToRowNames( targetArrayDesign,
+                countMatrix );
+        matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
+        QuantitationType countqt = makeQt( true );
+        countqt.setName( "Counts" );
+        countqt.setDescription( "Read counts" );
+        countqt.setIsBackgroundSubtracted( false );
+        countqt.setIsNormalized( false );
+        ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
+
+        ee = replaceData( ee, targetArrayDesign, countEEMatrix );
+
+        addTotalCountInformation( ee, countEEMatrix );
 
         if ( rpkmMatrix != null ) {
-            /*
-             * Treat this as the preferred data, so we have to do it first.
-             */
 
             DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = matchElementsToRowNames( targetArrayDesign,
                     rpkmMatrix );
             matchBioMaterialsToColNames( ee, rpkmMatrix, properRPKMMatrix );
-            QuantitationType rpkmqt = makeQt( true );
+            QuantitationType rpkmqt = makeQt( false );
             rpkmqt.setIsRatio( false );
             rpkmqt.setName( "RPKM" );
             rpkmqt.setDescription( "Reads (or fragments) per kb of gene model per million reads" );
             rpkmqt.setIsBackgroundSubtracted( false );
             rpkmqt.setIsNormalized( true );
             ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, rpkmqt, properRPKMMatrix );
-            // note call to replace
-            ee = replaceData( ee, targetArrayDesign, rpkmEEMatrix );
+
+            ee = addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
-        if ( countMatrix != null ) {
+    }
 
-            DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = matchElementsToRowNames(
-                    targetArrayDesign, countMatrix );
-            matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
-            QuantitationType countqt = makeQt( false );
-            countqt.setName( "Counts" );
-            countqt.setDescription( "Read counts" );
-            countqt.setIsBackgroundSubtracted( false );
-            countqt.setIsNormalized( false );
-            ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
-            ee = addData( ee, targetArrayDesign, countEEMatrix );
+    /**
+     * @param ee
+     * @param countEEMatrix
+     */
+    private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix ) {
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            Double[] col = countEEMatrix.getColumn( ba );
+            double librarySize = DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) );
+
+            // Ideally also know read length.
+            ba.setDescription( ba.getDescription() + " totalCounts=" + Math.floor( librarySize ) );
+
+            // This isn't a very good place to keep this...
+            VocabCharacteristic countTerm = VocabCharacteristic.Factory.newInstance();
+            countTerm.setName( "LibrarySize" );
+            countTerm.setDescription( "Total read counts in sample, computed from the imported data." );
+            // this is really a placeholder.
+            countTerm.setCategory( "count" );
+            countTerm.setCategoryUri( "http://purl.obolibrary.org/obo/PATO_0000070" );
+            countTerm.setValue( String.format( "%d", ( int ) Math.floor( librarySize ) ) );
+            BioMaterial bm = ba.getSamplesUsed().iterator().next();
+            bm.getCharacteristics().add( countTerm );
+            bioMaterialService.update( bm );
+            bioAssayService.update( ba );
+
         }
-
     }
 
     /**
