@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -923,7 +922,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public Collection<ExpressionExperiment> loadAll() {
         return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.loadAll();
     }
-    
+
     @Override
     public Collection<ExpressionExperimentValueObject> loadAllValueObjects() {
         return this.expressionExperimentDao.loadAllValueObjects();
@@ -940,10 +939,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
+            boolean descending, Taxon taxon ) {
         return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
     }
-
 
     @Override
     public ExpressionExperiment loadBySubsetId( Long id ) {
@@ -1022,11 +1021,13 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
 
     }
+
     @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending, Collection<Long> ids ){
-    	
-    	return new ArrayList(this.expressionExperimentDao.loadValueObjectsOrdered(orderField, descending, ids));
-    	
+    public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+            Collection<Long> ids ) {
+
+        return new ArrayList( this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
+
     }
 
     /*

@@ -40,6 +40,8 @@ import ubic.gemma.loader.expression.geo.util.GeoConstants;
  */
 public class GeoPlatform extends GeoData {
 
+    private static final String DISTRIBUTION_VIRTUAL = "virtual";
+
     private static final long serialVersionUID = 1L;
 
     private static Log log = LogFactory.getLog( GeoPlatform.class.getName() );
@@ -79,7 +81,7 @@ public class GeoPlatform extends GeoData {
 
     private String support = "";
 
-    private GeoDataset.PlatformType technology;
+    private GeoDataset.PlatformType technology = null;
 
     private Collection<String> webLinks = new HashSet<String>();
 
@@ -440,9 +442,10 @@ public class GeoPlatform extends GeoData {
             throw new IllegalStateException( "Don't call until the technology type is filled in" );
         }
 
-        if ( technology.equals( PlatformType.MPSS ) || technology.equals( PlatformType.SAGE )
-                || technology.equals( PlatformType.SAGENlaIII ) || technology.equals( PlatformType.SAGERsaI )
-                || technology.equals( PlatformType.SAGESau3A ) ) {
+        if ( DISTRIBUTION_VIRTUAL.equals( this.distribution ) || technology.equals( PlatformType.MPSS )
+                || technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII )
+                || technology.equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A )
+                || technology.equals( PlatformType.other ) ) {
             return false;
         }
 

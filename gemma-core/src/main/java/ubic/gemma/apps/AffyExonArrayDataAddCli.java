@@ -36,9 +36,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author paul
  * @version $Id$
  */
-public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
+public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI {
 
-    private static final String ADD_OPT = "add";
     private static final String APT_FILE_OPT = "aptFile";
     private String aptFile = null;
 
@@ -48,8 +47,6 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
         super.addOption( APT_FILE_OPT, true,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
 
-        // dinstead of apt file, perhaps we just need the generic file.
-        super.addOption( ADD_OPT, false, "Add the data, rather than replace it." );
     }
 
     @Override
@@ -67,13 +64,12 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "DataUpdater", args );
+        super.processCommandLine( "AffyExonArrayDataAdd", args );
 
         DataUpdater serv = getBean( DataUpdater.class );
 
         if ( StringUtils.isNotBlank( aptFile ) ) {
             if ( this.expressionExperiments.size() > 1 ) {
-
                 throw new IllegalArgumentException( "Can't use -aptfile unless you are doing just one experiment" );
             }
             BioAssaySet ee = this.expressionExperiments.iterator().next();
@@ -120,7 +116,7 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
                     serv.addAffyExonArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
                 } else {
-                    // need to have an input file.
+                    throw new IllegalStateException( "This CLI can only deal with exon arrays" );
 
                 }
             } catch ( Exception e ) {
@@ -137,7 +133,7 @@ public class DataUpdaterCli extends ExpressionExperimentManipulatingCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        DataUpdaterCli c = new DataUpdaterCli();
+        AffyExonArrayDataAddCli c = new AffyExonArrayDataAddCli();
         c.doWork( args );
     }
 

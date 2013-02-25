@@ -2444,7 +2444,8 @@ public class GeoConverterImpl implements GeoConverter {
             // we don't support this directly
             arrayDesign.setTechnologyType( TechnologyType.NONE );
         } else if ( technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII )
-                || technology.equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) ) {
+                || technology.equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A )
+                || technology.equals( PlatformType.other ) ) {
             // we don't support this directly
             arrayDesign.setTechnologyType( TechnologyType.NONE );
         } else {

@@ -43,6 +43,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.SimpleJdbcTestUtils;
 import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -283,6 +284,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, true );
+    }
+
+    public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
+        return testHelper.getTestPersistentBioSequence2GeneProducts( bioSequence );
     }
 
     /**

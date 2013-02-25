@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -46,6 +48,8 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -54,6 +58,8 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author paul
@@ -71,6 +77,79 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ProcessedExpressionDataVectorService dataVectorService;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    /**
+     * More realistic test of RNA seq.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testLoadRNASeqData() throws Exception {
+        // GSE19166
+        ExpressionExperiment ee;
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+
+        } catch ( AlreadyExistsInSystemException e ) {
+            ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
+        }
+
+        ee = experimentService.thaw( ee );
+
+        // Load the data from a text file.
+        DoubleMatrixReader reader = new DoubleMatrixReader();
+
+        InputStream countData = this.getClass().getResourceAsStream(
+                "/data/loader/expression/flatfileLoad/GSE19166_expression_count.test.txt" );
+        DoubleMatrix<String, String> countMatrix = reader.read( countData );
+
+        InputStream rpkmData = this.getClass().getResourceAsStream(
+                "/data/loader/expression/flatfileLoad/GSE19166_expression_RPKM.test.txt" );
+        DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
+
+        List<String> probeNames = countMatrix.getRowNames();
+
+        // we have to find the right generic platform to use.
+        ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
+                taxonService.findByCommonName( "human" ) );
+        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+
+        dataUpdater.addCountDataMatricesToExperiment( ee, targetArrayDesign, countMatrix, rpkmMatrix );
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+        }
+
+        /*
+         * Check
+         */
+        ExpressionExperiment updatedee = experimentService.thaw( ee );
+
+        for ( BioAssay ba : updatedee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+        }
+
+        assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
+
+        assertEquals( 199, updatedee.getProcessedExpressionDataVectors().size() );
+
+        Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
+
+        for ( DoubleVectorValueObject v : processedDataArrays ) {
+            BioAssayDimension bad = v.getBioAssayDimension();
+            assertEquals( 6, bad.getBioAssays().size() );
+
+        }
+
+        /*
+         * Should test that values aren't scrambled.
+         */
+
+    }
 
     /**
      * @throws Exception
@@ -92,7 +171,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            // log.warn( "Test skipped because GSE1133 was not removed from the system prior to test" );
+            // log.warn( "Test skipped because GSE37646 was not removed from the system prior to test" );
             ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
         }
 
@@ -204,6 +283,45 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         return qt;
+    }
+
+    private ArrayDesign getTestPersistentArrayDesign( List<String> probeNames, Taxon t ) {
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+
+        ad.setShortName( "Generic_" + t.getCommonName() );
+        ad.setName( "Generic test platform for " + t.getCommonName() );
+        ad.setTechnologyType( TechnologyType.NONE );
+        ad.setPrimaryTaxon( t );
+
+        ArrayDesign existing = arrayDesignService.findByShortName( ad.getShortName() );
+        if ( existing != null ) {
+            // hm, annoying, need to delete
+            return existing;
+        }
+
+        for ( int i = 0; i < probeNames.size(); i++ ) {
+
+            // Reporter reporter = Reporter.Factory.newInstance();
+            CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
+
+            compositeSequence.setName( probeNames.get( i ) );
+
+            // compositeSequence.getComponentReporters().add( reporter );
+            compositeSequence.setArrayDesign( ad );
+            ad.getCompositeSequences().add( compositeSequence );
+
+            BioSequence bioSequence = getTestPersistentBioSequence();
+            compositeSequence.setBiologicalCharacteristic( bioSequence );
+            bioSequence.setBioSequence2GeneProduct( this.getTestPersistentBioSequence2GeneProducts( bioSequence ) );
+
+        }
+
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            cs.setArrayDesign( ad );
+        }
+        assert ( ad.getCompositeSequences().size() == probeNames.size() );
+
+        return ( ArrayDesign ) persisterHelper.persist( ad );
     }
 
 }

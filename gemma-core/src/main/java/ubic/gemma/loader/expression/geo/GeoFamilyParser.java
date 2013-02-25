@@ -80,18 +80,19 @@ public class GeoFamilyParser implements Parser<Object> {
     private static final int MAX_WARNINGS = 100;
 
     private static Log log = LogFactory.getLog( GeoFamilyParser.class.getName() );
-    Integer previousNumTokens = null;
+    private Integer previousNumTokens = null;
+
     /**
      * For each platform, the map of column names to column numbers in the data.
      */
-    Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<GeoPlatform, Map<String, Integer>>();
+    private Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<GeoPlatform, Map<String, Integer>>();
 
     /**
      * This is used to put the data in the right place later. We know the actual column is where it is NOW, for this
      * sample, but in our data structure we put it where we EXPECT it to be (where it was the first time we saw it).
      * This is our attempt to fix problems with columns moving around from sample to sample.
      */
-    Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<GeoPlatform, Map<Integer, Integer>>();
+    private Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<GeoPlatform, Map<Integer, Integer>>();
 
     boolean alreadyWarnedAboutClobbering = false;
     boolean alreadyWarnedAboutInconsistentColumnOrder = false;
@@ -732,6 +733,7 @@ public class GeoFamilyParser implements Parser<Object> {
         if ( platforms.size() > 1 ) {
             log.warn( "Multiple platforms for " + this.currentSample() );
         }
+
         GeoPlatform platformForSample = platforms.iterator().next();
         log.debug( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
 
@@ -1073,6 +1075,7 @@ public class GeoFamilyParser implements Parser<Object> {
                 inPlatform = false;
                 inSeries = false;
             } else if ( startsWithIgnoreCase( line, "^SAMPLE" ) ) {
+
                 processedDesignElements.clear();
                 inSample = true;
                 inSubset = false;
@@ -1586,6 +1589,9 @@ public class GeoFamilyParser implements Parser<Object> {
             // e.g. 'transcriptomic'
         } else if ( startsWithIgnoreCase( line, "!Sample_library_strategy" ) ) {
             // e.g. 'RNA-seq'
+            if ( value.equals( "RNA-seq" ) ) {
+                sampleSet( currentSampleAccession, "mightNotHaveDataInFile", true );
+            }
         } else if ( startsWithIgnoreCase( line, "!Sample_anchor" ) ) {
             // e.g. NlaIII for SAGE
         } else if ( startsWithIgnoreCase( line, "!Sample_tag_length" ) ) {

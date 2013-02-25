@@ -63,12 +63,12 @@ public class GeoValues implements Serializable {
     /*
      * This plays the role of the BioAssayDimension; map of platform --> quantitationType --> samples
      */
-    Map<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>> sampleDimensions = new HashMap<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>>();
+    private Map<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>> sampleDimensions = new HashMap<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>>();
 
     /*
      * Map of platform --> quantitationtype -> designElement -> values; values in same order as sampleVector.
      */
-    Map<GeoPlatform, Map<Object, Map<String, List<Object>>>> data = new HashMap<GeoPlatform, Map<Object, Map<String, List<Object>>>>();
+    private Map<GeoPlatform, Map<Object, Map<String, List<Object>>>> data = new HashMap<GeoPlatform, Map<Object, Map<String, List<Object>>>>();
 
     // private Map<Object, String> quantitationTypeMap = new HashMap<Object, String>();
 
@@ -214,16 +214,24 @@ public class GeoValues implements Serializable {
         if ( platform.getTechnology().equals( PlatformType.MPSS )
                 || platform.getTechnology().equals( PlatformType.SAGE ) ) {
             /*
-             * We're not going to add data for this. ALSO: exon arrays.
+             * We're not going to add data for this. Note
              */
             return;
 
         } else if ( !sampleDimensions.containsKey( platform ) ) {
             /*
-             * Problem: if this is the first sample, we don't know how many quantitation types to expect.
+             * Problem: if this is the first sample, we don't know how many quantitation types to expect. However, for
+             * some data sets, there is no data provided in the SOFT file (e.g., RNA-seq), so this would be okay.
              */
-            throw new UnsupportedOperationException(
-                    "Can't deal with empty samples when that sample is the first one on its platform." );
+            if ( sample.isMightNotHaveDataInFile() ) {
+                addSample( sample, 0 );
+                log.warn( "Adding dummy quantitation type" );
+                return;
+                // throw new IllegalStateException( "Samples must have a platform assigned." );
+            } else {
+                throw new UnsupportedOperationException(
+                        "Can't deal with empty samples when that sample is the first one on its platform." );
+            }
         } else {
 
             Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
@@ -588,7 +596,16 @@ public class GeoValues implements Serializable {
                 int numSamples = sampleDimensions.get( platform ).get( qType ).size();
 
                 if ( skippableQuantitationTypes.contains( qType ) ) continue;
-                Collection<String> qtNames = quantitationTypeIndexMap.get( platform ).get( qType );
+                Map<Integer, Collection<String>> qtMap = quantitationTypeIndexMap.get( platform );
+                if ( qtMap == null ) {
+                    // for data sets where there is no data, this could happen.
+                    if ( platform.useDataFromGeo() ) {
+                        throw new IllegalStateException( "Missing quantitation type index map for " + platform );
+                    } else {
+                        continue;
+                    }
+                }
+                Collection<String> qtNames = qtMap.get( qType );
 
                 Map<String, List<Object>> q = d.get( qType );
                 boolean warned = false;
