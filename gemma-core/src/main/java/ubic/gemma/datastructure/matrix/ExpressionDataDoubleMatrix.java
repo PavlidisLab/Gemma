@@ -229,6 +229,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             i++;
         }
 
+        assert !bioAssayDimensions.isEmpty();
+
         setUpColumnElements();
 
     }
