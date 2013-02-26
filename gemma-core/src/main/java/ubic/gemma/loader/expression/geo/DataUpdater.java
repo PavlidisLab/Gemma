@@ -399,6 +399,8 @@ public class DataUpdater {
         if ( countMatrix == null )
             throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
 
+        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+
         /*
          * Treat this as the preferred data, so we have to do it first.
          */
