@@ -40,7 +40,6 @@ import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
  * @version $Id$
  * @deprecated
  */
-//TODO:   This needs to be changed due to deprecation of gigaspaces.
 @Deprecated
 public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
 
@@ -62,7 +61,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
         }
     }
 
-//    private SpacesUtil spacesUtil = null;
+    // private SpacesUtil spacesUtil = null;
 
     private GigaSpacesTemplate template = null;
 
@@ -138,7 +137,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
      */
     protected void init() throws Exception {
 
-//        spacesUtil = this.getBean( SpacesUtil.class );
+        // spacesUtil = this.getBean( SpacesUtil.class );
         ApplicationContext updatedContext = null; // spacesUtil.addGemmaSpacesToApplicationContext();
 
         if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
@@ -184,20 +183,20 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
                 /* configure this client to receive notifications */
                 try {
-// FIXME: JMS migration
-//                    template.addNotifyDelegatorListener( this, new SpacesProgressEntry(), null, true, Lease.FOREVER,
-//                            NotifyModifiers.NOTIFY_ALL );
+                    // FIXME: JMS migration
+                    // template.addNotifyDelegatorListener( this, new SpacesProgressEntry(), null, true, Lease.FOREVER,
+                    // NotifyModifiers.NOTIFY_ALL );
 
                 } catch ( Exception e ) {
                     throw new RuntimeException( e );
                 }
 
-//                if ( !spacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName() ) ) continue;
+                // if ( !spacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName() ) ) continue;
 
                 ExpressionExperimentLoadTaskCommand command = new ExpressionExperimentLoadTaskCommand( platformOnly,
                         !doMatching, accession, aggressive, false, null );
 
-               // res = proxy.execute( command );
+                // res = proxy.execute( command );
 
                 stopwatch.stop();
                 long wt = stopwatch.getTime();
