@@ -38,8 +38,10 @@ import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
  * 
  * @author keshav
  * @version $Id$
+ * @deprecated
  */
 //TODO:   This needs to be changed due to deprecation of gigaspaces.
+@Deprecated
 public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataCli implements RemoteEventListener {
 
     /**
