@@ -39,6 +39,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.DataUpdater;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
@@ -90,6 +91,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Test
     public void testLoadRNASeqData() throws Exception {
         // GSE19166
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         ExpressionExperiment ee;
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false, false );
