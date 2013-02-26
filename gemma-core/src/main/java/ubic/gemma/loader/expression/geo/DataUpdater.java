@@ -628,11 +628,11 @@ public class DataUpdater {
                 failedMatch++;
                 if ( timesWarned < 20 ) {
                     log.warn( "No platform match to element named: " + rowName );
-                    timesWarned++;
                 }
                 if ( timesWarned == 20 ) {
                     log.warn( "Further warnings suppressed" );
                 }
+                timesWarned++;
             }
             usableRowNames.add( rowName );
             newRowNames.add( cs );
