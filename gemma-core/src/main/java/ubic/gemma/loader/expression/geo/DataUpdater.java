@@ -48,7 +48,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -62,7 +61,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -81,25 +79,22 @@ public class DataUpdater {
     private static Log log = LogFactory.getLog( DataUpdater.class );
 
     @Autowired
+    private AnalysisUtilService analysisUtilService;
+
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
     @Autowired
     private BioAssayDimensionService assayDimensionService;
 
     @Autowired
-    private BioMaterialService bioMaterialService;
+    private AuditTrailService auditTrailService;
 
     @Autowired
     private BioAssayService bioAssayService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
     private ExpressionExperimentService experimentService;
-
-    @Autowired
-    private AnalysisUtilService analysisUtilService;
 
     @Autowired
     private GeoService geoService;
@@ -214,6 +209,112 @@ public class DataUpdater {
 
         postprocess( ee );
 
+    }
+
+    /**
+     * Replaces data.
+     * 
+     * @param ee
+     * @param targetArrayDesign
+     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
+     *        data. If this is provided, all the other data will be removed.
+     * @param rpkmMatrix Representing per-gene normalized data, optional.
+     * @param readLength
+     * @param isPairedReads
+     * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
+     */
+    public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
+            DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
+            Boolean isPairedReads, boolean allowMissingSamples ) {
+
+        if ( countMatrix == null )
+            throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
+
+        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+
+        ee = experimentService.thawLite( ee );
+
+        ee = dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
+
+        /*
+         * Treat this as the preferred data, so we have to do it first.
+         */
+        DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = matchElementsToRowNames( targetArrayDesign,
+                countMatrix );
+        matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
+        QuantitationType countqt = makeCountQt();
+        ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
+
+        ee = replaceData( ee, targetArrayDesign, countEEMatrix );
+
+        addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
+
+        if ( rpkmMatrix != null ) {
+
+            DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = matchElementsToRowNames( targetArrayDesign,
+                    rpkmMatrix );
+            matchBioMaterialsToColNames( ee, rpkmMatrix, properRPKMMatrix );
+            QuantitationType rpkmqt = makeRPKMQt();
+            ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, rpkmqt, properRPKMMatrix );
+
+            ee = addData( ee, targetArrayDesign, rpkmEEMatrix );
+        }
+
+    }
+
+    /**
+     * @param ee
+     * @param countMatrix
+     * @param allowMissingSamples
+     * @return
+     */
+    private ExpressionExperiment dealWithMissingSamples( ExpressionExperiment ee,
+            DoubleMatrix<String, String> countMatrix, boolean allowMissingSamples ) {
+        if ( ee.getBioAssays().size() > countMatrix.columns() ) {
+            if ( allowMissingSamples ) {
+
+                Map<String, BioMaterial> bmMap = makeBioMaterialNameMap( ee );
+                List<BioAssay> usedBioAssays = new ArrayList<BioAssay>();
+                List<BioMaterial> newColNames = new ArrayList<BioMaterial>();
+                for ( String colName : countMatrix.getColNames() ) {
+                    BioMaterial bm = bmMap.get( colName );
+                    if ( bm == null ) {
+                        throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName );
+                    }
+                    newColNames.add( bm );
+                    usedBioAssays.addAll( bm.getBioAssaysUsedIn() );
+                }
+
+                assert usedBioAssays.size() == countMatrix.columns();
+
+                Collection<BioAssay> toRemove = new HashSet<BioAssay>();
+                for ( BioAssay ba : ee.getBioAssays() ) {
+                    if ( !usedBioAssays.contains( ba ) ) {
+                        toRemove.add( ba );
+                        log.info( "Will remove unused bioassay from experiment: " + ba );
+                    }
+                }
+
+                if ( !toRemove.isEmpty() ) {
+                    ee.getBioAssays().removeAll( toRemove );
+                    experimentService.update( ee );
+                    ee = experimentService.load( ee.getId() );
+                    ee = experimentService.thawLite( ee );
+
+                    if ( ee.getBioAssays().size() != countMatrix.columns() ) {
+                        throw new IllegalStateException( "Something went wrong, could not remove unused samples" );
+                    }
+                }
+
+            } else {
+                throw new IllegalArgumentException( "Too little data provided: The experiment has "
+                        + ee.getBioAssays().size() + " samples but the data has " + countMatrix.columns() + " columns." );
+            }
+        } else if ( ee.getBioAssays().size() < countMatrix.columns() ) {
+            throw new IllegalArgumentException( "Extra data provided: The experiment has " + ee.getBioAssays().size()
+                    + " samples but the data has " + countMatrix.columns() + " columns." );
+        }
+        return ee;
     }
 
     /**
@@ -384,81 +485,22 @@ public class DataUpdater {
     }
 
     /**
-     * Replaces data.
-     * 
-     * @param ee
-     * @param targetArrayDesign
-     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
-     *        data. If this is provided, all the other data will be removed.
-     * @param rpkmMatrix Representing per-gene normalized data, optional.
-     */
-    public void addCountDataMatricesToExperiment( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
-            DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix ) {
-        // make the proper matrices we need for loading.
-
-        if ( countMatrix == null )
-            throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
-
-        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
-
-        /*
-         * Treat this as the preferred data, so we have to do it first.
-         */
-        DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = matchElementsToRowNames( targetArrayDesign,
-                countMatrix );
-        matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
-        QuantitationType countqt = makeQt( true );
-        countqt.setName( "Counts" );
-        countqt.setDescription( "Read counts" );
-        countqt.setIsBackgroundSubtracted( false );
-        countqt.setIsNormalized( false );
-        ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
-
-        ee = replaceData( ee, targetArrayDesign, countEEMatrix );
-
-        addTotalCountInformation( ee, countEEMatrix );
-
-        if ( rpkmMatrix != null ) {
-
-            DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = matchElementsToRowNames( targetArrayDesign,
-                    rpkmMatrix );
-            matchBioMaterialsToColNames( ee, rpkmMatrix, properRPKMMatrix );
-            QuantitationType rpkmqt = makeQt( false );
-            rpkmqt.setIsRatio( false );
-            rpkmqt.setName( "RPKM" );
-            rpkmqt.setDescription( "Reads (or fragments) per kb of gene model per million reads" );
-            rpkmqt.setIsBackgroundSubtracted( false );
-            rpkmqt.setIsNormalized( true );
-            ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, rpkmqt, properRPKMMatrix );
-
-            ee = addData( ee, targetArrayDesign, rpkmEEMatrix );
-        }
-
-    }
-
-    /**
      * @param ee
      * @param countEEMatrix
+     * @param readLength
+     * @param isPairedReads
      */
-    private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix ) {
+    private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
+            Integer readLength, Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             Double[] col = countEEMatrix.getColumn( ba );
             double librarySize = DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) );
 
-            // Ideally also know read length.
             ba.setDescription( ba.getDescription() + " totalCounts=" + Math.floor( librarySize ) );
+            ba.setSequenceReadLength( readLength );
+            ba.setSequencePairedReads( isPairedReads );
+            ba.setSequenceReadCount( ( int ) Math.floor( librarySize ) );
 
-            // This isn't a very good place to keep this...
-            VocabCharacteristic countTerm = VocabCharacteristic.Factory.newInstance();
-            countTerm.setName( "LibrarySize" );
-            countTerm.setDescription( "Total read counts in sample, computed from the imported data." );
-            // this is really a placeholder.
-            countTerm.setCategory( "count" );
-            countTerm.setCategoryUri( "http://purl.obolibrary.org/obo/PATO_0000070" );
-            countTerm.setValue( String.format( "%d", ( int ) Math.floor( librarySize ) ) );
-            BioMaterial bm = ba.getSamplesUsed().iterator().next();
-            bm.getCharacteristics().add( countTerm );
-            bioMaterialService.update( bm );
             bioAssayService.update( ba );
 
         }
@@ -479,6 +521,20 @@ public class DataUpdater {
         }
 
         auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
+    /**
+     * @return
+     */
+    private QuantitationType makeCountQt() {
+        QuantitationType countqt = makeQt( true );
+        countqt.setName( "Counts" );
+        countqt.setType( StandardQuantitationType.COUNT );
+        countqt.setScale( ScaleType.COUNT );
+        countqt.setDescription( "Read counts for gene model" );
+        countqt.setIsBackgroundSubtracted( false );
+        countqt.setIsNormalized( false );
+        return countqt;
     }
 
     /**
@@ -551,15 +607,51 @@ public class DataUpdater {
     }
 
     /**
+     * @return
+     */
+    private QuantitationType makeRPKMQt() {
+        QuantitationType rpkmqt = makeQt( false );
+        rpkmqt.setIsRatio( false );
+        rpkmqt.setName( "RPKM" );
+        rpkmqt.setDescription( "Reads (or fragments) per kb of gene model per million reads" );
+        rpkmqt.setIsBackgroundSubtracted( false );
+        rpkmqt.setIsNormalized( true );
+        return rpkmqt;
+    }
+
+    /**
      * @param ee
      * @param rawMatrix
      * @param finalMatrix
+     * @param allowMissingSamples set to true if you know some samples in the experiment lack data in the input.
      */
     private void matchBioMaterialsToColNames( ExpressionExperiment ee, DoubleMatrix<String, String> rawMatrix,
             DoubleMatrix<CompositeSequence, BioMaterial> finalMatrix ) {
         // match column names to the samples. can have any order so be careful.
         List<String> colNames = rawMatrix.getColNames();
+        Map<String, BioMaterial> bmMap = makeBioMaterialNameMap( ee );
+
+        List<BioAssay> usedBioAssays = new ArrayList<BioAssay>();
+        List<BioMaterial> newColNames = new ArrayList<BioMaterial>();
+        for ( String colName : colNames ) {
+            BioMaterial bm = bmMap.get( colName );
+            if ( bm == null ) {
+                throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName );
+            }
+            newColNames.add( bm );
+            usedBioAssays.addAll( bm.getBioAssaysUsedIn() );
+        }
+
+        finalMatrix.setColumnNames( newColNames );
+    }
+
+    /**
+     * @param ee
+     * @return map of strings to biomaterials, where the keys are likely column names used in the input files.
+     */
+    private Map<String, BioMaterial> makeBioMaterialNameMap( ExpressionExperiment ee ) {
         Map<String, BioMaterial> bmMap = new HashMap<String, BioMaterial>();
+
         Collection<BioAssay> bioAssays = ee.getBioAssays();
         for ( BioAssay bioAssay : bioAssays ) {
             Collection<BioMaterial> samplesUsed = bioAssay.getSamplesUsed();
@@ -589,17 +681,9 @@ public class DataUpdater {
                 }
                 bmMap.put( bm.getExternalAccession().getAccession(), bm );
             }
-        }
 
-        List<BioMaterial> newColNames = new ArrayList<BioMaterial>();
-        for ( String colName : colNames ) {
-            BioMaterial bm = bmMap.get( colName );
-            if ( bm == null ) {
-                throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName );
-            }
-            newColNames.add( bm );
         }
-        finalMatrix.setColumnNames( newColNames );
+        return bmMap;
     }
 
     /**
@@ -644,7 +728,7 @@ public class DataUpdater {
         DoubleMatrix<CompositeSequence, BioMaterial> finalMatrix;
         if ( failedMatch > 0 ) {
             log.warn( failedMatch + "/" + rawMatrix.rows()
-                    + " elements could not be matched to the platform. Lines that did not match will be ignore." );
+                    + " elements could not be matched to the platform. Lines that did not match will be ignored." );
             DoubleMatrix<String, String> useableData = rawMatrix.subsetRows( usableRowNames );
             finalMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( useableData.getRawMatrix() );
 

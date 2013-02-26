@@ -385,9 +385,11 @@ public class QuantitationTypeParameterGuesser {
     protected static StandardQuantitationType guessType( String name, String description ) {
         for ( StandardQuantitationType type : typeDescPatterns.keySet() ) {
 
-            if ( type == StandardQuantitationType.AMOUNT && !maybeDerivedSignal( name ) ) {
+            boolean isQuant = type == StandardQuantitationType.AMOUNT || type == StandardQuantitationType.COUNT;
+
+            if ( isQuant && !maybeDerivedSignal( name ) ) {
                 continue;
-            } else if ( type == StandardQuantitationType.AMOUNT && !maybeMeasuredSignal( name ) ) {
+            } else if ( isQuant && !maybeMeasuredSignal( name ) ) {
                 continue;
             }
 
@@ -633,7 +635,7 @@ public class QuantitationTypeParameterGuesser {
         isNormalized = isNormalized( namelc, descriptionlc );
         isRatio = isRatio( namelc, descriptionlc );
 
-        if ( qType.equals( StandardQuantitationType.AMOUNT ) ) {
+        if ( qType.equals( StandardQuantitationType.AMOUNT ) || qType.equals( StandardQuantitationType.COUNT ) ) {
             gType = GeneralType.QUANTITATIVE;
         } else if ( qType.equals( StandardQuantitationType.PRESENTABSENT ) ) {
             gType = GeneralType.CATEGORICAL;

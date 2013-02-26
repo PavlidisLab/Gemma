@@ -15,6 +15,7 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -27,76 +28,35 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
  */
 public class BioAssayValueObject implements Serializable {
 
-    private BioMaterialValueObject sample;
-
     private DatabaseEntryValueObject accession = null;
 
-    public DatabaseEntryValueObject getAccession() {
-        return accession;
-    }
-
-    public void setAccession( DatabaseEntryValueObject accession ) {
-        this.accession = accession;
-    }
-
-    public BioMaterialValueObject getSample() {
-        return sample;
-    }
-
-    public void setSample( BioMaterialValueObject sample ) {
-        this.sample = sample;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public boolean isOutlier() {
-        return outlier;
-    }
-
-    public void setOutlier( boolean outlier ) {
-        this.outlier = outlier;
-    }
-
-    private Long id = null;
-    private String name = "";
-    private String description = "";
-    private boolean outlier = false;
     private ArrayDesignValueObject arrayDesign;
 
-    public ArrayDesignValueObject getArrayDesign() {
-        return arrayDesign;
-    }
+    private String description = "";
 
-    public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
+    private Long id = null;
+
+    private String name = "";
+
+    private boolean outlier = false;
+
+    private Date processingDate;
+
+    private BioMaterialValueObject sample;
+
+    private Boolean sequencePairedReads;
+
+    private Integer sequenceReadCount;
+
+    private Integer sequenceReadLength;
 
     public BioAssayValueObject() {
 
     }
 
+    /**
+     * @param bioAssay
+     */
     public BioAssayValueObject( BioAssay bioAssay ) {
         this.id = bioAssay.getId();
         this.name = bioAssay.getName();
@@ -108,6 +68,11 @@ public class BioAssayValueObject implements Serializable {
         arrayDesign.setShortName( ad.getShortName() );
         arrayDesign.setName( ad.getName() );
 
+        this.processingDate = bioAssay.getProcessingDate();
+        this.sequencePairedReads = bioAssay.getSequencePairedReads();
+        this.sequenceReadLength = bioAssay.getSequenceReadLength();
+        this.sequenceReadCount = bioAssay.getSequenceReadCount();
+
         if ( bioAssay.getAccession() != null ) {
             this.accession = new DatabaseEntryValueObject( bioAssay.getAccession() );
         }
@@ -116,6 +81,94 @@ public class BioAssayValueObject implements Serializable {
             this.sample = new BioMaterialValueObject( bioAssay.getSamplesUsed().iterator().next(), bioAssay );
         }
 
+    }
+
+    public DatabaseEntryValueObject getAccession() {
+        return accession;
+    }
+
+    public ArrayDesignValueObject getArrayDesign() {
+        return arrayDesign;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Date getProcessingDate() {
+        return processingDate;
+    }
+
+    public BioMaterialValueObject getSample() {
+        return sample;
+    }
+
+    public Boolean getSequencePairedReads() {
+        return sequencePairedReads;
+    }
+
+    public Integer getSequenceReadCount() {
+        return sequenceReadCount;
+    }
+
+    public Integer getSequenceReadLength() {
+        return sequenceReadLength;
+    }
+
+    public boolean isOutlier() {
+        return outlier;
+    }
+
+    public void setAccession( DatabaseEntryValueObject accession ) {
+        this.accession = accession;
+    }
+
+    public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
+        this.arrayDesign = arrayDesign;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public void setOutlier( boolean outlier ) {
+        this.outlier = outlier;
+    }
+
+    public void setProcessingDate( Date processingDate ) {
+        this.processingDate = processingDate;
+    }
+
+    public void setSample( BioMaterialValueObject sample ) {
+        this.sample = sample;
+    }
+
+    public void setSequencePairedReads( Boolean sequencePairedReads ) {
+        this.sequencePairedReads = sequencePairedReads;
+    }
+
+    public void setSequenceReadCount( Integer sequenceReadCount ) {
+        this.sequenceReadCount = sequenceReadCount;
+    }
+
+    public void setSequenceReadLength( Integer sequenceReadLength ) {
+        this.sequenceReadLength = sequenceReadLength;
     }
 
 }

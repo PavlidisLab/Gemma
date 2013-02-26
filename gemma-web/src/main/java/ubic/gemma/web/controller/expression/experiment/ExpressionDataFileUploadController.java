@@ -140,7 +140,7 @@ public class ExpressionDataFileUploadController {
                 commandObject.getArrayDesigns().add( arrayDesign );
             }
 
-            commandObject.setType( StandardQuantitationType.AMOUNT );
+            commandObject.setType( StandardQuantitationType.AMOUNT ); // FIXME might need to be COUNT for some data.
             commandObject.setGeneralType( GeneralType.QUANTITATIVE );
             commandObject.setIsMaskedPreferred( true );
 
@@ -165,12 +165,18 @@ public class ExpressionDataFileUploadController {
 
     private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ArrayDesignService arrayDesignService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-    @Autowired private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-    @Autowired private TaxonService taxonService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    @Autowired
+    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+    @Autowired
+    private TaxonService taxonService;
 
     /**
      * AJAX
@@ -178,9 +184,9 @@ public class ExpressionDataFileUploadController {
      * @param loadEECommand
      * @return the taskid
      */
-    public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand) {
+    public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand ) {
         loadEECommand.setValidateOnly( false );
-        return taskRunningService.submitLocalJob(new SimpleEELoadLocalJob(loadEECommand));
+        return taskRunningService.submitLocalJob( new SimpleEELoadLocalJob( loadEECommand ) );
     }
 
     /**
@@ -224,8 +230,8 @@ public class ExpressionDataFileUploadController {
      */
     public String validate( SimpleExpressionExperimentLoadTaskCommand command ) throws Exception {
         assert command != null;
-        command.setValidateOnly(true);
-        return taskRunningService.submitLocalJob(new SimpleEEValidateLocalJob( command ));
+        command.setValidateOnly( true );
+        return taskRunningService.submitLocalJob( new SimpleEEValidateLocalJob( command ) );
     }
 
     /**

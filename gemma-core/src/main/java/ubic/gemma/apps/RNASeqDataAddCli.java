@@ -32,8 +32,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
+    private static final String ALLOW_MISSING = "allowMissing";
     private static final String COUNT_FILE_OPT = "count";
     private static final String RPKM_FILE_OPT = "rpkm";
+    private static final String METADATAOPT = "rlen";
 
     /**
      * @param args
@@ -44,9 +46,12 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     }
 
+    private boolean allowMissingSamples = false;
+
     private String countFile = null;
     private String platformName = null;
-
+    private boolean isPairedReads = false;
+    private Integer readLength = null;
     private String rpkmFile = null;
 
     @Override
@@ -56,8 +61,11 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         super.addOption( COUNT_FILE_OPT, true, "File with count data" );
 
         super.addOption( COUNT_FILE_OPT, true, "File with count data" );
-
+        super.addOption( ALLOW_MISSING, false, "Set this if your data files don't have information for all samples." );
         super.addOption( "a", true, "Target platform (must already exist in the system)" );
+
+        super.addOption( METADATAOPT, true,
+                "Information on read length given as a string like '100:paired', '36 (assumed unpaired)', or '36:unpaired' " );
 
     }
 
@@ -87,7 +95,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                 rpkmMatrix = reader.read( rpkmFile );
             }
 
-            serv.addCountDataMatricesToExperiment( ee, targetArrayDesign, countMatrix, rpkmMatrix );
+            serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, readLength, isPairedReads,
+                    allowMissingSamples );
 
         } catch ( IOException e ) {
             log.error( "Failed while processing " + ee, e );
@@ -128,6 +137,31 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( COUNT_FILE_OPT ) ) {
             this.countFile = getOptionValue( COUNT_FILE_OPT );
         }
+
+        if ( hasOption( METADATAOPT ) ) {
+            String metaString = getOptionValue( METADATAOPT );
+            String[] msf = metaString.split( ":" );
+
+            if ( msf.length > 2 ) {
+                throw new IllegalArgumentException( METADATAOPT
+                        + " must be supplied with string in format N:{unpaired|paired}" );
+            }
+
+            this.readLength = Integer.parseInt( msf[0] );
+
+            if ( msf.length == 2 ) {
+                if ( msf.equals( "paired" ) ) {
+                    this.isPairedReads = true;
+                } else if ( msf.equals( "unpaired" ) ) {
+                    this.isPairedReads = false;
+                } else {
+                    throw new IllegalArgumentException( "Value must be either 'paired' or 'unpaired' or left blank" );
+                }
+            }
+
+        }
+
+        this.allowMissingSamples = hasOption( ALLOW_MISSING );
 
         if ( rpkmFile == null && countFile == null )
             throw new IllegalArgumentException( "Must provide either RPKM or count data (or both)" );

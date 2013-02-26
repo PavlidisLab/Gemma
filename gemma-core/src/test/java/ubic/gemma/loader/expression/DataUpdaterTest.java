@@ -43,7 +43,6 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -121,11 +120,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
                 taxonService.findByCommonName( "human" ) );
         targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
-        dataUpdater.addCountDataMatricesToExperiment( ee, targetArrayDesign, countMatrix, rpkmMatrix );
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
-        }
+        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
 
         /*
          * Check
@@ -134,16 +129,20 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         for ( BioAssay ba : updatedee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
-            BioMaterial bm = ba.getSamplesUsed().iterator().next();
-            assertTrue( bm.getCharacteristics().size() > 0 );
-            boolean found = false;
-            for ( Characteristic c : bm.getCharacteristics() ) {
-                if ( c.getCategory().equals( "count" ) ) {
-                    found = true;
-                }
-            }
-            assertTrue( found );
         }
+
+        boolean found = false;
+        for ( BioAssay ba : updatedee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+
+            assertEquals( 36, ba.getSequenceReadLength().intValue() );
+
+            if ( ba.getDescription().contains( "GSM475204" ) ) {
+                assertEquals( 3949585, ba.getSequenceReadCount().intValue() );
+                found = true;
+            }
+        }
+        assertTrue( found );
 
         assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
 
@@ -156,10 +155,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 6, bad.getBioAssays().size() );
 
         }
-
-        /*
-         * Should test that values aren't scrambled.
-         */
 
     }
 

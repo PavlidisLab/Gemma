@@ -681,6 +681,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
             log.info( " **** LOG TRANSFORMING **** " );
             MatrixStats.logTransform( namedMatrix );
+        } else if ( scaleType.equals( ScaleType.COUNT ) ) {
+            /*
+             * FIXME compute the log2 CPM.
+             */
+            throw new UnsupportedOperationException("Count data not yet supported");
         } else {
             throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
         }
