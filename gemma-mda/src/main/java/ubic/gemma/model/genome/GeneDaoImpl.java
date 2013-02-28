@@ -1053,7 +1053,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                                 + " left join fetch g.auditTrail at left join fetch at.events "
                                 + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
                                 + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                                + " left join fetch g.taxon t left join fetch t.externalDatabase" + " where g.id=:gid",
+                                + " left join fetch g.taxon t left join fetch t.externalDatabase left join fetch g.multifunctionality " + " where g.id=:gid",
                         "gid", gene.getId() );
 
         return ( Gene ) res.iterator().next();

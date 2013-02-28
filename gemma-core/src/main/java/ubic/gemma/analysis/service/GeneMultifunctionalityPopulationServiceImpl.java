@@ -114,9 +114,12 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
                 Multifunctionality updatedMf = mfs.get( g );
 
                 Multifunctionality oldMf = g.getMultifunctionality();
+
                 if ( oldMf == null ) {
                     g.setMultifunctionality( updatedMf );
                 } else {
+                    g = geneService.thaw( g );
+                    oldMf = g.getMultifunctionality();
                     oldMf.setNumGoTerms( updatedMf.getNumGoTerms() );
                     oldMf.setRank( updatedMf.getRank() );
                     oldMf.setScore( updatedMf.getScore() );
