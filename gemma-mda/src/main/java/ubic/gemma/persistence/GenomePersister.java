@@ -254,13 +254,12 @@ abstract public class GenomePersister extends CommonPersister {
                     existingGene.getProducts().add( newGeneProductInfo );
                 } else {
                     /*
-                     * This can only happen if this gene product is associated with a different gene. This actually
-                     * seems to happen when a transcript is associated with two genes in NCBI, so the switching is
-                     * actually not useful to us, but we do it anyway to be consistent (and in case it really does
-                     * matter). The rarity of this makes me think it is a mistake in NCBI (in all cases so far, it's a
-                     * genome-duplicated gene, so there may be an arbitrary choice to make ). The problem for us is at
-                     * this point in processing, we don't know if the gene is going to get 'reattached' to its original
-                     * gene.
+                     * This can only happen if this gene product is associated with a different gene. This happens when
+                     * a transcript is associated with two genes in NCBI, so the switching is actually not useful to us,
+                     * but we do it anyway to be consistent (and in case it really does matter). It is rare. Causes can
+                     * be 1) bicistronic genes such as human LUZP6 and MTPN; 2) genome-duplicated genes; or 3) an error
+                     * in the data source. The problem for us is at this point in processing, we don't know if the gene
+                     * is going to get 'reattached' to its original gene.
                      */
                     assert existingGeneProduct != null;
                     existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
