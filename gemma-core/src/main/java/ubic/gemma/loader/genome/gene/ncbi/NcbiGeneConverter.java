@@ -103,7 +103,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
         /*
          * NOTE we allow multiple discontinued or previous ids, separated by commas. This is a hack to account for cases
-         * uncovered recently...
+         * uncovered recently...can be minimized by running this regularly.
          */
         if ( info.getHistory() != null ) {
             if ( info.getHistory().getCurrentId() != null ) {
@@ -117,8 +117,9 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             }
 
         } else if ( StringUtils.isNotBlank( info.getDiscontinuedId() ) ) {
-            log.info( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
-                    + info.getDiscontinuedId() );
+            if ( log.isDebugEnabled() )
+                log.debug( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
+                        + info.getDiscontinuedId() );
             gene.setPreviousNcbiId( info.getDiscontinuedId() );
         }
 
@@ -310,7 +311,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         return gene;
     }
 
-
     /*
      * Threaded conversion of domain objects to Gemma objects.
      */
@@ -334,7 +334,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                             continue;
                         }
                         Gene converted = convert( data );
-                    
+
                         geneQueue.put( converted );
 
                     } catch ( InterruptedException e ) {
