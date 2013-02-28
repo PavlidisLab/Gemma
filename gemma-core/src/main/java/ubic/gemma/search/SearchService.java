@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 import ubic.gemma.model.common.search.SearchSettings;
 
 /**
@@ -75,5 +76,7 @@ public interface SearchService {
      * @return
      */
     public abstract List<?> search( SearchSettings settings, Class<?> resultClass );
+    
+    public abstract Map<Class<?>, List<SearchResult>> searchForNewlyCreatedUserQueryResults( UserQuery uq );
 
 }

@@ -19,5 +19,7 @@ package ubic.gemma.model.common.search;
  * @version $Id$
  */
 public interface SearchSettingsDao {
+	
+	public SearchSettings create( SearchSettings searchSettings );
 
 }

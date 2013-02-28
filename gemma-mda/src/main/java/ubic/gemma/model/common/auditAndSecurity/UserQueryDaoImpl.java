@@ -53,7 +53,8 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
      */
     @Override
     public UserQuery create( UserQuery userQuery ) {
-        return ( UserQuery ) this.getHibernateTemplate().save( userQuery );
+        this.getHibernateTemplate().save( userQuery );
+        return userQuery;
 
     }
 

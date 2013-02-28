@@ -18,6 +18,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 import ubic.gemma.persistence.AbstractDao;
 
 /**
@@ -32,4 +33,13 @@ public class SearchSettingsDaoImpl extends AbstractDao<SearchSettings> implement
         super( SearchSettingsDaoImpl.class );
         super.setSessionFactory( sessionFactory );
     }
+    
+    @Override
+    public SearchSettings create( SearchSettings searchSettings ) {
+        this.getHibernateTemplate().save( searchSettings );
+        
+        return searchSettings;
+
+    }
+
 }

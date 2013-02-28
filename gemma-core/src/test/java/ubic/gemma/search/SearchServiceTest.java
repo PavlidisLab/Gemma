@@ -24,14 +24,21 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.ibm.icu.util.GregorianCalendar;
+
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.model.common.auditAndSecurity.UserQuery;
+import ubic.gemma.model.common.auditAndSecurity.UserQueryDao;
+import ubic.gemma.model.common.auditAndSecurity.UserQueryService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyService;
@@ -40,6 +47,7 @@ import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 import java.io.InputStream;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -77,13 +85,20 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     @Autowired
     IndexerTask indexerTask;
+    
+    @Autowired
+    UserQueryService userQueryService;
 
     private ExpressionExperiment ee;
     private Gene gene;
     private VocabCharacteristic eeCharSpinalCord;
     private VocabCharacteristic eeCharGeneURI;
     private VocabCharacteristic eeCharCortexURI;
-
+    
+    private UserQuery thePastUserQuery;
+    
+    private UserQuery theFutureUserQuery;
+    
     boolean setup = false;
 
     private String geneNcbiId;
@@ -135,6 +150,48 @@ public class SearchServiceTest extends BaseSpringContextTest {
         gene.setNcbiId( geneNcbiId );
         gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
+        
+        
+        thePastUserQuery = UserQuery.Factory.newInstance();
+    	
+    	Calendar calendar = Calendar.getInstance();
+
+    	calendar.set(Calendar.YEAR, 1979);//the past
+    	calendar.set(Calendar.MONTH, 1); 
+    	calendar.set(Calendar.DAY_OF_MONTH, 1); 
+    	
+    	thePastUserQuery.setLastUsed(calendar.getTime());
+    	
+        SearchSettings settings = SearchSettings.Factory.newInstance();
+        
+        settings.noSearches();
+        settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
+        settings.setSearchExperiments( true );
+        settings.setUseCharacteristics( true );
+        
+        thePastUserQuery.setSearchSettings(settings);
+        thePastUserQuery.setUrl("someUrl");
+
+    	calendar.add(Calendar.YEAR, 2000);//the future 	
+    	
+    	theFutureUserQuery = UserQuery.Factory.newInstance();
+    	theFutureUserQuery.setLastUsed(calendar.getTime());
+    	
+    	SearchSettings futureSettings = SearchSettings.Factory.newInstance();
+        
+    	futureSettings.noSearches();
+    	futureSettings.setQuery( "Brain" ); // should hit 'cavity of brain'.
+    	futureSettings.setSearchExperiments( true );
+    	futureSettings.setUseCharacteristics( true );        
+        
+    	theFutureUserQuery.setSearchSettings(futureSettings);
+        theFutureUserQuery.setUrl("someUrl");
+        
+        //save to db to load later to test if the pipes are clean
+        userQueryService.create(thePastUserQuery);
+        userQueryService.create(theFutureUserQuery);
+        
+        
     }
 
     @After
@@ -266,5 +323,35 @@ public class SearchServiceTest extends BaseSpringContextTest {
         }
         fail( "Didn't get expected result from search" );
     }
+    
+    @Test
+    public void testSearchForUpdatedQueryResults() {
+    	
+    	//test out the dao a bit
+    	UserQuery userQuery = userQueryService.load(thePastUserQuery.getId());
+        
+    	Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults(userQuery);
+        assertTrue( !found.isEmpty() );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                return;
+            }
+        }
+
+        fail( "Didn't get expected result from search" );
+    }
+    
+    @Test
+    public void testSearchForUpdatedQueryResultsNoResults() {
+    	//test out the dao a bit
+    	UserQuery userQuery = userQueryService.load(theFutureUserQuery.getId());
+    	
+        Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults(userQuery);
+        assertTrue( found.isEmpty() );
+
+       
+    }
+
 
 }
