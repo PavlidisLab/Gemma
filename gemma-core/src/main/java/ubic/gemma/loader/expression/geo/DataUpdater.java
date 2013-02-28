@@ -242,6 +242,10 @@ public class DataUpdater {
         DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = matchElementsToRowNames( targetArrayDesign,
                 countMatrix );
         matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
+
+        assert !properCountMatrix.getColNames().isEmpty();
+        assert !properCountMatrix.getRowNames().isEmpty();
+
         QuantitationType countqt = makeCountQt();
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
 
@@ -254,6 +258,10 @@ public class DataUpdater {
             DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = matchElementsToRowNames( targetArrayDesign,
                     rpkmMatrix );
             matchBioMaterialsToColNames( ee, rpkmMatrix, properRPKMMatrix );
+
+            assert !properRPKMMatrix.getColNames().isEmpty();
+            assert !properRPKMMatrix.getRowNames().isEmpty();
+
             QuantitationType rpkmqt = makeRPKMQt();
             ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, rpkmqt, properRPKMMatrix );
 
@@ -709,11 +717,12 @@ public class DataUpdater {
         int timesWarned = 0;
         List<CompositeSequence> newRowNames = new ArrayList<CompositeSequence>();
         List<String> usableRowNames = new ArrayList<String>();
+        assert !rawMatrix.getRowNames().isEmpty();
         for ( String rowName : rawMatrix.getRowNames() ) {
             CompositeSequence cs = pnmap.get( rowName );
             if ( cs == null ) {
                 /*
-                 * This might be okay, but we not too much
+                 * This might be okay, but not too much
                  */
                 failedMatch++;
                 if ( timesWarned < 20 ) {
@@ -723,12 +732,13 @@ public class DataUpdater {
                     log.warn( "Further warnings suppressed" );
                 }
                 timesWarned++;
+                continue;
             }
             usableRowNames.add( rowName );
             newRowNames.add( cs );
         }
 
-        if ( usableRowNames.isEmpty() ) {
+        if ( usableRowNames.isEmpty() || newRowNames.isEmpty() ) {
             throw new IllegalArgumentException( "None of the rows matched the given platform elements" );
         }
         DoubleMatrix<CompositeSequence, BioMaterial> finalMatrix;
@@ -740,9 +750,14 @@ public class DataUpdater {
 
         } else {
             finalMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( rawMatrix.getRawMatrix() );
-            finalMatrix.setRowNames( newRowNames );
+
         }
-        return finalMatrix; // not completel final.
+        finalMatrix.setRowNames( newRowNames );
+        if ( finalMatrix.getRowNames().isEmpty() ) {
+            throw new IllegalStateException( "Failed to get row names" );
+        }
+
+        return finalMatrix; // not actually final.
     }
 
     /**

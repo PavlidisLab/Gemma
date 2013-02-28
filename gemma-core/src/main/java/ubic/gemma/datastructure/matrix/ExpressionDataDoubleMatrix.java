@@ -189,6 +189,16 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, QuantitationType qt,
             DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
+
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Experiment cannot be null" );
+        }
+
+        if ( matrix.rows() == 0 || matrix.columns() == 0 || matrix.getRowNames().isEmpty()
+                || matrix.getColNames().isEmpty() ) {
+            throw new IllegalArgumentException( "Matrix is invalid" );
+        }
+
         init();
         this.expressionExperiment = ee;
         this.matrix = matrix;
@@ -222,6 +232,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         dim.setDescription( "Built from matrix supplied to Constructor" );
         dim.setName( "For " + ee + " from matrix" );
 
+        assert !matrix.getRowNames().isEmpty();
         int i = 0;
         for ( CompositeSequence cs : matrix.getRowNames() ) {
             bioAssayDimensions.put( cs, dim );

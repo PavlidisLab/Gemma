@@ -152,15 +152,15 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 36, ba.getSequenceReadLength().intValue() );
 
             if ( ba.getDescription().contains( "GSM475204" ) ) {
-                assertEquals( 3949585, ba.getSequenceReadCount().intValue() );
+                assertEquals( 3947638, ba.getSequenceReadCount().intValue() );
                 found = true;
             }
         }
         assertTrue( found );
 
-        assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
+        assertEquals( 390, updatedee.getRawExpressionDataVectors().size() );
 
-        assertEquals( 199, updatedee.getProcessedExpressionDataVectors().size() );
+        assertEquals( 195, updatedee.getProcessedExpressionDataVectors().size() );
 
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
 
