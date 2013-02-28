@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -82,14 +83,27 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @After
+    public void tearDown() {
+        ExpressionExperiment e1 = experimentService.findByShortName( "GSE29006" );
+        if ( e1 != null ) {
+            experimentService.delete( e1 );
+        }
+
+        ExpressionExperiment e2 = experimentService.findByShortName( "GSE19166" );
+        if ( e2 != null ) {
+            experimentService.delete( e2 );
+        }
+    }
+
     /**
-     * More realistic test of RNA seq.
+     * More realistic test of RNA seq. GSE19166
      * 
      * @throws Exception
      */
     @Test
     public void testLoadRNASeqData() throws Exception {
-        // GSE19166
+
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         ExpressionExperiment ee;
         try {
@@ -153,6 +167,94 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         for ( DoubleVectorValueObject v : processedDataArrays ) {
             BioAssayDimension bad = v.getBioAssayDimension();
             assertEquals( 6, bad.getBioAssays().size() );
+
+        }
+
+    }
+
+    /**
+     * Test case where some samples cannot be used.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testLoadRNASeqDataWithMissingSamples() throws Exception {
+
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        ExpressionExperiment ee = experimentService.findByShortName( "GSE29006" );
+        if ( ee != null ) {
+            experimentService.delete( ee );
+        }
+
+        assertTrue( experimentService.findByShortName( "GSE29006" ) == null );
+
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            throw new IllegalStateException( "Need to delete this data set before test is run" );
+        }
+
+        ee = experimentService.thaw( ee );
+
+        // Load the data from a text file.
+        DoubleMatrixReader reader = new DoubleMatrixReader();
+
+        InputStream countData = this.getClass().getResourceAsStream(
+                "/data/loader/expression/flatfileLoad/GSE29006_expression_count.test.txt" );
+        DoubleMatrix<String, String> countMatrix = reader.read( countData );
+
+        InputStream rpkmData = this.getClass().getResourceAsStream(
+                "/data/loader/expression/flatfileLoad/GSE29006_expression_RPKM.test.txt" );
+        DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
+
+        List<String> probeNames = countMatrix.getRowNames();
+
+        // we have to find the right generic platform to use.
+        ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
+                taxonService.findByCommonName( "human" ) );
+        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+
+        try {
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+            fail( "Should have gotten an exception" );
+        } catch ( IllegalArgumentException e ) {
+            // Expected
+        }
+        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
+        /*
+         * Check
+         */
+        ExpressionExperiment updatedee = experimentService.thaw( ee );
+
+        for ( BioAssay ba : updatedee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+        }
+
+        assertEquals( 4, updatedee.getBioAssays().size() );
+
+        boolean found = false;
+        for ( BioAssay ba : updatedee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+
+            assertEquals( 36, ba.getSequenceReadLength().intValue() );
+
+            if ( ba.getDescription().contains( "GSM718709" ) ) {
+                assertEquals( 320383, ba.getSequenceReadCount().intValue() );
+                found = true;
+            }
+        }
+        assertTrue( found );
+
+        assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
+
+        assertEquals( 199, updatedee.getProcessedExpressionDataVectors().size() );
+
+        Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
+
+        for ( DoubleVectorValueObject v : processedDataArrays ) {
+            BioAssayDimension bad = v.getBioAssayDimension();
+            assertEquals( 4, bad.getBioAssays().size() );
 
         }
 

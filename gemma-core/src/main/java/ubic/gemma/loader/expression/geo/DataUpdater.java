@@ -304,6 +304,12 @@ public class DataUpdater {
                     if ( ee.getBioAssays().size() != countMatrix.columns() ) {
                         throw new IllegalStateException( "Something went wrong, could not remove unused samples" );
                     }
+
+                    // this should already be done...
+                    for ( BioAssay b : toRemove ) {
+                        bioAssayService.remove( b );
+                    }
+
                 }
 
             } else {
