@@ -459,7 +459,7 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
                 throw new IllegalStateException( "No vectors for useful quantitation types for " + ee.getShortName() );
             }
 
-            designElementDataVectorService.thaw( vectors );
+            // designElementDataVectorService.thaw( vectors ); // should be in a transaction, don't need to do.
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();
 
