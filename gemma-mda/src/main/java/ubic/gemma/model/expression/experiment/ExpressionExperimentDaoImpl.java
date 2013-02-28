@@ -439,7 +439,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Query query = this.getSession().createQuery( qs );
         return query.list();
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -476,7 +476,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return this.getHibernateTemplate().find(
                 "select e from ExpressionExperimentImpl e where e.characteristics.size = 0" );
     }
-    
+
     @Override
     public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
         Collection<Long> ids = new HashSet<Long>();
@@ -1578,30 +1578,29 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
         return ees;
     }
-    
+
     @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjects(){
-    	
-    	final String queryString = getLoadValueObjectsQueryString(null, null);
-    	
-    	Query queryObject = super.getSession().createQuery( queryString );
-    	
-    	List<?> list = queryObject.list();
-    	
-    	Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap(list);
-    	
-        return new ArrayList<ExpressionExperimentValueObject>(vo.values());
-    	
-    	
+    public List<ExpressionExperimentValueObject> loadAllValueObjects() {
+
+        final String queryString = getLoadValueObjectsQueryString( null, null );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+
     }
-    
+
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
-    	String orderByClause="";
-    	if ( orderField.equals( "taxon" ) ) {
-            orderByClause =  "order by taxon.id " + ( descending ? "desc" : "" );
+        String orderByClause = "";
+        if ( orderField.equals( "taxon" ) ) {
+            orderByClause = "order by taxon.id " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "bioAssayCount" ) ) {
-            orderByClause =  "order by count(BA) " + ( descending ? "desc" : "" );
+            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "dateLastUpdated" ) ) {
             orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "troubled" ) ) {
@@ -1609,42 +1608,43 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
             orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
-    	
-    	final String queryString = getLoadValueObjectsQueryString(null, orderByClause);
-    	
-    	Query queryObject = super.getSession().createQuery( queryString );
-    	
-    	List<?> list = queryObject.list();
-    	
-    	Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap(list);
-    	
-        return new ArrayList<ExpressionExperimentValueObject>(vo.values());
-        
+
+        final String queryString = getLoadValueObjectsQueryString( null, orderByClause );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+
     }
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
-    	
-    	String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
-    	
-    	final String queryString = getLoadValueObjectsQueryString(idRestrictionClause, null);
-    	
-    	Query queryObject = super.getSession().createQuery( queryString );
-    	
-    	queryObject.setParameter( "tid", taxon.getId() );
-    	
-    	List<?> list = queryObject.list();
-    	
-    	Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap(list);
-    	
-        return new ArrayList<ExpressionExperimentValueObject>(vo.values());
+
+        String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
+
+        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        queryObject.setParameter( "tid", taxon.getId() );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
-    	String orderByClause="";
-    	if ( orderField.equals( "bioAssayCount" ) ) {
-            orderByClause =  "order by count(BA) " + ( descending ? "desc" : "" );
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
+            boolean descending, Taxon taxon ) {
+        String orderByClause = "";
+        if ( orderField.equals( "bioAssayCount" ) ) {
+            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "dateLastUpdated" ) ) {
             orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "troubled" ) ) {
@@ -1652,73 +1652,72 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
             orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
-    	
-    	String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid)";
-    	
-    	final String queryString = getLoadValueObjectsQueryString(idRestrictionClause, orderByClause);
-    	
-    	Query queryObject = super.getSession().createQuery( queryString );
-    	
-    	queryObject.setParameter( "tid", taxon.getId() );
-    	
-    	List<?> list = queryObject.list();
-    	
-    	Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap(list);
-    	
-        return new ArrayList<ExpressionExperimentValueObject>(vo.values());
+
+        String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid)";
+
+        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        queryObject.setParameter( "tid", taxon.getId() );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
     }
-    
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered(String orderField, boolean descending, Collection<Long> ids){
-    	String orderByClause="";
-    	if ( orderField.equals( "taxon" ) ) {
-            orderByClause =  "order by taxon.id " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "bioAssayCount" ) ) {
-            orderByClause =  "order by count(BA) " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "dateLastUpdated" ) ) {
-            orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "troubled" ) ) {
-            orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
-        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
-            orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
-        }
-    	
-    	String idRestrictionClause = "where ee.id in (:ids) ";
-    	
-    	final String queryString = getLoadValueObjectsQueryString(idRestrictionClause, orderByClause);
-    	
-    	Query queryObject = super.getSession().createQuery( queryString );
-    	
-    	queryObject.setParameterList( "ids", ids );
-    	
-    	List<?> list = queryObject.list();
-    	
-    	Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap(list);
-    	
-        return new ArrayList<ExpressionExperimentValueObject>(vo.values());
-    }
-    
+
     @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids,
-            boolean maintainOrder ) {
-    	
-    	boolean isList = ( ids != null && ids instanceof List );
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+            Collection<Long> ids ) {
+        String orderByClause = "";
+        if ( orderField.equals( "taxon" ) ) {
+            orderByClause = "order by taxon.id " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "bioAssayCount" ) ) {
+            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "dateLastUpdated" ) ) {
+            orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "troubled" ) ) {
+            orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
+        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+            orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
+        }
+
+        String idRestrictionClause = "where ee.id in (:ids) ";
+
+        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        queryObject.setParameterList( "ids", ids );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
+
+        boolean isList = ( ids != null && ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
                 return new ArrayList<ExpressionExperimentValueObject>();
             }
             return new HashSet<ExpressionExperimentValueObject>();
         }
-        
-        String idRestrictionClause = "where ee.id in (:ids) ";
-        
-        final String queryString = getLoadValueObjectsQueryString(idRestrictionClause, null);
 
-        
+        String idRestrictionClause = "where ee.id in (:ids) ";
+
+        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
+
         Query queryObject = super.getSession().createQuery( queryString );
 
         Map<Long, Collection<QuantitationType>> qtMap;
 
-        
         List<Long> idl = new ArrayList<Long>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
         qtMap = getQuantitationTypeMap( idl );
@@ -1726,10 +1725,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         queryObject.setCacheable( true );
         List<?> list = queryObject.list();
-        
-        
-        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap(list, qtMap,  ids.size());        
-        
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list, qtMap, ids.size() );
+
         /*
          * Remove items we didn't get back out. This is defensiveness!
          */
@@ -1765,12 +1763,10 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         return finalValues;
 
-    	
-    	
     }
 
-    private String getLoadValueObjectsQueryString(String idRestrictionClause, String orderByClause){
-    	String queryString = "select ee.id as id, " // 0
+    private String getLoadValueObjectsQueryString( String idRestrictionClause, String orderByClause ) {
+        String queryString = "select ee.id as id, " // 0
                 + "ee.name, " // 1
                 + "ED.name, " // 2
                 + "ED.webUri, " // 3
@@ -1794,36 +1790,37 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
                 + " inner join ee.experimentalDesign as EDES join ee.status as s ";
-    	
-    	if (idRestrictionClause != null){
-    		queryString = queryString + idRestrictionClause;    		
-    	}
-        
+
+        if ( idRestrictionClause != null ) {
+            queryString = queryString + idRestrictionClause;
+        }
+
         queryString = queryString + " group by ee.id ";
-    	
-    	if (orderByClause!=null){
-    		queryString = queryString + orderByClause;
-    	}
-    	
-    	return queryString;
-    	
+
+        if ( orderByClause != null ) {
+            queryString = queryString + orderByClause;
+        }
+
+        return queryString;
+
     }
-    
-    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap(List<?> list){
-    	return getExpressionExperimentValueObjectMap(list, null, null);
+
+    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List<?> list ) {
+        return getExpressionExperimentValueObjectMap( list, null, null );
     }
-    
-    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap(List<?> list, Map<Long, Collection<QuantitationType>> qtMap,  Integer initialSize){
-    	
-    	Map<Long, ExpressionExperimentValueObject> vo;
-    	
-    	if (initialSize==null){
-    		vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>();
-    	} else{
-    		vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>(initialSize);
-    	}
-    	
-    	for ( Object object : list ) {
+
+    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List<?> list,
+            Map<Long, Collection<QuantitationType>> qtMap, Integer initialSize ) {
+
+        Map<Long, ExpressionExperimentValueObject> vo;
+
+        if ( initialSize == null ) {
+            vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>();
+        } else {
+            vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>( initialSize );
+        }
+
+        for ( Object object : list ) {
 
             Object[] res = ( Object[] ) object;
 
@@ -1864,7 +1861,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             }
             Object technology = res[12];
             if ( technology != null ) v.setTechnologyType( ( ( TechnologyType ) technology ).toString() );
-            if (qtMap!=null && !qtMap.isEmpty() && v.getTechnologyType() != null ) {
+            if ( qtMap != null && !qtMap.isEmpty() && v.getTechnologyType() != null ) {
                 fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
             }
             v.setClazz( ( String ) res[13] );
@@ -1876,11 +1873,10 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             // System.out.println(res[16]);
             vo.put( eeId, v );
         }
-    	
-    	return vo;
-    	
-    }    
-    
+
+        return vo;
+
+    }
 
     /*
      * (non-Javadoc)
