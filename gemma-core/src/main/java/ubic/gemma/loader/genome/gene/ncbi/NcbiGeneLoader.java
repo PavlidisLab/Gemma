@@ -192,10 +192,10 @@ public class NcbiGeneLoader {
         timer.start();
         int skipped = 0;
         while ( !( converterDone.get() && geneQueue.isEmpty() ) ) {
-
+            Gene gene = null;
             try {
                 // the converted genes.
-                Gene gene = geneQueue.poll();
+                gene = geneQueue.poll();
                 if ( gene == null ) {
                     continue;
                 }
@@ -218,7 +218,7 @@ public class NcbiGeneLoader {
                 }
 
             } catch ( Exception e ) {
-                log.error( e, e );
+                log.error( "Error while loading gene: " + gene + ": " + e.getMessage(), e );
                 loaderDone.set( true );
                 throw new RuntimeException( e );
             }
