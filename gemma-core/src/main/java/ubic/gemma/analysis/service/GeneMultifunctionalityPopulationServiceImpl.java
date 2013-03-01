@@ -54,7 +54,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     private static Log log = LogFactory.getLog( GeneMultifunctionalityPopulationServiceImpl.class );
 
     @Autowired
-    private TaxonService taxonService;
+    private Gene2GOAssociationService gene2GOService;
 
     @Autowired
     private GeneService geneService;
@@ -66,7 +66,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     private OntologyService ontologyService;
 
     @Autowired
-    private Gene2GOAssociationService gene2GOService;
+    private TaxonService taxonService;
 
     /*
      * (non-Javadoc)
@@ -102,28 +102,28 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         Map<Gene, Multifunctionality> mfs = computeMultifunctionality( gomap );
 
         log.info( "Saving multifunctionality for " + genes.size() + " genes" );
-        genes = geneService.thawLite( genes );
+
+        Collection<Gene> batch = new HashSet<Gene>();
+
+        int batchSize = 200;
+        int i = 0;
         for ( Gene g : genes ) {
-            if ( !mfs.containsKey( g ) ) {
-                g.setMultifunctionality( null );
-            } else {
+            batch.add( g );
 
-                Multifunctionality updatedMf = mfs.get( g );
+            if ( batch.size() == batchSize ) {
+                saveBatch( batch, mfs );
+                batch.clear();
+            }
 
-                Multifunctionality oldMf = g.getMultifunctionality();
-
-                if ( oldMf == null ) {
-                    g.setMultifunctionality( updatedMf );
-                } else {
-                    oldMf = g.getMultifunctionality();
-                    oldMf.setNumGoTerms( updatedMf.getNumGoTerms() );
-                    oldMf.setRank( updatedMf.getRank() );
-                    oldMf.setScore( updatedMf.getScore() );
-                }
+            if ( ++i % 1000 == 0 ) {
+                log.info( "Updated " + i + " genes/" + genes.size() );
             }
         }
 
-        geneService.update( genes );
+        if ( !batch.isEmpty() ) {
+            saveBatch( batch, mfs );
+        }
+
         log.info( "Done" );
     }
 
@@ -271,6 +271,35 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
         }
         return gomap;
+    }
+
+    /**
+     * @param genes
+     * @param mfs
+     */
+    private void saveBatch( Collection<Gene> genes, Map<Gene, Multifunctionality> mfs ) {
+        genes = geneService.thawLite( genes );
+        for ( Gene g : genes ) {
+            if ( !mfs.containsKey( g ) ) {
+                g.setMultifunctionality( null );
+            } else {
+
+                Multifunctionality updatedMf = mfs.get( g );
+
+                Multifunctionality oldMf = g.getMultifunctionality();
+
+                if ( oldMf == null ) {
+                    g.setMultifunctionality( updatedMf );
+                } else {
+                    oldMf = g.getMultifunctionality();
+                    oldMf.setNumGoTerms( updatedMf.getNumGoTerms() );
+                    oldMf.setRank( updatedMf.getRank() );
+                    oldMf.setScore( updatedMf.getScore() );
+                }
+            }
+        }
+
+        geneService.update( genes );
     }
 
 }
