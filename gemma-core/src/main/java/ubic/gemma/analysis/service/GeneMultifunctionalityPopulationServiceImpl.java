@@ -96,8 +96,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             return;
         }
 
-        genes = geneService.thawLite( genes );
-
         Map<Gene, Collection<String>> gomap = fetchGoAnnotations( genes );
 
         Map<Gene, Multifunctionality> mfs = computeMultifunctionality( gomap );
@@ -107,7 +105,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
          */
         log.info( "Saving multifunctionality for " + genes.size() + " genes" );
         int i = 0;
-
+        genes = geneService.thawLite( genes );
         for ( Gene g : genes ) {
 
             if ( !mfs.containsKey( g ) ) {
@@ -127,11 +125,13 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
                     oldMf.setScore( updatedMf.getScore() );
                 }
             }
-            geneService.update( g );
+
             if ( ++i % 1000 == 0 ) {
                 log.info( "Updated " + i + " genes ..." );
             }
         }
+        log.info( "Saving ..." );
+        geneService.update( genes );
         log.info( "Done" );
 
     }

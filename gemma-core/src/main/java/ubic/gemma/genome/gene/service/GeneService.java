@@ -198,7 +198,7 @@ public interface GeneService {
      * @return
      */
     public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes );
-    
+
     public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds );
 
     /**
@@ -277,7 +277,7 @@ public interface GeneService {
      * @return
      */
     public Collection<Gene> loadThawed( Collection<Long> ids );
-    
+
     public Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
     /**
@@ -291,7 +291,7 @@ public interface GeneService {
      * @return
      */
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
-    
+
     public Collection<GeneValueObject> loadValueObjectsLiter( Collection<Long> ids );
 
     /**
@@ -328,7 +328,7 @@ public interface GeneService {
      * @param gene
      */
     public Gene thawLite( Gene gene );
-    
+
     public Gene thawLiter( Gene gene );
 
     /**
@@ -337,5 +337,8 @@ public interface GeneService {
     @Secured({ "GROUP_ADMIN" })
     /* we would need to relax this to allow phenotype associations to be added, but I think we should avoid doing that */
     public void update( Gene gene );
+
+    @Secured({ "GROUP_ADMIN" })
+    public void update( Collection<Gene> genes );
 
 }

@@ -107,7 +107,7 @@ public class GeneServiceImpl implements GeneService {
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
         return this.getGeneDao().findNearest( physicalLocation, useStrand );
     }
-    
+
     @Override
     public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
         return this.getGeneDao().getGeneIdCoexpressionNodeDegree( geneIds );
@@ -222,9 +222,10 @@ public class GeneServiceImpl implements GeneService {
     public Collection<Gene> loadThawed( Collection<Long> ids ) {
         return this.getGeneDao().loadThawed( ids );
     }
-    
+
     @Override
-    public Collection<Gene> loadThawedLiter( Collection<Long> ids ) {//maybe this isn't needed, just use value objects method
+    public Collection<Gene> loadThawedLiter( Collection<Long> ids ) {// maybe this isn't needed, just use value objects
+                                                                     // method
         return this.getGeneDao().loadThawedLiter( ids );
     }
 
@@ -233,7 +234,7 @@ public class GeneServiceImpl implements GeneService {
         Collection<Gene> g = this.getGeneDao().loadThawed( ids );
         return GeneValueObject.convert2ValueObjects( g );
     }
-    
+
     @Override
     public Collection<GeneValueObject> loadValueObjectsLiter( Collection<Long> ids ) {
         Collection<Gene> g = this.getGeneDao().loadThawedLiter( ids );
@@ -253,7 +254,7 @@ public class GeneServiceImpl implements GeneService {
     public Gene thawLite( Gene gene ) {
         return this.getGeneDao().thawLite( gene );
     }
-    
+
     @Override
     public Gene thawLiter( Gene gene ) {
         return this.getGeneDao().thawLiter( gene );
@@ -457,7 +458,6 @@ public class GeneServiceImpl implements GeneService {
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
     }
- 
 
     /**
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
@@ -613,6 +613,11 @@ public class GeneServiceImpl implements GeneService {
      */
     protected GeneDao getGeneDao() {
         return this.geneDao;
+    }
+
+    @Override
+    public void update( Collection<Gene> genes ) {
+        this.getGeneDao().update( genes );
     }
 
 }
