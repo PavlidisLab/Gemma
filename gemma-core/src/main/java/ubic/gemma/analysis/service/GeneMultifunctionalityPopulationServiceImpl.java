@@ -93,6 +93,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         Collection<Gene> genes = geneService.loadAll( taxon );
 
         if ( genes.isEmpty() ) {
+            log.warn( "No genes found for " + taxon );
             return;
         }
 
@@ -100,14 +101,9 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
         Map<Gene, Multifunctionality> mfs = computeMultifunctionality( gomap );
 
-        /*
-         * Persist the results.
-         */
         log.info( "Saving multifunctionality for " + genes.size() + " genes" );
-        int i = 0;
         genes = geneService.thawLite( genes );
         for ( Gene g : genes ) {
-
             if ( !mfs.containsKey( g ) ) {
                 g.setMultifunctionality( null );
             } else {
@@ -125,15 +121,10 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
                     oldMf.setScore( updatedMf.getScore() );
                 }
             }
-
-            if ( ++i % 1000 == 0 ) {
-                log.info( "Updated " + i + " genes ..." );
-            }
         }
-        log.info( "Saving ..." );
+
         geneService.update( genes );
         log.info( "Done" );
-
     }
 
     /**

@@ -36,6 +36,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Gene</code>.
@@ -243,8 +244,8 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
      * @see GeneDao#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
     @Override
-    public QueryGeneCoexpression getCoexpressedGenes( final Gene gene,
-            final Collection<? extends BioAssaySet> ees, final Integer stringency ) {
+    public QueryGeneCoexpression getCoexpressedGenes( final Gene gene, final Collection<? extends BioAssaySet> ees,
+            final Integer stringency ) {
         return this.handleGetCoexpressedGenes( gene, ees, stringency );
     }
 
@@ -404,8 +405,15 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             @Override
             public Object doInHibernate( Session session ) throws HibernateException {
+                int i = 0;
+                int batchSize = ConfigUtils.getInt( "gemma.hibernate.jdbc_batch_size" );
+
                 for ( Iterator<? extends Gene> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
                     update( entityIterator.next() );
+                    if ( i++ % batchSize == 0 ) {
+                        session.flush();
+                        session.clear();
+                    }
                 }
                 return null;
             }

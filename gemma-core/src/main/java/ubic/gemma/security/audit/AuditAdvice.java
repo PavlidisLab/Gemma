@@ -29,6 +29,9 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
+import org.hibernate.SessionFactory;
+import org.hibernate.classic.Session;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.slf4j.Logger;
@@ -73,6 +76,9 @@ public class AuditAdvice {
 
     @Autowired
     private AuditHelper auditHelper;
+
+    @Autowired
+    private SessionFactory sessionFactory;
 
     private boolean AUDIT_CREATE = true;
     private boolean AUDIT_DELETE = true;
@@ -137,6 +143,8 @@ public class AuditAdvice {
 
         AuditTrail auditTrail = auditable.getAuditTrail();
 
+        ensureInSession( auditTrail );
+
         if ( auditTrail != null && !auditTrail.getEvents().isEmpty() ) {
             // This can happen when we persist objects and then let this interceptor look at them again
             // while persisting parent objects. That's okay.
@@ -191,6 +199,8 @@ public class AuditAdvice {
 
         AuditTrail auditTrail = auditable.getAuditTrail();
 
+        ensureInSession( auditTrail );
+
         if ( auditTrail == null || auditTrail.getEvents().isEmpty() ) {
             /*
              * Note: This can happen for ExperimentalFactors when loading from GEO etc. because of the bidirectional
@@ -205,6 +215,20 @@ public class AuditAdvice {
                 log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":"
                         + auditable.getId() + " by " + user.getUserName() );
             }
+        }
+    }
+
+    /**
+     * @param auditTrail
+     */
+    private void ensureInSession( AuditTrail auditTrail ) {
+        if ( auditTrail == null ) return;
+        /*
+         * Ensure we have the object in the session. It might not be, if we have flushed the session.
+         */
+        Session session = sessionFactory.getCurrentSession();
+        if ( !session.contains( auditTrail ) ) {
+            session.buildLockRequest( LockOptions.NONE ).lock( auditTrail );
         }
     }
 

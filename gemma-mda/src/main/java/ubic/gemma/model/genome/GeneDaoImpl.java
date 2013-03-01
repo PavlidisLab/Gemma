@@ -414,7 +414,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * 
      * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util .Collection, java.util.Collection)
      */
-    @SuppressWarnings("deprecation")
     @Override
     public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees ) {
