@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2013 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.job;
 
 import org.junit.After;
@@ -25,15 +39,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.Assert.*;
 
 /**
- * Created with IntelliJ IDEA.
- * User: anton
- * Date: 02/02/13
- * Time: 10:29 AM
- * To change this template use File | Settings | File Templates.
+ * @author anton
+ * @version $Id$
  */
 public class ExecutingTaskTest extends BaseSpringContextTest {
 
-    @Autowired UserManager userManager;
+    @Autowired
+    UserManager userManager;
 
     private AtomicBoolean onStartRan = new AtomicBoolean( false );
     private AtomicBoolean onFailureRan = new AtomicBoolean( false );
@@ -45,7 +57,6 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     private SecurityContext securityContextAfterInitialize;
     private SecurityContext securityContextAfterFinish;
     private SecurityContext securityContextAfterFail;
-
 
     private ProgressUpdateAppender progressAppender = new ProgressUpdateAppender() {
         @Override
@@ -76,7 +87,6 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         }
     };
 
-
     private ExecutingTask.TaskLifecycleHandler statusSecurityContextCheckerHandler = new ExecutingTask.TaskLifecycleHandler() {
         @Override
         public void onStart() {
@@ -93,7 +103,6 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
             securityContextAfterFinish = SecurityContextHolder.getContext();
         }
     };
-
 
     private static class SuccessTestTask implements Task<TaskResult, TaskCommand> {
         TaskCommand command;
@@ -119,7 +128,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
         @Override
         public TaskResult execute() {
-            throw new AccessDeniedException("Test!");
+            throw new AccessDeniedException( "Test!" );
         }
     }
 
@@ -142,14 +151,13 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
     }
 
-
     @Test
     public void testSecurityContextManagement() {
         try {
             this.userManager.loadUserByUsername( "ExecutingTaskTestUser" );
         } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", "ExecutingTaskTestUser", true, null, "fooUser@chibi.ubc.ca", "key",
-                    new Date() ) );
+            this.userManager.createUser( new UserDetailsImpl( "foo", "ExecutingTaskTestUser", true, null,
+                    "fooUser@chibi.ubc.ca", "key", new Date() ) );
         }
 
         runAsUser( "ExecutingTaskTestUser" );
@@ -167,11 +175,11 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Future<TaskResult> future = executorService.submit( executingTask );
         try {
             TaskResult taskResult = future.get();
-            String answer = (String) taskResult.getAnswer();
+            String answer = ( String ) taskResult.getAnswer();
             assertEquals( "SUCCESS", answer );
-        } catch (InterruptedException e) {
+        } catch ( InterruptedException e ) {
             fail();
-        } catch (ExecutionException e) {
+        } catch ( ExecutionException e ) {
             fail();
         }
 
@@ -180,10 +188,10 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         assertEquals( null, securityContextAfterFail );
     }
 
-    //TODO: Test security context under different failure scenarios
-    //  - exception in the task
-    //  - exception in the lifecycle hook
-    //  - exception in progress appender setup/teardown hook
+    // TODO: Test security context under different failure scenarios
+    // - exception in the task
+    // - exception in the lifecycle hook
+    // - exception in progress appender setup/teardown hook
     @Test
     public void testOrderOfExecutionSuccess() {
         TaskCommand taskCommand = new TaskCommand();
@@ -198,11 +206,11 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Future<TaskResult> future = executorService.submit( executingTask );
         try {
             TaskResult taskResult = future.get();
-            String answer = (String) taskResult.getAnswer();
+            String answer = ( String ) taskResult.getAnswer();
             assertEquals( "SUCCESS", answer );
-        } catch (InterruptedException e) {
+        } catch ( InterruptedException e ) {
             fail();
-        } catch (ExecutionException e) {
+        } catch ( ExecutionException e ) {
             fail();
         }
 
@@ -217,7 +225,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     @Test
     public void testOrderOfExecutionFailure() {
         TaskCommand taskCommand = new TaskCommand();
-        Task task = new FailureTestTask();
+        Task<TaskResult, TaskCommand> task = new FailureTestTask();
         task.setCommand( taskCommand );
 
         ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
@@ -231,9 +239,9 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
             Throwable exception = taskResult.getException();
             assertEquals( AccessDeniedException.class, exception.getClass() );
             assertEquals( "Test!", exception.getMessage() );
-        } catch (InterruptedException e) {
+        } catch ( InterruptedException e ) {
             fail();
-        } catch (ExecutionException e) {
+        } catch ( ExecutionException e ) {
             fail();
         }
 
