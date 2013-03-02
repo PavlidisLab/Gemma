@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
@@ -40,6 +41,7 @@ import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
@@ -85,6 +87,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
     private ExternalDatabaseService edService;
@@ -317,6 +322,13 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         GeneDifferentialExpressionMetaAnalysisDetailValueObject mdvo = geneDiffExMetaAnalysisHelperService
                 .findDetailMetaAnalysisById( metaAnalysis.getId() );
         assertNotNull( mdvo );
+
+        // this is a little extra test, related to bug 3341
+        differentialExpressionResultService.thaw( rs1 );
+
+        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = differentialExpressionResultService
+                .getExperimentalFactors( rs1.getResults() );
+        assertTrue( factorsByResultMap.keySet().containsAll( rs1.getResults() ) );
 
     }
 

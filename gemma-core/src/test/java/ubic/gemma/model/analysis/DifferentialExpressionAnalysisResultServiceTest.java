@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,6 +40,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
+ * FIXME this test requires having certain data loaded into the system.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -124,6 +127,8 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
                 .getExperimentalFactors( testResults );
 
         Collection<DifferentialExpressionAnalysisResult> diffResultKeys = factorsByResultMap.keySet();
+
+        assertTrue( testResults.containsAll( diffResultKeys ) );
 
         for ( DifferentialExpressionAnalysisResult d : diffResultKeys ) {
 
