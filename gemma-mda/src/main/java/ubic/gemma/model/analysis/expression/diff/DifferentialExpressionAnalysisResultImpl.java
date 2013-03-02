@@ -50,7 +50,7 @@ public class DifferentialExpressionAnalysisResultImpl extends
 
     @Override
     public String toString() {
-        return this.getProbe() + " p=" + String.format( "%g", this.getPvalue() );
+        return "DiffExRes[" + this.getId() + "]: " + this.getProbe() + " p=" + String.format( "%g", this.getPvalue() );
     }
 
     @Override
@@ -73,7 +73,7 @@ public class DifferentialExpressionAnalysisResultImpl extends
         DifferentialExpressionAnalysisResult other = ( DifferentialExpressionAnalysisResult ) obj;
 
         if ( this.getId() != null ) {
-            return ( other.getId() == null || !this.getId().equals( other.getId() ) );
+            return other.getId() != null && this.getId().equals( other.getId() );
         }
 
         if ( super.getProbe() == null ) {

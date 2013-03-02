@@ -42,7 +42,6 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
     private static final String FV_SEP = ", ";
 
-
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService = null;
 
@@ -473,6 +472,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
     private Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getFactors(
             Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> resultsMap ) {
 
+        // collapse them down to one collection.
         Collection<DifferentialExpressionAnalysisResult> allRes = new HashSet<DifferentialExpressionAnalysisResult>();
         for ( Collection<DifferentialExpressionAnalysisResult> p : resultsMap.values() ) {
             allRes.addAll( p );
@@ -510,10 +510,14 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
             Collection<DifferentialExpressionAnalysisResult> probeResults = results.get( ee );
 
+            assert probeResults != null && !probeResults.isEmpty();
+
+            assert dearToEf.keySet().containsAll( probeResults );
+
             differentialExpressionResultService.thaw( probeResults );
 
             for ( DifferentialExpressionAnalysisResult r : probeResults ) {
-
+                r.hashCode();
                 Collection<ExperimentalFactor> efs = dearToEf.get( r );
 
                 if ( efs == null ) {

@@ -879,12 +879,12 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         StopWatch timer = new StopWatch();
         timer.start();
         Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResult = new HashMap<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>>();
-        if ( differentialExpressionAnalysisResults.size() == 0 ) {
+        if ( differentialExpressionAnalysisResults.isEmpty() ) {
             return factorsByResult;
         }
 
-        final String queryString = "select ef, r from ExpressionAnalysisResultSetImpl rs"
-                + " inner join rs.results r inner join rs.experimentalFactors ef where r in (:differentialExpressionAnalysisResults)";
+        final String queryString = "select rs.experimentalFactors, r from ExpressionAnalysisResultSetImpl rs"
+                + " inner join rs.results r where r in (:differentialExpressionAnalysisResults)";
 
         String[] paramNames = { "differentialExpressionAnalysisResults" };
         Object[] objectValues = { differentialExpressionAnalysisResults };
@@ -897,6 +897,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             Object[] ar = ( Object[] ) o;
             ExperimentalFactor f = ( ExperimentalFactor ) ar[0];
             DifferentialExpressionAnalysisResult res = ( DifferentialExpressionAnalysisResult ) ar[1];
+
+            assert differentialExpressionAnalysisResults.contains( res );
 
             if ( !factorsByResult.containsKey( res ) ) {
                 factorsByResult.put( res, new HashSet<ExperimentalFactor>() );
