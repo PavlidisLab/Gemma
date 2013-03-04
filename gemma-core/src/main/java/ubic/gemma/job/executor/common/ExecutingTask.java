@@ -19,7 +19,6 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
-import java.io.Serializable;
 import java.util.concurrent.Callable;
 
 /**
@@ -28,7 +27,7 @@ import java.util.concurrent.Callable;
  * @author anton
  * @version $Id$
  */
-public class ExecutingTask<T extends TaskResult> implements Callable<T>, Serializable {
+public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
     private Task<T, ?> task;
     private BackgroundJob<?, T> job;

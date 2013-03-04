@@ -89,7 +89,6 @@ public class TaskCommand implements Serializable {
 
 
     public TaskCommand() {
-        // TODO: probably better to generate at submission time?
         // The taskId is assigned on creation.
         this.taskId = TaskUtils.generateTaskId();
 

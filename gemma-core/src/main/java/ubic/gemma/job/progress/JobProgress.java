@@ -16,9 +16,6 @@
 
 package ubic.gemma.job.progress;
 
-import ubic.gemma.model.common.auditAndSecurity.JobInfo;
-import java.util.Queue;
-
 /**
  * All progressJobs must implement the following functionality. ProgressJobs are used by the client to provide hooks for
  * providing feedback to a user for long running processes
@@ -28,23 +25,23 @@ import java.util.Queue;
  */
 public interface JobProgress {
 
-    public Queue<ProgressData> getProgressData();
-
-    // Updates the current progress of the job with the desired updated message. Doesn't change anything else.
-    public void updateProgress( String message );
+//    public Queue<ProgressData> getProgressData();
+//
+//    // Updates the current progress of the job with the desired updated message. Doesn't change anything else.
+//    public void updateProgress( String message );
 
     // Updates the progress job by a complete progressData. In case a few things need to be updated
-    public void updateProgress( ProgressData pd );
+//    public void updateProgress( ProgressData pd );
 
-    public void done();
-    public void failed( Throwable cause );
+//    public void done();
+//    public void failed( Throwable cause );
 
-    public JobInfo getJobInfo();
-    public String getTaskId();
-    public String getUser();
+//    public String getTaskId();
 
-    public String getForwardingURL();
-    public void setForwardingURL( String forwardingURL );
-    public boolean forwardWhenDone();
+//    public String getForwardingURL();
 
+//    public JobInfo getJobInfo();
+//    public void setForwardingURL( String forwardingURL );
+//    public boolean forwardWhenDone();
+//    public String getUser();
 }

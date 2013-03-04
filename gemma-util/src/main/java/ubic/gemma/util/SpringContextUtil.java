@@ -98,22 +98,6 @@ public class SpringContextUtil {
         return getApplicationContext( testing, isWebApp, new String[] {} );
     }
 
-    public static ApplicationContext getRemoteWorkerApplicationContext( boolean testing ) {
-        String[] paths = getConfigLocations( testing, false );
-        paths = addPaths( getRemoteWorkerConfigLocations(), paths );
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        ApplicationContext applicationContext = new ClassPathXmlApplicationContext( paths );
-
-        timer.stop();
-
-        log.info( "Got context in " + timer.getTime() + "ms" );
-
-        return applicationContext;
-    }
-
     /**
      * @param additionalConfigurationPaths
      * @return a minimally-configured standard BeanFactory: no Compass, no Web config, but with the additional
@@ -210,14 +194,6 @@ public class SpringContextUtil {
         CompassUtils.turnOnCompass( false, paths );
 
         addCommonConfig( isWebapp, paths );
-        return paths.toArray( new String[] {} );
-    }
-
-    // Configs specific for remote worker instance.
-    private static String[] getRemoteWorkerConfigLocations() {
-        List<String> paths = new ArrayList<String>();
-        paths.add( "classpath*:ubic/gemma/workerContext-jms.xml" );
-        paths.add( "classpath*:ubic/gemma/workerContext-component-scan.xml" );
         return paths.toArray( new String[] {} );
     }
 

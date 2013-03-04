@@ -24,6 +24,5 @@ package ubic.gemma.job.executor.common;
  */
 public interface ProgressUpdateAppender {
     void initialize();
-
     void tearDown();
 }

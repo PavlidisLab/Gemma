@@ -18,10 +18,10 @@
  */
 package ubic.gemma.job;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.commons.lang.RandomStringUtils;
 
 /**
  * @author paul
@@ -34,13 +34,6 @@ public class TaskUtils {
     private static Set<String> usedIds = new HashSet<String>();
 
     private static int MAX_ATTEMPTS = 1000;
-
-
-    public static boolean canRunRemotely( TaskCommand command ) {
-        return  command.getTaskClass() != null;
-
-    }
-
 
     /**
      * @return a unique (since the JVM was started) task id.

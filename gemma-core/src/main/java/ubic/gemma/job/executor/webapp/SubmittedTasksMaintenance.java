@@ -23,26 +23,19 @@ public class SubmittedTasksMaintenance {
 
     @Autowired private TaskRunningService taskRunningService;
 
-    /**
-     * How often we look for tasks to cleanup (milliseconds). This should be set to be longer than the grid monitor task
-     * interval. The longer it is, the longer it will be before dead tasks are noticed.
-     */
-    private static final int TASK_CLEANUP_FREQUENCY = 30000;
-
     private static final int MAX_QUEUE_MINUTES = 60;
 
     /**
-     * How long we will hold onto results after a task has finished before giving up.
+     * How long we will hold onto results after a task has finished before removing it from task list.
      */
-    private static final int MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES = 30;
-
+    private static final int MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES = 120;
 
     /**
      * Check if a task has been running or queued for too long, and cancel it if necessary. Email alert will always be
      * sent in that case.
      *
      */
-    @Scheduled(fixedDelay = 60000 )
+    @Scheduled(fixedDelay = 120000 )
     public void doSubmittedTasksMaintenance() {
         log.info( "Doing submitted tasks maintenance." );
         // Assumes collection implementing weakly consistent iterator with remove support.

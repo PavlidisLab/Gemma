@@ -18,11 +18,8 @@
  */
 package ubic.gemma.job.executor.worker;
 
-import org.quartz.impl.StdScheduler;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.util.AbstractSpringAwareCLI;
-import ubic.gemma.util.QuartzUtils;
 import ubic.gemma.util.SpringContextUtil;
 
 /**
@@ -67,11 +64,21 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
 //        super.addOption( mmtxOption );
     }
 
+
+    @Override
+    protected String[] getAdditionalSpringConfigLocations() {
+        String[] workerSpecificConfigs = {
+                "classpath*:ubic/gemma/workerContext-component-scan.xml",
+                "classpath*:ubic/gemma/workerContext-jms.xml"
+        };
+        return workerSpecificConfigs;
+    }
+
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
+         * (non-Javadoc)
+         *
+         * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+         */
     @Override
     protected Exception doWork( String[] args ) {
         Exception commandArgumentErrors = processCommandLine( this.getClass().getName(), args );
@@ -115,15 +122,9 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void createSpringContext() {
-        ctx = SpringContextUtil.getRemoteWorkerApplicationContext( hasOption( "testing" ) );
-
-        try {
-            QuartzUtils.disableQuartzScheduler( this.getBean( StdScheduler.class ) );
-        } catch ( NoSuchBeanDefinitionException exception) {
-            //This is ok. I've removed quartz from worker/cli context.
-            log.info( exception.getMessage() );
-        }
+        protected void createSpringContext() {
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false /* webapp */,
+                getAdditionalSpringConfigLocations() );
 
         /*
          * Important to ensure that threads get permissions from their context - not global!
