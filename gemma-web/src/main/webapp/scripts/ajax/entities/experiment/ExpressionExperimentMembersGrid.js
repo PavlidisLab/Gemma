@@ -780,9 +780,17 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					return;
 				}
 				else {
-					this.fireEvent('experimentListModified', newValueObjects);
-					this.fireEvent('experimentListCreated', newValueObjects[0]);
-					this.fireEvent('doneModification');
+					
+					
+					Ext.MessageBox.alert('Save Successful', 'Group saved', function(){
+	
+						this.fireEvent('experimentListModified', newValueObjects);
+						this.fireEvent('experimentListCreated', newValueObjects[0]);
+						this.fireEvent('doneModification');
+						
+					}.createDelegate(this));
+					
+					
 				}
 			}.createDelegate(this));
 		
@@ -795,11 +803,17 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		var eeIds = this.getEEIds();
 
 		ExpressionExperimentSetController.updateMembers(id, eeIds, function(msg) {
-					this.getSelectedExperimentSet().expressionExperimentIds = eeIds;
-
-					this.fireEvent('experimentListModified', [this.getSelectedExperimentSet()]);
-					this.fireEvent('experimentListSavedOver');
-					this.fireEvent('doneModification');
+					Ext.MessageBox.alert('Save Successful', 'Group saved', function(){
+						
+						this.getSelectedExperimentSet().expressionExperimentIds = eeIds;
+						this.fireEvent('experimentListModified', [this.getSelectedExperimentSet()]);
+						this.fireEvent('experimentListSavedOver');
+						this.fireEvent('doneModification');
+						
+						
+					}.createDelegate(this));
+			
+					
 				}.createDelegate(this));
 	},
 	
