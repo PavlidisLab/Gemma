@@ -149,7 +149,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 .hasArg()
                 .withDescription(
                         "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
-                                + "known genes for the taxon, or with --all-arrays to process all arrays for the taxon." )
+                                + "known genes for the taxon, or with --batch to process all arrays for the taxon." )
                 .create( "taxon" );
         addOption( taxonNameOption );
 
@@ -373,6 +373,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         if ( this.hasOption( 'b' ) ) {
             this.processAllADs = true;
+
+            if ( this.hasOption( 'a' ) ) {
+                throw new IllegalArgumentException(
+                        "--batch overrides -a to run all platforms. If you want to run like --batch but for selected platforms use -a with -t all" );
+            }
+
         }
 
         if ( this.hasOption( GENENAME_LISTFILE_OPTION ) ) {
