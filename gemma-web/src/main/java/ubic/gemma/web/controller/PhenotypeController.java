@@ -58,9 +58,12 @@ public class PhenotypeController extends BaseController {
 
     private static Log logNeurocarta = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
 
-    @Autowired private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    @Autowired private UserManager userManager;
-    @Autowired private SecurityController securityController;
+    @Autowired
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    @Autowired
+    private UserManager userManager;
+    @Autowired
+    private SecurityController securityController;
 
     private ValidateEvidenceValueObject generateValidateEvidenceValueObject( Throwable throwable ) {
         final ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
@@ -214,13 +217,14 @@ public class PhenotypeController extends BaseController {
     public ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis( Long metaAnalysisId ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
-            validateEvidenceValueObject = this.phenotypeAssociationManagerService.removeAllEvidenceFromMetaAnalysis( metaAnalysisId );
+            validateEvidenceValueObject = this.phenotypeAssociationManagerService
+                    .removeAllEvidenceFromMetaAnalysis( metaAnalysisId );
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
         }
         return validateEvidenceValueObject;
     }
-    
+
     public ValidateEvidenceValueObject removePhenotypeAssociation( Long evidenceId ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
