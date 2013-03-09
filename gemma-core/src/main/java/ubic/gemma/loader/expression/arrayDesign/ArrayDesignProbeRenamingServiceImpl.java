@@ -29,7 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignProbeRenamingServiceImpl implements ArrayDesignProbeRenamingService {
 
     private static Log log = LogFactory.getLog( ArrayDesignProbeRenamingServiceImpl.class.getName() );
@@ -49,8 +49,11 @@ public class ArrayDesignProbeRenamingServiceImpl implements ArrayDesignProbeRena
     @Autowired
     ArrayDesignService arrayDesignService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeRenamingService#reName(ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.io.InputStream)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeRenamingService#reName(ubic.gemma.model.expression.
+     * arrayDesign.ArrayDesign, java.io.InputStream)
      */
     @Override
     public void reName( ArrayDesign arrayDesign, InputStream newIdFile ) {
@@ -86,8 +89,12 @@ public class ArrayDesignProbeRenamingServiceImpl implements ArrayDesignProbeRena
 
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeRenamingService#setArrayDesignService(ubic.gemma.model.expression.arrayDesign.ArrayDesignService)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeRenamingService#setArrayDesignService(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesignService)
      */
     @Override
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {

@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
  * @see ubic.gemma.model.common.protocol.ProtocolService
  */
 @Service
-public class ProtocolServiceImpl implements ProtocolService{
+public class ProtocolServiceImpl implements ProtocolService {
 
     @Autowired
     private ProtocolDao protocolDao;
@@ -58,8 +58,7 @@ public class ProtocolServiceImpl implements ProtocolService{
      * @see ubic.gemma.model.common.protocol.ProtocolService#findOrCreate(ubic.gemma.model.common.protocol.Protocol)
      */
     @Override
-    public Protocol findOrCreate(
-            final Protocol protocol ) {
+    public Protocol findOrCreate( final Protocol protocol ) {
         try {
             return this.protocolDao.findOrCreate( protocol );
         } catch ( Throwable th ) {

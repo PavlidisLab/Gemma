@@ -33,6 +33,8 @@ import ubic.gemma.search.SearchService;
 
 /**
  * Implementation of BibliographicReferenceService.
+ * <p>
+ * Note: This is only in Core because it uses SearchService, but it could be refactored.
  * 
  * @author keshav
  * @version $Id$
@@ -265,6 +267,11 @@ public class BibliographicReferenceServiceImpl extends
         return new ArrayList<ExpressionExperiment>();
     }
 
+    /*
+     * FIXME shouldn't this be in the SearchService directly? (non-Javadoc)
+     * 
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#search(java.lang.String)
+     */
     @Override
     public List<BibliographicReferenceValueObject> search( String query ) {
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search(

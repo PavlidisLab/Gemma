@@ -1022,11 +1022,19 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentService#loadValueObjectsOrdered(java.lang.String,
+     * boolean, java.util.Collection)
+     */
     @Override
     public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids ) {
 
-        return new ArrayList( this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
+        return new ArrayList<ExpressionExperimentValueObject>( this.expressionExperimentDao.loadValueObjectsOrdered(
+                orderField, descending, ids ) );
 
     }
 

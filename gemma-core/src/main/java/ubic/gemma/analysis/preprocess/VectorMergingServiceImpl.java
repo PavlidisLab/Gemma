@@ -238,6 +238,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         audit( expExp, "Vector merging peformed, merged " + allOldBioAssayDims + " old bioassay dimensions for "
                 + qts.size() + " quantitation types." );
 
+        // FIXME don't do this in the same transaction
         postProcess( expExp );
     }
 

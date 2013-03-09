@@ -25,8 +25,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * 
  * @author nicolas
  * @version $Id$
- */
-@Service
+ */ 
 public interface GeneCoreService {
 
     /**

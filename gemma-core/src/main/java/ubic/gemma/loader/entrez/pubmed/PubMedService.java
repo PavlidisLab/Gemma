@@ -27,7 +27,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -40,7 +40,7 @@ import ubic.gemma.persistence.Persister;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class PubMedService {
 
     private static Log log = LogFactory.getLog( PubMedService.class.getName() );

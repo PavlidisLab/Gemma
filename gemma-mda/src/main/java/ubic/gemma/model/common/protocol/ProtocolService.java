@@ -37,7 +37,7 @@ public interface ProtocolService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     public Protocol findOrCreate( Protocol protocol );
 
     /**

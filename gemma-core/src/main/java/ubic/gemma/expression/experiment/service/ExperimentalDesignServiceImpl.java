@@ -20,15 +20,10 @@ package ubic.gemma.expression.experiment.service;
 
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 
 /**
  * @author pavlidis
@@ -39,14 +34,6 @@ import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 @Service
 public class ExperimentalDesignServiceImpl extends
         ubic.gemma.expression.experiment.service.ExperimentalDesignServiceBase {
-
-    @Autowired
-    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService = null;
-
-    @Autowired
-    private ProcessedDataVectorCache processedDataVectorCache = null;
-
-    private Log log = LogFactory.getLog( ExperimentalDesignServiceImpl.class.getName() );
 
     /*
      * (non-Javadoc)
