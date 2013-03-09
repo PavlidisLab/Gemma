@@ -120,11 +120,11 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
         InputStream countData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileLoad/GSE19166_expression_count.test.txt" );
+                "/data/loader/expression/flatfileload/GSE19166_expression_count.test.txt" );
         DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
         InputStream rpkmData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileLoad/GSE19166_expression_RPKM.test.txt" );
+                "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" );
         DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
         List<String> probeNames = countMatrix.getRowNames();
@@ -201,11 +201,11 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
         InputStream countData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileLoad/GSE29006_expression_count.test.txt" );
+                "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
         DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
         InputStream rpkmData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileLoad/GSE29006_expression_RPKM.test.txt" );
+                "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );
         DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
         List<String> probeNames = countMatrix.getRowNames();
