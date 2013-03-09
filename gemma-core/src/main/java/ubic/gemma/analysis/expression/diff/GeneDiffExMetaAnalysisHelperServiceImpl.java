@@ -24,7 +24,7 @@ import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -44,7 +44,7 @@ import ubic.gemma.security.SecurityService;
  * @author frances
  * @version $Id$
  */
-@Service
+@Component
 public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAnalysisHelperService {
 
     @Autowired
@@ -86,8 +86,7 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
      */
     @Override
     public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses() {
-        Collection<GeneDifferentialExpressionMetaAnalysis> metaAnalyses = this.geneDiffExMetaAnalysisService
-        		.loadAll();
+        Collection<GeneDifferentialExpressionMetaAnalysis> metaAnalyses = this.geneDiffExMetaAnalysisService.loadAll();
 
         Collection<Long> metaAnalysisIds = new HashSet<Long>( metaAnalyses.size() );
         for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
@@ -97,20 +96,21 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
         Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> vos = this.geneDiffExMetaAnalysisService
                 .findMetaAnalyses( metaAnalysisIds );
         for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject vo : vos ) {
-        	vo.setDiffExpressionEvidence( this.phenotypeAssociationManagerService.loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( vo.getId() ) );
-        	
+            vo.setDiffExpressionEvidence( this.phenotypeAssociationManagerService
+                    .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( vo.getId() ) );
+
             // Find meta-analysis so that its security settings can be copied to value object.
             for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
-                if (vo.getId().equals(metaAnalysis.getId())) {
-                	boolean isEditable = false;
-                	
-					try {
-						isEditable = this.securityService.isEditable( metaAnalysis );
-					} catch (AccessDeniedException e) {
-						// nothing to do
-					} 
-						
-					vo.setEditable( isEditable );
+                if ( vo.getId().equals( metaAnalysis.getId() ) ) {
+                    boolean isEditable = false;
+
+                    try {
+                        isEditable = this.securityService.isEditable( metaAnalysis );
+                    } catch ( AccessDeniedException e ) {
+                        // nothing to do
+                    }
+
+                    vo.setEditable( isEditable );
                     vo.setOwnedByCurrentUser( this.securityService.isOwnedByCurrentUser( metaAnalysis ) );
                     vo.setPublic( this.securityService.isPublic( metaAnalysis ) );
                     vo.setShared( this.securityService.isShared( metaAnalysis ) );
