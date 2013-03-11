@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionExperimentReportTaskCommand extends TaskCommand {
 
+    @Override
     public Class getTaskClass() {
         return ExpressionExperimentReportTask.class;
     }

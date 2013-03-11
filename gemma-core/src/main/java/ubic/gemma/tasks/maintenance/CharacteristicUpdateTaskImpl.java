@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2013 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.tasks.maintenance;
 
 import org.apache.commons.lang.StringUtils;
@@ -39,37 +53,45 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
 
     @Autowired
     private BioMaterialService bioMaterialService;
-    @Autowired private CharacteristicService characteristicService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private FactorValueService factorValueService;
-    @Autowired private SecurityService securityService;
+    @Autowired
+    private CharacteristicService characteristicService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private FactorValueService factorValueService;
+    @Autowired
+    private SecurityService securityService;
 
-    private CharacteristicUpdateCommand command;
+    private CharacteristicUpdateCommand command = null;
 
     @Override
-    public void setCommand(CharacteristicUpdateCommand command) {
+    public void setCommand( CharacteristicUpdateCommand command ) {
+        assert command != null;
         this.command = command;
     }
 
     @Override
     public TaskResult execute() {
+
+        assert this.command != null;
+
         if ( command.isRemove() ) {
-            return this.doRemove( command );
+            return this.doRemove();
         }
-        return this.doUpdate( command );
+        return this.doUpdate();
     }
 
     private void addToParent( Characteristic c, Object parent ) {
-        if ( parent instanceof ExpressionExperiment) {
+        if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
             ee = expressionExperimentService.thawLite( ee );
             ee.getCharacteristics().add( c );
             expressionExperimentService.update( ee );
-        } else if ( parent instanceof BioMaterial) {
+        } else if ( parent instanceof BioMaterial ) {
             BioMaterial bm = ( BioMaterial ) parent;
             bm.getCharacteristics().add( c );
             bioMaterialService.update( bm );
-        } else if ( parent instanceof FactorValue) {
+        } else if ( parent instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) parent;
             fv.getCharacteristics().add( c );
             factorValueService.update( fv );
@@ -94,7 +116,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
 
     /**
      * Convert incoming AVOs into Characteristics (if the AVO objectClass is not FactorValue)
-     *
+     * 
      * @param avos
      * @return
      */
@@ -113,7 +135,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
 
     /**
      * This is used to handle the special case of FactorValues that are being updated to have a characteristic.
-     *
+     * 
      * @param avos
      * @return for each given AnnotationValueObject, the corresponding FactorValue with an associated persistent
      *         Characteristic.
@@ -160,15 +182,15 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
         return result;
     }
 
-    private TaskResult doRemove( CharacteristicUpdateCommand c ) {
-        Collection<AnnotationValueObject> chars = c.getAnnotationValueObjects();
+    private TaskResult doRemove() {
+        Collection<AnnotationValueObject> chars = command.getAnnotationValueObjects();
         log.info( "Delete " + chars.size() + " characteristics..." );
 
         Collection<Characteristic> asChars = convertToCharacteristic( chars );
 
         if ( asChars.size() == 0 ) {
             log.info( "No characteristic objects were received" );
-            return new TaskResult( c, false );
+            return new TaskResult( command, false );
         }
 
         Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
@@ -179,7 +201,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
             characteristicService.delete( cFromDatabase );
             log.info( "Characteristic deleted: " + cFromDatabase + " (associated with " + parent + ")" );
         }
-        return new TaskResult( c, true );
+        return new TaskResult( command, true );
 
     }
 
@@ -187,7 +209,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
      * @param command
      * @return
      */
-    private TaskResult doUpdate( CharacteristicUpdateCommand command ) {
+    private TaskResult doUpdate() {
         Collection<AnnotationValueObject> avos = command.getAnnotationValueObjects();
         if ( avos.size() == 0 ) return new TaskResult( command, false );
         log.info( "Updating " + avos.size() + " characteristics or uncharacterized factor values..." );
@@ -244,14 +266,14 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
             }
 
             if ( vcFromClient != null && vcFromDatabase == null ) {
-                VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
-                c.setValue( cFromDatabase.getValue() );
-                c.setEvidenceCode( cFromDatabase.getEvidenceCode() );
-                c.setDescription( cFromDatabase.getDescription() );
-                c.setCategory( cFromDatabase.getCategory() );
-                c.setName( cFromDatabase.getName() );
+                VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+                vc.setValue( cFromDatabase.getValue() );
+                vc.setEvidenceCode( cFromDatabase.getEvidenceCode() );
+                vc.setDescription( cFromDatabase.getDescription() );
+                vc.setCategory( cFromDatabase.getCategory() );
+                vc.setName( cFromDatabase.getName() );
 
-                vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( c );
+                vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( vc );
 
                 removeFromParent( cFromDatabase, parent );
                 characteristicService.delete( cFromDatabase );

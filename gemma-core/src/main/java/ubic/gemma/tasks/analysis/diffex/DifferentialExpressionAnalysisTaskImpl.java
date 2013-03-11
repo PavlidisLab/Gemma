@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2013 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.tasks.analysis.diffex;
 
 import org.apache.commons.logging.Log;
@@ -22,7 +36,7 @@ import java.util.HashSet;
 
 /**
  * A differential expression analysis spaces task
- *
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -32,24 +46,28 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
     private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
-    @Autowired private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
-    @Autowired private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     private DifferentialExpressionAnalysisTaskCommand command;
 
     @Override
-    public void setCommand(DifferentialExpressionAnalysisTaskCommand command) {
+    public void setCommand( DifferentialExpressionAnalysisTaskCommand command ) {
         this.command = command;
     }
 
     /*
-             * (non-Javadoc)
-             *
-             * @see ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid
-             * .javaspaces.task .diff. SpacesDifferentialExpressionAnalysisCommand)
-             */
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid
+     * .javaspaces.task .diff. SpacesDifferentialExpressionAnalysisCommand)
+     */
     @Override
     public TaskResult execute() {
 
@@ -118,8 +136,8 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
         Collection<DifferentialExpressionAnalysis> results;
 
         Collection<ExperimentalFactor> factors = command.getFactors();
-        DifferentialExpressionAnalyzerServiceImpl.AnalysisType analyzer = analysisSelectionAndExecutionService.determineAnalysis( ee, factors,
-                command.getSubsetFactor(), command.isIncludeInteractions() );
+        DifferentialExpressionAnalyzerServiceImpl.AnalysisType analyzer = analysisSelectionAndExecutionService
+                .determineAnalysis( ee, factors, command.getSubsetFactor(), command.isIncludeInteractions() );
 
         if ( analyzer == null ) {
             throw new IllegalStateException( "Data set cannot be analyzed" );
