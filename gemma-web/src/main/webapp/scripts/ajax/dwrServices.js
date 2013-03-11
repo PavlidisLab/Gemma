@@ -97,9 +97,7 @@ if (typeof ArrayDesignRepeatScanController === 'undefined') {
 }
 ArrayDesignRepeatScanController._path = '/Gemma/dwr';
 ArrayDesignRepeatScanController.run = function(p0, callback) {
-	dwr.engine._execute(ArrayDesignRepeatScanController._path, 'ArrayDesignRepeatScanController', 'run', p0, callback);
-};
-ArrayDesignRepeatScanController.run = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ArrayDesignRepeatScanController/run");
 	dwr.engine._execute(ArrayDesignRepeatScanController._path, 'ArrayDesignRepeatScanController', 'run', p0, callback);
 };
 // ====================================================================================
@@ -136,18 +134,22 @@ BibliographicReferenceController.update = function(p0, callback) {
 			callback);
 };
 BibliographicReferenceController.browse = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/BibliographicReferenceController/browse");
 	dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'browse', p0,
 			callback);
 };
 BibliographicReferenceController.load = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/BibliographicReferenceController/load");
 	dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'load', p0,
 			callback);
 };
 BibliographicReferenceController.search = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/BibliographicReferenceController/search");
 	dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'search', p0,
 			callback);
 };
 BibliographicReferenceController.loadFromPubmedID = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/BibliographicReferenceController/loadFromPubmedID");
 		dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'loadFromPubmedID', p0,
 				callback);
 };
@@ -244,10 +246,12 @@ DEDVController.getDEDV = function(p0, p1, callback) {
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDV', p0, p1, callback);
 };
 DEDVController.getDEDVForCoexpressionVisualization = function(p0, p1, p2, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getDEDVForCoexpressionVisualization");
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForCoexpressionVisualization', p0, p1, p2,
 			callback);
 };
 DEDVController.getDEDVForDiffExVisualization = function(p0, p1, p2, p3, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getDEDVForDiffExVisualization");
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualization', p0, p1, p2, p3,
 			callback);
 };
@@ -256,17 +260,21 @@ DEDVController.getDEDVForVisualization = function(p0, p1, callback) {
     dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForVisualization', p0, p1, callback);
 };
 DEDVController.getVectorData = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getVectorData");
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getVectorData', p0, callback);
 };
 DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1,  callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getDEDVForDiffExVisualizationByThreshold");
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByThreshold', p0, p1, 
 			callback);
 };
 DEDVController.getDEDVForPcaVisualization = function(p0, p1, p2, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getDEDVForPcaVisualization");
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForPcaVisualization', p0, p1, p2,
 			callback);
 };
 DEDVController.getDEDVForDiffExVisualizationByExperiment = function(p0, p1, p2, p3, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getDEDVForDiffExVisualizationByExperiment");
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByExperiment', p0, p1,
 			p2. p3, callback);
 };
@@ -277,6 +285,7 @@ if (typeof DifferentialExpressionAnalysisController === 'undefined') {
 }
 DifferentialExpressionAnalysisController._path = '/Gemma/dwr';
 DifferentialExpressionAnalysisController.run = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionAnalysisController/run");
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
 			'run', p0, callback);
 };
@@ -285,22 +294,22 @@ DifferentialExpressionAnalysisController.determineAnalysisType = function(p0, ca
 			'determineAnalysisType', p0, callback);
 };
 DifferentialExpressionAnalysisController.runCustom = function(p0, p1, p2, p3, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionAnalysisController/runCutom");
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
 			'runCustom', p0, p1, p2, p3, callback);
 };
-DifferentialExpressionAnalysisController.run = function(p0, callback) {
-	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
-			'run', p0, callback);
-};
 DifferentialExpressionAnalysisController.remove = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionAnalysisController/remove");
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
 			'remove', p0, p1, callback);
 };
 DifferentialExpressionAnalysisController.redo = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionAnalysisController/redo");
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
 			'redo', p0, p1, callback);
 };
 DifferentialExpressionAnalysisController.refreshStats = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionAnalysisController/refreshStats");
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
 			'refreshStats', p0, p1, callback);
 };
@@ -315,14 +324,17 @@ DifferentialExpressionSearchController.getDifferentialExpression = function(p0, 
 			'getDifferentialExpression', p0, p1, p2, callback);
 };
 DifferentialExpressionSearchController.getDifferentialExpressionWithoutBatch = function(p0, p1, p2, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionSearchController/getDifferentialExpressionWithoutBatch");
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDifferentialExpressionWithoutBatch', p0, p1, p2, callback);
 };
 DifferentialExpressionSearchController.getDiffExpressionForGenes = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionSearchController/getDiffExpressionForGenes");
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDiffExpressionForGenes', p0, callback);
 };
 DifferentialExpressionSearchController.getDifferentialExpressionForFactors = function(p0, p1, p2, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionSearchController/getDifferentialExpressionForFactors");
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDifferentialExpressionForFactors', p0, p1, p2, callback);
 };
@@ -332,6 +344,7 @@ DifferentialExpressionSearchController.getFactors = function(p0, callback) {
 };
 
 DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function(p0, p1, p2, p3, p4, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionSearchController/scheduleDiffExpSearchTask");
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'scheduleDiffExpSearchTask', p0, p1, p2, p3, p4, callback);
 };
@@ -342,6 +355,7 @@ if (typeof DiffExMetaAnalyzerController === 'undefined') {
 }
 DiffExMetaAnalyzerController._path = '/Gemma/dwr';
 DiffExMetaAnalyzerController.analyzeResultSets = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DiffExMetaAnalyzerController/analyzeResultSets");
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
 			'analyzeResultSets', p0, callback);
 };
@@ -355,10 +369,12 @@ DiffExMetaAnalyzerController.loadAllMetaAnalyses = function(callback) {
 			'loadAllMetaAnalyses', callback);
 };
 DiffExMetaAnalyzerController.removeMetaAnalysis = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DiffExMetaAnalyzerController/removeMetaAnalysis");
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
 			'removeMetaAnalysis', p0, callback);
 };
 DiffExMetaAnalyzerController.saveResultSets = function(p0, p1, p2, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DiffExMetaAnalyzerController/saveResultSets");
 	dwr.engine._execute(DiffExMetaAnalyzerController._path, 'DiffExMetaAnalyzerController',
 			'saveResultSets', p0, p1, p2, callback);
 };
@@ -369,6 +385,7 @@ if (typeof ExperimentalDesignController === 'undefined') {
 }
 ExperimentalDesignController._path = '/Gemma/dwr';
 ExperimentalDesignController.updateBioMaterials = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/updateBioMaterials");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'updateBioMaterials', p0,
 			callback);
 };
@@ -385,30 +402,37 @@ ExperimentalDesignController.getBioMaterials = function(p0, callback) {
 			callback);
 };
 ExperimentalDesignController.createDesignFromFile = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/createDesignFromFile");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'createDesignFromFile', p0,
 			p1, callback);
 };
 ExperimentalDesignController.createExperimentalFactor = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/createExperimentalFactor");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'createExperimentalFactor',
 			p0, p1, callback);
 };
 ExperimentalDesignController.createFactorValue = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/createFactorValue");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'createFactorValue', p0,
 			callback);
 };
 ExperimentalDesignController.createFactorValueCharacteristic = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/createFactorValueCharacteristic");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'createFactorValueCharacteristic', p0, p1, callback);
 };
 ExperimentalDesignController.deleteExperimentalFactors = function(pO, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/deleteExperimentalFactors");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'deleteExperimentalFactors', pO, p1, callback);
 };
 ExperimentalDesignController.deleteFactorValueCharacteristics = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/deleteFactorValueCharacteristics");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'deleteFactorValueCharacteristics', p0, callback);
 };
 ExperimentalDesignController.deleteFactorValues = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/deleteFactorValues");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'deleteFactorValues', p0,
 			p1, callback);
 };
@@ -417,10 +441,12 @@ ExperimentalDesignController.getFactorValuesWithCharacteristics = function(p0, c
 			'getFactorValuesWithCharacteristics', p0, callback);
 };
 ExperimentalDesignController.updateExperimentalFactors = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/updateExperimentalFactors");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'updateExperimentalFactors', p0, callback);
 };
 ExperimentalDesignController.updateFactorValueCharacteristics = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExperimentalDesignController/updateFactorValueCharacteristics");
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'updateFactorValueCharacteristics', p0, callback);
 };
@@ -448,6 +474,7 @@ ExpressionExperimentController.getAnnotation = function(p0, callback) {
 			callback);
 };
 ExpressionExperimentController.find = function(p0, p1, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/find");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'find', p0, p1,
 			callback);
 };
@@ -459,9 +486,11 @@ ExpressionExperimentController.getAllTaxonExperimentGroup = function(p0, callbac
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getAllTaxonExperimentGroup', p0, callback);
 };
 ExpressionExperimentController.searchExperimentsAndExperimentGroups = function(p0,p1, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/searchExperimentsAndExperimentGroups");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroups', p0, p1, callback);
 };
 ExpressionExperimentController.searchExperimentsAndExperimentGroupsGetIds = function(p0, p1, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/searchExperimentsAndExperimentGroupsGetIds");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroupsGetIds', p0, p1, callback);
 };
 ExpressionExperimentController.getDescription = function(p0, callback) {
@@ -473,50 +502,62 @@ ExpressionExperimentController.getFactorValues = function(p0, callback) {
 			callback);
 };
 ExpressionExperimentController.getExperimentalFactors = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/getExperimentalFactors");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'getExperimentalFactors', p0, callback);
 };
 ExpressionExperimentController.updateReport = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/updateReport");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateReport', p0,
 			callback);
 };
 ExpressionExperimentController.updatePubMed = function(p0, p1, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/updatePubMed");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updatePubMed', p0, p1,
 			callback);
 };
 ExpressionExperimentController.deleteById = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/deleteById");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'deleteById', p0,
 			callback);
 };
 ExpressionExperimentController.getDesignMatrixRows = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/getDesignMatrixRows");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getDesignMatrixRows',
 			p0, callback);
 };
 ExpressionExperimentController.loadExpressionExperimentDetails = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadExpressionExperimentDetails");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadExpressionExperimentDetails', p0, callback);
 };
 ExpressionExperimentController.loadQuantitationTypes = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadQuantitationTypes");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadQuantitationTypes', p0, callback);
 };
 ExpressionExperimentController.loadExpressionExperiments = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadExpressionExperiments");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadExpressionExperiments', p0, callback);
 };
 ExpressionExperimentController.loadStatusSummaries = function(p0, p1, p2, p3, p4, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadStatusSummaries");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadStatusSummaries',
 			p0, p1, p2, p3, p4, callback);
 };
 ExpressionExperimentController.removePrimaryPublication = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/removePrimaryPublication");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'removePrimaryPublication', p0, callback);
 };
 ExpressionExperimentController.updateAllReports = function(callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/updateAllReports");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateAllReports',
 			callback);
 };
 ExpressionExperimentController.updateBasics = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/updateBasics");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateBasics', p0,
 			callback);
 };
@@ -529,6 +570,7 @@ ExpressionExperimentController.clearFromCaches = function(p0, callback ) {
 // 'updateBioMaterialMapping', callback);
 // }
 ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/unmatchAllBioAssays");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'unmatchAllBioAssays',
 			p0, callback);
 };
@@ -537,14 +579,17 @@ ExpressionExperimentController.canCurrentUserEditExperiment = function(p0, callb
 			p0, callback);
 };
 ExpressionExperimentController.browse = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browse");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browse', p0,
 			callback);
 };
 ExpressionExperimentController.browseSpecificIds = function(p0, p1, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browseSpecificIds");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseSpecificIds', p0, p1,
 			callback);
 };
 ExpressionExperimentController.browseByTaxon = function(p0, p1, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browseByTaxon");
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseByTaxon', p0, p1,
 			callback);
 };
@@ -563,14 +608,17 @@ if (typeof ExpressionExperimentDataFetchController === 'undefined') {
 }
 ExpressionExperimentDataFetchController._path = '/Gemma/dwr';
 ExpressionExperimentDataFetchController.getDataFile = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getDataFile");
 	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
 			'getDataFile', p0, callback);
 };
 ExpressionExperimentDataFetchController.getDiffExpressionDataFile = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getDiffExpressionDataFile");
 	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
 			'getDiffExpressionDataFile', p0, callback);
 };
 ExpressionExperimentDataFetchController.getCoExpressionDataFile = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getCoExpressionDataFile");
 	dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
 			'getCoExpressionDataFile', p0, callback);
 };
@@ -590,34 +638,42 @@ if (typeof ExpressionExperimentSetController === 'undefined') {
 }
 ExpressionExperimentSetController._path = '/Gemma/dwr';
 ExpressionExperimentSetController.remove = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/remove");
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'remove', p0,
 			callback);
 };
 ExpressionExperimentSetController.create = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/create");
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'create', p0,
 			callback);
 };
 ExpressionExperimentSetController.update = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/update");
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'update', p0,
 			callback);
 };
 ExpressionExperimentSetController.updateNameDesc = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/updateNameDesc");
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateNameDesc', p0,
 			callback);
 };
 ExpressionExperimentSetController.updateMembers = function(p0, p1, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/updateMembers");
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateMembers', p0, p1,
 			callback);
 };
 ExpressionExperimentSetController.loadAll = function(callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/loadAll");
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAll',
 			callback);
 };
 ExpressionExperimentSetController.load = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/load");
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'load', p0,
 			callback);
 };
 ExpressionExperimentSetController.loadByName = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/loadByName");
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadByName', p0,
 			callback);
 };
@@ -688,27 +744,30 @@ ExtCoexpressionSearchController.doSearch = function(p0, callback) {
 			callback);
 };
 ExtCoexpressionSearchController.findExpressionExperiments = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExtCoexpressionSearchController/findExpressionExperiments");
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController',
 			'findExpressionExperiments', p0, p1, callback);
 };
 ExtCoexpressionSearchController.doSearchQuick2Complete = function(p0, p1, callback) {
-	
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExtCoexpressionSearchController/doSearchQuick2");
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick2', p0, p1,
 			callback);
 	
 };
 ExtCoexpressionSearchController.doSearchQuick2 = function(p0, callback) {
-	
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExtCoexpressionSearchController/doSearchQuick2");
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick2', p0,
 			callback);
 	
 };
 ExtCoexpressionSearchController.doSearchQuick = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExtCoexpressionSearchController/doSearchQuick");
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick', p0,
 			callback);
 };
 
 ExtCoexpressionSearchController.doBackgroundCoexSearch = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExtCoexpressionSearchController/doBackgroundCoexSearch");
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doBackgroundCoexSearch', p0,
 			callback);
 };
@@ -718,6 +777,7 @@ if (typeof FileUploadController === 'undefined') {
 }
 FileUploadController._path = '/Gemma/dwr';
 FileUploadController.upload = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/FileUploadController/upload");
 	dwr.engine._execute(FileUploadController._path, 'FileUploadController', 'upload', p0, callback);
 };
 FileUploadController.getUploadStatus = function(callback) {
@@ -729,18 +789,24 @@ if (typeof GeneController === 'undefined') {
 }
 GeneController._path = '/Gemma/dwr';
 GeneController.getProducts = function(p0, callback) {
+// Not used?
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/getProducts");
 	dwr.engine._execute(GeneController._path, 'GeneController', 'getProducts', p0, callback);
 };
 GeneController.findGOTerms = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/findGOTerms");
 	dwr.engine._execute(GeneController._path, 'GeneController', 'findGOTerms', p0, callback);
 };
 GeneController.loadGeneDetails = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadGeneDetails");
 	dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneDetails', p0, callback);
 };
 GeneController.loadGeneEvidence = function(p0, p1, p2, p3, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadGeneEvidence");
 	dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneEvidence', p0, p1, p2, p3, callback);
 };
 GeneController.loadAllenBrainImages = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadAllenBrainImages");
 	dwr.engine._execute(GeneController._path, 'GeneController', 'loadAllenBrainImages', p0, callback);
 };
 // ====================================================================================
@@ -749,21 +815,27 @@ if (typeof GenePickerController === 'undefined') {
 }
 GenePickerController._path = '/Gemma/dwr';
 GenePickerController.getGenes = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GenePickerController/getGenes");
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getGenes', p0, callback);
 };
 GenePickerController.getGenesByGOId = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GenePickerController/getGenesByGOId");
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getGenesByGOId', p0, p1, callback);
 };
 GenePickerController.searchGenes = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GenePickerController/searchGenes");
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenes', p0, p1, callback);
 };
 GenePickerController.searchGenesAndGeneGroups= function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GenePickerController/searchGenesAndGeneGroups");
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenesAndGeneGroups', p0, p1, callback);
 };
 GenePickerController.searchGenesAndGeneGroupsGetIds= function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GenePickerController/searchGenesAndGeneGroupsGetIds");
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenesAndGeneGroupsGetIds', p0, p1, callback);
 };
 GenePickerController.searchGenesWithNCBIId= function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GenePickerController/searchGenesWithNCBIId");
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenesWithNCBIId', p0, p1, callback);
 };
 GenePickerController.getTaxa = function(callback) {
@@ -813,9 +885,11 @@ if (typeof SecurityController === 'undefined') {
 }
 SecurityController._path = '/Gemma/dwr';
 SecurityController.createGroup = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/createGroup");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'createGroup', p0, callback);
 };
 SecurityController.deleteGroup = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/deleteGroup");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'deleteGroup', p0, callback);
 };
 SecurityController.getAvailableGroups = function(callback) {
@@ -831,33 +905,43 @@ SecurityController.getSecurityInfo = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getSecurityInfo', p0, callback);
 };
 SecurityController.addUserToGroup = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/addUserToGroup");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'addUserToGroup', p0, p1, callback);
 };
 SecurityController.removeUsersFromGroup = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/removeUsersFromGroup");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeUsersFromGroup', p0, p1, callback);
 };
 SecurityController.makeGroupReadable = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/makeGroupReadable");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makeGroupReadable', p0, p1, callback);
 };
 SecurityController.makeGroupWriteable = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/makeGroupWriteable");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makeGroupWriteable', p0, p1, callback);
 };
 SecurityController.makePrivate = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/makePrivate");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePrivate', p0, callback);
 };
 SecurityController.makePublic = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/makePublic");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePublic', p0, callback);
 };
 SecurityController.removeGroupWriteable = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/removeGroupWriteable");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeGroupWriteable', p0, p1, callback);
 };
 SecurityController.removeGroupReadable = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/removeGroupReadable");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeGroupReadable', p0, p1, callback);
 };
 SecurityController.updatePermissions = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/updatePermissions");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermissions', p0, callback);
 };
 SecurityController.updatePermission = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/SecurityController/updatePermission");
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermission', p0, callback);
 };
 SecurityController.getGroupMembers = function(p0, callback) {
@@ -887,36 +971,47 @@ GeneSetController.getGeneSetsByGOId = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGeneSetsByGO', p0, p1, callback);
 };
 GeneSetController.update = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/update");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'update', p0, callback);
 };
 GeneSetController.updateNameDesc = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/updateNameDesc");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateNameDesc', p0, callback);
 };
 GeneSetController.updateMembers = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/updateMembers");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateMembers', p0, p1, callback);
 };
 GeneSetController.updateSessionGroups = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/updateSessionGroups");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateSessionGroups', p0, callback);
 };
 GeneSetController.updateUserAndSessionGroups = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/updateUserAndSessionGroups");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateUserAndSessionGroups', p0, callback);
 };
 GeneSetController.create = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/create");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'create', p0, callback);
 };
 GeneSetController.addSessionGroups = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/addSessionGroups");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addSessionGroups', p0, p1, callback);
 };
 GeneSetController.addUserAndSessionGroups = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/addUserAndSessionGroups");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addUserAndSessionGroups', p0, callback);
 };
 GeneSetController.remove = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/remove");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'remove', p0, callback);
 };
 GeneSetController.removeSessionGroups = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/removeSessionGroups");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'removeSessionGroups', p0, callback);
 };
 GeneSetController.removeUserAndSessionGroups = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/removeUserAndSessionGroups");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'removeUserAndSessionGroups', p0, callback);
 };
 GeneSetController.getUsersGeneGroups = function(p0, p1, callback) {
@@ -929,9 +1024,11 @@ GeneSetController.getUserAndSessionGeneGroups = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUserAndSessionGeneGroups', p0, p1, callback);
 };
 GeneSetController.findGeneSetsByGene = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/findGeneSetsByGene");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByGene', p0, callback);
 };
 GeneSetController.findGeneSetsByName = function(p0, p1, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneSetController/findGeneSetsByName");
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByName', p0, p1, callback);
 };
 GeneSetController.canCurrentUserEditGroup = function(p0, callback) {
@@ -972,6 +1069,7 @@ if (typeof LinkAnalysisController === 'undefined') {
 }
 LinkAnalysisController._path = '/Gemma/dwr';
 LinkAnalysisController.run = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/LinkAnalysisController/run");
 	dwr.engine._execute(LinkAnalysisController._path, 'LinkAnalysisController', 'run', p0, callback);
 };
 
@@ -1112,15 +1210,18 @@ if (typeof PhenotypeController === 'undefined') {
 }
 PhenotypeController._path = '/Gemma/dwr';
 PhenotypeController.findEvidenceByFilters = function(p0, p1, p2, callback) {
+    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/findEvidenceByFilters");
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findEvidenceByFilters', p0, p1, p2, callback);
 };
 PhenotypeController.findCandidateGenes = function(p0, p1, p2, callback) {
+    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/findCandidateGenes");
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findCandidateGenes', p0, p1, p2, callback);
 };
 PhenotypeController.findExperimentMgedCategory = function(callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentMgedCategory', callback);
 };
 PhenotypeController.calculateExternalDatabasesStatistics = function(callback) {
+    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/calculateExternalDatabasesStatistics");
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'calculateExternalDatabasesStatistics', callback);
 };
 PhenotypeController.findExperimentOntologyValue = function(p0, p1, p2, callback) {
@@ -1133,6 +1234,7 @@ PhenotypeController.loadAllPhenotypesByTree = function(p0, p1, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypesByTree', p0, p1, callback);
 };
 PhenotypeController.searchOntologyForPhenotypes = function(p0, p1, callback) {
+    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/searchOntologyForPhenotypes");
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'searchOntologyForPhenotypes', p0, p1, callback);
 };
 PhenotypeController.findBibliographicReference = function(p0, p1, callback) {
@@ -1145,9 +1247,11 @@ PhenotypeController.validatePhenotypeAssociationForm = function(p0, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'validatePhenotypeAssociationForm', p0, callback);
 };
 PhenotypeController.removePhenotypeAssociation = function(p0, callback) {
+    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/removePhenotypeAssociation");
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'removePhenotypeAssociation', p0, callback);
 };
 PhenotypeController.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis = function(p0, p1, p2, callback) {
+    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis");
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis', p0, p1, p2, callback);
 };
 PhenotypeController.removeAllEvidenceFromMetaAnalysis = function(p0, callback) {
