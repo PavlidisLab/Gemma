@@ -333,6 +333,8 @@ public class ExpressionExperimentController {
             records = removeTroubledExperimentVOs( records );
         }
 
+        assert records != null;
+
         /*
          * can't just do expressionExperimentService.countAll() because this will count experiments the user may not
          * have access to
@@ -1023,7 +1025,7 @@ public class ExpressionExperimentController {
             record.element( "shortName", ee.getShortName() );
             record.element( "name", ee.getName() );
 
-            if ( outlierEEs.contains( ee ) ) { 
+            if ( outlierEEs.contains( ee ) ) {
                 record.element( "sampleRemoved", true );
             }
 
@@ -2086,13 +2088,25 @@ public class ExpressionExperimentController {
                         expressionExperimentService.loadAllValueObjects() );
             }
         }
+
+        assert records != null;
+
         return records;
     }
 
+    /**
+     * @param batch
+     * @param taxon
+     * @return
+     */
     private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Taxon taxon ) {
         return loadAllValueObjectsOrdered( batch, null, taxon );
     }
 
+    /**
+     * @param records
+     * @return
+     */
     private List<ExpressionExperimentValueObject> removeTroubledExperimentVOs(
             List<ExpressionExperimentValueObject> records ) {
         List<ExpressionExperimentValueObject> untroubled = new ArrayList<ExpressionExperimentValueObject>( records );

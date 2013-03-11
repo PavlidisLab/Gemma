@@ -18,16 +18,26 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.io.Serializable;
+
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 /**
+ * Indicates that a value object represents a Securable so security filtering can be provided during reading.
+ * 
  * @author cmcdonald
- *
+ * @version $Id$
  */
-public interface SecureValueObject {
-	
-	Long getId();
-	
-	Class<? extends Securable> getSecurableClass();
+public interface SecureValueObject extends Serializable {
+
+    /**
+     * @return the serializable ID for the represented entity
+     */
+    public Long getId();
+
+    /**
+     * @return the securable Class of the represented entity.
+     */
+    public Class<? extends Securable> getSecurableClass();
 
 }

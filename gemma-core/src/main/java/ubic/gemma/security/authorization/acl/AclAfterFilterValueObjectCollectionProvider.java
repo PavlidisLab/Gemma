@@ -18,11 +18,11 @@
  */
 package ubic.gemma.security.authorization.acl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.afterinvocation.AbstractAclProvider;
-import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.Authentication;
@@ -38,24 +37,28 @@ import org.springframework.security.core.Authentication;
 import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 import ubic.gemma.security.SecurityService;
 
-
-
-
 /**
+ * TODO add info for security related fields here if applicable (e.g. for ExpressionExperimentValueObject:
+ * currentUserHasWritePermission, currentUserIsOwner etc.)
+ * 
  * @author cmcdonald
- *TODO add info for security related fields here if applicable (e.g. for ExpressionExperimentValueObject: currentUserHasWritePermission, currentUserIsOwner etc.)
+ * @version $Id$
  */
 public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProvider {
-    
-    protected static final Log logger = LogFactory.getLog(AclAfterFilterValueObjectCollectionProvider.class);
 
-    public AclAfterFilterValueObjectCollectionProvider(AclService aclService, List<Permission> requirePermission) {
-        super(aclService, "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ", requirePermission);
+    protected static final Log logger = LogFactory.getLog( AclAfterFilterValueObjectCollectionProvider.class );
+
+    /**
+     * @param aclService
+     * @param requirePermission
+     */
+    public AclAfterFilterValueObjectCollectionProvider( AclService aclService, List<Permission> requirePermission ) {
+        super( aclService, "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ", requirePermission );
     }
 
     @Autowired
     private SecurityService securityService;
-   
+
     @Override
     @SuppressWarnings("unchecked")
     public final Object decide( Authentication authentication, Object object, Collection<ConfigAttribute> config,
@@ -69,8 +72,7 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
                 // Need to process the Collection for this invocation
                 if ( returnedObject == null ) {
                     logger.debug( "Return object is null, skipping" );
-
-                    return null;
+                    return returnedObject;
                 }
 
                 Filterer<Object> filterer = null;
@@ -104,15 +106,12 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
                     }
                     securablesToFilter.add( ( SecureValueObject ) domainObject );
                 }
-                
-                
-                //you will only ever want to read securevalueobjects
-                List<Permission> requiredPermissions = new ArrayList<Permission>();
-                requiredPermissions.add( BasePermission.READ );
 
-                for ( SecureValueObject s : securablesToFilter ) {
+                Map<SecureValueObject, Boolean> hasPerm = securityService.hasPermission( securablesToFilter,
+                        this.requirePermission, authentication );
 
-                    if ( !securityService.hasPermission( s, requiredPermissions ,authentication ) ) {
+                for ( SecureValueObject s : hasPerm.keySet() ) {
+                    if ( !hasPerm.get( s ) ) {
                         filterer.remove( s );
                     }
                 }

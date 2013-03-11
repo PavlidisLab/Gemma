@@ -18,25 +18,25 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 
 /**
  * @author tvrossum
  * @version $Id$
  */
-public class ExpressionExperimentSetValueObject implements Serializable, Comparable<ExpressionExperimentSetValueObject> {
+public class ExpressionExperimentSetValueObject implements SecureValueObject,
+        Comparable<ExpressionExperimentSetValueObject> {
 
     private static final long serialVersionUID = -6852364688337216390L;
 
     private boolean currentUserHasWritePermission = false;
 
     private boolean currentUserIsOwner = false;
-
-    private boolean publik;
-
-    private boolean shared;
 
     private String description;
 
@@ -52,37 +52,13 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
     private String name;
 
     private Integer numExperiments;
+
+    private boolean publik;
+
+    private boolean shared;
     private Long taxonId;
 
     private String taxonName;
-
-    /**
-     * @return the publik
-     */
-    public boolean isPublik() {
-        return publik;
-    }
-
-    /**
-     * @param publik the publik to set
-     */
-    public void setPublik( boolean publik ) {
-        this.publik = publik;
-    }
-
-    /**
-     * @return the shared
-     */
-    public boolean isShared() {
-        return shared;
-    }
-
-    /**
-     * @param shared the shared to set
-     */
-    public void setShared( boolean shared ) {
-        this.shared = shared;
-    }
 
     public ExpressionExperimentSetValueObject() {
         this.expressionExperimentIds = new HashSet<Long>();
@@ -119,6 +95,7 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
         return expressionExperimentIds;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -129,6 +106,11 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
 
     public Integer getNumExperiments() {
         return numExperiments;
+    }
+
+    @Override
+    public Class<? extends Securable> getSecurableClass() {
+        return ExpressionExperimentSetImpl.class;
     }
 
     public Long getTaxonId() {
@@ -156,12 +138,40 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
         return currentUserHasWritePermission;
     }
 
+    /**
+     * @return the currentUserIsOwner
+     */
+    public boolean isCurrentUserIsOwner() {
+        return currentUserIsOwner;
+    }
+
     public boolean isModifiable() {
         return modifiable;
     }
 
+    /**
+     * @return the publik
+     */
+    public boolean isPublik() {
+        return publik;
+    }
+
+    /**
+     * @return the shared
+     */
+    public boolean isShared() {
+        return shared;
+    }
+
     public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
         this.currentUserHasWritePermission = currentUserHasWritePermission;
+    }
+
+    /**
+     * @param currentUserIsOwner the currentUserIsOwner to set
+     */
+    public void setCurrentUserIsOwner( boolean currentUserIsOwner ) {
+        this.currentUserIsOwner = currentUserIsOwner;
     }
 
     public void setDescription( String description ) {
@@ -188,26 +198,26 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
         this.numExperiments = numExperiments;
     }
 
+    /**
+     * @param publik the publik to set
+     */
+    public void setPublik( boolean publik ) {
+        this.publik = publik;
+    }
+
+    /**
+     * @param shared the shared to set
+     */
+    public void setShared( boolean shared ) {
+        this.shared = shared;
+    }
+
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
     }
 
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
-    }
-
-    /**
-     * @param currentUserIsOwner the currentUserIsOwner to set
-     */
-    public void setCurrentUserIsOwner( boolean currentUserIsOwner ) {
-        this.currentUserIsOwner = currentUserIsOwner;
-    }
-
-    /**
-     * @return the currentUserIsOwner
-     */
-    public boolean isCurrentUserIsOwner() {
-        return currentUserIsOwner;
     }
 
 }

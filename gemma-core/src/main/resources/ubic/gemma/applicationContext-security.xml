@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @author Gemma @version $Id$ -->
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:s="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop"
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:s="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
           http://www.springframework.org/schema/security 
           http://www.springframework.org/schema/security/spring-security-3.0.xsd
@@ -10,8 +11,8 @@
 
 	<bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
 
-	<!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager so we can get the role hierarchy and GROUP_ prefix applied 
-		to http request. -->
+	<!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager 
+		so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
 	<s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma">
 		<s:http-basic />
 
@@ -35,7 +36,8 @@
 			authentication-failure-handler-ref="ajaxAuthenticationFailureHandler" />
 		<s:remember-me key="gemma_rm" />
 
-		<!-- See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get exceptions galore. -->
+		<!-- See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get exceptions 
+			galore. -->
 		<s:session-management session-fixation-protection="none">
 			<!-- We define the session registry ourselves so we can use it to count users -->
 			<s:concurrency-control max-sessions="1" session-registry-ref="sessionRegistry" />
@@ -77,7 +79,7 @@
 		<s:authentication-provider ref="runAsAuthenticationProvider" />
 	</s:authentication-manager>
 
-    <bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
+	<bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
 		<property name="rolePrefix" value="GROUP_" />
 		<property name="key" value="${gemma.runas.password}" />
 	</bean>
@@ -104,8 +106,8 @@
 
 	<!--- global method security configuration -->
 
-	<s:global-method-security run-as-manager-ref="runAsManager" secured-annotations="enabled" pre-post-annotations="enabled" access-decision-manager-ref="accessDecisionManager"
-		order="1">
+	<s:global-method-security run-as-manager-ref="runAsManager" secured-annotations="enabled"
+		pre-post-annotations="enabled" access-decision-manager-ref="accessDecisionManager" order="1">
 		<s:expression-handler ref="securityExpressionHandler" />
 
 		<!-- these filters are declared below -->
@@ -118,6 +120,7 @@
 		<s:after-invocation-provider ref="afterAclMyPrivateDataRead" />
 		<s:after-invocation-provider ref="afterAclAllMyData" />
 		<s:after-invocation-provider ref="afterAclValueObjectCollection" />
+		<s:after-invocation-provider ref="afterAclValueObject" />
 		<s:after-invocation-provider ref="afterAclMapRead" />
 		<s:after-invocation-provider ref="afterAclMapValuesRead" />
 		<s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->
@@ -177,7 +180,8 @@
 	</bean>
 
 
-	<!-- Voter that can be applied to any method that takes a securable as an argument (NOT on the return value, this is checked before the call) -->
+	<!-- Voter that can be applied to any method that takes a securable as an argument (NOT on the return value, this is checked 
+		before the call) -->
 	<bean id="securableEditVoter" class="org.springframework.security.acls.AclEntryVoter">
 		<constructor-arg ref="aclService" />
 		<constructor-arg value="ACL_SECURABLE_EDIT" />
@@ -217,8 +221,9 @@
 		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
 
-	<!-- Check: 'GROUP_RUN_AS_' guys are so we can allow some exposed methods to be run by users with lower privileges - such as servers or certain user operations that need to happen 
-		when users are logging in or signing up. Note that IS_AUTHENTICATED_ANONYMOUSLY is not recognized by the role voter, but it is by other uses of this hierarchy. -->
+	<!-- Check: 'GROUP_RUN_AS_' guys are so we can allow some exposed methods to be run by users with lower privileges - such 
+		as servers or certain user operations that need to happen when users are logging in or signing up. Note that IS_AUTHENTICATED_ANONYMOUSLY 
+		is not recognized by the role voter, but it is by other uses of this hierarchy. -->
 	<bean id="roleHierarchy" class="org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl">
 		<property name="hierarchy">
 			<value>[CDATA[
@@ -277,7 +282,8 @@
 	<!-- Aspect that adds ACLs for new entities, and deletes them for deleted entities. -->
 	<aop:config>
 		<aop:aspect id="aclAspect" ref="aclAdvice" order="4">
-			<aop:after-returning method="doAclAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()" returning="retValue" />
+			<aop:after-returning method="doAclAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
+				returning="retValue" />
 		</aop:aspect>
 	</aop:config>
 
@@ -285,7 +291,8 @@
 	<!-- Aspect to add audit info for objects after CRUD operations. -->
 	<aop:config>
 		<aop:aspect id="auditAspect" ref="auditAdvice" order="5">
-			<aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()" returning="retValue" />
+			<aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
+				returning="retValue" />
 		</aop:aspect>
 	</aop:config>
 
@@ -419,20 +426,26 @@
 		</constructor-arg>
 		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
 	</bean>
-	
+
 	<bean id="afterAclValueObjectCollection" class="ubic.gemma.security.authorization.acl.AclAfterFilterValueObjectCollectionProvider">
 		<constructor-arg ref="aclService" />
 		<constructor-arg>
 			<list>
-				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE" />
 				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
 		</constructor-arg>
 		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
 	</bean>
-	
-	
+
+	<bean id="afterAclValueObject" class="ubic.gemma.security.authorization.acl.AclAfterValueObjectProvider">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
+			<list>
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
+			</list>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+	</bean>
 
 	<!-- needed for the use of @Post.. -->
 	<bean id="postInvocationAdviceProvider" class="org.springframework.security.access.prepost.PostInvocationAdviceProvider">

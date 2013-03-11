@@ -133,6 +133,8 @@ public interface SecurityService {
     @Secured("GROUP_ADMIN")
     public abstract Collection<Sid> getAvailableSids();
 
+    public String getGroupAuthorityNameFromGroupName( String groupName );
+
     /**
      * @param s
      * @throws AuthorizationServiceException if the collection is empty, see comments in
@@ -186,6 +188,24 @@ public interface SecurityService {
     public abstract Map<Securable, Sid> getOwners( Collection<? extends Securable> securables );
 
     /**
+     * @param svos
+     * @param requiredPermissions
+     * @param authentication
+     * @return
+     */
+    public Map<SecureValueObject, Boolean> hasPermission( Collection<SecureValueObject> svos,
+            List<Permission> requiredPermissions, Authentication authentication );
+
+    /**
+     * @param svo
+     * @param requiredPermissions
+     * @param authentication
+     * @return
+     */
+    public boolean hasPermission( SecureValueObject svo, List<Permission> requiredPermissions,
+            Authentication authentication );
+
+    /**
      * @param s
      * @return true if the current user can edit the securable
      */
@@ -210,7 +230,8 @@ public interface SecurityService {
 
     /**
      * @param s
-     * @return true if the owner is the same as the current authenticated user. Special case: if the owner is an administrator, and the uc
+     * @return true if the owner is the same as the current authenticated user. Special case: if the owner is an
+     *         administrator, and the uc
      */
     public abstract boolean isOwnedByCurrentUser( Securable s );
 
@@ -344,8 +365,4 @@ public interface SecurityService {
      */
     @Secured("GROUP_ADMIN")
     public abstract void setOwner( Securable s, String userName );
-
-    public String getGroupAuthorityNameFromGroupName( String groupName );
-    
-    public boolean hasPermission( SecureValueObject svo, List<Permission> requiredPermissions, Authentication authentication );
 }

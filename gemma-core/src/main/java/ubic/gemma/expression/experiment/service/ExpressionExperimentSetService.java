@@ -102,6 +102,7 @@ public interface ExpressionExperimentSetService {
      * 
      * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjectsWithTaxon();
 
     /**

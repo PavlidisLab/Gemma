@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2009 University of British Columbia
+ * Copyright (c) 2013 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,20 +31,23 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 
-
 /**
  * @author kelsey
  * @version $Id$
  */
-public class ExpressionExperimentValueObject implements java.io.Serializable,
-        Comparable<ExpressionExperimentValueObject>, SecureValueObject {
+public class ExpressionExperimentValueObject implements Comparable<ExpressionExperimentValueObject>, SecureValueObject {
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -5678747537830051610L;
-    
-    public Class<? extends Securable> getSecurableClass(){
-    	return ExpressionExperimentImpl.class;    	
+
+    @Override
+    public Class<? extends Securable> getSecurableClass() {
+        if ( this.isSubset ) {
+            return ExpressionExperimentSubSetImpl.class;
+        }
+        return ExpressionExperimentImpl.class;
     }
 
     /**
@@ -585,6 +588,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
     /**
      * 
      */
+    @Override
     public Long getId() {
         return this.id;
     }

@@ -81,6 +81,18 @@ public class SecurityServiceImpl implements SecurityService {
 
     private static AuthenticationTrustResolver authenticationTrustResolver = new AuthenticationTrustResolverImpl();
 
+    public static boolean isRunningAsAdmin() {
+
+        Collection<GrantedAuthority> authorities = getAuthentication().getAuthorities();
+        assert authorities != null;
+        for ( GrantedAuthority authority : authorities ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.RUN_AS_ADMIN_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Returns true if the current user has admin authority.
      * 
@@ -96,18 +108,6 @@ public class SecurityServiceImpl implements SecurityService {
         assert authorities != null;
         for ( GrantedAuthority authority : authorities ) {
             if ( authority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean isRunningAsAdmin() {
-
-        Collection<GrantedAuthority> authorities = getAuthentication().getAuthorities();
-        assert authorities != null;
-        for ( GrantedAuthority authority : authorities ) {
-            if ( authority.getAuthority().equals( AuthorityConstants.RUN_AS_ADMIN_AUTHORITY ) ) {
                 return true;
             }
         }
@@ -448,6 +448,35 @@ public class SecurityServiceImpl implements SecurityService {
         return results;
     }
 
+    /**
+     * From the group name get the authority which should be underscored with GROUP_
+     * 
+     * @param The group name e.g. fish
+     * @return The authority e.g. GROUP_FISH_...
+     */
+    @Override
+    public String getGroupAuthorityNameFromGroupName( String groupName ) {
+        Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
+
+        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
+            throw new AccessDeniedException( "User doesn't have access to that group" );
+        }
+
+        List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
+
+        if ( groupAuthorities == null || groupAuthorities.isEmpty() ) {
+            throw new IllegalStateException( "Group has no authorities" );
+        }
+
+        if ( groupAuthorities.size() > 1 ) {
+            throw new UnsupportedOperationException( "Sorry, groups can only have a single authority" );
+        }
+
+        GrantedAuthority ga = groupAuthorities.get( 0 );
+        String authority = userManager.getRolePrefix() + ( ga.getAuthority() );
+        return authority;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -618,6 +647,76 @@ public class SecurityServiceImpl implements SecurityService {
                 result.put( objectIdentities.get( oi ), owner );
         }
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.security.SecurityService#hasPermission(ubic.gemma.model.common.auditAndSecurity.SecureValueObject,
+     * java.util.List, org.springframework.security.core.Authentication)
+     */
+    @Override
+    public boolean hasPermission( SecureValueObject svo, List<Permission> requiredPermissions,
+            Authentication authentication ) {
+
+        List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
+
+        Acl acl = null;
+
+        ObjectIdentity objectIdentity = new ObjectIdentityImpl( svo.getSecurableClass(), svo.getId() );
+
+        try {
+            // Lookup only ACLs for SIDs we're interested in (this actually get them all)
+            acl = aclService.readAclById( objectIdentity, sids );
+            // administrative mode = false
+            return acl.isGranted( requiredPermissions, sids, false );
+        } catch ( NotFoundException ignore ) {
+            return false;
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.security.SecurityService#hasPermission(java.util.Collection, java.util.List,
+     * org.springframework.security.core.Authentication)
+     */
+    @Override
+    public Map<SecureValueObject, Boolean> hasPermission( Collection<SecureValueObject> svos,
+            List<Permission> requiredPermissions, Authentication authentication ) {
+
+        Map<SecureValueObject, Boolean> result = new HashMap<SecureValueObject, Boolean>();
+
+        if ( svos.isEmpty() ) return result;
+
+        Map<ObjectIdentity, SecureValueObject> objectIdentities = getValueObjectIdentities( svos );
+
+        /*
+         * Take advantage of fast bulk loading of ACLs.
+         */
+        Map<ObjectIdentity, Acl> acls = aclService
+                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+
+        List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
+
+        for ( ObjectIdentity oi : acls.keySet() ) {
+            Acl acl = acls.get( oi );
+
+            try {
+                boolean granted = acl.isGranted( requiredPermissions, sids, false );
+
+                result.put( objectIdentities.get( oi ), granted );
+            } catch ( NotFoundException ignore ) {
+                /*
+                 * Not sure what the right thing to do is here. Since these are value object, this is probably a
+                 * "session-bound" object
+                 */
+                result.put( objectIdentities.get( oi ), true );
+            }
+        }
+        return result;
+
     }
 
     /*
@@ -1227,35 +1326,6 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     /**
-     * From the group name get the authority which should be underscored with GROUP_
-     * 
-     * @param The group name e.g. fish
-     * @return The authority e.g. GROUP_FISH_...
-     */
-    @Override
-    public String getGroupAuthorityNameFromGroupName( String groupName ) {
-        Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
-
-        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
-            throw new AccessDeniedException( "User doesn't have access to that group" );
-        }
-
-        List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
-
-        if ( groupAuthorities == null || groupAuthorities.isEmpty() ) {
-            throw new IllegalStateException( "Group has no authorities" );
-        }
-
-        if ( groupAuthorities.size() > 1 ) {
-            throw new UnsupportedOperationException( "Sorry, groups can only have a single authority" );
-        }
-
-        GrantedAuthority ga = groupAuthorities.get( 0 );
-        String authority = userManager.getRolePrefix() + ( ga.getAuthority() );
-        return authority;
-    }
-
-    /**
      * @return
      */
     private Collection<String> getGroupsUserCanView() {
@@ -1277,6 +1347,21 @@ public class SecurityServiceImpl implements SecurityService {
         Map<ObjectIdentity, Securable> result = new HashMap<ObjectIdentity, Securable>();
         for ( Securable s : securables ) {
             result.put( objectIdentityRetrievalStrategy.getObjectIdentity( s ), s );
+        }
+        return result;
+    }
+
+    /**
+     * Specialized for value objects.
+     * 
+     * @param securables
+     * @return
+     */
+    private Map<ObjectIdentity, SecureValueObject> getValueObjectIdentities(
+            Collection<? extends SecureValueObject> securables ) {
+        Map<ObjectIdentity, SecureValueObject> result = new HashMap<ObjectIdentity, SecureValueObject>();
+        for ( SecureValueObject s : securables ) {
+            result.put( new ObjectIdentityImpl( s.getSecurableClass(), s.getId() ), s );
         }
         return result;
     }
@@ -1358,25 +1443,6 @@ public class SecurityServiceImpl implements SecurityService {
             acl = aclService.readAclById( objectIdentity, sids );
             // administrative mode = true
             return acl.isGranted( requiredPermissions, sids, true );
-        } catch ( NotFoundException ignore ) {
-            return false;
-        }
-    }
-    
-    
-    public boolean hasPermission( SecureValueObject svo, List<Permission> requiredPermissions, Authentication authentication ) {
-
-        List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
-
-        Acl acl = null;
-
-        ObjectIdentity objectIdentity = new ObjectIdentityImpl(svo.getSecurableClass(), svo.getId());
-        
-        try {
-            // Lookup only ACLs for SIDs we're interested in (this actually get them all)
-            acl = aclService.readAclById( objectIdentity, sids );
-            // administrative mode = false
-            return acl.isGranted( requiredPermissions, sids, false);
         } catch ( NotFoundException ignore ) {
             return false;
         }
