@@ -76,9 +76,9 @@ import ubic.gemma.util.EntityUtils;
 @Repository
 public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
-    private static final int BATCH_SIZE = 1000;
-
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
+
+    private static final int BATCH_SIZE = 1000;
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -308,6 +308,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 
+    @Override
+    public Collection<ExpressionExperiment> getExperimentsWithOutliers() {
+        return this.getHibernateTemplate().find(
+                "select distinct e from ExpressionExperimentImpl e join e.bioAssays b where b.isOutlier = 1" );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -440,6 +446,95 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return query.list();
     }
 
+    @Override
+    public List<ExpressionExperimentValueObject> loadAllValueObjects() {
+
+        final String queryString = getLoadValueObjectsQueryString( null, null );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
+        String orderByClause = "";
+        if ( orderField.equals( "taxon" ) ) {
+            orderByClause = "order by taxon.id " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "bioAssayCount" ) ) {
+            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "dateLastUpdated" ) ) {
+            orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "troubled" ) ) {
+            orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
+        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+            orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
+        }
+
+        final String queryString = getLoadValueObjectsQueryString( null, orderByClause );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
+
+        String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
+
+        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        queryObject.setParameter( "tid", taxon.getId() );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
+            boolean descending, Taxon taxon ) {
+        String orderByClause = "";
+        if ( orderField.equals( "bioAssayCount" ) ) {
+            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "dateLastUpdated" ) ) {
+            orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "troubled" ) ) {
+            orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
+        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+            orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
+        }
+
+        String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid)";
+
+        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        queryObject.setParameter( "tid", taxon.getId() );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -484,6 +579,103 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Collection<ExpressionExperimentValueObject> r = this.loadValueObjects( ids, false );
         if ( r.isEmpty() ) return null;
         return r.iterator().next();
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
+
+        boolean isList = ( ids != null && ids instanceof List );
+        if ( ids == null || ids.size() == 0 ) {
+            if ( isList ) {
+                return new ArrayList<ExpressionExperimentValueObject>();
+            }
+            return new HashSet<ExpressionExperimentValueObject>();
+        }
+
+        String idRestrictionClause = "where ee.id in (:ids) ";
+
+        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        Map<Long, Collection<QuantitationType>> qtMap;
+
+        List<Long> idl = new ArrayList<Long>( ids );
+        Collections.sort( idl ); // so it's consistent and therefore cacheable.
+        qtMap = getQuantitationTypeMap( idl );
+        queryObject.setParameterList( "ids", idl );
+
+        queryObject.setCacheable( true );
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list, qtMap, ids.size() );
+
+        /*
+         * Remove items we didn't get back out. This is defensiveness!
+         */
+
+        Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<ExpressionExperimentValueObject>();
+
+        Set<Long> voIds = vo.keySet();
+        if ( maintainOrder ) {
+            Set<Long> orderedVoIds = new LinkedHashSet<Long>( voIds.size() );
+            for ( Long eeId : ids ) {
+                if ( voIds.contains( eeId ) ) {
+                    orderedVoIds.add( eeId );
+                }
+            }
+            voIds = orderedVoIds;
+        }
+
+        for ( Long id : voIds ) {
+            if ( vo.get( id ).getId() != null ) {
+                finalValues.add( vo.get( id ) );
+            } else {
+                log.warn( "No value object was fetched for EE with id=" + id );
+            }
+        }
+
+        if ( finalValues.isEmpty() ) {
+            log.error( "No values were retrieved for the ids provided" );
+        }
+
+        if ( isList ) {
+            return new ArrayList<ExpressionExperimentValueObject>( finalValues );
+        }
+
+        return finalValues;
+
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+            Collection<Long> ids ) {
+        String orderByClause = "";
+        if ( orderField.equals( "taxon" ) ) {
+            orderByClause = "order by taxon.id " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "bioAssayCount" ) ) {
+            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "dateLastUpdated" ) ) {
+            orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "troubled" ) ) {
+            orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
+        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+            orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
+        }
+
+        String idRestrictionClause = "where ee.id in (:ids) ";
+
+        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
+
+        Query queryObject = super.getSession().createQuery( queryString );
+
+        queryObject.setParameterList( "ids", ids );
+
+        List<?> list = queryObject.list();
+
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
+
+        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
     }
 
     /*
@@ -1579,305 +1771,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return ees;
     }
 
-    @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjects() {
-
-        final String queryString = getLoadValueObjectsQueryString( null, null );
-
-        Query queryObject = super.getSession().createQuery( queryString );
-
-        List<?> list = queryObject.list();
-
-        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
-
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
-
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
-        String orderByClause = "";
-        if ( orderField.equals( "taxon" ) ) {
-            orderByClause = "order by taxon.id " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "bioAssayCount" ) ) {
-            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "dateLastUpdated" ) ) {
-            orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "troubled" ) ) {
-            orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
-        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
-            orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
-        }
-
-        final String queryString = getLoadValueObjectsQueryString( null, orderByClause );
-
-        Query queryObject = super.getSession().createQuery( queryString );
-
-        List<?> list = queryObject.list();
-
-        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
-
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
-
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
-
-        String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
-
-        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
-
-        Query queryObject = super.getSession().createQuery( queryString );
-
-        queryObject.setParameter( "tid", taxon.getId() );
-
-        List<?> list = queryObject.list();
-
-        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
-
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
-            boolean descending, Taxon taxon ) {
-        String orderByClause = "";
-        if ( orderField.equals( "bioAssayCount" ) ) {
-            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "dateLastUpdated" ) ) {
-            orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "troubled" ) ) {
-            orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
-        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
-            orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
-        }
-
-        String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid)";
-
-        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
-
-        Query queryObject = super.getSession().createQuery( queryString );
-
-        queryObject.setParameter( "tid", taxon.getId() );
-
-        List<?> list = queryObject.list();
-
-        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
-
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
-    }
-
-    @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
-            Collection<Long> ids ) {
-        String orderByClause = "";
-        if ( orderField.equals( "taxon" ) ) {
-            orderByClause = "order by taxon.id " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "bioAssayCount" ) ) {
-            orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "dateLastUpdated" ) ) {
-            orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "troubled" ) ) {
-            orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
-        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
-            orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
-        }
-
-        String idRestrictionClause = "where ee.id in (:ids) ";
-
-        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
-
-        Query queryObject = super.getSession().createQuery( queryString );
-
-        queryObject.setParameterList( "ids", ids );
-
-        List<?> list = queryObject.list();
-
-        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
-
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
-    }
-
-    @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
-
-        boolean isList = ( ids != null && ids instanceof List );
-        if ( ids == null || ids.size() == 0 ) {
-            if ( isList ) {
-                return new ArrayList<ExpressionExperimentValueObject>();
-            }
-            return new HashSet<ExpressionExperimentValueObject>();
-        }
-
-        String idRestrictionClause = "where ee.id in (:ids) ";
-
-        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
-
-        Query queryObject = super.getSession().createQuery( queryString );
-
-        Map<Long, Collection<QuantitationType>> qtMap;
-
-        List<Long> idl = new ArrayList<Long>( ids );
-        Collections.sort( idl ); // so it's consistent and therefore cacheable.
-        qtMap = getQuantitationTypeMap( idl );
-        queryObject.setParameterList( "ids", idl );
-
-        queryObject.setCacheable( true );
-        List<?> list = queryObject.list();
-
-        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list, qtMap, ids.size() );
-
-        /*
-         * Remove items we didn't get back out. This is defensiveness!
-         */
-
-        Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<ExpressionExperimentValueObject>();
-
-        Set<Long> voIds = vo.keySet();
-        if ( maintainOrder ) {
-            Set<Long> orderedVoIds = new LinkedHashSet<Long>( voIds.size() );
-            for ( Long eeId : ids ) {
-                if ( voIds.contains( eeId ) ) {
-                    orderedVoIds.add( eeId );
-                }
-            }
-            voIds = orderedVoIds;
-        }
-
-        for ( Long id : voIds ) {
-            if ( vo.get( id ).getId() != null ) {
-                finalValues.add( vo.get( id ) );
-            } else {
-                log.warn( "No value object was fetched for EE with id=" + id );
-            }
-        }
-
-        if ( finalValues.isEmpty() ) {
-            log.error( "No values were retrieved for the ids provided" );
-        }
-
-        if ( isList ) {
-            return new ArrayList<ExpressionExperimentValueObject>( finalValues );
-        }
-
-        return finalValues;
-
-    }
-
-    private String getLoadValueObjectsQueryString( String idRestrictionClause, String orderByClause ) {
-        String queryString = "select ee.id as id, " // 0
-                + "ee.name, " // 1
-                + "ED.name, " // 2
-                + "ED.webUri, " // 3
-                + "ee.source, " // 4
-                + "acc.accession, " // 5
-                + "taxon.commonName," // 6
-                + "taxon.id," // 7
-                + "count(distinct BA), " // 8
-                + "count(distinct AD), " // 9
-                + "ee.shortName, " // 10
-                + "s.createDate, " // 11
-                + "AD.technologyType, ee.class, " // 12, 13
-                + " EDES.id,  " // 14
-                + " s.lastUpdateDate, " // 15
-                + " AD.status, " // 16
-                + " s.troubled, " // 17
-                + " s.validated, " // 18
-                + " count(distinct SU), " // 19
-                + " ee.numberOfDataVectors " // 20
-                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
-                + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
-                + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
-                + " inner join ee.experimentalDesign as EDES join ee.status as s ";
-
-        if ( idRestrictionClause != null ) {
-            queryString = queryString + idRestrictionClause;
-        }
-
-        queryString = queryString + " group by ee.id ";
-
-        if ( orderByClause != null ) {
-            queryString = queryString + orderByClause;
-        }
-
-        return queryString;
-
-    }
-
-    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List<?> list ) {
-        return getExpressionExperimentValueObjectMap( list, null, null );
-    }
-
-    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List<?> list,
-            Map<Long, Collection<QuantitationType>> qtMap, Integer initialSize ) {
-
-        Map<Long, ExpressionExperimentValueObject> vo;
-
-        if ( initialSize == null ) {
-            vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>();
-        } else {
-            vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>( initialSize );
-        }
-
-        for ( Object object : list ) {
-
-            Object[] res = ( Object[] ) object;
-
-            Long eeId = ( Long ) res[0];
-
-            assert eeId != null;
-
-            ExpressionExperimentValueObject v;
-            if ( vo.containsKey( eeId ) ) {
-                v = vo.get( eeId );
-            } else {
-                v = new ExpressionExperimentValueObject();
-                vo.put( eeId, v );
-            }
-
-            v.setId( eeId );
-            v.setName( ( String ) res[1] );
-            v.setExternalDatabase( ( String ) res[2] );
-            v.setExternalUri( ( String ) res[3] );
-            v.setSource( ( String ) res[4] );
-            v.setAccession( ( String ) res[5] );
-            v.setTaxon( ( String ) res[6] );
-            v.setTaxonId( ( Long ) res[7] );
-            v.setBioAssayCount( ( ( Long ) res[8] ).intValue() );
-            v.setArrayDesignCount( ( ( Long ) res[9] ).intValue() );
-            v.setShortName( ( String ) res[10] );
-            v.setDateCreated( ( ( Date ) res[11] ) );
-            v.setTroubled( ( ( Boolean ) res[17] ) );
-
-            if ( ( ( Boolean ) res[17] ) ) {
-                if ( ( ( Boolean ) res[18] ) ) {
-                    v.setTroubleDetails( "Error: May not actually be troubled, as it is also 'validated'" );
-                } else {
-                    v.setTroubleDetails( "Troubled reason not loaded" );
-                }
-            } else {
-                v.setTroubleDetails( "Not troubled" );
-            }
-            Object technology = res[12];
-            if ( technology != null ) v.setTechnologyType( ( ( TechnologyType ) technology ).toString() );
-            if ( qtMap != null && !qtMap.isEmpty() && v.getTechnologyType() != null ) {
-                fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
-            }
-            v.setClazz( ( String ) res[13] );
-            v.setExperimentalDesign( ( Long ) res[14] );
-            v.setDateLastUpdated( ( ( Date ) res[15] ) );
-            v.setBioMaterialCount( ( ( Long ) res[19] ).intValue() );
-
-            if ( res[20] != null ) v.setProcessedExpressionVectorCount( ( Integer ) res[20] );
-            // System.out.println(res[16]);
-            vo.put( eeId, v );
-        }
-
-        return vo;
-
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -2058,6 +1951,119 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setHasBothIntensities( hasBothIntensities && !mayBeOneChannel );
             v.setHasEitherIntensity( hasIntensityA || hasIntensityB );
         }
+    }
+
+    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List<?> list ) {
+        return getExpressionExperimentValueObjectMap( list, null, null );
+    }
+
+    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List<?> list,
+            Map<Long, Collection<QuantitationType>> qtMap, Integer initialSize ) {
+
+        Map<Long, ExpressionExperimentValueObject> vo;
+
+        if ( initialSize == null ) {
+            vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>();
+        } else {
+            vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>( initialSize );
+        }
+
+        for ( Object object : list ) {
+
+            Object[] res = ( Object[] ) object;
+
+            Long eeId = ( Long ) res[0];
+
+            assert eeId != null;
+
+            ExpressionExperimentValueObject v;
+            if ( vo.containsKey( eeId ) ) {
+                v = vo.get( eeId );
+            } else {
+                v = new ExpressionExperimentValueObject();
+                vo.put( eeId, v );
+            }
+
+            v.setId( eeId );
+            v.setName( ( String ) res[1] );
+            v.setExternalDatabase( ( String ) res[2] );
+            v.setExternalUri( ( String ) res[3] );
+            v.setSource( ( String ) res[4] );
+            v.setAccession( ( String ) res[5] );
+            v.setTaxon( ( String ) res[6] );
+            v.setTaxonId( ( Long ) res[7] );
+            v.setBioAssayCount( ( ( Long ) res[8] ).intValue() );
+            v.setArrayDesignCount( ( ( Long ) res[9] ).intValue() );
+            v.setShortName( ( String ) res[10] );
+            v.setDateCreated( ( ( Date ) res[11] ) );
+            v.setTroubled( ( ( Boolean ) res[17] ) );
+
+            if ( ( ( Boolean ) res[17] ) ) {
+                if ( ( ( Boolean ) res[18] ) ) {
+                    v.setTroubleDetails( "Error: May not actually be troubled, as it is also 'validated'" );
+                } else {
+                    v.setTroubleDetails( "Troubled reason not loaded" );
+                }
+            } else {
+                v.setTroubleDetails( "Not troubled" );
+            }
+            Object technology = res[12];
+            if ( technology != null ) v.setTechnologyType( ( ( TechnologyType ) technology ).toString() );
+            if ( qtMap != null && !qtMap.isEmpty() && v.getTechnologyType() != null ) {
+                fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
+            }
+            v.setClazz( ( String ) res[13] );
+            v.setExperimentalDesign( ( Long ) res[14] );
+            v.setDateLastUpdated( ( ( Date ) res[15] ) );
+            v.setBioMaterialCount( ( ( Long ) res[19] ).intValue() );
+
+            if ( res[20] != null ) v.setProcessedExpressionVectorCount( ( Integer ) res[20] );
+            // System.out.println(res[16]);
+            vo.put( eeId, v );
+        }
+
+        return vo;
+
+    }
+
+    private String getLoadValueObjectsQueryString( String idRestrictionClause, String orderByClause ) {
+        String queryString = "select ee.id as id, " // 0
+                + "ee.name, " // 1
+                + "ED.name, " // 2
+                + "ED.webUri, " // 3
+                + "ee.source, " // 4
+                + "acc.accession, " // 5
+                + "taxon.commonName," // 6
+                + "taxon.id," // 7
+                + "count(distinct BA), " // 8
+                + "count(distinct AD), " // 9
+                + "ee.shortName, " // 10
+                + "s.createDate, " // 11
+                + "AD.technologyType, ee.class, " // 12, 13
+                + " EDES.id,  " // 14
+                + " s.lastUpdateDate, " // 15
+                + " AD.status, " // 16
+                + " s.troubled, " // 17
+                + " s.validated, " // 18
+                + " count(distinct SU), " // 19
+                + " ee.numberOfDataVectors " // 20
+                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
+                + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
+                + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
+                + " inner join ee.experimentalDesign as EDES join ee.status as s ";
+
+        if ( idRestrictionClause != null ) {
+            queryString = queryString + idRestrictionClause;
+        }
+
+        queryString = queryString + " group by ee.id ";
+
+        if ( orderByClause != null ) {
+            queryString = queryString + orderByClause;
+        }
+
+        return queryString;
+
     }
 
     /**

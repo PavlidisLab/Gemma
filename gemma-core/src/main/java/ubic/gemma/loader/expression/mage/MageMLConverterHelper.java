@@ -2673,7 +2673,7 @@ public class MageMLConverterHelper {
         } else if ( val.equalsIgnoreCase( "percent" ) ) {
             return ScaleType.PERCENT;
         } else if ( val.equalsIgnoreCase( "fraction" ) ) {
-            return ScaleType.FRACTION;
+            return ScaleType.OTHER;
         } else if ( val.equalsIgnoreCase( "log10" ) ) {
             return ScaleType.LOG10;
         } else if ( val.equalsIgnoreCase( "log_base_10" ) ) {

@@ -218,6 +218,8 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             Collection<QuantitationType> quantitationTypes );
 
+    public Collection<ExpressionExperiment> getExperimentsWithOutliers();
+
     /**
      * 
      */
@@ -323,14 +325,15 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<Long> getUntroubled( Collection<Long> ids );
 
     public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
-    
+
     public List<ExpressionExperimentValueObject> loadAllValueObjects();
-    
+
     public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
 
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
 
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending, Taxon taxon );
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
+            boolean descending, Taxon taxon );
 
     public Collection<ExpressionExperiment> loadLackingFactors();
 
@@ -346,8 +349,9 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      */
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
-    
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered(String orderField, boolean descending, Collection<Long> ids  );
+
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+            Collection<Long> ids );
 
     /**
      * 

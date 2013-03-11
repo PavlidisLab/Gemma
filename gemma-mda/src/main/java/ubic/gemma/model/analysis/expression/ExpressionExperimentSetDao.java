@@ -32,7 +32,6 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperimentSet> {
 
-
     /**
      * Locate expressionExperimentSets that contain the given bioAssaySet.
      */
@@ -60,25 +59,25 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * @param id
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id );
 
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
 
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
     /**
      * @param expressionExperimentSet
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( ExpressionExperimentSet expressionExperimentSet );
 
     int getExperimentCount( Long id );

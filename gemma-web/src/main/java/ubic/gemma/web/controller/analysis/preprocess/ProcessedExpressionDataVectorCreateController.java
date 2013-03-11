@@ -23,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
 
@@ -37,8 +38,10 @@ public class ProcessedExpressionDataVectorCreateController {
 
     @Autowired
     private TaskRunningService taskRunningService;
+
     @Autowired
     private ExpressionExperimentReportService experimentReportService;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -55,6 +58,17 @@ public class ProcessedExpressionDataVectorCreateController {
         if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
 
         ee = expressionExperimentService.thawLite( ee );
+
+        /*
+         * Check if there are any outliers, because this will revert them. Later we can override this behaviour.
+         */
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getIsOutlier() ) {
+                throw new IllegalArgumentException(
+                        "This experiment has outliers marked; recomputing processed data will revert this so this action is currently disabled." );
+            }
+        }
+
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
         experimentReportService.evictFromCache( id );
         return taskRunningService.submitRemoteTask( cmd );

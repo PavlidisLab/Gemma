@@ -23,6 +23,9 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
-public interface BioAssayOutlierProcessingTask extends Task<TaskResult, TaskCommand>{
+/**
+ * @author Paul
+ * @version $Id$
+ */
+public interface BioAssayOutlierProcessingTask extends Task<TaskResult, TaskCommand> {
 }
-

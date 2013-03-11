@@ -8,10 +8,11 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.web.controller.expression.bioAssay.BioAssayOutlierProcessingTaskCommand;
 
 /**
  * Handle 'flagging' a sample as an outlier. The sample will not be used in analyses.
- *
+ * 
  * @author paul
  * @version $Id$
  */
@@ -19,14 +20,17 @@ import ubic.gemma.model.expression.bioAssay.BioAssayService;
 @Scope("prototype")
 public class BioAssayOutlierProcessingTaskImpl implements BioAssayOutlierProcessingTask {
 
-    @Autowired BioAssayService bioAssayService;
-    @Autowired SampleRemoveService sampleRemoveService;
+    @Autowired
+    BioAssayService bioAssayService;
+    @Autowired
+    SampleRemoveService sampleRemoveService;
 
-    private TaskCommand command;
+    private BioAssayOutlierProcessingTaskCommand command;
 
     @Override
     public void setCommand( TaskCommand command ) {
-        this.command = command;
+        assert command instanceof BioAssayOutlierProcessingTaskCommand;
+        this.command = ( BioAssayOutlierProcessingTaskCommand ) command;
     }
 
     @Override
@@ -35,7 +39,12 @@ public class BioAssayOutlierProcessingTaskImpl implements BioAssayOutlierProcess
         if ( bioAssay == null ) {
             throw new RuntimeException( "BioAssay with id=" + command.getEntityId() + " not found" );
         }
-        sampleRemoveService.markAsMissing( bioAssay );
+
+        if ( command.isRevert() ) {
+            sampleRemoveService.unmarkAsMissing( bioAssay );
+        } else {
+            sampleRemoveService.markAsMissing( bioAssay );
+        }
         return new TaskResult( command, bioAssay );
     }
 

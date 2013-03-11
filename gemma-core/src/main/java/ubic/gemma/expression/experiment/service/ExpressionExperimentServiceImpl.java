@@ -682,6 +682,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     @Override
+    public Collection<ExpressionExperiment> getExperimentsWithOutliers() {
+        return this.expressionExperimentDao.getExperimentsWithOutliers();
+
+    }
+
+    @Override
     public Collection<ExpressionExperiment> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass ) {
         List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
         entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(

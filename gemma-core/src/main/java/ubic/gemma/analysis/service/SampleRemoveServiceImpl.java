@@ -30,12 +30,14 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -45,17 +47,11 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control.
+ * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control, so
+ * we treat this synonymous with "outler removal".
  * <p>
- * NOTE currently this does not actually remove the samples. It just replaces the data in the processed data with
- * "missing values". This means the data are only recoverable by regenerating the processed data from the raw data (note
- * that in previous version, the raw data was modified as well).
- * <p>
- * The reason we don't simply mark it as missing in the "absent-present" data (and leave the regular data alone) is that
- * for many data sets we either 1) don't already have an absent-present data type or 2) the absent-present data is not
- * used in analysis. We will probably change this behavior to preserve the data in question.
- * <p>
- * In the meantime, this should be used very judiciously!
+ * This does not actually remove the samples. It just replaces the data in the processed data with "missing values".
+ * This means the data are only recoverable by regenerating the processed data from the raw data
  * 
  * @author pavlidis
  * @version $Id$
@@ -77,6 +73,9 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
 
     @Autowired
     private SampleCoexpressionMatrixService sampleSoexpressionMatrixService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     /*
      * (non-Javadoc)
@@ -110,6 +109,35 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
     /*
      * (non-Javadoc)
      * 
+     * @see
+     * ubic.gemma.analysis.service.SampleRemoveService#unmarkAsMissing(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    @Override
+    public void unmarkAsMissing( BioAssay bioAssay ) {
+        if ( bioAssay.getIsOutlier() != null && !bioAssay.getIsOutlier() ) {
+            throw new IllegalArgumentException( "Sample is not already marked as an outlier, can't revert." );
+        }
+
+        // Rather long transaction.
+        bioAssay.setIsOutlier( false );
+        bioAssayService.update( bioAssay );
+
+        ExpressionExperiment expExp = expressionExperimentService.findByBioMaterial( bioAssay.getSamplesUsed()
+                .iterator().next() );
+        assert expExp != null;
+
+        auditTrailService.addUpdateEvent( bioAssay, SampleRemovalReversionEvent.Factory.newInstance(), "" );
+
+        Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( expExp );
+
+        sampleSoexpressionMatrixService.create( expExp, vecs );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.service.SampleRemoveService#markAsMissing(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, java.util.Collection)
      */
@@ -125,6 +153,7 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
                 .getProcessedDataVectors( expExp );
 
         if ( oldVectors.isEmpty() ) {
+            // this should not happen.
             throw new IllegalArgumentException(
                     "The data set must have processed data first before outliers can be marked." );
         }
@@ -170,9 +199,11 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
         /*
          * Update the correlation heatmaps.
          */
-        sampleSoexpressionMatrixService.findOrCreate( expExp );
+        sampleSoexpressionMatrixService.create( expExp, oldVectors );
 
         for ( BioAssay ba : assaysToRemove ) {
+            ba.setIsOutlier( true );
+            bioAssayService.update( ba );
             audit( ba, "Sample " + ba.getName() + " marked as missing data." );
         }
 

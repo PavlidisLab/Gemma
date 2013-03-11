@@ -415,6 +415,7 @@
 	<bean id="bioAssayController" class="ubic.gemma.web.controller.expression.bioAssay.BioAssayController">
 		<dwr:remote javascript="BioAssayController">
 			<dwr:include method="markOutlier" />
+			<dwr:include method="unmarkOutlier" />
 			<dwr:include method="getBioAssays" />
 		</dwr:remote>
 	</bean>

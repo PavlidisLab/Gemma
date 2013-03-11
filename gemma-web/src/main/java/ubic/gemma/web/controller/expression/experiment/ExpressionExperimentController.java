@@ -348,9 +348,9 @@ public class ExpressionExperimentController {
 
         List<ExpressionExperimentValueObject> recordsSubset = records.subList( start, stop );
 
-        //this populates securityInfo TODO populate security info in filter
-        //List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        //        getExpressionExperimentValueObjects( recordsSubset ) );
+        // this populates securityInfo TODO populate security info in filter
+        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+        // getExpressionExperimentValueObjects( recordsSubset ) );
 
         // if admin, want to show why experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -401,11 +401,11 @@ public class ExpressionExperimentController {
         if ( batch.getLimit() == 0 ) {
             pSize = count;
         }
-        
-        List<ExpressionExperimentValueObject> recordsSubset =  records.subList( origStart, pSize );
 
-        //List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        //        getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
+        List<ExpressionExperimentValueObject> recordsSubset = records.subList( origStart, pSize );
+
+        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+        // getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -413,7 +413,7 @@ public class ExpressionExperimentController {
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-        		recordsSubset, count );
+                recordsSubset, count );
 
         return returnVal;
     }
@@ -451,9 +451,9 @@ public class ExpressionExperimentController {
         }
 
         List<ExpressionExperimentValueObject> recordsSubset = records.subList( origStart, pSize );
-        
-        //List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        //        getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
+
+        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+        // getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
 
         // if admin, want to show if experiment is troubled
         if ( SecurityServiceImpl.isUserAdmin() ) {
@@ -461,7 +461,7 @@ public class ExpressionExperimentController {
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-        		recordsSubset, records.size() );
+                recordsSubset, records.size() );
         return returnVal;
     }
 
@@ -998,25 +998,21 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * AJAX; get a collection of experiments that have had samples removed due to outliers and experiment that have
-     * possible batch effects detected
+     * AJAX; get a collection of experiments that have had samples removed due to outliers (TODO: and experiment that
+     * have possible batch effects detected)
      * 
      * @param id Identifier for the experiment
      */
     public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
 
-        Collection<ExpressionExperiment> sampleRemovedEEs = expressionExperimentService
-                .getExperimentsWithEvent( SampleRemovalEvent.class );
-
-        Collection<ExpressionExperiment> eesWithRevertedSampleRemovals = expressionExperimentService
-                .getExperimentsWithEvent( SampleRemovalReversionEvent.class );
+        Collection<ExpressionExperiment> outlierEEs = expressionExperimentService.getExperimentsWithOutliers();
 
         // List<ExpressionExperimentValueObject> batchEffectEEs =
         // expressionExperimentService.getExperimentsWithBatchEffect();
         // List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
 
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        ees.addAll( sampleRemovedEEs );
+        ees.addAll( outlierEEs );
         // ees.addAll( batchEffectEEs );
 
         List<JSONObject> jsonRecords = new ArrayList<JSONObject>();
@@ -1027,30 +1023,8 @@ public class ExpressionExperimentController {
             record.element( "shortName", ee.getShortName() );
             record.element( "name", ee.getName() );
 
-            if ( sampleRemovedEEs.contains( ee ) ) {
-
-                boolean hasOutlier = true;
-
-                // check if the outliers were reverted.
-                if ( eesWithRevertedSampleRemovals.contains( ee ) ) {
-
-                    // figure out if it was later.
-                    AuditEvent sampleRemoval = auditEventService.getLastEvent( ee, SampleRemovalEvent.class );
-
-                    assert sampleRemoval != null;
-
-                    AuditEvent reversion = auditEventService.getLastEvent( ee, SampleRemovalReversionEvent.class );
-
-                    assert reversion != null;
-
-                    if ( reversion.getDate().after( sampleRemoval.getDate() ) ) {
-                        continue;
-                    }
-
-                } else {
-                    record.element( "sampleRemoved", hasOutlier );
-                }
-
+            if ( outlierEEs.contains( ee ) ) { 
+                record.element( "sampleRemoved", true );
             }
 
             // record.element( "batchEffect", batchEffectEEs.contains( ee ) );
@@ -1922,10 +1896,8 @@ public class ExpressionExperimentController {
     private List<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
             Collection<Long> eeIds, boolean filterDataForUser, Integer limit, boolean showPublic ) {
 
-    	//TODO this can be cleaned up substantially by using new loading valueobject through secured methods
-    	
-    	
-    	
+        // TODO this can be cleaned up substantially by using new loading valueobject through secured methods
+
         List<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
 
         StopWatch timer = new StopWatch();
@@ -2065,11 +2037,13 @@ public class ExpressionExperimentController {
         return loadAllValueObjectsOrdered( batch, null, null );
     }
 
-    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Collection<Long> ids ) {
+    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
+            Collection<Long> ids ) {
         return loadAllValueObjectsOrdered( batch, ids, null );
     }
 
-    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Collection<Long> ids, Taxon taxon ) {
+    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
+            Collection<Long> ids, Taxon taxon ) {
         List<ExpressionExperimentValueObject> records;
         if ( StringUtils.isNotBlank( batch.getSort() ) ) {
 
@@ -2103,11 +2077,13 @@ public class ExpressionExperimentController {
             }
         } else {
             if ( ids != null ) {
-                records = new ArrayList<ExpressionExperimentValueObject>( expressionExperimentService.loadValueObjects( ids, true ) );
+                records = new ArrayList<ExpressionExperimentValueObject>( expressionExperimentService.loadValueObjects(
+                        ids, true ) );
             } else if ( taxon != null ) {
                 records = expressionExperimentService.loadAllValueObjectsTaxon( taxon );
             } else {
-                records = new ArrayList<ExpressionExperimentValueObject>( expressionExperimentService.loadAllValueObjects() );
+                records = new ArrayList<ExpressionExperimentValueObject>(
+                        expressionExperimentService.loadAllValueObjects() );
             }
         }
         return records;
@@ -2116,21 +2092,18 @@ public class ExpressionExperimentController {
     private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Taxon taxon ) {
         return loadAllValueObjectsOrdered( batch, null, taxon );
     }
-    
-    
-    
-    
-    private List<ExpressionExperimentValueObject> removeTroubledExperimentVOs( List<ExpressionExperimentValueObject> records ) {
+
+    private List<ExpressionExperimentValueObject> removeTroubledExperimentVOs(
+            List<ExpressionExperimentValueObject> records ) {
         List<ExpressionExperimentValueObject> untroubled = new ArrayList<ExpressionExperimentValueObject>( records );
-        
+
         Collection<ExpressionExperimentValueObject> toRemove = new ArrayList<ExpressionExperimentValueObject>();
         for ( ExpressionExperimentValueObject record : records ) {
 
-            
             if ( record.getTroubled() ) {
                 toRemove.add( record );
             }
-            
+
         }
         untroubled.removeAll( toRemove );
         return untroubled;

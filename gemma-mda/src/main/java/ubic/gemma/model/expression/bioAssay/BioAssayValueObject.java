@@ -38,7 +38,7 @@ public class BioAssayValueObject implements Serializable {
 
     private String name = "";
 
-    private boolean outlier = false;
+    private Boolean outlier = false;
 
     private Date processingDate;
 
@@ -81,6 +81,9 @@ public class BioAssayValueObject implements Serializable {
             this.sample = new BioMaterialValueObject( bioAssay.getSamplesUsed().iterator().next(), bioAssay );
         }
 
+        if ( bioAssay.getIsOutlier() != null ) {
+            this.outlier = bioAssay.getIsOutlier();
+        }
     }
 
     public DatabaseEntryValueObject getAccession() {

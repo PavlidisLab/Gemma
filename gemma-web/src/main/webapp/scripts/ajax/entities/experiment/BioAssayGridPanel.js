@@ -111,7 +111,8 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
             outlierRemoveRender : function(value, metadata, record, row, col, ds) {
                 if (record.get('outlier')) {
-                    return "<img src=\"/Gemma/images/icons/stop.png\"/>";
+                    return "<span class=\"link\" onClick=\"Ext.getCmp('eemanager').unmarkOutlierBioAssay(" + record.get('id')
+                        + ")\"><img title=\"Click to unmark as an outlier\" src=\"/Gemma/images/icons/stop.png\"/></span>";
                 }
 
                 return "<span class=\"link\" onClick=\"Ext.getCmp('eemanager').markOutlierBioAssay(" + record.get('id')

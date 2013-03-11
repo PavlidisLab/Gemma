@@ -49,4 +49,11 @@ public interface SampleRemoveService {
      */
     public abstract void markAsMissing( ExpressionExperiment expExp, Collection<BioAssay> assaysToRemove );
 
+    /**
+     * Reverts the action of markAsMissing.
+     * 
+     * @param bioAssay
+     */
+    public abstract void unmarkAsMissing( BioAssay bioAssay );
+
 }
