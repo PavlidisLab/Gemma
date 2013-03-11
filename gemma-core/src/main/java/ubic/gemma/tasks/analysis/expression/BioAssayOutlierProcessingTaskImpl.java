@@ -8,7 +8,6 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.web.controller.expression.bioAssay.BioAssayOutlierProcessingTaskCommand;
 
 /**
  * Handle 'flagging' a sample as an outlier. The sample will not be used in analyses.
