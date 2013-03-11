@@ -17,6 +17,13 @@
         <amq:plugins>
             <amq:statisticsBrokerPlugin/>
         </amq:plugins>
+        <amq:systemUsage>
+            <amq:systemUsage>
+                <amq:tempUsage>
+                    <amq:tempUsage limit="1 gb"/>
+                </amq:tempUsage>
+            </amq:systemUsage>
+        </amq:systemUsage>
         <amq:destinationPolicy>
             <amq:policyMap>
                 <amq:policyEntries>
