@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -397,7 +398,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     private ArrayDesign getTestPersistentArrayDesign( List<String> probeNames, Taxon t ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
-        ad.setShortName( "Generic_" + t.getCommonName() );
+        ad.setShortName( "Generic_" + t.getCommonName() + "_" + RandomStringUtils.random( 10 ) );
         ad.setName( "Generic test platform for " + t.getCommonName() );
         ad.setTechnologyType( TechnologyType.NONE );
         ad.setPrimaryTaxon( t );
