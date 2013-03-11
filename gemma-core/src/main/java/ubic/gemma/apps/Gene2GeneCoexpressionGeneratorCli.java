@@ -58,7 +58,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
     private Gene2GenePopulationService geneVoteAnalyzer;
     private Collection<Gene> toUseGenes;
-    private int toUseStringency;
+    private int toUseStringency = DEFAULT_STRINGINCY;
 
     private boolean useDB = true;
     private boolean nodeDegreeOnly = false;
