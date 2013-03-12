@@ -698,7 +698,11 @@ public class SecurityServiceImpl implements SecurityService {
         Map<ObjectIdentity, Acl> acls = aclService
                 .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
 
+        assert !acls.isEmpty();
+
         List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
+
+        assert !sids.isEmpty();
 
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl acl = acls.get( oi );
@@ -709,10 +713,9 @@ public class SecurityServiceImpl implements SecurityService {
                 result.put( objectIdentities.get( oi ), granted );
             } catch ( NotFoundException ignore ) {
                 /*
-                 * Not sure what the right thing to do is here. Since these are value object, this is probably a
-                 * "session-bound" object
+                 * The user is anonymous.
                  */
-                result.put( objectIdentities.get( oi ), true );
+                result.put( objectIdentities.get( oi ), false );
             }
         }
         return result;
