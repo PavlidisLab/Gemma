@@ -46,6 +46,8 @@ public class ConfigUtils {
      * </pre>
      */
     private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
+    
+    private static final String ANALYTICS_TRACKER_DOMAIN_PROPERTY = "ga.domain";
 
     /**
      * Name of the resource that is used to configure Gemma internally.
@@ -171,6 +173,10 @@ public class ConfigUtils {
 
     public static String getAnalyticsKey() {
         return getString( ANALYTICS_TRACKER_PROPERTY );
+    }
+    
+    public static String getAnalyticsDomain() {
+        return getString( ANALYTICS_TRACKER_DOMAIN_PROPERTY );
     }
 
     /**
