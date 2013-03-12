@@ -54,7 +54,7 @@ public class AclAfterValueObjectProvider extends
             Object returnedObject ) throws AccessDeniedException {
         try {
 
-            if ( !SecureValueObject.class.isAssignableFrom( returnedObject.getClass() ) ) {
+            if ( returnedObject == null || !SecureValueObject.class.isAssignableFrom( returnedObject.getClass() ) ) {
                 // nothing to do here.
                 return returnedObject;
             }
