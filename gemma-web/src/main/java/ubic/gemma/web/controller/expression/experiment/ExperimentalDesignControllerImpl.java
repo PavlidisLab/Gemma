@@ -78,16 +78,26 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 @RequestMapping("/experimentalDesign")
 public class ExperimentalDesignControllerImpl extends BaseController implements ExperimentalDesignController {
 
-    @Autowired private BioMaterialService bioMaterialService;
-    @Autowired private CharacteristicService characteristicService;
-    @Autowired private ExperimentalDesignImporter experimentalDesignImporter;
-    @Autowired private ExperimentalDesignService experimentalDesignService;
-    @Autowired private ExperimentalFactorService experimentalFactorService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private ExpressionExperimentReportService experimentReportService;
-    @Autowired private FactorValueDeletion factorValueDeletion;
-    @Autowired private FactorValueService factorValueService;
-    @Autowired private SecurityService securityService;
+    @Autowired
+    private BioMaterialService bioMaterialService;
+    @Autowired
+    private CharacteristicService characteristicService;
+    @Autowired
+    private ExperimentalDesignImporter experimentalDesignImporter;
+    @Autowired
+    private ExperimentalDesignService experimentalDesignService;
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
+    @Autowired
+    private FactorValueDeletion factorValueDeletion;
+    @Autowired
+    private FactorValueService factorValueService;
+    @Autowired
+    private SecurityService securityService;
 
     /*
      * (non-Javadoc)
@@ -271,7 +281,19 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     public void deleteFactorValueCharacteristics( FactorValueValueObject[] fvvos ) {
         for ( FactorValueValueObject fvvo : fvvos ) {
             FactorValue fv = factorValueService.load( fvvo.getId() );
+
+            if ( fv == null ) {
+                log.warn( "No factorvalue with ID=" + fvvo.getId() );
+                continue;
+            }
+
             Characteristic c = characteristicService.load( fvvo.getCharId() );
+
+            if ( c == null ) {
+                log.warn( "Characteristic ID is null for FactorValueValueObject with id=" + fvvo.getId() );
+                continue;
+            }
+
             fv.getCharacteristics().remove( c );
             characteristicService.delete( c );
             factorValueService.update( fv );
