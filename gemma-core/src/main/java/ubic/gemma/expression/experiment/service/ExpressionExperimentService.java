@@ -220,8 +220,8 @@ public interface ExpressionExperimentService {
      * @param name
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    public ExpressionExperiment findByName( java.lang.String name );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByName( java.lang.String name );
 
     /**
      * gets all EE that match the given parent Taxon

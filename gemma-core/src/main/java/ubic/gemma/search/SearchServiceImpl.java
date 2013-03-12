@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -103,7 +102,6 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -153,21 +151,6 @@ import ubic.gemma.util.ReflectionUtil;
 public class SearchServiceImpl implements SearchService {
 
     private static final String ONTOLOGY_CHILDREN_CACHE_NAME = "OntologyChildrenCache";
-    //
-    // /**
-    // * Defines the properties we look at for 'highlighting'.
-    // */
-    // private static final String[] propertiesToSearch = new String[] { "all", "name", "description",
-    // "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
-    // "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
-    // "expressionExperiment.experimentalDesign.experimentalFactors.name",
-    // "expressionExperiment.experimentalDesign.experimentalFactors.description",
-    // "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
-    // "expressionExperiment.primaryPublication.authorList",
-    // "expressionExperiment.otherRelevantPublications.abstractText",
-    // "expressionExperiment.otherRelevantPublications.title", "expressionExperiment.experimentalDesign.name",
-    // "expressionExperiment.experimentalDesign.experimentalFactors.name",
-    // "expressionExperiment.experimentalDesign.factorValues.value" };
 
     /**
      * Penalty applied to all 'index' hits
@@ -292,7 +275,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private TaxonDao taxonDao;
-    
+
     @Autowired
     private AuditTrailService auditTrailService;
 
@@ -1343,16 +1326,18 @@ public class SearchServiceImpl implements SearchService {
 
         Map<ExpressionExperiment, String> results = new HashMap<ExpressionExperiment, String>();
         String query = StringEscapeUtils.unescapeJava( settings.getQuery() );
-        ExpressionExperiment ee = expressionExperimentService.findByName( query );
-        if ( ee != null ) {
-            results.put( ee, ee.getName() );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
+        if ( !ees.isEmpty() ) {
+            for ( ExpressionExperiment ee : ees ) {
+                results.put( ee, ee.getName() );
+            }
         } else {
-            ee = expressionExperimentService.findByShortName( query );
+            ExpressionExperiment ee = expressionExperimentService.findByShortName( query );
             if ( ee != null ) {
                 results.put( ee, ee.getShortName() );
             } else {
 
-                Collection<ExpressionExperiment> ees = expressionExperimentService.findByAccession( query );
+                ees = expressionExperimentService.findByAccession( query );
                 for ( ExpressionExperiment e : ees ) {
                     results.put( e, e.getId().toString() );
                 }
@@ -2454,67 +2439,68 @@ public class SearchServiceImpl implements SearchService {
 
         return getSearchResults( hits );
     }
-    
+
     @Override
     public Map<Class<?>, List<SearchResult>> searchForNewlyCreatedUserQueryResults( UserQuery query ) {
 
-    	//TODO set last run time for query at end of this method? maybe do that outside this method
-    	
-    	Map<Class<?>, List<SearchResult>> searchResults;
-    	Map<Class<?>, List<SearchResult>> finalResults = new HashMap<Class<?>, List<SearchResult>>();;
-    	
-    	SearchSettings settings = query.getSearchSettings();
-    	
-    	
+        // TODO set last run time for query at end of this method? maybe do that outside this method
+
+        Map<Class<?>, List<SearchResult>> searchResults;
+        Map<Class<?>, List<SearchResult>> finalResults = new HashMap<Class<?>, List<SearchResult>>();
+        ;
+
+        SearchSettings settings = query.getSearchSettings();
+
         if ( StringUtils.isBlank( settings.getTermUri() ) && !settings.getQuery().startsWith( "http://" ) ) {
-            //fill objects=yes
-        	searchResults = generalSearch( settings, true );
-        }else {
-        	// we only attempt an ontology search if the uri looks remotely like a url.
-        	searchResults = ontologyUriSearch( settings );
+            // fill objects=yes
+            searchResults = generalSearch( settings, true );
+        } else {
+            // we only attempt an ontology search if the uri looks remotely like a url.
+            searchResults = ontologyUriSearch( settings );
         }
-        
+
         if ( searchResults != null ) {
             for ( Class<?> clazz : searchResults.keySet() ) {
-            	
+
                 List<SearchResult> results = searchResults.get( clazz );
 
                 List<SearchResult> updatedResults = new ArrayList<SearchResult>();
-                
+
                 if ( results.size() == 0 ) continue;
 
-                log.info( "Search for newly createdQuery with settings: " + settings + "; result: " + results.size() + " " + clazz.getSimpleName() + "s" );
+                log.info( "Search for newly createdQuery with settings: " + settings + "; result: " + results.size()
+                        + " " + clazz.getSimpleName() + "s" );
 
-                for ( SearchResult sr : results ) {                	
-                	
-                	//Are SearchResults always auditable? maybe put in some error handling in case they are not or enforce searchSettings object to be of a certain form
-                	Auditable auditableResult = (Auditable) sr.getResultObject();                	
-                	           	
-                	//this list is ordered by date (not descending)
-                	List<AuditEvent> eventList = auditTrailService.getEvents(auditableResult);
-                	
-                	if (eventList==null || eventList.isEmpty()) continue;
-                	
-                	for (AuditEvent ae: eventList){
-                		
-                		//assuming there is only one create event
-                		if (ae.getAction() == AuditAction.CREATE && ae.getDate().after(query.getLastUsed())){
-                			updatedResults.add(sr);
-                			break;
-                		}
-                		
-                	}	
-                    
+                for ( SearchResult sr : results ) {
+
+                    // Are SearchResults always auditable? maybe put in some error handling in case they are not or
+                    // enforce searchSettings object to be of a certain form
+                    Auditable auditableResult = ( Auditable ) sr.getResultObject();
+
+                    // this list is ordered by date (not descending)
+                    List<AuditEvent> eventList = auditTrailService.getEvents( auditableResult );
+
+                    if ( eventList == null || eventList.isEmpty() ) continue;
+
+                    for ( AuditEvent ae : eventList ) {
+
+                        // assuming there is only one create event
+                        if ( ae.getAction() == AuditAction.CREATE && ae.getDate().after( query.getLastUsed() ) ) {
+                            updatedResults.add( sr );
+                            break;
+                        }
+
+                    }
+
                 }
-                
-                if (!updatedResults.isEmpty()){
-                	finalResults.put(clazz, updatedResults);                
+
+                if ( !updatedResults.isEmpty() ) {
+                    finalResults.put( clazz, updatedResults );
                 }
-                
+
             }
         }
-        
-        
+
         return finalResults;
 
     }

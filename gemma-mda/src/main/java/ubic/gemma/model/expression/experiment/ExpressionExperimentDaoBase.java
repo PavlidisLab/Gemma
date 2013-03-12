@@ -107,11 +107,11 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     public Collection<ExpressionExperiment> findByBibliographicReference( final Long bibRefID ) {
         return this.handleFindByBibliographicReference( bibRefID );
     }
-    
+
     @Override
     public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
         return this.handleFindByBioMaterial( bm );
-        
+
     }
 
     @Override
@@ -191,28 +191,18 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     @Override
-    public ExpressionExperiment findByName( final String name ) {
+    public Collection<ExpressionExperiment> findByName( final String name ) {
         return this.findByName( "from ExpressionExperimentImpl a where a.name=:name", name );
     }
 
-    public ExpressionExperiment findByName( final String queryString, final String name ) {
+    private Collection<ExpressionExperiment> findByName( final String queryString, final String name ) {
         List<String> argNames = new ArrayList<String>();
         List<Object> args = new ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        Set<ExpressionExperiment> results = new LinkedHashSet<ExpressionExperiment>( this.getHibernateTemplate()
-                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        ExpressionExperiment result = null;
+        return this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ExpressionExperiment" + "' was found when executing query --> '"
-                            + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        return result;
     }
 
     @Override
@@ -457,8 +447,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         final Collection<?> results = this.getHibernateTemplate().loadAll( ExpressionExperimentImpl.class );
         return ( Collection<ExpressionExperiment> ) results;
     }
-
-   
 
     /**
      * @see ExpressionExperimentDao#remove(Long)
@@ -767,7 +755,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * Performs the core logic for {@link #load(Collection)}
      */
     protected abstract Collection<ExpressionExperiment> handleLoad( Collection<Long> ids );
-    
+
     /**
      * Performs the core logic for {@link #thaw(ExpressionExperiment)}
      */

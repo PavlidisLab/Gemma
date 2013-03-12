@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
@@ -58,7 +58,7 @@ import ubic.gemma.util.EntityUtils;
  * @author tvrossum
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionExperimentSearchServiceImpl implements ExpressionExperimentSearchService {
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -100,9 +100,8 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         }
 
         log.info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
-        Collection<ExpressionExperimentValueObject> experimentValueObjects = ExpressionExperimentValueObject
-                .convert2ValueObjects( expressionExperimentService.loadMultiple( EntityUtils
-                        .getIds( experimentSearchResults ) ) );
+        Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
+                .loadValueObjects( EntityUtils.getIds( experimentSearchResults ), true );
         log.info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
         return experimentValueObjects;
     }

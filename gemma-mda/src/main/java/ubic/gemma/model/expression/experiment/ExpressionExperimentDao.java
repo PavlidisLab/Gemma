@@ -120,7 +120,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public ExpressionExperiment findByName( String name );
+    public Collection<ExpressionExperiment> findByName( String name );
 
     /**
      * 

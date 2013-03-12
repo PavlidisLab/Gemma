@@ -447,7 +447,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      * @see ExpressionExperimentService#findByName(java.lang.String)
      */
     @Override
-    public ExpressionExperiment findByName( final java.lang.String name ) {
+    public Collection<ExpressionExperiment> findByName( final java.lang.String name ) {
         return this.expressionExperimentDao.findByName( name );
     }
 
