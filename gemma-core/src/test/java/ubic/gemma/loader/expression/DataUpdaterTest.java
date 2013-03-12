@@ -130,10 +130,14 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         List<String> probeNames = countMatrix.getRowNames();
 
+        assertEquals( 199, probeNames.size() );
+
         // we have to find the right generic platform to use.
         ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
                 taxonService.findByCommonName( "human" ) );
         targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+
+        assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
 
         dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
 
@@ -402,12 +406,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         ad.setName( "Generic test platform for " + t.getCommonName() );
         ad.setTechnologyType( TechnologyType.NONE );
         ad.setPrimaryTaxon( t );
-
-        ArrayDesign existing = arrayDesignService.findByShortName( ad.getShortName() );
-        if ( existing != null ) {
-            // hm, annoying, need to delete
-            return existing;
-        }
 
         for ( int i = 0; i < probeNames.size(); i++ ) {
 
