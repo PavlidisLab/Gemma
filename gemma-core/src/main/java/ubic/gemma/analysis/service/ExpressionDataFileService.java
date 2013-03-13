@@ -127,6 +127,16 @@ public interface ExpressionDataFileService {
      * @return
      */
     public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
+    
+    /**
+     * create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
+     * expression applied (currently supports default settings only). 
+     * 
+     * @param ee     
+     * @param filtered
+     * @return
+     */
+    public File writeDataFile( ExpressionExperiment ee, boolean filtered );
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -146,7 +156,9 @@ public interface ExpressionDataFileService {
      * @return
      */
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
-
+    
+    public File writeDesignFile( ExpressionExperiment ee);
+    
     /**
      * Locate or create the differential expression data file(s) for a given experiment.
      * 

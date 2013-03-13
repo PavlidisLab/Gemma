@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -501,6 +502,19 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             throw new RuntimeException( e );
         }
     }
+    
+    @Override
+    public File writeDataFile( ExpressionExperiment ee, boolean filtered ) {
+
+        try {
+            File f = getOutputFile( ee, filtered );
+            
+            //TODO note that the file name will still have a .gz extension even though it is uncompressed, change later if necessary
+            return writeDataFile( ee, filtered, f, false );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /*
      * (non-Javadoc)
@@ -559,6 +573,24 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
             log.info( "Creating new experimental design file: " + f.getName() );
             writeDesignMatrix( f, ee, true );
+            return f;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+    
+    @Override
+    public File writeDesignFile( ExpressionExperiment ee) {
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        String filename = getDesignFileName( ee );
+        try {
+            File f = getOutputFile( filename );
+           
+            log.info( "Creating new experimental design file: " + f.getName() );
+            writeDesignMatrix( f, ee, true, false );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -1068,9 +1100,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
         Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
-        writeMatrix( f, geneAnnotations, matrix );
+        writeMatrix( f, geneAnnotations, matrix, compress );
         return f;
     }
+    
+   
+    
 
     /**
      * Writes out the experimental design for the given experiment. The bioassays (col 0) matches match the header row
@@ -1083,8 +1118,24 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @throws FileNotFoundException
      */
     private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign )
+            throws IOException, FileNotFoundException {    	
+    	writeDesignMatrix(file,expressionExperiment, orderByDesign, true );        
+    }    
+    
+   
+    private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign, boolean compress )
             throws IOException, FileNotFoundException {
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+    	
+    	OutputStream ostream;
+    	
+    	if (compress){
+    		ostream = new GZIPOutputStream( new FileOutputStream( file ) );
+    	} else {    		
+    		//TODO note that the file name will still have a .gz extension even though it is uncompressed, change later if necessary
+    		ostream = new FileOutputStream( file );
+    	}
+    	
+        Writer writer = new OutputStreamWriter( ostream );
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
         edWriter.write( writer, expressionExperiment, true, orderByDesign );
         writer.flush();
@@ -1122,6 +1173,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         matrixWriter.writeJSON( writer, expressionDataMatrix, true );
     }
 
+    
+    private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,
+            ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException, FileNotFoundException {
+    	
+    	writeMatrix( file, geneAnnotations, expressionDataMatrix, true );
+    	
+    }
     /**
      * @param file
      * @param geneAnnotations
@@ -1130,14 +1188,24 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @throws FileNotFoundException
      */
     private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,
-            ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException, FileNotFoundException {
+            ExpressionDataMatrix<?> expressionDataMatrix, boolean gzipped ) throws IOException, FileNotFoundException {
+    	
+    	OutputStream ostream;
+    	
+    	if (gzipped){
+    		ostream = new GZIPOutputStream( new FileOutputStream( file ) );
+    	} else {
+    		ostream = new FileOutputStream( file );
+    	}
 
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+        Writer writer = new OutputStreamWriter( ostream );
         MatrixWriter matrixWriter = new MatrixWriter();
         matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
         writer.flush();
         writer.close();
     }
+    
+    
 
     /**
      * @param file
