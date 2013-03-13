@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService;
@@ -57,15 +56,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     public static void main( String[] args ) {
         DifferentialExpressionAnalysisCli analysisCli = new DifferentialExpressionAnalysisCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
+
         try {
             Exception ex = analysisCli.doWork( args );
             if ( ex != null ) {
                 ex.printStackTrace();
             }
-            watch.stop();
-            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }

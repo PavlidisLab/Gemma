@@ -822,7 +822,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         int processed = 0;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
 
-            if ( ++processed % 5000 == 0 ) {
+            if ( ++processed % 15000 == 0 ) {
                 log.info( "Processed results for " + processed + " elements ..." );
             }
 

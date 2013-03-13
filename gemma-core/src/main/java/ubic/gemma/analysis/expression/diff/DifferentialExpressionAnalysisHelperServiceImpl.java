@@ -32,6 +32,7 @@ import java.util.List;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -84,6 +85,9 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
 
     @Autowired
     private Persister persisterHelper = null;
+
+    @Autowired
+    private SessionFactory sessionFactory;
 
     /*
      * (non-Javadoc)
@@ -166,6 +170,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
                     && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting.equals( newAnalysis
                             .getSubsetFactorValue() ) ) ) {
 
+                log.info( "Deleting analysis with ID=" + existingAnalysis.getId() );
                 deleteAnalysis( expressionExperiment, existingAnalysis );
 
                 numDeleted++;
@@ -224,6 +229,9 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis analysis, Collection<ExperimentalFactor> factors ) {
         deleteOldAnalyses( expressionExperiment, analysis, factors );
+
+        sessionFactory.getCurrentSession().flush();
+
         DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis );
         return persistentAnalysis;
     }

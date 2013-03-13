@@ -547,6 +547,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      * @param deep
      */
     private void doThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
         Session session = this.getSession();
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis );
@@ -566,7 +568,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             Hibernate.initialize( ( ( FactorAssociatedAnalysisResultSet ) ear ).getExperimentalFactors() );
 
         }
-
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Thaw: " + timer.getTime() + "ms" );
+        }
     }
 
     private void fetchExperimentsTestingGeneNativeQuery( Collection<CompositeSequence> probes,
