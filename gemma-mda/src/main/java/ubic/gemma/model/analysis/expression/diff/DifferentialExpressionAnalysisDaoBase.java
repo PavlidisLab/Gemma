@@ -154,19 +154,9 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoI
         if ( entities == null ) {
             throw new IllegalArgumentException( "DifferentialExpressionAnalysis.remove - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see DifferentialExpressionAnalysisDao#remove(DifferentialExpressionAnalysis)
-     */
-    @Override
-    public void remove( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        if ( differentialExpressionAnalysis == null ) {
-            throw new IllegalArgumentException(
-                    "DifferentialExpressionAnalysis.remove - 'differentialExpressionAnalysis' can not be null" );
+        for ( DifferentialExpressionAnalysis a : entities ) {
+            this.remove( a );
         }
-        this.getHibernateTemplate().delete( differentialExpressionAnalysis );
     }
 
     /**
