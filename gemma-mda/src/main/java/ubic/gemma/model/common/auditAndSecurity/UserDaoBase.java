@@ -18,13 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
+import java.util.*;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -64,8 +60,8 @@ public abstract class UserDaoBase extends HibernateDaoSupport implements UserDao
             throw new IllegalArgumentException( "User.create - 'user' can not be null" );
         }
         this.getHibernateTemplate().save( user );
+        this.getSessionFactory().getCurrentSession().flush();
         return user;
-
     }
 
     /**
