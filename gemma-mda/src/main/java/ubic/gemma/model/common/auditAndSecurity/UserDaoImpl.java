@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -74,8 +75,13 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
     @Override
     public User findByUserName( final String userName ) {
 
+        this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.MANUAL );
+
         List<?> results = this.getHibernateTemplate()
                 .findByNamedParam( "from UserImpl u where u.userName=:userName", "userName", userName );
+
+        this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.AUTO );
+
 
         if ( results.isEmpty() ) {
             return null;
