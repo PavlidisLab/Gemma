@@ -266,7 +266,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         for ( ExperimentalFactor ef : toDelete ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-            this.experimentReportService.evictFromCache( ee.getId() );
+            
+            if (ee!=null){
+            	this.experimentReportService.evictFromCache( ee.getId() );
+            }
         }
     }
 
