@@ -18,9 +18,6 @@
  */
 package ubic.gemma.security.authorization.acl;
 
-import java.beans.PropertyDescriptor;
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.JoinPoint;
@@ -35,28 +32,13 @@ import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
 import org.springframework.security.acls.domain.PrincipalSid;
-import org.springframework.security.acls.model.AccessControlEntry;
-import org.springframework.security.acls.model.Acl;
-import org.springframework.security.acls.model.AuditableAcl;
-import org.springframework.security.acls.model.MutableAcl;
-import org.springframework.security.acls.model.MutableAclService;
-import org.springframework.security.acls.model.NotFoundException;
-import org.springframework.security.acls.model.ObjectIdentity;
-import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
-import org.springframework.security.acls.model.Permission;
-import org.springframework.security.acls.model.Sid;
+import org.springframework.security.acls.model.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
-import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -67,6 +49,9 @@ import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.audit.AuditAdvice;
 import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.ReflectionUtil;
+
+import java.beans.PropertyDescriptor;
+import java.util.Collection;
 
 /**
  * Adds security controls to newly created objects, and removes them for objects that are deleted. Methods in this
@@ -307,9 +292,9 @@ public class AclAdvice {
         // If aclParent is passed to this method we overwrite it.
 
         if ( SingleExperimentAnalysis.class.isAssignableFrom( object.getClass() ) ) {
-            SingleExperimentAnalysis a = ( SingleExperimentAnalysis ) object;
-            BioAssaySet e = a.getExperimentAnalyzed();
-            ObjectIdentity oi_temp = makeObjectIdentity( e );
+            SingleExperimentAnalysis experimentAnalysis = ( SingleExperimentAnalysis ) object;
+            BioAssaySet bioAssaySet = experimentAnalysis.getExperimentAnalyzed();
+            ObjectIdentity oi_temp = makeObjectIdentity( bioAssaySet );
 
             try {
                 parentAcl = aclService.readAclById( oi_temp );
@@ -382,7 +367,7 @@ public class AclAdvice {
     /**
      * Determine which ACL is going to be the parent of the associations of the given object.
      * <p>
-     * If the objected is a SecuredNotChild, then it will be treated as the parent. For example, ArrayDesigns associated
+     * If the object is a SecuredNotChild, then it will be treated as the parent. For example, ArrayDesigns associated
      * with an Experiment has 'parent status' for securables associated with the AD, such as LocalFiles.
      * 
      * @param object

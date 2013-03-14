@@ -18,21 +18,8 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.ObjectArrayList;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.commons.lang.StringUtils;
@@ -43,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Rank;
@@ -60,15 +46,8 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
-import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
-import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
-import ubic.gemma.model.association.coexpression.UserProbeCoExpression;
+import ubic.gemma.model.association.coexpression.*;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
@@ -87,8 +66,14 @@ import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.TaxonUtility;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.ObjectArrayList;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.NumberFormat;
+import java.util.*;
 
 /**
  * Running link analyses through the spring context; will persist the results if the configuration says so. See
@@ -781,9 +766,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         Taxon taxon = la.getTaxon();
         Creator c;
 
-        User user = userManager.getCurrentUser();
-
-        if ( user == null ) {
+        if ( SecurityServiceImpl.isUserAnonymous() ) {
             throw new IllegalStateException( "Can't run link analysis anonymously" );
         } else if ( !SecurityServiceImpl.isUserAdmin() ) {
             log.info( "Creating coexpression analysis for user's data" );

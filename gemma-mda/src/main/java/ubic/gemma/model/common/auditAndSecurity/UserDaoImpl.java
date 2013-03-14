@@ -14,16 +14,13 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateAccessor;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.util.BusinessKey;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.User
@@ -77,18 +74,15 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
     @Override
     public User findByUserName( final String userName ) {
 
-        // we make this method safer to call in a transaction, as it really is a read-only method that should be
-        // accessing information that is already committed.
-        HibernateTemplate t = new HibernateTemplate( this.getSessionFactory() );
-        t.setAlwaysUseNewSession( true );
-        t.setFlushMode( HibernateAccessor.FLUSH_NEVER );
-        List<?> r = t.findByNamedParam( "from UserImpl u where u.userName=:userName", "userName", userName );
-        if ( r.isEmpty() ) {
+        List<?> results = this.getHibernateTemplate()
+                .findByNamedParam( "from UserImpl u where u.userName=:userName", "userName", userName );
+
+        if ( results.isEmpty() ) {
             return null;
-        } else if ( r.size() > 1 ) {
+        } else if ( results.size() > 1 ) {
             throw new IllegalStateException( "Multiple users with name=" + userName );
         }
-        return ( User ) r.get( 0 );
+        return ( User ) results.get( 0 );
     }
 
     /*

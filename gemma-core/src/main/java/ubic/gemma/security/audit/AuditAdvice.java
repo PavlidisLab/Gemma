@@ -18,13 +18,6 @@
  */
 package ubic.gemma.security.audit;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.NoSuchElementException;
-
-import javax.annotation.PostConstruct;
-
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
@@ -40,7 +33,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -55,6 +47,12 @@ import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authorization.acl.AclAdvice;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.ReflectionUtil;
+
+import javax.annotation.PostConstruct;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
+import java.util.NoSuchElementException;
 
 /**
  * Manage audit trails on objects.
@@ -278,27 +276,27 @@ public class AuditAdvice {
      * @param methodName
      * @param object
      */
-    private void process( final String methodName, final Auditable a, User user ) {
+    private void process( final String methodName, final Auditable auditable, User user ) {
         if ( log.isTraceEnabled() ) {
-            log.trace( "***********  Start Audit of " + methodName + " on " + a + " *************" );
+            log.trace( "***********  Start Audit of " + methodName + " on " + auditable + " *************" );
         }
-        assert a != null : "Null entity passed to auditing [" + methodName + " on " + a + "]";
-        assert a.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + a + "]";
+        assert auditable != null : "Null entity passed to auditing [" + methodName + " on " + auditable + "]";
+        assert auditable.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + auditable + "]";
 
         if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
-            addCreateAuditEvent( a, user, "" );
-            processAssociations( methodName, a, user );
+            addCreateAuditEvent( auditable, user, "" );
+            processAssociations( methodName, auditable, user );
         } else if ( AUDIT_UPDATE && CrudUtilsImpl.methodIsUpdate( methodName ) ) {
-            addUpdateAuditEvent( a, user );
+            addUpdateAuditEvent( auditable, user );
 
             /*
              * Do not process associations during an update except to add creates to new objects. Otherwise this would
              * result in update events getting added to all child objects, which is silly; and in any case they might be
              * proxies.
              */
-            processAssociations( methodName, a, user );
+            processAssociations( methodName, auditable, user );
         } else if ( AUDIT_DELETE && CrudUtilsImpl.methodIsDelete( methodName ) ) {
-            addDeleteAuditEvent( a, user );
+            addDeleteAuditEvent( auditable, user );
         }
 
         if ( log.isTraceEnabled() ) log.trace( "============  End Audit ==============" );
