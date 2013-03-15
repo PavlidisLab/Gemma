@@ -177,6 +177,15 @@ public class AclTestUtils {
         }
     }
 
+    public void checkLacksAcl( Object f ) {
+        try {
+            aclService.readAclById( new ObjectIdentityImpl( f ) );
+            fail( "Should not have found an ACL" );
+        } catch ( NotFoundException okaye ) {
+            // good.S
+        }
+    }
+
     public void checkHasAcl( Object f ) {
         try {
             aclService.readAclById( new ObjectIdentityImpl( f ) );

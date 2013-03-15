@@ -159,12 +159,10 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         aclTestUtils.checkHasAcl( ee );
         aclTestUtils.checkHasAcl( diffExpressionAnalysis );
-        aclTestUtils.checkHasAcl( resultSet );
+        aclTestUtils.checkLacksAcl( resultSet );
 
         aclTestUtils.checkHasAces( ee );
-        // aclTestUtils.checkHasAces( diffExpressionAnalysis );
-        aclTestUtils.checkLacksAces( resultSet );
-        // aclTestUtils.checkHasAclParent( resultSet, diffExpressionAnalysis );
+        aclTestUtils.checkLacksAces( diffExpressionAnalysis );
         aclTestUtils.checkHasAclParent( diffExpressionAnalysis, ee );
 
     }
