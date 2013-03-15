@@ -127,6 +127,11 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         SearchResultDisplayObject newSRDO = null;
         for ( ExpressionExperimentSet set : sets ) {
             expressionExperimentSetService.thaw( set );
+            
+            if(set.getExperiments().size()<1){
+            	continue;
+            }
+            
             if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
                 DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentSetService
                         .getValueObject( set.getId() );
