@@ -379,7 +379,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private void audit( ExpressionExperiment ee, String note, LinkAnalysisEvent eventType ) {
         expressionExperimentReportService.generateSummary( ee.getId() );
         ee = eeService.thawLite( ee );
-        auditTrailService.addUpdateEvent( ee, eventType, note, true );
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
