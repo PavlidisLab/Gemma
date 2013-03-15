@@ -18,9 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import ubic.gemma.persistence.BaseDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.User
@@ -32,13 +32,13 @@ public interface UserDao extends BaseDao<User> {
     /**
      * 
      */
-    public void addAuthority( ubic.gemma.model.common.auditAndSecurity.User user, java.lang.String roleName );
+    public void addAuthority( User user, String roleName );
 
     /**
      * @param user
      * @param password - encrypted
      */
-    public void changePassword( ubic.gemma.model.common.auditAndSecurity.User user, String password );
+    public void changePassword( User user, String password );
 
     /**
      * @param contact
@@ -49,12 +49,12 @@ public interface UserDao extends BaseDao<User> {
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.User findByEmail( java.lang.String email );
+    public User findByEmail( String email );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.User findByUserName( java.lang.String userName );
+    public User findByUserName( String userName );
 
     /**
      * @param u
@@ -68,4 +68,5 @@ public interface UserDao extends BaseDao<User> {
      */
     public Collection<UserGroup> loadGroups( User user );
 
+    public User findByUserNameSameSession( String userName );
 }

@@ -18,13 +18,6 @@
  */
 package ubic.gemma.security.authentication;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -47,16 +40,19 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
-
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.util.AuthorityConstants;
 
+import java.util.*;
+
 /**
  * Implementation for Spring Security, plus some other handy methods.
- * 
+ *
+ *
+ *
  * @author pavlidis
  * @version $Id$
  */
@@ -94,12 +90,6 @@ public class UserManagerImpl implements UserManager {
     @Autowired
     private UserService userService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#addGroupAuthority(java.lang.String,
-     * org.springframework.security.core.GrantedAuthority)
-     */
     @Override
     public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
         UserGroup g = loadGroup( groupName );
@@ -119,11 +109,6 @@ public class UserManagerImpl implements UserManager {
         userService.update( g );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#addUserToGroup(java.lang.String, java.lang.String)
-     */
     @Override
     public void addUserToGroup( String username, String groupName ) {
         User u = loadUser( username );
@@ -131,11 +116,6 @@ public class UserManagerImpl implements UserManager {
         userService.addUserToGroup( g, u );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#changePassword(java.lang.String, java.lang.String)
-     */
     @Override
     @Secured({ "GROUP_USER" })
     public void changePassword( String oldPassword, String newPassword ) throws AuthenticationException {
@@ -163,11 +143,6 @@ public class UserManagerImpl implements UserManager {
         userCache.removeUserFromCache( username );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#changePasswordForUser(java.lang.String, java.lang.String)
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public String changePasswordForUser( String email, String username, String newPassword )
@@ -205,11 +180,6 @@ public class UserManagerImpl implements UserManager {
         return u.getSignupToken();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#createGroup(java.lang.String, java.util.List)
-     */
     @Override
     public void createGroup( String groupName, List<GrantedAuthority> authorities ) {
 
@@ -220,16 +190,8 @@ public class UserManagerImpl implements UserManager {
         }
 
         userService.create( g );
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.security.authentication.UserManagerI#createUser(org.springframework.security.core.userdetails.UserDetails
-     * )
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public void createUser( UserDetails user ) {
@@ -272,22 +234,12 @@ public class UserManagerImpl implements UserManager {
          */
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#deleteGroup(java.lang.String)
-     */
     @Override
     public void deleteGroup( String groupName ) {
         UserGroup group = loadGroup( groupName );
         userService.delete( group );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#deleteUser(java.lang.String)
-     */
     @Override
     public void deleteUser( String username ) {
 
@@ -297,11 +249,6 @@ public class UserManagerImpl implements UserManager {
         userCache.removeUserFromCache( username );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#findAllGroups()
-     */
     @Override
     public List<String> findAllGroups() {
         Collection<UserGroup> groups = userService.listAvailableGroups();
@@ -311,7 +258,6 @@ public class UserManagerImpl implements UserManager {
             result.add( group.getName() );
         }
         return result;
-
     }
 
     @Override
@@ -325,43 +271,23 @@ public class UserManagerImpl implements UserManager {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#findbyEmail(java.lang.String)
-     */
     @Override
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     public User findbyEmail( String emailAddress ) {
         return findByEmail( emailAddress );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#findbyEmail(java.lang.String)
-     */
     @Override
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     public User findByEmail( String emailAddress ) {
         return userService.findByEmail( emailAddress );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#findByUserName(java.lang.String)
-     */
     @Override
     public User findByUserName( String userName ) {
         return this.userService.findByUserName( userName );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#findGroupAuthorities(java.lang.String)
-     */
     @Override
     public List<GrantedAuthority> findGroupAuthorities( String groupName ) {
 
@@ -380,21 +306,11 @@ public class UserManagerImpl implements UserManager {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#findGroupByName(java.lang.String)
-     */
     @Override
     public UserGroup findGroupByName( String name ) {
         return this.userService.findGroupByName( name );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#findGroupsForUser(java.lang.String)
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
     public Collection<String> findGroupsForUser( String userName ) {
@@ -415,11 +331,6 @@ public class UserManagerImpl implements UserManager {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#findUsersInGroup(java.lang.String)
-     */
     @Override
     public List<String> findUsersInGroup( String groupName ) {
 
@@ -435,31 +346,21 @@ public class UserManagerImpl implements UserManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#generateSignupToken(java.lang.String)
-     */
     @Override
     public String generateSignupToken( String username ) {
         return RandomStringUtils.randomAlphanumeric( 32 ).toUpperCase();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#getCurrentUser()
-     */
     @Override
     public User getCurrentUser() {
         return getUserForUserName( getCurrentUsername() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#getCurrentUsername()
-     */
+    @Override
+    public User getCurrentUserAttachedToCurrentSession() {
+        return userService.findByUserNameSameSession( getCurrentUsername() );
+    }
+
     @Override
     public String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -484,57 +385,31 @@ public class UserManagerImpl implements UserManager {
         return userService.groupExists( groupName );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#isEnableAuthorities()
-     */
     public boolean isEnableAuthorities() {
         return enableAuthorities;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#isEnableGroups()
-     */
     public boolean isEnableGroups() {
         return enableGroups;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#loadAll()
-     */
     @Override
     public Collection<User> loadAll() {
         return this.userService.loadAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#loadUserByUsername(java.lang.String)
-     */
     @Override
     public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
-        List<UserDetails> users = loadUsersByUsername( username );
-
-        if ( users.size() == 0 ) {
-            throw new UsernameNotFoundException( "Username " + username + " not found" );
-        }
-
-        UserDetails user = users.get( 0 ); // contains no GrantedAuthority[]
+        User user = loadUser( username );
 
         Set<GrantedAuthority> dbAuthsSet = new HashSet<GrantedAuthority>();
 
         if ( enableAuthorities ) {
-            dbAuthsSet.addAll( loadUserAuthorities( user.getUsername() ) );
+            dbAuthsSet.addAll( loadUserAuthorities( user.getUserName() ) );
         }
 
         if ( enableGroups ) {
-            dbAuthsSet.addAll( loadGroupAuthorities( user.getUsername() ) );
+            dbAuthsSet.addAll( loadGroupAuthorities( user ) );
         }
 
         List<GrantedAuthority> dbAuths = new ArrayList<GrantedAuthority>( dbAuthsSet );
@@ -545,14 +420,9 @@ public class UserManagerImpl implements UserManager {
             throw new UsernameNotFoundException( "User " + username + " has no GrantedAuthority" );
         }
 
-        return createUserDetails( username, ( UserDetailsImpl ) user, dbAuths );
+        return createUserDetails( username, new UserDetailsImpl( user ), dbAuths );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#loggedIn()
-     */
     @Override
     public boolean loggedIn() {
 
@@ -562,11 +432,6 @@ public class UserManagerImpl implements UserManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#reauthenticate(java.lang.String, java.lang.String)
-     */
     @Override
     public void reauthenticate( String username, String password ) {
         // If an authentication manager has been set, re-authenticate the user with the supplied password.
@@ -579,26 +444,14 @@ public class UserManagerImpl implements UserManager {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#removeGroupAuthority(java.lang.String,
-     * org.springframework.security.core.GrantedAuthority)
-     */
     @Override
     public void removeGroupAuthority( String groupName, GrantedAuthority authority ) {
 
         UserGroup group = loadGroup( groupName );
 
         userService.removeGroupAuthority( group, authority.getAuthority() );
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#removeUserFromGroup(java.lang.String, java.lang.String)
-     */
     @Override
     public void removeUserFromGroup( String username, String groupName ) {
 
@@ -610,14 +463,8 @@ public class UserManagerImpl implements UserManager {
         }
 
         userService.removeUserFromGroup( user, group );
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#renameGroup(java.lang.String, java.lang.String)
-     */
     @Override
     public void renameGroup( String oldName, String newName ) {
 
@@ -626,7 +473,6 @@ public class UserManagerImpl implements UserManager {
         group.setName( newName );
 
         userService.update( group );
-
     }
 
     /**
@@ -636,29 +482,14 @@ public class UserManagerImpl implements UserManager {
         this.authenticationManager = authenticationManager;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#setEnableAuthorities(boolean)
-     */
     public void setEnableAuthorities( boolean enableAuthorities ) {
         this.enableAuthorities = enableAuthorities;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#setEnableGroups(boolean)
-     */
     public void setEnableGroups( boolean enableGroups ) {
         this.enableGroups = enableGroups;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#setRolePrefix(java.lang.String)
-     */
     public void setRolePrefix( String rolePrefix ) {
         this.rolePrefix = rolePrefix;
     }
@@ -677,13 +508,6 @@ public class UserManagerImpl implements UserManager {
         this.userService = userService;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.security.authentication.UserManager#updateUser(org.springframework.security.core.userdetails.UserDetails
-     * )
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public void updateUser( UserDetails user ) {
@@ -702,33 +526,18 @@ public class UserManagerImpl implements UserManager {
         userCache.removeUserFromCache( user.getUsername() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManagerI#userExists(java.lang.String)
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userExists( String username ) {
         return userService.findByUserName( username ) != null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#userWithEmailExists(java.lang.String)
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userWithEmailExists( String emailAddress ) {
         return userService.findByEmail( emailAddress ) != null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.security.authentication.UserManager#validateSignupToken(java.lang.String, java.lang.String)
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean validateSignupToken( String username, String key ) {
@@ -760,13 +569,6 @@ public class UserManagerImpl implements UserManager {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.security.provisioning.JdbcUserDetailsManager#updateUser(org.springframework.security.core
-     * .userdetails.UserDetails)
-     */
     protected Authentication createNewAuthentication( Authentication currentAuth,
             @SuppressWarnings("unused") String newPassword ) {
         UserDetails user = loadUserByUsername( currentAuth.getName() );
@@ -793,15 +595,8 @@ public class UserManagerImpl implements UserManager {
                 userFromUserQuery.getSignupTokenDatestamp() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadGroupAuthorities(java.lang.String)
-     */
-    protected List<GrantedAuthority> loadGroupAuthorities( String username ) {
-        User u = loadUser( username );
-
-        Collection<GroupAuthority> authorities = userService.loadGroupAuthorities( u );
+    protected List<GrantedAuthority> loadGroupAuthorities( User user ) {
+        Collection<GroupAuthority> authorities = userService.loadGroupAuthorities( user );
 
         List<GrantedAuthority> result = new ArrayList<GrantedAuthority>();
         for ( GroupAuthority ga : authorities ) {
@@ -810,23 +605,12 @@ public class UserManagerImpl implements UserManager {
         }
 
         return result;
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadUserAuthorities(java.lang.String)
-     */
     protected List<GrantedAuthority> loadUserAuthorities( @SuppressWarnings("unused") String username ) {
         throw new UnsupportedOperationException( "Use the group-based authorities instead" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadUsersByUsername(java.lang.String)
-     */
     protected List<UserDetails> loadUsersByUsername( String username ) {
         List<UserDetails> result = new ArrayList<UserDetails>();
         User u = loadUser( username );

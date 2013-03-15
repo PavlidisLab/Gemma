@@ -18,15 +18,14 @@
  */
 package ubic.gemma.security.authentication;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+
+import java.util.Collection;
 
 /**
  * @version $Id$
@@ -121,7 +120,7 @@ public interface UserService {
      * @return
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
-    public User load( java.lang.Long id );
+    public User load( Long id );
 
     /**
      * Retrieves a list of users
@@ -162,5 +161,7 @@ public interface UserService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( UserGroup group );
+
+    public User findByUserNameSameSession( String userName );
 
 }

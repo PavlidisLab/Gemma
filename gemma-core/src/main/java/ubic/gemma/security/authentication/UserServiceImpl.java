@@ -14,23 +14,17 @@
  */
 package ubic.gemma.security.authentication;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.stereotype.Service;
-
-import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserDao;
-import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
-import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.common.auditAndSecurity.UserGroupDao;
+import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authorization.acl.AclService;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.security.authentication.UserService
@@ -138,8 +132,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Collection<GroupAuthority> loadGroupAuthorities( User u ) {
-        return this.userDao.loadGroupAuthorities( u );
+    public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
+        return this.userDao.loadGroupAuthorities( user );
     }
 
     @Override
@@ -163,13 +157,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User findByUserNameSameSession( String userName ) {
+        return this.userDao.findByUserNameSameSession( userName );
+    }
+
+    @Override
     public boolean groupExists( String name ) {
         return this.userGroupDao.findByUserGroupName( name ) != null;
     }
 
-    /**
-     * @see ubic.gemma.security.authentication.UserService#create(ubic.gemma.model.common.auditAndSecurity.User)
-     */
     @Override
     public User create( final User user ) throws UserExistsException {
 
@@ -196,50 +192,30 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    /**
-     * @see ubic.gemma.security.authentication.UserService#findByEmail(java.lang.String)
-     */
     @Override
     public User findByEmail( final String email ) {
         return this.userDao.findByEmail( email );
 
     }
 
-    /**
-     * @see ubic.gemma.security.authentication.UserService#findByUserName(java.lang.String)
-     */
     @Override
     public User findByUserName( final String userName ) {
         return this.userDao.findByUserName( userName );
-
     }
 
-    /**
-     * @see ubic.gemma.security.authentication.UserService#load(java.lang.Long)
-     */
     @Override
     public User load( final Long id ) {
         return this.userDao.load( id );
-
     }
 
-    /**
-     * @see ubic.gemma.security.authentication.UserService#loadAll()
-     */
     @Override
-    public java.util.Collection<User> loadAll() {
+    public Collection<User> loadAll() {
         return ( Collection<User> ) this.userDao.loadAll();
-
     }
 
-    /**
-     * @see ubic.gemma.security.authentication.UserService#update(ubic.gemma.model.common.auditAndSecurity.User)
-     */
     @Override
     public void update( final User user ) {
-
         this.userDao.update( user );
-
     }
 
 }
