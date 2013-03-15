@@ -103,7 +103,7 @@ public class AclAdvice {
         if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
             for ( final Object o : ( Collection<?> ) persistentObject ) {
                 if ( !isEligibleForAcl( o ) ) {
-                    continue; // possibly could return, if we assume collection is homogenous in type.
+                    continue; // possibly could return, if we assume collection is homogeneous in type.
                 }
                 process( o, methodName, isUpdate, isDelete );
             }
