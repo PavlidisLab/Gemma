@@ -21,7 +21,6 @@ package ubic.gemma.persistence;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -30,8 +29,6 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysi
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationDao;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
@@ -39,7 +36,6 @@ import ubic.gemma.model.association.Gene2GeneProteinAssociationDao;
 import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.association.TfGeneAssociationDao;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * Persist objects like Gene2GOAssociation.
@@ -54,9 +50,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     @Autowired
     private ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
-
-    @Autowired
-    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Autowired
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
@@ -87,8 +80,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             return persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
         } else if ( entity instanceof ProbeCoexpressionAnalysis ) {
             return persistProbeCoexpressionAnalysis( ( ProbeCoexpressionAnalysis ) entity );
-        } else if ( entity instanceof DifferentialExpressionAnalysis ) {
-            return persistDifferentialExpressionAnalysis( ( DifferentialExpressionAnalysis ) entity );
         } else if ( entity instanceof GeneCoexpressionAnalysis ) {
             return persistGeneCoexpressionAnalysis( ( GeneCoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
@@ -111,31 +102,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         return super.persistOrUpdate( entity );
-    }
-
-    /**
-     * @param entity
-     * @return
-     */
-    protected DifferentialExpressionAnalysis persistDifferentialExpressionAnalysis(
-            DifferentialExpressionAnalysis entity ) {
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
-        StopWatch timer = new StopWatch();
-        timer.start();
-        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
-        if ( isTransient( entity.getExperimentAnalyzed() ) ) {
-            if ( entity.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
-                entity.setExperimentAnalyzed( ( BioAssaySet ) persist( entity.getExperimentAnalyzed() ) );
-            } else {
-                throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
-            }
-        }
-        DifferentialExpressionAnalysis r = differentialExpressionAnalysisDao.create( entity );
-        if ( timer.getTime() > 5000 ) {
-            log.info( "Save: " + timer.getTime() + "ms" );
-        }
-        return r;
     }
 
     /**

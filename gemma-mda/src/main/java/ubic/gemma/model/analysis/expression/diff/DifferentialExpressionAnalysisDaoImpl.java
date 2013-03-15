@@ -89,7 +89,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         session.clear();
 
         session.buildLockRequest( LockOptions.NONE ).lock( analysis );
-        // int chunkSize = 1000;
         int contrastsDone = 0;
         int resultsDone = 0;
 
@@ -97,16 +96,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         timer.start();
 
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
-            // int i = 0;
-            // Collection<DifferentialExpressionAnalysisResult> res = rs.getResults();
-            // rs.setResults( null );
-            // for ( DifferentialExpressionAnalysisResult r : res ) {
-            // session.delete( r );
-            // if ( ++i % 32 == 0 ) {
-            // session.flush();
-            // session.clear();
-            // }
-            // }
 
             // Delete contrasts
             final String nativeDeleteContrastsQuery = "DELETE c FROM CONTRAST_RESULT c, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
@@ -121,18 +110,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             q = session.createSQLQuery( nativeDeleteARQuery );
             q.setParameter( "rsid", rs.getId() );
             resultsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table delete.
-
-            // // Delete actual results.
-            // final String nativeDeleteResultsQuery =
-            // "DELETE from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT where EXPRESSION_ANALYSIS_RESULT_SET_FK = :rsid limit "
-            // + chunkSize;
-            // Query q2 = session.createSQLQuery( nativeDeleteResultsQuery ).setParameter( "rsid", rs.getId() );
-            // while ( true ) {
-            // int d = q2.executeUpdate();
-            // resultsDone += d;
-            // session.flush();
-            // if ( d == 0 ) break;
-            // }
 
             session.flush();
             session.clear();
@@ -243,9 +220,18 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
-        return this.getHibernateTemplate().findByNamedParam(
+
+        // subset factorvalues factors.
+        Collection<DifferentialExpressionAnalysis> result = this.getHibernateTemplate().findByNamedParam(
+                "select distinct a from DifferentialExpressionAnalysisImpl a join a.subsetFactorValue ssf"
+                        + " join ssf.experimentalFactor efa where efa = :ef ", "ef", ef );
+
+        // factors used in the analysis.
+        result.addAll( this.getHibernateTemplate().findByNamedParam(
                 "select distinct a from DifferentialExpressionAnalysisImpl a join a.resultSets rs"
-                        + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ", "ef", ef );
+                        + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ", "ef", ef ) );
+
+        return result;
     }
 
     /*

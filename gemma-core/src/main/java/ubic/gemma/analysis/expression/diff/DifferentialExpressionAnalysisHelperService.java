@@ -17,9 +17,7 @@ package ubic.gemma.analysis.expression.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 
 /**
  * Service methods to do database-related work for differential expression analysis
@@ -29,41 +27,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public interface DifferentialExpressionAnalysisHelperService {
 
-    public static final String FACTOR_NAME_MANGLING_DELIMITER = "__";
-
     /**
-     * @param ee
-     * @param differentialExpressionAnalysis
-     */
-    public void writeDistributions( BioAssaySet ee, DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
-    /**
-     * Delete all the differential expression analyses for the experiment.
-     * 
-     * @param expressionExperiment
-     * @return how many analyses were deleted.
-     */
-    public abstract int deleteAnalyses( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Delete an old analysis.
-     * 
-     * @param expressionExperiment
-     * @param existingAnalysis
-     */
-    public abstract void deleteAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis existingAnalysis );
-
-    /**
-     * @param expressionExperiment
-     * @param diffExpressionAnalyses
-     * @param factors
+     * @param entity
      * @return
      */
-    public Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses, Collection<ExperimentalFactor> factors );
+    public DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity );
 
-    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis analysis, Collection<ExperimentalFactor> factors );
+    /**
+     * @param entity
+     * @param resultSets
+     */
+    public void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets );
 
 }

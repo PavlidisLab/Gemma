@@ -69,17 +69,6 @@ public interface AuditTrailService {
 
     /**
      * @param auditable
-     * @param auditEventType
-     * @param note
-     * @param detachedAuditable
-     * @return
-     */
-    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note,
-            boolean detachedAuditable );
-
-    /**
-     * @param auditable
      * @param type
      * @param note
      * @param detail

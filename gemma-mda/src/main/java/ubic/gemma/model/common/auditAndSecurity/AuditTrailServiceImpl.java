@@ -131,22 +131,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
      */
     @Override
-    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
-            final String note, boolean detachedAuditable ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( auditEventType );
-        auditEvent.setNote( note );
-
-        this.statusDao.update( auditable, auditEventType );
-        return this.auditTrailDao.addEvent( auditable, auditEvent );
-    }
-
-    /**
-     * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
-     */
-    @Override
     public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType, final String note ) {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
         auditEvent.setDate( new Date() );

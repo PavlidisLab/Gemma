@@ -83,4 +83,9 @@ public interface DifferentialExpressionAnalyzerService {
      */
     public abstract void updateSummaries( DifferentialExpressionAnalysis toUpdate );
 
+    public int deleteAnalyses( ExpressionExperiment expressionExperiment );
+
+    public void deleteAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis existingAnalysis );
+
 }

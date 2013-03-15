@@ -28,7 +28,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
@@ -75,10 +74,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     protected boolean ignoreBatch = true;
     private boolean delete = false;
-    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService;
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
     private List<Long> factorIds = new ArrayList<Long>();
 
     private List<String> factorNames = new ArrayList<String>();
@@ -221,7 +218,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             if ( delete ) {
                 log.info( "Deleting any analyses for experiment=" + ee );
-                differentialExpressionAnalysisHelperService.deleteAnalyses( ee );
+                differentialExpressionAnalyzerService.deleteAnalyses( ee );
                 successObjects.add( "Deleted analysis for: " + ee.toString() );
                 return;
             }
@@ -342,8 +339,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.processOptions();
         differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
         differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
-        differentialExpressionAnalysisHelperService = this.getBean( DifferentialExpressionAnalysisHelperService.class );
-
+        differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
         if ( hasOption( "type" ) ) {
 
             if ( this.expressionExperiments.size() > 1 ) {

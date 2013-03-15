@@ -24,16 +24,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -52,7 +50,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 
 /**
  * @author keshav, paul
@@ -64,16 +61,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
     @Autowired
-    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalyzerHelperService = null;
-
-    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
-
-    @Autowired
-    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
@@ -117,7 +108,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
         ee = expressionExperimentService.thawLite( ee );
-        differentialExpressionAnalyzerHelperService.deleteAnalyses( ee );
+        differentialExpressionAnalyzerService.deleteAnalyses( ee );
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -159,14 +150,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         expressionDataFileService.deleteAllFiles( ee );
 
         // / delete the analysis
-        int numDeleted = differentialExpressionAnalyzerHelperService.deleteAnalyses( ee );
+        int numDeleted = differentialExpressionAnalyzerService.deleteAnalyses( ee );
         assertTrue( numDeleted > 0 );
-
-        // this is kind of thrown in here
-        LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = experimentalDesignVisualizationService
-                .getExperimentalDesignLayout( ee );
-
-        assertEquals( 12, layout.size() );
 
     }
 
@@ -183,7 +168,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertTrue( !analyses.isEmpty() );
         differentialExpressionAnalysisService.getAnalysisValueObjects( analyses.iterator().next().getId() );
 
-        differentialExpressionAnalyzerHelperService.deleteAnalysis( ee, analyses.iterator().next() );
+        differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
 
     }
 
@@ -212,7 +197,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         differentialExpressionAnalysisService.getAnalysisValueObjects( analyses.iterator().next().getId() );
 
-        differentialExpressionAnalyzerHelperService.deleteAnalysis( ee, analyses.iterator().next() );
+        differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
 
     }
 
@@ -247,7 +232,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertNotNull( is );
         experimentalDesignImporter.importDesign( ee, is );
 
-        differentialExpressionAnalyzerHelperService.deleteAnalyses( ee );
+        differentialExpressionAnalyzerService.deleteAnalyses( ee );
 
         experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertEquals( 3, experimentalFactors.size() );

@@ -44,7 +44,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         super.setSessionFactory( sessionFactory );
     }
 
-
     @Override
     public AuditEvent addEvent( final Auditable auditable, final AuditEvent auditEvent ) {
 
@@ -61,8 +60,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
             auditEvent.setPerformer( user );
         }
 
-        // Hibernate.initialize( auditable );
-
         AuditTrail trail = auditable.getAuditTrail();
 
         if ( trail == null ) {
@@ -70,15 +67,20 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
              * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
              * defensive.
              */
-            logger.warn("AuditTrail was null. It should have been initialized by the AuditAdvice when the entity was first created.");
+            logger.warn( "AuditTrail was null. It should have been initialized by the AuditAdvice when the entity was first created." );
             trail = AuditTrail.Factory.newInstance();
             auditable.setAuditTrail( trail );
+        } else {
+
+            // if ( this.getHibernateTemplate().get( trail ) ) {
+            /*
+             * This assumes that nobody else in this session has modified this audit trail.
+             */
+            if ( trail.getId() != null )
+                trail = this.getHibernateTemplate().get( AuditTrailImpl.class, trail.getId() );
+            // }
+
         }
-//        else if ( auditable.getAuditTrail().getId() != null ) {
-//            trail = ( AuditTrail ) this.getSession(false).get( AuditTrailImpl.class, auditable.getAuditTrail().getId() );
-//            // Isn't it a no-op in this case? trail is already associated with current session.
-//            //this.getSession(false).buildLockRequest( LockOptions.NONE ).lock( trail );
-//        }
 
         trail.addEvent( auditEvent );
 
@@ -136,7 +138,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         this.getHibernateTemplate().update( auditTrail );
     }
 
-
     @Override
     public void remove( Collection<? extends AuditTrail> entities ) {
         if ( entities == null ) {
@@ -162,7 +163,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
             update( auditTrail );
         }
     }
-
 
     /**
      * FIXME this returns a list, but there is no particular ordering enforced?
@@ -193,7 +193,7 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
          * This might be the best place to embody rules that determine if the event is still 'live'.
          */
 
-        Query queryObject = super.getSession(false).createQuery( queryString );
+        Query queryObject = super.getSession( false ).createQuery( queryString );
         return queryObject.list();
     }
 

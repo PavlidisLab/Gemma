@@ -64,7 +64,7 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
 
     /**
      * @param ef
-     * @return
+     * @return analyses associated with the factor, either through the subsetfactor or as factors for resultsets.
      */
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
