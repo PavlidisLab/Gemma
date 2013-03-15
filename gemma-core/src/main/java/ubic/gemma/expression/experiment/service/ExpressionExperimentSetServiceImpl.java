@@ -257,6 +257,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
             results.add( vo );
         }
 
+        // FIXME the contract of this method is a collection, not a list. I've left this here because it is presumably
+        // important for something...
         Collections.sort( results );
 
         return results;
