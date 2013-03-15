@@ -88,4 +88,14 @@ public interface DifferentialExpressionAnalyzerService {
     public void deleteAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis );
 
+    /**
+     * This method is made available primarily for tests.
+     * 
+     * @param expressionExperiment
+     * @param analysis
+     * @return
+     */
+    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis );
+
 }

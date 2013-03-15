@@ -28,6 +28,7 @@ import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.MutableAclService;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
@@ -68,6 +69,9 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     @Autowired
     ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
     /**
      * Create Array design, check ACLs are put on correctly and removed when the design is removed. Array Designs are
@@ -131,7 +135,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testAnalysisAcl()   {
+    public void testAnalysisAcl() {
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis diffExpressionAnalysis = config.toAnalysis();
@@ -150,7 +154,8 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         diffExpressionAnalysis.setExperimentAnalyzed( ee );
 
-        diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) persisterHelper.persist( diffExpressionAnalysis );
+        diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) differentialExpressionAnalyzerService
+                .persistAnalysis( ee, diffExpressionAnalysis );
 
         aclTestUtils.checkHasAcl( ee );
         aclTestUtils.checkHasAcl( diffExpressionAnalysis );

@@ -188,7 +188,7 @@ public class AclTestUtils {
 
     public void checkHasAces( Object f ) {
         Acl a = getAcl( f );
-        assertTrue( a + " doesn't have ACEs, it should", a.getEntries().size() > 0 );
+        assertTrue( "For object " + f + " with ACL " + a + ":doesn't have ACEs, it should", a.getEntries().size() > 0 );
     }
 
     private Acl getAcl( Object f ) {
