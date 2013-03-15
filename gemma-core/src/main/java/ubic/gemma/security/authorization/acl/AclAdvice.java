@@ -478,7 +478,7 @@ public class AclAdvice {
      */
     private ObjectIdentity makeObjectIdentity( Securable object ) {
 
-        assert object.getId() != null;
+        assert object.getId() != null : "Object checked for ACLs before it has an ID: " + object;
 
         return objectIdentityRetrievalStrategy.getObjectIdentity( object );
     }
