@@ -105,11 +105,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table delete.
 
             // Delete AnalysisResults
-            String nativeDeleteARQuery = "DELETE d,a FROM ANALYSIS_RESULT a, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
-                    + " where d.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rsid and d.ID = a.ID";
+            String nativeDeleteARQuery = "DELETE d from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
+                    + " where d.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rsid  ";
             q = session.createSQLQuery( nativeDeleteARQuery );
             q.setParameter( "rsid", rs.getId() );
-            resultsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table delete.
+            resultsDone += q.executeUpdate();
+            // could do in a loop with limit , might be faster.
 
             session.flush();
             session.clear();

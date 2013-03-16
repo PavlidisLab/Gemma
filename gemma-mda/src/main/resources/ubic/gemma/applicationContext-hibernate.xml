@@ -148,7 +148,8 @@
 				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/AnalysisResult.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/ProbeLoading.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/CoexpressionProbe.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/Investigation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml</value>

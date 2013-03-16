@@ -59,8 +59,6 @@ public class DifferentialExpressionAnalysisResultImpl extends
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + ( ( super.getProbe() == null ) ? 0 : super.getProbe().hashCode() );
-        result = prime * result
-                + ( ( super.getQuantitationType() == null ) ? 0 : super.getQuantitationType().hashCode() );
         return result;
     }
 
@@ -79,10 +77,6 @@ public class DifferentialExpressionAnalysisResultImpl extends
         if ( super.getProbe() == null ) {
             if ( other.getProbe() != null ) return false;
         } else if ( !super.getProbe().equals( other.getProbe() ) ) return false;
-
-        if ( super.getQuantitationType() == null ) {
-            if ( other.getQuantitationType() != null ) return false;
-        } else if ( !super.getQuantitationType().equals( other.getQuantitationType() ) ) return false;
 
         return true;
     }

@@ -24,15 +24,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.analysis.expression.pca.Eigenvalue;
-import ubic.gemma.model.analysis.expression.pca.Eigenvector;
-import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeDao;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -76,8 +68,6 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         pca.setMaxNumProbesPerComponent( numLoadingsToStore );
         pca.setExperimentAnalyzed( ee );
 
-        QuantitationType loadingQt = getLoadingQt();
-
         /*
          * deal with U. We keep only the first numComponentsToStore components for the first numLoadingsToStore genes.
          */
@@ -86,8 +76,7 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
 
             for ( int j = 0; j < Math.min( u.rows(), numLoadingsToStore ) - 1; j++ ) {
                 CompositeSequence probe = inOrder.get( j );
-                ProbeLoading plr = ProbeLoading.Factory.newInstance( loadingQt, i + 1, u.getRowByName( probe )[i], j,
-                        probe );
+                ProbeLoading plr = ProbeLoading.Factory.newInstance( i + 1, u.getRowByName( probe )[i], j, probe );
                 pca.getProbeLoadings().add( plr );
             }
 
@@ -148,19 +137,6 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
 
         return this.getPrincipalComponentAnalysisDao().getTopLoadedProbes( ee, component, count );
 
-    }
-
-    /**
-     * Reuse this ...
-     * 
-     * @return
-     */
-    private QuantitationType getLoadingQt() {
-        QuantitationType loadingQt = QuantitationType.Factory.newInstance( "Loading",
-                "Loading of a feature on an eigenvector", Boolean.FALSE, PrimitiveType.DOUBLE,
-                GeneralType.QUANTITATIVE, StandardQuantitationType.CORRELATION, ScaleType.LINEAR, false, false, false,
-                false, false, false );
-        return quantitationTypeDao.findOrCreate( loadingQt );
     }
 
     @Override
