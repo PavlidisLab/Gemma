@@ -685,7 +685,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             /*
              * FIXME compute the log2 CPM.
              */
-            throw new UnsupportedOperationException("Count data not yet supported");
+            throw new UnsupportedOperationException( "Count data not yet supported" );
         } else {
             throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
         }
@@ -850,7 +850,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 DifferentialExpressionAnalysisResult probeAnalysisResult = DifferentialExpressionAnalysisResult.Factory
                         .newInstance();
                 probeAnalysisResult.setProbe( el );
-                probeAnalysisResult.setQuantitationType( quantitationType );
 
                 if ( lm.getCoefficients() == null ) {
                     probeAnalysisResult.setPvalue( null );
@@ -1219,14 +1218,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             FactorValue subsetFactorValue ) {
 
         DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( bioAssaySet );
-
-        Collection<ExpressionAnalysisResultSet> resultSets = makeResultSets( label2Factors, baselineConditions,
-                oneSampleTtest, expressionAnalysis, resultLists );
-
         /*
          * Complete analysis config
          */
-        expressionAnalysis.setResultSets( resultSets );
         expressionAnalysis.setName( this.getClass().getSimpleName() );
         expressionAnalysis.setDescription( "Linear model with "
                 + config.getFactorsToInclude().size()
@@ -1236,6 +1230,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 + ( subsetFactorValue == null ? "" : "Using subset " + bioAssaySet + " subset value= "
                         + subsetFactorValue ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
+
+        Collection<ExpressionAnalysisResultSet> resultSets = makeResultSets( label2Factors, baselineConditions,
+                oneSampleTtest, expressionAnalysis, resultLists );
+
+        expressionAnalysis.setResultSets( resultSets );
 
         return expressionAnalysis;
     }
