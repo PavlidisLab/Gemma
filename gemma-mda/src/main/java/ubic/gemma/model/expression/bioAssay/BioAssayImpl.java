@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+
 /**
  * @see ubic.gemma.model.expression.bioAssay.BioAssay
  */
@@ -55,5 +57,11 @@ public class BioAssayImpl extends ubic.gemma.model.expression.bioAssay.BioAssay 
         hashCode = 29 * nameHash + descHash;
 
         return hashCode;
+    }
+
+    @Override
+    public Securable getSecurityOwner() {
+        throw new UnsupportedOperationException( "Sorry, " + this.getClass().getSimpleName()
+                + " cannot identify their own security owner in this scope" );
     }
 }

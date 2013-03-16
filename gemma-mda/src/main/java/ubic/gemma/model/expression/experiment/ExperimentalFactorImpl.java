@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
  * @version $Id$
@@ -63,4 +65,9 @@ public class ExperimentalFactorImpl extends ExperimentalFactor {
         return true;
     }
 
+    @Override
+    public Securable getSecurityOwner() {
+        throw new UnsupportedOperationException( "Sorry, " + this.getClass().getSimpleName()
+                + " cannot identify their own security owner in this scope" );
+    }
 }

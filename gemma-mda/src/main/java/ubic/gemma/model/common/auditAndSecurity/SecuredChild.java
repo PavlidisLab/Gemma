@@ -27,4 +27,6 @@ package ubic.gemma.model.common.auditAndSecurity;
  */
 public interface SecuredChild extends Securable {
 
+    public Securable getSecurityOwner();
+
 }

@@ -182,7 +182,7 @@
 
 	<!-- Voter that can be applied to any method that takes a securable as an argument (NOT on the return value, this is checked 
 		before the call) -->
-	<bean id="securableEditVoter" class="org.springframework.security.acls.AclEntryVoter">
+	<bean id="securableEditVoter" class="ubic.gemma.security.authorization.acl.AclEntryVoter">
 		<constructor-arg ref="aclService" />
 		<constructor-arg value="ACL_SECURABLE_EDIT" />
 		<constructor-arg>
@@ -195,7 +195,7 @@
 		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
 
-	<bean id="securableReadVoter" class="org.springframework.security.acls.AclEntryVoter">
+	<bean id="securableReadVoter" class="ubic.gemma.security.authorization.acl.AclEntryVoter">
 		<constructor-arg ref="aclService" />
 		<constructor-arg value="ACL_SECURABLE_READ" />
 		<constructor-arg>

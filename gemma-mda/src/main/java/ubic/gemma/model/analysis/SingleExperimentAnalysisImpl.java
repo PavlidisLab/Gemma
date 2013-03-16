@@ -22,15 +22,20 @@
  */
 package ubic.gemma.model.analysis;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+
 /**
  * @see ubic.gemma.model.analysis.SingleExperimentAnalysis
  */
-public class SingleExperimentAnalysisImpl
-    extends ubic.gemma.model.analysis.SingleExperimentAnalysis
-{
+public class SingleExperimentAnalysisImpl extends ubic.gemma.model.analysis.SingleExperimentAnalysis {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -7828207320627014990L;
+
+    @Override
+    public Securable getSecurityOwner() {
+        return this.getExperimentAnalyzed();
+    }
 
 }

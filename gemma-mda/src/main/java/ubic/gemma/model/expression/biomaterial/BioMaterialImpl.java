@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+
 /**
  * @see ubic.gemma.model.expression.biomaterial.BioMaterial
  * @author pavlidis
@@ -26,4 +28,9 @@ public class BioMaterialImpl extends ubic.gemma.model.expression.biomaterial.Bio
      */
     private static final long serialVersionUID = -7892217074183258185L;
 
+    @Override
+    public Securable getSecurityOwner() {
+        throw new UnsupportedOperationException( "Sorry, " + this.getClass().getSimpleName()
+                + " cannot identify their own security owner in this scope" );
+    }
 }

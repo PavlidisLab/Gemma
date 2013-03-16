@@ -140,7 +140,6 @@ public interface DifferentialExpressionResultService {
 
     public Collection<DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 
     public void thaw( DifferentialExpressionAnalysisResult result );
@@ -150,13 +149,11 @@ public interface DifferentialExpressionResultService {
      * 
      * @param resultSet
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thawLite( ExpressionAnalysisResultSet resultSet );
 
     // FIXME not used?
     public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet ar,
             Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults );
 

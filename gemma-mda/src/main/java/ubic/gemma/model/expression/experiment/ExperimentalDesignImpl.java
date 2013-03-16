@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
  */
@@ -23,4 +25,10 @@ public class ExperimentalDesignImpl extends ubic.gemma.model.expression.experime
      * 
      */
     private static final long serialVersionUID = -2264481292024687685L;
+
+    @Override
+    public Securable getSecurityOwner() {
+        throw new UnsupportedOperationException( "Sorry, " + this.getClass().getSimpleName()
+                + " cannot identify their own security owner in this scope" );
+    }
 }

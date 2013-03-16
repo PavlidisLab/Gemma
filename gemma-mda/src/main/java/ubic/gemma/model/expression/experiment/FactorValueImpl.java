@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 
@@ -128,5 +129,11 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
 
         // everything is empty...
         return true;
+    }
+
+    @Override
+    public Securable getSecurityOwner() {
+        throw new UnsupportedOperationException( "Sorry, " + this.getClass().getSimpleName()
+                + " cannot identify their own security owner in this scope" );
     }
 }

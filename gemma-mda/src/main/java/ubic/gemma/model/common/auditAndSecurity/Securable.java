@@ -26,6 +26,9 @@ package ubic.gemma.model.common.auditAndSecurity;
  */
 public interface Securable {
 
+    /**
+     * @return
+     */
     public Long getId();
 
 }

@@ -38,7 +38,7 @@ public interface AnalysisService<T extends Analysis> {
      * deletes the given analysis from the system
      * </p>
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
     public void delete( T toDelete );
 
     /**
