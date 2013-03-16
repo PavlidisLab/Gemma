@@ -9,7 +9,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -36,7 +36,7 @@ import ubic.gemma.search.SearchService;
  * @version
  * @author Nicolas
  */
-@Service
+@Component
 public class GeneCoreServiceImpl implements GeneCoreService {
 
     private static Log log = LogFactory.getLog( GeneCoreService.class );
