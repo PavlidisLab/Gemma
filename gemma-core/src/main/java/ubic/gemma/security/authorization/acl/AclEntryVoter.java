@@ -55,21 +55,16 @@ public class AclEntryVoter extends org.springframework.security.acls.AclEntryVot
             args = jp.getArgs();
         }
 
-        int goodArg = -1;
         for ( int i = 0; i < params.length; i++ ) {
             if ( getProcessDomainObjectClass().isAssignableFrom( params[i] ) ) {
-                goodArg = i;
+                return args[i];
             }
         }
 
-        if ( goodArg >= 0 ) {
-            return args[goodArg];
-        } else {
-            // Start special case!
-            for ( int i = 0; i < params.length; i++ ) {
-                if ( SecuredChild.class.isAssignableFrom( params[i] ) ) {
-                    return ( ( SecuredChild ) args[i] ).getSecurityOwner();
-                }
+        // Start special case!
+        for ( int i = 0; i < params.length; i++ ) {
+            if ( SecuredChild.class.isAssignableFrom( params[i] ) ) {
+                return ( ( SecuredChild ) args[i] ).getSecurityOwner();
             }
         }
 
