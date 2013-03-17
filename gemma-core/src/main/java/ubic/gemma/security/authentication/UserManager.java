@@ -141,6 +141,4 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      * @return true if okay, false otherwise
      */
     public boolean validateSignupToken( String username, String key );
-
-    public User getCurrentUserAttachedToCurrentSession();
 }

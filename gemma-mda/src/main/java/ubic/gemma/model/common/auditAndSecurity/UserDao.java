@@ -67,6 +67,4 @@ public interface UserDao extends BaseDao<User> {
      * @return
      */
     public Collection<UserGroup> loadGroups( User user );
-
-    public User findByUserNameSameSession( String userName );
 }

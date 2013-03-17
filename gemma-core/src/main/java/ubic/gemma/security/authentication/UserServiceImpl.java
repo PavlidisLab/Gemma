@@ -157,11 +157,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findByUserNameSameSession( String userName ) {
-        return this.userDao.findByUserNameSameSession( userName );
-    }
-
-    @Override
     public boolean groupExists( String name ) {
         return this.userGroupDao.findByUserGroupName( name ) != null;
     }

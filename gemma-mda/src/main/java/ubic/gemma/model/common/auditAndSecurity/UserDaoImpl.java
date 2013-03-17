@@ -14,13 +14,12 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
-import org.springframework.orm.hibernate3.HibernateAccessor;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.util.BusinessKey;
@@ -81,37 +80,17 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
 
     @Override
     public User findByUserName( final String userName ) {
-        // we make this method safer to call in a transaction, as it really is a read-only method that should be
-        // accessing information that is already committed.
-        HibernateTemplate t = new HibernateTemplate( this.getSessionFactory() );
-        t.setAlwaysUseNewSession( true );
-        t.setFlushMode( HibernateAccessor.FLUSH_NEVER );
-        List<?> r = t.findByNamedParam( "from UserImpl u where u.userName=:userName", "userName", userName );
-        if ( r.isEmpty() ) {
+        Session session = this.getSessionFactory().getCurrentSession();
+
+        List<User> users = session.createCriteria( UserImpl.class ).setFlushMode( FlushMode.MANUAL )
+                .add( Restrictions.eq( "userName", userName ) ).list();
+
+        if ( users.isEmpty() ) {
             return null;
-        } else if ( r.size() > 1 ) {
+        } else if ( users.size() > 1 ) {
             throw new IllegalStateException( "Multiple users with name=" + userName );
         }
-        return ( User ) r.get( 0 );
-
-//        Session session = this.getSessionFactory().openSession();
-//        session.setDefaultReadOnly( true );
-//
-//        List<User> users = session.createCriteria( UserImpl.class )
-//                                           .add( Restrictions.eq( "userName", userName ) ).list();
-//
-//
-////        List<?> results = this.getHibernateTemplate()
-////                .findByNamedParam( "from UserImpl u where u.userName=:userName", "userName", userName );
-//
-//        session.close();
-//
-//        if ( users.isEmpty() ) {
-//            return null;
-//        } else if ( users.size() > 1 ) {
-//            throw new IllegalStateException( "Multiple users with name=" + userName );
-//        }
-//        return users.get( 0 );
+        return users.get( 0 );
     }
 
     @Override
@@ -129,21 +108,6 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     public Collection<UserGroup> loadGroups( User user ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );
-    }
-
-    @Override
-    public User findByUserNameSameSession( String userName ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        List<User> users = session.createCriteria( UserImpl.class )
-                .add( Restrictions.eq( "userName", userName ) ).list();
-
-        if ( users.isEmpty() ) {
-            return null;
-        } else if ( users.size() > 1 ) {
-            throw new IllegalStateException( "Multiple users with name=" + userName );
-        }
-        return users.get( 0 );
     }
 
     @Override

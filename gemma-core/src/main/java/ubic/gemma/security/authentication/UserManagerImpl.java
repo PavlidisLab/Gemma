@@ -357,11 +357,6 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    public User getCurrentUserAttachedToCurrentSession() {
-        return userService.findByUserNameSameSession( getCurrentUsername() );
-    }
-
-    @Override
     public String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 

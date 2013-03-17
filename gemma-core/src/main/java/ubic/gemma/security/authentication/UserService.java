@@ -161,7 +161,4 @@ public interface UserService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( UserGroup group );
-
-    public User findByUserNameSameSession( String userName );
-
 }
