@@ -285,6 +285,12 @@ public interface GeneService {
      * @return
      */
     public GeneValueObject loadValueObject( Long id );
+    
+    /**
+     * @param ids
+     * @return
+     */
+    public GeneValueObject loadFullyPopulatedValueObject( Long id );
 
     /**
      * @param ids

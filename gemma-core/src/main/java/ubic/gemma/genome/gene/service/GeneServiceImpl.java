@@ -22,6 +22,7 @@ package ubic.gemma.genome.gene.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -35,11 +36,14 @@ import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
@@ -52,9 +56,12 @@ import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.search.GeneSetSearch;
+import ubic.gemma.search.SearchResult;
+import ubic.gemma.search.SearchService;
 
 /**
  * @author pavlidis
@@ -87,6 +94,9 @@ public class GeneServiceImpl implements GeneService {
 
     @Autowired
     private GeneDao geneDao;
+    
+    @Autowired
+    private SearchService searchService;
 
     @Override
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
@@ -248,6 +258,72 @@ public class GeneServiceImpl implements GeneService {
         Collection<Gene> g = this.getGeneDao().loadThawed( ids );
         if ( g == null || g.isEmpty() ) return null;
         return GeneValueObject.convert2ValueObjects( g ).iterator().next();
+    }
+    
+    @Override
+    public GeneValueObject loadFullyPopulatedValueObject( Long id ) {
+        Collection<Long> ids = new ArrayList<Long>( 1 );
+        ids.add( id );
+        Collection<Gene> gCollection = this.getGeneDao().loadThawed( ids );
+        if ( gCollection == null || gCollection.isEmpty() ) return null;
+        
+        Gene g = gCollection.iterator().next();
+        
+        GeneValueObject gvo =  GeneValueObject.convert2ValueObjects( gCollection ).iterator().next();
+        
+        
+        Collection<GeneAlias> aliasObjs = g.getAliases();
+        Collection<String> aliasStrs = new ArrayList<String>();
+        for ( GeneAlias ga : aliasObjs ) {
+            aliasStrs.add( ga.getAlias() );
+        }
+        gvo.setAliases(aliasStrs);
+        
+        if ( g.getMultifunctionality() != null ) {
+            gvo.setNumGoTerms( g.getMultifunctionality().getNumGoTerms() );
+            gvo.setMultifunctionalityRank( g.getMultifunctionality().getRank() );
+        }        
+        
+        Long compositeSequenceCount = getCompositeSequenceCountById( id );
+        gvo.setCompositeSequenceCount(compositeSequenceCount.intValue());
+        
+        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( g );
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        gsvos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( genesets, false ) );
+        
+        gvo.setGeneSets( gsvos );
+        
+        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( g );
+        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
+        
+        gvo.setHomologues(homologues);
+        
+        Collection<PhenotypeAssociation> phenoAssocs = g.getPhenotypeAssociations();
+        Collection<CharacteristicValueObject> cvos = new HashSet<CharacteristicValueObject>();
+        for ( PhenotypeAssociation pa : phenoAssocs ) {
+            cvos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
+        }
+        
+        gvo.setPhenotypes(cvos);
+        
+        if ( gvo.getNcbiId() != null ) {
+        	SearchSettingsImpl s = new SearchSettingsImpl();
+        	s.setTermUri( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() );
+        	s.noSearches();
+        	s.setSearchExperiments( true );
+        	Map<Class<?>, List<SearchResult>> r = searchService.search( s );
+        	if ( r.containsKey( ExpressionExperiment.class ) ) {
+        		List<SearchResult> hits = r.get( ExpressionExperiment.class );
+        		gvo.setAssociatedExperimentCount( hits.size() );
+        	}
+        }
+        
+        GeneCoexpressionNodeDegree nodeDegree = getGeneCoexpressionNodeDegree( g );
+        if ( nodeDegree != null ) gvo.setNodeDegreeRank( nodeDegree.getRankNumLinks() );   
+        
+        
+        
+        return gvo;
     }
 
     @Override

@@ -43,16 +43,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
     @Autowired
     private GeneService geneService = null;
-
-    @Autowired
-    private GeneSetValueObjectHelper geneSetValueObjectHelper = null;
-
-    @Autowired
-    private GeneSetSearch geneSetSearch;
-
-    @Autowired
-    private HomologeneService homologeneService = null;
-
+    
     @Autowired
     private SearchService searchService = null;
 
@@ -62,108 +53,19 @@ public class GeneCoreServiceImpl implements GeneCoreService {
     /**
      * Returns a detailVO for a geneDd
      * 
+     * This method may be unnecessary now that we have put all the logic into the GeneService
+     * 
      * @param geneId The gene id
      * @return GeneDetailsValueObject a representation of that gene
      */
     @Override
     public GeneValueObject loadGeneDetails( long geneId ) {
-
-        Gene gene = this.geneService.load( geneId );
-
-        GeneValueObject details = this.geneService.loadValueObject( geneId );
-
-        details.setAliases( getAliasStrings( gene ) );
-
-        if ( gene.getMultifunctionality() != null ) {
-            details.setNumGoTerms( gene.getMultifunctionality().getNumGoTerms() );
-            details.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
-        }
-
-        Long compositeSequenceCount = this.geneService.getCompositeSequenceCountById( geneId );
-        details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
-
-        details.setGeneSets( this.getGeneSets( gene ) );
-
-        details.setHomologues( getHomologues( gene ) );
-
-        details.setPhenotypes( this.getPhenotypes( gene ) );
-
-        /*
-         * Look for the gene as an attribute in experiments.
-         */
-        if ( details.getNcbiId() != null ) {
-            getAssociatedExperimentsCount( details );
-        }
-
-        GeneCoexpressionNodeDegree nodeDegree = geneService.getGeneCoexpressionNodeDegree( gene );
-        if ( nodeDegree != null ) details.setNodeDegreeRank( nodeDegree.getRankNumLinks() );
-
-        return details;
+    	
+    	return this.geneService.loadFullyPopulatedValueObject(geneId);
 
     }
 
-    /**
-     * @param gene
-     * @return
-     */
-    private Collection<String> getAliasStrings( Gene gene ) {
-        Collection<GeneAlias> aliasObjs = gene.getAliases();
-        Collection<String> aliasStrs = new ArrayList<String>();
-        for ( GeneAlias ga : aliasObjs ) {
-            aliasStrs.add( ga.getAlias() );
-        }
-        return aliasStrs;
-    }
-
-    /**
-     * @param gene
-     * @return
-     */
-    private Collection<GeneSetValueObject> getGeneSets( Gene gene ) {
-        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( genesets, false ) );
-        return gsvos;
-    }
-
-    /**
-     * @param gene
-     * @return
-     */
-    private Collection<GeneValueObject> getHomologues( Gene gene ) {
-        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
-        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
-        return homologues;
-    }
-
-    /**
-     * @param gene
-     * @return
-     */
-    private Collection<CharacteristicValueObject> getPhenotypes( Gene gene ) {
-        Collection<PhenotypeAssociation> phenoAssocs = gene.getPhenotypeAssociations();
-        Collection<CharacteristicValueObject> cvos = new HashSet<CharacteristicValueObject>();
-        for ( PhenotypeAssociation pa : phenoAssocs ) {
-            cvos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
-        }
-        return cvos;
-    }
-
-    /**
-     * @param details
-     */
-    private void getAssociatedExperimentsCount( GeneValueObject details ) {
-        SearchSettingsImpl s = new SearchSettingsImpl();
-        s.setTermUri( "http://purl.org/commons/record/ncbi_gene/" + details.getNcbiId() );
-        s.noSearches();
-        s.setSearchExperiments( true );
-        Map<Class<?>, List<SearchResult>> r = this.searchService.search( s );
-        if ( r.containsKey( ExpressionExperiment.class ) ) {
-            List<SearchResult> hits = r.get( ExpressionExperiment.class );
-            details.setAssociatedExperimentCount( hits.size() );
-        }
-    }
-
+ 
     /**
      * Search for genes (by name or symbol)
      * 
