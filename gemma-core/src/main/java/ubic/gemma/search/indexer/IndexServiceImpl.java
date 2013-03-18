@@ -18,7 +18,7 @@
  */
 package ubic.gemma.search.indexer;
 
-import org.compass.core.spi.InternalCompass;
+import org.compass.core.Compass;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -43,14 +43,14 @@ public class IndexServiceImpl implements IndexService {
 
     @Autowired private TaskRunningService taskRunningService;
 
-    @Autowired @Qualifier("compassArray") private InternalCompass compassArray;
-    @Autowired @Qualifier("compassBibliographic") private InternalCompass compassBibliographic;
-    @Autowired @Qualifier("compassBiosequence") private InternalCompass compassBiosequence;
-    @Autowired @Qualifier("compassExperimentSet") private InternalCompass compassExperimentSet;
-    @Autowired @Qualifier("compassExpression") private InternalCompass compassExpression;
-    @Autowired @Qualifier("compassGene") private InternalCompass compassGene;
-    @Autowired @Qualifier("compassGeneSet") private InternalCompass compassGeneSet;
-    @Autowired @Qualifier("compassProbe") private InternalCompass compassProbe;
+    @Autowired @Qualifier("compassArray") private Compass compassArray;
+    @Autowired @Qualifier("compassBibliographic") private Compass compassBibliographic;
+    @Autowired @Qualifier("compassBiosequence") private Compass compassBiosequence;
+    @Autowired @Qualifier("compassExperimentSet") private Compass compassExperimentSet;
+    @Autowired @Qualifier("compassExpression") private Compass compassExpression;
+    @Autowired @Qualifier("compassGene") private Compass compassGene;
+    @Autowired @Qualifier("compassGeneSet") private Compass compassGeneSet;
+    @Autowired @Qualifier("compassProbe") private Compass compassProbe;
 
     /**
      * Job that loads in a javaspace.

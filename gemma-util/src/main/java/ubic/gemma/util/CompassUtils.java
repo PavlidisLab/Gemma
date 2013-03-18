@@ -18,15 +18,15 @@
  */
 package ubic.gemma.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.compass.core.spi.InternalCompass;
+import org.compass.core.Compass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Utility methods to manipulate compass (and lucene).
@@ -146,7 +146,7 @@ public class CompassUtils {
      *        sub dir.
      * @throws IOException
      */
-    public static synchronized void swapCompassIndex( InternalCompass compass, String pathToIndex ) throws IOException {
+    public static synchronized void swapCompassIndex( Compass compass, String pathToIndex ) throws IOException {
 
         log.info( "Attempting to swap indexes. From " + pathToIndex );
         final File srcDir = new File( pathToIndex );
