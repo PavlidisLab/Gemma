@@ -260,19 +260,28 @@ Gemma.ExpressionExperimentTools = Ext
                   var panel = new Ext.Panel({ layout : 'hbox', defaults : { border : false, padding : 2 },
                      items : [ { html : 'Batch Information: ' } ] });
                   var id = ee.id;
+                  var hasBatchInformation = ee.hasBatchInformation;
+                  var technologyType = ee.technologyType;
                   var runBtn = new Ext.Button({ icon : '/Gemma/images/icons/control_play_blue.png',
                      tooltip : 'batch information',
                      // See EEManager.js doBatchInfoFetch(id)
                      handler : manager.doBatchInfoFetch.createDelegate(this, [ id ]), scope : this,
                      cls : 'transparent-btn' });
+                  
+                  // Batch info fetching not allowed for RNA seq and other non-microarray data
+                  if (technologyType == 'NONE') {
+                	  panel.add({ html : '<span style="color:#CCF; "ext:qtip="Not microarray data">' 
+                    	  + 'NA' + '</span>&nbsp;' });
+                	  return panel;
+                  };
 
-                  // Get date and info
+                  // If present, display the date and info. If batch information exists without date, display 'Provided'.
+                  // If no batch information, display 'Needed' with button for GEO and ArrayExpress data. Otherwise, NA.
                   if ( ee.dateBatchFetch ) {
                      var type = ee.batchFetchEventType;
-
+                     
                      var color = "#000";
                      var qtip = 'ext:qtip="OK"';
-                     var suggestRun = true;
 
                      if ( type == 'FailedBatchInformationFetchingEventImpl' ) {
                         color = 'red';
@@ -284,9 +293,15 @@ Gemma.ExpressionExperimentTools = Ext
 
                      panel.add({ html : '<span style="color:' + color + ';" ' + qtip + '>'
                            + Ext.util.Format.date(ee.dateBatchFetch, 'y/M/d') + '&nbsp;' });
-                  } else
+                     panel.add(runBtn);
+                  } else if (hasBatchInformation) {
+                	  panel.add({ html : '<span style="color:#000;">Provided</span>' });
+                  } else if (ee.externalDatabase == "GEO" || ee.externalDatabase == "ArrayExpress") {
                      panel.add({ html : '<span style="color:#3A3;">Needed</span>&nbsp;' });
-
-                  panel.add(runBtn);
+                     panel.add(runBtn);
+                  } else panel.add({ html : '<span style="color:#CCF; "' 
+                	  + 'ext:qtip="Add batch information by creating a \'batch\' experiment factor">' 
+                	  + 'NA' + '</span>&nbsp;' });
+                  
                   return panel;
                } });

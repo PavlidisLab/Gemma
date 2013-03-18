@@ -518,6 +518,7 @@ Gemma.EEReportGridColumnRenderers = {
 
     batchDateRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
         var id = record.get('id');
+        var dataSource = record.get('externalDatabase');
         var runurl = "";
         if (record.get("currentUserHasWritePermission")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchInfoFetch('
@@ -525,10 +526,17 @@ Gemma.EEReportGridColumnRenderers = {
                     + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run batch info fetch"  alt="Fetch batch information" /></span>';
         }
 
+        // Batch info fetching not allowed for RNA seq and other non-microarray data
+        if (record.get('technologyType') == 'NONE') {
+        	return '<span style="color:#CCF;" ext:qtip="Not microarray data">' + 'NA' + '</span>&nbsp;';
+        }
+        
         /*
          * See bug 2626. If we have batch information, do not let us clobber it from here. FIXME hasBatchInformation is
          * not populated here.
          */
+        // If present, display the date and info. If batch information exists without date, display 'Provided'.
+        // If no batch information, display 'Needed' with button for GEO and ArrayExpress data. Otherwise, NA.
         var hasBatchInformation = record.get('hasBatchInformation');
         if (record.get('dateBatchFetch')) {
             var type = record.get('batchFetchEventType');
@@ -542,7 +550,7 @@ Gemma.EEReportGridColumnRenderers = {
                 if (hasBatchInformation) {
                     return '<span style="color:#000;">Provided</span>&nbsp;';
                 } else {
-                    color = '#CCC';
+                    color = '#CCF';
                     qtip = 'ext:qtip="Raw data files not available from source"';
                     suggestRun = false;
                 }
@@ -550,11 +558,13 @@ Gemma.EEReportGridColumnRenderers = {
 
             return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
                     + (suggestRun ? runurl : '');
-        } else if (!hasBatchInformation) {
-            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-        } else {
-            return '<span style="color:#000;">Provided</span>&nbsp;';
-        }
+        } else if (hasBatchInformation) {
+        	return '<span style="color:#000;">Provided</span>&nbsp;';
+        } else if (dataSource == 'GEO' || dataSource == 'ArrayExpress') {
+        	return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+        } else return '<span style="color:#CCF;" ' 
+        	+ 'ext:qtip="Add batch information by creating a \'batch\' experiment factor">' 
+        	+ 'NA' + '</span>&nbsp;';
     },
 
     missingValueAnalysisRenderer : function(value, metadata, record, rowIndex, colIndex, store) {

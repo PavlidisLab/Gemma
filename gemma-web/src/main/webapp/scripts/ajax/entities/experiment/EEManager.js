@@ -16,7 +16,7 @@ Gemma.EEManager = Ext
                      { name : "name" }, { name : "arrayDesignCount", type : "int" }, { name : "technologyType" },
                      { name : "hasBothIntensities", type : 'bool' }, { name : "hasEitherIntensity", type : 'bool' },
                      { name : "bioAssayCount", type : "int" },
-                     { name : "processedExpressionVectorCount", type : "int" }, { name : "externalUri" },
+                     { name : "processedExpressionVectorCount", type : "int" }, { name : "externalUri" }, {name : "externalDatabase"},
                      { name : "description" }, { name : "taxon" }, { name : "taxonId" }, { name : "numAnnotations" },
                      { name : "numPopulatedFactors" }, { name : "isPublic", type : "boolean" },
                      { name : "isShared", type : "boolean" }, { name : "currentUserHasWritePermission" },
