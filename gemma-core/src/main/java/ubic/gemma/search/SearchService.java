@@ -14,12 +14,13 @@
  */
 package ubic.gemma.search;
 
+import ubic.gemma.model.common.auditAndSecurity.UserQuery;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsValueObject;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import ubic.gemma.model.common.auditAndSecurity.UserQuery;
-import ubic.gemma.model.common.search.SearchSettings;
 
 /**
  * @author paul
@@ -39,11 +40,30 @@ public interface SearchService {
      * <li>BioSequences
      * <li>BibliographicReferences (articles)
      * </ul>
+     *
+     * @param settings
+     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
+     */
+    public Map<Class<?>, List<SearchResult>> ajaxSearch( SearchSettingsValueObject settings );
+
+
+    /**
+     * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
+     * for, depending on the configuration of the input object.
+     * <ul>
+     * <li>Genes
+     * <li>ExpressionExperiments
+     * <li>CompositeSequences (probes)
+     * <li>ArrayDesigns (platforms)
+     * <li>Characteristics (e.g., Ontology annotations)
+     * <li>BioSequences
+     * <li>BibliographicReferences (articles)
+     * </ul>
      * 
      * @param settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
-    public abstract Map<Class<?>, List<SearchResult>> search( SearchSettings settings );
+    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings );
 
     /**
      * Makes an attempt at determining of the query term is a valid URI from an Ontology in Gemma or a Gene URI (a GENE
@@ -59,14 +79,14 @@ public interface SearchService {
      * @return
      * @see SearchService.search(SearchSettings settings)
      */
-    public abstract Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects );
+    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects );
 
     /**
      * @param query if empty, all experiments for the taxon are returned; otherwise, we use the search facility.
      * @param taxonId required.
      * @return Collection of ids.
      */
-    public abstract Collection<Long> searchExpressionExperiments( String query, Long taxonId );
+    public Collection<Long> searchExpressionExperiments( String query, Long taxonId );
 
     /**
      * convenience method to return only search results from one class
@@ -75,8 +95,8 @@ public interface SearchService {
      * @param resultClass
      * @return
      */
-    public abstract List<?> search( SearchSettings settings, Class<?> resultClass );
+    public List<?> search( SearchSettings settings, Class<?> resultClass );
     
-    public abstract Map<Class<?>, List<SearchResult>> searchForNewlyCreatedUserQueryResults( UserQuery uq );
+    public Map<Class<?>, List<SearchResult>> searchForNewlyCreatedUserQueryResults( UserQuery uq );
 
 }

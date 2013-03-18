@@ -2,14 +2,15 @@
 <!-- @author Gemma @version $Id$ -->
 
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
-	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
 
-	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/context 
 	http://www.springframework.org/schema/context/spring-context-3.0.xsd 
-	http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+
 	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
 	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd">
 
@@ -803,7 +804,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.FactorProfile" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.GeneExpressionProfile" />
 		<dwr:convert type="bean" class="ubic.gemma.web.feed.NewsItem" />
-		<dwr:convert type="bean" class="ubic.gemma.model.common.search.SearchSettings" />
+		<dwr:convert type="bean" class="ubic.gemma.model.common.search.SearchSettingsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.VisualizationValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.TaxonValueObject" />

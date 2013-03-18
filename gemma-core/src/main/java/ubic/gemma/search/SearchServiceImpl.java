@@ -19,27 +19,6 @@
 
 package ubic.gemma.search;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Queue;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.PostConstruct;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
@@ -50,7 +29,6 @@ import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -65,29 +43,13 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriter.MaxFieldLength;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.PrefixQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocCollector;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.RAMDirectory;
-import org.compass.core.Compass;
-import org.compass.core.CompassCallback;
-import org.compass.core.CompassException;
-import org.compass.core.CompassHighlightedText;
-import org.compass.core.CompassHits;
-import org.compass.core.CompassQuery;
-import org.compass.core.CompassSession;
-import org.compass.core.CompassTemplate;
+import org.compass.core.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
@@ -104,13 +66,10 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.CharacteristicService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
+import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -132,6 +91,15 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
+
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database. <h2>
@@ -397,11 +365,17 @@ public class SearchServiceImpl implements SearchService {
 
     }
 
+    @Override
+    public Map<Class<?>, List<SearchResult>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
+        SearchSettings settings = SearchSettingsValueObject.Converter.toEntity( settingsValueObject );
+        return this.search( settings );
+    }
+
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.SearchService#search(ubic.gemma.search.SearchSettings)
-     */
+         * (non-Javadoc)
+         *
+         * @see ubic.gemma.search.SearchService#search(ubic.gemma.search.SearchSettings)
+         */
     @Override
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings ) {
         Map<Class<?>, List<SearchResult>> searchResults = new HashMap<Class<?>, List<SearchResult>>();
