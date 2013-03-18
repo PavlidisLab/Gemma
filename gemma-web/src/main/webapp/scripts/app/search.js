@@ -646,7 +646,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	initComponent : function() {
-		var proxy = new Ext.data.DWRProxy(SearchService.search);
+		var proxy = new Ext.data.DWRProxy(SearchService.ajaxSearch);
 		var autoLoadStore = (this.autoLoadStore != undefined && this.autoLoadStore != null )? this.autoLoadStore: false;
 
 		proxy.on("loadexception", this.handleLoadError.createDelegate(this));

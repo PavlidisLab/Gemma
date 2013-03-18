@@ -391,7 +391,7 @@
 
 	<bean id="generalSearchController" class="ubic.gemma.web.controller.GeneralSearchControllerImpl">
 		<dwr:remote javascript="SearchService">
-			<dwr:include method="search" />
+			<dwr:include method="ajaxSearch" />
 		</dwr:remote>
 	</bean>
 

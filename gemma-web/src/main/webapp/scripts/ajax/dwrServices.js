@@ -1157,9 +1157,9 @@ if (typeof SearchService === 'undefined') {
 	var SearchService = {};
 }
 SearchService._path = '/Gemma/dwr';
-SearchService.search = function(p0, callback) {
+SearchService.ajaxSearch = function(p0, callback) {
     googleAnalyticsTrackPageviewIfConfigured("/Gemma/SearchService/search");
-    dwr.engine._execute(SearchService._path, 'SearchService', 'search', p0, callback);
+    dwr.engine._execute(SearchService._path, 'SearchService', 'ajaxSearch', p0, callback);
 };
 // ====================================================================================
 if (typeof TaskCompletionController === 'undefined') {
