@@ -250,9 +250,9 @@ public class MatrixWriter {
     private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe,
             Map<CompositeSequence, String[]> geneAnnotations ) {
         if ( geneAnnotations == null || geneAnnotations.isEmpty() ) return;
-        if ( geneAnnotations.containsKey( probe.getId() ) ) {
+        if ( geneAnnotations.containsKey( probe ) ) {
 
-            String[] geneStrings = geneAnnotations.get( probe.getId() );
+            String[] geneStrings = geneAnnotations.get( probe );
 
             if ( geneStrings.length == 0 ) {
                 buf.append( "\t\t\t\t" );
