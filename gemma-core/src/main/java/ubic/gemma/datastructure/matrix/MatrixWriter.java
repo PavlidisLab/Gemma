@@ -100,7 +100,9 @@ public class MatrixWriter {
             buf.append( probeForRow.getName() + "\t" );
             if ( writeSequence ) {
                 BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
-                if ( biologicalCharacteristic != null ) buf.append( biologicalCharacteristic.getName() + "\t" );
+                if ( biologicalCharacteristic != null ) buf.append( biologicalCharacteristic.getName());
+                
+                buf.append("\t" );
             }
 
             if ( writeGeneInfo ) {
