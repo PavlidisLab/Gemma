@@ -276,7 +276,7 @@ DEDVController.getDEDVForPcaVisualization = function(p0, p1, p2, callback) {
 DEDVController.getDEDVForDiffExVisualizationByExperiment = function(p0, p1, p2, p3, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getDEDVForDiffExVisualizationByExperiment");
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByExperiment', p0, p1,
-			p2. p3, callback);
+			p2, p3, callback);
 };
 
 // ====================================================================================
