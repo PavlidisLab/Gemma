@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collection; 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,11 +122,11 @@ public class HomologeneServiceImpl implements HomologeneService {
     @Override
     public Collection<Gene> getHomologues( Gene gene ) {
 
-        if ( !this.ready.get() ) {
-            return null;
-        }
-
         Collection<Gene> genes = new HashSet<Gene>();
+
+        if ( !this.ready.get() ) {
+            return genes;
+        }
 
         Long groupId = null;
 
