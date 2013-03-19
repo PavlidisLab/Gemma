@@ -63,6 +63,7 @@
 				</property>
 				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory
 				</property>
+				<property name="defaultHibernateGeneratorClass">native</property>
 				<property name="hibernateInheritanceStrategy">${hibernate.inheritance.strategy}</property>
 				<property name="hibernateCacheProvider">net.sf.ehcache.hibernate.EhCacheProvider</property>
 				<property name="entities">${maven.andromda.core.generated.dir}</property>
