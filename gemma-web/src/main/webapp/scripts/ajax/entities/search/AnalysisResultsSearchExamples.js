@@ -26,7 +26,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend(Ext.Panel, {
 				}],
 				coex : [{
 					goId : "GO_0051302",
-					eeSetName : 'All yeast',
+					eeSetName : 'Master set for yeast',
 					// eeSetId: '6223',
 					taxonId : '11',
 					backupGeneIds : [7678763, 7678783, 7676882, 7694443, 7685764, 7667629, 7672893, 7673265, 7686100,
