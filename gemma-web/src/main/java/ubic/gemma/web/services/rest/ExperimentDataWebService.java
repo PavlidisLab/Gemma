@@ -58,10 +58,7 @@ public class ExperimentDataWebService {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getExpressionDataByEeId(@PathParam("eeId") Long eeId,
 			@PathParam("filtered") boolean filtered) {
-
-		StopWatch watch = new StopWatch();
-		watch.start();
-
+		
 		ExpressionExperiment ee = null;
 
 		ee = expressionExperimentService.load(eeId);
@@ -70,6 +67,35 @@ public class ExperimentDataWebService {
 			return	"No data available (either due to lack of authorization, or use of an invalid experiment identifier)";
 		}
 
+		return getOutputForExpressionData(ee, filtered);
+		
+		
+	}
+	
+	@GET
+	@Path("/findExpressionDataByEeName/{eeName},{filtered}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getExpressionDataByEeName(@PathParam("eeName") String eeName,
+			@PathParam("filtered") boolean filtered) {
+
+		ExpressionExperiment ee = null;
+		
+		ee = expressionExperimentService.findByShortName(eeName);
+
+		if (ee == null) {
+			return	"No data available (either due to lack of authorization, or use of an invalid experiment identifier)";
+		}
+		
+		return getOutputForExpressionData(ee, filtered);
+		
+	}
+	
+	private String getOutputForExpressionData(ExpressionExperiment ee, boolean filtered){
+		
+
+		StopWatch watch = new StopWatch();
+		watch.start();
+		
 		ee = expressionExperimentService.thawLite(ee);
 
 		File f = null;
@@ -99,8 +125,8 @@ public class ExperimentDataWebService {
             log.info( "Deleted: " + f );
         }
 		
-		
 		return output;
+		
 	}
 
 	@GET
