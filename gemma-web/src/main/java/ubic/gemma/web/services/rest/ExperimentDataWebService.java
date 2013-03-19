@@ -76,7 +76,7 @@ public class ExperimentDataWebService {
 
 		/* write out the file using text format */
 
-		f = expressionDataFileService.writeDataFile(ee, filtered);
+		f = expressionDataFileService.writeTemporaryDataFile(ee, filtered);
 
 		if (f == null)
 			throw new IllegalStateException("No file was obtained");
@@ -93,6 +93,13 @@ public class ExperimentDataWebService {
 			return "There has been an error";
 
 		}
+		
+		//delete file
+		if ( f.canWrite() && f.delete() ) {
+            log.info( "Deleted: " + f );
+        }
+		
+		
 		return output;
 	}
 
@@ -118,7 +125,7 @@ public class ExperimentDataWebService {
 
 		File f = null;
 		
-		f = expressionDataFileService.writeDesignFile(ee);
+		f = expressionDataFileService.writeTemporaryDesignFile(ee);
 
 		if (f == null)
 			throw new IllegalStateException("No file was obtained");
@@ -135,6 +142,12 @@ public class ExperimentDataWebService {
 			return "There has been an error";
 
 		}
+		
+		//delete file
+		if ( f.canWrite() && f.delete() ) {
+            log.info( "Deleted: " + f );
+        }
+		
 		return output;
 
 	}

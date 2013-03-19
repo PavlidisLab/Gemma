@@ -36,8 +36,12 @@ public interface ExpressionDataFileService {
     public static final String DATA_ARCHIVE_FILE_SUFFIX = ".archive.zip";
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
+    
+    public static final String TMP_DATA_DIR = ConfigUtils.getString( "gemma.tmpdata.home" ) + File.separatorChar
+            + "dataFiles" + File.separatorChar;
 
-    public static final String DATA_FILE_SUFFIX = ".data.txt.gz";
+    public static final String DATA_FILE_SUFFIX_COMPRESSED = ".data.txt.gz";
+    public static final String DATA_FILE_SUFFIX = ".data.txt";
     public static final String DISCLAIMER = "# If you use this file for your research, please cite: \n"
             + "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. "
             + "Bioinformatics, 2012. \n";
@@ -88,12 +92,28 @@ public interface ExpressionDataFileService {
      * @return
      */
     public File getOutputFile( ExpressionExperiment ee, boolean filtered );
+    
+    /**
+     * @param ee
+     * @param filtered if the data matrix is filtered
+     * @param compressed if the filename should have a .gz extension
+     * @param temporary if you want the file to be saved in the configuration file temporary location
+     * @return
+     */
+    public File getOutputFile( ExpressionExperiment ee, boolean filtered, boolean compressed, boolean temporary );
 
     /**
      * @param filename without the path - that is, just the name of the file
      * @return File, with location in the appropriate target directory.
      */
     public File getOutputFile( String filename );
+    
+    /**
+     * @param filename without the path - that is, just the name of the file
+     * @param boolean temporary, if this is true then the file gets saved to the temporary location from the configuration file
+     * @return File, with location in the appropriate target directory.
+     */
+    public File getOutputFile( String filename, boolean temporary );
 
     /**
      * Create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -136,7 +156,7 @@ public interface ExpressionDataFileService {
      * @param filtered
      * @return
      */
-    public File writeDataFile( ExpressionExperiment ee, boolean filtered );
+    public File writeTemporaryDataFile( ExpressionExperiment ee, boolean filtered );
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -157,7 +177,7 @@ public interface ExpressionDataFileService {
      */
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
     
-    public File writeDesignFile( ExpressionExperiment ee);
+    public File writeTemporaryDesignFile( ExpressionExperiment ee);
     
     /**
      * Locate or create the differential expression data file(s) for a given experiment.

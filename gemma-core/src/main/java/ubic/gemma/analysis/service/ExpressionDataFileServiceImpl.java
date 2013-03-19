@@ -38,6 +38,7 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -408,6 +409,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         return f;
     }
+    
+    @Override
+    public File getOutputFile( ExpressionExperiment ee, boolean filtered) {
+    	return getOutputFile( ee, filtered, true, false);
+    }
 
     /*
      * (non-Javadoc)
@@ -416,13 +422,35 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * ExpressionExperiment, boolean)
      */
     @Override
-    public File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
+    public File getOutputFile( ExpressionExperiment ee, boolean filtered, boolean compressed, boolean temporary ) {
         String filteredAdd = "";
         if ( !filtered ) {
             filteredAdd = ".unfilt";
         }
-        String filename = getDataFileName( ee, filteredAdd );
-        return getOutputFile( filename );
+        String suffix;
+        
+        if (compressed){
+        	suffix = DATA_FILE_SUFFIX_COMPRESSED;        	
+        }else{
+        	suffix = DATA_FILE_SUFFIX;
+        }
+        
+        String filename = getDataFileName( ee, filteredAdd, suffix );
+        
+        //randomize file name if temporary in case of access by more than one user at once
+        if (temporary){
+        	
+        	filename = RandomStringUtils.randomAlphabetic( 6 ) + filename;
+        	
+        }
+        
+        return getOutputFile( filename, temporary );
+    }
+    
+    @Override
+    public File getOutputFile( String filename ) {
+    	return getOutputFile(filename, false);
+    	
     }
 
     /*
@@ -431,8 +459,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @see ubic.gemma.analysis.service.ExpressionDataFileSerivce#getOutputFile(java.lang.String)
      */
     @Override
-    public File getOutputFile( String filename ) {
-        String fullFilePath = DATA_DIR + filename;
+    public File getOutputFile( String filename, boolean temporary ) {
+        String fullFilePath;
+        if (temporary){
+        	fullFilePath = TMP_DATA_DIR + filename;
+        }
+        else{
+        	fullFilePath = DATA_DIR + filename;
+        }
         File f = new File( fullFilePath );
 
         if ( f.exists() ) {
@@ -504,12 +538,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
     
     @Override
-    public File writeDataFile( ExpressionExperiment ee, boolean filtered ) {
+    public File writeTemporaryDataFile( ExpressionExperiment ee, boolean filtered ) {
 
-        try {
-            File f = getOutputFile( ee, filtered );
+        try {        	
+        	
+            File f = getOutputFile( ee, filtered, false, true );
             
-            //TODO note that the file name will still have a .gz extension even though it is uncompressed, change later if necessary
+            
+            
             return writeDataFile( ee, filtered, f, false );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -581,13 +617,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
     
     @Override
-    public File writeDesignFile( ExpressionExperiment ee) {
+    public File writeTemporaryDesignFile( ExpressionExperiment ee) {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        String filename = getDesignFileName( ee );
+        String filename = getDesignFileName( ee, DATA_FILE_SUFFIX );
+        
+        filename = RandomStringUtils.randomAlphabetic( 6 ) + filename;
         try {
-            File f = getOutputFile( filename );
+            File f = getOutputFile( filename, true );
            
             log.info( "Creating new experimental design file: " + f.getName() );
             writeDesignMatrix( f, ee, true, false );
@@ -750,7 +788,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @return
      */
     private String getCoexpressionDataFilename( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_coExp" + DATA_FILE_SUFFIX;
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_coExp" + DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     /**
@@ -758,9 +796,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @param filteredAdd
      * @return Name, without full path.
      */
-    private String getDataFileName( ExpressionExperiment ee, String filteredAdd ) {
+    private String getDataFileName( ExpressionExperiment ee, String filteredAdd, String suffix ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expmat" + filteredAdd
-                + DATA_FILE_SUFFIX;
+                + suffix;
     }
 
     /**
@@ -784,12 +822,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return matrix;
     }
 
+    
+    private String getDesignFileName( ExpressionExperiment ee ) {
+    	
+    	return getDesignFileName(ee, DATA_FILE_SUFFIX_COMPRESSED );
+    	
+    }
     /**
      * @param ee
      * @return
      */
-    private String getDesignFileName( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign" + DATA_FILE_SUFFIX;
+    private String getDesignFileName( ExpressionExperiment ee, String suffix ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign" + suffix;
     }
 
     /**
@@ -928,7 +972,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @return Name, without full path.
      */
     private String getOutputFilename( QuantitationType type ) {
-        return type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + DATA_FILE_SUFFIX;
+        return type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     /**
