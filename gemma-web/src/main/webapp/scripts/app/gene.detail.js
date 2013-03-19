@@ -80,28 +80,7 @@ Ext.onReady(function() {
 
 			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-			geneid = dwr.util.getValue("gene");
-
-			var gpGrid = new Gemma.GeneProductGrid({
-						geneid : geneid,
-						renderTo : "geneproduct-grid",
-						height : 200,
-						width : 400
-					});
-
-			var gogrid = new Gemma.GeneGOGrid({
-						renderTo : "go-grid",
-						geneid : geneid,
-						height : 200,
-						width : 500
-					});
-
-			var geneGroupDataView = new Gemma.GeneGroupDataView({
-						renderTo : "gene-group-grid",
-						readParams : [geneid]
-					});
-
-			// Coexpression grid.
+			geneid = dwr.util.getValue("gene"); 
 
 			var coexpressedGeneGrid = new Gemma.CoexpressionGrid({
 						width : 400,

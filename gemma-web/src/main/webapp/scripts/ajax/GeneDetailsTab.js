@@ -154,9 +154,9 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 				this.loadMask.hide();
 				this.add([
 				{
-						html: '<div style="font-weight: bold; font-size:1.3em;">' + geneDetails.name + '<br>' +
+						html: '<div style="font-weight: bold; font-size:1.3em;">' + geneDetails.name + '<br />' +
 						geneDetails.officialName +
-						'<br><br></div>'
+						'<br/></div>'
 					}, {
 						layout: 'form',
 						flex:1,
@@ -202,7 +202,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							'<img src="/Gemma/images/help.png" /> </a>',
 							html: this.renderPhenotypes( geneDetails ) 
 						}, {
-							fieldLabel: 'Probes' + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
+							fieldLabel: 'On platforms' + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
 								'\''+ Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT+'\'); return false">' +
 								'<img src="/Gemma/images/help.png" /> </a>', 
 							html: geneDetails.compositeSequenceCount + 

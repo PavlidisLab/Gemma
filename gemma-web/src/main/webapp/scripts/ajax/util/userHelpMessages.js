@@ -355,7 +355,7 @@ Gemma.HelpText.WidgetDefaults = {
 			multiple: 'Visualize {0} genes'
 		},
 		StatusText: {
-			random: 'Visualizing 20 \'random\' probes.',
+			random: 'Visualizing 20 \'random\' elements/probes.',
 			one: 'Visualizing selected gene.',
 			multiple: 'Visualizing selected genes. Note that not all genes are necessarily in the data set.',
 			geneMatchCount: 'Found data for {0} of {1} genes.'
@@ -429,7 +429,7 @@ Gemma.HelpText.WidgetDefaults = {
             'This isn\'t necessarily a problem but is suspicious.',
 		statusMultipleTechnologyTypes : 'This experiment seems to mix platforms with different technology types.',
 		profileDownloadTT: 'Tab-delimited data file for this experiment. ' +
-                    'The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes'
+                    'The filtered version corresponds to what is used in most Gemma analyses, removing some probes/elements. Unfiltered includes all elements'
 	},
 	ExpressionExperimentGrid:{
 		// only column TTs, skipped
@@ -448,7 +448,7 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	
 	GeneDetails:{
-		probesTT: 'Number of probes for this gene on expression platforms in Gemma',
+		probesTT: 'Number of elements/probes for this gene on expression platforms in Gemma',
 		assocExpTT: 'Experiments that specifically involve manipulation (or naturally-occurring variation/mutations) of this gene as part of their design.',
 		multifuncTT : 'Overall multifunctionality is a function of both the number of GO terms and the sizes of the groups. Values range from 0-1 where 1 indicates the highest multifunctionality',
 		nodeDegreeTT : 'Relative measure estimating how &quot;hubby&quot; this gene is, based on coexpression. Values range from 0-1 where 1 indicates the highest number of associations.',

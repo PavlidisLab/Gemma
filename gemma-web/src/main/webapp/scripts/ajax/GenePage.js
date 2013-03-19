@@ -37,9 +37,6 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 	initComponent: function(){
 
 		var geneId = this.geneId;
-		
-		var isAdmin = (Ext.get("hasAdmin"))?(Ext.get("hasAdmin").getValue() === 'true')?true:false:false;
-		
 		Gemma.GenePage.superclass.initComponent.call(this);
 		
 		//DETAILS TAB
@@ -76,17 +73,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			title:'Expression Images',
 			itemId:'expression'
 		});
-		
-
-		/* see bug 2972
-		 * this.add({
-			xtype: 'geneproductgrid',
-			geneid: geneId,
-			title: 'Gene Products',
-			deferLoadToRender: true,
-			itemId: 'products'
-		});*/
-		
+		  
 		var initialTab = 'details';
 		this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
         if ( this.loadSpecificTab ) {

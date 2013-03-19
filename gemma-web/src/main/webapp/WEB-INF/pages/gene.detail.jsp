@@ -19,7 +19,7 @@ Ext.onReady(function() {
 		 				geneTaxonId: Ext.get("geneTaxonId").getValue()
 			 	})],
 			 	layout:'fit', 
-			 	title:Ext.get("geneSymbol").getValue()
+			 	title:Ext.get("geneSymbol").getValue() + ' - ' + Ext.get("geneName").getValue() + ' (' + Ext.get("geneTaxonName").getValue() + ')'
 			 })
 		 });
 });
