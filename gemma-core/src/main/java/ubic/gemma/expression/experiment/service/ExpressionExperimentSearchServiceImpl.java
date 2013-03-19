@@ -169,8 +169,8 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         Taxon taxon = taxonService.load( taxonId );
 
-        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName( "All "
-                + taxon.getCommonName() );
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName( "Master set for "
+                + taxon.getCommonName().toLowerCase() );
         SearchResultDisplayObject newSRDO = null;
         for ( ExpressionExperimentSet set : sets ) {
             expressionExperimentSetService.thaw( set );

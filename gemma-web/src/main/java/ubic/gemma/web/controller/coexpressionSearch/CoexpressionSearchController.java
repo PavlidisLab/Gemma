@@ -551,7 +551,7 @@ public class CoexpressionSearchController  {
 
             } else {
                 GeneCoexpressionAnalysis analysis = null;
-                String analysisName = "All " + gene.getTaxon().getCommonName();
+                String analysisName = "Master set for " + gene.getTaxon().getCommonName().toLowerCase();
                 Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService
                         .findByName( analysisName );
 
