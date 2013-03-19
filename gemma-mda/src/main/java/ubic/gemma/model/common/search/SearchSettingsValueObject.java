@@ -206,6 +206,10 @@ public class SearchSettingsValueObject implements Serializable {
 
         public static SearchSettings toEntity( SearchSettingsValueObject valueObject ) {
             final SearchSettings entity = new SearchSettingsImpl();
+            entity.setQuery( valueObject.getQuery() );
+            entity.setPlatformConstraint( valueObject.getPlatformConstraint() );
+            entity.setTermUri( valueObject.getTermUri() );
+            entity.setTaxon( valueObject.getTaxon() );
             entity.setMaxResults( valueObject.getMaxResults() );
             entity.setSearchExperiments( valueObject.getSearchExperiments() );
             entity.setSearchGenes( valueObject.getSearchGenes() );
