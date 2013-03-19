@@ -141,19 +141,32 @@ public class DEDVController {
         return factorColoursMap;
     }
 
-    @Autowired private BioAssayDimensionService bioAssayDimensionService;
-    @Autowired private CompositeSequenceService compositeSequenceService;
-    @Autowired private DesignElementDataVectorService designElementDataVectorService;
-    @Autowired private DifferentialExpressionResultService differentialExpressionResultService;
-    @Autowired private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private SVDService svdService;
-    @Autowired private GeneDifferentialExpressionService geneDifferentialExpressionService;
-    @Autowired private GeneService geneService;
-    @Autowired private FactorValueService factorValueService;
-    @Autowired private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
-    @Autowired private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    @Autowired private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private DesignElementDataVectorService designElementDataVectorService;
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired
+    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private SVDService svdService;
+    @Autowired
+    private GeneDifferentialExpressionService geneDifferentialExpressionService;
+    @Autowired
+    private GeneService geneService;
+    @Autowired
+    private FactorValueService factorValueService;
+    @Autowired
+    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
@@ -319,7 +332,7 @@ public class DEDVController {
      * @return
      */
     public VisualizationValueObject[] getDEDVForDiffExVisualizationByExperiment( Long eeId, Long geneId,
-            Double threshold, boolean isSubset ) {
+            Double threshold, Boolean isSubset ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -330,7 +343,7 @@ public class DEDVController {
             ee = expressionExperimentService.load( eeId );
         }
 
-        if ( ee == null ) return null; // access denied, etc.
+        if ( ee == null ) return new VisualizationValueObject[] {}; // access denied, etc.
 
         if ( threshold == null ) {
             log.warn( "Threshold was null, using default" );

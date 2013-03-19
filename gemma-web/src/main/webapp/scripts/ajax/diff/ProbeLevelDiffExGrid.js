@@ -249,7 +249,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	visStyler : function(value, metadata, record, row, col, ds) {
-		return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+		return "<span style='cursor:pointer' ><img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' /></span>";
 	},
 
 	rowClickHandler : function(grid, rowIndex, columnIndex, e) {
@@ -281,11 +281,11 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 						cascadeOnFirstShow: true,
 						title : title,
 						thumbnails : false,
-						downloadLink : String.format('/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}', eeid, geneId),
+						downloadLink : String.format('/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}', ee.id, geneId),
 						readMethod: DEDVController.getDEDVForDiffExVisualizationByExperiment
 					});
 			visDifWindow.show({
-						params : [ ee.id, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD, ee.sourceExperiment === null]
+						params : [ ee.id, geneId, null, ee.sourceExperiment != null]
 					});
 		}
 	}
