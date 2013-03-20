@@ -516,9 +516,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "troubled" ) ) {
             orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
-        } else if (orderField.equals("taxon") ) {
+        } else if ( orderField.equals( "taxon" ) ) {
             orderByClause = "order by tax " + ( descending ? "desc" : "" );
-        } else { 
+        } else {
             // name, shortName
             orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
@@ -1582,7 +1582,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             return null;
         }
 
-        return ( ( Long ) cobj ).intValue();
+        return ( Integer ) cobj;
     }
 
     /*
