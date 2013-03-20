@@ -371,8 +371,11 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      */
     @Override
     public int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type ) {
+
+        Map<Gene, Collection<VocabCharacteristic>> goMappings = gene2GOAssociationService.findByGenes( genes );
+
         for ( Gene gene : genes ) {
-            Collection<OntologyTerm> ontos = getGoTerms( gene, type );
+            Collection<OntologyTerm> ontos = getGoTerms( gene, goMappings.get( gene ), type );
 
             Integer ncbiGeneId = gene.getNcbiGeneId();
             Integer ncbiId = ncbiGeneId;
@@ -401,6 +404,16 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             throws IOException {
 
         int compositeSequencesProcessed = 0;
+        int simple = 0;
+        int empty = 0;
+        int complex = 0;
+        Collection<OntologyTerm> goTerms = new LinkedHashSet<OntologyTerm>();
+        Set<String> genes = new LinkedHashSet<String>();
+        Set<String> geneDescriptions = new LinkedHashSet<String>();
+        Set<String> geneIds = new LinkedHashSet<String>();
+        Set<String> ncbiIds = new LinkedHashSet<String>();
+
+        Map<Gene, Collection<VocabCharacteristic>> goMappings = getGOMappings( genesWithSpecificity );
 
         for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
 
@@ -408,11 +421,12 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
             if ( ++compositeSequencesProcessed % 2000 == 0 && log.isInfoEnabled() ) {
                 log.info( "Processed " + compositeSequencesProcessed + "/" + genesWithSpecificity.size()
-                        + " compositeSequences " );
+                        + " compositeSequences " + empty + " empty; " + simple + " simple; " + complex + " complex;" );
             }
 
             if ( geneclusters.isEmpty() ) {
                 writeAnnotationLine( writer, cs.getName(), "", "", null, "", "" );
+                empty++;
                 continue;
             }
 
@@ -420,19 +434,20 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 // common case, do it quickly.
                 BioSequence2GeneProduct b2g = geneclusters.iterator().next();
                 Gene g = b2g.getGeneProduct().getGene();
-                Collection<OntologyTerm> goTerms = getGoTerms( g, ty );
+                goTerms = getGoTerms( g, goMappings.get( g ), ty );
                 String gemmaId = g.getId() == null ? "" : g.getId().toString();
                 String ncbiId = g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString();
                 writeAnnotationLine( writer, cs.getName(), g.getOfficialSymbol(), g.getOfficialName(), goTerms,
                         gemmaId, ncbiId );
+                simple++;
                 continue;
             }
 
-            Set<OntologyTerm> goTerms = new LinkedHashSet<OntologyTerm>();
-            Set<String> genes = new LinkedHashSet<String>();
-            Set<String> geneDescriptions = new LinkedHashSet<String>();
-            Set<String> geneIds = new LinkedHashSet<String>();
-            Set<String> ncbiIds = new LinkedHashSet<String>();
+            goTerms.clear();
+            genes.clear();
+            geneDescriptions.clear();
+            geneIds.clear();
+            ncbiIds.clear();
 
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
@@ -445,7 +460,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 if ( ncbiGeneId != null ) {
                     ncbiIds.add( ncbiGeneId.toString() );
                 }
-                goTerms.addAll( getGoTerms( g, ty ) );
+                goTerms.addAll( getGoTerms( g, goMappings.get( g ), ty ) );
 
             }
 
@@ -455,6 +470,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             String ncbiIdsString = StringUtils.join( ncbiIds, "|" );
             writeAnnotationLine( writer, cs.getName(), geneString, geneDescriptionString, goTerms, geneIdsString,
                     ncbiIdsString );
+            complex++;
 
         }
         writer.close();
@@ -509,18 +525,37 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     }
 
     /**
+     * @param genesWithSpecificity
+     * @return
+     */
+    private Map<Gene, Collection<VocabCharacteristic>> getGOMappings(
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity ) {
+        log.info( "Fetching GO mappings" );
+        Collection<Gene> allGenes = new HashSet<Gene>();
+        for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
+
+            Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
+            for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
+
+                Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
+                allGenes.add( g );
+            }
+        }
+        Map<Gene, Collection<VocabCharacteristic>> goMappings = gene2GOAssociationService.findByGenes( allGenes );
+        log.info( "Got GO mappings for " + goMappings.size() + " genes" );
+        return goMappings;
+    }
+
+    /**
      * @param gene
      * @param ty Configures which GO terms to return: With all parents, biological process only, or direct annotations
      *        only.
      * @return the goTerms for a given gene, as configured
      */
-    private Collection<OntologyTerm> getGoTerms( Gene gene, OutputType ty ) {
-
-        Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>(
-                gene2GOAssociationService.findByGene( gene ) );
+    private Collection<OntologyTerm> getGoTerms( Gene gene, Collection<VocabCharacteristic> ontos, OutputType ty ) {
 
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
-        if ( ontos.size() == 0 ) return results;
+        if ( ontos == null || ontos.size() == 0 ) return results;
 
         for ( VocabCharacteristic vc : ontos ) {
             results.add( GeneOntologyServiceImpl.getTermForId( vc.getValue() ) );
@@ -551,11 +586,16 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     }
 
     /**
+     * Adds one line at a time to the annotation file.
+     * 
+     * @param writer
      * @param probeId
      * @param gene
      * @param description
      * @param goTerms
-     * @throws IOException Adds one line at a time to the annotation file
+     * @param geneIds
+     * @param ncbiIds
+     * @throws IOException
      */
     private void writeAnnotationLine( Writer writer, String probeId, String gene, String description,
             Collection<OntologyTerm> goTerms, String geneIds, String ncbiIds ) throws IOException {
@@ -579,10 +619,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             writer.write( goterms );
         }
 
-        writer.write( "\t" + geneIds + "\t" + ncbiIds );
-
-        writer.write( "\n" );
-        writer.flush();
+        writer.write( "\t" + geneIds + "\t" + ncbiIds + "\n" );
 
     }
 

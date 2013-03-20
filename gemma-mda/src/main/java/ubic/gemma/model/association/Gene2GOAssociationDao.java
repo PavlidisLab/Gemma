@@ -19,6 +19,7 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
+import java.util.Map;
 
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
@@ -45,14 +46,16 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
      */
     public Collection<VocabCharacteristic> findByGene( Gene gene );
 
+    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind );
+
+    public Collection<Gene> findByGoTerm( java.lang.String goId );
+
     /**
      * <p>
      * Return all genes for the given taxon that have the given GO id associated.
      * </p>
      */
     public Collection<Gene> findByGoTerm( java.lang.String goId, Taxon taxon );
-    
-    public Collection<Gene> findByGoTerm( java.lang.String goId);
 
     /**
      * <p>

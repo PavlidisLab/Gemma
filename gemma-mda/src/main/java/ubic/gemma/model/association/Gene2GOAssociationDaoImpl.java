@@ -19,9 +19,13 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -35,6 +39,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.association.Gene2GOAssociation
@@ -132,6 +137,65 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGenes(java.util.Collection)
+     */
+    @Override
+    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind ) {
+        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<Gene, Collection<VocabCharacteristic>>();
+        StopWatch timer = new StopWatch();
+        timer.start();
+        int batchSize = 200;
+        Set<Gene> batch = new HashSet<Gene>();
+        int i = 0;
+        for ( Gene gene : needToFind ) {
+            batch.add( gene );
+            if ( batch.size() == batchSize ) {
+                result.putAll( fetchBatch( batch ) );
+                batch.clear();
+            }
+            if ( ++i % 1000 == 0 ) {
+                log.info( "Fetched GO associations for " + i + "/" + needToFind.size() + " genes" );
+            }
+        }
+        if ( !batch.isEmpty() ) result.putAll( fetchBatch( batch ) );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Fetched GO annotations for " + needToFind.size() + " genes in " + timer.getTime() + "ms" );
+        }
+        return result;
+    }
+
+    /**
+     * @param batch
+     * @return
+     */
+    private Map<? extends Gene, ? extends Collection<VocabCharacteristic>> fetchBatch( Set<Gene> batch ) {
+        Map<Long, Gene> gimap = EntityUtils.getIdMap( batch );
+        final String queryString = "select g.id, geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss join geneAss.gene g where g.id in (:genes)";
+        Map<Gene, Collection<VocabCharacteristic>> results = new HashMap<Gene, Collection<VocabCharacteristic>>();
+        Query query = this.getHibernateTemplate().getSessionFactory().getCurrentSession().createQuery( queryString );
+        query.setFetchSize( batch.size() );
+        query.setParameterList( "genes", gimap.keySet() );
+        List<?> o = query.list();
+
+        for ( Object object : o ) {
+            Object[] oa = ( Object[] ) object;
+            Long g = ( Long ) oa[0];
+            VocabCharacteristic vc = ( VocabCharacteristic ) oa[1];
+            Gene gene = gimap.get( g );
+            assert gene != null;
+            if ( !results.containsKey( gene ) ) {
+                results.put( gene, new HashSet<VocabCharacteristic>() );
+            }
+            results.get( gene ).add( vc );
+        }
+
+        return results;
+    }
+
     @Override
     protected Collection<Gene> handleFindByGoTerm( String goId, Taxon taxon ) {
 
@@ -154,7 +218,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         }
         return results;
     }
-    
+
     @Override
     protected Collection<Gene> handleFindByGoTerm( String goId ) {
 
@@ -167,7 +231,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-            queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );            
+            queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
 
             results = queryObject.list();
 
@@ -194,7 +258,9 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
                 new Object[] { goTerms, taxon } );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleRemoveAll()
      */
     @Override

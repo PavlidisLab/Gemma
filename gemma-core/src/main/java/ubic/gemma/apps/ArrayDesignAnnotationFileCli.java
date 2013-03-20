@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.security.SecurityService;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file
@@ -410,6 +411,10 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * @param arrayDesign
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
+
+        SecurityService ss = this.getBean( SecurityService.class );
+        if ( !ss.isEditable( arrayDesign ) ) return;
+
         AuditEventType eventType = ArrayDesignAnnotationFileEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

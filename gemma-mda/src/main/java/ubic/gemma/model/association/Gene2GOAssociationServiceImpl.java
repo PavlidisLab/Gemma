@@ -20,6 +20,9 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import net.sf.ehcache.Element;
 
@@ -80,6 +83,26 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
         this.gene2goCache.put( new Element( gene, re ) );
 
         return re;
+
+    }
+
+    @Override
+    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes ) {
+        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<Gene, Collection<VocabCharacteristic>>();
+
+        Collection<Gene> needToFind = new HashSet<Gene>();
+        for ( Gene gene : genes ) {
+            Element element = this.gene2goCache.get( gene );
+
+            if ( element != null )
+                result.put( gene, ( Collection<VocabCharacteristic> ) element.getValue() );
+            else
+                needToFind.add( gene );
+        }
+
+        result.putAll( this.getGene2GOAssociationDao().findByGenes( needToFind ) );
+
+        return result;
 
     }
 
