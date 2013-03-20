@@ -324,8 +324,7 @@ public class DEDVController {
     /**
      * AJAX exposed method Batch factor value analyses are filtered out
      * 
-     * @param eeId FIXME accomodate ExpressionExperimentSubSets. Currently we pass in the "source experiment" so we
-     *        don't get the slice.
+     * @param eeId
      * @param geneId
      * @param threshold (diff expression threshold)
      * @param isSubset Set to true if the ID is for an EE subset.
