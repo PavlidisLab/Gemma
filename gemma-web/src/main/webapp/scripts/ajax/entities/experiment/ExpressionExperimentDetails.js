@@ -107,7 +107,9 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         // number not displayed, coerce to string.
     },
 
-    renderStatus : function(ee) {
+    renderStatus : function(ee) {    	
+    	
+    	
         var result = '';
         if (ee.validated) {
             result = result + '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" title="validated"/>';
@@ -130,11 +132,15 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ' + 'title="'
                     + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"/>';
         }
-
-        result = result
-                + Gemma.SecurityManager.getSecurityLink(
-                        'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic,
-                        ee.isShared, ee.currentUserHasWritePermission, null, null, null, ee.currentUserIsOwner);
+        
+        var isUserLoggedIn = (Ext.getDom('hasUser') && Ext.getDom('hasUser').getValue() === 'true') ? true : false;
+    	
+    	if (isUserLoggedIn){
+    		result = result
+            + Gemma.SecurityManager.getSecurityLink(
+                    'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic,
+                    ee.isShared, ee.currentUserHasWritePermission, null, null, null, ee.currentUserIsOwner);
+    	}
 
         return result || "No flags";
 
