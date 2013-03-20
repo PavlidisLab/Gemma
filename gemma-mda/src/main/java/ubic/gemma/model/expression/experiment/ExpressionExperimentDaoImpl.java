@@ -327,35 +327,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getProcessedExpressionVectorCount(java.util.Collection
-     * )
-     */
-    @Deprecated
-    @Override
-    public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments ) {
-
-        /*
-         * FIXME get this from the field in the EE. -- see
-         */
-
-        final String queryString = "select v.expressionExperiment.id, count(v) from ProcessedExpressionDataVectorImpl v "
-                + " where v.expressionExperiment.id in (:ee) group by v.expressionExperiment.id";
-
-        List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ee", EntityUtils.getIds( experiments ) );
-        Map<Long, Integer> res = new HashMap<Long, Integer>();
-        for ( Object o : result ) {
-            Object[] oa = ( Object[] ) o;
-            Long eeid = ( Long ) oa[0];
-            Integer count = ( ( Long ) oa[1] ).intValue();
-            res.put( eeid, count );
-        }
-        return res;
-    }
-
     @Override
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
         Collection<Long> batch = new HashSet<Long>();
@@ -1535,54 +1506,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             results.put( id, count );
         }
         return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPreferredDesignElementDataVectorCount
-     * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    @Override
-    protected Integer handleGetProcessedExpressionVectorCount( Long expressionExperiment ) {
-
-        List<Object> r = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select e.numberOfDataVectors from ExpressionExperimentImpl e where e.id = :ee and e.numberOfDataVectors is not null ",
-                        "ee", expressionExperiment );
-        if ( r.isEmpty() ) {
-            /*
-             * FIXME this is a backwards compatibility fix; it can be removed once the numberOfDataVectors has been
-             * populated.
-             */
-            // final String queryString =
-            // "select count(v) from ProcessedExpressionDataVectorImpl v  where v.expressionExperiment.id = :ee ";
-            //
-            // List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
-            // Integer count = ( ( Long ) result.iterator().next() ).intValue();
-            //
-            // ExpressionExperiment ee = this.load( expressionExperiment );
-            // ee.setNumberOfDataVectors( count );
-            //
-            // log.info( "Backfilling processed vector count=" + count + " for ee with id=" + expressionExperiment );
-            //
-            // this.getSession().setReadOnly( ee, false );
-            // this.getSession().setFlushMode( FlushMode.AUTO );
-            // this.getSession().update( ee );
-            // return count;
-            return null;
-
-        }
-
-        Object cobj = r.get( 0 );
-
-        if ( cobj == null ) {
-            return null;
-        }
-
-        return ( Integer ) cobj;
     }
 
     /*

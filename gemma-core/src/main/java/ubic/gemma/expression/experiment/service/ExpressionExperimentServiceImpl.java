@@ -267,14 +267,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
-     */
-    @Override
-    public Integer countProcessedDataVectors( final Long expressionExperiment ) {
-        return this.expressionExperimentDao.getProcessedExpressionVectorCount( expressionExperiment );
-    }
-
-    /**
      * @see ExpressionExperimentService#create(ExpressionExperiment)
      */
     @Override

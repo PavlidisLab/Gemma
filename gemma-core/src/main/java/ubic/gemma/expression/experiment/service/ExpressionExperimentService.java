@@ -83,12 +83,6 @@ public interface ExpressionExperimentService {
      */
     public java.lang.Integer countAll();
 
-    /**
-     * Counts the number of ProcessedExpressionDataVectors.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public Integer countProcessedDataVectors( Long expressionExperiment );
-
     @Secured({ "GROUP_USER" })
     public ExpressionExperiment create( ExpressionExperiment expressionExperiment );
 

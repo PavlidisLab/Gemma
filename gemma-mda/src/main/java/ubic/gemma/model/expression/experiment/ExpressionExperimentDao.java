@@ -264,17 +264,6 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 
     /**
-     * @param experiments
-     * @return
-     */
-    public Map<Long, Integer> getProcessedExpressionVectorCount( Collection<ExpressionExperiment> experiments );
-
-    /**
-     * 
-     */
-    public Integer getProcessedExpressionVectorCount( Long expressionExperiment );
-
-    /**
      * <p>
      * Function to get a count of an expressionExperiment's designelementdatavectors, grouped by quantitation type.
      * </p>

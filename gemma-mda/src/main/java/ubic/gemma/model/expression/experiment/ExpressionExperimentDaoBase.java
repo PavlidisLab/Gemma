@@ -337,15 +337,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
-     */
-    @Override
-    public Integer getProcessedExpressionVectorCount( final Long expressionExperiment ) {
-        return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
-
-    }
-
-    /**
      * @see ExpressionExperimentDao#getQuantitationTypeCountById(Long)
      */
     @Override
@@ -703,11 +694,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * Performs the core logic for {@link #getPopulatedFactorCountsExcludeBatch(Collection)}
      */
     protected abstract Map<Long, Integer> handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #getProcessedExpressionVectorCount(ExpressionExperiment)}
-     */
-    protected abstract Integer handleGetProcessedExpressionVectorCount( Long expressionExperiment );
 
     /**
      * Performs the core logic for {@link #getQuantitationTypeCountById(Long)}

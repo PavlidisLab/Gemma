@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -53,6 +54,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
@@ -77,6 +79,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     @Autowired
     ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    ExpressionExperimentReportService experimentReportService;
 
     @Autowired
     BioMaterialService bioMaterialService;
@@ -119,6 +124,11 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             assertNotNull( d.getRankByMean() );
             assertNotNull( d.getRankByMax() );
         }
+
+        assertNotNull( ee.getNumberOfDataVectors() );
+
+        ExpressionExperimentValueObject s = experimentReportService.generateSummary( ee.getId() );
+        assertEquals( ee.getNumberOfDataVectors(), s.getProcessedExpressionVectorCount() );
     }
 
     /**

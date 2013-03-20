@@ -593,11 +593,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Long id = eeVo.getId();
         assert id != null;
 
-        if ( eeVo.getProcessedExpressionVectorCount() == null ) {
-            // normally part of the initial fetch of the experiment, but if not filled in ...
-            eeVo.setProcessedExpressionVectorCount( expressionExperimentService.countProcessedDataVectors( id ) );
-        }
-
         eeVo.setDifferentialExpressionAnalyses( differentialExpressionAnalysisService.getAnalysisValueObjects( id ) );
 
         eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( id ) );
