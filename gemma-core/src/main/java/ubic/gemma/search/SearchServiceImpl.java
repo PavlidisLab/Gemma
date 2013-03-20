@@ -2304,6 +2304,21 @@ public class SearchServiceImpl implements SearchService {
             }
 
         }
+        
+        String[] searchTerms = searchString.split( "\\s+");
+        
+        //some strings of size 1 cause lucene to barf and they were slipping through in multi-term queries, get rid of them        
+        if (searchTerms.length>0){
+        	searchString = "";
+        	for (String sTerm: searchTerms){        	
+        		if (sTerm.length()>1){
+        			searchString = searchString+" "+sTerm;     	    	
+        		}
+        	}        	
+        	searchString = searchString.trim();
+        }
+        
+        
 
         settings.setQuery( searchString );
 
