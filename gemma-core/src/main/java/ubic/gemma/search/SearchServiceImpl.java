@@ -1789,7 +1789,7 @@ public class SearchServiceImpl implements SearchService {
                     currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
                 }
 
-                if ( currentTaxon == null || !currentTaxon.equals( t ) ) {
+                if ( currentTaxon == null || !currentTaxon.getId().equals( t.getId() ) ) {
                     if ( currentTaxon == null ) {
                         // Sanity check for bad data in db (could happen if EE has no samples). Can happen that
                         // searchResults have a vaild getTaxon method
