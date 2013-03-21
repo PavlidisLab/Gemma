@@ -128,7 +128,7 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 	timeToString : function (timeStamp) {
 		// Make minutes double digits.
 		var min = (timeStamp.getMinutes()<10)?'0'+timeStamp.getMinutes(): timeStamp.getMinutes();
-		return timeStamp.getFullYear()+"/"+timeStamp.getMonth()+"/"+timeStamp.getDate()+" "+timeStamp.getHours()+":"+min;
+		return timeStamp.getFullYear()+"/"+(timeStamp.getMonth()+1)+"/"+timeStamp.getDate()+" "+timeStamp.getHours()+":"+min;
 	},
 		
 	makeHeaderRow : function () {
