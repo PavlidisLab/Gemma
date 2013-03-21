@@ -270,8 +270,14 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         // get all expressionExperimentSet results and convert result object into a value object
         for ( SearchResult sr : eesSR ) {
             ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) sr.getResultObject();
+            
             DatabaseBackedExpressionExperimentSetValueObject eevo = expressionExperimentValueObjectHelper
                     .convertToValueObject( eeSet );
+            
+            if (eevo.getNumExperiments()<1){
+            	continue;
+            }
+            
             sr.setResultObject( eevo );
         }
 

@@ -221,12 +221,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     @Override
-    public boolean isValidForFrontEnd( ExpressionExperimentSet eeSet ) {
-    	
-    	if (eeSet.getExperiments().size()<1){
-    		return false;
-    	}
-    	
+    public boolean isValidForFrontEnd( ExpressionExperimentSet eeSet ) { 
         return ( eeSet.getTaxon() != null );
     }
 
