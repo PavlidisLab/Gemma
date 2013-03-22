@@ -103,10 +103,10 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			var searchProbes = Ext.getCmp('search-prbs-chkbx').getValue();
 			var searchGenes = Ext.getCmp('search-genes-chkbx').getValue();
 			var searchExperiments = Ext.getCmp('search-exps-chkbx').getValue();
-			var searchArrays = Ext.getCmp('search-ars-chkbx').getValue();
+			var searchPlatforms = Ext.getCmp('search-ars-chkbx').getValue();
 			var searchSequences = Ext.getCmp('search-seqs-chkbx').getValue();
 			var searchGeneSets = Ext.getCmp('search-genesets-chkbx').getValue();
-			var searchForPhenotypes = Ext.getCmp('search-forPhenotypes-chkbx').getValue();
+			var searchPhenotypes = Ext.getCmp('search-forPhenotypes-chkbx').getValue();
 			var searchEESets = Ext.getCmp('search-eesets-chkbx').getValue();
 			var searchPapers = Ext.getCmp('search-papers-chkbx').getValue();
 
@@ -114,13 +114,13 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			var searchIndices = true;
 			var searchCharacteristics = true;
 			var searchGO = false;
-			var searchUsingPhenotypes = false;
+			//var searchUsingPhenotypes = false;
 			if (Ext.get("hasUser") != null && Ext.get("hasUser").getValue()) {
 				searchDatabase = Ext.getCmp('search-database-chkbx').getValue();
 				searchIndices = Ext.getCmp('search-indices-chkbx').getValue();
 				searchCharacteristics = Ext.getCmp('search-characteristics-chkbx').getValue();
 				searchGO = Ext.getCmp('search-go-chkbx').getValue();
-				searchUsingPhenotypes = Ext.getCmp('search-usingPhenotypes-chkbx').getValue();
+				//searchUsingPhenotypes = Ext.getCmp('search-usingPhenotypes-chkbx').getValue();
 			}
 
 			var scopes = "&scope=";
@@ -133,7 +133,7 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			if (searchExperiments) {
 				scopes = scopes + "E";
 			}
-			if (searchArrays) {
+			if (searchPlatforms) {
 				scopes = scopes + "A";
 			}
 			// removed until sequences have a page
@@ -144,7 +144,7 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			if (searchGeneSets) {
 				scopes = scopes + "M";
 			}
-			if (searchForPhenotypes) {
+			if (searchPhenotypes) {
 				scopes = scopes + "H";
 			}
 			if (searchEESets) {
@@ -158,7 +158,7 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 				query : query,
 				searchProbes : searchProbes,
 				searchBioSequences : searchSequences,
-				searchArrays : searchArrays,
+				searchPlatforms : searchPlatforms,
 				searchExperiments : searchExperiments,
 				searchGenes : searchGenes,
 				searchGeneSets : searchGeneSets,
@@ -166,10 +166,10 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 				useDatabase : searchDatabase,
 				useIndices : searchIndices,
 				useCharacteristics : searchCharacteristics,
-				useGO : searchGO,
+				useGo : searchGO,
 				searchBibrefs: searchPapers,
-				usePhenotypes : searchUsingPhenotypes,
-				searchForPhenotypes: searchForPhenotypes
+				//usePhenotypes : searchUsingPhenotypes,
+				searchPhenotypes: searchPhenotypes
 			}];
 			return {
 				params: params,
@@ -532,14 +532,14 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 											boxLabel: "Search GO groups (genes)",
 											hideLabel: true,
 											checked: false
-										}, {
+										}/*, {
 											id: 'search-usingPhenotypes-chkbx',
 											name: "searchUsingPhenotypes",
 											boxLabel: "Search phenotype Associations (genes)",
 											hideLabel: true,
 											checked: false,
 											disabled: false
-										}]
+										}*/]
 									}]
 						});			
 
