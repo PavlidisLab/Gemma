@@ -500,10 +500,13 @@ public class SearchServiceImpl implements SearchService {
             classesToSearch.add( BioMaterial.class );
             classesToSearch.add( FactorValue.class );
         }
+        
+        //this doesn't seem to be implemented yet, LiteratureEvidence and GenericEvidence aren't handled in the fillValueObjects method downstream
+        /*
         if ( settings.getSearchPhenotypes() ) {
             classesToSearch.add( PhenotypeAssociationImpl.class );
         }
-
+*/
         matchingTerm = this.ontologyService.getTerm( uriString );
         if ( matchingTerm == null || matchingTerm.getUri() == null ) {
             /*
