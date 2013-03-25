@@ -2342,13 +2342,16 @@ public class SearchServiceImpl implements SearchService {
             genes = geneSearch( settings );
             accreteResults( rawResults, genes );
         }
-        if ( settings.getSearchPhenotypes() && settings.getSearchGenes() ) {
+        
+        //SearchSettings persistent entity does not contain a usePhenotypes property that these logic requires
+        /*
+        if ( settings.getUsePhenotypes() && settings.getSearchGenes() ) {
 
             Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
                     geneSearchService.getPhenotypeAssociatedGenes( searchString, settings.getTaxon() ),
                     "From phenotype association" );
             accreteResults( rawResults, phenotypeGenes );
-        }
+        }*/
 
         Collection<SearchResult> compositeSequences = null;
         if ( settings.getSearchProbes() ) {
