@@ -488,13 +488,13 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         } else if ( orderField.equals( "troubled" ) ) {
             orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "taxon" ) ) {
-            orderByClause = "order by tax " + ( descending ? "desc" : "" );
+            orderByClause = "order by taxon " + ( descending ? "desc" : "" );
         } else {
             // name, shortName
             orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
 
-        String idRestrictionClause = "where (tax  = :t or tax.parentTaxon = :t) ";
+        String idRestrictionClause = "where (taxon  = :t or taxon.parentTaxon = :t) ";
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
 
@@ -1959,8 +1959,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "ED.webUri, " // 3
                 + "ee.source, " // 4
                 + "acc.accession, " // 5
-                + "tax.commonName," // 6
-                + "tax.id," // 7
+                + "taxon.commonName," // 6
+                + "taxon.id," // 7
                 + "count(distinct BA), " // 8
                 + "count(distinct AD), " // 9
                 + "ee.shortName, " // 10
@@ -1975,7 +1975,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + " ee.numberOfDataVectors " // 20
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
-                + "left join SU.sourceTaxon as tax left join ee.accession acc left join acc.externalDatabase as ED "
+                + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
                 + " inner join ee.experimentalDesign as EDES join ee.status as s ";
 
         if ( idRestrictionClause != null ) {
