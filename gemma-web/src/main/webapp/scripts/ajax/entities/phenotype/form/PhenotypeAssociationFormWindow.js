@@ -539,12 +539,8 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							if (isValid && evidenceCodeComboBox.getValue() !== '') {
 								var evidenceValueObject = generateEvidenceValueObject(selectedPhenotypes);
 
-								this.loadMask.show();
-
 								// Ask the controller to validate only after all fields are filled.
 								PhenotypeController.validatePhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {
-									this.loadMask.hide();
-
 									var hasError = false;								
 									var hasWarning = false;
 			
