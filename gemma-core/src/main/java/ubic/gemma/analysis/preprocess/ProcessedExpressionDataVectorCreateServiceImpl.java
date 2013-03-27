@@ -40,6 +40,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -97,6 +98,9 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
     @Autowired
     private ExpressionExperimentDao eeDao;
+    
+    @Autowired
+    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
 
     /*
      * (non-Javadoc)
@@ -109,7 +113,10 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
         // WARNING long transaction.
         try {
-            ee = processedDataService.createProcessedDataVectors( ee );
+            // Delete any existing links from previous link analyses before computing new vectors
+        	probe2ProbeCoexpressionService.deleteLinks( ee );
+        	
+        	ee = processedDataService.createProcessedDataVectors( ee );
             ee = this.eeService.thawLite( ee );
 
             Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();

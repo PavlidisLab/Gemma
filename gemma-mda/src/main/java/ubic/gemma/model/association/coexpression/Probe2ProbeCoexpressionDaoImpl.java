@@ -305,8 +305,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
 
             while ( true ) {
                 int deleted = q.executeUpdate();
-                if ( deleted < DELETE_CHUNK_SIZE ) break;
                 totalDone += deleted;
+                if ( deleted < DELETE_CHUNK_SIZE ) break;
             }
 
             if ( totalDone > 0 ) {
