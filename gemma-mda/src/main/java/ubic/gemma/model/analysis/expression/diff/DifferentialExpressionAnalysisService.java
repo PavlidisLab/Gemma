@@ -27,6 +27,7 @@ import ubic.gemma.model.analysis.AnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author kelsey
@@ -86,6 +87,20 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
             Collection<Long> investigationIds );
 
+    
+    /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<DifferentialExpressionAnalysis> findByParentTaxon( Taxon taxon );
+
+    /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
+    
+    
     /**
      * Return a collection of experiments in which the given gene was analyzed.
      */

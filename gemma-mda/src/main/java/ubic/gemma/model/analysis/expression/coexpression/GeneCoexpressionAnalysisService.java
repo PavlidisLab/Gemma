@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -32,7 +34,7 @@ public interface GeneCoexpressionAnalysisService extends
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public GeneCoexpressionAnalysis create( GeneCoexpressionAnalysis analysis );
 
     /**
@@ -40,8 +42,8 @@ public interface GeneCoexpressionAnalysisService extends
      * This is required only to allow security filtering of the expression experiment collections.
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperiment> getDatasetsAnalyzed( GeneCoexpressionAnalysis analysis );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> getDatasetsAnalyzed( GeneCoexpressionAnalysis analysis );
 
     /**
      * Get the number of data sets analyzed .
@@ -58,7 +60,22 @@ public interface GeneCoexpressionAnalysisService extends
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void update( GeneCoexpressionAnalysis geneCoExpressionAnalysis );
 
+    /*
+     * Note lack of security on findByParentTaxon and findByTaxon - just not needed.
+     */
+    
+    /**
+     * @param taxon
+     * @return
+     */
+    public java.util.Collection<GeneCoexpressionAnalysis> findByParentTaxon( Taxon taxon );
+
+    /**
+     * @param taxon
+     * @return
+     */
+    public Collection<GeneCoexpressionAnalysis> findByTaxon( Taxon taxon );
 }

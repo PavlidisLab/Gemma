@@ -25,6 +25,7 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.AnalysisService;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * TODO Document Me
@@ -37,21 +38,20 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
     @Secured({ "GROUP_USER" })
     public GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis );
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( GeneDifferentialExpressionMetaAnalysis analysis );
-
     @Secured({ "GROUP_USER" })
     public BaseValueObject delete( Long id );
 
-    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
-
-    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
+    /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon );
 
     /**
-     * @param analysisId
-     * @return
+     * 
      */
-    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
 
     /**
      * @param analysisId
@@ -66,5 +66,18 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
      */
     public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
             Collection<Long> metaAnalysisIds );
+
+    /**
+     * @param analysisId
+     * @return
+     */
+    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
+
+    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
+
+    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( GeneDifferentialExpressionMetaAnalysis analysis );
 
 }

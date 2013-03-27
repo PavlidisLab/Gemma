@@ -23,10 +23,8 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
-import ubic.gemma.model.genome.Taxon;
-
 /**
- * Provides basic services for dealing with analysis
+ * Provides basic services for dealing with analyses
  * 
  * @author Gemma
  * @version $Id$
@@ -34,17 +32,13 @@ import ubic.gemma.model.genome.Taxon;
 public interface AnalysisService<T extends Analysis> {
 
     /**
-     * <p>
      * deletes the given analysis from the system
-     * </p>
      */
     @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
     public void delete( T toDelete );
 
     /**
-     * <p>
      * find all the analyses that involved the given investigation
-     * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<T> findByInvestigation( Investigation investigation );
@@ -68,18 +62,6 @@ public interface AnalysisService<T extends Analysis> {
     public Collection<T> findByName( java.lang.String name );
 
     /**
-     * 
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<T> findByParentTaxon( Taxon taxon );
-
-    /**
-     * 
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<T> findByTaxon( Taxon taxon );
-
-    /**
      * <p>
      * An analysis is uniquely determined by its set of investigations. Only returns an analyis if the collection of
      * investigations given exacly matches other wise returns null
@@ -89,17 +71,13 @@ public interface AnalysisService<T extends Analysis> {
     public T findByUniqueInvestigations( Collection<? extends Investigation> investigations );
 
     /**
-     * <p>
      * Returns the analysis with the specified ID
-     * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public T load( java.lang.Long id );
 
     /**
-     * <p>
      * Returns all of the analysis objects
-     * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<T> loadAll();

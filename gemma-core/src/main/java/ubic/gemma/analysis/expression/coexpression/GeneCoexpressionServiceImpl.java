@@ -56,7 +56,6 @@ import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -1407,8 +1406,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @return
      */
     private List<ExpressionExperimentValueObject> getSortedEEvos( Collection<Long> eeIds ) {
-        
-    	//expressionExperimentService.loadValueObjects is secured
+
+        // expressionExperimentService.loadValueObjects is secured
         List<ExpressionExperimentValueObject> securityFilteredEevos = new ArrayList<ExpressionExperimentValueObject>(
                 expressionExperimentService.loadValueObjects( eeIds, false ) );
 

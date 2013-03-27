@@ -24,6 +24,7 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author kelsey
@@ -35,8 +36,20 @@ public interface ProbeCoexpressionAnalysisService extends
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ProbeCoexpressionAnalysis create( ProbeCoexpressionAnalysis probeCoexpressionAnalysis );
+
+    /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<ProbeCoexpressionAnalysis> findByParentTaxon( Taxon taxon );
+
+    /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<ProbeCoexpressionAnalysis> findByTaxon( Taxon taxon );
 
     /**
      * Retrieve the list of probes used in the probe-level coexpression analysis for the given experiment. This assumes
@@ -47,12 +60,13 @@ public interface ProbeCoexpressionAnalysisService extends
      * @param experiment
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment );
 
     /**
      * @param o
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ProbeCoexpressionAnalysis o );
+
 }
