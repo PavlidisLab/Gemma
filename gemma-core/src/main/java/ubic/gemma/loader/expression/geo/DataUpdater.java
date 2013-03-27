@@ -390,16 +390,17 @@ public class DataUpdater {
 
         audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
 
-        if ( qt.getIsPreferred() ) {
-            postprocess( ee );
-        }
-
         // debug code.
         for ( BioAssay ba : ee.getBioAssays() ) {
             assert ba.getArrayDesignUsed().equals( targetPlatform );
         }
 
         experimentService.update( ee );
+
+        if ( qt.getIsPreferred() ) {
+            postprocess( ee );
+        }
+
         return ee;
     }
 
