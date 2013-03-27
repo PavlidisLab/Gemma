@@ -61,7 +61,6 @@ import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -143,7 +142,7 @@ public class OntologyServiceImpl implements OntologyService {
 
                 } else if ( o2.getDescription().startsWith( USED ) ) {
                     // o2 is used and o1 is not.
-                    return -1;
+                    return 1;
                 } else {
                     // neither is used.
                     return compareByUri( o1, o2 );
