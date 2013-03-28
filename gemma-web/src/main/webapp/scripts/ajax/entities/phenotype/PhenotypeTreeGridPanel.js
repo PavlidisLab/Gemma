@@ -279,7 +279,9 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 		// Hide the loadMask which is shown when collapse all or expand all is executed. 
 		this.getStore().on('datachanged',
 			function(store, rc) {
-				this.loadMask.hide();
+				if (this.loadMask instanceof Ext.LoadMask) {
+					this.loadMask.hide();
+				}
 			},
 			this
 		);

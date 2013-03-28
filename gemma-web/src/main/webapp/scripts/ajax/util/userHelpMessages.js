@@ -533,6 +533,9 @@ Gemma.HelpText.WidgetDefaults = {
 		negativeEvidenceTT: 'Denotes evidence against association'
 	},
 	PhenotypePanel:{
+		noRecordEmptyText: 'No phenotype associations',
+		noPhenotypeSelectedForGeneGridEmptyText: 'No phenotype has been selected.',
+		noGeneSelectedForEvidenceGridEmptyText: 'No gene has been selected.',
 		setupErrorTitle: 'Error in Gemma.PhenotypePanel',
 		setupErrorText:'If you are using PhenotypePanel inside of Gemma, <b>phenotypeStoreProxy</b>,<br />' +
     			'<b>geneStoreProxy</b>, <b>evidenceStoreProxy</b> and <b>getGeneLink</b><br />' +

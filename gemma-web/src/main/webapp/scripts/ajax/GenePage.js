@@ -153,6 +153,8 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 				}
 			}
 		});
+		phenotypeEvidenceGridPanel.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noRecordEmptyText;
+		
 		// In PhenotypePanel, when a user logs in, PhenotypeGridPanel will be reloaded first, followed by  
 		// PhenotypeGeneGridPanel and then PhenotypeEvidenceGridPanel. So, the following code should not 
 		// be done in PhenotypeEvidenceGridPanel. Otherwise, PhenotypeEvidenceGridPanel would be reloaded twice.

@@ -20,10 +20,11 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     stripeRows: true,
 	loadMask: true,
 	disableSelection: true,
+	// Note that a general emptyText should NOT be defined here because this widget has already
+	// been used in a lot of places and a general emptyText may not make sense for all cases.
+	// If emptyText is needed, it should be defined outside of this class.
     viewConfig: {
-        forceFit: true,
-		deferEmptyText: false,
-		emptyText: 'No gene has been selected.'
+        forceFit: true
     },
 	hasRelevanceColumn: true,
 	extraColumns: null,

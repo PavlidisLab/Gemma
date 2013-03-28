@@ -27,10 +27,9 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 				clickedSelections = null;
 			},
 			getViewConfig: function() {
+				// Don't need any emptyText.
 				return {
-			        forceFit: true,
-					deferEmptyText: false,
-					emptyText: 'You have not created any phenotype association yet.'
+			        forceFit: true
 			    };
 			},
 			getStoreProxy: function(defaultProxy) {

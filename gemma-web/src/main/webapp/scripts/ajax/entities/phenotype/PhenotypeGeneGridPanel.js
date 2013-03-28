@@ -11,10 +11,11 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
     autoScroll: true,
     stripeRows: true,
 	loadMask: true,
+	// Note that a general emptyText should NOT be defined here because this widget can
+	// be used in other places and a general emptyText may not make sense for all cases.
+	// If emptyText is needed, it should be defined outside of this class.
     viewConfig: {
-        forceFit: true,
-		deferEmptyText: false,
-		emptyText: 'No phenotype has been selected.'
+        forceFit: true
     },
     currentPhenotypes: null,
     initComponent: function() {

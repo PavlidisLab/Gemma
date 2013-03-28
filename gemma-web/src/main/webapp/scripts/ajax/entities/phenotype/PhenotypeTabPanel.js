@@ -12,18 +12,33 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 	width: 330,
 	split: true,
     initComponent: function() {
-    	var syncDestinationStoresOnSourceStoreLoad = function(sourceStore, destinationStores) {
+		var getGridPanelConfig = function(isFirstTab) {
+			return {
+		    	// Only the first tab's grid panel should have storeAutoLoad set to true.
+				storeAutoLoad: isFirstTab,
+				phenotypeStoreProxy: this.phenotypeStoreProxy
+			}
+		}
+    	
+		var gridPanels = [
+			new Gemma.PhenotypeTreeGridPanel(getGridPanelConfig(true)),
+			new Gemma.PhenotypeGridPanel(getGridPanelConfig(false))
+		];
+
+    	var syncGridPanelsOnSourceStoreLoad = function(sourceStore) {
 			sourceStore.on('load', 
 				function(store, records, options) {
-					var data = [];
-					for (var i = 0; i < records.length; i++) {
-						data.push(Ext.apply({}, records[i].data));						
-					}
-					for (var i = 0; i < destinationStores.length; i++) {
-						var currStore = destinationStores[i].getStore();
-						if (currStore !== sourceStore) {
-							currStore.loadData(data);
-						}				
+					if (records.length > 0) {
+						var data = [];
+						for (var i = 0; i < records.length; i++) {
+							data.push(Ext.apply({}, records[i].data));
+						}
+						for (var i = 0; i < gridPanels.length; i++) {
+							var currStore = gridPanels[i].getStore();
+							if (currStore !== sourceStore) {
+								currStore.loadData(data);
+							}
+						}
 					}
 				},
 				this, // scope
@@ -32,20 +47,23 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 				});
     	}
     	
-    	// Only the first tab's grid panel should have storeAutoLoad set to true.
-    	var phenotypeTreeGridPanel = new Gemma.PhenotypeTreeGridPanel({
-			storeAutoLoad: true,
-			phenotypeStoreProxy: this.phenotypeStoreProxy
-		});
-		var phenotypeGrid = new Gemma.PhenotypeGridPanel({
-			storeAutoLoad: false,
-			phenotypeStoreProxy: this.phenotypeStoreProxy
-		});
+		for (var i = 0; i < gridPanels.length; i++) {
+			gridPanels[i].on('viewready',
+				function(gridPanel) {
+					gridPanel.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noRecordEmptyText;
+					
+					// Defer empty text only for the first tab.
+					if (gridPanel === gridPanels[0]) {
+						gridPanel.getView().deferEmptyText = true;
+					} else {
+						gridPanel.getView().applyEmptyText();
+					}
+				});
+		}
 		
-    	this.relayEvents(phenotypeTreeGridPanel,
-    		['phenotypeAssociationChanged', 'phenotypeSelectionChange']);
-    	this.relayEvents(phenotypeGrid,
-    		['phenotypeAssociationChanged', 'phenotypeSelectionChange']);
+		for (var i = 0; i < gridPanels.length; i++) {
+		    this.relayEvents(gridPanels[i], ['phenotypeAssociationChanged', 'phenotypeSelectionChange']);
+		}
 
 		Ext.apply(this, {
 			reloadActiveTab: function(filters) {
@@ -55,8 +73,7 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 	
 				var activeTabStore = this.getActiveTab().getStore();
 			
-				// this.items.items are all the components in this tab panel.
-				syncDestinationStoresOnSourceStoreLoad(activeTabStore, this.items.items);	
+				syncGridPanelsOnSourceStoreLoad(activeTabStore);	
 				
 				
 				var taxonId;
@@ -76,14 +93,11 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 					}
 				});
 			},
-			items: [
-				phenotypeTreeGridPanel,
-				phenotypeGrid
-			]
+			items: gridPanels
 		});
 		Gemma.PhenotypeTabPanel.superclass.initComponent.call(this);
 
-		syncDestinationStoresOnSourceStoreLoad(phenotypeTreeGridPanel.getStore(), [ phenotypeGrid ]);
+		syncGridPanelsOnSourceStoreLoad(gridPanels[0].getStore());
 
 		// I need to manually call setActiveTab() to set active tab. Otherwise, getActiveTab() returns null.
 		this.setActiveTab(this.activeTab);

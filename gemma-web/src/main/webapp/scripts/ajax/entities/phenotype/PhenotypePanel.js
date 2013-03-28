@@ -76,9 +76,24 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 					geneSelectionChange: function(selectedPhenotypes, selectedGene) {
 						evidenceGrid.setCurrentData(currentFilters, selectedPhenotypes, selectedGene);
 						currentGene = selectedGene;
+
+						// Reset emptyText.
+						evidenceGrid.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noGeneSelectedForEvidenceGridEmptyText;
+						evidenceGrid.getView().applyEmptyText();
         			}
 				}
 			});
+			geneGrid.getView().deferEmptyText = false;
+			geneGrid.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noPhenotypeSelectedForGeneGridEmptyText;
+			geneGrid.getStore().on('load',
+				function(store, records, options) {
+					if (records.length == 0) {
+						geneGrid.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noRecordEmptyText;
+					} else {
+						geneGrid.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noPhenotypeSelectedForGeneGridEmptyText; 
+					}
+					geneGrid.getView().applyEmptyText();	
+				});
 			this.relayEvents(geneGrid, ['phenotypeAssociationChanged']);
 			
 	    	var evidenceGrid = new Gemma.PhenotypeEvidenceGridPanel({
@@ -86,6 +101,17 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 				evidenceStoreProxy: this.evidenceStoreProxy,	    		
 				getGeneLink: this.getGeneLink
 	    	});
+			evidenceGrid.getView().deferEmptyText = false;
+			evidenceGrid.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noGeneSelectedForEvidenceGridEmptyText;
+			evidenceGrid.getStore().on('load', 
+				function(store, records, options) {
+					if (records.length == 0) {
+						evidenceGrid.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noRecordEmptyText;
+					} else {
+						evidenceGrid.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noGeneSelectedForEvidenceGridEmptyText; 
+					}
+					evidenceGrid.getView().applyEmptyText();	
+				});
 			this.relayEvents(evidenceGrid, ['phenotypeAssociationChanged']);
 
 			// This method needs to be called whenever phenotype selections change in code.
