@@ -35,7 +35,7 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
     }
 
     /**
-     * @see ubic.gemma.model.common.description.DatabaseEntryService#createDatabaseEntity(ubic.gemma.model.common.description.DatabaseEntry)
+     * @see ubic.gemma.model.common.description.DatabaseEntryService#createFromValueObject(ubic.gemma.model.common.description.DatabaseEntry)
      */
     protected ubic.gemma.model.common.description.DatabaseEntry handleCreate(
             ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {

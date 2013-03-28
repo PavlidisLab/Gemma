@@ -689,7 +689,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             newSRDO.setTaxonName( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonName() );
             boolean isPrivate = securityService.isPrivate( set );
             newSRDO.setUserOwned( isPrivate );
-            ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).setPublik( !isPrivate );
+            ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).setIsPublic( !isPrivate );
             if ( isPrivate ) {
                 displayResultsPrivate.add( newSRDO );
             } else {

@@ -138,8 +138,8 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     	if (isUserLoggedIn){
     		result = result
             + Gemma.SecurityManager.getSecurityLink(
-                    'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic,
-                    ee.isShared, ee.currentUserHasWritePermission, null, null, null, ee.currentUserIsOwner);
+                    'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.publik,
+                    ee.shared, ee.writeableByUser, null, null, null, ee.userOwned);
     	}
 
         return result || "No flags";

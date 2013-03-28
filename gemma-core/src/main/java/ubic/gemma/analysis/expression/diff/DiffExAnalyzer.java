@@ -53,25 +53,6 @@ public interface DiffExAnalyzer {
             DifferentialExpressionAnalysisConfig config, boolean retainScale );
 
     /**
-     * Peform an analysis where the factors are determined (or guessed) automatically. If this cannot be unambiguously
-     * determined, an exception will be thrown. (Default behaviour might be just to use all factors)
-     * 
-     * @param expressionExperiment
-     * @return ExpressionAnalysis
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Perform an analysis using the specified factor(s)
-     * 
-     * @param expressionExperiment
-     * @param factors If you care about the order the factors are included in the model, use a List
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors );
-
-    /**
      * @param expressionExperiment
      * @param config
      * @return

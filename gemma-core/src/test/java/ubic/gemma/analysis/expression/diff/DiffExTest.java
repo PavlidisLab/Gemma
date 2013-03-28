@@ -106,7 +106,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
             ee = eeService.thawLite( ee );
         }
 
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        config.setQvalueThreshold( null );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );
 

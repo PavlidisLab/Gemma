@@ -31,7 +31,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
@@ -100,8 +99,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         Long id = eeSet.getId();
         assertNotNull( id );
 
-        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetValueObjectHelper
-                .convertToValueObject( eeSet );
+        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
 
         assertEquals( eesvo.getId(), eeSet.getId() );
         assertEquals( eesvo.getNumExperiments().intValue(), eeSet.getExperiments().size() );
@@ -116,8 +114,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         Long id = eeSet.getId();
         assertNotNull( id );
 
-        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetValueObjectHelper
-                .convertToLightValueObject( eeSet );
+        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
 
         assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
 
@@ -136,8 +133,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         Long id = eeSet.getId();
         assertNotNull( id );
 
-        DatabaseBackedExpressionExperimentSetValueObject eesvo = expressionExperimentSetValueObjectHelper
-                .convertToValueObject( eeSet );
+        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
 
         // create entity from VO
         ExpressionExperimentSet remadeEE = expressionExperimentSetValueObjectHelper.convertToEntity( eesvo );

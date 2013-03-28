@@ -60,7 +60,6 @@ import ubic.gemma.genome.gene.service.GeneSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -372,10 +371,10 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /*
-         * (non-Javadoc)
-         *
-         * @see ubic.gemma.search.SearchService#search(ubic.gemma.search.SearchSettings)
-         */
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.search.SearchService#search(ubic.gemma.search.SearchSettings)
+     */
     @Override
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings ) {
         Map<Class<?>, List<SearchResult>> searchResults = new HashMap<Class<?>, List<SearchResult>>();
@@ -500,13 +499,12 @@ public class SearchServiceImpl implements SearchService {
             classesToSearch.add( BioMaterial.class );
             classesToSearch.add( FactorValue.class );
         }
-        
-        //this doesn't seem to be implemented yet, LiteratureEvidence and GenericEvidence aren't handled in the fillValueObjects method downstream
+
+        // this doesn't seem to be implemented yet, LiteratureEvidence and GenericEvidence aren't handled in the
+        // fillValueObjects method downstream
         /*
-        if ( settings.getSearchPhenotypes() ) {
-            classesToSearch.add( PhenotypeAssociationImpl.class );
-        }
-*/
+         * if ( settings.getSearchPhenotypes() ) { classesToSearch.add( PhenotypeAssociationImpl.class ); }
+         */
         matchingTerm = this.ontologyService.getTerm( uriString );
         if ( matchingTerm == null || matchingTerm.getUri() == null ) {
             /*
@@ -2307,21 +2305,20 @@ public class SearchServiceImpl implements SearchService {
             }
 
         }
-        
-        String[] searchTerms = searchString.split( "\\s+");
-        
-        //some strings of size 1 cause lucene to barf and they were slipping through in multi-term queries, get rid of them        
-        if (searchTerms.length>0){
-        	searchString = "";
-        	for (String sTerm: searchTerms){        	
-        		if (sTerm.length()>1){
-        			searchString = searchString+" "+sTerm;     	    	
-        		}
-        	}        	
-        	searchString = searchString.trim();
+
+        String[] searchTerms = searchString.split( "\\s+" );
+
+        // some strings of size 1 cause lucene to barf and they were slipping through in multi-term queries, get rid of
+        // them
+        if ( searchTerms.length > 0 ) {
+            searchString = "";
+            for ( String sTerm : searchTerms ) {
+                if ( sTerm.length() > 1 ) {
+                    searchString = searchString + " " + sTerm;
+                }
+            }
+            searchString = searchString.trim();
         }
-        
-        
 
         settings.setQuery( searchString );
 
@@ -2342,16 +2339,15 @@ public class SearchServiceImpl implements SearchService {
             genes = geneSearch( settings );
             accreteResults( rawResults, genes );
         }
-        
-        //SearchSettings persistent entity does not contain a usePhenotypes property that these logic requires
-        /*
-        if ( settings.getUsePhenotypes() && settings.getSearchGenes() ) {
 
-            Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
-                    geneSearchService.getPhenotypeAssociatedGenes( searchString, settings.getTaxon() ),
-                    "From phenotype association" );
-            accreteResults( rawResults, phenotypeGenes );
-        }*/
+        // SearchSettings persistent entity does not contain a usePhenotypes property that these logic requires
+        /*
+         * if ( settings.getUsePhenotypes() && settings.getSearchGenes() ) {
+         * 
+         * Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
+         * geneSearchService.getPhenotypeAssociatedGenes( searchString, settings.getTaxon() ),
+         * "From phenotype association" ); accreteResults( rawResults, phenotypeGenes ); }
+         */
 
         Collection<SearchResult> compositeSequences = null;
         if ( settings.getSearchProbes() ) {

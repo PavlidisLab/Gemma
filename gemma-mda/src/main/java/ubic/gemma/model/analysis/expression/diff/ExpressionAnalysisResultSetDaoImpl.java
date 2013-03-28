@@ -87,11 +87,16 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         this.thawLite( resultSet );
 
         List<ExpressionAnalysisResultSet> res = this.getHibernateTemplate().findByNamedParam(
-                "select r from ExpressionAnalysisResultSetImpl r join fetch r.results res "
+                "select r from ExpressionAnalysisResultSetImpl r left join fetch r.results res "
                         + "join fetch res.probe left join fetch res.contrasts where r = :rs ", "rs", resultSet );
 
         if ( timer.getTime() > 1000 ) {
             Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
+        }
+
+        if ( res.isEmpty() ) {
+            throw new IllegalStateException( "There was no result with ID=" + resultSet.getId()
+                    + ", or it had no results?" );
         }
 
         return res.get( 0 );

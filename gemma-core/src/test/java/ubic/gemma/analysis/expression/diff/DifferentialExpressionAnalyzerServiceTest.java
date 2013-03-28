@@ -125,9 +125,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     public void testAnalyzeAndDelete() throws Exception {
 
         assert ee.getId() != null;
-
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( null );
+        config.addInteractionToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
-                .runDifferentialExpressionAnalyses( ee, ee.getExperimentalDesign().getExperimentalFactors() );
+                .runDifferentialExpressionAnalyses( ee, config );
         assertNotNull( analyses );
         assertTrue( !analyses.isEmpty() );
         assertNotNull( analyses.iterator().next() );
@@ -145,7 +149,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
         assertEquals( 100, readIn.rows() );
-        assertEquals( 6, readIn.columns() ); // interactions will be included by default.
+        assertEquals( 6, readIn.columns() );
 
         expressionDataFileService.deleteAllFiles( ee );
 
@@ -162,9 +166,12 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      */
     @Test
     public void testAnalyzeAndDeleteSpecificAnalysis() throws Exception {
-
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
-                .runDifferentialExpressionAnalyses( ee, ee.getExperimentalDesign().getExperimentalFactors() );
+                .runDifferentialExpressionAnalyses( ee, config );
         assertTrue( !analyses.isEmpty() );
         differentialExpressionAnalysisService.getAnalysisValueObjects( analyses.iterator().next().getId() );
 
@@ -189,7 +196,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( factorsToUse );
         config.setSubsetFactor( subsetFactor );
-
+        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
 
@@ -256,6 +263,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         config.setFactorsToInclude( factors );
         config.setSubsetFactor( subsetFactor );
+        config.setQvalueThreshold( null );
+
         HashSet<Collection<ExperimentalFactor>> ifacts = new HashSet<Collection<ExperimentalFactor>>();
         ifacts.add( factors );
         config.setInteractionsToInclude( ifacts );
@@ -286,9 +295,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      */
     @Test
     public void testWritePValuesHistogram() throws Exception {
-
-        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, ee.getExperimentalDesign()
-                .getExperimentalFactors() );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( null );
+        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
         differentialExpressionAnalyzerService.updateScoreDistributionFiles( ee );
 
     }

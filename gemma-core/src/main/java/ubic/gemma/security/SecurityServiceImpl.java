@@ -36,8 +36,6 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
-import org.springframework.security.acls.domain.ObjectIdentityImpl;
-import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
@@ -66,6 +64,7 @@ import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authentication.UserService;
 
 import ubic.gemma.security.authorization.acl.AclService;
+import ubic.gemma.security.authorization.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
 import ubic.gemma.util.AuthorityConstants;
 
 /**
@@ -149,7 +148,7 @@ public class SecurityServiceImpl implements SecurityService {
 
     private Log log = LogFactory.getLog( SecurityServiceImpl.class );
 
-    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ObjectIdentityRetrievalStrategyImpl();
+    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
 
     @Autowired
     private SessionRegistry sessionRegistry;
@@ -269,7 +268,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
-            boolean p = isPrivate( a );
+            boolean p = SecurityUtil.isPrivate( a );
             result.put( objectIdentities.get( oi ), p );
         }
         return result;
@@ -281,7 +280,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#areShared(java.util.Collection)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Securable, Boolean> areShared( Collection<? extends Securable> securables ) {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
         Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
@@ -293,7 +291,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
-            boolean p = isShared( a );
+            boolean p = SecurityUtil.isShared( a );
             result.put( objectIdentities.get( oi ), p );
         }
         return result;
@@ -664,7 +662,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         Acl acl = null;
 
-        ObjectIdentity objectIdentity = new ObjectIdentityImpl( svo.getSecurableClass(), svo.getId() );
+        ObjectIdentity objectIdentity = objectIdentityRetrievalStrategy.getObjectIdentity( svo );
 
         try {
             // Lookup only ACLs for SIDs we're interested in (this actually get them all)
@@ -805,6 +803,17 @@ public class SecurityServiceImpl implements SecurityService {
             Sid owner = acl.getOwner();
             if ( owner == null ) return false;
 
+            /*
+             * Special case: if we're the administrator, and the owner of the data is GROUP_ADMIN, we are considered the
+             * owner.
+             */
+            if ( owner instanceof GrantedAuthoritySid
+                    && isUserAdmin()
+                    && ( ( GrantedAuthoritySid ) owner ).getGrantedAuthority().equals(
+                            AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
+                return true;
+            }
+
             if ( owner instanceof PrincipalSid ) {
                 String ownerName = ( ( PrincipalSid ) owner ).getPrincipal();
 
@@ -829,17 +838,6 @@ public class SecurityServiceImpl implements SecurityService {
                     return false;
                 }
 
-            }
-
-            /*
-             * Special case: if we're the administrator, and the owner of the data is GROUP_ADMIN, we are considered the
-             * owner.
-             */
-            if ( owner instanceof GrantedAuthoritySid
-                    && isUserAdmin()
-                    && ( ( GrantedAuthoritySid ) owner ).getGrantedAuthority().equals(
-                            AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
-                return true;
             }
 
             return false;
@@ -877,7 +875,7 @@ public class SecurityServiceImpl implements SecurityService {
         List<Sid> sids = new Vector<Sid>();
         sids.add( anonSid );
 
-        ObjectIdentity oi = new ObjectIdentityImpl( s.getClass(), s.getId() );
+        ObjectIdentity oi = objectIdentityRetrievalStrategy.getObjectIdentity( s );
 
         /*
          * Note: in theory, it should pay attention to the sid we ask for and return nothing if there is no acl.
@@ -888,7 +886,7 @@ public class SecurityServiceImpl implements SecurityService {
 
             assert acl != null;
 
-            return isPrivate( acl );
+            return SecurityUtil.isPrivate( acl );
         } catch ( NotFoundException nfe ) {
             return true;
         }
@@ -953,7 +951,7 @@ public class SecurityServiceImpl implements SecurityService {
         try {
             Acl acl = this.aclService.readAclById( oi );
 
-            return isShared( acl );
+            return SecurityUtil.isShared( acl );
         } catch ( NotFoundException nfe ) {
             return true;
         }
@@ -1318,7 +1316,8 @@ public class SecurityServiceImpl implements SecurityService {
      * @param s
      * @return
      */
-    private MutableAcl getAcl( Securable s ) {
+    @Override
+    public MutableAcl getAcl( Securable s ) {
         ObjectIdentity oi = objectIdentityRetrievalStrategy.getObjectIdentity( s );
 
         try {
@@ -1364,7 +1363,7 @@ public class SecurityServiceImpl implements SecurityService {
             Collection<? extends SecureValueObject> securables ) {
         Map<ObjectIdentity, SecureValueObject> result = new HashMap<ObjectIdentity, SecureValueObject>();
         for ( SecureValueObject s : securables ) {
-            result.put( new ObjectIdentityImpl( s.getSecurableClass(), s.getId() ), s );
+            result.put( objectIdentityRetrievalStrategy.getObjectIdentity( s ), s );
         }
         return result;
     }
@@ -1451,81 +1450,6 @@ public class SecurityServiceImpl implements SecurityService {
         }
     }
 
-    /**
-     * @param acl
-     * @return
-     */
-    private boolean isPrivate( Acl acl ) {
-
-        /*
-         * If the given Acl has anonymous permissions on it, then it can't be private.
-         */
-        for ( AccessControlEntry ace : acl.getEntries() ) {
-
-            if ( !ace.getPermission().equals( BasePermission.READ ) ) continue;
-
-            Sid sid = ace.getSid();
-            if ( sid instanceof GrantedAuthoritySid ) {
-                String grantedAuthority = ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
-                if ( grantedAuthority.equals( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) && ace.isGranting() ) {
-                    return false;
-                }
-            }
-        }
-
-        /*
-         * Even if the object is not private, it's parent might be and we might inherit that. Recursion happens here.
-         */
-        Acl parentAcl = acl.getParentAcl();
-        if ( parentAcl != null && acl.isEntriesInheriting() ) {
-            return isPrivate( parentAcl );
-        }
-
-        /*
-         * We didn't find a granted authority on IS_AUTHENTICATED_ANONYMOUSLY
-         */
-        return true;
-
-    }
-
-    /**
-     * @param acl
-     * @return true if the ACL grants READ authority to at least one group that is not admin or agent.
-     */
-    private boolean isShared( Acl acl ) {
-        for ( AccessControlEntry ace : acl.getEntries() ) {
-
-            if ( !ace.getPermission().equals( BasePermission.READ ) ) continue;
-
-            Sid sid = ace.getSid();
-            if ( sid instanceof GrantedAuthoritySid ) {
-                String grantedAuthority = ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
-                if ( grantedAuthority.startsWith( "GROUP_" ) && ace.isGranting() ) {
-
-                    if ( grantedAuthority.equals( AuthorityConstants.AGENT_GROUP_AUTHORITY )
-                            || grantedAuthority.equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
-                        continue;
-                    }
-                    return true;
-
-                }
-            }
-        }
-
-        /*
-         * Even if the object is not private, it's parent might be and we might inherit that. Recursion happens here.
-         */
-        Acl parentAcl = acl.getParentAcl();
-        if ( parentAcl != null && acl.isEntriesInheriting() ) {
-            return isShared( parentAcl );
-        }
-
-        /*
-         * We didn't find a granted authority for any group.
-         */
-        return false;
-    }
-
     private void populateGroupsEditableBy( Map<Securable, Collection<String>> result, String groupName,
             Map<Securable, Boolean> groupHasPermission ) {
         for ( Securable s : groupHasPermission.keySet() ) {
@@ -1605,6 +1529,36 @@ public class SecurityServiceImpl implements SecurityService {
 
         return numberAclsToRemove;
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.security.SecurityService#getAcls(java.util.Collection)
+     */
+    @Override
+    public Map<Securable, Acl> getAcls( Collection<? extends Securable> securables ) {
+        if ( securables.isEmpty() ) {
+            throw new IllegalArgumentException( "Must provide securables" );
+        }
+
+        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+
+        assert !objectIdentities.isEmpty();
+
+        /*
+         * Take advantage of fast bulk loading of ACLs.
+         */
+        Map<ObjectIdentity, Acl> acls = aclService
+                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+
+        Map<Securable, Acl> result = new HashMap<Securable, Acl>();
+        for ( ObjectIdentity o : acls.keySet() ) {
+            Securable se = objectIdentities.get( o );
+            assert se != null;
+            result.put( se, acls.get( o ) );
+        }
+        return result;
     }
 
 }

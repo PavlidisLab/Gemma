@@ -41,10 +41,10 @@ Gemma.DatasetGroupStore = function(config) {
 				name : "shared",
 				type : 'boolean'
 			}, {
-				name : "currentUserHasWritePermission",
+				name : "writeableByUser",
 				type : 'boolean'
 			}, {
-				name : "currentUserIsOwner",
+				name : "userOwned",
 				type : 'boolean'
 			}]);
 

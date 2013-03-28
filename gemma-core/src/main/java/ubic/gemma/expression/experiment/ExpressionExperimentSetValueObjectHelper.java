@@ -14,9 +14,8 @@
  */
 package ubic.gemma.expression.experiment;
 
-import java.util.Collection;
-
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**
  * @author paul
@@ -25,41 +24,12 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 public interface ExpressionExperimentSetValueObjectHelper {
 
     /**
-     * @param set
-     * @return
-     */
-    public abstract DatabaseBackedExpressionExperimentSetValueObject convertToValueObject( ExpressionExperimentSet set );
-
-    /**
-     * @param sets
-     * @return
-     */
-    public abstract Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToValueObjects(
-            Collection<ExpressionExperimentSet> sets );
-
-    /**
-     * doesn't set value for member experiment ids
-     * 
-     * @param set
-     * @return
-     */
-    public abstract DatabaseBackedExpressionExperimentSetValueObject convertToLightValueObject(
-            ExpressionExperimentSet set );
-
-    /**
-     * @param sets
-     * @return
-     */
-    public abstract Collection<DatabaseBackedExpressionExperimentSetValueObject> convertToLightValueObjects(
-            Collection<ExpressionExperimentSet> sets );
-
-    /**
      * Tries to load an existing experiment set with the param's id, if no experiment can be loaded, create a new one
-     * with id = null.
-     * Sets all fields of the new entity with values from the valueObject param.
+     * with id = null. Sets all fields of the new entity with values from the valueObject param.
+     * 
      * @param setVO if null, returns null
      * @return
      */
-    public abstract ExpressionExperimentSet convertToEntity( DatabaseBackedExpressionExperimentSetValueObject setVO );
+    public abstract ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject setVO );
 
 }

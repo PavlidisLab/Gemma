@@ -24,22 +24,28 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.afterinvocation.AbstractAclProvider;
+import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.Authentication;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
+import ubic.gemma.security.SecurityUtil;
 
 /**
- * TODO add info for security related fields here if applicable (e.g. for ExpressionExperimentValueObject:
- * currentUserHasWritePermission, currentUserIsOwner etc.)
+ * Security check for reading value objects.
+ * <p>
+ * As a side effect, it fills in security status information in the value objects, but only if permission was granted.
  * 
  * @author cmcdonald
  * @version $Id$
@@ -77,7 +83,6 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
 
                 Filterer<Object> filterer = null;
 
-                boolean wasSingleton = false;
                 if ( returnedObject instanceof Collection ) {
                     Collection<Object> collection = ( Collection<Object> ) returnedObject;
                     filterer = new CollectionFilterer<Object>( collection );
@@ -85,11 +90,7 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
                     Object[] array = ( Object[] ) returnedObject;
                     filterer = new ArrayFilterer<Object>( array );
                 } else {
-                    // shortcut, just put the object in a collection. (PP)
-                    wasSingleton = true;
-                    Collection<Object> coll = new HashSet<Object>();
-                    coll.add( returnedObject );
-                    filterer = new CollectionFilterer<Object>( coll );
+                    throw new UnsupportedOperationException( "Must be a Collection" );
                 }
 
                 // Locate unauthorised Collection elements
@@ -116,12 +117,50 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
                     }
                 }
 
-                if ( wasSingleton ) {
-                    if ( ( ( Collection<SecureValueObject> ) filterer.getFilteredObject() ).size() == 1 ) {
-                        return ( ( Collection<SecureValueObject> ) filterer.getFilteredObject() ).iterator().next();
-                    }
-                    return null;
+                if ( ( ( Collection<SecureValueObject> ) filterer.getFilteredObject() ).isEmpty() ) {
+                    return filterer.getFilteredObject();
+                }
 
+                // Following are only relevant if you are logged in.
+                if ( !SecurityServiceImpl.isUserLoggedIn() ) {
+                    return filterer.getFilteredObject();
+                }
+
+                StopWatch timer = new StopWatch();
+                timer.start();
+
+                Map<Securable, Acl> acls = securityService.getAcls( ( Collection<SecureValueObject> ) filterer
+                        .getFilteredObject() );
+
+                Map<Securable, Boolean> areOwnedByCurrentUser = securityService
+                        .areOwnedByCurrentUser( ( Collection<SecureValueObject> ) filterer.getFilteredObject() );
+                boolean userIsAdmin = SecurityServiceImpl.isUserAdmin();
+
+                for ( Securable s : acls.keySet() ) {
+
+                    /*
+                     * Populate optional fields in the ValueObject.
+                     */
+
+                    SecureValueObject svo = ( SecureValueObject ) s;
+
+                    // this should be fast, but could be even faster.
+                    Acl acl = acls.get( s );
+                    svo.setIsPublic( !SecurityUtil.isPrivate( acl ) );
+                    svo.setIsShared( SecurityUtil.isShared( acl ) );
+                    svo.setIsUserOwned( areOwnedByCurrentUser.get( s ) );
+
+                    if ( !svo.isUserOwned() ) {
+                        // svo.setUserCanWrite( securityService.isEditable( s ) ); // FIXME, can't use this here.
+                        svo.setWriteableByUser( userIsAdmin );
+                    } else {
+                        svo.setWriteableByUser( true );
+                    }
+                }
+
+                if ( timer.getTime() > 100 ) {
+                    logger.info( "Fill in security details on " + acls.keySet().size() + " value objects: "
+                            + timer.getTime() + "ms" );
                 }
                 return filterer.getFilteredObject();
             }

@@ -32,7 +32,6 @@ import org.aspectj.lang.reflect.CodeSignature;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.vote.AbstractAclVoter;
-import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
 import org.springframework.security.acls.domain.SidRetrievalStrategyImpl;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AclService;
@@ -73,7 +72,7 @@ public class AclCollectionEntryVoter extends AbstractAclVoter {
 
     private AclService aclService;
     private String internalMethod;
-    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ObjectIdentityRetrievalStrategyImpl();
+    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
     private String processConfigAttribute;
     private List<Permission> requirePermission;
     private SidRetrievalStrategy sidRetrievalStrategy = new SidRetrievalStrategyImpl();
@@ -152,6 +151,7 @@ public class AclCollectionEntryVoter extends AbstractAclVoter {
 
     /*
      * Most of this is modified from the superclass vote method code.
+     * 
      * @see org.springframework.security.acls.AclEntryVoter#vote(org.springframework.security.core.Authentication,
      * java.lang.Object, java.util.Collection)
      */
@@ -224,8 +224,7 @@ public class AclCollectionEntryVoter extends AbstractAclVoter {
                 try {
                     if ( !acl.isGranted( requirePermission, sids, false ) ) {
                         if ( logger.isDebugEnabled() ) {
-                            logger
-                                    .debug( "Voting to deny access - ACLs returned, but insufficient permissions for this principal" );
+                            logger.debug( "Voting to deny access - ACLs returned, but insufficient permissions for this principal" );
                         }
 
                         return ACCESS_DENIED;

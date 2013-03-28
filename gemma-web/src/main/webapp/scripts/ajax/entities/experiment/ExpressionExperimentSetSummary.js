@@ -41,7 +41,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 				"title='"+Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT+"' />&nbsp;";
 		}
 		var sl = Gemma.SecurityManager.getSecurityLink("ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl", 
-					e.id, e.publik, e.shared,e.currentUserHasWritePermission, null, null, null, e.currentUserIsOwner);
+					e.id, e.publik, e.shared,e.writeableByUser, null, null, null, e.userOwned);
 					
 		statusString += sl;
 		return statusString;
@@ -59,7 +59,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 		
         var e = this.experimentSet;
         
-        if ( e.currentUserHasWritePermission && e.modifiable) {
+        if ( e.writeableByUser && e.modifiable) {
             this.editable = true;
         }
 

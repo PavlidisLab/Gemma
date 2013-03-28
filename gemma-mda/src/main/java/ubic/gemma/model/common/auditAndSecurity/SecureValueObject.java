@@ -28,16 +28,48 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
  * @author cmcdonald
  * @version $Id$
  */
-public interface SecureValueObject extends Serializable {
-
-    /**
-     * @return the serializable ID for the represented entity
-     */
-    public Long getId();
+public interface SecureValueObject extends Serializable, Securable {
 
     /**
      * @return the securable Class of the represented entity.
      */
     public Class<? extends Securable> getSecurableClass();
+
+    /**
+     * @return true if the object is public
+     */
+    public boolean isPublik();
+
+    public void setIsPublic( boolean isPublic );
+
+    /**
+     * @return true if the object is owned by the current user
+     */
+    public boolean isUserOwned();
+
+    /**
+     * @param isUserOwned
+     */
+    public void setIsUserOwned( boolean isUserOwned );
+
+    /**
+     * @return
+     */
+    public boolean isWriteableByUser();
+
+    /**
+     * @param userCanWrite
+     */
+    public void setWriteableByUser( boolean userCanWrite );
+
+    /**
+     * @return
+     */
+    public boolean isShared();
+
+    /**
+     * @param isShared
+     */
+    public void setIsShared( boolean isShared );
 
 }

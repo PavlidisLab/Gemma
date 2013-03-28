@@ -33,7 +33,6 @@ import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
@@ -48,27 +47,6 @@ import cern.colt.matrix.DoubleMatrix1D;
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer implements DiffExAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
-     * )
-     */
-    @Override
-    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment );
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
-     * , java.util.Collection)
-     */
-    @Override
-    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors );
 
     /*
      * (non-Javadoc)

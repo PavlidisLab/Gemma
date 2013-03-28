@@ -17,8 +17,7 @@ package ubic.gemma.analysis.expression.diff;
 import java.io.IOException;
 import java.util.Collection;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis; 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
@@ -37,21 +36,11 @@ public interface DifferentialExpressionAnalyzerService {
     /**
      * @param ee
      * @param copyMe
+     * @param qvalueThreshold to use for the re-run.
      * @return
      */
     public abstract Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe );
-
-    /**
-     * Run the differential expression analysis. First deletes the matching existing differential expression analysis,
-     * if any.
-     * 
-     * @param expressionExperiment
-     * @param factors
-     * @return persistent analyses
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors );
+            DifferentialExpressionAnalysis copyMe, Double qvalueThreshold );
 
     /**
      * @param expressionExperiment

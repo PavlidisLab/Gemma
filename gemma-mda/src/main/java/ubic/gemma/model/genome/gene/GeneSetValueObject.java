@@ -19,10 +19,11 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 
 /**
  * Represents a Gene group gene set.
@@ -30,7 +31,7 @@ import java.util.HashSet;
  * @author kelsey
  * @version $Id$
  */
-public class GeneSetValueObject implements Serializable {
+public class GeneSetValueObject implements SecureValueObject {
 
     private static final long serialVersionUID = 6212231006289412683L;
 
@@ -39,36 +40,27 @@ public class GeneSetValueObject implements Serializable {
     private String description;
     private Collection<Long> geneIds = new HashSet<Long>();
     private Long id;
+    private boolean isPublic;
+    private boolean isShared;
     private String name;
-    private boolean publik;
-    private boolean shared;
     private Integer size;
-    private String taxonName;
     private Long taxonId;
-    
+    private String taxonName;
+
     /**
      * default constructor to satisfy java bean contract
      */
     public GeneSetValueObject() {
         super();
     }
-  
-    public String getTaxonName() {
-        return this.taxonName;
-    }    
 
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;        
+    public boolean equals( GeneSetValueObject ervo ) {
+        if ( ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() ) ) {
+            return true;
+        }
+        return false;
     }
 
-    public Long getTaxonId() {
-        return this.taxonId;
-    }    
-
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;        
-    }
-    
     /**
      * @return
      */
@@ -86,16 +78,21 @@ public class GeneSetValueObject implements Serializable {
     /**
      * @return
      */
+    @Override
     public Long getId() {
         return this.id;
     }
-        
 
     /**
      * @return
      */
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public Class<? extends Securable> getSecurableClass() {
+        return GeneSetImpl.class;
     }
 
     /**
@@ -107,26 +104,27 @@ public class GeneSetValueObject implements Serializable {
         return this.size;
     }
 
-    /**
-     * @return the currentUserHasWritePermission
-     */
-    public boolean isCurrentUserHasWritePermission() {
-        return this.currentUserHasWritePermission;
+    public Long getTaxonId() {
+        return this.taxonId;
     }
 
+    public String getTaxonName() {
+        return this.taxonName;
+    }
+
+    @Override
     public boolean isPublik() {
-        return this.publik;
+        return this.isPublic;
     }
 
+    @Override
     public boolean isShared() {
-        return this.shared;
+        return this.isShared;
     }
 
-    /**
-     * @param currentUserHasWritePermission the currentUserHasWritePermission to set
-     */
-    public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
-        this.currentUserHasWritePermission = currentUserHasWritePermission;
+    @Override
+    public boolean isUserOwned() {
+        return this.currentUserIsOwner;
     }
 
     /**
@@ -150,19 +148,29 @@ public class GeneSetValueObject implements Serializable {
         this.id = id;
     }
 
+    @Override
+    public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+
+    }
+
+    @Override
+    public void setIsShared( boolean isShared ) {
+        this.isShared = isShared;
+
+    }
+
+    @Override
+    public void setIsUserOwned( boolean isUserOwned ) {
+        this.currentUserIsOwner = isUserOwned;
+
+    }
+
     /**
      * @param name
      */
     public void setName( String name ) {
         this.name = name;
-    }
-
-    public void setPublik( boolean isPublic ) {
-        this.publik = isPublic;
-    }
-
-    public void setShared( boolean isShared ) {
-        this.shared = isShared;
     }
 
     /**
@@ -172,24 +180,21 @@ public class GeneSetValueObject implements Serializable {
         this.size = size;
     }
 
-    public boolean equals( GeneSetValueObject ervo ) {
-        if(ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() )){
-            return true;
-        }
-       return false;
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 
-    /**
-     * @param currentUserIsOwner the currentUserIsOwner to set
-     */
-    public void setCurrentUserIsOwner( boolean currentUserIsOwner ) {
-        this.currentUserIsOwner = currentUserIsOwner;
+    public void setTaxonName( String taxonName ) {
+        this.taxonName = taxonName;
     }
 
-    /**
-     * @return the currentUserIsOwner
-     */
-    public boolean isCurrentUserIsOwner() {
-        return this.currentUserIsOwner;
+    @Override
+    public void setWriteableByUser( boolean userCanWrite ) {
+        this.currentUserHasWritePermission = userCanWrite;
+    }
+
+    @Override
+    public boolean isWriteableByUser() {
+        return this.currentUserHasWritePermission;
     }
 }

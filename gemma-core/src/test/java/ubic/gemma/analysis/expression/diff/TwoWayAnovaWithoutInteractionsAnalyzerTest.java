@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    DiffExAnalyzer  analyzer = null;
+    DiffExAnalyzer analyzer = null;
 
     /**
      * Tests the TwoWayAnova method.
@@ -61,8 +62,13 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         configureMocks();
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment,
-                Arrays.asList( new ExperimentalFactor[] { experimentalFactorA_Area, experimentalFactorB } ) );
+        List<ExperimentalFactor> factors = Arrays.asList( new ExperimentalFactor[] { experimentalFactorA_Area,
+                experimentalFactorB } );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( null );
+
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 

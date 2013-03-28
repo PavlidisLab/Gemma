@@ -83,7 +83,7 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 		if (!name && this.selectedSetValueObject instanceof ExpressionExperimentSetValueObject) {
 			size = this.selectedSetValueObject.expressionExperimentIds.size();
 			
-			if (this.selectedSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
+			if (! (this.selectedSetValueObject instanceof SessionBoundExpressionExperimentSetValueObject) ){
 			
 				name = '<a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id=' +
 				this.selectedSetValueObject.id +

@@ -535,8 +535,7 @@ public interface ExpressionExperimentService {
 
     /**
      * * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
-     * current user has specific READ permissions on (as opposed to data sets which are public). Important: This method
-     * will return all experiments if security is not enabled.
+     * current user has specific READ permissions on (as opposed to data sets which are public).
      * <p>
      * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyPrivateData for
      * processConfigAttribute. (in Gemma-core)
@@ -563,24 +562,24 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments();
 
     /**
-     * Note: does not fill in security info fields (isPublic, shared, currentUserHasWritePermission, etc)
-     * 
      * @param id
      * @return
      */
     public ExpressionExperimentValueObject loadValueObject( Long eeId );
 
     /**
-     * Note: does not fill in security info fields (isPublic, shared, currentUserHasWritePermission, etc) TODO SECURE:
-     * How to secure value objects, should take a secured EE or a collection of secured EE's....?
-     * 
      * @param ids
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
-     * @return TODO fill in the security info (see above)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
+    /**
+     * @param orderField
+     * @param descending
+     * @param ids
+     * @return
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids );

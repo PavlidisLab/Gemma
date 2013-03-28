@@ -293,7 +293,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 				var viewEvidenceWindow = new Gemma.MetaAnalysisEvidenceWindow({
 					metaAnalysisId: metaAnalysisId,
 					metaAnalysis: metaAnalysis,
-					showActionButton: record.data.evidenceSecurityValueObject.currentUserHasWritePermission,				
+					showActionButton: record.data.evidenceSecurityValueObject.writeableByUser,				
 					title: 'View Neurocarta evidence for ' + record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name,
 					diffExpressionEvidence: record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.diffExpressionEvidence,
 					modal: false,
@@ -718,7 +718,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
 						if ((record.data.className === 'LiteratureEvidenceValueObject' ||						
 						 	 record.data.className === 'ExperimentalEvidenceValueObject') &&
-	            		    record.data.evidenceSecurityValueObject.currentUserHasWritePermission &&
+	            		    record.data.evidenceSecurityValueObject.writeableByUser &&
 							record.data.evidenceSource == null) {
 		            		adminLinks += ' ' +
 								generateLink('showCreateWindow(' + record.data.id + ');', '/Gemma/images/icons/add.png', 'Clone evidence') + ' ' +			            		

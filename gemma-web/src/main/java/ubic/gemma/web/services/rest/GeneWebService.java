@@ -33,7 +33,6 @@ import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.ChromosomeImpl;
 import ubic.gemma.model.genome.ChromosomeService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -64,7 +63,7 @@ public class GeneWebService {
 
     @Autowired
     private ChromosomeService chromosomeService;
-    
+
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
@@ -80,7 +79,7 @@ public class GeneWebService {
 
         return valueObjects;
     }
-    
+
     @GET
     @Path("/find-genes-with-evidence")
     @Produces(MediaType.APPLICATION_JSON)
@@ -88,43 +87,40 @@ public class GeneWebService {
         return phenotypeAssociationManagerService.findGenesWithEvidence( geneSymbol, null );
     }
 
-        
     /**
-     * Find genes located in a given region. Genes that overlap the query region are returned. 
+     * Find genes located in a given region. Genes that overlap the query region are returned.
      * 
-     * @param chromosomeName - eg:  2, 3, X
-     * @param strand - eg: +, -   (currently disabled)
+     * @param chromosomeName - eg: 2, 3, X
+     * @param strand - eg: +, - (currently disabled)
      * @param start - start of the region
      * @param size - size of the region
      * @return GeneValue objects of the genes in the region.
-     */    
+     */
     @GET
     @Path("/find-genes-by-genomic-location")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<GeneValueObject> findGeneDetails( @QueryParam("chromosome") String chromosomeName,
-    		@QueryParam("strand") String strand,    		
-    		@QueryParam("start") Long start,
-    		@QueryParam("size") Integer size ) {
-    
-    	// Construct query object
-    	PhysicalLocation region = new PhysicalLocationImpl();
-    	Taxon taxon = taxonService.findByCommonName("human");
-    	
-    	Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );
-        if ( chromosomes.isEmpty() ) throw new NotFoundException( "Chromosome "+chromosomeName+" not found." );
+            @QueryParam("strand") String strand, @QueryParam("start") Long start, @QueryParam("size") Integer size ) {
 
-    	Chromosome chromosome = chromosomes.iterator().next();
-    	region.setChromosome( chromosome );
-    	region.setNucleotide( start );
-    	region.setNucleotideLength( size );
-    	//region.setStrand( strand );
-    	
-    	// Do the search
-    	Collection<Gene> genes = geneService.find(region);
- 
-    	// Convert to value objects
-    	Collection<GeneValueObject> valueObjects = GeneValueObject.convert2ValueObjects(genes);
- 
+        // Construct query object
+        PhysicalLocation region = new PhysicalLocationImpl();
+        Taxon taxon = taxonService.findByCommonName( "human" );
+
+        Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );
+        if ( chromosomes.isEmpty() ) throw new NotFoundException( "Chromosome " + chromosomeName + " not found." );
+
+        Chromosome chromosome = chromosomes.iterator().next();
+        region.setChromosome( chromosome );
+        region.setNucleotide( start );
+        region.setNucleotideLength( size );
+        // region.setStrand( strand );
+
+        // Do the search
+        Collection<Gene> genes = geneService.find( region );
+
+        // Convert to value objects
+        Collection<GeneValueObject> valueObjects = GeneValueObject.convert2ValueObjects( genes );
+
         return valueObjects;
     }
 

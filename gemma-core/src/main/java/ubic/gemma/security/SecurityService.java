@@ -20,6 +20,8 @@ import java.util.Map;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
@@ -111,6 +113,24 @@ public interface SecurityService {
      */
     @Secured({ "ACL_SECURABLE_READ" })
     public abstract Collection<String> editableBy( Securable s );
+
+    /**
+     * Note that this method cannot be secured, but as it only reads permissions on a securable already in scope, it is
+     * safe.
+     * 
+     * @param s
+     * @return
+     */
+    public MutableAcl getAcl( Securable s );
+
+    /**
+     * Note that this method cannot be secured, but as it only reads permissions on securables already in scope, it is
+     * safe.
+     * 
+     * @param securables
+     * @return
+     */
+    public Map<Securable, Acl> getAcls( Collection<? extends Securable> securables );
 
     /**
      * We make this available to anonymous
@@ -365,4 +385,5 @@ public interface SecurityService {
      */
     @Secured("GROUP_ADMIN")
     public abstract void setOwner( Securable s, String userName );
+
 }

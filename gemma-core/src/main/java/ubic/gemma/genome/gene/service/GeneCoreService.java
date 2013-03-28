@@ -16,8 +16,6 @@ package ubic.gemma.genome.gene.service;
 
 import java.util.Collection;
 
-import org.springframework.stereotype.Service;
-
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
@@ -25,7 +23,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * 
  * @author nicolas
  * @version $Id$
- */ 
+ */
 public interface GeneCoreService {
 
     /**

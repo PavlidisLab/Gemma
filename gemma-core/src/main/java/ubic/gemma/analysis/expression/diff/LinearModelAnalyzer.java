@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -266,7 +267,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * @param matrix on which to perform regression.
      * @param config containing configuration of factors to include. Any interactions or subset configuration is
-     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way.
+     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qvaluethreshold will be
+     *        ignored)
      * @param retainScale if true, the data retain the global mean (intercept)
      * @return residuals from the regression.
      */
@@ -278,6 +280,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             log.warn( "No factors" );
             return matrix; // FIXME perhaps return a copy instead. OR throw an ex.
         }
+
+        /*
+         * Always retain all.
+         */
+        config.setQvalueThreshold( null );
 
         /*
          * Note that this method relies on similar code to doAnalysis, for the setup stages.
@@ -315,36 +322,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         f.setRowNames( dmatrix.getMatrix().getRowNames() );
         f.setColumnNames( dmatrix.getMatrix().getColNames() );
         return new ExpressionDataDoubleMatrix( dmatrix, f );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment ) {
-        return run( expressionExperiment, expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, java.util.Collection)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors ) {
-
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factors );
-
-        return this.run( expressionExperiment, config );
 
     }
 
@@ -1031,6 +1008,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         newConfig.setSubsetFactor( null );
         newConfig.setFactorsToInclude( factors );
+        newConfig.setQvalueThreshold( config.getQvalueThreshold() );
 
         return newConfig;
 
@@ -1232,7 +1210,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
         Collection<ExpressionAnalysisResultSet> resultSets = makeResultSets( label2Factors, baselineConditions,
-                oneSampleTtest, expressionAnalysis, resultLists );
+                oneSampleTtest, expressionAnalysis, resultLists, config.getQvalueThreshold() );
 
         expressionAnalysis.setResultSets( resultSets );
 
@@ -1416,13 +1394,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param oneSampleTtest
      * @param expressionAnalysis
      * @param resultLists
+     * @param qValueThreshold for retention of results
      * @return
      */
     private Collection<ExpressionAnalysisResultSet> makeResultSets(
             final Map<String, Collection<ExperimentalFactor>> label2Factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions, boolean oneSampleTtest,
             DifferentialExpressionAnalysis expressionAnalysis,
-            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists ) {
+            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists, Double qvalueThreshold ) {
 
         Map<CompositeSequence, Collection<Gene>> probeToGeneMap = getProbeToGeneMap( resultLists );
 
@@ -1451,6 +1430,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             int numberOfProbesTested = results.size();
             int numberOfGenesTested = getNumberOfGenesTested( results, probeToGeneMap );
 
+            removeUnwantedResults( qvalueThreshold, results );
+
             // make List into Set
             ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( factorsUsed,
                     numberOfProbesTested, numberOfGenesTested, baselineGroup, expressionAnalysis,
@@ -1461,6 +1442,27 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         }
         return resultSets;
+    }
+
+    /**
+     * @param qvalueThreshold
+     * @param results
+     */
+    private void removeUnwantedResults( Double qvalueThreshold, Collection<DifferentialExpressionAnalysisResult> results ) {
+
+        if ( qvalueThreshold != null ) {
+            int i = 0;
+            for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
+                DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) it.next();
+
+                if ( r.getCorrectedPvalue() == null || r.getCorrectedPvalue() >= qvalueThreshold ) {
+                    it.remove();
+                } else {
+                    i++;
+                }
+            }
+            log.info( "Retained " + i + " results meeting qvalue of " + qvalueThreshold );
+        }
     }
 
     /**

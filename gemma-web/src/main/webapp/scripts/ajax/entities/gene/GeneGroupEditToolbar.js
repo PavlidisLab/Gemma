@@ -59,7 +59,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 										taxonName : args.taxon.data.commonName,
 										publik : args.publik,
 										// id : -1, // maybe not important.
-										currentUserHasWritePermission : true,
+										writeableByUser : true,
 										geneIds : [],
 										size: 0
 									});
@@ -184,7 +184,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 								this.cloneBut.enable();
 							}
 
-							if (record.get('currentUserHasWritePermission')) {
+							if (record.get('writeableByUser')) {
 								this.deleteBut.enable();
 
 								if (record.isModified()) {
@@ -352,7 +352,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 							description : rec.get("description"),
 							size : rec.get("size"),
 							geneIds : rec.get("geneIds"),
-							currentUserHasWritePermission : true
+							writeableByUser : true
 						});
 
 				this.ownerCt.getStore().add(newRec);

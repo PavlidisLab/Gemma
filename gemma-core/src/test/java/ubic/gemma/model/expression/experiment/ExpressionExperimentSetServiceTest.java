@@ -137,8 +137,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         expressionExperimentSetService.update( eeSet );
         ExpressionExperimentSet updatedSet = expressionExperimentSetService.load( eeSetId );
         // need VO otherwise was getting lazy loading issues
-        ExpressionExperimentSetValueObject setVO = expressionExperimentSetValueObjectHelper
-                .convertToValueObject( updatedSet );
+        ExpressionExperimentSetValueObject setVO = expressionExperimentSetService.loadValueObject( updatedSet.getId() );
 
         assertEquals( newName, setVO.getName() );
         assertEquals( newDesc, setVO.getDescription() );

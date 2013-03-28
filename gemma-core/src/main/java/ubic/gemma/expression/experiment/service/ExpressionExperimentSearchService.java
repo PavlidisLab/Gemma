@@ -17,6 +17,8 @@ package ubic.gemma.expression.experiment.service;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.search.SearchResultDisplayObject;
 
@@ -32,6 +34,7 @@ public interface ExpressionExperimentSearchService {
      * @param query
      * @return Collection of expression experiment entity objects
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public abstract Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query );
 
     /**
@@ -43,6 +46,10 @@ public interface ExpressionExperimentSearchService {
      */
     public abstract List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId );
 
+    /**
+     * @param taxonId
+     * @return
+     */
     public abstract List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId );
 
 }

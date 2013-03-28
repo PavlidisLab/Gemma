@@ -65,8 +65,10 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
         factors.add( super.experimentalFactorA_Area );
-
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, factors );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( null );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
@@ -151,8 +153,10 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         quantitationType.setIsRatio( true ); // must be for one-sample to make sense.
         quantitationType.setScale( ScaleType.LOG2 );
-
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, factors );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( null );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();

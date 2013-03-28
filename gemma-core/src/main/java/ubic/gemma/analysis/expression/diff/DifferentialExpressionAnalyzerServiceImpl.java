@@ -248,14 +248,17 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return persistentAnalysis;
     }
 
-    /**
-     * @param ee
-     * @param copyMe
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#redoAnalysis(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment, ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis,
+     * java.lang.Double)
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe ) {
+            DifferentialExpressionAnalysis copyMe, Double qValueThreshold ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
 
         if ( !differentialExpressionAnalysisService.canDelete( copyMe ) ) {
@@ -268,6 +271,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         log.info( "Will base analysis on old one: " + copyMe );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setQvalueThreshold( qValueThreshold );
 
         if ( copyMe.getSubsetFactorValue() != null ) {
             config.setSubsetFactor( copyMe.getSubsetFactorValue().getExperimentalFactor() );
@@ -313,36 +317,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#runDifferentialExpressionAnalyses(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
-        try {
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
-                    .analyze( expressionExperiment, factors );
-
-            diffExpressionAnalyses = persistAnalyses( expressionExperiment, diffExpressionAnalyses, factors );
-            /*
-             * Save histograms . Do this here, outside of the other transaction .
-             */
-            for ( DifferentialExpressionAnalysis a : diffExpressionAnalyses ) {
-                writeDistributions( expressionExperiment, a );
-            }
-            return diffExpressionAnalyses;
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( expressionExperiment,
-                    FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
-                    ExceptionUtils.getFullStackTrace( e ) );
-            throw new RuntimeException( e );
-        }
     }
 
     /*
@@ -447,7 +421,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         log.info( "Retrieving gene-element information ..." );
         probe2GeneMap = compositeSequenceService.getGenes( probe2GeneMap.keySet() );
 
-        if ( probe2GeneMap.isEmpty() ) throw new IllegalStateException( "The probes do not map to genes" );
+        if ( probe2GeneMap.isEmpty() ) throw new IllegalStateException( "The elements do not map to genes" );
 
         int i = 1;
         for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
@@ -701,8 +675,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         StopWatch timer = new StopWatch();
         timer.start();
         List<Histogram> pvalueHistograms = new ArrayList<Histogram>();
-        // List<Histogram> qvalueHistograms = new ArrayList<Histogram>();
-        // List<Histogram> scoreHistograms = new ArrayList<Histogram>();
 
         List<ExpressionAnalysisResultSet> resultSetList = new ArrayList<ExpressionAnalysisResultSet>();
         resultSetList.addAll( diffExpressionAnalysis.getResultSets() );
@@ -725,15 +697,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Histogram pvalHist = new Histogram( factorName, 100, 0.0, 1.0 );
             pvalueHistograms.add( pvalHist );
 
-            // Histogram qvalHist = new Histogram( factorName, 100, 0.0, 1.0 );
-            // qvalueHistograms.add( qvalHist );
-
-            // Histogram scoreHist = new Histogram( factorName, 200, -20, 20 );
-            // scoreHistograms.add( scoreHist );
-
             for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
-                // Double correctedPvalue = result.getCorrectedPvalue();
-                // if ( correctedPvalue != null ) qvalHist.fill( correctedPvalue );
 
                 Double pvalue = result.getPvalue();
                 if ( pvalue != null ) pvalHist.fill( pvalue );
@@ -742,17 +706,10 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         DoubleMatrix<String, String> pvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size() );
-        // DoubleMatrix<String, String> qvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size()
-        // );
-        // DoubleMatrix<String, String> scoreDists = new DenseDoubleMatrix<String, String>( 200, resultSetList.size() );
 
         fillDists( factorNames, pvalueHistograms, pvalueDists );
-        // fillDists( factorNames, qvalueHistograms, qvalueDists );
-        // fillDists( factorNames, scoreHistograms, scoreDists );
 
         saveDistributionMatrixToFile( "pvalues", pvalueDists, expressionExperiment, resultSetList );
-        // saveDistributionMatrixToFile( "qvalues", qvalueDists, expressionExperiment, resultSetList );
-        // saveDistributionMatrixToFile( "scores", scoreDists, expressionExperiment, resultSetList );
 
         if ( timer.getTime() > 5000 ) {
             log.info( "Done writing distributions: " + timer.getTime() + "ms" );

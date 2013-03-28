@@ -34,30 +34,30 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
 
     private static final long serialVersionUID = -6852364688337216390L;
 
-    private boolean currentUserHasWritePermission = false;
+    private boolean userOwned = false;
 
-    private boolean currentUserIsOwner = false;
+    private boolean userCanWrite = false;
 
-    private String description;
+    private String description = "";
 
-    private Collection<Long> expressionExperimentIds;
+    private Collection<Long> expressionExperimentIds = new HashSet<Long>();
 
-    private Long id;
+    private Long id = null;
+
+    private boolean isPublic = false;
 
     /**
      * If modifying the set is constrained by existing analyses.
      */
-    private boolean modifiable;
+    private boolean modifiable = true;
 
-    private String name;
+    private String name = "";
 
-    private Integer numExperiments;
+    private Integer numExperiments = 0;
 
-    private boolean publik;
+    private boolean shared = false;
 
-    private boolean shared;
     private Long taxonId;
-
     private String taxonName;
 
     public ExpressionExperimentSetValueObject() {
@@ -134,44 +134,23 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
         return result;
     }
 
-    public boolean isCurrentUserHasWritePermission() {
-        return currentUserHasWritePermission;
-    }
-
-    /**
-     * @return the currentUserIsOwner
-     */
-    public boolean isCurrentUserIsOwner() {
-        return currentUserIsOwner;
-    }
-
     public boolean isModifiable() {
         return modifiable;
     }
 
-    /**
-     * @return the publik
-     */
+    @Override
     public boolean isPublik() {
-        return publik;
+        return this.isPublic;
     }
 
-    /**
-     * @return the shared
-     */
+    @Override
     public boolean isShared() {
         return shared;
     }
 
-    public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
-        this.currentUserHasWritePermission = currentUserHasWritePermission;
-    }
-
-    /**
-     * @param currentUserIsOwner the currentUserIsOwner to set
-     */
-    public void setCurrentUserIsOwner( boolean currentUserIsOwner ) {
-        this.currentUserIsOwner = currentUserIsOwner;
+    @Override
+    public boolean isUserOwned() {
+        return this.userOwned;
     }
 
     public void setDescription( String description ) {
@@ -186,6 +165,21 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
         this.id = id;
     }
 
+    @Override
+    public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
+
+    @Override
+    public void setIsShared( boolean isShared ) {
+        this.shared = isShared;
+    }
+
+    @Override
+    public void setIsUserOwned( boolean isUserOwned ) {
+        this.userOwned = isUserOwned;
+    }
+
     public void setModifiable( boolean modifiable ) {
         this.modifiable = modifiable;
     }
@@ -198,26 +192,22 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
         this.numExperiments = numExperiments;
     }
 
-    /**
-     * @param publik the publik to set
-     */
-    public void setPublik( boolean publik ) {
-        this.publik = publik;
-    }
-
-    /**
-     * @param shared the shared to set
-     */
-    public void setShared( boolean shared ) {
-        this.shared = shared;
-    }
-
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
     }
 
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
+    }
+
+    @Override
+    public void setWriteableByUser( boolean userCanWrite ) {
+        this.userCanWrite = userCanWrite;
+    }
+
+    @Override
+    public boolean isWriteableByUser() {
+        return this.userCanWrite;
     }
 
 }

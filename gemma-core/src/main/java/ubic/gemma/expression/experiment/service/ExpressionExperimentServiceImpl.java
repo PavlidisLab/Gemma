@@ -1012,12 +1012,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
             boolean maintainOrder ) {
-        /*
-         * NOTE: Don't try and call this.loadMultiple(ids) to have security filter out experiments. The security
-         * filtering just doesn't work. You need to call loadMultiple before calling loadValueObjects.
-         */
         return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
-
     }
 
     /*

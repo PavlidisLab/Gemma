@@ -756,9 +756,9 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	createInDatabase: function(){
 		var editedGroup;
 		if (this.getSelectedExperimentSet() === null || typeof this.getSelectedExperimentSet() === 'undefined' || 
-				!(this.getSelectedExperimentSet() instanceof DatabaseBackedExpressionExperimentSetValueObject)) {
+				 this.getSelectedExperimentSet() instanceof SessionBoundExpressionExperimentSetValueObject)  {
 			//group wasn't made before launching 
-			editedGroup = new DatabaseBackedExpressionExperimentSetValueObject();
+			editedGroup = new ExpressionExperimentSetValueObject();
 		}
 		else {
 			editedGroup = Object.clone(this.getSelectedExperimentSet());

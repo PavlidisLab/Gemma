@@ -18,14 +18,18 @@
  */
 package ubic.gemma.model.analysis.expression;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +39,10 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
@@ -46,132 +53,11 @@ import ubic.gemma.model.genome.Taxon;
 public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implements ExpressionExperimentSetDao {
 
     @Autowired
+    private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
     public ExpressionExperimentSetDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.
-     * BioAssaySet)
-     */
-    @Override
-    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select ees from ExpressionExperimentSetImpl ees inner join ees.experiments e where e = :ee", "ee",
-                bioAssaySet );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getExperimentsInSet(java.lang.Long)
-     */
-    @Override
-    public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select ees.experiments from ExpressionExperimentSetImpl ees where ees.id = :id", "id", id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllMultiExperimentSets()
-     */
-    @Override
-    public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
-        return this.getHibernateTemplate().find(
-                "select ees from ExpressionExperimentSetImpl ees where size(ees.experiments) > 1" );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllExperimentSetsWithTaxon()
-     */
-    @Override
-    public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
-        return this.getHibernateTemplate().find(
-                "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
-    }
-
-    @Override
-    public Taxon getTaxon( Long eeSetId ) {
-        List<?> r = this.getHibernateTemplate().findByNamedParam(
-                "select ees.taxon from ExpressionExperimentSetImpl ees where ees.id = :id", "id", eeSetId );
-        if ( r.isEmpty() ) return null;
-        return ( Taxon ) r.iterator().next();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#thaw(ubic.gemma.model.analysis.expression.
-     * ExpressionExperimentSet)
-     */
-    @Override
-    public void thaw( final ExpressionExperimentSet expressionExperimentSet ) {
-
-        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
-
-            @Override
-            public Object doInHibernate( Session session ) throws HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( expressionExperimentSet );
-                Hibernate.initialize( expressionExperimentSet );
-                Hibernate.initialize( expressionExperimentSet.getTaxon() );
-                Hibernate.initialize( expressionExperimentSet.getExperiments() );
-                return null;
-            }
-        } );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleFindByName(java.lang.String)
-     */
-    protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
-        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where name=:query",
-                "query", name );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
-     * .expression.ExpressionExperimentSet)
-     */
-    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
-            throws Exception {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
-                        "eeset", expressionExperimentSet );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getExperimentCount(java.lang.Long)
-     */
-    @Override
-    public int getExperimentCount( Long id ) {
-
-        List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select e.id, count(i) from ExpressionExperimentSetImpl e join e.experiments i where e.id in (:ids)",
-                "ids", id );
-
-        for ( Object object : o ) {
-            Object[] oa = ( Object[] ) object;
-            return ( ( Long ) oa[1] ).intValue();
-        }
-
-        return 0;
-
     }
 
     /*
@@ -218,6 +104,19 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
     /*
      * (non-Javadoc)
      * 
+     * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.
+     * BioAssaySet)
+     */
+    @Override
+    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select ees from ExpressionExperimentSetImpl ees inner join ees.experiments e where e = :ee", "ee",
+                bioAssaySet );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#findByName(java.lang.String)
      */
     @Override
@@ -242,6 +141,37 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
                     "Error performing 'ExpressionExperimentSetDao.getAnalyses(ExpressionExperimentSet expressionExperimentSet)' --> "
                             + th, th );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getExperimentsInSet(java.lang.Long)
+     */
+    @Override
+    public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select ees.experiments from ExpressionExperimentSetImpl ees where ees.id = :id", "id", id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getExperimentValueObjectsInSet(java.lang.Long)
+     */
+    @Override
+    public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
+        this.getHibernateTemplate().findByNamedParam(
+                "select i.id from ExpressionExperimentSetImpl eset join eset.experiments i where eset.id = :id", "id",
+                id );
+
+        return expressionExperimentDao
+                .loadValueObjects(
+                        this.getHibernateTemplate()
+                                .findByNamedParam(
+                                        "select i.id from ExpressionExperimentSetImpl eset join eset.experiments i where eset.id = :id",
+                                        "id", id ), false );
     }
 
     @Override
@@ -274,19 +204,49 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         return results;
     }
 
-    /**
-     * @see ExpressionExperimentSetDao#remove(java.lang.Long)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllExperimentSetsWithTaxon()
      */
+    @Override
+    public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
+        return this.getHibernateTemplate().find(
+                "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllMultiExperimentSets()
+     */
+    @Override
+    public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
+        return this.getHibernateTemplate().find(
+                "select ees from ExpressionExperimentSetImpl ees where size(ees.experiments) > 1" );
+    }
 
     @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ExpressionExperimentSet.remove - 'id' can not be null" );
+    public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects() {
+
+        return fetchValueObjects( null );
+    }
+
+    @Override
+    public ExpressionExperimentSetValueObject loadValueObject( Long id ) {
+        Collection<Long> setIds = new HashSet<Long>();
+        setIds.add( id );
+        Collection<ExpressionExperimentSetValueObject> vos = this.loadValueObjects( setIds );
+        if ( vos.isEmpty() ) {
+            return null;
         }
-        ExpressionExperimentSet entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
+        return vos.iterator().next();
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds ) {
+
+        return fetchValueObjects( eeSetIds );
     }
 
     /**
@@ -311,6 +271,44 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
                     "ExpressionExperimentSet.remove - 'expressionExperimentSet' can not be null" );
         }
         this.getHibernateTemplate().delete( expressionExperimentSet );
+    }
+
+    /**
+     * @see ExpressionExperimentSetDao#remove(java.lang.Long)
+     */
+
+    @Override
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ExpressionExperimentSet.remove - 'id' can not be null" );
+        }
+        ExpressionExperimentSet entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#thaw(ubic.gemma.model.analysis.expression.
+     * ExpressionExperimentSet)
+     */
+    @Override
+    public void thaw( final ExpressionExperimentSet expressionExperimentSet ) {
+
+        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
+
+            @Override
+            public Object doInHibernate( Session session ) throws HibernateException {
+                session.buildLockRequest( LockOptions.NONE ).lock( expressionExperimentSet );
+                Hibernate.initialize( expressionExperimentSet );
+                Hibernate.initialize( expressionExperimentSet.getTaxon() );
+                Hibernate.initialize( expressionExperimentSet.getExperiments() );
+                return null;
+            }
+        } );
+
     }
 
     /**
@@ -348,20 +346,128 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         this.getHibernateTemplate().update( expressionExperimentSet );
     }
 
-    @Override
-    public Collection<Long> getExperimentIds( Long id ) {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleFindByName(java.lang.String)
+     */
+    protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where name=:query",
+                "query", name );
+    }
 
-        List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select e.id, i.id from ExpressionExperimentSetImpl e join e.experiments i where e.id = :id", "id", id );
-        Collection<Long> results = new ArrayList<Long>();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
+     * .expression.ExpressionExperimentSet)
+     */
+    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
+            throws Exception {
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
+                        "eeset", expressionExperimentSet );
+    }
 
-        for ( Object object : o ) {
-            Object[] oa = ( Object[] ) object;
-            results.add( ( Long ) oa[1] );
+    /**
+     * @param ids, if null fetch all.
+     * @return
+     */
+    private Collection<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids ) {
+        Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentSetValueObject>();
+        Query queryObject = this.getLoadValueObjectsQueryString( ids );
+        List<?> list = queryObject.list();
+        for ( Object object : list ) {
+
+            Object[] res = ( Object[] ) object;
+
+            Long eeId = ( Long ) res[0];
+
+            assert eeId != null;
+
+            ExpressionExperimentSetValueObject v;
+            if ( vo.containsKey( eeId ) ) {
+                v = vo.get( eeId );
+            } else {
+                v = new ExpressionExperimentSetValueObject();
+                v.setId( eeId );
+                vo.put( eeId, v );
+            }
+
+            v.setId( eeId );
+            v.setName( ( String ) res[1] );
+            v.setDescription( ( String ) res[2] );
+
+            v.setTaxonName( ( String ) res[3] );
+            v.setTaxonId( ( Long ) res[4] );
+            v.setNumExperiments( ( ( Long ) res[5] ).intValue() );
+            vo.put( eeId, v );
+
         }
 
-        return results;
+        Collection<ExpressionExperimentSetValueObject> result = vo.values();
 
+        /*
+         * populate 'modifiable' - if it has any analysis attached to it, it is not. Might want to make this optional.
+         */
+        if ( !result.isEmpty() ) {
+            populateModifiable( result );
+        }
+        return result;
+    }
+
+    private void populateModifiable( Collection<ExpressionExperimentSetValueObject> eeSets ) {
+
+        /*
+         * This can be sped up by checking if any are master sets.
+         */
+
+        Map<Long, ExpressionExperimentSetValueObject> idMap = EntityUtils.getIdMap( eeSets );
+
+        Set<Long> ids = idMap.keySet();
+
+        /*
+         * Currently the only type of analysis that ties up EEsets is the GenecoexpressionAnalysis.
+         */
+        List<Long> unmodifiable = this.getHibernateTemplate().findByNamedParam(
+                "select es.id from GeneCoexpressionAnalysisImpl m "
+                        + "join m.expressionExperimentSetAnalyzed es where es.id in (:ids)", "ids", ids );
+
+        for ( Long id : unmodifiable ) {
+            idMap.get( id ).setModifiable( false );
+        }
+
+    }
+
+    /**
+     * @param ids
+     * @return
+     */
+    private Query getLoadValueObjectsQueryString( Collection<Long> ids ) {
+
+        String idClause = "";
+        if ( ids != null ) {
+            if ( ids.isEmpty() ) {
+                throw new IllegalArgumentException( "If provided ids cannot be empty" );
+            }
+            idClause = " where eeset.id in (:ids)";
+        }
+
+        String queryString = "select eeset.id , " // 0
+                + "eeset.name, " // 1
+                + "eeset.description, " // 2
+                + "taxon.commonName," // 3
+                + "taxon.id," // 4
+                + " count(ees) " // 5
+                + " from ExpressionExperimentSetImpl as eeset inner join eeset.taxon taxon inner join eeset.experiments ees "
+                + idClause + " group by eeset.id ";
+
+        Query queryObject = super.getSession().createQuery( queryString );
+        if ( ids != null ) queryObject.setParameterList( "ids", ids );
+        return queryObject;
     }
 
 }

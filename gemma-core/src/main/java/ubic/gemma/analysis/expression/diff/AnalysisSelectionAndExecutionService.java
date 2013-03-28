@@ -32,42 +32,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 public interface AnalysisSelectionAndExecutionService extends ApplicationContextAware {
 
     /**
-     * Initiates the differential expression analysis
-     * 
-     * @param expressionExperiment
-     * @return
-     * @deprecated because it is not used.
-     */
-    @Deprecated
-    public abstract Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment );
-
-    /**
      * @param expressionExperiment
      * @param config
      * @return
      */
     public abstract Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config );
-
-    /**
-     * Initiates the differential expression analysis
-     * 
-     * @param expressionExperiment
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors );
-
-    /**
-     * @param expressionExperiment
-     * @param factors
-     * @param type
-     * @return
-     * @deprecated as it is not used
-     */
-    @Deprecated
-    public abstract Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors, AnalysisType type );
 
     /**
      * @param bioAssaySet

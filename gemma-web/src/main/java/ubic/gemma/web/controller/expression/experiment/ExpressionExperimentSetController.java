@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -54,9 +53,12 @@ import ubic.gemma.web.persistence.SessionListManager;
 @RequestMapping("/expressionExperimentSet")
 public class ExpressionExperimentSetController extends BaseController {
 
-    @Autowired private ExpressionExperimentReportService expressionExperimentReportService;
-    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired private SessionListManager sessionListManager;
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired
+    private SessionListManager sessionListManager;
 
     /**
      * AJAX adds the Expression Experiment group to the session
@@ -118,11 +120,11 @@ public class ExpressionExperimentSetController extends BaseController {
     public String canCurrentUserEditGroup( ExpressionExperimentSetValueObject eesvo ) {
         boolean userCanEditGroup = false;
         boolean groupIsDBBacked = false;
-        if ( eesvo instanceof DatabaseBackedExpressionExperimentSetValueObject ) {
+        if ( !( eesvo instanceof SessionBoundExpressionExperimentSetValueObject ) ) {
             groupIsDBBacked = true;
             try {
-                ExpressionExperimentSetValueObject set = expressionExperimentSetService.getValueObject( eesvo.getId() );
-                userCanEditGroup = ( set.isCurrentUserHasWritePermission() && set.isModifiable() );
+                ExpressionExperimentSetValueObject set = expressionExperimentSetService.loadValueObject( eesvo.getId() );
+                userCanEditGroup = ( set.isWriteableByUser() && set.isModifiable() );
 
             } catch ( org.springframework.security.access.AccessDeniedException ade ) {
                 return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + false + "}";
@@ -137,15 +139,17 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public Collection<ExpressionExperimentSetValueObject> create(
             Collection<ExpressionExperimentSetValueObject> entities ) {
-        Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
+
+        Collection<Long> eeSetIds = new HashSet<Long>();
         for ( ExpressionExperimentSetValueObject ees : entities ) {
 
             if ( ees.getExpressionExperimentIds() == null || ees.getExpressionExperimentIds().isEmpty() ) {
                 throw new IllegalArgumentException( "No expression experiment ids provided. Cannot save an empty set." );
             }
-            result.add( this.create( ees ) );
+            ExpressionExperimentSet newEESet = this.create( ees );
+            eeSetIds.add( newEESet.getId() );
         }
-        return result;
+        return this.expressionExperimentSetService.loadValueObjects( eeSetIds );
     }
 
     /**
@@ -168,7 +172,7 @@ public class ExpressionExperimentSetController extends BaseController {
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
         Collection<ExpressionExperimentValueObject> result = expressionExperimentSetService
                 .getExperimentValueObjectsInSet( id );
-        expressionExperimentReportService.getReportInformation( result );
+        // expressionExperimentReportService.getReportInformation( result );
         return result;
     }
 
@@ -179,18 +183,16 @@ public class ExpressionExperimentSetController extends BaseController {
      * @throws IllegalArgumentException if the id param is null
      * @throws AccessDeniedException if the id param is not null but the loading function returns a null value
      */
-    public DatabaseBackedExpressionExperimentSetValueObject load( Long id ) {
+    public ExpressionExperimentSetValueObject load( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Cannot load an experiment set with a null id." );
         }
         Collection<Long> ids = new ArrayList<Long>( 1 );
         ids.add( id );
 
-        Collection<DatabaseBackedExpressionExperimentSetValueObject> sets = expressionExperimentSetService
-                .getValueObjectsFromIds( ids );// filtered
-        // by
+        Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService.loadValueObjects( ids );
         // security.
-        if ( sets == null || sets.size() < 1 ) {
+        if ( sets == null || sets.isEmpty() ) {
             throw new AccessDeniedException( "No experiment set exists with id=" + id
                     + " or you do not have permission to access it." );
         } else if ( sets.size() > 1 ) {
@@ -208,10 +210,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public Collection<ExpressionExperimentSetValueObject> loadAll() {
         Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService
-                .loadAllExperimentSetValueObjectsWithTaxon();
-
-        // TODO why are we trying to sort a collection?? Does this need to be a list?
-        // Collections.sort( sets );
+                .loadAllExperimentSetValueObjects();
 
         return sets;
     }
@@ -265,7 +264,7 @@ public class ExpressionExperimentSetController extends BaseController {
      * @param name
      * @return
      */
-    public DatabaseBackedExpressionExperimentSetValueObject loadByName( String name ) {
+    public ExpressionExperimentSetValueObject loadByName( String name ) {
         if ( StringUtils.isBlank( name ) ) {
             throw new IllegalArgumentException( "Cannot load an experiment set with a blank name." );
         }
@@ -275,7 +274,7 @@ public class ExpressionExperimentSetController extends BaseController {
             throw new AccessDeniedException( "No experiment set exists with name=" + name
                     + " or you do not have permission to access it." );
         }
-        return expressionExperimentSetService.getValueObject( sets.iterator().next().getId() );
+        return expressionExperimentSetService.loadValueObject( sets.iterator().next().getId() );
 
     }
 
@@ -284,9 +283,9 @@ public class ExpressionExperimentSetController extends BaseController {
      * @return the entities which were removed.
      */
     // TODO returning the entities that were removed is weird?
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> remove(
-            Collection<DatabaseBackedExpressionExperimentSetValueObject> entities ) {
-        for ( DatabaseBackedExpressionExperimentSetValueObject ees : entities ) {
+    public Collection<ExpressionExperimentSetValueObject> remove(
+            Collection<ExpressionExperimentSetValueObject> entities ) {
+        for ( ExpressionExperimentSetValueObject ees : entities ) {
             this.remove( ees );
         }
         return entities;
@@ -311,14 +310,14 @@ public class ExpressionExperimentSetController extends BaseController {
     public Collection<ExpressionExperimentSetValueObject> removeUserAndSessionGroups(
             Collection<ExpressionExperimentSetValueObject> vos ) {
         Collection<ExpressionExperimentSetValueObject> removedSets = new HashSet<ExpressionExperimentSetValueObject>();
-        Collection<DatabaseBackedExpressionExperimentSetValueObject> databaseCollection = new HashSet<DatabaseBackedExpressionExperimentSetValueObject>();
+        Collection<ExpressionExperimentSetValueObject> databaseCollection = new HashSet<ExpressionExperimentSetValueObject>();
         Collection<SessionBoundExpressionExperimentSetValueObject> sessionCollection = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
 
         for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
             if ( experimentSetValueObject instanceof SessionBoundExpressionExperimentSetValueObject ) {
                 sessionCollection.add( ( SessionBoundExpressionExperimentSetValueObject ) experimentSetValueObject );
-            } else if ( experimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject ) {
-                databaseCollection.add( ( DatabaseBackedExpressionExperimentSetValueObject ) experimentSetValueObject );
+            } else {
+                databaseCollection.add( experimentSetValueObject );
             }
         }
 
@@ -359,9 +358,9 @@ public class ExpressionExperimentSetController extends BaseController {
      * @param entities
      * @return the entities which were updated (even if they weren't actually updated)
      */
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> update(
-            Collection<DatabaseBackedExpressionExperimentSetValueObject> entities ) {
-        for ( DatabaseBackedExpressionExperimentSetValueObject ees : entities ) {
+    public Collection<ExpressionExperimentSetValueObject> update(
+            Collection<ExpressionExperimentSetValueObject> entities ) {
+        for ( ExpressionExperimentSetValueObject ees : entities ) {
 
             if ( ees.getExpressionExperimentIds() == null || ees.getExpressionExperimentIds().isEmpty() ) {
                 throw new IllegalArgumentException( "No expression experiment ids provided. Cannot save an empty set." );
@@ -392,8 +391,7 @@ public class ExpressionExperimentSetController extends BaseController {
      * @param eeSetVO the value object that represents the database record to update
      * @return a value object for the updated set
      */
-    public DatabaseBackedExpressionExperimentSetValueObject updateNameDesc(
-            DatabaseBackedExpressionExperimentSetValueObject eeSetVO ) {
+    public ExpressionExperimentSetValueObject updateNameDesc( ExpressionExperimentSetValueObject eeSetVO ) {
 
         return expressionExperimentSetService.updateDatabaseEntityNameDesc( eeSetVO );
 
@@ -417,14 +415,14 @@ public class ExpressionExperimentSetController extends BaseController {
             Collection<ExpressionExperimentSetValueObject> vos ) {
 
         Collection<ExpressionExperimentSetValueObject> updatedSets = new HashSet<ExpressionExperimentSetValueObject>();
-        Collection<DatabaseBackedExpressionExperimentSetValueObject> databaseCollection = new HashSet<DatabaseBackedExpressionExperimentSetValueObject>();
+        Collection<ExpressionExperimentSetValueObject> databaseCollection = new HashSet<ExpressionExperimentSetValueObject>();
         Collection<SessionBoundExpressionExperimentSetValueObject> sessionCollection = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
 
         for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
             if ( experimentSetValueObject instanceof SessionBoundExpressionExperimentSetValueObject ) {
                 sessionCollection.add( ( SessionBoundExpressionExperimentSetValueObject ) experimentSetValueObject );
-            } else if ( experimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject ) {
-                databaseCollection.add( ( DatabaseBackedExpressionExperimentSetValueObject ) experimentSetValueObject );
+            } else {
+                databaseCollection.add( experimentSetValueObject );
             }
         }
 
@@ -442,7 +440,7 @@ public class ExpressionExperimentSetController extends BaseController {
      * @param obj
      * @return
      */
-    private ExpressionExperimentSetValueObject create( ExpressionExperimentSetValueObject obj ) {
+    private ExpressionExperimentSet create( ExpressionExperimentSetValueObject obj ) {
 
         if ( obj.getId() != null && obj.getId() >= 0 ) {
             throw new IllegalArgumentException( "Should not provide an id for 'create': " + obj.getId() );
@@ -452,7 +450,7 @@ public class ExpressionExperimentSetController extends BaseController {
             throw new IllegalArgumentException( "You must provide a name" );
         }
 
-        return expressionExperimentSetService.createDatabaseEntity( obj );
+        return expressionExperimentSetService.createFromValueObject( obj );
     }
 
     /**
@@ -471,7 +469,7 @@ public class ExpressionExperimentSetController extends BaseController {
             } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
             }
-            set = expressionExperimentSetService.getValueObject( id );
+            set = expressionExperimentSetService.loadValueObject( id );
 
             if ( set == null ) {
                 throw new IllegalArgumentException( "Unable to access experiment set with id=" + id );
@@ -489,7 +487,7 @@ public class ExpressionExperimentSetController extends BaseController {
      * @return true if it was deleted.
      * @throw IllegalArgumentException it has analyses associated with it
      */
-    private boolean remove( DatabaseBackedExpressionExperimentSetValueObject obj ) {
+    private boolean remove( ExpressionExperimentSetValueObject obj ) {
         try {
             expressionExperimentSetService.deleteDatabaseEntity( obj );
         } catch ( Exception e ) {
@@ -501,7 +499,7 @@ public class ExpressionExperimentSetController extends BaseController {
     /**
      * @param obj
      */
-    private void update( DatabaseBackedExpressionExperimentSetValueObject obj ) {
+    private void update( ExpressionExperimentSetValueObject obj ) {
         try {
             expressionExperimentSetService.updateDatabaseEntity( obj );
         } catch ( Exception e ) {

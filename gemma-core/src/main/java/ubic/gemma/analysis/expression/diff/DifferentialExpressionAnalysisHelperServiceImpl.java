@@ -57,10 +57,9 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         entity.setProtocol( ( Protocol ) persisterHelper.persist( entity.getProtocol() ) );
 
         // Sometimes we have made a new EESubSet as part of the analysis.
-        if ( ExpressionExperimentSubSet.class.isAssignableFrom( entity.getExperimentAnalyzed().getClass() ) ) {
-            if ( entity.getId() == null ) {
-                entity.setExperimentAnalyzed( ( BioAssaySet ) persisterHelper.persist( entity.getExperimentAnalyzed() ) );
-            }
+        if ( ExpressionExperimentSubSet.class.isAssignableFrom( entity.getExperimentAnalyzed().getClass() )
+                && entity.getId() == null ) {
+            entity.setExperimentAnalyzed( ( BioAssaySet ) persisterHelper.persist( entity.getExperimentAnalyzed() ) );
         }
 
         entity = differentialExpressionAnalysisDao.create( entity );

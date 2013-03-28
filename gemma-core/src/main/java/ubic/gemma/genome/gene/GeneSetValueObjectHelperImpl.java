@@ -37,11 +37,9 @@ import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.security.SecurityService;
 
-
 /**
- * This class will handle population of GeneSetValueObjects. Services need to be accessed in order
- * to define values for size, geneIds, and public/private fields.
- * 
+ * This class will handle population of GeneSetValueObjects. Services need to be accessed in order to define values for
+ * size, geneIds, and public/private fields.
  * 
  * @author tvrossum
  * @version $Id$
@@ -51,78 +49,85 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
     @Autowired
     private GeneSetDao geneSetDao;
-    
+
     @Autowired
     private SecurityService securityService;
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToValueObject(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
-    public DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {        
+    public DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {
 
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
         if ( dbgsvo != null ) {
             // no duplicates
-            Set<Long> ids = new HashSet<Long>(this.geneSetDao.getGeneIds( gs.getId() ));
+            Set<Long> ids = new HashSet<Long>( this.geneSetDao.getGeneIds( gs.getId() ) );
             dbgsvo.setGeneIds( ids );
             dbgsvo.setSize( ids.size() );
         }
-        
+
         return dbgsvo;
     }
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToLightValueObject(ubic.gemma.model.genome.gene.GeneSet)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToLightValueObject(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
-    public DatabaseBackedGeneSetValueObject convertToLightValueObject( GeneSet gs ) {        
+    public DatabaseBackedGeneSetValueObject convertToLightValueObject( GeneSet gs ) {
         if ( gs == null ) {
             return null;
         }
-        
+
         DatabaseBackedGeneSetValueObject dbgsvo = new DatabaseBackedGeneSetValueObject();
-        
+
         dbgsvo.setName( gs.getName() );
 
         dbgsvo.setId( gs.getId() );
 
         dbgsvo.setGeneIds( null );
-        
+
         dbgsvo.setDescription( gs.getDescription() );
         dbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
-        
+
         Taxon tax = this.geneSetDao.getTaxon( gs.getId() );
-        if( tax != null){
-            while(tax.getParentTaxon() != null){
+        if ( tax != null ) {
+            while ( tax.getParentTaxon() != null ) {
                 tax = tax.getParentTaxon();
-            }  
+            }
             dbgsvo.setTaxonId( tax.getId() );
             dbgsvo.setTaxonName( tax.getCommonName() );
-        }else{
+        } else {
             dbgsvo.setTaxonId( null );
             dbgsvo.setTaxonName( null );
         }
- 
-        dbgsvo.setCurrentUserHasWritePermission( this.securityService.isEditable( gs ) );
-        dbgsvo.setCurrentUserIsOwner( this.securityService.isOwnedByCurrentUser( gs ) );
-        dbgsvo.setPublik( this.securityService.isPublic( gs ) );
-        dbgsvo.setShared( this.securityService.isShared( gs ) );
-        
+
+        dbgsvo.setWriteableByUser( this.securityService.isEditable( gs ) );
+        dbgsvo.setIsUserOwned( this.securityService.isOwnedByCurrentUser( gs ) );
+        dbgsvo.setIsPublic( this.securityService.isPublic( gs ) );
+        dbgsvo.setIsShared( this.securityService.isShared( gs ) );
+
         return dbgsvo;
     }
-    
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToValueObjects(java.util.Collection)
      */
     @Override
-    public List<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets ){
-        return convertToValueObjects(sets, false);
+    public List<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets ) {
+        return convertToValueObjects( sets, false );
     }
-    
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToValueObjects(java.util.Collection, boolean)
      */
     @Override
@@ -131,9 +136,10 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         return convertToLightValueObjects( genesets, includeOnesWithoutGenes, false );
     }
-    
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToLightValueObjects(java.util.Collection, boolean)
      */
     @Override
@@ -145,7 +151,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
     private List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> genesets,
             boolean includeOnesWithoutGenes, boolean light ) {
-        
+
         List<DatabaseBackedGeneSetValueObject> results = new ArrayList<DatabaseBackedGeneSetValueObject>();
 
         for ( GeneSet gs : genesets ) {
@@ -153,12 +159,12 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
                 continue;
             }
 
-            if(light){
+            if ( light ) {
                 results.add( convertToLightValueObject( gs ) );
-            }else{
+            } else {
                 results.add( convertToValueObject( gs ) );
             }
-            
+
         }
 
         Collections.sort( results, new Comparator<GeneSetValueObject>() {
@@ -167,60 +173,51 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
                 return -o1.getSize().compareTo( o2.getSize() );
             }
         } );
-        
+
         return results;
     }
-    
-    private void fillSessionBoundValueObject( SessionBoundGeneSetValueObject sbgsvo, GeneSet gs, String searchTerm ) {
-                
+
+    private void fillSessionBoundValueObject( SessionBoundGeneSetValueObject sbgsvo, GeneSet gs ) {
+
         sbgsvo.setName( gs.getName() );
         sbgsvo.setDescription( gs.getDescription() );
         sbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
-        
+
         Collection<Long> gids = new HashSet<Long>();
         for ( GeneSetMember gm : gs.getMembers() ) {
             gids.add( gm.getGene().getId() );
         }
         sbgsvo.setGeneIds( gids );
-        
+
         Taxon tax = this.geneSetDao.getTaxon( gs.getId() );
-        if( tax != null){
-            while(tax.getParentTaxon() != null){
+        if ( tax != null ) {
+            while ( tax.getParentTaxon() != null ) {
                 tax = tax.getParentTaxon();
-            }  
+            }
             sbgsvo.setTaxonId( tax.getId() );
             sbgsvo.setTaxonName( tax.getCommonName() );
         }
-        
+
         sbgsvo.setId( new Long( -1 ) );
         sbgsvo.setModified( false );
     }
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToGOValueObject(ubic.gemma.model.genome.gene.GeneSet, java.lang.String, java.lang.String)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToGOValueObject(ubic.gemma.model.genome.gene.GeneSet,
+     * java.lang.String, java.lang.String)
      */
     @Override
     public GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm ) {
-        
+
         GOGroupValueObject ggvo = new GOGroupValueObject();
-        fillSessionBoundValueObject( ggvo, gs, searchTerm );
+        fillSessionBoundValueObject( ggvo, gs );
 
         ggvo.setGoId( goId );
         ggvo.setSearchTerm( searchTerm );
-        
+
         return ggvo;
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.genome.gene.GeneSetValueObjectHelper#convertToGOValueObject(ubic.gemma.model.genome.gene.GeneSet, java.lang.String, java.lang.String)
-     */
-    @Override
-    public PhenotypeGroupValueObject convertToPhenotypeValueObject( GeneSet gs, String searchTerm ){
-
-        PhenotypeGroupValueObject pgvo = new PhenotypeGroupValueObject();
-        fillSessionBoundValueObject( pgvo, gs, searchTerm );
-        
-        return pgvo;
     }
 
 }

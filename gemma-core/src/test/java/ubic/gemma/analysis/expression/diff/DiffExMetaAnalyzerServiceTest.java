@@ -192,12 +192,10 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         /*
          * Run differential analyses.
          */
-        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ds1, ds1.getExperimentalDesign()
-                .getExperimentalFactors() );
-        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ds2, ds2.getExperimentalDesign()
-                .getExperimentalFactors() );
-        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ds3, ds3.getExperimentalDesign()
-                .getExperimentalFactors() );
+
+        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ds1, getConfig( ds1 ) );
+        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ds2, getConfig( ds2 ) );
+        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ds3, getConfig( ds3 ) );
 
         /*
          * Prepare for meta-analysis.
@@ -330,6 +328,18 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 .getExperimentalFactors( rs1.getResults() );
         assertTrue( factorsByResultMap.keySet().containsAll( rs1.getResults() ) );
 
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private DifferentialExpressionAnalysisConfig getConfig( ExpressionExperiment ee ) {
+        DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        config1.setFactorsToInclude( factors );
+        config1.setQvalueThreshold( null );
+        return config1;
     }
 
     /**

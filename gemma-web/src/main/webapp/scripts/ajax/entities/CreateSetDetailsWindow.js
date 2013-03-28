@@ -11,7 +11,7 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 			height : 300,
 			closeAction : 'hide',
 			title : "Provide or edit group details",
-			shadow : true,
+   			shadow : true,
 			modal : true,
 			/**
 			 * taxon combo option to make it only display taxa with experiments
@@ -84,7 +84,7 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 							}), new Ext.form.Checkbox({
 								fieldLabel: 'Public group',
 								name: 'publik',
-								checked: this.publik,
+ 								checked : this.publik,
 								value: this.publik,
 								width: 300
 							})]

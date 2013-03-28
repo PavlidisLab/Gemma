@@ -31,7 +31,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.MutableAclService;
 import org.springframework.security.acls.model.NotFoundException;
@@ -66,7 +65,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
     @Autowired
     private SecurityService securityService;
 
-    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ObjectIdentityRetrievalStrategyImpl();
+    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
     @Autowired
     private MutableAclService aclService;
     @Autowired
@@ -76,11 +75,12 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
     ArrayDesign arrayDesign;
     String arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
-    String compositeSequenceName1 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ); 
-    String compositeSequenceName2 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ); 
+    String compositeSequenceName1 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
+    String compositeSequenceName2 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
      */
     @Before
@@ -111,8 +111,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
             userManager.loadUserByUsername( aDifferentUsername );
         } catch ( UsernameNotFoundException e ) {
             userManager.createUser( new UserDetailsImpl( "foo", aDifferentUsername, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 )
-                    + "@gmail.com", "key", new Date() ) );
+                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
 
     }

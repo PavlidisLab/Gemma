@@ -8,6 +8,7 @@ Ext.namespace('Gemma');
  * @version $Id$
  * @author paul
  * @see DatasetGroupComboPanel for a convenient way to display this with an edit button.
+ * @see ExperimentAndExperimentGroupCombo
  */
 Gemma.DatasetGroupCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
@@ -127,7 +128,7 @@ Gemma.DatasetGroupCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 										name: 'All Experiments',
 										description: 'All expression experiments in the database.',
 										numExperiments: -10,
-										currentUserHasWritePermission: false
+										writeableByUser: false
 									},0);
 									this.insert(0, allExperimentsRecord);
 							}

@@ -43,7 +43,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 										description : args.description,
 										// id : -1, // maybe not important.
 										modifiable : true,
-										currentUserHasWritePermission : true,
+										writeableByUser : true,
 										expressionExperimentIds : [],
 										numExperiments : 0,
 										publik: (args.publik)? args.publik : false,
@@ -159,7 +159,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 								this.cloneBut.enable();
 							}
 
-							if (record.get('currentUserHasWritePermission')) {
+							if (record.get('writeableByUser')) {
 
 								if (record.get('modifiable')) {
 									this.deleteBut.enable();
@@ -421,10 +421,10 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 								"ext:qtip='"+Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT+"' />";
 						}
 						var canEdit = (record.get('id') && record.get('id') > 0)?
-										record.get('currentUserHasWritePermission') : false;
+										record.get('writeableByUser') : false;
 										
 						var isCurrentOwner = (record.get('id') && record.get('id') > 0)?
-										record.get('currentUserIsOwner') : false;
+										record.get('userOwned') : false;
 						
 						var sl = Gemma.SecurityManager
 								.getSecurityLink("ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl",
@@ -437,7 +437,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					scope : this
 				}, {
 					header : "Editable",
-					dataIndex : "currentUserHasWritePermission",
+					dataIndex : "writeableByUser",
 					sortable : true,
 					editable : false,
 					tooltip : 'Do you have permission to edit this group?',

@@ -417,7 +417,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             }
 
             if ( sharingInfo.containsKey( ee ) ) {
-                eeVo.setShared( sharingInfo.get( ee ) );
+                eeVo.setIsShared( sharingInfo.get( ee ) );
             }
 
             /*

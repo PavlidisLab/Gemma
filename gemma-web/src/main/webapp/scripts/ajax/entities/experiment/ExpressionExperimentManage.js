@@ -378,7 +378,7 @@ Gemma.EEReportGridColumnRenderers = {
 
     adminRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
 
-        if (record.get("currentUserHasWritePermission")) {
+        if (record.get("writeableByUser")) {
             var adminLink = '<span class="link"  onClick="Ext.getCmp(\'eemanager\').updateEEReport('
                     + value
                     + ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  ext:qtip="refresh"/></span>';
@@ -415,11 +415,11 @@ Gemma.EEReportGridColumnRenderers = {
         var taxonId = record.get('taxonId');
 
         var url = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId + ','
-                + record.get("currentUserHasWritePermission") + ',' + (record.get("validatedAnnotations") !== null)
+                + record.get("writeableByUser") + ',' + (record.get("validatedAnnotations") !== null)
                 + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></span>';
         value = value + '&nbsp;' + url;
 
-        if (record.get("currentUserHasWritePermission")) {
+        if (record.get("writeableByUser")) {
             var turl;
             if (record.get('autoTagDate')) {
                 var icon = "/Gemma/images/icons/wand.png";
@@ -446,7 +446,7 @@ Gemma.EEReportGridColumnRenderers = {
         // based on biomaterials. and it should
         // come from the server side.
 
-        if (record.get("currentUserHasWritePermission")) {
+        if (record.get("writeableByUser")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doLinks('
                     + id
                     + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run coexpression analysis"  alt="link analysis" /></span>';
@@ -481,7 +481,7 @@ Gemma.EEReportGridColumnRenderers = {
         var id = record.get('id');
         var runurl = "";
 
-        if (record.get("currentUserHasWritePermission")) {
+        if (record.get("writeableByUser")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
                     + id
                     + ', '
@@ -520,7 +520,7 @@ Gemma.EEReportGridColumnRenderers = {
         var id = record.get('id');
         var dataSource = record.get('externalDatabase');
         var runurl = "";
-        if (record.get("currentUserHasWritePermission")) {
+        if (record.get("writeableByUser")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchInfoFetch('
                     + id
                     + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run batch info fetch"  alt="Fetch batch information" /></span>';
@@ -571,7 +571,7 @@ Gemma.EEReportGridColumnRenderers = {
         var id = record.get('id');
 
         var runurl = "";
-        if (record.get("currentUserHasWritePermission")) {
+        if (record.get("writeableByUser")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
                     + id
                     + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></span>';
@@ -605,7 +605,7 @@ Gemma.EEReportGridColumnRenderers = {
     processedVectorCreateRenderer : function(value, metadata, record, rowIndex, colIndex, store) {
         var id = record.get('id');
         var runurl = "";
-        if (record.get("currentUserHasWritePermission")) {
+        if (record.get("writeableByUser")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('
                     + id
                     + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run processed vector generation" alt="processed vector generation"/></span>';
@@ -633,11 +633,11 @@ Gemma.EEReportGridColumnRenderers = {
         var id = record.get('id');
 
         var diffIsPossible = function(record) {
-            return record.get("numPopulatedFactors") > 0 && record.get("currentUserHasWritePermission");
+            return record.get("numPopulatedFactors") > 0 && record.get("writeableByUser");
         };
 
         var runurl = "";
-        if (record.get("currentUserHasWritePermission")) {
+        if (record.get("writeableByUser")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential('
                     + id
                     + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" ext:qtip="Run differential expression analysis"/></span>';
@@ -686,8 +686,8 @@ Gemma.EEReportGridColumnRenderers = {
 
         result = result
                 + Gemma.SecurityManager.getSecurityLink(
-                        'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', id, record.get('isPublic'),
-                        record.get('isShared'), record.get('currentUserHasWritePermission'),null, null,null, record.get('currentUserIsOwner'));
+                        'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', id, record.get('publik'),
+                        record.get('shared'), record.get('writeableByUser'),null, null,null, record.get('userOwned'));
 
         return result;
 

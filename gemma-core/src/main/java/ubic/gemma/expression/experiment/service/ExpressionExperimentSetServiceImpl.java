@@ -20,9 +20,7 @@ package ubic.gemma.expression.experiment.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -30,8 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
@@ -62,9 +58,6 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     private TaxonService taxonService;
 
     @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService;
-
-    @Autowired
     private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
 
     /*
@@ -75,8 +68,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .expression.experiment.ExpressionExperimentSetValueObject)
      */
     @Override
-    public DatabaseBackedExpressionExperimentSetValueObject createDatabaseEntity(
-            ExpressionExperimentSetValueObject eesvo ) {
+    public ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo ) {
 
         /*
          * Sanity check.
@@ -136,7 +128,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
             securityService.makePrivate( newEESet );
         }
 
-        return expressionExperimentValueObjectHelper.convertToValueObject( newEESet );
+        return newEESet;
 
     }
 
@@ -148,7 +140,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
     @Override
-    public void deleteDatabaseEntity( DatabaseBackedExpressionExperimentSetValueObject eesvo ) {
+    public void deleteDatabaseEntity( ExpressionExperimentSetValueObject eesvo ) {
         try {
             delete( load( eesvo.getId() ) );
         } catch ( Exception e ) {
@@ -173,17 +165,6 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     @Override
-    public Collection<Long> getExperimentIdsInSet( Long id ) {
-        ExpressionExperimentSet eeSet = load( id ); // secure
-        Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
-        Collection<Long> eeids = new HashSet<Long>();
-        for ( BioAssaySet ee : datasets ) {
-            eeids.add( ee.getId() );
-        }
-        return eeids;
-    }
-
-    @Override
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
         return this.getExpressionExperimentSetDao().getExperimentsInSet( id );
     }
@@ -191,38 +172,13 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Override
     public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
 
-        Collection<Long> eeids = getExperimentIdsInSet( id );
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentService
-                .loadValueObjects( eeids, false );
-        expressionExperimentReportService.getReportInformation( result );
-        return result;
+        return this.getExpressionExperimentSetDao().getExperimentValueObjectsInSet( id );
+
     }
 
     @Override
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getLightValueObjectsFromIds(
-            Collection<Long> ids ) {
-        if ( ids.isEmpty() ) {
-            return new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
-        }
-        Collection<ExpressionExperimentSet> eeSets = this.load( ids );
-        return expressionExperimentValueObjectHelper.convertToLightValueObjects( eeSets );
-    }
-
-    @Override
-    public DatabaseBackedExpressionExperimentSetValueObject getValueObject( Long id ) {
-        ExpressionExperimentSet eeSet = this.load( id );
-        return expressionExperimentValueObjectHelper.convertToValueObject( eeSet );
-    }
-
-    @Override
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> getValueObjectsFromIds( Collection<Long> ids ) {
-        Collection<ExpressionExperimentSet> eeSets = this.load( ids );
-        return expressionExperimentValueObjectHelper.convertToValueObjects( eeSets );
-    }
-
-    @Override
-    public boolean isValidForFrontEnd( ExpressionExperimentSet eeSet ) { 
-        return ( eeSet.getTaxon() != null );
+    public ExpressionExperimentSetValueObject loadValueObject( Long id ) {
+        return this.getExpressionExperimentSetDao().loadValueObject( id );
     }
 
     /*
@@ -241,22 +197,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjectsWithTaxon() {
-        Collection<ExpressionExperimentSet> sets = this.loadAllExperimentSetsWithTaxon();
-        // filtered by security.
-        List<ExpressionExperimentSetValueObject> results = new ArrayList<ExpressionExperimentSetValueObject>();
-
-        // should be a small number of items.
-        for ( ExpressionExperimentSet set : sets ) {
-            ExpressionExperimentSetValueObject vo = expressionExperimentValueObjectHelper.convertToValueObject( set );
-            results.add( vo );
-        }
-
-        // FIXME the contract of this method is a collection, not a list. I've left this here because it is presumably
-        // important for something...
-        Collections.sort( results );
-
-        return results;
+    public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects() {
+        return this.getExpressionExperimentSetDao().loadAllValueObjects();
     }
 
     @Override
@@ -274,10 +216,14 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
 
+    /*
+     * (non-Javadoc) Same as loadAllValueObjects but security filtering is differenet.
+     * 
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadMySetValueObjects()
+     */
     @Override
-    public Collection<DatabaseBackedExpressionExperimentSetValueObject> loadMySetValueObjects() {
-        return expressionExperimentValueObjectHelper.convertToValueObjects( this.getExpressionExperimentSetDao()
-                .loadAllExperimentSetsWithTaxon() );
+    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects() {
+        return this.getExpressionExperimentSetDao().loadAllValueObjects();
     }
 
     @Override
@@ -338,7 +284,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
     @Override
-    public void updateDatabaseEntity( DatabaseBackedExpressionExperimentSetValueObject eesvo ) {
+    public void updateDatabaseEntity( ExpressionExperimentSetValueObject eesvo ) {
         try {
             ExpressionExperimentSet eeset = expressionExperimentValueObjectHelper.convertToEntity( eesvo );
             if ( eeset == null ) {
@@ -415,8 +361,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .expression.experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
     @Override
-    public DatabaseBackedExpressionExperimentSetValueObject updateDatabaseEntityNameDesc(
-            DatabaseBackedExpressionExperimentSetValueObject eeSetVO ) {
+    public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO ) {
 
         Long groupId = eeSetVO.getId();
         ExpressionExperimentSet eeSet = this.load( groupId );
@@ -428,19 +373,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         if ( eeSetVO.getName() != null && eeSetVO.getName().length() > 0 ) eeSet.setName( eeSetVO.getName() );
         this.update( eeSet );
 
-        return expressionExperimentValueObjectHelper.convertToValueObject( eeSet );
+        return this.loadValueObject( eeSet.getId() );
 
-    }
-
-    @Override
-    public Collection<ExpressionExperimentSet> validateForFrontEnd( Collection<ExpressionExperimentSet> eeSets ) {
-        Collection<ExpressionExperimentSet> valid = new ArrayList<ExpressionExperimentSet>();
-        for ( ExpressionExperimentSet eeSet : eeSets ) {
-            if ( isValidForFrontEnd( eeSet ) ) {
-                valid.add( eeSet );
-            }
-        }
-        return valid;
     }
 
     /**
@@ -633,5 +567,10 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         String regexDesc = String.format(
                 ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, ".*" );
         return experimentSetDescription.matches( regexDesc );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds ) {
+        return this.getExpressionExperimentSetDao().loadValueObjects( eeSetIds );
     }
 }

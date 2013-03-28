@@ -56,7 +56,7 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysisService#createDatabaseEntity(ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysis)
+     * @see ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysisService#createFromValueObject(ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysis)
      */
     @Override
     public ProbeCoexpressionAnalysis create(

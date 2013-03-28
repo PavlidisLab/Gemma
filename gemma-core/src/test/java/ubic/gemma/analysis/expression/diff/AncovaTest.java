@@ -69,8 +69,11 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
         configureMocks();
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment,
-                super.experimentalFactors );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( super.experimentalFactors );
+        config.setQvalueThreshold( null );
+
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
 
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
@@ -165,9 +168,11 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
             experimentalFactorC.getFactorValues().add( factorValueC );
         }
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+        config.setQvalueThreshold( null );
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment,
-                expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
 
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
@@ -275,8 +280,10 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
         factors.add( experimentalFactorA_Area );
         factors.add( experimentalFactorC );
-
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, factors );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( null );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
 
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
@@ -374,7 +381,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
         config.getFactorsToInclude().add( this.experimentalFactorB );
         config.getInteractionsToInclude().add( config.getFactorsToInclude() );
-
+        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
 
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();

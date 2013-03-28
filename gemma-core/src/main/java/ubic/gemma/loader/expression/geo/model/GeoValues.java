@@ -91,6 +91,41 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "DIAMETER" );
         skippableQuantitationTypes.add( "TOT_SPIX" );
         skippableQuantitationTypes.add( "TOT_BPIX" );
+        skippableQuantitationTypes.add( "Slide_block" );
+        skippableQuantitationTypes.add( "Slide_row" );
+        skippableQuantitationTypes.add( "B Pixels" );
+        skippableQuantitationTypes.add( "F Pixels" );
+        skippableQuantitationTypes.add( "Bkgd_area" );
+        skippableQuantitationTypes.add( "Spot_area" );
+        skippableQuantitationTypes.add( "Spot_diameter" );
+        skippableQuantitationTypes.add( "Bkgd_diameter" );
+        skippableQuantitationTypes.add( "CH2_BKD_AREA" );
+        skippableQuantitationTypes.add( "CH1_BKD_AREA" );
+        skippableQuantitationTypes.add( "ch1 Area" );
+        skippableQuantitationTypes.add( "ch2 Area" );
+        skippableQuantitationTypes.add( "CH1_AREA" );
+        skippableQuantitationTypes.add( "AREA" );
+        skippableQuantitationTypes.add( "CH2_AREA" );
+        skippableQuantitationTypes.add( "CH2_Spot_Area" );
+        skippableQuantitationTypes.add( "CH1_Spot_Area" );
+        skippableQuantitationTypes.add( "CH1_SIGNAL_AREA" );
+        skippableQuantitationTypes.add( "CH2_SIGNAL_AREA" );
+        skippableQuantitationTypes.add( "Spot Area" );
+        skippableQuantitationTypes.add( "Area To Perimeter" );
+        skippableQuantitationTypes.add( "Background Area" );
+        skippableQuantitationTypes.add( "Signal Area" );
+        skippableQuantitationTypes.add( "Ignored Area" );
+        skippableQuantitationTypes.add( " Probe 1Area%" );
+        skippableQuantitationTypes.add( "BKD_AREA" );
+        skippableQuantitationTypes.add( "Perim-to-area failed" );
+        skippableQuantitationTypes.add( "F_AREA_L" );
+        skippableQuantitationTypes.add( "F_AREA_H" );
+        skippableQuantitationTypes.add( "F_AREA_M" );
+        skippableQuantitationTypes.add( "Probe 2Area%" );
+        skippableQuantitationTypes.add( "Probe 2 %Area" );
+        skippableQuantitationTypes.add( "B_AREA_H" );
+        skippableQuantitationTypes.add( "B_AREA_M" );
+        skippableQuantitationTypes.add( "B_AREA_L" );
 
         //
         // unfortunately the non-background-subtracted values aren't always available.
@@ -149,6 +184,22 @@ public class GeoValues implements Serializable {
         aggressivelyRemovedQuantitationTypes.add( "RAT2_SD" );
         aggressivelyRemovedQuantitationTypes.add( "RAT1_SD" );
         aggressivelyRemovedQuantitationTypes.add( "LOG_RAT2N_MEDIAN" );
+
+        // We no longer keep "absent-present" calls (affymetrix and others)
+        skippableQuantitationTypes.add( "ABS_CALL" );
+        skippableQuantitationTypes.add( "Detection Pval" );
+        skippableQuantitationTypes.add( "DETECTION P-VALUE" );
+        skippableQuantitationTypes.add( "Detection call" );
+        skippableQuantitationTypes.add( "rIsWellAboveBG" );
+        skippableQuantitationTypes.add( "gIsWellAboveBG" );
+        skippableQuantitationTypes.add( "CH2_IsWellAboveBG" );
+        skippableQuantitationTypes.add( "CH1_IsWellAboveBG" );
+        skippableQuantitationTypes.add( "COMPUTED.G_IS_WELL_ABOVE_BG" );
+        skippableQuantitationTypes.add( "COMPUTED.R_IS_WELL_ABOVE_BG" );
+
+        // Additional types that are not needed.
+
+        skippableQuantitationTypes.add( "Bkgd_area" );
 
     }
 

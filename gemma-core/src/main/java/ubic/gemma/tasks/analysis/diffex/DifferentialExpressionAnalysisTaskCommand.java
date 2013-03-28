@@ -18,6 +18,7 @@
  */
 package ubic.gemma.tasks.analysis.diffex;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -43,6 +44,16 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     private AnalysisType analysisType;
 
     private ExpressionExperiment expressionExperiment = null;
+
+    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
+
+    public Double getQvalueThreshold() {
+        return qvalueThreshold;
+    }
+
+    public void setQvalueThreshold( Double qvalueThreshold ) {
+        this.qvalueThreshold = qvalueThreshold;
+    }
 
     /**
      * The factors to actually use in the analysis. If null the system tries to figure it out.
@@ -165,14 +176,13 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.updateStatsOnly = updateStatsOnly;
     }
 
-    //TODO: drop this or not?
+    // TODO: drop this or not?
     public boolean getConfigRemoteRunValue() {
-        return ConfigUtils.getBoolean("gemma.grid.gridonly.diff");
+        return ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" );
     }
-    
-    
+
     @Override
     public Class getTaskClass() {
-        return DifferentialExpressionAnalysisTask.class;                
+        return DifferentialExpressionAnalysisTask.class;
     }
 }

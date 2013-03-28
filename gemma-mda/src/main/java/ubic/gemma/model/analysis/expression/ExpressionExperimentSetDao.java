@@ -24,7 +24,8 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -53,7 +54,7 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
 
     /**
      * Get the security-filtered list of experiments in a set. It is possible for the return to be empty even if the set
-     * is not (due to security filters). Use this insead of expressionExperimentSet.getExperiments.
+     * is not (due to security filters). Use this instead of expressionExperimentSet.getExperiments.
      * 
      * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService.getExperimentsInSet
      * @param id
@@ -80,10 +81,16 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( ExpressionExperimentSet expressionExperimentSet );
 
-    int getExperimentCount( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects();
 
-    Collection<Long> getExperimentIds( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds );
 
-    Taxon getTaxon( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
+    public ExpressionExperimentSetValueObject loadValueObject( Long id );
 
 }

@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service;
 public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity.ContactServiceBase {
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#createDatabaseEntity(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#createFromValueObject(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
     protected ubic.gemma.model.common.auditAndSecurity.Contact handleCreate(
             ubic.gemma.model.common.auditAndSecurity.Contact contact ) {

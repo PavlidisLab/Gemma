@@ -138,6 +138,20 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 	
 	initComponent: function(){
+	   
+	   /*
+	    * Colors:
+	    * 
+	    * Dataset, not an EEset: #ECF4FF -  light blue
+	    * 
+	    * Modified session-bound: #FFFFFF - white
+	    * 
+	    * Free-text: #FFFFE3 - almost white
+	    * 
+	    * user-owned: #FFECEC (pink)
+	    * 
+	    * Default, also for session-bound. Dataset, not an EEset #EBE3F6 ?  - light purple
+	    */
 	
 		var eeTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" '+
 					'ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>');
@@ -159,13 +173,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				'{[ this.renderItem(values) ]}' +
 			'</tpl>',{
 				renderItem: function(values){
-					if (values.resultValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
-						if (values.userOwned) {
-							return userOwnedDbSetTpl.apply(values);
-						} else {
-							return dbSetTpl.apply(values);
-						}
-					}else if (values.resultValueObject instanceof FreeTextExpressionExperimentResultsValueObject) {
+					if (values.resultValueObject instanceof FreeTextExpressionExperimentResultsValueObject) {
 						return freeTxtTpl.apply(values);
 					}else if (values.resultValueObject instanceof SessionBoundExpressionExperimentSetValueObject) {
 						if (values.resultValueObject.modified) {
@@ -173,6 +181,12 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 						}else {
 							return sessionSetTpl.apply(values);
 						}
+					} else if (values.resultValueObject instanceof  ExpressionExperimentSetValueObject) {
+	                  if (values.userOwned) {
+	                     return userOwnedDbSetTpl.apply(values);
+	                  } else {
+	                     return dbSetTpl.apply(values);
+	                  } 
 					}else if (values.resultValueObject instanceof ExpressionExperimentValueObject) {
 						return eeTpl.apply(values);
 					}

@@ -76,6 +76,11 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     @Override
     public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds ) {
 
+        /*
+         * FIXME: instead of retrieving the analysisresult, redo the analysis, since we might not have saved all the results.
+         */
+        
+        
         Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSet( analysisResultSetIds );
 
         if ( resultSets.size() < 2 ) {

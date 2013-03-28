@@ -99,6 +99,8 @@ import ubic.gemma.security.authentication.UserManager;
 @Service
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
 
+    private static final int MAX_PHENOTYPES_FROM_ONTOLOGY = 100;
+
     private static Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
 
     @Autowired
@@ -544,7 +546,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) {
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         ArrayList<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<CharacteristicValueObject>();
 
         boolean geneProvided = true;
@@ -632,10 +635,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         orderedPhenotypesFromOntology.addAll( phenotypesNoRuleFound );
 
         // limit the size of the returned phenotypes to 100 terms
-        if ( orderedPhenotypesFromOntology.size() > 100 ) {
-            return orderedPhenotypesFromOntology.subList( 0, 100 );
+        if ( orderedPhenotypesFromOntology.size() > MAX_PHENOTYPES_FROM_ONTOLOGY ) {
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Phenotype search: " + timer.getTime() + "ms" );
+            }
+            return orderedPhenotypesFromOntology.subList( 0, MAX_PHENOTYPES_FROM_ONTOLOGY );
         }
-
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Phenotype search: " + timer.getTime() + "ms" );
+        }
         return orderedPhenotypesFromOntology;
     }
 

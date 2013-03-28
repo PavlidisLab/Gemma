@@ -1341,8 +1341,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return
      */
     private String getP2PTableNameForClassName( String className ) {
-        if ( className.equals( "UserProbeCoExpressionImpl" ) ) {
-            return "USER_PROBE_CO_EXPRESSION";
+        if ( className.equals( "StagingProbeCoExpressionImpl" ) ) {
+            return "STAGING_PROBE_CO_EXPRESSION";
         } else if ( className.equals( "HumanProbeCoExpressionImpl" ) )
             return "HUMAN_PROBE_CO_EXPRESSION";
         else if ( className.equals( "MouseProbeCoExpressionImpl" ) )

@@ -233,7 +233,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
                 otherBean.getArrayDesignCount(), otherBean.getShortName(), otherBean.getLinkAnalysisEventType(),
                 otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidated(), otherBean.getTechnologyType(),
                 otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
-                otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.isIsPublic(),
+                otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.isPublik(),
                 otherBean.isCurrentUserHasWritePermission(), otherBean.getClazz(), otherBean.getSourceExperiment(),
                 otherBean.getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(),
                 otherBean.getDateCreated(), otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
@@ -363,7 +363,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
             this.setNumPopulatedFactors( otherBean.getNumPopulatedFactors() );
             this.setDateDifferentialAnalysis( otherBean.getDateDifferentialAnalysis() );
             this.setSampleRemovedFlags( otherBean.getSampleRemovedFlags() );
-            this.setIsPublic( otherBean.isIsPublic() );
+            this.setIsPublic( otherBean.isPublik() );
             this.setClazz( otherBean.getClazz() );
             this.setSourceExperiment( otherBean.getSourceExperiment() );
             this.setPubmedId( otherBean.getPubmedId() );
@@ -600,10 +600,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.investigators;
     }
 
-    public Boolean getIsPublic() {
-        return isPublic;
-    }
-
     /**
      * 
      */
@@ -778,30 +774,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.hasBothIntensities;
     }
 
-    /**
-     * <p>
-     * If true, this data set has been made public. If false, it is private and is only viewable by some users.
-     * </p>
-     */
-    public boolean isIsPublic() {
-        return this.isPublic;
-    }
-
-    public boolean isIsShared() {
-        return this.isShared;
-    }
-
-    /**
-     * @return the isPublic
-     */
-    public boolean isPublic() {
-        return isPublic;
-    }
-
-    public boolean isShared() {
-        return isShared;
-    }
-
     public void setAccession( String accession ) {
         this.accession = accession;
     }
@@ -835,21 +807,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
         this.coexpressionLinkCount = coexpressionLinkCount;
-    }
-
-    /**
-     * @param currentUserHasWritePermission the currentUserHasWritePermission to set
-     */
-    public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
-        this.currentUserHasWritePermission = currentUserHasWritePermission;
-    }
-
-    public void setCurrentUserHasWritePermission( Boolean currentUserHasWritePermission ) {
-        this.currentUserHasWritePermission = currentUserHasWritePermission;
-    }
-
-    public void setCurrentUserIsOwner( Boolean currentUserIsOwner ) {
-        this.currentUserIsOwner = currentUserIsOwner;
     }
 
     public void setDateArrayDesignLastUpdated( Date dateArrayDesignLastUpdated ) {
@@ -937,11 +894,8 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         this.investigators = investigators;
     }
 
+    @Override
     public void setIsPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-    }
-
-    public void setIsPublic( Boolean isPublic ) {
         this.isPublic = isPublic;
     }
 
@@ -985,13 +939,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         this.processedExpressionVectorCount = processedExpressionVectorCount;
     }
 
-    /**
-     * @param isPublic the isPublic to set
-     */
-    public void setPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-    }
-
     public void setPubmedId( Integer pubmedId ) {
         this.pubmedId = pubmedId;
     }
@@ -999,10 +946,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {
 
         this.sampleRemovedFlags = sampleRemovedFlags;
-    }
-
-    public void setShared( boolean isShared ) {
-        this.isShared = isShared;
     }
 
     public void setShortName( String shortName ) {
@@ -1047,6 +990,41 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     @Override
     public String toString() {
         return this.getShortName() + " (id = " + this.getId() + ")";
+    }
+
+    @Override
+    public boolean isUserOwned() {
+        return this.currentUserIsOwner;
+    }
+
+    @Override
+    public void setIsUserOwned( boolean isUserOwned ) {
+        this.currentUserIsOwner = isUserOwned;
+    }
+
+    @Override
+    public boolean isWriteableByUser() {
+        return this.currentUserHasWritePermission;
+    }
+
+    @Override
+    public void setWriteableByUser( boolean userCanWrite ) {
+        this.currentUserHasWritePermission = userCanWrite;
+    }
+
+    @Override
+    public void setIsShared( boolean isShared ) {
+        this.isShared = isShared;
+    }
+
+    @Override
+    public boolean isPublik() {
+        return this.isPublic;
+    }
+
+    @Override
+    public boolean isShared() {
+        return this.isShared;
     }
 
 }

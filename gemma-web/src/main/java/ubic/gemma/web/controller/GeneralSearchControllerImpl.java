@@ -99,8 +99,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private GeneSetService geneSetService;
     @Autowired
     private ExpressionExperimentSetService experimentSetService;
-    @Autowired
-    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
+
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
@@ -224,7 +223,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * @return Object
      * @throws Exception
      */
-    @SuppressWarnings("deprecation")
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         SearchSettingsImpl searchSettings = new SearchSettingsImpl();
@@ -240,7 +238,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     protected Map<String, List<? extends Object>> referenceData( HttpServletRequest request ) {
         Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
@@ -299,7 +296,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                             break;
                     }
                 }
-            }  
+            }
 
             return this.doSearch( request, response, csc, errors );
         }
@@ -313,7 +310,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * @return ValueObjects for the entities (in some cases, this is just the entities again). They are returned in the
      *         same order as the entities.
      */
-    @SuppressWarnings("unchecked")
     private void fillValueObjects( Map<Class<?>, List<SearchResult>> results, SearchSettingsImpl settings ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -360,9 +356,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
                 vos = geneSetService.getValueObjects( EntityUtils.getIds( classSearchResults ) );
             } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-                Collection<ExpressionExperimentSet> eeSets = experimentSetService
-                        .validateForFrontEnd( experimentSetService.load( EntityUtils.getIds( classSearchResults ) ) );
-                vos = expressionExperimentValueObjectHelper.convertToValueObjects( eeSets );
+                vos = experimentSetService.loadValueObjects( EntityUtils.getIds( classSearchResults ) );
             } else {
                 throw new UnsupportedOperationException( "Don't know how to make value objects for class="
                         + entityClass );
@@ -442,9 +436,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             vos = geneSetService.getValueObjects( EntityUtils.getIds( results ) );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-            Collection<ExpressionExperimentSet> eeSets = experimentSetService.validateForFrontEnd( experimentSetService
-                    .load( EntityUtils.getIds( results ) ) );
-            vos = expressionExperimentValueObjectHelper.convertToValueObjects( eeSets );
+            vos = experimentSetService.loadValueObjects( EntityUtils.getIds( results ) );
         } else if ( FactorValue.class.isAssignableFrom( entityClass ) ) {
             Collection<FactorValueValueObject> fvo = new ArrayList<FactorValueValueObject>();
             for ( SearchResult sr : results ) {

@@ -40,8 +40,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
  * @version $Id$
  */

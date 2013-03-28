@@ -85,7 +85,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
             return new TaskResult( command, true );
         }
 
-        Collection<DifferentialExpressionAnalysis> results = doAnalysis( command );
+        Collection<DifferentialExpressionAnalysis> results = doAnalysis();
 
         Collection<DifferentialExpressionAnalysis> minimalResults = new HashSet<DifferentialExpressionAnalysis>();
         for ( DifferentialExpressionAnalysis r : results ) {
@@ -107,7 +107,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
      * @param command
      * @return
      */
-    private Collection<DifferentialExpressionAnalysis> doAnalysis( DifferentialExpressionAnalysisTaskCommand command ) {
+    private Collection<DifferentialExpressionAnalysis> doAnalysis() {
         ExpressionExperiment ee = command.getExpressionExperiment();
 
         if ( command.getToRedo() != null ) {
@@ -120,7 +120,8 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
             } else {
                 log.info( "Redoing analysis" );
                 ee = expressionExperimentService.thawLite( ee );
-                return differentialExpressionAnalyzerService.redoAnalysis( ee, command.getToRedo() );
+                return differentialExpressionAnalyzerService.redoAnalysis( ee, command.getToRedo(),
+                        command.getQvalueThreshold() );
             }
         }
 
@@ -148,6 +149,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         config.setAnalysisType( analyzer );
         config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( command.getQvalueThreshold() );
         config.setSubsetFactor( command.getSubsetFactor() );
 
         /*

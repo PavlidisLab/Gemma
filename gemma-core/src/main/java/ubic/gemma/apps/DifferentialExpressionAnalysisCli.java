@@ -91,6 +91,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     private AnalysisType type = null;
 
+    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
+
     /*
      * (non-Javadoc)
      * 
@@ -163,6 +165,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         super.addOption( "delete", false,
                 "Instead of running the analyssi on the given experiments, delete the old analyses. Use with care!" );
+
+        super.addOption(
+                "qvalue",
+                true,
+                "Set the qvalue threshold for retaining data; set to a values outside the range 0-1 (inclusive) to retain all results. Default: "
+                        + String.format( "%.2f", DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD ) );
 
     }
 
@@ -259,6 +267,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setAnalysisType( this.type );
                 config.setFactorsToInclude( factors );
                 config.setSubsetFactor( subsetFactor );
+                config.setQvalueThreshold( this.qvalueThreshold );
 
                 /*
                  * FIXME I am pretty sure this is the right thing to do here, to get iterations included by default.
@@ -306,9 +315,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     results = tryToRedoBasedOnOldAnalysis( ee );
 
                 } else {
+
                     assert !factorsToUse.isEmpty();
-                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
-                            factorsToUse );
+                    DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+                    config.setFactorsToInclude( factorsToUse );
+                    // FIXME: possibly include the interaction term.
+                    config.setQvalueThreshold( this.qvalueThreshold );
+                    results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
                 }
 
             }
@@ -339,7 +352,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.processOptions();
         differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
         differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
-        differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
         if ( hasOption( "type" ) ) {
 
             if ( this.expressionExperiments.size() > 1 ) {
@@ -351,6 +363,18 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
             }
             this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
+        }
+
+        if ( hasOption( "qvalue" ) ) {
+            try {
+                this.qvalueThreshold = Double.parseDouble( getOptionValue( "qvalue" ) );
+            } catch ( NumberFormatException e ) {
+                throw new IllegalArgumentException( "qvalue must be a valid double" );
+            }
+
+            if ( this.qvalueThreshold <= 0 || this.qvalueThreshold >= 1.0 ) {
+                this.qvalueThreshold = null;
+            }
         }
 
         if ( hasOption( "subset" ) ) {
@@ -519,7 +543,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-            results.addAll( this.differentialExpressionAnalyzerService.redoAnalysis( ee, copyMe ) );
+            results.addAll( this.differentialExpressionAnalyzerService.redoAnalysis( ee, copyMe, this.qvalueThreshold ) );
         }
         return results;
 

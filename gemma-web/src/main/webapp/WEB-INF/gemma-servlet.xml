@@ -2,11 +2,10 @@
 <!-- @author Gemma @version $Id$ -->
 
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:aop="http://www.springframework.org/schema/aop"
-       xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
 
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/context 
 	http://www.springframework.org/schema/context/spring-context-3.0.xsd 
@@ -723,11 +722,8 @@
 
 		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject"
 			javascript="FreeTextExpressionExperimentResultsValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject"
-			javascript="DatabaseBackedExpressionExperimentSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject"
 			javascript="SessionBoundExpressionExperimentSetValueObject" />
-
 
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetValueObject" javascript="GeneSetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject" javascript="FreeTextGeneResultsValueObject" />
@@ -861,7 +857,8 @@
 		</dwr:convert>
 
 		<dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.PrimitiveType" />
-		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadTaskCommand" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadTaskCommand" />
 		<dwr:convert type="bean"
 			class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentCommandValidation" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentUploadResponse" />

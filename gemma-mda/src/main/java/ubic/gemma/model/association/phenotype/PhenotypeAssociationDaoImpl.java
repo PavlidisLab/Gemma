@@ -45,6 +45,12 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.AbstractDao;
 
+/**
+ * TODO Document Me
+ * 
+ * @author Nicolas
+ * @version $Id$
+ */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
 

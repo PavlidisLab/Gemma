@@ -41,7 +41,7 @@ Gemma.UserSessionDatasetGroupStore = function(config) {
 				name : "shared",
 				type : 'boolean'
 			}, {
-				name : "currentUserHasWritePermission",
+				name : "writeableByUser",
 				type : 'boolean'
 			}, {
 				name : "session",

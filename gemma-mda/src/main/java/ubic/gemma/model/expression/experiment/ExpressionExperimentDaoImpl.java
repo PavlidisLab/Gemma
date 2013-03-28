@@ -213,7 +213,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample join ee.status s where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdateDate desc";
+                + "inner join ba.samplesUsed as sample join ee.status s where sample.sourceTaxon = :taxon"
+                + " or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdateDate desc";
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
         if ( limit != null ) tpl.setMaxResults( limit );
         return tpl.findByNamedParam( queryString, "taxon", taxon );

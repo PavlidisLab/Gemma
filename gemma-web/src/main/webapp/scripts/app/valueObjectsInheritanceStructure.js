@@ -1,16 +1,11 @@
-
 // Set up inheritance structures for value objects
 // see http://directwebremoting.org/dwr/documentation/server/configuration/dwrxml/converters/bean.html#interfacesAndAbstractClasses
-
-DatabaseBackedExpressionExperimentSetValueObject.prototype = new ExpressionExperimentSetValueObject();
-DatabaseBackedExpressionExperimentSetValueObject.prototype.constructor = DatabaseBackedExpressionExperimentSetValueObject;
 
 SessionBoundExpressionExperimentSetValueObject.prototype = new ExpressionExperimentSetValueObject();
 SessionBoundExpressionExperimentSetValueObject.prototype.constructor = SessionBoundExpressionExperimentSetValueObject;
 
 FreeTextExpressionExperimentResultsValueObject.prototype = new SessionBoundExpressionExperimentSetValueObject();
 FreeTextExpressionExperimentResultsValueObject.prototype.constructor = FreeTextExpressionExperimentResultsValueObject;
-
 
 DatabaseBackedGeneSetValueObject.prototype = new GeneSetValueObject();
 DatabaseBackedGeneSetValueObject.prototype.constructor = DatabaseBackedGeneSetValueObject;
@@ -26,7 +21,6 @@ GOGroupValueObject.prototype.constructor = GOGroupValueObject;
 
 PhenotypeGroupValueObject.prototype = new SessionBoundGeneSetValueObject();
 PhenotypeGroupValueObject.prototype.constructor = PhenotypeGroupValueObject;
-
 
 ExperimentalEvidenceValueObject.prototype = new EvidenceValueObject();
 ExperimentalEvidenceValueObject.prototype.constructor = ExperimentalEvidenceValueObject;

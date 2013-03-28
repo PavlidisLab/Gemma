@@ -36,8 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
-import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
-import org.springframework.security.acls.domain.PrincipalSid;
+ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.MutableAcl;
@@ -58,6 +57,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.security.authorization.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -88,7 +88,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     @Autowired
     private MutableAclService mutableAclService;
 
-    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ObjectIdentityRetrievalStrategyImpl();
+    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
 
     /*
      * (non-Javadoc)
@@ -222,7 +222,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.securityService.makeWriteableByGroup( entity, groupName );
 
         /*
-         * Add another user to the group.
+         * Add another user to the group, which is owned by username
          */
 
         this.securityService.addUserToGroup( usertwo, groupName );

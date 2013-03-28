@@ -44,6 +44,11 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     private static final long serialVersionUID = 622877438067070041L;
 
+    /**
+     * The default value used for retention of the results. If null, everything will be stored.
+     */
+    public static final Double DEFAULT_QVALUE_THRESHOLD = null;
+
     private AnalysisType analysisType;
 
     private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<ExperimentalFactor, FactorValue>();
@@ -53,6 +58,8 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     private Collection<Collection<ExperimentalFactor>> interactionsToInclude = new HashSet<Collection<ExperimentalFactor>>();
 
     private ExperimentalFactor subsetFactor;
+
+    private Double qvalueThreshold = DEFAULT_QVALUE_THRESHOLD;
 
     public AnalysisType getAnalysisType() {
         return analysisType;
@@ -180,6 +187,20 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
         return buf.toString();
 
+    }
+
+    /**
+     * @return threshold for retention of results.
+     */
+    public Double getQvalueThreshold() {
+        return qvalueThreshold;
+    }
+
+    /**
+     * @param qValueThreshold threshold for retention of results. Set to null to retain all.
+     */
+    public void setQvalueThreshold( Double qValueThreshold ) {
+        this.qvalueThreshold = qValueThreshold;
     }
 
 }
