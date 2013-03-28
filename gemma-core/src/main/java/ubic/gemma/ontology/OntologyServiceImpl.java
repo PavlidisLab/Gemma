@@ -88,9 +88,6 @@ public class OntologyServiceImpl implements OntologyService {
     // Private class for sorting Characteristics
     static class TermComparator implements Comparator<Characteristic>, Serializable {
 
-        /**
-         * 
-         */
         private static final long serialVersionUID = 1L;
         String comparator;
 
@@ -135,31 +132,34 @@ public class OntologyServiceImpl implements OntologyService {
             if ( o1.getValue().length() == o2.getValue().length() ) {
                 if ( o1.getDescription().startsWith( USED ) ) {
                     if ( o2.getDescription().startsWith( USED ) ) {
+                        // both are used, break tie.
                         return compareByUri( o1, o2 );
                     }
-                    // o1 is used, o2 is not
+                    // o1 is used, o2 is not; o1 should be first.
                     return -1;
 
                 } else if ( o2.getDescription().startsWith( USED ) ) {
-                    // o2 is used and o1 is not.
+                    // o2 is used and o1 is not; o2 should be first.
                     return 1;
                 } else {
                     // neither is used.
                     return compareByUri( o1, o2 );
                 }
             }
+
+            // we don't use the actual text, because we've already declared these matches.
             return o1.getValue().length() < o2.getValue().length() ? -1 : 1;
         }
 
+        // break ties by uri and/or value.
         private int compareByUri( Characteristic o1, Characteristic o2 ) {
             // both are used. Break tie based on whether it has a URI
             if ( o1 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o1 ).getValueUri() != null ) {
                 if ( !( o2 instanceof VocabCharacteristic ) || ( ( VocabCharacteristic ) o2 ).getValueUri() == null ) {
                     return -1;
                 }
-                // both have URIs
-                return ( ( VocabCharacteristic ) o1 ).getValueUri().compareTo(
-                        ( ( VocabCharacteristic ) o2 ).getValueUri() );
+                // both have URIs, sort by value
+                return o1.getValue().toLowerCase().compareTo( o2.getValue().toLowerCase() );
             } else if ( o2 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o2 ).getValueUri() != null ) {
                 // we know o1 does not have a uri.
                 return 1;
@@ -169,9 +169,9 @@ public class OntologyServiceImpl implements OntologyService {
         }
     }
 
-    private static Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
+    static final String USED = " -USED- ";
 
-    private static final String USED = " -USED- ";
+    private static Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
 
     /**
      * List the ontologies that are available in the jena database.
@@ -202,32 +202,32 @@ public class OntologyServiceImpl implements OntologyService {
     @Autowired
     private BioMaterialService bioMaterialService;
 
+    private BirnLexOntologyService birnLexOntologyService;
+
+    private CellTypeOntologyService cellTypeOntologyService;
+
     @Autowired
     private CharacteristicService characteristicService;
 
-    private ExperimentalFactorOntologyService experimentalFactorOntologyService;
+    private ChebiOntologyService chebiOntologyService;
 
+    private DiseaseOntologyService diseaseOntologyService;
     @Autowired
     private ExpressionExperimentService eeService;
-
-    @Autowired
-    private SearchService searchService;
-
-    private BirnLexOntologyService birnLexOntologyService;
-    private CellTypeOntologyService cellTypeOntologyService;
-    private NIFSTDOntologyService nifstdOntologyService;
-    private ChebiOntologyService chebiOntologyService;
-    private DiseaseOntologyService diseaseOntologyService;
+    private ExperimentalFactorOntologyService experimentalFactorOntologyService;
     private FMAOntologyService fmaOntologyService;
     private HumanDevelopmentOntologyService humanDevelopmentOntologyService;
+    private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
     private MgedOntologyService mgedOntologyService;
     private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
+    private NIFSTDOntologyService nifstdOntologyService;
+    private ObiService obiService;
 
     private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
 
-    private ObiService obiService;
+    @Autowired
+    private SearchService searchService;
 
     @Override
     public void afterPropertiesSet() {
@@ -264,79 +264,6 @@ public class OntologyServiceImpl implements OntologyService {
             serv.startInitializationThread( false );
         }
 
-    }
-
-    /**
-     * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
-     * of possible choices
-     */
-    @Override
-    public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQueryString,
-            boolean useNeuroCartaOntology ) {
-
-        String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
-
-        if ( searchQuery == null || searchQuery.length() < 3 ) {
-            return new HashSet<CharacteristicValueObject>();
-        }
-
-        // this will do like %search%
-        Collection<CharacteristicValueObject> characteristicsFromDatabase = CharacteristicValueObject
-                .characteristic2CharacteristicVO( this.characteristicService.findByValue( "%" + searchQuery ) );
-
-        Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri = new HashMap<String, CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> characteristicFromDatabaseFreeText = new HashSet<CharacteristicValueObject>();
-
-        for ( CharacteristicValueObject characteristicInDatabase : characteristicsFromDatabase ) {
-
-            // flag to let know that it was found in the database
-            characteristicInDatabase.setAlreadyPresentInDatabase( true );
-
-            if ( characteristicInDatabase.getValueUri() != null && !characteristicInDatabase.getValueUri().equals( "" ) ) {
-                characteristicFromDatabaseWithValueUri.put( characteristicInDatabase.getValueUri(),
-                        characteristicInDatabase );
-            } else {
-                // free txt, no value uri
-                characteristicFromDatabaseFreeText.add( characteristicInDatabase );
-            }
-        }
-
-        // search the ontology for the given searchTerm, but if already found in the database dont add it again
-        Collection<CharacteristicValueObject> characteristicsFromOntology = findCharacteristicsFromOntology(
-                searchQuery, useNeuroCartaOntology, characteristicFromDatabaseWithValueUri );
-
-        // order to show the the term: 1-exactMatch, 2-startWith, 3-substring and 4- no rule
-        // order to show values for each List : 1-From database with Uri, 2- from Ontology, 3- from from database with
-        // no Uri
-        Collection<CharacteristicValueObject> characteristicsWithExactMatch = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> characteristicsStartWithQuery = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> characteristicsSubstring = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> characteristicsNoRuleFound = new ArrayList<CharacteristicValueObject>();
-
-        // from the database with a uri
-        putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseWithValueUri.values(),
-                characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
-                characteristicsNoRuleFound );
-        // from the ontology
-        putCharacteristicsIntoSpecificList( searchQuery, characteristicsFromOntology, characteristicsWithExactMatch,
-                characteristicsStartWithQuery, characteristicsSubstring, characteristicsNoRuleFound );
-        // from the database with no uri
-        putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseFreeText,
-                characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
-                characteristicsNoRuleFound );
-
-        List<CharacteristicValueObject> allCharactersticsFound = new ArrayList<CharacteristicValueObject>();
-        allCharactersticsFound.addAll( characteristicsWithExactMatch );
-        allCharactersticsFound.addAll( characteristicsStartWithQuery );
-        allCharactersticsFound.addAll( characteristicsSubstring );
-        allCharactersticsFound.addAll( characteristicsNoRuleFound );
-
-        // limit the size of the returned phenotypes to 100 terms
-        if ( allCharactersticsFound.size() > 100 ) {
-            return allCharactersticsFound.subList( 0, 100 );
-        }
-
-        return allCharactersticsFound;
     }
 
     /*
@@ -430,6 +357,79 @@ public class OntologyServiceImpl implements OntologyService {
         Collection<Characteristic> terms = findExactTerm( givenQueryString, categoryUri, taxon );
         return CharacteristicValueObject.characteristic2CharacteristicVO( terms );
 
+    }
+
+    /**
+     * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
+     * of possible choices
+     */
+    @Override
+    public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQueryString,
+            boolean useNeuroCartaOntology ) {
+
+        String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
+
+        if ( searchQuery == null || searchQuery.length() < 3 ) {
+            return new HashSet<CharacteristicValueObject>();
+        }
+
+        // this will do like %search%
+        Collection<CharacteristicValueObject> characteristicsFromDatabase = CharacteristicValueObject
+                .characteristic2CharacteristicVO( this.characteristicService.findByValue( "%" + searchQuery ) );
+
+        Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri = new HashMap<String, CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> characteristicFromDatabaseFreeText = new HashSet<CharacteristicValueObject>();
+
+        for ( CharacteristicValueObject characteristicInDatabase : characteristicsFromDatabase ) {
+
+            // flag to let know that it was found in the database
+            characteristicInDatabase.setAlreadyPresentInDatabase( true );
+
+            if ( characteristicInDatabase.getValueUri() != null && !characteristicInDatabase.getValueUri().equals( "" ) ) {
+                characteristicFromDatabaseWithValueUri.put( characteristicInDatabase.getValueUri(),
+                        characteristicInDatabase );
+            } else {
+                // free txt, no value uri
+                characteristicFromDatabaseFreeText.add( characteristicInDatabase );
+            }
+        }
+
+        // search the ontology for the given searchTerm, but if already found in the database dont add it again
+        Collection<CharacteristicValueObject> characteristicsFromOntology = findCharacteristicsFromOntology(
+                searchQuery, useNeuroCartaOntology, characteristicFromDatabaseWithValueUri );
+
+        // order to show the the term: 1-exactMatch, 2-startWith, 3-substring and 4- no rule
+        // order to show values for each List : 1-From database with Uri, 2- from Ontology, 3- from from database with
+        // no Uri
+        Collection<CharacteristicValueObject> characteristicsWithExactMatch = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> characteristicsStartWithQuery = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> characteristicsSubstring = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> characteristicsNoRuleFound = new ArrayList<CharacteristicValueObject>();
+
+        // from the database with a uri
+        putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseWithValueUri.values(),
+                characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
+                characteristicsNoRuleFound );
+        // from the ontology
+        putCharacteristicsIntoSpecificList( searchQuery, characteristicsFromOntology, characteristicsWithExactMatch,
+                characteristicsStartWithQuery, characteristicsSubstring, characteristicsNoRuleFound );
+        // from the database with no uri
+        putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseFreeText,
+                characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
+                characteristicsNoRuleFound );
+
+        List<CharacteristicValueObject> allCharactersticsFound = new ArrayList<CharacteristicValueObject>();
+        allCharactersticsFound.addAll( characteristicsWithExactMatch );
+        allCharactersticsFound.addAll( characteristicsStartWithQuery );
+        allCharactersticsFound.addAll( characteristicsSubstring );
+        allCharactersticsFound.addAll( characteristicsNoRuleFound );
+
+        // limit the size of the returned phenotypes to 100 terms
+        if ( allCharactersticsFound.size() > 100 ) {
+            return allCharactersticsFound.subList( 0, 100 );
+        }
+
+        return allCharactersticsFound;
     }
 
     /*
@@ -809,69 +809,12 @@ public class OntologyServiceImpl implements OntologyService {
         }
     }
 
-    /** given a collection of characteristics add them to the correct List */
-    private void putCharacteristicsIntoSpecificList( String searchQuery,
-            Collection<CharacteristicValueObject> characteristics,
-            Collection<CharacteristicValueObject> characteristicsWithExactMatch,
-            Collection<CharacteristicValueObject> characteristicsStartWithQuery,
-            Collection<CharacteristicValueObject> characteristicsSubstring,
-            Collection<CharacteristicValueObject> characteristicsNoRuleFound ) {
-
-        for ( CharacteristicValueObject cha : characteristics ) {
-            // Case 1, exact match
-            if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
-                characteristicsWithExactMatch.add( cha );
-            }
-            // Case 2, starts with a substring of the word
-            else if ( cha.getValue().toLowerCase().startsWith( searchQuery.toLowerCase() ) ) {
-                characteristicsStartWithQuery.add( cha );
-            }
-            // Case 3, contains a substring of the word
-            else if ( cha.getValue().toLowerCase().indexOf( searchQuery.toLowerCase() ) != -1 ) {
-                characteristicsSubstring.add( cha );
-            } else {
-                characteristicsNoRuleFound.add( cha );
-            }
-        }
-    }
-
-    /** given a collection of characteristics add them to the correct List */
-    private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
-            boolean useNeuroCartaOntology, Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) {
-
-        Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<CharacteristicValueObject>();
-
-        // in neurocarta we dont need to search all Ontologies
-        Collection<AbstractOntologyService> ontologyServicesToUse = new HashSet<AbstractOntologyService>();
-
-        if ( useNeuroCartaOntology ) {
-            ontologyServicesToUse.add( this.nifstdOntologyService );
-            ontologyServicesToUse.add( this.fmaOntologyService );
-            ontologyServicesToUse.add( this.obiService );
-
-        } else {
-            ontologyServicesToUse = this.ontologyServices;
-        }
-
-        // search all Ontology
-        for ( AbstractOntologyService ontologyService : ontologyServicesToUse ) {
-
-            Collection<OntologyTerm> ontologyTerms = ontologyService.findTerm( searchQuery );
-
-            for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-
-                // if the ontology term wasnt already found in the database
-                if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
-
-                    CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel()
-                            .toLowerCase(), ontologyTerm.getUri() );
-
-                    characteristicsFromOntology.add( phenotype );
-                }
-            }
-        }
-
-        return characteristicsFromOntology;
+    /**
+     * @param sortedResultsExact
+     */
+    @Override
+    public void sort( List<Characteristic> sortedResultsExact ) {
+        Collections.sort( sortedResultsExact, new CharacteristicComparator() );
     }
 
     /**
@@ -952,6 +895,45 @@ public class OntologyServiceImpl implements OntologyService {
         return filtered;
     }
 
+    /** given a collection of characteristics add them to the correct List */
+    private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
+            boolean useNeuroCartaOntology, Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) {
+
+        Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<CharacteristicValueObject>();
+
+        // in neurocarta we dont need to search all Ontologies
+        Collection<AbstractOntologyService> ontologyServicesToUse = new HashSet<AbstractOntologyService>();
+
+        if ( useNeuroCartaOntology ) {
+            ontologyServicesToUse.add( this.nifstdOntologyService );
+            ontologyServicesToUse.add( this.fmaOntologyService );
+            ontologyServicesToUse.add( this.obiService );
+
+        } else {
+            ontologyServicesToUse = this.ontologyServices;
+        }
+
+        // search all Ontology
+        for ( AbstractOntologyService ontologyService : ontologyServicesToUse ) {
+
+            Collection<OntologyTerm> ontologyTerms = ontologyService.findTerm( searchQuery );
+
+            for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+
+                // if the ontology term wasnt already found in the database
+                if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
+
+                    CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel()
+                            .toLowerCase(), ontologyTerm.getUri() );
+
+                    characteristicsFromOntology.add( phenotype );
+                }
+            }
+        }
+
+        return characteristicsFromOntology;
+    }
+
     /**
      * @param c
      * @return
@@ -980,6 +962,32 @@ public class OntologyServiceImpl implements OntologyService {
             vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId() );
         }
         return vc;
+    }
+
+    /** given a collection of characteristics add them to the correct List */
+    private void putCharacteristicsIntoSpecificList( String searchQuery,
+            Collection<CharacteristicValueObject> characteristics,
+            Collection<CharacteristicValueObject> characteristicsWithExactMatch,
+            Collection<CharacteristicValueObject> characteristicsStartWithQuery,
+            Collection<CharacteristicValueObject> characteristicsSubstring,
+            Collection<CharacteristicValueObject> characteristicsNoRuleFound ) {
+
+        for ( CharacteristicValueObject cha : characteristics ) {
+            // Case 1, exact match
+            if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
+                characteristicsWithExactMatch.add( cha );
+            }
+            // Case 2, starts with a substring of the word
+            else if ( cha.getValue().toLowerCase().startsWith( searchQuery.toLowerCase() ) ) {
+                characteristicsStartWithQuery.add( cha );
+            }
+            // Case 3, contains a substring of the word
+            else if ( cha.getValue().toLowerCase().indexOf( searchQuery.toLowerCase() ) != -1 ) {
+                characteristicsSubstring.add( cha );
+            } else {
+                characteristicsNoRuleFound.add( cha );
+            }
+        }
     }
 
     /**
@@ -1077,9 +1085,9 @@ public class OntologyServiceImpl implements OntologyService {
             }
         }
 
-        Collections.sort( sortedResultsExact, new CharacteristicComparator() );
-        Collections.sort( sortedResultsStartsWith, new CharacteristicComparator() );
-        Collections.sort( sortedResultsBottom, new CharacteristicComparator() );
+        sort( sortedResultsExact );
+        sort( sortedResultsStartsWith );
+        sort( sortedResultsBottom );
 
         List<Characteristic> sortedTerms = new ArrayList<Characteristic>( foundValues.size() );
         sortedTerms.addAll( sortedResultsExact );

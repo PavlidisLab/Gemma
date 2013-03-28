@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 University of British Columbia
+ * Copyright (c) 2007-2013 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,11 +38,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class OntologyServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    OntologyService os;
+    private OntologyService os;
 
-    /**
-     * This test can fail if the db isn't initialized public void testListAvailableOntologies() throws Exception {
-     * Collection<Ontology> name = OntologyService.listAvailableOntologies(); assertTrue( name.size() > 0 ); }
+    /** 
      */
     @Test
     public final void testFindExactMatch() throws Exception {

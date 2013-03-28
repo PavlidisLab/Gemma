@@ -15,6 +15,7 @@
 package ubic.gemma.ontology;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.beans.factory.InitializingBean;
 
@@ -39,7 +40,9 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
- * @author paul
+ * TODO Document Me
+ * 
+ * @author Paul
  * @version $Id$
  */
 public interface OntologyService extends InitializingBean {
@@ -59,6 +62,13 @@ public interface OntologyService extends InitializingBean {
 
     public Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri,
             Taxon taxon );
+
+    /**
+     * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
+     * of possible choices
+     */
+    public abstract Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
+            boolean useNeuroCartaOntology );
 
     /**
      * @param search
@@ -197,10 +207,11 @@ public interface OntologyService extends InitializingBean {
     public abstract void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
 
     /**
-     * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
-     * of possible choices
+     * Sorts characteristics in a manner reflecting their likely importance to the user. Ones which are already used in
+     * the system are listed first.
+     * 
+     * @param s to be sorted
      */
-    public abstract Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology );
+    public void sort( List<Characteristic> s );
 
 }
