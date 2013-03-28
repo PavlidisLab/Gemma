@@ -620,7 +620,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		var dh = Ext.DomHelper;
 		dh.overwrite("details-title", {
 					tag : 'h2',
-					html : "Details for probe: " + csname + arName
+					html : "Details for element: " + csname + arName
 				});
 		dh.append("details-title", {
 					tag : 'ul',
@@ -628,7 +628,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 					children : [{
 								tag : 'li',
 								id : "probe-description",
-								html : "Probe description: " + "[pending]"
+								html : "Element description: " + "[pending]"
 							}, {
 								tag : 'li',
 								id : "probe-sequence-name",
