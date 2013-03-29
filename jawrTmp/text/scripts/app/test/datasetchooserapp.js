@@ -1,2 +1,0 @@
-
-Ext.BLANK_IMAGE_URL='/Gemma/images/default/s.gif';Ext.namespace('Gemma.DatasetChooser');Gemma.DatasetChooser.app=function(){var btn;var dcp;return{init:function(){Ext.QuickTips.init();Ext.state.Manager.setProvider(new Ext.state.CookieProvider());this.dg=new Gemma.DiffExpressionExperimentGrid({renderTo:'but',height:100,width:400});this.dg.getStore().load({params:[544510,0.01]});this.dg.getView().refresh();}};}();
