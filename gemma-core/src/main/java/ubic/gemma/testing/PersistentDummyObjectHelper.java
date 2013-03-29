@@ -783,7 +783,9 @@ public class PersistentDummyObjectHelper {
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testee" );
+        ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testee" );
         ee.setBioAssays( bas1 );
+        ee.setExperimentalDesign( ExperimentalDesign.Factory.newInstance() );
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
         return ee;
     }

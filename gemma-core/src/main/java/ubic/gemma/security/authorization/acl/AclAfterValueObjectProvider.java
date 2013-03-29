@@ -67,10 +67,9 @@ public class AclAfterValueObjectProvider extends
             /*
              * Populate optional fields in the ValueObject. Problem: some of these hit the database. Make this optional.
              */
-            SecureValueObject svo = ( SecureValueObject ) object;
+            SecureValueObject svo = ( SecureValueObject ) returnedObject;
 
-            boolean hasPermission = securityService.hasPermission( ( SecureValueObject ) object, requirePermission,
-                    authentication );
+            boolean hasPermission = securityService.hasPermission( svo, requirePermission, authentication );
 
             if ( !hasPermission ) return false;
 
@@ -87,7 +86,7 @@ public class AclAfterValueObjectProvider extends
                     svo.setWriteableByUser( true );
                 }
             }
-            return true;
+            return svo;
         } catch ( AccessDeniedException e ) {
             log.warn( e.getMessage() + ": returning null" );
             return null;

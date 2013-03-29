@@ -572,18 +572,17 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
 
         Query queryObject = super.getSession().createQuery( queryString );
-
-        Map<Long, Collection<QuantitationType>> qtMap;
+ 
 
         List<Long> idl = new ArrayList<Long>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
-        qtMap = getQuantitationTypeMap( idl );
-        queryObject.setParameterList( "ids", idl );
 
+        queryObject.setParameterList( "ids", idl ); 
         queryObject.setCacheable( true );
         List<?> list = queryObject.list();
 
-        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list, qtMap, ids.size() );
+        Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list,
+                getQuantitationTypeMap( idl ), ids.size() );
 
         /*
          * Remove items we didn't get back out. This is defensiveness!

@@ -162,10 +162,6 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      */
     @Override
     public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
-        this.getHibernateTemplate().findByNamedParam(
-                "select i.id from ExpressionExperimentSetImpl eset join eset.experiments i where eset.id = :id", "id",
-                id );
-
         return expressionExperimentDao
                 .loadValueObjects(
                         this.getHibernateTemplate()

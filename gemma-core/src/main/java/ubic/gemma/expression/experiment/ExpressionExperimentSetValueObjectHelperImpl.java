@@ -93,6 +93,12 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
         entity.setDescription( setVO.getDescription() );
         Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( setVO
                 .getExpressionExperimentIds() );
+
+        if ( experiments.isEmpty() ) {
+            throw new IllegalArgumentException(
+                    "The value object must have some experiments associated before it can be converted and persisted" );
+        }
+
         Collection<BioAssaySet> bas = new HashSet<BioAssaySet>();
         bas.addAll( experiments );
         entity.setExperiments( bas );

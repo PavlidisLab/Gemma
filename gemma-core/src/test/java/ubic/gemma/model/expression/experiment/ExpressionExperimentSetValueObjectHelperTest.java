@@ -38,6 +38,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Tests for methods that create ExpressionExperimentSetValueObjects from expressionExperiment entities
@@ -69,14 +70,13 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         tax1 = this.getTaxon( "human" );
         ee = this.getTestPersistentExpressionExperiment( tax1 );
 
-        // needs to be a set
         Collection<BioAssaySet> ees = new HashSet<BioAssaySet>();
         ees.add( ee );
 
         eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setName( "CreateTest" );
         eeSet.setDescription( "CreateDesc" );
-        eeSet.setExperiments( ees );
+        eeSet.getExperiments().addAll( ees );
         eeSet.setTaxon( tax1 );
 
         eeSet = expressionExperimentSetService.create( eeSet );
@@ -133,7 +133,18 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         Long id = eeSet.getId();
         assertNotNull( id );
 
+        assertNotNull( expressionExperimentService.loadValueObject( ee.getId() ) );
+
         ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
+
+        assertEquals( 1, eeSet.getExperiments().size() );
+
+        Collection<ExpressionExperimentValueObject> experimentValueObjectsInSet = expressionExperimentSetService
+                .getExperimentValueObjectsInSet( id );
+
+        assertEquals( 1, experimentValueObjectsInSet.size() );
+
+        eesvo.getExpressionExperimentIds().addAll( EntityUtils.getIds( experimentValueObjectsInSet ) );
 
         // create entity from VO
         ExpressionExperimentSet remadeEE = expressionExperimentSetValueObjectHelper.convertToEntity( eesvo );
@@ -157,5 +168,4 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         assertEquals( eeSet.getTaxon(), remadeEE.getTaxon() );
 
     }
-
 }
