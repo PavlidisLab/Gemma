@@ -265,6 +265,12 @@ public interface ExpressionExperimentService {
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
+    
+    /**
+     * Added to access latest expression experiments for Twitter outbounds
+     */
+    @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> findByUpdatedLimitWithAgent( Integer limit );
 
     /**
      * @param expressionExperiment
