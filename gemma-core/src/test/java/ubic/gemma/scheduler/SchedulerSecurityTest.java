@@ -71,6 +71,29 @@ public class SchedulerSecurityTest extends BaseSpringContextTest {
     }
 
     /**
+     * Tests whether we can run a secured method that has been granted to both GROUP_AGENT _and_ GROUP_USER.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void runSecuredMethodOnScheduleMultiGroup() throws Exception {
+
+        String jobName = "job_" + RandomStringUtils.randomAlphabetic( 10 );
+
+        SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean();
+        jobDetail.setTargetMethod( "findByUpdatedLimit" );
+        jobDetail.setArguments( new Object[] { new Integer( 10 ) } );
+        jobDetail.setTargetObject( expressionExperimentService ); // access should be ok for GROUP_AGENT.
+        jobDetail.setConcurrent( false );
+        jobDetail.setBeanName( jobName );
+        jobDetail.afterPropertiesSet(); // needed when we do this programatically.
+        jobDetail.setManualAuthenticationService( this.manualAuthenticationService );
+
+        jobDetail.invoke();
+
+    }
+
+    /**
      * Confirm that we can't run methods that GROUP_AGENT doesn't have access to, namely deleting experiments.
      * 
      * @throws Exception

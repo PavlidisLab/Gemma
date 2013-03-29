@@ -87,7 +87,5 @@
 		</property>
 	</bean>
 
-	<!--  Configure twitter outbound for tweets -->
-	<bean id="twitterOutbound" class="ubic.gemma.web.spring.integration.twitter.TwitterOutbound" />
 
 </beans>

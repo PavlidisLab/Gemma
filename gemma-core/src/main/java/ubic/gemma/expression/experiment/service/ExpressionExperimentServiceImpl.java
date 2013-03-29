@@ -492,11 +492,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
         return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }
-    
-    @Override
-    public List<ExpressionExperiment> findByUpdatedLimitWithAgent( Integer limit ) {
-    	return findByUpdatedLimit( limit );
-    }
 
     /**
      * @see ExpressionExperimentService#findOrCreate(ExpressionExperiment)

@@ -18,9 +18,6 @@
 	<aop:aspectj-autoproxy />
 
 	<!-- Mapping URLS to controllers -->
-	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
-	<bean id="rssViewer" class="ubic.gemma.web.controller.common.rss.CustomRssViewer" />
-
 
 	<!-- This is provided by spring by default, but this declaration is needed because we define other mappers, and to allow 
 		configuration of the interceptor; otherwise this would be configured by default. -->

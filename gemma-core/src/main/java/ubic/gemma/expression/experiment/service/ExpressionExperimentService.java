@@ -260,17 +260,11 @@ public interface ExpressionExperimentService {
      * @param limit
      * @return EEs in order of decreasing last update event date.
      */
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> idsOfFetched, Integer limit );
 
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
-    
-    /**
-     * Added to access latest expression experiments for Twitter outbounds
-     */
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> findByUpdatedLimitWithAgent( Integer limit );
+    public List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
 
     /**
      * @param expressionExperiment

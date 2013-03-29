@@ -29,7 +29,6 @@
 				<ref local="expressionExperimentReportTrigger" />
 				<ref local="whatsNewTrigger" />
 				<ref local="gene2CsUpdateTrigger" />
-				<ref local="twitterOutboundTrigger" />
 				<!-- <ref local="viewTrigger" /> -->
 				<!--<ref local="monitorSpaceTrigger" />-->
 			</list>
@@ -82,14 +81,6 @@
 		</property>
 		<property name="cronExpression">
 			<value>0 40 0 ? * *</value><!-- daily at 00:40 (should only update if it needs to) -->
-		</property>
-	</bean>
-	<bean id="twitterOutboundTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-		<property name="jobDetail">
-			<ref bean="twitterOutboundJobDetail" />
-		</property>
-		<property name="cronExpression">
-			<value>0 0 9 * * ?</value>
 		</property>
 	</bean>
 
@@ -162,16 +153,6 @@
 			<value>updateGene2CsEntries</value>
 		</property>
 	</bean>
-	<bean id="twitterOutboundJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
-		<property name="targetObject">
-			<ref bean="twitterOutbound" />
-		</property>
-		<property name="concurrent" value="false" />
-		<property name="targetMethod">
-			<value>sendDailyFeed</value>
-		</property>
-	</bean>
-
 <!--
 	 
 	<bean id="viewJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
