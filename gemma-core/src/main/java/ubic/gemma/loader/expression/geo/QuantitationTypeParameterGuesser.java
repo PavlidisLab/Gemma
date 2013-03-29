@@ -44,6 +44,7 @@ import ubic.gemma.util.ConfigUtils;
  * 
  * @author Paul
  * @version $Id$
+ * @see GeoValues for a list of Quantitation Type names which are skipped (so some of the below might not be needed)
  */
 public class QuantitationTypeParameterGuesser {
 
@@ -199,7 +200,7 @@ public class QuantitationTypeParameterGuesser {
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "^pairs.*" );
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "area" );
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "dia\\.?(meter)?" );
-        typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "flags?" );
+        typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "flags?" ); // FLAGS are now skipped
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "(m|p)m[_\\s]excess" );
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "negative" );
         typeDescPatterns.get( StandardQuantitationType.OTHER ).add(

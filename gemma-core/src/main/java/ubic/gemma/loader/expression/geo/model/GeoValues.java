@@ -126,7 +126,7 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "B_AREA_H" );
         skippableQuantitationTypes.add( "B_AREA_M" );
         skippableQuantitationTypes.add( "B_AREA_L" );
-
+        skippableQuantitationTypes.add( "Bkgd_area" );
         //
         // unfortunately the non-background-subtracted values aren't always available.
         // skippableQuantitationTypes.add( "CH1D_MEAN" );
@@ -196,10 +196,27 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "CH1_IsWellAboveBG" );
         skippableQuantitationTypes.add( "COMPUTED.G_IS_WELL_ABOVE_BG" );
         skippableQuantitationTypes.add( "COMPUTED.R_IS_WELL_ABOVE_BG" );
-
-        // Additional types that are not needed.
-
-        skippableQuantitationTypes.add( "Bkgd_area" );
+        // related QC calls that are too hard to use as they have no consistent meaning.
+        skippableQuantitationTypes.add( "FLAG" );
+        skippableQuantitationTypes.add( "FLAGS" );
+        skippableQuantitationTypes.add( "QUALITY_FLAG" );
+        skippableQuantitationTypes.add( "CH2_Flag" );
+        skippableQuantitationTypes.add( "CH1_Flag" );
+        skippableQuantitationTypes.add( "IsManualFlag" );
+        skippableQuantitationTypes.add( "Flag_high_pmt" );
+        skippableQuantitationTypes.add( "Flag_low_pmt" );
+        skippableQuantitationTypes.add( "Autoflag" );
+        skippableQuantitationTypes.add( "FLAGGED" );
+        skippableQuantitationTypes.add( "FlagCy5" );
+        skippableQuantitationTypes.add( "FlagCy3" );
+        skippableQuantitationTypes.add( "FLAG_L" );
+        skippableQuantitationTypes.add( "FLAG_H" );
+        skippableQuantitationTypes.add( "Flagbkgrd" );
+        skippableQuantitationTypes.add( "FLAG_M" );
+        skippableQuantitationTypes.add( "flag1" );
+        skippableQuantitationTypes.add( "Flag.30236" );
+        skippableQuantitationTypes.add( "flag2" );
+        skippableQuantitationTypes.add( "Flagged?" );
 
     }
 
@@ -297,11 +314,11 @@ public class GeoValues implements Serializable {
     /**
      * Store a value. It is assumed that designElements have unique names.
      * <p>
-     * Implementation note: The way this works: the first time we see a sample, we associate it with a 'dimension' that
-     * is connected to the platform and quantitation type. In parallel, we add the data to a 'vector' for the
-     * designElement that is likewise connected to the platform the sample uses, the quantitation type. Because in GEO
-     * files samples are seen one at a time, the vectors for each designelement are built up. Thus it is important that
-     * we add a value for each sample for each design element.
+     * Implementation note: The first time we see a sample, we associate it with a 'dimension' that is connected to the
+     * platform and quantitation type. In parallel, we add the data to a 'vector' for the designElement that is likewise
+     * connected to the platform the sample uses, the quantitation type. Because in GEO files samples are seen one at a
+     * time, the vectors for each designelement are built up. Thus it is important that we add a value for each sample
+     * for each design element.
      * <p>
      * Note what happens if data is MISSING for a given designElement/quantitationType/sample combination. This can
      * happen (typically all the quantitation types for a designelement in a given sample). This method will NOT be
