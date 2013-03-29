@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Collection;
 
 /**
- * Value Object for transporting details needd from other websites to provide convinient links to them in gemma
+ * Value Object for transporting details needed from other websites to provide convinient links to them in gemma
  * <p>
  * FIXME this really is quite specific for ABA, it should be renamed.
  * 

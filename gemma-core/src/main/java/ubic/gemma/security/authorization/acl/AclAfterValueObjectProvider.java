@@ -14,6 +14,7 @@
  */
 package ubic.gemma.security.authorization.acl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
@@ -79,11 +81,13 @@ public class AclAfterValueObjectProvider extends
                 svo.setIsShared( SecurityUtil.isShared( acl ) );
                 svo.setIsUserOwned( securityService.isOwnedByCurrentUser( svo ) );
 
-                if ( !svo.isUserOwned() ) {
-                    // FIXME svo.setUserCanWrite( securityService.isEditable( svo ) );
-                    svo.setWriteableByUser( SecurityServiceImpl.isUserAdmin() );
-                } else {
+                if ( svo.isUserOwned() || SecurityServiceImpl.isUserAdmin()
+                        || requirePermission.contains( BasePermission.WRITE ) ) {
                     svo.setWriteableByUser( true );
+                } else {
+                    List<Permission> writePermissions = new ArrayList<Permission>();
+                    writePermissions.add( BasePermission.WRITE );
+                    svo.setWriteableByUser( securityService.hasPermission( svo, writePermissions, authentication ) );
                 }
             }
             return svo;

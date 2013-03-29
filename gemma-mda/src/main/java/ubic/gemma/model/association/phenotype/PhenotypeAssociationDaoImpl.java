@@ -175,7 +175,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** delete all evidences from a specific external database */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
 
@@ -187,7 +186,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** find all evidence that doesn't come from an external course */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
         Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
@@ -197,7 +195,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return geneQueryCriteria.list();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases() {
 
@@ -270,7 +267,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
-    @SuppressWarnings("unchecked")
     @Override
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration() {
 
@@ -481,7 +477,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( maxResults != null ) {
             tpl.setMaxResults( maxResults.intValue() );
         }
-        @SuppressWarnings("unchecked")
         List<DifferentialExpressionEvidence> differentialExpressionEvidenceCollection = tpl
                 .find( "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
                         + geneDifferentialExpressionMetaAnalysisId + ")" );

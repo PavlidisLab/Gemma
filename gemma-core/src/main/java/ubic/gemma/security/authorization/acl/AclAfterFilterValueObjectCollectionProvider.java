@@ -18,7 +18,9 @@
  */
 package ubic.gemma.security.authorization.acl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.afterinvocation.AbstractAclProvider;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
@@ -136,6 +139,15 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
                         .areOwnedByCurrentUser( ( Collection<SecureValueObject> ) filterer.getFilteredObject() );
                 boolean userIsAdmin = SecurityServiceImpl.isUserAdmin();
 
+                // Only need to check for write permissions if we can't already infer it.
+                Map<SecureValueObject, Boolean> canWrite = new HashMap<SecureValueObject, Boolean>();
+                if ( !userIsAdmin && !requirePermission.contains( BasePermission.WRITE ) ) {
+                    List<Permission> writePermissions = new ArrayList<Permission>();
+                    writePermissions.add( BasePermission.WRITE );
+                    canWrite = securityService.hasPermission( securablesToFilter, this.requirePermission,
+                            authentication );
+                }
+
                 for ( Securable s : acls.keySet() ) {
 
                     /*
@@ -150,11 +162,10 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
                     svo.setIsShared( SecurityUtil.isShared( acl ) );
                     svo.setIsUserOwned( areOwnedByCurrentUser.get( s ) );
 
-                    if ( !svo.isUserOwned() ) {
-                        // svo.setUserCanWrite( securityService.isEditable( s ) ); // FIXME, can't use this here.
-                        svo.setWriteableByUser( userIsAdmin );
-                    } else {
+                    if ( svo.isUserOwned() || userIsAdmin || requirePermission.contains( BasePermission.WRITE ) ) {
                         svo.setWriteableByUser( true );
+                    } else {
+                        svo.setWriteableByUser( canWrite.containsKey( s ) && canWrite.get( s ) );
                     }
                 }
 

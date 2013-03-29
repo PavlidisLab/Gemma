@@ -126,7 +126,6 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
         String newName = "newName";
         String newDesc = "newDesc";
-        int newCount = 1;
         Collection<BioAssaySet> newMembers = new HashSet<BioAssaySet>();
         newMembers.add( ee1 );
 
@@ -141,8 +140,12 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
         assertEquals( newName, setVO.getName() );
         assertEquals( newDesc, setVO.getDescription() );
-        assertEquals( newCount, setVO.getExpressionExperimentIds().size() );
-        assertEquals( ee1.getId(), setVO.getExpressionExperimentIds().iterator().next() );
+        assertEquals( 1, setVO.getNumExperiments().intValue() ); // experiment IDs are not populated by default.
+
+        Collection<ExpressionExperiment> eesInSet = expressionExperimentSetService.getExperimentsInSet( eeSet.getId() );
+
+        assertEquals( 1, eesInSet.size() );
+        assertTrue( eesInSet.contains( ee1 ) );
 
     }
 

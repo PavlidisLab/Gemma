@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2013 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.util;
 
 import org.apache.commons.lang.StringUtils;
@@ -12,23 +26,24 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserService;
 
 /**
- * Created with IntelliJ IDEA.
- * User: anton
- * Date: 04/02/13
- * Time: 5:29 PM
- * To change this template use File | Settings | File Templates.
-  */
+ * TODO Document Me
+ * 
+ * @author anton
+ * @version $Id$
+ */
 @Component
 public class MailUtilsImpl implements MailUtils {
 
     private static final Log log = LogFactory.getLog( MailUtilsImpl.class );
 
-    @Autowired MailEngine mailEngine;
-    @Autowired UserService userService;
+    @Autowired
+    MailEngine mailEngine;
+    @Autowired
+    UserService userService;
 
     @Override
     public void sendTaskCompletedNotificationEmail( EmailNotificationContext emailNotificationContext,
-                                                    TaskResult taskResult ) {
+            TaskResult taskResult ) {
         String taskId = emailNotificationContext.getTaskId();
         String submitter = emailNotificationContext.getSubmitter();
         String taskName = emailNotificationContext.getTaskName();
@@ -47,57 +62,22 @@ public class MailUtilsImpl implements MailUtils {
                 msg.setFrom( ConfigUtils.getAdminEmailAddress() );
                 msg.setSubject( "Gemma task completed" );
 
-
                 String logs = "";
-                if (taskResult.getException() != null) {
+                if ( taskResult.getException() != null ) {
                     logs += "Task failed with :\n";
                     logs += taskResult.getException().getMessage();
                 }
 
-                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ", "
-                        + taskName + ")\n\n" + logs + "\n" );
+                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ", " + taskName + ")\n\n"
+                        + logs + "\n" );
 
                 /*
                  * TODO provide a link to something relevant something like:
                  */
-                String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskId;
+                // String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskId;
 
                 mailEngine.send( msg );
             }
         }
     }
-
-    //    private void emailNotifyCompletionOfTask( TaskCommand taskCommand, ExecutingTask executingTask ) {
-//        if ( StringUtils.isNotBlank( taskCommand.getSubmitter() ) ) {
-//            User user = userService.findByUserName( taskCommand.getSubmitter() );
-//
-//            assert user != null;
-//
-//            String emailAddress = user.getEmail();
-//
-//            if ( emailAddress != null ) {
-//                log.debug( "Sending email notification to " + emailAddress );
-//                SimpleMailMessage msg = new SimpleMailMessage();
-//                msg.setTo( emailAddress );
-//                msg.setFrom( ConfigUtils.getAdminEmailAddress() );
-//                msg.setSubject( "Gemma task completed" );
-//
-//                String logs = "Event logs:\n";
-//                if ( executingTask != null ) {
-//                    logs += StringUtils.join( executingTask.getLocalProgressQueue(), "\n" );
-//                }
-//
-//                msg.setText( "A job you started on Gemma is completed (taskid=" + taskCommand.getTaskId() + ", "
-//                        + taskCommand.getTaskClass().getSimpleName() + ")\n\n" + logs + "\n" );
-//
-//                /*
-//                 * TODO provide a link to something relevant something like:
-//                 */
-//                String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskCommand.getTaskId();
-//
-//                mailEngine.send( msg );
-//            }
-//        }
-//    }
-
 }
