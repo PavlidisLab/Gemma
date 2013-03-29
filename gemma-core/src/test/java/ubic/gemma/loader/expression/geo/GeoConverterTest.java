@@ -564,7 +564,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 1, ees.size() );
         ExpressionExperiment ee = ees.iterator().next();
         assertEquals( 133, ee.getBioAssays().size() );
-        assertEquals( 540, ee.getRawExpressionDataVectors().size() );
+        // used to be more but we reject mote qts now.
+        assertEquals( 480, ee.getRawExpressionDataVectors().size() );
     }
 
     /**

@@ -182,7 +182,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = eeService.thawLite( ee );
         aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
-        assertEquals( 17, qts.size() );
+        assertEquals( 13, qts.size() );
 
     }
 
@@ -211,7 +211,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = eeService.thawLite( ee );
         aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
-        assertEquals( 17, qts.size() );
+        assertEquals( 16, qts.size() );
 
         twoChannelMissingValues.computeMissingValues( ee );
 
@@ -282,7 +282,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         }
         ee = eeService.thawLite( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
-        assertEquals( 3, qts.size() );
+        assertEquals( 1, qts.size() );
 
     }
 
