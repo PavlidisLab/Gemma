@@ -11,6 +11,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * TODO Document Me
@@ -20,6 +21,13 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
  * @param <T>
  */
 public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<RawExpressionDataVector> {
+    /**
+     * @param eeId
+     * @param vectors
+     * @return the experiment.
+     */
+    public ExpressionExperiment addVectors( Long eeId, Collection<RawExpressionDataVector> vectors );
+
     /**
      * @param bioAssayDimension
      * @return

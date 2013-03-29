@@ -117,7 +117,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         ee = eeService.load( ee.getId() );
         ee = eeService.thawLite( ee );
-
+        int numQts = ee.getQuantitationTypes().size();
         for ( ProcessedExpressionDataVector d : preferredVectors ) {
             assertTrue( d.getQuantitationType().getIsMaskedPreferred() );
             assertTrue( ee.getQuantitationTypes().contains( d.getQuantitationType() ) );
@@ -129,6 +129,12 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         ExpressionExperimentValueObject s = experimentReportService.generateSummary( ee.getId() );
         assertEquals( ee.getNumberOfDataVectors(), s.getProcessedExpressionVectorCount() );
+
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        // repeat, make sure deleted old QTs.
+        ee = eeService.load( ee.getId() );
+        ee = eeService.thawLite( ee );
+        assertEquals( numQts, ee.getQuantitationTypes().size() );
     }
 
     /**

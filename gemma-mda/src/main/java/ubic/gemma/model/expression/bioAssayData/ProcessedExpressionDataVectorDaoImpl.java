@@ -690,9 +690,24 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
         assert expressionExperiment != null;
+
+        /*
+         * Get quantitation types that will be removed.
+         */
+        List<QuantitationType> qtsToRemove = this.getHibernateTemplate().findByNamedParam(
+                "select distinct p.quantitationType from ExpressionExperimentImpl e "
+                        + "inner join e.processedExpressionDataVectors p where e.id = :id", "id",
+                expressionExperiment.getId() );
+
         this.getHibernateTemplate().bulkUpdate(
                 "delete from ProcessedExpressionDataVectorImpl p where p.expressionExperiment = ?",
                 expressionExperiment );
+
+        if ( !qtsToRemove.isEmpty() ) {
+            expressionExperiment.getQuantitationTypes().removeAll( qtsToRemove );
+            this.getHibernateTemplate().update( expressionExperiment );
+            this.getHibernateTemplate().deleteAll( qtsToRemove );
+        }
     }
 
     /**

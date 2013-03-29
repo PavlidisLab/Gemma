@@ -24,6 +24,8 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -39,6 +41,17 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     @Autowired
     public RawExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
+    }
+
+    @Override
+    public ExpressionExperiment addVectors( Long eeId, Collection<RawExpressionDataVector> vectors ) {
+        ExpressionExperimentImpl ee = this.getHibernateTemplate().load( ExpressionExperimentImpl.class, eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Experiment with id=" + eeId + " not found" );
+        }
+        ee.getRawExpressionDataVectors().addAll( vectors );
+        this.getHibernateTemplate().update( ee );
+        return ee;
     }
 
     /*

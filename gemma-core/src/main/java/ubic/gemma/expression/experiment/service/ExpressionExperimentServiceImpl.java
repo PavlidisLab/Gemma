@@ -124,6 +124,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     @Autowired
+    private RawExpressionDataVectorDao rawExpressionDataVectorDao;
+
+    @Autowired
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -200,7 +203,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             vec.setQuantitationType( newQt );
         }
 
-        ee.getRawExpressionDataVectors().addAll( newVectors );
+        ee = rawExpressionDataVectorDao.addVectors( ee.getId(), newVectors );
+
         ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
 
         if ( ad == null ) {
