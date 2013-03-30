@@ -709,7 +709,6 @@
 
 		<dwr:init>
 			<dwr:converter id="classConverter" class="ubic.gemma.web.remote.ClassConverter" />
-			<dwr:converter id="characteristicPropertyConverter" class="ubic.gemma.web.remote.CharacteristicPropertyConverter" />
 			<dwr:converter id="characteristicConverter" class="ubic.gemma.web.remote.CharacteristicConverter" />
 			<dwr:converter id="standardQuantitationTypeConverter" class="ubic.gemma.web.remote.StandardQuantitationTypeConverter" />
 			<dwr:converter id="scaleTypeConverter" class="ubic.gemma.web.remote.ScaleTypeConverter" />
@@ -967,7 +966,6 @@
 		<dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.VocabCharacteristic" />
 		<dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.Characteristic" />
 		<dwr:convert type="goEvidenceCodeConverter" class="ubic.gemma.model.association.GOEvidenceCode" />
-		<dwr:convert type="characteristicPropertyConverter" class="ubic.gemma.model.common.description.CharacteristicProperty" />
 		<dwr:convert type="classConverter" class="java.lang.Class" />
 		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyTermImpl">
 			<dwr:include method="term" />
@@ -975,12 +973,6 @@
 			<dwr:include method="label" />
 			<dwr:include method="comment" />
 		</dwr:convert>
-
-		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyRestrictionImpl" />
-		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyCardinalityRestrictionImpl" />
-		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyClassRestrictionImpl" />
-		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyDatatypeRestrictionImpl" />
-		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyPropertyImpl" />
 
 		<dwr:convert type="standardQuantitationTypeConverter" class="ubic.gemma.model.common.quantitationtype.StandardQuantitationType" />
 		<dwr:convert type="scaleTypeConverter" class="ubic.gemma.model.common.quantitationtype.ScaleType" />
