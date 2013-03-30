@@ -194,7 +194,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
                 // if ( !spacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName() ) ) continue;
 
                 ExpressionExperimentLoadTaskCommand command = new ExpressionExperimentLoadTaskCommand( platformOnly,
-                        !doMatching, accession, aggressive, false, null );
+                        !doMatching, accession, true, false, null );
 
                 // res = proxy.execute( command );
 
