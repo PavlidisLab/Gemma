@@ -33,7 +33,6 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.AbstractCLIContextCLI;
@@ -52,10 +51,6 @@ import java.util.Collection;
  * @version $Id$
  */
 public class LoadExpressionDataCli extends AbstractCLIContextCLI {
-
-    private enum Formats {
-        AE, GEO
-    }
 
     /**
      * @param args
@@ -82,9 +77,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     protected boolean platformOnly = false;
     protected boolean doMatching = true;
     protected boolean force = false;
-    protected String fileFormat = Formats.GEO.toString();
     protected String adName = "none";
-    protected boolean aggressive;
 
     // Service Beans
     private ExpressionExperimentService eeService;
@@ -192,20 +185,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
                 .withLongOpt( "force" ).create( "force" );
         addOption( forceOption );
-        Option aggressiveQtRemoval = OptionBuilder
-                .withDescription( "Aggressively remove all unneeded quantitation types" ).withLongOpt( "aggressive" )
-                .create( "aggressive" );
-
-        addOption( aggressiveQtRemoval );
-
-        Option fileFormatOpt = OptionBuilder
-                .hasArg()
-                .withArgName( "File Format" )
-                .withDescription(
-                        "Either AE or GEO; defaults to GEO (using batch file does not work with Array Express)" )
-                .withLongOpt( "format" ).create( 'm' );
-
-        addOption( fileFormatOpt );
 
         Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" )
                 .withDescription( "Specify the name or short name of the platform the experiment uses (AE only)" )
@@ -240,10 +219,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             if ( accessions == null && accessionFile == null ) {
                 return new IllegalArgumentException(
                         "You must specific either a file or accessions on the command line" );
-            }
-
-            if ( !StringUtils.equalsIgnoreCase( Formats.GEO.toString(), fileFormat ) ) {
-                return new IllegalArgumentException( "File format '" + fileFormat + "' is not understood" );
             }
 
             if ( accessions != null ) {
@@ -307,7 +282,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             }
 
             Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    accession, false, doMatching, this.aggressive, this.splitByPlatform, this.allowSuperSeriesLoad,
+                    accession, false, doMatching, true, this.splitByPlatform, this.allowSuperSeriesLoad,
                     this.allowSubSeriesLoad );
 
             if ( !suppressPostProcessing ) {
@@ -351,14 +326,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
         this.allowSubSeriesLoad = hasOption( "allowsuper" );
         this.allowSuperSeriesLoad = hasOption( "allowsuper" );
-
-        if ( hasOption( "aggressive" ) ) {
-            this.aggressive = true;
-        }
-
-        if ( hasOption( 'm' ) ) {
-            this.fileFormat = getOptionValue( 'm' );
-        }
 
         if ( hasOption( 'a' ) ) {
             this.adName = getOptionValue( 'a' );
