@@ -9,7 +9,6 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -21,8 +20,6 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -67,35 +64,15 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     @Override
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
-                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where de.id in (:desEls) "
+                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
                 + "and dev.quantitationType = :quantitationType ";
-        try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-            queryObject.setParameter( "quantitationType", quantitationType );
 
-            List<Long> batch = new ArrayList<Long>();
-            Collection<RawExpressionDataVector> result = new HashSet<RawExpressionDataVector>();
-            int batchSize = 100;
-            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                batch.add( cs.getId() );
+        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        queryObject.setParameter( "quantitationType", quantitationType );
+        queryObject.setParameter( "adid", arrayDesign.getId() );
 
-                if ( batch.size() >= batchSize ) {
-                    Collections.sort( batch );
-                    queryObject.setParameterList( "desEls", batch );
-                    result.addAll( queryObject.list() );
-                    batch.clear();
-                }
-            }
+        return queryObject.list();
 
-            if ( batch.size() > 0 ) {
-                queryObject.setParameterList( "desEls", batch );
-                result.addAll( queryObject.list() );
-            }
-
-            return result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
     }
 
     @Override
