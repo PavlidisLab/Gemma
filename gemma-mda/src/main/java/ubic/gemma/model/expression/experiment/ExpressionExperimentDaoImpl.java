@@ -778,24 +778,24 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         for ( BioAssay ba : bioAssays ) {
             // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-            // anywhere.
+            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
 
             BioMaterial biomaterial = ba.getSampleUsed();
-
-            ba.setSampleUsed( null ); // let this cascade?? It doesn't. biomaterial-bioassay is many-to-one
+            bioMaterialsToDelete.add( biomaterial );
 
             copyOfRelations.put( ba, biomaterial );
 
-            bioMaterialsToDelete.add( biomaterial );
             // see bug 855
             session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
             Hibernate.initialize( biomaterial );
+
             // this can easily end up with an unattached object.
             Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
 
-            biomaterial.setFactorValues( null );
+            biomaterial.getFactorValues().clear();
             biomaterial.getBioAssaysUsedIn().clear();
 
+            ba.setSampleUsed( null );
         }
 
         log.info( "Last bits ..." );
@@ -809,6 +809,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             session.delete( qt );
         }
 
+        session.flush();
         session.delete( toDelete );
 
         /*
