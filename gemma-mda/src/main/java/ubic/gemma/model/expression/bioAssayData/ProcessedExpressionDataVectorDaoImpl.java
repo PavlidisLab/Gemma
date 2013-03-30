@@ -191,7 +191,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType ) {
         final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
-                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join dev.arrayDesign ad where ad.id = :adid "
+                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
                 + "and dev.quantitationType = :quantitationType ";
         org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
         queryObject.setParameter( "quantitationType", quantitationType );
