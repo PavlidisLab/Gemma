@@ -604,19 +604,14 @@ public class GeoConverterImpl implements GeoConverter {
             // find the matching biomaterial(s) in the expression experiment.
             for ( BioAssay bioAssay : expExp.getBioAssays() ) {
                 if ( bioAssay.getAccession().getAccession().equals( sample.getGeoAccession() ) ) {
-                    Collection<BioMaterial> bioMaterials = bioAssay.getSamplesUsed();
-
-                    // this is a bit funny if one of them is the control channel
-                    // ....how do we figure this out!
-                    for ( BioMaterial material : bioMaterials ) {
-                        if ( log.isDebugEnabled() ) {
-                            log.debug( "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to "
-                                    + material );
-                        }
-                        material.getFactorValues().add( factorValue );
+                    BioMaterial material = bioAssay.getSampleUsed();
+                    if ( log.isDebugEnabled() ) {
+                        log.debug( "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to "
+                                + material );
                     }
-                    break;
+                    material.getFactorValues().add( factorValue );
                 }
+
             }
 
         }
@@ -1754,9 +1749,15 @@ public class GeoConverterImpl implements GeoConverter {
              * In reality GEO does not have information about the samples run on each channel. We're just making it up.
              * So we need to just add the channel information to the biomaterials we have already. Note taxon is now
              * taken from sample FIXME this is no longer accurate; GEO has species information for each channel.
+             * 
+             * Actually this has changed. GEO does store channel information. However, we don't use it (see bug 2902).
              */
+            if ( bioAssay.getSampleUsed() != null ) {
+                bioMaterial = bioAssay.getSampleUsed();
+                log.info( "Multi-sample information stored in biomaterial " + bioMaterial );
+            }
             convertChannel( sample, channel, bioMaterial );
-            bioAssay.getSamplesUsed().add( bioMaterial );
+            bioAssay.setSampleUsed( bioMaterial );
         }
 
         // Taxon lastTaxon = null;
@@ -1971,9 +1972,11 @@ public class GeoConverterImpl implements GeoConverter {
 
                         // TODO these custom string prefixes should be made into constants, need to make public for use
                         // by ExpressionExperimentAnnotator
+
                         ba.setDescription( ba.getDescription() + "\nSource GEO sample is " + sample.getGeoAccession()
                                 + "\nLast updated (according to GEO): " + sample.getLastUpdateDate() );
-                        ba.getSamplesUsed().add( bioMaterial );
+
+                        assert ba.getSampleUsed() != null;
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription = bioMaterialDescription + "," + sample;
                         expExp.getBioAssays().add( ba );

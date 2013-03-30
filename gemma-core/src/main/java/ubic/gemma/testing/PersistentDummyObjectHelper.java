@@ -521,7 +521,7 @@ public class PersistentDummyObjectHelper {
     private BioAssay getTestNonPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
         BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
         ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbioassay" );
-        ba.getSamplesUsed().add( bm );
+        ba.setSampleUsed( bm );
         ba.setArrayDesignUsed( ad );
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
 

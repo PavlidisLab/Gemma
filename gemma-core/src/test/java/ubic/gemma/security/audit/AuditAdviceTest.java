@@ -308,20 +308,20 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             checkAuditTrail( ba, trailIds, eventIds );
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                checkAuditTrail( bm, trailIds, eventIds );
-                for ( Characteristic c : bm.getCharacteristics() ) {
-                    checkAuditTrail( c, trailIds, eventIds );
-                }
-
-                for ( Treatment t : bm.getTreatments() ) {
-                    checkAuditTrail( t, trailIds, eventIds );
-                    checkAuditTrail( t.getAction(), trailIds, eventIds );
-                    // for ( CompoundMeasurement cm : t.getCompoundMeasurements() ) {
-                    // checkAuditTrail( cm.getCompound().getCompoundIndices(), trailIds, eventIds );
-                    // }
-                }
+            BioMaterial bm = ba.getSampleUsed();
+            checkAuditTrail( bm, trailIds, eventIds );
+            for ( Characteristic c : bm.getCharacteristics() ) {
+                checkAuditTrail( c, trailIds, eventIds );
             }
+
+            for ( Treatment t : bm.getTreatments() ) {
+                checkAuditTrail( t, trailIds, eventIds );
+                checkAuditTrail( t.getAction(), trailIds, eventIds );
+                // for ( CompoundMeasurement cm : t.getCompoundMeasurements() ) {
+                // checkAuditTrail( cm.getCompound().getCompoundIndices(), trailIds, eventIds );
+                // }
+            }
+
         }
 
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();

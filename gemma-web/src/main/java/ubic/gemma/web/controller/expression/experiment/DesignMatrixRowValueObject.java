@@ -73,9 +73,9 @@ public class DesignMatrixRowValueObject implements Serializable {
 
             CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
             for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
-                for ( BioMaterial sample : assay.getSamplesUsed() ) {
-                    assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
-                }
+                BioMaterial sample = assay.getSampleUsed();
+                assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
+
             }
 
             Collection<DesignMatrixRowValueObject> matrix = new ArrayList<DesignMatrixRowValueObject>();
@@ -106,8 +106,8 @@ public class DesignMatrixRowValueObject implements Serializable {
         factorValueMap = new HashMap<String, String>();
         for ( ExperimentalFactor factor : factorValues.getFactors() ) {
             factors.add( getFactorString( factor ) );
-            factorValueMap.put( getFactorString( factor ), getFactorValueString( factorValues
-                    .getValuesForFactor( factor ) ) );
+            factorValueMap.put( getFactorString( factor ),
+                    getFactorValueString( factorValues.getValuesForFactor( factor ) ) );
         }
         count = n;
     }

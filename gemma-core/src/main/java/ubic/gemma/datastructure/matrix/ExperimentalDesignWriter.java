@@ -70,16 +70,12 @@ public class ExperimentalDesignWriter {
         Collection<BioAssay> bioAssays = ee.getBioAssays();
         Map<BioMaterial, Collection<BioAssay>> bioMaterials = new HashMap<BioMaterial, Collection<BioAssay>>();
         for ( BioAssay bioAssay : bioAssays ) {
-            Collection<BioMaterial> biomaterials = bioAssay.getSamplesUsed();
-            BioMaterial bm = biomaterials.iterator().next();
+            BioMaterial bm = bioAssay.getSampleUsed();
             if ( !bioMaterials.containsKey( bm ) ) {
                 bioMaterials.put( bm, new HashSet<BioAssay>() );
             }
             bioMaterials.get( bm ).add( bioAssay );
         }
-
-        // List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign(
-        // new ArrayList<BioMaterial>( bioMaterials.keySet() ), null );
 
         Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
 

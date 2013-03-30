@@ -139,19 +139,19 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         Map<Long, Integer> batches = new HashMap<Long, Integer>();
         Set<BioMaterial> seen = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                if ( seen.contains( bm ) ) continue;
-                seen.add( bm );
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    if ( fv.getExperimentalFactor().equals( batch ) ) {
-                        Long batchId = fv.getId();
-                        if ( !batches.containsKey( batchId ) ) batches.put( batchId, 0 );
+            BioMaterial bm = ba.getSampleUsed();
+            if ( seen.contains( bm ) ) continue;
+            seen.add( bm );
+            for ( FactorValue fv : bm.getFactorValues() ) {
+                if ( fv.getExperimentalFactor().equals( batch ) ) {
+                    Long batchId = fv.getId();
+                    if ( !batches.containsKey( batchId ) ) batches.put( batchId, 0 );
 
-                        batches.put( batchId, batches.get( batchId ) + 1 );
+                    batches.put( batchId, batches.get( batchId ) + 1 );
 
-                    }
                 }
             }
+
         }
 
         /*

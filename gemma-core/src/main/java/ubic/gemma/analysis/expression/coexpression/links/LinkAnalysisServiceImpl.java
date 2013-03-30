@@ -515,8 +515,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             ProbeCoexpressionAnalysis analysisObj ) {
         Probe2ProbeCoexpression ppCoexpression = c.create();
         ppCoexpression.setScore( w );
-        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
-        ppCoexpression.setMetric( metric );
+        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) ); 
         ppCoexpression.setSourceAnalysis( analysisObj );
         return ppCoexpression;
     }

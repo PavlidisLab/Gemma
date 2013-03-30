@@ -112,10 +112,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+            BioMaterial bm = ba.getSampleUsed();
                 assertEquals( bm + " " + ba, 2, bm.getFactorValues().size() );
             }
-        }
+         
     }
 
     /**

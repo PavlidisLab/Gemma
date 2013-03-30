@@ -1223,11 +1223,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             if ( !ee.getBioAssays().contains( ba ) ) {
                 continue;
             }
-            Hibernate.initialize( ba.getSamplesUsed() );
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                Hibernate.initialize( bm.getFactorValues() );
-            }
+            Hibernate.initialize( ba.getSampleUsed() );
+            BioMaterial bm = ba.getSampleUsed();
+            Hibernate.initialize( bm.getBioAssaysUsedIn() );
+            Hibernate.initialize( bm.getFactorValues() );
+
             sliceBioAssays.add( ba );
         }
         bad.setBioAssays( sliceBioAssays );

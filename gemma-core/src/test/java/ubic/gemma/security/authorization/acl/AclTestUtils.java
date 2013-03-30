@@ -95,11 +95,10 @@ public class AclTestUtils {
                 checkDeletedAcl( rawDataFile );
             }
 
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                checkDeletedAcl( bm );
-            }
-
+            BioMaterial bm = ba.getSampleUsed();
+            checkDeletedAcl( bm );
         }
+
     }
 
     /**
@@ -156,11 +155,10 @@ public class AclTestUtils {
                 checkLacksAces( f );
             }
 
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                checkHasAcl( bm );
-                checkHasAclParent( bm, ee );
-                checkLacksAces( bm );
-            }
+            BioMaterial bm = ba.getSampleUsed();
+            checkHasAcl( bm );
+            checkHasAclParent( bm, ee );
+            checkLacksAces( bm );
 
             ArrayDesign arrayDesign = ba.getArrayDesignUsed();
             checkHasAcl( arrayDesign );

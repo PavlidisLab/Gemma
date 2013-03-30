@@ -122,7 +122,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
         final String queryStringParent = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
                 + " as eesa inner join eesa.experiments as ee "
                 + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon.parentTaxon = :taxon ";
+                + "inner join ba.sampleUsed as sample where sample.sourceTaxon.parentTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryStringParent, "taxon", taxon );
 
     }

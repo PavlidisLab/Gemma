@@ -267,12 +267,11 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             Map<BioMaterial, BioAssay> BMtoBA = new HashMap<BioMaterial, BioAssay>();
 
             for ( BioAssay ba : layout.keySet() ) {
-                Collection<BioMaterial> samplesUsed = ba.getSamplesUsed();
-                assert !samplesUsed.isEmpty();
-                for ( BioMaterial bm : samplesUsed ) {
-                    BMtoBA.put( bm, ba ); // is one biomaterial per bioassay true??
-                    bmList.add( bm );
-                }
+                BioMaterial bm = ba.getSampleUsed();
+
+                BMtoBA.put( bm, ba );
+                bmList.add( bm );
+
             }
 
             // sort factors within layout by number of values

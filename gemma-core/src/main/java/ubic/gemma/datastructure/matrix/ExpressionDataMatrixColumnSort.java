@@ -149,8 +149,8 @@ public class ExpressionDataMatrixColumnSort {
         List<BioMaterial> start = new ArrayList<BioMaterial>();
         Map<BioMaterial, BioAssay> bm2ba = new HashMap<BioMaterial, BioAssay>();
         for ( BioAssay bioAssay : bioAssays ) {
-            start.add( bioAssay.getSamplesUsed().iterator().next() );
-            bm2ba.put( bioAssay.getSamplesUsed().iterator().next(), bioAssay );
+            start.add( bioAssay.getSampleUsed() );
+            bm2ba.put( bioAssay.getSampleUsed(), bioAssay );
         }
         List<BioMaterial> bm = orderByExperimentalDesign( start, null );
         List<BioAssay> newBioAssayOrder = new ArrayList<BioAssay>();

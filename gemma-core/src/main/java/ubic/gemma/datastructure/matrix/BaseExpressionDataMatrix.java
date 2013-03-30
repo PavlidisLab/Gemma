@@ -122,11 +122,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                 }
 
                 for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    if ( ba.getSamplesUsed().size() > 1 ) {
-                        throw new UnsupportedOperationException(
-                                "Can't deal with more than one biomaterial per bioassay" );
-                    }
-                    bms.add( ba.getSamplesUsed().iterator().next() );
+                    bms.add( ba.getSampleUsed() );
                 }
             }
 
@@ -135,7 +131,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
              */
             for ( BioAssayDimension bioAssayDimension : dims ) {
                 for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    if ( !bms.contains( ba.getSamplesUsed().iterator().next() ) ) {
+                    if ( !bms.contains( ba.getSampleUsed() ) ) {
                         throw new IllegalStateException(
                                 "This data set seems to require further preprocessing before it can be used for SVD; Vector merge or sample match?" );
                     }
@@ -595,12 +591,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             Collection<BioAssay> bioAssays ) {
         for ( BioAssay ba : bioAssays ) {
             if ( log.isDebugEnabled() ) log.debug( "      " + ba );
-            Collection<BioMaterial> bms = ba.getSamplesUsed();
-
-            if ( bms.size() > 1 )
-                throw new UnsupportedOperationException( "Can't deal with more than one biomaterial per bioassay." );
-
-            BioMaterial bm = bms.iterator().next();
+            BioMaterial bm = ba.getSampleUsed();
 
             if ( !bioMaterialMap.containsKey( bm ) ) {
                 bioMaterialMap.put( bm, new HashSet<BioAssay>() );

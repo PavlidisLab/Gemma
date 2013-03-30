@@ -64,32 +64,31 @@ public class BatchConfound {
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<ExperimentalFactor, Map<Long, Double>>();
 
         for ( BioAssay bioAssay : ee.getBioAssays() ) {
-            for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
-                    if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
-                        bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
-                    }
-
-                    double valueToStore;
-                    if ( fv.getMeasurement() != null ) {
-                        try {
-                            valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
-                        } catch ( NumberFormatException e ) {
-                            log.warn( "Measurement wasn't a number for " + fv );
-                            valueToStore = Double.NaN;
-                        }
-
-                    } else {
-                        /*
-                         * This is a hack. We're storing the ID but as a double.
-                         */
-                        valueToStore = fv.getId().doubleValue();
-                    }
-                    bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
+            BioMaterial bm = bioAssay.getSampleUsed();
+            for ( FactorValue fv : bm.getFactorValues() ) {
+                ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
+                if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
+                    bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
                 }
 
+                double valueToStore;
+                if ( fv.getMeasurement() != null ) {
+                    try {
+                        valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
+                    } catch ( NumberFormatException e ) {
+                        log.warn( "Measurement wasn't a number for " + fv );
+                        valueToStore = Double.NaN;
+                    }
+
+                } else {
+                    /*
+                     * This is a hack. We're storing the ID but as a double.
+                     */
+                    valueToStore = fv.getId().doubleValue();
+                }
+                bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
             }
+
         }
         return bioMaterialFactorMap;
     }

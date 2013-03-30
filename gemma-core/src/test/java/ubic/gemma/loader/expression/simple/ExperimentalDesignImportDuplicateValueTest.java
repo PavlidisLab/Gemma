@@ -119,10 +119,10 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+            BioMaterial bm = ba.getSampleUsed();
                 bms.add( bm );
             }
-        }
+        
 
         checkResults( bms );
     }

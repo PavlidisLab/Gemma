@@ -95,9 +95,9 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
         Collections.sort( experimentalFactors, DescribableComparator.getInstance() );
 
         for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
-            for ( BioMaterial sample : assay.getSamplesUsed() ) {
-                getAssayCountEntry( sample ).add( assay );
-            }
+            BioMaterial sample = assay.getSampleUsed();
+            getAssayCountEntry( sample ).add( assay );
+
         }
         List<FactorValueVector> vectors = new ArrayList<FactorValueVector>( assayCount.keySet() );
         Collections.sort( vectors, new FactorValueVectorComparator( experimentalFactors ) );

@@ -77,8 +77,8 @@ public class BioAssayValueObject implements Serializable {
             this.accession = new DatabaseEntryValueObject( bioAssay.getAccession() );
         }
 
-        if ( !bioAssay.getSamplesUsed().isEmpty() ) {
-            this.sample = new BioMaterialValueObject( bioAssay.getSamplesUsed().iterator().next(), bioAssay );
+        if ( bioAssay.getSampleUsed() != null ) {
+            this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed(), bioAssay );
         }
 
         if ( bioAssay.getIsOutlier() != null ) {

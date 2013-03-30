@@ -56,7 +56,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -85,9 +84,6 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
     private AuditTrailService auditTrailService;
 
     @Autowired
-    private DesignElementDataVectorService designElementDataVectorService = null;
-
-    @Autowired
     private ExpressionExperimentService eeService = null;
 
     @Autowired
@@ -98,7 +94,7 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
     @Autowired
     private ExpressionExperimentDao eeDao;
-    
+
     @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
 
@@ -114,9 +110,9 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
         // WARNING long transaction.
         try {
             // Delete any existing links from previous link analyses before computing new vectors
-        	probe2ProbeCoexpressionService.deleteLinks( ee );
-        	
-        	ee = processedDataService.createProcessedDataVectors( ee );
+            probe2ProbeCoexpressionService.deleteLinks( ee );
+
+            ee = processedDataService.createProcessedDataVectors( ee );
             ee = this.eeService.thawLite( ee );
 
             Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
@@ -180,10 +176,8 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
         BioAssayDimension bioassaydim = dims.iterator().next();
         List<BioMaterial> start = new ArrayList<BioMaterial>();
         for ( BioAssay ba : bioassaydim.getBioAssays() ) {
-            if ( ba.getSamplesUsed().size() > 1 )
-                throw new UnsupportedOperationException( "Bioassay cannot use more than one biomaterial" );
 
-            start.add( ba.getSamplesUsed().iterator().next() );
+            start.add( ba.getSampleUsed() );
         }
 
         /*
@@ -227,31 +221,30 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
             for ( int oldIndex = 0; oldIndex < bioAssays.size(); oldIndex++ ) {
                 BioAssay bioAssay = ( ( List<BioAssay> ) bioAssays ).get( oldIndex );
-                Collection<BioMaterial> samplesUsed1 = bioAssay.getSamplesUsed();
 
-                for ( BioMaterial sam1 : samplesUsed1 ) {
-                    if ( ordering.containsKey( sam1 ) ) {
-                        Integer newIndex = ordering.get( sam1 );
+                BioMaterial sam1 = bioAssay.getSampleUsed();
+                if ( ordering.containsKey( sam1 ) ) {
+                    Integer newIndex = ordering.get( sam1 );
 
-                        resorted.set( newIndex, bioAssay );
+                    resorted.set( newIndex, bioAssay );
 
-                        if ( indexes.containsKey( oldIndex ) ) {
-                            /*
-                             * Should be the same for all dimensions....
-                             */
-                            assert indexes.get( oldIndex ).equals( newIndex );
-                        }
-
+                    if ( indexes.containsKey( oldIndex ) ) {
                         /*
+                         * Should be the same for all dimensions....
+                         */
+                        assert indexes.get( oldIndex ).equals( newIndex );
+                    }
+
+                    /*
                          * 
                          */
-                        // log.info( oldIndex + " ---> " + newIndex );
-                        indexes.put( oldIndex, newIndex );
+                    // log.info( oldIndex + " ---> " + newIndex );
+                    indexes.put( oldIndex, newIndex );
 
-                    } else {
-                        throw new IllegalStateException();
-                    }
+                } else {
+                    throw new IllegalStateException();
                 }
+
             }
 
             BioAssayDimension newBioAssayDimension = BioAssayDimension.Factory.newInstance();
@@ -332,10 +325,8 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
         for ( BioAssayDimension dim : dims ) {
             int j = 0;
             for ( BioAssay ba : dim.getBioAssays() ) {
-                if ( ba.getSamplesUsed().size() > 1 )
-                    throw new UnsupportedOperationException( "Bioassay cannot use more than one biomaterial" );
 
-                BioMaterial sample = ba.getSamplesUsed().iterator().next();
+                BioMaterial sample = ba.getSampleUsed();
 
                 if ( i == 0 ) {
                     ordering.add( sample );

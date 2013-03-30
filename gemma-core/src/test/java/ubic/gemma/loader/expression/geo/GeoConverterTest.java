@@ -141,8 +141,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) seriesResult;
         ExpressionExperiment exper = ees.iterator().next();
         Collection<BioAssay> bioassays = exper.getBioAssays();
-        Collection<BioMaterial> materials = bioassays.iterator().next().getSamplesUsed();
-        Taxon taxon = materials.iterator().next().getSourceTaxon();
+        BioMaterial material = bioassays.iterator().next().getSampleUsed();
+        Taxon taxon = material.getSourceTaxon();
         assertEquals( "Oncorhynchus kisutch", taxon.getScientificName() );
 
         // assert that the platform is another taxon

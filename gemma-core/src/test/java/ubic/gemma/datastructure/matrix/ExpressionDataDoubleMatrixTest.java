@@ -209,24 +209,20 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         BioAssay assay1 = BioAssay.Factory.newInstance();
         assay1.setName( "Current Smoker 73" );
 
-        Collection<BioMaterial> samplesUsed1 = new LinkedHashSet<BioMaterial>();
         BioMaterial sample1 = BioMaterial.Factory.newInstance();
         sample1.setName( "GSM15697" );
-        samplesUsed1.add( sample1 );
 
-        assay1.setSamplesUsed( samplesUsed1 );
+        assay1.setSampleUsed( sample1 );
 
         assays.add( assay1 );
 
         BioAssay assay2 = BioAssay.Factory.newInstance();
         assay2.setName( "Former Smoker 34" );
 
-        Collection<BioMaterial> samplesUsed2 = new LinkedHashSet<BioMaterial>();
         BioMaterial sample2 = BioMaterial.Factory.newInstance();
         sample2.setName( "GSM15744" );
-        samplesUsed2.add( sample2 );
 
-        assay2.setSamplesUsed( samplesUsed2 );
+        assay2.setSampleUsed( sample2 );
 
         assays.add( assay2 );
 

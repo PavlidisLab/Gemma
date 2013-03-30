@@ -342,13 +342,11 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             bioMaterial.setName( makeBioMaterialName( ee, columnName ) );
             bioMaterial.setSourceTaxon( taxon );
-            Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
-            bioMaterials.add( bioMaterial );
 
             BioAssay assay = BioAssay.Factory.newInstance();
             assay.setName( columnName.toString() );
             assay.setArrayDesignUsed( arrayDesign );
-            assay.setSamplesUsed( bioMaterials );
+            assay.setSampleUsed( bioMaterial );
             bad.getBioAssays().add( assay );
         }
 
@@ -487,13 +485,12 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     private void validate( ExpressionExperiment experiment ) {
 
         for ( BioAssay ba : experiment.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
 
-                if ( bioMaterialService.exists( bm ) ) {
-                    throw new IllegalArgumentException( "There is already a biomaterial in the system matching: " + bm );
-                }
-
+            if ( bioMaterialService.exists( ba.getSampleUsed() ) ) {
+                throw new IllegalArgumentException( "There is already a biomaterial in the system matching: "
+                        + ba.getSampleUsed() );
             }
+
         }
 
     }

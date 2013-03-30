@@ -1261,9 +1261,9 @@ public class ExpressionExperimentController {
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
         for ( BioAssay assay : bioAssays ) {
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
-            if ( materials != null ) {
-                bioMaterials.addAll( materials );
+            BioMaterial material = assay.getSampleUsed();
+            if ( material != null ) {
+                bioMaterials.add( material );
             }
         }
 
@@ -1384,12 +1384,11 @@ public class ExpressionExperimentController {
         Collection<BioMaterial> needToProcess = new HashSet<BioMaterial>();
 
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                this.bioMaterialService.thaw( bm );
-                Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
-                if ( bioAssaysUsedIn.size() > 1 ) {
-                    needToProcess.add( bm );
-                }
+            BioMaterial bm = ba.getSampleUsed();
+            this.bioMaterialService.thaw( bm );
+            Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
+            if ( bioAssaysUsedIn.size() > 1 ) {
+                needToProcess.add( bm );
             }
         }
 
@@ -1404,8 +1403,7 @@ public class ExpressionExperimentController {
                     newMaterial.getBioAssaysUsedIn().add( baU );
                     newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
 
-                    baU.getSamplesUsed().clear();
-                    baU.getSamplesUsed().add( newMaterial );
+                    baU.setSampleUsed( newMaterial );
                     bioAssayService.update( baU );
 
                 }

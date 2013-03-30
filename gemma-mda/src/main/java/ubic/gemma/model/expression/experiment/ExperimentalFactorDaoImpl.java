@@ -55,21 +55,20 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
         ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
 
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+            BioMaterial bm = ba.getSampleUsed();
 
-                Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
-                for ( FactorValue factorValue : bm.getFactorValues() ) {
-                    if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
-                        factorValuesToRemoveFromBioMaterial.add( factorValue );
-                        this.getSession().evict( factorValue.getExperimentalFactor() );
-                    }
+            Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
+            for ( FactorValue factorValue : bm.getFactorValues() ) {
+                if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
+                    factorValuesToRemoveFromBioMaterial.add( factorValue );
+                    this.getSession().evict( factorValue.getExperimentalFactor() );
                 }
+            }
 
-                // if there are factorvalues to remove
-                if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
-                    bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                    // getBioMaterialDao().update( bm ); // needed?
-                }
+            // if there are factorvalues to remove
+            if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
+                bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
+                // getBioMaterialDao().update( bm ); // needed?
             }
         }
 

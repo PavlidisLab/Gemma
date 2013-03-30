@@ -84,6 +84,8 @@ public class GeoValues implements Serializable {
         // these are location and spot size information.
         skippableQuantitationTypes.add( "X_COORD" );
         skippableQuantitationTypes.add( "Y_COORD" );
+        skippableQuantitationTypes.add( "X" );
+        skippableQuantitationTypes.add( "Y" );
         skippableQuantitationTypes.add( "TOP" );
         skippableQuantitationTypes.add( "BOT" );
         skippableQuantitationTypes.add( "LEFT" );
@@ -115,7 +117,7 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "Background Area" );
         skippableQuantitationTypes.add( "Signal Area" );
         skippableQuantitationTypes.add( "Ignored Area" );
-        skippableQuantitationTypes.add( " Probe 1Area%" );
+        skippableQuantitationTypes.add( "Probe 1Area%" );
         skippableQuantitationTypes.add( "BKD_AREA" );
         skippableQuantitationTypes.add( "Perim-to-area failed" );
         skippableQuantitationTypes.add( "F_AREA_L" );
@@ -127,6 +129,7 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "B_AREA_M" );
         skippableQuantitationTypes.add( "B_AREA_L" );
         skippableQuantitationTypes.add( "Bkgd_area" );
+        skippableQuantitationTypes.add( "Dia." );
         //
         // unfortunately the non-background-subtracted values aren't always available.
         // skippableQuantitationTypes.add( "CH1D_MEAN" );
@@ -187,8 +190,10 @@ public class GeoValues implements Serializable {
 
         // We no longer keep "absent-present" calls (affymetrix and others)
         skippableQuantitationTypes.add( "ABS_CALL" );
+        skippableQuantitationTypes.add( "ABS CALL" );
         skippableQuantitationTypes.add( "Detection Pval" );
         skippableQuantitationTypes.add( "DETECTION P-VALUE" );
+        skippableQuantitationTypes.add( "Detection" );
         skippableQuantitationTypes.add( "Detection call" );
         skippableQuantitationTypes.add( "rIsWellAboveBG" );
         skippableQuantitationTypes.add( "gIsWellAboveBG" );

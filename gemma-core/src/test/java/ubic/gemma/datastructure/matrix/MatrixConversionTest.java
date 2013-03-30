@@ -81,7 +81,7 @@ public class MatrixConversionTest extends TestCase {
             for ( long i = 0; i < NUM_BIOMATERIALS - 20; i++ ) {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
                 ba.setName( RandomStringUtils.randomNumeric( 5 ) + "_testbioassay" );
-                ba.getSamplesUsed().add( bmita.next() );
+                ba.setSampleUsed( bmita.next() );
                 ba.setArrayDesignUsed( ad );
                 ba.setId( i );
                 baDimA.getBioAssays().add( ba );
@@ -93,7 +93,7 @@ public class MatrixConversionTest extends TestCase {
             for ( long i = 0; i < NUM_BIOMATERIALS; i++ ) {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
                 ba.setName( RandomStringUtils.randomNumeric( 15 ) + "_testbioassay" );
-                ba.getSamplesUsed().add( bmitb.next() );
+                ba.setSampleUsed( bmitb.next() );
                 ba.setArrayDesignUsed( adb );
                 ba.setId( i + 20 );
                 baDimB.getBioAssays().add( ba );

@@ -203,13 +203,13 @@ public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao 
                 session.buildLockRequest( LockOptions.NONE ).lock( bioAssay );
                 Hibernate.initialize( bioAssay.getArrayDesignUsed() );
                 Hibernate.initialize( bioAssay.getDerivedDataFiles() );
-                for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
+                BioMaterial bm = bioAssay.getSampleUsed() ;
                     session.buildLockRequest( LockOptions.NONE ).lock( bm );
                     Hibernate.initialize( bm );
                     Hibernate.initialize( bm.getBioAssaysUsedIn() );
                     Hibernate.initialize( bm.getFactorValues() );
                     session.evict( bm );
-                }
+                 
                 session.evict( bioAssay );
                 return null;
             }
@@ -292,7 +292,7 @@ public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao 
         if ( bioAssays.isEmpty() ) return bioAssays;
         List<?> thawedBioassays = this.getHibernateTemplate().findByNamedParam(
                 "select distinct b from BioAssayImpl b left join fetch b.arrayDesignUsed"
-                        + " left join fetch b.derivedDataFiles left join fetch b.samplesUsed bm"
+                        + " left join fetch b.derivedDataFiles join fetch b.sampleUsed bm"
                         + " left join bm.factorValues left join bm.bioAssaysUsedIn left join fetch "
                         + " b.auditTrail at left join fetch at.events where b.id in (:ids) ", "ids",
                 EntityUtils.getIds( bioAssays ) );

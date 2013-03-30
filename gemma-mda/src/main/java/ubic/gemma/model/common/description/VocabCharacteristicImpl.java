@@ -30,7 +30,7 @@ public class VocabCharacteristicImpl extends ubic.gemma.model.common.description
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 8530426256054538222L;
-    
+
     @Override
     public boolean equals( Object object ) {
         if ( !super.equals( object ) ) return false;
@@ -42,8 +42,8 @@ public class VocabCharacteristicImpl extends ubic.gemma.model.common.description
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder( 17, 3 ).appendSuper( super.hashCode() ).append( this.getCategoryUri() ).append(
-                this.getValueUri() ).toHashCode();
+        return new HashCodeBuilder( 17, 3 ).appendSuper( super.hashCode() ).append( this.getCategoryUri() )
+                .append( this.getValueUri() ).toHashCode();
     }
 
     /**
@@ -61,9 +61,6 @@ public class VocabCharacteristicImpl extends ubic.gemma.model.common.description
         buf.append( ind + this.getValue() + "\n" );
 
         ++indent;
-        for ( CharacteristicProperty constituent : this.getProperties() ) {
-            buf.append( constituent.toString( indent ) );
-        }
         return buf.toString();
     }
 }

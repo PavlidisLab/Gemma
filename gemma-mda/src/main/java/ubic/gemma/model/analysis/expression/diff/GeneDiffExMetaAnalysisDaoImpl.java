@@ -92,7 +92,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon ) {
         final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
                 + "   inner join a.resultSetsIncluded rs inner join rs.analysis ra inner join ra.experimentAnalyzed ee inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample "
+                + "inner join ba.sampleUsed as sample "
                 + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }

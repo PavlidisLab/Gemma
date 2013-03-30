@@ -193,9 +193,7 @@ public class BioAssayServiceImpl implements BioAssayService {
      */
     protected void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {
         // add bioMaterial to bioAssay
-        Collection<BioMaterial> currentBioMaterials = bioAssay.getSamplesUsed();
-        currentBioMaterials.add( bioMaterial );
-        bioAssay.setSamplesUsed( currentBioMaterials );
+        bioAssay.setSampleUsed( bioMaterial );
 
         // add bioAssay to bioMaterial
         Collection<BioAssay> currentBioAssays = bioMaterial.getBioAssaysUsedIn();
@@ -268,9 +266,8 @@ public class BioAssayServiceImpl implements BioAssayService {
         BioAssay bioAssayTemp = this.getBioAssayDao().load( bioAssay.getId() );
         BioMaterial biomaterialToBeRemoved = this.getBioMaterialDao().load( bioMaterial.getId() );
 
-        Collection<BioMaterial> currentBioMaterials = bioAssayTemp.getSamplesUsed();
-        currentBioMaterials.remove( biomaterialToBeRemoved );
-        bioAssayTemp.setSamplesUsed( currentBioMaterials );
+        BioMaterial currentBioMaterials = bioAssayTemp.getSampleUsed();
+        bioAssayTemp.setSampleUsed( currentBioMaterials );
 
         // Remove bioAssay from bioMaterial
         Collection<BioAssay> currentBioAssays = biomaterialToBeRemoved.getBioAssaysUsedIn();

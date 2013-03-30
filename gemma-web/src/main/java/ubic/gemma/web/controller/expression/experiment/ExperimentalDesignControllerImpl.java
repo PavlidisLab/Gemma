@@ -266,9 +266,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         for ( ExperimentalFactor ef : toDelete ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-            
-            if (ee!=null){
-            	this.experimentReportService.evictFromCache( ee.getId() );
+
+            if ( ee != null ) {
+                this.experimentReportService.evictFromCache( ee.getId() );
             }
         }
     }
@@ -340,11 +340,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         ee = expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<BioMaterialValueObject>();
         for ( BioAssay assay : ee.getBioAssays() ) {
-            for ( BioMaterial sample : assay.getSamplesUsed() ) {
-                BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
-                result.add( bmvo );
-            }
+            BioMaterial sample = assay.getSampleUsed();
+            BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
+            result.add( bmvo );
         }
+
         return result;
     }
 

@@ -172,16 +172,16 @@ public class EEDesignWebService {
 
             Map<String, String> annotations = new HashMap<String, String>();
 
-            for ( BioMaterial bioMaterial : bioAssay.getSamplesUsed() ) {
+            BioMaterial bioMaterial = bioAssay.getSampleUsed();
 
-                for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
-                    if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
-                        // skip batch
-                    } else {
-                        annotations.put( factorValue.getExperimentalFactor().getName(),
-                                getFactorValueString( factorValue ) );
-                    }
+            for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
+                if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
+                    // skip batch
+                } else {
+                    annotations
+                            .put( factorValue.getExperimentalFactor().getName(), getFactorValueString( factorValue ) );
                 }
+
             }
 
             for ( Characteristic charac : characs ) {
@@ -209,16 +209,16 @@ public class EEDesignWebService {
             Map<String, Map<String, String>> annotationsCategories = new HashMap<String, Map<String, String>>();
             Map<String, String> annotations = new HashMap<String, String>();
 
-            for ( BioMaterial bioMaterial : bioAssay.getSamplesUsed() ) {
+            BioMaterial bioMaterial = bioAssay.getSampleUsed();
 
-                for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
-                    if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
-                        // skip batch
-                    } else {
-                        annotations.put( factorValue.getExperimentalFactor().getName(),
-                                getFactorValueString( factorValue ) );
-                    }
+            for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
+                if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
+                    // skip batch
+                } else {
+                    annotations
+                            .put( factorValue.getExperimentalFactor().getName(), getFactorValueString( factorValue ) );
                 }
+
             }
 
             Map<String, String> tagAnnotations = new HashMap<String, String>();

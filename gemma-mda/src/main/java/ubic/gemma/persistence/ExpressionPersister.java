@@ -254,17 +254,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 boolean found = false;
                 // Make sure there is at least one bioassay using it.
                 for ( BioAssay ba : bioAssays ) {
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        for ( FactorValue fvb : bm.getFactorValues() ) {
+                    BioMaterial bm = ba.getSampleUsed();
+                    for ( FactorValue fvb : bm.getFactorValues() ) {
 
-                            // They should be persistent already at this point.
-                            if ( ( fvb.getId() != null || fv.getId() != null ) && fvb.equals( fv ) && fvb == fv ) {
-                                // Note we use == because they should be the same objects.
-                                found = true;
-                            }
+                        // They should be persistent already at this point.
+                        if ( ( fvb.getId() != null || fv.getId() != null ) && fvb.equals( fv ) && fvb == fv ) {
+                            // Note we use == because they should be the same objects.
+                            found = true;
                         }
                     }
                 }
+
                 if ( !found ) {
                     /*
                      * Basically this means there is factorvalue but no biomaterial is associated with it. This can
@@ -317,13 +317,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         bioAssay.setArrayDesignUsed( arrayDesignUsed );
 
         boolean hadFactors = false;
-        for ( BioMaterial material : bioAssay.getSamplesUsed() ) {
-            for ( FactorValue factorValue : material.getFactorValues() ) {
-                // Factors are not compositioned in any more, but by association with the ExperimentalFactor.
-                fillInFactorValueAssociations( factorValue );
-                factorValue = persistFactorValue( factorValue );
-                hadFactors = true;
-            }
+        BioMaterial material = bioAssay.getSampleUsed();
+        for ( FactorValue factorValue : material.getFactorValues() ) {
+            // Factors are not compositioned in any more, but by association with the ExperimentalFactor.
+            fillInFactorValueAssociations( factorValue );
+            factorValue = persistFactorValue( factorValue );
+            hadFactors = true;
         }
 
         if ( hadFactors ) log.debug( "factor values done" );
@@ -337,7 +336,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
 
         // BioMaterials
-        persistCollectionElements( bioAssay.getSamplesUsed() );
+        bioAssay.setSampleUsed( ( BioMaterial ) persist( bioAssay.getSampleUsed() ) );
 
         log.debug( "biomaterials done" );
 

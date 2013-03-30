@@ -60,10 +60,14 @@ public class BioMaterialController {
 
     private static Log log = LogFactory.getLog( BioMaterialController.class.getName() );
 
-    @Autowired private BioMaterialService bioMaterialService;
-    @Autowired private OntologyService ontologyService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private FactorValueService factorValueService;
+    @Autowired
+    private BioMaterialService bioMaterialService;
+    @Autowired
+    private OntologyService ontologyService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private FactorValueService factorValueService;
 
     private boolean AJAX = true;
 
@@ -192,9 +196,9 @@ public class BioMaterialController {
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
         for ( BioAssay assay : bioAssays ) {
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
-            if ( materials != null ) {
-                bioMaterials.addAll( materials );
+            BioMaterial material = assay.getSampleUsed();
+            if ( material != null ) {
+                bioMaterials.add( material );
             }
         }
         return bioMaterials;

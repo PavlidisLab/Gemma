@@ -157,21 +157,21 @@ public class DifferentialExpressionAnalysisUtil {
         boolean replicatesok = false;
         Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
         for ( BioAssay ba : ( Collection<BioAssay> ) expressionExperiment.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
+            BioMaterial bm = ba.getSampleUsed();
+            for ( FactorValue fv : bm.getFactorValues() ) {
+                if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
 
-                        if ( !counts.containsKey( fv ) ) {
-                            counts.put( fv, 0 );
-                        }
-
-                        counts.put( fv, counts.get( fv ) + 1 );
-                        if ( counts.get( fv ) > 1 ) {
-                            replicatesok = true;
-                        }
-
+                    if ( !counts.containsKey( fv ) ) {
+                        counts.put( fv, 0 );
                     }
+
+                    counts.put( fv, counts.get( fv ) + 1 );
+                    if ( counts.get( fv ) > 1 ) {
+                        replicatesok = true;
+                    }
+
                 }
+
             }
         }
 
@@ -207,13 +207,9 @@ public class DifferentialExpressionAnalysisUtil {
         }
 
         for ( BioAssay assay : assays ) {
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
-            if ( materials.size() != 1 ) {
-                throw new RuntimeException( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "
-                        + materials.size() + "." );
-            }
-
-            biomaterials.addAll( materials );
+            BioMaterial  material  = assay.getSampleUsed();
+            
+            biomaterials.add ( material  );
 
         }
 
@@ -448,13 +444,9 @@ public class DifferentialExpressionAnalysisUtil {
 
         /* look for 1 bioassay/matrix column and 1 biomaterial/bioassay */
         for ( BioAssay assay : ( Collection<BioAssay> ) ee.getBioAssays() ) {
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
-            if ( materials.size() != 1 ) {
-                throw new RuntimeException( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "
-                        + materials.size() + "." );
-            }
-
-            biomaterials.addAll( materials );
+            BioMaterial  material  = assay.getSampleUsed();
+            
+            biomaterials.add ( material  );
         }
 
         return biomaterials;

@@ -41,6 +41,7 @@ import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -48,6 +49,8 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -156,8 +159,13 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     public void testFetchAndLoadGSE2122SAGE() throws Exception {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
                 getTestFileBasePath( "gse2122shortSage" ) ) );
-        Collection<?> results = geoService.fetchAndLoad( "GSE2122", false, true, false, false );
-        ee = ( ExpressionExperiment ) results.iterator().next();
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE2122", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.warn( "Test skipped because GSE2122 was not removed from the system prior to test" );
+            return;
+        }
         ee = eeService.thawLite( ee );
         assertEquals( 4, ee.getBioAssays().size() );
         aclTestUtils.checkEEAcls( ee );
@@ -184,6 +192,24 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 13, qts.size() );
 
+        // make sure we got characteristics and treatments for both channels.
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            log.info( bm + " " + bm.getDescription() );
+            for ( Treatment t : bm.getTreatments() ) {
+                // log.info( bm + " " + t );
+            }
+
+            assertEquals( 6, bm.getTreatments().size() );
+
+            for ( Characteristic c : bm.getCharacteristics() ) {
+                // log.info( bm + " " + c );
+            }
+
+            assertEquals( 9, bm.getCharacteristics().size() );
+
+        }
+
     }
 
     @After
@@ -191,7 +217,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         if ( ee != null ) try {
             eeService.delete( ee );
         } catch ( Exception e ) {
-            log.info( "Failed to delete EE after test" );
+            log.info( "Failed to delete EE after test: " + e.getMessage() );
         }
     }
 

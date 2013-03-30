@@ -153,9 +153,8 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                bms.add( bm );
-            }
+            BioMaterial bm = ba.getSampleUsed();
+            bms.add( bm );
         }
 
         checkResults( bms );
@@ -175,13 +174,11 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         assertEquals( s - 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    assertTrue( !fv.getExperimentalFactor().equals( toDelete ) );
-                }
+            BioMaterial bm = ba.getSampleUsed();
+            for ( FactorValue fv : bm.getFactorValues() ) {
+                assertTrue( !fv.getExperimentalFactor().equals( toDelete ) );
             }
         }
-
     }
 
     /**

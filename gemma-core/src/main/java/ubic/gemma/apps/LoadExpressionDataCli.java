@@ -27,7 +27,6 @@ import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.Describable;
@@ -89,7 +88,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
     // Service Beans
     private ExpressionExperimentService eeService;
-    private ArrayDesignService adService;
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
     private TwoChannelMissingValues tcmv;
 
@@ -239,41 +237,12 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             GeoService geoService = this.getBean( GeoService.class );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
-            ArrayExpressLoadService aeService = this.getBean( ArrayExpressLoadService.class );
-
             if ( accessions == null && accessionFile == null ) {
                 return new IllegalArgumentException(
                         "You must specific either a file or accessions on the command line" );
             }
 
-            Boolean aeFlag = false;
-            ArrayDesign ad;
-            if ( StringUtils.equalsIgnoreCase( Formats.AE.toString(), fileFormat ) ) {
-
-                if ( platformOnly )
-                    return new IllegalArgumentException( "Loading 'platform only' not supported for Array Express. " );
-
-                if ( accessionFile != null )
-                    return new IllegalArgumentException(
-                            "Batch loading via text file not supported for Array Express file formats. " );
-
-                ad = adService.findByShortName( this.adName );
-                if ( ad == null ) {
-
-                    Collection<ArrayDesign> byname = adService.findByName( adName );
-                    if ( byname.size() > 1 ) {
-                        throw new IllegalArgumentException( "Ambiguous name: " + adName );
-                    } else if ( byname.size() == 1 ) {
-                        ad = byname.iterator().next();
-                    }
-                }
-
-                if ( ad == null ) {
-                    return new IllegalArgumentException( "Array Design Specified was not valid: " + adName
-                            + " Either name is incorrect that Array Design is not in Gemma:" );
-                }
-                aeFlag = true;
-            } else if ( !StringUtils.equalsIgnoreCase( Formats.GEO.toString(), fileFormat ) ) {
+            if ( !StringUtils.equalsIgnoreCase( Formats.GEO.toString(), fileFormat ) ) {
                 return new IllegalArgumentException( "File format '" + fileFormat + "' is not understood" );
             }
 
@@ -289,10 +258,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                         continue;
                     }
 
-                    if ( aeFlag ) {
-                        processAEAccession( aeService, accession );
-
-                    } else if ( platformOnly ) {
+                    if ( platformOnly ) {
                         Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, false, true,
                                 true );
                         for ( Object object : designs ) {
@@ -360,25 +326,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         }
     }
 
-    /**
-     * @param aeService
-     * @param accession
-     */
-    protected void processAEAccession( ArrayExpressLoadService aeService, String accession ) {
-
-        try {
-            ExpressionExperiment aeExperiment = aeService.load( accession, adName, false );
-            successObjects.add( ( ( Describable ) aeExperiment ).getName() + " (" + ( aeExperiment ).getShortName()
-                    + ")" );
-
-        } catch ( Exception e ) {
-            errorObjects.add( accession + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
-            log.error( e, e );
-
-        }
-    }
-
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -428,7 +375,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         this.suppressPostProcessing = hasOption( "nopost" );
 
         this.eeService = getBean( ExpressionExperimentService.class );
-        this.adService = getBean( ArrayDesignService.class );
         this.processedExpressionDataVectorCreateService = getBean( ProcessedExpressionDataVectorCreateService.class );
         this.tcmv = this.getBean( TwoChannelMissingValues.class );
         this.sampleCoexpressionMatrixService = getBean( SampleCoexpressionMatrixService.class );

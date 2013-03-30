@@ -98,8 +98,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
             ppc.setSecondVector( dvl.get( i + 1 ) );
 
             assertNotNull( ppc.getFirstVector().getDesignElement().getId() );
-
-            ppc.setMetric( qt );
+ 
             ppc.setScore( 0.0 );
             ppc.setPvalue( 0.2 );
             ppc.setExpressionBioAssaySet( ee );

@@ -292,9 +292,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         Map<BioMaterial, BioAssay> bmap = new HashMap<BioMaterial, BioAssay>();
         ArrayDesign arrayDesign = null;
         for ( BioAssay b : this.getBioAssayDimension().getBioAssays() ) {
-            if ( b.getSamplesUsed().size() > 1 )
-                throw new UnsupportedOperationException( "Can only have one biomaterial per bioassay" );
-            bmap.put( b.getSamplesUsed().iterator().next(), b );
+
+            bmap.put( b.getSampleUsed(), b );
             arrayDesign = b.getArrayDesignUsed();
         }
 
@@ -302,9 +301,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         int i = 0;
         int indexInUngappedData = 0;
         for ( BioAssay b : dimToMatch.getBioAssays() ) {
-            if ( b.getSamplesUsed().size() > 1 )
-                throw new UnsupportedOperationException( "Can only have one biomaterial per bioassay" );
-            BioMaterial bm = b.getSamplesUsed().iterator().next();
+
+            BioMaterial bm = b.getSampleUsed();
 
             if ( !bmap.containsKey( bm ) ) {
                 /*
@@ -316,7 +314,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
                 placeholder
                         .setDescription( "This is to represent a biomaterial that was not run on the platform for the rest of the bioassaydimension." );
                 placeholder.setArrayDesignUsed( arrayDesign );
-                placeholder.getSamplesUsed().add( bm );
+                placeholder.setSampleUsed( bm );
                 expandedBioAssays.add( placeholder );
             } else {
                 expandedBioAssays.add( ( ( List<BioAssay> ) this.bioAssayDimension.getBioAssays() )

@@ -470,14 +470,12 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             bioMaterial.setName( columnName.toString() );
-            bioMaterial.setSourceTaxon( taxon );
-            Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
-            bioMaterials.add( bioMaterial );
+            bioMaterial.setSourceTaxon( taxon ); 
 
             BioAssay assay = BioAssay.Factory.newInstance();
             assay.setName( columnName.toString() );
             assay.setArrayDesignUsed( arrayDesign );
-            assay.setSamplesUsed( bioMaterials );
+            assay.setSampleUsed( bioMaterial );
             bad.getBioAssays().add( assay );
         }
         return bad;

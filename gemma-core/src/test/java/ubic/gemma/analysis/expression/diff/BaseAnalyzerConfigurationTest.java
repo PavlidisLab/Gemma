@@ -308,59 +308,43 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         /* set up the bioassays */
         bioAssay0a = BioAssay.Factory.newInstance();
         bioAssay0a.setName( "bioassay 0a" );
-        Collection<BioMaterial> samplesUsed0a = new HashSet<BioMaterial>();
-        samplesUsed0a.add( biomaterial0a );
-        bioAssay0a.getSamplesUsed().addAll( samplesUsed0a );
+        bioAssay0a.setSampleUsed( biomaterial0a );
         bioAssay0a.setArrayDesignUsed( arrayDesign );
 
         bioAssay0b = BioAssay.Factory.newInstance();
         bioAssay0b.setName( "bioassay 0b" );
-        Collection<BioMaterial> samplesUsed0b = new HashSet<BioMaterial>();
-        samplesUsed0b.add( biomaterial0b );
-        bioAssay0b.getSamplesUsed().addAll( samplesUsed0b );
+        bioAssay0b.setSampleUsed( biomaterial0b );
 
         bioAssay0b.setArrayDesignUsed( arrayDesign );
 
         bioAssay1a = BioAssay.Factory.newInstance();
         bioAssay1a.setName( "bioassay 1a" );
-        Collection<BioMaterial> samplesUsed1a = new HashSet<BioMaterial>();
-        samplesUsed1a.add( biomaterial1a );
-        bioAssay1a.getSamplesUsed().addAll( samplesUsed1a );
+        bioAssay1a.setSampleUsed( biomaterial1a );
         bioAssay1a.setArrayDesignUsed( arrayDesign );
 
         bioAssay1b = BioAssay.Factory.newInstance();
         bioAssay1b.setName( "bioassay 1b" );
-        Collection<BioMaterial> samplesUsed1b = new HashSet<BioMaterial>();
-        samplesUsed1b.add( biomaterial1b );
-        bioAssay1b.getSamplesUsed().addAll( samplesUsed1b );
+        bioAssay1b.setSampleUsed( biomaterial1b );
         bioAssay1b.setArrayDesignUsed( arrayDesign );
 
         bioAssay2a = BioAssay.Factory.newInstance();
         bioAssay2a.setName( "bioassay 2a" );
-        Collection<BioMaterial> samplesUsed2a = new HashSet<BioMaterial>();
-        samplesUsed2a.add( biomaterial2a );
-        bioAssay2a.getSamplesUsed().addAll( samplesUsed2a );
+        bioAssay2a.setSampleUsed( biomaterial2a );
         bioAssay2a.setArrayDesignUsed( arrayDesign );
 
         bioAssay2b = BioAssay.Factory.newInstance();
         bioAssay2b.setName( "bioassay 2b" );
-        Collection<BioMaterial> samplesUsed2b = new HashSet<BioMaterial>();
-        samplesUsed2b.add( biomaterial2b );
-        bioAssay2b.getSamplesUsed().addAll( samplesUsed2b );
+        bioAssay2b.setSampleUsed( biomaterial2b );
         bioAssay2b.setArrayDesignUsed( arrayDesign );
 
         bioAssay3a = BioAssay.Factory.newInstance();
         bioAssay3a.setName( "bioassay 3a" );
-        Collection<BioMaterial> samplesUsed3a = new HashSet<BioMaterial>();
-        samplesUsed3a.add( biomaterial3a );
-        bioAssay3a.getSamplesUsed().addAll( samplesUsed3a );
+        bioAssay3a.setSampleUsed( biomaterial3a );
         bioAssay3a.setArrayDesignUsed( arrayDesign );
 
         bioAssay3b = BioAssay.Factory.newInstance();
         bioAssay3b.setName( "bioassay 3b" );
-        Collection<BioMaterial> samplesUsed3b = new HashSet<BioMaterial>();
-        samplesUsed3b.add( biomaterial3b );
-        bioAssay3b.getSamplesUsed().addAll( samplesUsed3b );
+        bioAssay3b.setSampleUsed( biomaterial3b );
         bioAssay3b.setArrayDesignUsed( arrayDesign );
 
         bioAssays = new ArrayList<BioAssay>();
@@ -500,9 +484,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         biomaterials = new ArrayList<BioMaterial>();
         for ( BioAssay b : bioAssayDimension.getBioAssays() ) {
-            if ( b.getSamplesUsed().size() > 1 )
-                throw new UnsupportedOperationException( "Bioassay cannot use more than one biomaterial" );
-            biomaterials.add( b.getSamplesUsed().iterator().next() );
+
+            biomaterials.add( b.getSampleUsed() );
         }
 
         configureVectors( biomaterials, null );

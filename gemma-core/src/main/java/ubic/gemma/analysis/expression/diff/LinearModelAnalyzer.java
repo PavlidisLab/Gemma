@@ -362,7 +362,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         ExperimentalFactor ef = config.getSubsetFactor();
         Collection<BioMaterial> bmtmp = new HashSet<BioMaterial>();
         for ( BioAssay ba : subset.getBioAssays() ) {
-            bmtmp.addAll( ba.getSamplesUsed() );
+            bmtmp.add( ba.getSampleUsed() );
         }
 
         List<BioMaterial> samplesInSubset = new ArrayList<BioMaterial>( bmtmp );
@@ -1043,11 +1043,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 Collection<FactorValue> levels = new HashSet<FactorValue>();
                 for ( BioAssay ba : eesubSet.getBioAssays() ) {
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        for ( FactorValue fv : bm.getFactorValues() ) {
-                            if ( fv.getExperimentalFactor().equals( f ) ) {
-                                levels.add( fv );
-                            }
+                    BioMaterial bm = ba.getSampleUsed();
+                    for ( FactorValue fv : bm.getFactorValues() ) {
+                        if ( fv.getExperimentalFactor().equals( f ) ) {
+                            levels.add( fv );
                         }
                     }
                 }

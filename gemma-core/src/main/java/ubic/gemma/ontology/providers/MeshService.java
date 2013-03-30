@@ -28,19 +28,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.ontology.OntologyLoader;
-import ubic.basecode.ontology.model.ChainedStatementObject;
-import ubic.basecode.ontology.model.CharacteristicStatement;
-import ubic.basecode.ontology.model.DataStatement;
 import ubic.basecode.ontology.model.ObjectPropertyImpl;
 import ubic.basecode.ontology.model.OntologyClassRestriction;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologyIndexer;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.ontology.ChainedStatementImpl;
-import ubic.gemma.ontology.ChainedStatementObjectImpl;
-import ubic.gemma.ontology.ClassStatementImpl;
-import ubic.gemma.ontology.DataStatementImpl;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
@@ -129,27 +122,6 @@ public class MeshService {
         }
 
         return results;
-    }
-
-    /**
-     * @param term that the qualifier is attached to
-     * @param qualTerm the qualifier term
-     * @param qualIsMajorHeading if the qualifier is a major heading for the instance
-     * @return
-     */
-    public static CharacteristicStatement getQualifierStatement( OntologyTerm term, OntologyTerm qualTerm,
-            boolean qualIsMajorHeading ) {
-        CharacteristicStatement cs;
-        if ( qualIsMajorHeading ) {
-            cs = new ChainedStatementImpl( term, MeshService.hasQualifier() );
-            ChainedStatementObject cso = new ChainedStatementObjectImpl( qualTerm );
-            DataStatement mh = new DataStatementImpl( qualTerm, MeshService.isMajorHeading(), "true" );
-            cso.addStatement( mh );
-            ( ( ChainedStatementImpl ) cs ).setObject( cso );
-        } else {
-            cs = new ClassStatementImpl( term, MeshService.hasQualifier(), qualTerm );
-        }
-        return cs;
     }
 
     /**

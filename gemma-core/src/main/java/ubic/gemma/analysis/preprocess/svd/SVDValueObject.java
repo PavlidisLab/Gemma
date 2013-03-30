@@ -112,11 +112,10 @@ public class SVDValueObject implements Serializable {
 
         List<Long> bmids = new ArrayList<Long>();
         for ( BioAssay ba : pca.getBioAssayDimension().getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                bmids.add( bm.getId() );
-                break;
-            }
+            BioMaterial bm = ba.getSampleUsed();
+            bmids.add( bm.getId() );
         }
+
         this.bioMaterialIds = bmids.toArray( new Long[] {} );
 
         this.vMatrix = new DenseDoubleMatrix<Long, Integer>( eigenvectorArrays.get( 0 ).length,

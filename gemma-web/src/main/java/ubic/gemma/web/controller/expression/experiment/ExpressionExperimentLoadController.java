@@ -30,7 +30,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -80,15 +79,9 @@ public class ExpressionExperimentLoadController {
 
         ExpressionExperimentLoadTask eeLoadTask;
 
-        public LoadRemoteJob(ExpressionExperimentLoadTaskCommand commandObj) {
+        public LoadRemoteJob( ExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
 
-        }
-
-        @Override
-        protected TaskResult processArrayExpressJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
-            TaskResult result = this.process( eeLoadCommand );
-            return super.processArrayExpressResult( ( ExpressionExperiment ) result.getAnswer() );
         }
 
         @Override
@@ -120,7 +113,7 @@ public class ExpressionExperimentLoadController {
      */
     private class LoadLocalJob extends BackgroundJob<ExpressionExperimentLoadTaskCommand, TaskResult> {
 
-        public LoadLocalJob(ExpressionExperimentLoadTaskCommand commandObj) {
+        public LoadLocalJob( ExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
             if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
                 geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -139,7 +132,7 @@ public class ExpressionExperimentLoadController {
             if ( command.isLoadPlatformOnly() ) {
                 return processPlatformOnlyJob( command );
             } else if ( command.isArrayExpress() ) {
-                return processArrayExpressJob( command );
+                throw new UnsupportedOperationException( "Array express no longer supported" );
             } else /* GEO */{
                 return processGEODataJob( command );
             }
@@ -162,21 +155,6 @@ public class ExpressionExperimentLoadController {
                 list += ad.getId() + ",";
             return new TaskResult( command, new ModelAndView( new RedirectView(
                     "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) ) );
-        }
-
-        /**
-         * @param expressionExperimentLoadCommand
-         * @return
-         * @throws IOException
-         */
-        protected TaskResult processArrayExpressJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
-
-            String accession = getAccession( expressionExperimentLoadCommand );
-            ExpressionExperiment result = arrayExpressLoadService.load( accession,
-                    expressionExperimentLoadCommand.getArrayDesignName(),
-                    expressionExperimentLoadCommand.isAllowArrayExpressDesign() );
-
-            return processArrayExpressResult( result );
         }
 
         /**
@@ -307,12 +285,16 @@ public class ExpressionExperimentLoadController {
         }
     }
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private GeoService geoDatasetService;
-    @Autowired private ArrayExpressLoadService arrayExpressLoadService;
-    @Autowired private ExpressionExperimentService eeService;
-    @Autowired private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-    @Autowired private TwoChannelMissingValues twoChannelMissingValueService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private GeoService geoDatasetService;
+    @Autowired
+    private ExpressionExperimentService eeService;
+    @Autowired
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    @Autowired
+    private TwoChannelMissingValues twoChannelMissingValueService;
 
     /**
      * Main entry point for AJAX calls.
@@ -329,13 +311,6 @@ public class ExpressionExperimentLoadController {
         }
 
         return taskRunningService.submitRemoteTask( command );
-    }
-
-    /**
-     * @param arrayExpressLoadService the arrayExpressLoadService to set
-     */
-    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
-        this.arrayExpressLoadService = arrayExpressLoadService;
     }
 
     public void setEeService( ExpressionExperimentService eeService ) {

@@ -101,7 +101,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
             BioMaterial bm = BioMaterial.Factory.newInstance();
             bm.setId( ( long ) i );
             bm.setName( "bm" + i );
-            ba.getSamplesUsed().add( bm );
+            ba.setSampleUsed( bm );
 
             for ( ExperimentalFactor ef : factors ) {
 

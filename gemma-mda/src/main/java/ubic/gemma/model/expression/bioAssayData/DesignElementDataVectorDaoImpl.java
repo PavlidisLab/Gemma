@@ -184,17 +184,16 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             Hibernate.initialize( bad );
             for ( BioAssay ba : bad.getBioAssays() ) {
                 Hibernate.initialize( ba );
-                Hibernate.initialize( ba.getSamplesUsed() );
+                Hibernate.initialize( ba.getSampleUsed() );
 
                 Collection<BioAssay> bioAssaysUsedIn = null;
-                for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                    EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
-                    Hibernate.initialize( bm );
-                    bioAssaysUsedIn = bm.getBioAssaysUsedIn();
-                    Hibernate.initialize( bioAssaysUsedIn );
-                    Hibernate.initialize( bm.getFactorValues() );
-                    session.evict( bm );
-                }
+                BioMaterial bm = ba.getSampleUsed();
+                EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
+                Hibernate.initialize( bm );
+                bioAssaysUsedIn = bm.getBioAssaysUsedIn();
+                Hibernate.initialize( bioAssaysUsedIn );
+                Hibernate.initialize( bm.getFactorValues() );
+                session.evict( bm );
 
                 Hibernate.initialize( ba.getArrayDesignUsed() );
                 Hibernate.initialize( ba.getDerivedDataFiles() );
@@ -275,7 +274,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
             ba = ( BioAssay ) session.get( BioAssayImpl.class, ba.getId() );
             Hibernate.initialize( ba.getArrayDesignUsed() );
-            Hibernate.initialize( ba.getSamplesUsed() );
+            Hibernate.initialize( ba.getSampleUsed() );
             Hibernate.initialize( ba.getDerivedDataFiles() );
         }
     }

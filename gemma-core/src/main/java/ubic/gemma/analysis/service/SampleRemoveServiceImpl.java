@@ -87,8 +87,7 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
         Collection<BioAssay> bms = new HashSet<BioAssay>();
         bms.add( bioAssay );
         bioAssayService.thaw( bioAssay );
-        ExpressionExperiment expExp = expressionExperimentService.findByBioMaterial( bioAssay.getSamplesUsed()
-                .iterator().next() );
+        ExpressionExperiment expExp = expressionExperimentService.findByBioMaterial( bioAssay.getSampleUsed() );
         assert expExp != null;
         this.markAsMissing( expExp, bms );
     }
@@ -122,8 +121,7 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
         bioAssay.setIsOutlier( false );
         bioAssayService.update( bioAssay );
 
-        ExpressionExperiment expExp = expressionExperimentService.findByBioMaterial( bioAssay.getSamplesUsed()
-                .iterator().next() );
+        ExpressionExperiment expExp = expressionExperimentService.findByBioMaterial( bioAssay.getSampleUsed() );
         assert expExp != null;
 
         auditTrailService.addUpdateEvent( bioAssay, SampleRemovalReversionEvent.Factory.newInstance(), "" );

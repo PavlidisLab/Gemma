@@ -352,11 +352,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
             BioAssay bioAssay = bioAssayService.load( bioAssayId );
             bioAssayService.thaw( bioAssay );
-            Collection<BioMaterial> bMats = bioAssay.getSamplesUsed();
+            BioMaterial bMats = bioAssay.getSampleUsed();
             Collection<Long> oldBioMaterials = new ArrayList<Long>();
-            for ( BioMaterial material : bMats ) {
-                oldBioMaterials.add( material.getId() );
-            }
+
+            oldBioMaterials.add( bMats.getId() );
 
             // try to find the bioMaterials in the list of current samples
             // if it is not in the current samples, add it
@@ -368,12 +367,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 }
                 BioMaterial newMaterial;
                 if ( newBioMaterialId < 0 ) { // This kludge signifies that it is a 'brand new' biomaterial.
-                    // model the new biomaterial after the old one for the bioassay (we're taking a guess here.)
-                    if ( bMats.size() > 1 ) {
-                        // log.warn("");
-                    }
-
-                    BioMaterial oldBioMaterial = bMats.iterator().next();
+                    BioMaterial oldBioMaterial = bMats;
                     newMaterial = bioMaterialService.copy( oldBioMaterial );
                     newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
                     newMaterial.getFactorValues().clear();
@@ -383,7 +377,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 }
                 anyChanges = true;
                 bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
-
             }
 
             // put all unnecessary associations in a collection
@@ -396,7 +389,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 }
                 BioMaterial oldMaterial = bioMaterialService.load( oldBioMaterialId );
                 deleteAssociations.put( bioAssay, oldMaterial );
-
             }
 
         }

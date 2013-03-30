@@ -296,11 +296,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         List<BioMaterial> bms = new ArrayList<BioMaterial>();
         for ( BioAssay ba : bioAssays ) {
-            if ( ba.getSamplesUsed().size() > 1 ) {
-                throw new UnsupportedOperationException(
-                        "Can't make new data from matrix that has multiple bioassays per biomaterial" );
-            }
-            bms.add( ba.getSamplesUsed().iterator().next() );
+
+            bms.add( ba.getSampleUsed() );
         }
 
         ArrayDesign targetArrayDesign = getTestPersistentArrayDesign( 100, true );

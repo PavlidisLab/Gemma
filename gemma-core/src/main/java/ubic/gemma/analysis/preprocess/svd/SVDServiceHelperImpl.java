@@ -548,37 +548,37 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
         for ( BioAssay bioAssay : bioAssays ) {
             Date processingDate = bioAssay.getProcessingDate();
-            for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
-                bioMaterialDates.put( bm.getId(), processingDate ); // can be null
+            BioMaterial bm = bioAssay.getSampleUsed();
+            bioMaterialDates.put( bm.getId(), processingDate ); // can be null
 
-                for ( FactorValue fv : bm.getFactorValues() ) {
+            for ( FactorValue fv : bm.getFactorValues() ) {
 
-                    ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
+                ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
 
-                    if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
-                        bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
-                    }
-
-                    double valueToStore;
-                    if ( fv.getMeasurement() != null ) {
-                        try {
-                            valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
-                        } catch ( NumberFormatException e ) {
-                            log.warn( "Measurement wasn't a number for " + fv );
-                            valueToStore = Double.NaN;
-                        }
-
-                    } else {
-                        /*
-                         * This is a hack. We're storing the ID but as a double.
-                         */
-                        valueToStore = fv.getId().doubleValue();
-                    }
-                    bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
+                if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
+                    bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
                 }
 
+                double valueToStore;
+                if ( fv.getMeasurement() != null ) {
+                    try {
+                        valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
+                    } catch ( NumberFormatException e ) {
+                        log.warn( "Measurement wasn't a number for " + fv );
+                        valueToStore = Double.NaN;
+                    }
+
+                } else {
+                    /*
+                     * This is a hack. We're storing the ID but as a double.
+                     */
+                    valueToStore = fv.getId().doubleValue();
+                }
+                bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
             }
+
         }
+
     }
 
     /**

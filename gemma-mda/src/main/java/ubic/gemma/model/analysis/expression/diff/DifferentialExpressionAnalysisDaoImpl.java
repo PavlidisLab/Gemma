@@ -504,7 +504,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     protected Collection<DifferentialExpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
         final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.experimentAnalyzed as ee "
                 + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample "
+                + "inner join ba.sampleUsed as sample "
                 + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
@@ -518,7 +518,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     protected Collection<DifferentialExpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.experimentAnalyzed as ee "
                 + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+                + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
@@ -693,7 +693,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         ExperimentalFactorValueObject subsetFactor = avo.getSubsetFactor();
 
         for ( BioAssay ba : ( Collection<BioAssay> ) bioAssaySet.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+              BioMaterial bm = ba.getSampleUsed() ;
                 for ( FactorValue fv : bm.getFactorValues() ) {
 
                     Long experimentalFactorId = fv.getExperimentalFactor().getId();
@@ -707,7 +707,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                     }
 
                     avo.getFactorValuesUsed().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
-                }
+                
             }
         }
     }

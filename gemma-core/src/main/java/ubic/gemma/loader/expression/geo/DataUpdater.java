@@ -670,10 +670,8 @@ public class DataUpdater {
 
         Collection<BioAssay> bioAssays = ee.getBioAssays();
         for ( BioAssay bioAssay : bioAssays ) {
-            Collection<BioMaterial> samplesUsed = bioAssay.getSamplesUsed();
-            assert samplesUsed.size() == 1;
 
-            BioMaterial bm = samplesUsed.iterator().next();
+            BioMaterial bm = bioAssay.getSampleUsed();
             if ( bmMap.containsKey( bm.getName() ) ) {
                 // this might not actually be an error - but just in case...
                 throw new IllegalStateException( "Two biomaterials from the same experiment with the same name " );

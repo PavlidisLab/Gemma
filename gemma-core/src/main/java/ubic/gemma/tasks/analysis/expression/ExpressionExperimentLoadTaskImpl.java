@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -27,21 +26,21 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
 
     @Autowired
     private GeoService geoDatasetService;
-    @Autowired private ArrayExpressLoadService arrayExpressLoadService;
-    @Autowired private PreprocessorService preprocessorService;
+    @Autowired
+    private PreprocessorService preprocessorService;
 
     private ExpressionExperimentLoadTaskCommand command;
 
     @Override
-    public void setCommand(ExpressionExperimentLoadTaskCommand command) {
+    public void setCommand( ExpressionExperimentLoadTaskCommand command ) {
         this.command = command;
     }
 
     /*
-                 * (non-Javadoc)
-                 *
-                 * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
-                 */
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
+     */
     @Override
     public TaskResult execute() {
         ExpressionExperimentLoadTaskCommand jsEeLoadCommand = command;
@@ -55,19 +54,7 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
         boolean allowSubSeriesLoad = true; // FIXME
 
         TaskResult result;
-        if ( jsEeLoadCommand.isArrayExpress() ) {
-            ExpressionExperiment dataset = arrayExpressLoadService.load( accession,
-                    jsEeLoadCommand.getArrayDesignName(), jsEeLoadCommand.isAllowArrayExpressDesign() );
-            ExpressionExperiment minimalDataset = null;
-            if ( dataset != null ) {
-                /* Don't send the full experiment to the space. Instead, create a minimal result. */
-                minimalDataset = ExpressionExperiment.Factory.newInstance();
-                minimalDataset.setId( dataset.getId() );
-                minimalDataset.setName( dataset.getName() );
-                minimalDataset.setDescription( dataset.getDescription() );
-            }
-            result = new TaskResult( command, minimalDataset );
-        } else if ( loadPlatformOnly ) {
+        if ( loadPlatformOnly ) {
             Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService.fetchAndLoad(
                     accession, true, doSampleMatching, aggressiveQtRemoval, splitByPlatform );
             ArrayList<ArrayDesign> minimalDesigns = null;
@@ -116,7 +103,7 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
 
     /**
      * Do missing value and processed vector creation steps.
-     *
+     * 
      * @param ees
      */
     private void postProcess( Collection<ExpressionExperiment> ees ) {

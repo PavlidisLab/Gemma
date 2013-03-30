@@ -92,7 +92,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
             eeService.update( ee );
 
             BioAssay ba = ee.getBioAssays().toArray( new BioAssay[0] )[0];
-            bm = ba.getSamplesUsed().toArray( new BioMaterial[0] )[0];
+            bm = ba.getSampleUsed();
             bm.setCharacteristics( getTestPersistentCharacteristics( 1 ) );
             bmChar = bm.getCharacteristics().toArray( new Characteristic[0] )[0];
             bmService.update( bm );

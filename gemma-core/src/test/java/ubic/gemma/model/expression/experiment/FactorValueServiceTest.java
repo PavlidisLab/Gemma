@@ -56,10 +56,10 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
                 .iterator().next();
 
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                bm.getFactorValues().add( fv );
-                bioMaterialService.update( bm );
-            }
+            BioMaterial bm = ba.getSampleUsed();
+            bm.getFactorValues().add( fv );
+            bioMaterialService.update( bm );
+
         }
 
         ee = expressionExperimentService.thawLite( ee );
@@ -67,10 +67,10 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
         // done with setup
 
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                assertTrue( bm.getFactorValues().size() > 0 );
-                fv = bm.getFactorValues().iterator().next();
-            }
+            BioMaterial bm = ba.getSampleUsed();
+            assertTrue( bm.getFactorValues().size() > 0 );
+            fv = bm.getFactorValues().iterator().next();
+
         }
 
         assertNotNull( fv );

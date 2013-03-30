@@ -114,36 +114,36 @@ public class AssayViewTag extends TagSupport {
         for ( BioAssay assay : bioAssays ) {
             // map for bioassays linked to a specific arraydesign
             // map for the bioassays linked to a specific biomaterial
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
+            BioMaterial material = assay.getSampleUsed();
             ArrayDesign design = assay.getArrayDesignUsed();
             designs.add( design );
-            for ( BioMaterial material : materials ) {
-                // check if the assay list is initialized yet
-                Map<ArrayDesign, Collection<BioAssay>> assayMap;
-                if ( bioAssayMap.containsKey( material ) ) {
-                    assayMap = bioAssayMap.get( material );
-                } else {
-                    assayMap = new HashMap<ArrayDesign, Collection<BioAssay>>();
-                    bioAssayMap.put( material, assayMap );
-                }
 
-                if ( assayMap.containsKey( design ) ) {
-                    assayMap.get( design ).add( assay );
-                } else {
-                    Collection<BioAssay> assayList = new ArrayList<BioAssay>();
-                    assayList.add( assay );
-                    assayMap.put( design, assayList );
-                }
-                // count the number of materials per array
-                if ( arrayMaterialCount.containsKey( design ) ) {
-                    Long count = arrayMaterialCount.get( design );
-                    count++;
-                    arrayMaterialCount.put( design, count );
-                } else {
-                    Long count = new Long( 1 );
-                    arrayMaterialCount.put( design, count );
-                }
+            // check if the assay list is initialized yet
+            Map<ArrayDesign, Collection<BioAssay>> assayMap;
+            if ( bioAssayMap.containsKey( material ) ) {
+                assayMap = bioAssayMap.get( material );
+            } else {
+                assayMap = new HashMap<ArrayDesign, Collection<BioAssay>>();
+                bioAssayMap.put( material, assayMap );
             }
+
+            if ( assayMap.containsKey( design ) ) {
+                assayMap.get( design ).add( assay );
+            } else {
+                Collection<BioAssay> assayList = new ArrayList<BioAssay>();
+                assayList.add( assay );
+                assayMap.put( design, assayList );
+            }
+            // count the number of materials per array
+            if ( arrayMaterialCount.containsKey( design ) ) {
+                Long count = arrayMaterialCount.get( design );
+                count++;
+                arrayMaterialCount.put( design, count );
+            } else {
+                Long count = new Long( 1 );
+                arrayMaterialCount.put( design, count );
+            }
+
         }
         int materialCount = bioAssayMap.keySet().size();
         buf.append( "<table class='list'><tr>" );

@@ -191,9 +191,9 @@ public class BatchInfoParser {
                     throw new RuntimeException( "Date was in the future for: " + ba + " from " + f.getName() );
                 }
 
-                for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                    result.put( bm, d );
-                }
+                BioMaterial bm = ba.getSampleUsed();
+                result.put( bm, d );
+
             } catch ( FileNotFoundException e ) {
                 log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
                 missingDate.add( f );

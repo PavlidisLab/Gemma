@@ -699,7 +699,7 @@ public class AclAdvice {
     private boolean specialCaseForAssociationFollow( Object object, String property ) {
 
         if ( BioAssay.class.isAssignableFrom( object.getClass() )
-                && ( property.equals( "samplesUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
+                && ( property.equals( "sampleUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
             return true;
         }
 

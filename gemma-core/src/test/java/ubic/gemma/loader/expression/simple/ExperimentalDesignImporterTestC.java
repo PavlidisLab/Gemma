@@ -212,9 +212,9 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                bms.add( bm );
-            }
+            BioMaterial bm = ba.getSampleUsed();
+            bms.add( bm );
+
         }
 
         checkResults( bms );
@@ -229,17 +229,16 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
          */
 
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                boolean removed = false;
-                for ( Iterator<FactorValue> fIt = bm.getFactorValues().iterator(); fIt.hasNext(); ) {
-                    if ( fIt.next().getExperimentalFactor().equals( toDelete ) ) {
-                        fIt.remove();
-                        removed = true;
-                    }
+            BioMaterial bm = ba.getSampleUsed();
+            boolean removed = false;
+            for ( Iterator<FactorValue> fIt = bm.getFactorValues().iterator(); fIt.hasNext(); ) {
+                if ( fIt.next().getExperimentalFactor().equals( toDelete ) ) {
+                    fIt.remove();
+                    removed = true;
                 }
-                if ( removed ) {
-                    bioMaterialService.update( bm );
-                }
+            }
+            if ( removed ) {
+                bioMaterialService.update( bm );
             }
         }
         ee.getExperimentalDesign().getExperimentalFactors().remove( toDelete );

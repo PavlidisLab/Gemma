@@ -304,21 +304,21 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         int i = 0;
         for ( BioAssay ba : basInOrder ) {
             // bioAssayService.thaw( ba );
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                assert fv1.getId() != null;
-                if ( !bm.getFactorValues().isEmpty() ) {
-                    continue;
-                }
-                if ( i % 2 == 0 ) {
-                    bm.getFactorValues().add( fv1 );
-                    // log.info( bm + " " + bm.getId() + " => " + fv1 );
-                } else {
-                    bm.getFactorValues().add( fv2 );
-                    // log.info( bm + " " + bm.getId() + " => " + fv2 );
-                }
-
-                bioMaterialService.update( bm );
+            BioMaterial bm = ba.getSampleUsed();
+            assert fv1.getId() != null;
+            if ( !bm.getFactorValues().isEmpty() ) {
+                continue;
             }
+            if ( i % 2 == 0 ) {
+                bm.getFactorValues().add( fv1 );
+                // log.info( bm + " " + bm.getId() + " => " + fv1 );
+            } else {
+                bm.getFactorValues().add( fv2 );
+                // log.info( bm + " " + bm.getId() + " => " + fv2 );
+            }
+
+            bioMaterialService.update( bm );
+
             i++;
         }
 
@@ -355,20 +355,17 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
             for ( BioAssay ba : bioAssays ) {
 
-                assertEquals( 1, ba.getSamplesUsed().size() );
+                BioMaterial bm = ba.getSampleUsed();
+                assertEquals( 1, bm.getFactorValues().size() );
 
-                for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                    assertEquals( 1, bm.getFactorValues().size() );
+                FactorValue fv = bm.getFactorValues().iterator().next();
 
-                    FactorValue fv = bm.getFactorValues().iterator().next();
-
-                    assertNotNull( fv.getId() );
-                    log.debug( ba.getId() + " " + fv.getId() + " " + fv );
-                    if ( i < 10 ) {
-                        assertEquals( fv2, fv ); // first because it is baseline;
-                    }
-
+                assertNotNull( fv.getId() );
+                log.debug( ba.getId() + " " + fv.getId() + " " + fv );
+                if ( i < 10 ) {
+                    assertEquals( fv2, fv ); // first because it is baseline;
                 }
+
                 i++;
 
             }

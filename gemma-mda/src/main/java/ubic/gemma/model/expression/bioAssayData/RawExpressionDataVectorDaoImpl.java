@@ -9,6 +9,7 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,8 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -64,19 +67,20 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     @Override
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
-                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
+                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where de.id in (:desEls) "
                 + "and dev.quantitationType = :quantitationType ";
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameter( "quantitationType", quantitationType );
 
-            Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
+            List<Long> batch = new ArrayList<Long>();
             Collection<RawExpressionDataVector> result = new HashSet<RawExpressionDataVector>();
-            int batchSize = 2000;
+            int batchSize = 100;
             for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                batch.add( cs );
+                batch.add( cs.getId() );
 
                 if ( batch.size() >= batchSize ) {
+                    Collections.sort( batch );
                     queryObject.setParameterList( "desEls", batch );
                     result.addAll( queryObject.list() );
                     batch.clear();
