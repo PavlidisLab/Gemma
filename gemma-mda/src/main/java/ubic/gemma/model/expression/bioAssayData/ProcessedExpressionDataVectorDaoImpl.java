@@ -191,34 +191,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType ) {
         final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
-                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
+                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join dev.arrayDesign ad where ad.id = :adid "
                 + "and dev.quantitationType = :quantitationType ";
-        try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-            queryObject.setParameter( "quantitationType", quantitationType );
+        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        queryObject.setParameter( "quantitationType", quantitationType );
+        queryObject.setParameter( "adid", arrayDesign.getId() );
 
-            Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
-            Collection<RawExpressionDataVector> result = new HashSet<RawExpressionDataVector>();
-            int batchSize = 2000;
-            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                batch.add( cs );
-
-                if ( batch.size() >= batchSize ) {
-                    queryObject.setParameterList( "desEls", batch );
-                    result.addAll( queryObject.list() );
-                    batch.clear();
-                }
-            }
-
-            if ( batch.size() > 0 ) {
-                queryObject.setParameterList( "desEls", batch );
-                result.addAll( queryObject.list() );
-            }
-
-            return result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return queryObject.list();
     }
 
     @Override
