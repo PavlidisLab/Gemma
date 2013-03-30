@@ -97,7 +97,7 @@ public class QuantitationTypeParameterGuesser {
         measuredSignalDescPatterns.add( ".*(red|green|cy5|cy3) (mean|median) (feature)? intensity.*" );
         measuredSignalDescPatterns.add( ".*(red|green|cy5|cy3) (mean|median) (feature)? intensity.*" );
 
-        measuredSignalNamePatterns.add( ".*[rg]_(mean|median).*?(?!sd)" );
+        measuredSignalNamePatterns.add( ".*[rg]_?(mean|median).*?(?!sd)" );
         measuredSignalNamePatterns.add( ".*ch[12][ib]?_(mean|median|^sd).*?(?!sd).*" );
         measuredSignalNamePatterns.add( ".*ch[12]_(mean|bkg).*?(?!sd)" );
         measuredSignalNamePatterns.add( ".*channel [12] (mean|median) (signal|intensity).*" );

@@ -130,7 +130,9 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "B_AREA_L" );
         skippableQuantitationTypes.add( "Bkgd_area" );
         skippableQuantitationTypes.add( "Dia." );
-        //
+        skippableQuantitationTypes.add( "Slide_row" );
+        skippableQuantitationTypes.add( "Slide_column" );
+        skippableQuantitationTypes.add( "Slide_block" );
         // unfortunately the non-background-subtracted values aren't always available.
         // skippableQuantitationTypes.add( "CH1D_MEAN" );
         // skippableQuantitationTypes.add( "CH2D_MEAN" );
@@ -188,11 +190,21 @@ public class GeoValues implements Serializable {
         aggressivelyRemovedQuantitationTypes.add( "RAT1_SD" );
         aggressivelyRemovedQuantitationTypes.add( "LOG_RAT2N_MEDIAN" );
 
+        String[] moreAgg = new String[] { "gBGPixSDev", "ch1 Background Std Dev", "rBGPixSDev",
+                "ch2 Background Std Dev", "CY3_BKD_SD", "CY5_BKD_SD", "BEAD_STDERR", "CH1_BKD_SD", "CH2_BKD_SD",
+                "R_BG_SD", "G_BG_SD", "CH1_SD", "CH2_SD", "G_SD", "R_SD" };
+        for ( String s : moreAgg ) {
+            aggressivelyRemovedQuantitationTypes.add( s );
+        }
+
         // We no longer keep "absent-present" calls (affymetrix and others)
         skippableQuantitationTypes.add( "ABS_CALL" );
         skippableQuantitationTypes.add( "ABS CALL" );
+        skippableQuantitationTypes.add( "CALL" );
         skippableQuantitationTypes.add( "Detection Pval" );
         skippableQuantitationTypes.add( "DETECTION P-VALUE" );
+        skippableQuantitationTypes.add( "Detection_p-value" );
+        skippableQuantitationTypes.add( "Detection_pvalue" );
         skippableQuantitationTypes.add( "Detection" );
         skippableQuantitationTypes.add( "Detection call" );
         skippableQuantitationTypes.add( "rIsWellAboveBG" );
@@ -222,7 +234,14 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "Flag.30236" );
         skippableQuantitationTypes.add( "flag2" );
         skippableQuantitationTypes.add( "Flagged?" );
+        skippableQuantitationTypes.add( "Pos_Fraction" );
+        skippableQuantitationTypes.add( "Pairs_Used" );
 
+        String[] moreSkip = new String[] { "Pos_Fraction", "% > B635+2SD", "% > B635+1SD", "F532 % Sat.",
+                "F635 % Sat.", "rIsSaturated", "gIsSaturated" };
+        for ( String s : moreSkip ) {
+            skippableQuantitationTypes.add( s );
+        }
     }
 
     private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<GeoPlatform, Map<String, Integer>>();
