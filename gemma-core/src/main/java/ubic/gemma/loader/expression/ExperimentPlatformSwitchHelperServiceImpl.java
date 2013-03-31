@@ -14,8 +14,6 @@
  */
 package ubic.gemma.loader.expression;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -73,7 +71,7 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
         audit( expExp, "Switch to use " + arrayDesign.getShortName() );
 
         for ( RawExpressionDataVector v : expExp.getRawExpressionDataVectors() ) {
-            assertEquals( arrayDesign, v.getDesignElement().getArrayDesign() );
+            assert arrayDesign.equals( v.getDesignElement().getArrayDesign() );
         }
 
         log.info( "Done switching " + expExp );
