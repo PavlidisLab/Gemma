@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
+import ubic.gemma.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -52,8 +53,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
     /**
      * 
      */
-    private static final String PROBE_NAME_DISAMBIGUATION_REGEX = PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR
-            + "(\\d )+$";
+    private static final String PROBE_NAME_DISAMBIGUATION_REGEX = PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + "(\\d)+";
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -98,7 +98,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         makeBioSeqMap( globalBsMap, arrayDesign );
 
         log.info( globalBsMap.keySet().size() + " sequences in first array design." );
-
+        // Now check the other designs, add slots for additional probes if necessary.
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
             if ( otherArrayDesign.getMergedInto() != null ) {
                 throw new IllegalArgumentException( "Sorry, can't merge an array design that is already a mergee ("
@@ -200,7 +200,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         }
 
         while ( probeNames.contains( name ) ) {
-            if ( name.matches( PROBE_NAME_DISAMBIGUATION_REGEX ) ) {
+            if ( name.matches( ".+?" + PROBE_NAME_DISAMBIGUATION_REGEX ) ) {
                 name = name
                         .replaceAll( PROBE_NAME_DISAMBIGUATION_REGEX, PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + i );
             } else {
@@ -212,7 +212,9 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
     }
 
     /**
-     * @param globalBsMap
+     * If we're merging into an existing platform, it is important that this method is called for that platform first.
+     * 
+     * @param globalBsMap Map that tells us, in effect, how many probes to make for the sequence. Modified by this.
      * @param arrayDesign
      */
     private void makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap, ArrayDesign arrayDesign ) {
@@ -221,6 +223,12 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = cs.getBiologicalCharacteristic();
+
+            if ( bs == null ) {
+                // this is common. We could try to match them up based on the probe name, because there is nothing else
+                // to go on.
+                bs = ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE;
+            }
 
             if ( !globalBsMap.containsKey( bs ) ) {
                 globalBsMap.put( bs, new HashSet<CompositeSequence>() );
@@ -232,6 +240,10 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
             bsMap.get( bs ).add( cs );
 
+            /*
+             * We need at one probe for each time the sequence appears on one platform. Here we ensure that the global
+             * map has enough 'slots'.
+             */
             if ( globalBsMap.get( bs ).size() < bsMap.get( bs ).size() ) {
                 globalBsMap.get( bs ).add( cs );
             }
@@ -248,19 +260,21 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
      * probes from arrayDesign will not be included; just the ones that we need to add to it will be returned.
      * 
      * @param arrayDesign
-     * @param globalBsMap
+     * @param globalBsMap Map that tells us, in effect, how many probes to make for the sequence.
      * @param mergeWithExisting
      * @return
      */
     private Collection<CompositeSequence> makeNewProbes( ArrayDesign arrayDesign,
             Map<BioSequence, Collection<CompositeSequence>> globalBsMap, boolean mergeWithExisting ) {
-        int count;
-        count = 0;
+
         Collection<CompositeSequence> newProbes = new HashSet<CompositeSequence>();
+        log.info( globalBsMap.size() + " unique sequences" );
 
         Collection<String> probeNames = new HashSet<String>();
         for ( BioSequence bs : globalBsMap.keySet() ) {
+            assert bs != null; // should be the placeholder NULL_BIOSEQUENCE
             for ( CompositeSequence cs : globalBsMap.get( bs ) ) {
+
                 if ( mergeWithExisting && cs.getArrayDesign().equals( arrayDesign ) ) {
                     assert arrayDesign.getId() != null;
                     /*
@@ -270,7 +284,10 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
                 }
 
                 CompositeSequence newCs = CompositeSequence.Factory.newInstance();
-                newCs.setBiologicalCharacteristic( bs );
+
+                if ( !bs.equals( ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE ) ) {
+                    newCs.setBiologicalCharacteristic( bs );
+                }
 
                 String name = getProbeName( probeNames, cs );
 
@@ -278,10 +295,15 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
                 newCs.setName( name );
                 newCs.setDescription( ( cs.getDescription() == null ? "" : cs.getDescription() ) + " (via merge)" );
                 newCs.setArrayDesign( arrayDesign );
+
                 newProbes.add( newCs );
+
+                if ( log.isDebugEnabled() )
+                    log.debug( "Made merged probe for " + bs + ": " + newCs + " for old probe on "
+                            + cs.getArrayDesign().getShortName() );
             }
         }
-        log.info( "Made " + count + " new probes" );
+        log.info( "Made " + newProbes.size() + " new probes" );
         return newProbes;
     }
 

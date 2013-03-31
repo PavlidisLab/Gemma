@@ -14,6 +14,10 @@
  */
 package ubic.gemma.loader.expression;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +29,9 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -33,16 +40,44 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 @Service
 public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlatformSwitchHelperService {
+    private static Log log = LogFactory.getLog( ExperimentPlatformSwitchHelperServiceImpl.class );
+
     @Autowired
     private AnalysisUtilService analysisUtilService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private DesignElementDataVectorService vectorService;
 
-    private static Log log = LogFactory.getLog( ExperimentPlatformSwitchHelperServiceImpl.class );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.ExperimentPlatformSwitchHelperService#persist(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    public void persist( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
+        analysisUtilService.deleteOldAnalyses( expExp );
+
+        expressionExperimentService.update( expExp );
+
+        update( expExp.getRawExpressionDataVectors() );
+        update( expExp.getProcessedExpressionDataVectors() ); // usually shouldn't be needed.
+
+        audit( expExp, "Switch to use " + arrayDesign.getShortName() );
+
+        for ( RawExpressionDataVector v : expExp.getRawExpressionDataVectors() ) {
+            assertEquals( arrayDesign, v.getDesignElement().getArrayDesign() );
+        }
+
+        log.info( "Done switching " + expExp );
+    }
 
     /**
      * @param arrayDesign
@@ -52,20 +87,8 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
-    /**
-     * @param expExp
-     * @param arrayDesign
-     */
-    @Override
-    public void persist( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
-
-        expressionExperimentService.update( expExp );
-
-        analysisUtilService.deleteOldAnalyses( expExp );
-
-        audit( expExp, "Switch to use " + arrayDesign.getShortName() );
-
-        log.info( "Done switching " + expExp );
+    private void update( Collection<? extends DesignElementDataVector> vectorsForQt ) {
+        vectorService.update( vectorsForQt );
     }
 
 }

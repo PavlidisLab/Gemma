@@ -255,6 +255,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         Collection<ProcessedExpressionDataVector> pedvs = this.getProcessedVectors( getExperiment( ee ), limit );
 
+        if ( pedvs.isEmpty() ) {
+            log.warn( "No processed vectors for experiment " + ee );
+            return new HashSet<DoubleVectorValueObject>();
+        }
+
         Collection<Long> probes = new ArrayList<Long>();
         for ( ProcessedExpressionDataVector pedv : pedvs ) {
             probes.add( pedv.getDesignElement().getId() );

@@ -36,6 +36,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -64,7 +66,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * Used to identify design elements that have no sequence associated with them.
      */
-    private static BioSequence NULL_BIOSEQUENCE;
+    public static final BioSequence NULL_BIOSEQUENCE;
 
     static {
         NULL_BIOSEQUENCE = BioSequence.Factory.newInstance();
@@ -88,7 +90,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
      *        changed for them.
      */
-    public void switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
+    @SuppressWarnings("unchecked")
+    public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
         // get relation between sequence and designelements.
@@ -105,6 +108,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 designElementMap.get( bs ).add( cs );
             }
         }
+
+        expExp = expressionExperimentService.thaw( expExp );
 
         log.info( elsWithNoSeq.size() + " elements on the new platform have no associated sequence." );
         designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
@@ -138,7 +143,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     continue;
                 }
 
-                log.info( "Processing " + vectorsForQt.size() + " vectors for " + type + " on " + oldAd );
+                log.info( "Switching " + vectorsForQt.size() + " vectors for " + type + " from " + oldAd.getShortName()
+                        + " to " + arrayDesign.getShortName() );
 
                 int count = 0;
                 Class<? extends DesignElementDataVector> vectorClass = null;
@@ -153,10 +159,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                         throw new IllegalStateException( "Two types of vector for one quantitationtype: " + type );
                     }
 
+                    assert RawExpressionDataVector.class.isAssignableFrom( vector.getClass() );
+
                     CompositeSequence oldDe = vector.getDesignElement();
 
-                    // we're doing this by array design; nice to have a method to fetch those only, oh well.
-                    if ( !oldDe.getArrayDesign().equals( oldAd ) ) {
+                    if ( oldDe.getArrayDesign().equals( arrayDesign ) ) {
                         continue;
                     }
 
@@ -166,6 +173,9 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                         log.warn( "No new design element available to match " + oldDe + " (seq="
                                 + oldDe.getBiologicalCharacteristic() + "; array=" + oldDe.getArrayDesign() );
                         unMatched.add( vector );
+                        /*
+                         * This can happen if there is no biosequence associated with the element.
+                         */
                     }
 
                     if ( ++count % 20000 == 0 ) {
@@ -178,7 +188,24 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                  */
                 if ( unMatched.size() > 0 ) {
                     throw new IllegalStateException( "There were " + unMatched.size()
-                            + " vectors that couldn't be matched to the new design for: " + type );
+                            + " vectors that couldn't be matched to the new design for: " + type + ", example: "
+                            + unMatched.iterator().next() );
+                }
+
+                if ( RawExpressionDataVector.class.isAssignableFrom( vectorClass ) ) {
+                    int s = expExp.getRawExpressionDataVectors().size();
+                    expExp.getRawExpressionDataVectors().removeAll( vectorsForQt );
+                    assert s > expExp.getRawExpressionDataVectors().size();
+                    expExp.getRawExpressionDataVectors().addAll(
+                            ( Collection<? extends RawExpressionDataVector> ) vectorsForQt );
+                    assert s == expExp.getRawExpressionDataVectors().size();
+                } else {
+                    int s = expExp.getProcessedExpressionDataVectors().size();
+                    expExp.getProcessedExpressionDataVectors().removeAll( vectorsForQt );
+                    assert s > expExp.getProcessedExpressionDataVectors().size();
+                    expExp.getProcessedExpressionDataVectors().addAll(
+                            ( Collection<? extends ProcessedExpressionDataVector> ) vectorsForQt );
+                    assert s == expExp.getProcessedExpressionDataVectors().size();
                 }
             }
         }
@@ -191,17 +218,19 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 + " by Gemma]" );
 
         helperService.persist( expExp, arrayDesign );
+
+        return expExp;
     }
 
     /**
      * @param expExp
      * @param arrayDesign
      */
-    public void switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
+    public ExpressionExperiment switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
         ArrayDesign arrayDesign = locateMergedDesign( expExp );
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
-        this.switchExperimentToArrayDesign( expExp, arrayDesign );
+        return this.switchExperimentToArrayDesign( expExp, arrayDesign );
     }
 
     /**
@@ -243,7 +272,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     }
 
     /**
-     * @param designElementMap
+     * @param designElementMap Mapping of sequences to probes for the platform that is being switch from. This is used
+     *        to identify new candidates.
      * @param usedDesignElements probes from the new design that have already been assigned to probes from the old
      *        design. If things are done correctly (the old design was merged into the new) then there should be enough.
      *        Map is of the new design probe to the old design probe it was used for (this is debugging information)
@@ -262,58 +292,30 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             newElCandidates = designElementMap.get( seq );
         }
 
-        boolean found = false;
-
-        if ( newElCandidates != null && !newElCandidates.isEmpty() ) {
-            for ( CompositeSequence newEl : newElCandidates ) {
-                if ( !usedDesignElements.containsKey( newEl ) ) {
-                    vector.setDesignElement( newEl );
-                    usedDesignElements.put( newEl, new HashSet<BioAssayDimension>() );
-                    usedDesignElements.get( newEl ).add( vector.getBioAssayDimension() );
-                    found = true;
-                    break;
-                }
-
-                if ( !usedDesignElements.get( newEl ).contains( vector.getBioAssayDimension() ) ) {
-                    /*
-                     * Then it's okay to use it.
-                     */
-                    vector.setDesignElement( newEl );
-                    usedDesignElements.get( newEl ).add( vector.getBioAssayDimension() );
-                    found = true;
-                    break;
-                }
-            }
-
-            // if ( !found ) {
-            //
-            // // This means that the quantitation type + bioassaydimension has two vectors for the same probe, which
-            // // should not happen.
-            //
-            // /*
-            // * The bioassaydimension will not be the same I hope?
-            // */
-            //
-            // throw new IllegalStateException(
-            // "Experiment has more than one vector for the same quantitation type - bioassaydimension - design element combination: "
-            // + oldDe + " (seq=" + seq + "; array=" + oldDe.getArrayDesign() + " and "
-            // + usedDesignElements.get( newElCandidates.iterator().next() ) );
-            //
-            // // /*
-            // // * This is also a case that should not happen if merging etc. is correct.
-            // // */
-            // // throw new IllegalStateException( "Matching candidate probes for " + oldDe + " (seq=" + seq +
-            // // "; array="
-            // // + oldDe.getArrayDesign() + ") were already used: " + StringUtils.join( newElCandidates, "," )
-            // // + ", mapped by [first one shown] " + usedDesignElements.get( newElCandidates.iterator().next() ) );
-            //
-            // }
+        if ( newElCandidates == null || newElCandidates.isEmpty() ) {
+            throw new IllegalStateException( "There are no candidates probes for sequence: " + seq
+                    + "('null' should be okay)" );
         }
 
-        if ( !found ) {
-            // throw new IllegalStateException( "No new design element available to match " + oldDe + " (seq=" + seq
-            // + "; array=" + oldDe.getArrayDesign() + ")" );
-            return false;
+        for ( CompositeSequence newEl : newElCandidates ) {
+            if ( !usedDesignElements.containsKey( newEl ) ) {
+
+                vector.setDesignElement( newEl );
+                usedDesignElements.put( newEl, new HashSet<BioAssayDimension>() );
+                usedDesignElements.get( newEl ).add( vector.getBioAssayDimension() );
+                assert !newEl.getArrayDesign().equals( oldDe.getArrayDesign() );
+                break;
+            }
+
+            if ( !usedDesignElements.get( newEl ).contains( vector.getBioAssayDimension() ) ) {
+                /*
+                 * Then it's okay to use it.
+                 */
+                vector.setDesignElement( newEl );
+                usedDesignElements.get( newEl ).add( vector.getBioAssayDimension() );
+                assert !newEl.getArrayDesign().equals( oldDe.getArrayDesign() );
+                break;
+            }
         }
 
         return true;

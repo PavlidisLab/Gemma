@@ -40,8 +40,7 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.loader.util.AlreadyExistsInSystemException; 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -49,8 +48,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.Treatment;
+import ubic.gemma.model.expression.biomaterial.BioMaterial; 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -194,17 +192,21 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         // make sure we got characteristics and treatments for both channels.
         for ( BioAssay ba : ee.getBioAssays() ) {
+
             BioMaterial bm = ba.getSampleUsed();
+
+            assertNotNull( bm );
+
             log.info( bm + " " + bm.getDescription() );
-            for ( Treatment t : bm.getTreatments() ) {
-                // log.info( bm + " " + t );
-            }
-
-            assertEquals( 6, bm.getTreatments().size() );
-
-            for ( Characteristic c : bm.getCharacteristics() ) {
-                // log.info( bm + " " + c );
-            }
+            // for ( Treatment t : bm.getTreatments() ) {
+            // // log.info( bm + " " + t );
+            // }
+            //
+            // assertEquals( 6, bm.getTreatments().size() );
+            //
+            // for ( Characteristic c : bm.getCharacteristics() ) {
+            // // log.info( bm + " " + c );
+            // }
 
             assertEquals( 9, bm.getCharacteristics().size() );
 
@@ -213,11 +215,12 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if ( ee != null ) try {
             eeService.delete( ee );
         } catch ( Exception e ) {
             log.info( "Failed to delete EE after test: " + e.getMessage() );
+            throw e;
         }
     }
 
@@ -454,9 +457,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         geoService.fetchAndLoad( accession, false, false, false, false );
     }
 
-    // @Test
-    // public void test() {
-    // fetchASeries( "GSE30521" );
-    // }
+    @Test
+    public void test() {
+        fetchASeries( "GSE3443" );
+    }
 
 }

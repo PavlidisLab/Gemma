@@ -25,6 +25,14 @@ public interface VectorMergingService {
     /**
      * @param expExp
      */
-    public abstract void mergeVectors( ExpressionExperiment expExp );
+    public abstract ExpressionExperiment mergeVectors( ExpressionExperiment expExp );
+
+    /**
+     * To finish processing, starting a new transaction as this step is not critical.
+     * 
+     * @param ee
+     * @return 
+     */
+    public ExpressionExperiment postProcess( ExpressionExperiment ee );
 
 }

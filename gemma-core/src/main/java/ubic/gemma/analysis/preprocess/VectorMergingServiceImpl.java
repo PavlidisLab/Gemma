@@ -79,7 +79,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @see ExpressionDataMatrixBuilder
  */
 @Service
-public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipulatingService implements VectorMergingService {
+public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipulatingService implements
+        VectorMergingService {
 
     private static Log log = LogFactory.getLog( VectorMergingServiceImpl.class.getName() );
 
@@ -106,11 +107,14 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     @Autowired
     private AnalysisUtilService analysisUtilService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.VectorMergingService#mergeVectors(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.preprocess.VectorMergingService#mergeVectors(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment)
      */
     @Override
-    public void mergeVectors( ExpressionExperiment expExp ) {
+    public ExpressionExperiment mergeVectors( ExpressionExperiment expExp ) {
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
 
@@ -123,7 +127,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         expExp = expressionExperimentService.thawLite( expExp );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
 
-        log.info( qts.size() + " quantitation types" );
+        log.info( qts.size() + " quantitation types for potential merge" );
 
         /*
          * Load all the bioassay dimensions, which will be merged.
@@ -147,7 +151,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
         if ( allOldBioAssayDims.size() == 1 ) {
             log.warn( "Experiment already has only a single bioassaydimension, nothing seems to need merging. Bailing" );
-            return;
+            return expExp;
         }
 
         log.info( allOldBioAssayDims.size() + " bioassaydimensions to merge" );
@@ -163,18 +167,25 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         /*
          * This will run into problems if there are excess quantitation types
          */
-
+        int numSuccessfulMergers = 0;
         for ( QuantitationType type : qt2Vec.keySet() ) {
 
             Collection<DesignElementDataVector> vecs = qt2Vec.get( type );
 
             if ( vecs.isEmpty() ) {
-                log.warn( "No vectors for " + type + ", directly loading vectors." );
+                log.warn( "No vectors for " + type );
+                continue;
+            }
+
+            Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = getDevMap( vecs );
+
+            if ( deVMap == null ) {
+                log.info( "Vector merging will not be done for " + type
+                        + " as there is only one vector per element already" );
+                continue;
             }
 
             log.info( "Processing " + vecs.size() + " vectors  for " + type );
-
-            Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = getDevMap( vecs );
 
             Collection<DesignElementDataVector> newVectors = new HashSet<DesignElementDataVector>();
             int numAllMissing = 0;
@@ -209,6 +220,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                 vector.setData( newDataAr );
 
                 newVectors.add( vector );
+
             }
 
             // print( newVectors ); // debugging
@@ -230,16 +242,20 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
             log.info( "Removing " + vecs.size() + " old vectors for " + type );
             designElementDataVectorService.remove( vecs );
-
+            numSuccessfulMergers++;
         } // for each quantitation type
+
+        if ( numSuccessfulMergers == 0 ) {
+            throw new IllegalStateException( "Nothing was merged. Maybe all the vectors are effectively merged already" );
+        }
 
         cleanUp( expExp, allOldBioAssayDims, newBioAd );
 
-        audit( expExp, "Vector merging peformed, merged " + allOldBioAssayDims + " old bioassay dimensions for "
-                + qts.size() + " quantitation types." );
+        audit( expExp,
+                "Vector merging peformed, merged " + allOldBioAssayDims + " old bioassay dimensions for " + qts.size()
+                        + " quantitation types." );
 
-        // FIXME don't do this in the same transaction
-        postProcess( expExp );
+        return expExp;
     }
 
     /**
@@ -370,20 +386,30 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             Collection<? extends DesignElementDataVector> oldVectors ) {
         Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = new HashMap<CompositeSequence, Collection<DesignElementDataVector>>();
         boolean atLeastOneMatch = false;
-        for ( DesignElementDataVector vector : oldVectors ) {
-            if ( !deVMap.containsKey( vector.getDesignElement() ) ) {
-                deVMap.put( vector.getDesignElement(), new HashSet<DesignElementDataVector>() );
-            }
-            deVMap.get( vector.getDesignElement() ).add( vector );
+        assert !oldVectors.isEmpty();
 
-            if ( deVMap.get( vector.getDesignElement() ).size() > 1 ) {
+        for ( DesignElementDataVector vector : oldVectors ) {
+            CompositeSequence designElement = vector.getDesignElement();
+            if ( !deVMap.containsKey( designElement ) ) {
+                if ( log.isDebugEnabled() )
+                    log.debug( "adding " + designElement + " " + designElement.getBiologicalCharacteristic() );
+                deVMap.put( designElement, new HashSet<DesignElementDataVector>() );
+            }
+            deVMap.get( designElement ).add( vector );
+
+            if ( deVMap.get( designElement ).size() > 1 ) {
                 atLeastOneMatch = true;
+            }
+            if ( designElement.getBiologicalCharacteristic() != null
+                    && designElement.getBiologicalCharacteristic().getName().equals( "N57553" ) ) {
+                log.info( designElement.getBiologicalCharacteristic() + " " + designElement + " " + vector );
             }
         }
 
         if ( !atLeastOneMatch ) {
-            throw new IllegalStateException(
-                    "Vector merging doesn't make much sense: there is already only one vector per design element." );
+            // throw new IllegalStateException(
+            // "Vector merging doesn't make much sense: there is already only one vector per design element." );
+            return null;
         }
         return deVMap;
     }
@@ -408,6 +434,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     private Map<QuantitationType, Collection<DesignElementDataVector>> getVectors( ExpressionExperiment expExp,
             Collection<QuantitationType> qts, Collection<BioAssayDimension> allOldBioAssayDims ) {
         Collection<DesignElementDataVector> oldVectors = new HashSet<DesignElementDataVector>();
+
         for ( BioAssayDimension dim : allOldBioAssayDims ) {
             oldVectors.addAll( super.designElementDataVectorService.find( dim ) );
         }
@@ -508,7 +535,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
      * 
      * @param ees
      */
-    private void postProcess( ExpressionExperiment ee ) {
+    @Override
+    public ExpressionExperiment postProcess( ExpressionExperiment ee ) {
 
         log.info( "Postprocessing ..." );
 
@@ -521,6 +549,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
         processForMissingValues( ee, arrayDesignUsed );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        return ee;
 
     }
 

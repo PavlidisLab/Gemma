@@ -150,7 +150,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                     bail( ErrorCode.INVALID_OPTION );
                 }
                 ad = arrayDesignService.thaw( ad );
-                serv.switchExperimentToArrayDesign( ee, ad );
+                ee = serv.switchExperimentToArrayDesign( ee, ad );
 
                 ats.addUpdateEvent( ee, type, "Switched to use " + ad );
 

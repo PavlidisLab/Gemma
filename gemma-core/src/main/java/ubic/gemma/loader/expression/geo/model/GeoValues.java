@@ -192,10 +192,11 @@ public class GeoValues implements Serializable {
 
         String[] moreAgg = new String[] { "gBGPixSDev", "ch1 Background Std Dev", "rBGPixSDev",
                 "ch2 Background Std Dev", "CY3_BKD_SD", "CY5_BKD_SD", "BEAD_STDERR", "CH1_BKD_SD", "CH2_BKD_SD",
-                "R_BG_SD", "G_BG_SD", "CH1_SD", "CH2_SD", "G_SD", "R_SD" };
-        for ( String s : moreAgg ) {
-            aggressivelyRemovedQuantitationTypes.add( s );
-        }
+                "R_BG_SD", "G_BG_SD", "CH1_SD", "CH2_SD", "G_SD", "R_SD", "ch1 Background Std Dev",
+                "ch1 Signal Noise Ratio", "ch2 Background Std Dev", "ch2 Signal Noise Ratio", "Bkgd_stdev", "F635 SD",
+                "F532 SD" };
+
+        aggressivelyRemovedQuantitationTypes.addAll( Arrays.asList( moreAgg ) );
 
         // We no longer keep "absent-present" calls (affymetrix and others)
         skippableQuantitationTypes.add( "ABS_CALL" );
@@ -205,6 +206,8 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "DETECTION P-VALUE" );
         skippableQuantitationTypes.add( "Detection_p-value" );
         skippableQuantitationTypes.add( "Detection_pvalue" );
+        skippableQuantitationTypes.add( "D_P-VALUE" );
+ 
         skippableQuantitationTypes.add( "Detection" );
         skippableQuantitationTypes.add( "Detection call" );
         skippableQuantitationTypes.add( "rIsWellAboveBG" );
@@ -237,11 +240,12 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "Pos_Fraction" );
         skippableQuantitationTypes.add( "Pairs_Used" );
 
-        String[] moreSkip = new String[] { "Pos_Fraction", "% > B635+2SD", "% > B635+1SD", "F532 % Sat.",
-                "F635 % Sat.", "rIsSaturated", "gIsSaturated" };
-        for ( String s : moreSkip ) {
-            skippableQuantitationTypes.add( s );
-        }
+        String[] moreSkip = new String[] { "Pos_Fraction", "% > B635+2SD", "% > B635+1SD", "% > B532+2SD", "% > B532+1SD", "F532 % Sat.",
+                "F635 % Sat.", "rIsSaturated", "gIsSaturated", "ch1 Signal Noise Ratio", "ch2 Signal Noise Ratio",
+                "gIsFeatNonUnifOL", "gIsPosAndSignif", "rIsPosAndSignif", "rIsFeatNonUnifOL" };
+
+        skippableQuantitationTypes.addAll( Arrays.asList( moreSkip ) );
+
     }
 
     private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<GeoPlatform, Map<String, Integer>>();

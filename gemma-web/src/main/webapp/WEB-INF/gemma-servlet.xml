@@ -984,14 +984,3 @@
 	</dwr:configuration>
 
 </beans>
-
-<!-- Leaving this here until I figure out how to pass these setting using new config style (IF they are important) <bean 
-	id="dwrController" class="org.directwebremoting.spring.DwrController"> <property name="configParams"> <map> <entry key="allowScriptTagRemoting" 
-	value="true"></entry> <entry key="generateDtoClasses" value="dtoall"></entry> Uncomment for development if you are getting 
-	DWR security errors <entry key="crossDomainSessionSecurity" value="false"></entry> <entry key="activeReverseAjaxEnabled" 
-	value="true"></entry> <entry key="org.directwebremoting.extend.ServerLoadMonitor" value="org.directwebremoting.impl.PollingServerLoadMonitor"></entry> 
-	<entry key="disconnectedTime" value="1000"></entry> </map> </property> turn debug true on to get access to dwr debugging 
-	tools (very helpful) <property name="debug" value="true" /> </bean> TODO: These are candidate for removal (if everything 
-	works without them). <entry key="ubic.basecode.dataStructure.DoublePoint"> <value>x</value> <value>y</value> <entry key="ubic.gemma.web.remote.StringPoint"> 
-	can this be removed? key="ubic.gemma.web.controller.visualization.ExpressionProfileDataObject"> can this be removed only 
-	used in DEDVController, looks redundent -->

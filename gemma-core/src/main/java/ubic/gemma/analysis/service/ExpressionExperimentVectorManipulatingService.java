@@ -53,6 +53,7 @@ public abstract class ExpressionExperimentVectorManipulatingService {
      */
     protected Collection<? extends DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
             QuantitationType type ) {
+
         Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign,
                 type );
 

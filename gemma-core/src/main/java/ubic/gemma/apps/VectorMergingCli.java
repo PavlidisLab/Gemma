@@ -84,7 +84,8 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
         try {
             expressionExperiment = eeService.thawLite( expressionExperiment );
 
-            mergingService.mergeVectors( expressionExperiment );
+            expressionExperiment = mergingService.mergeVectors( expressionExperiment );
+            mergingService.postProcess( expressionExperiment );
 
             super.successObjects.add( expressionExperiment.toString() );
         } catch ( Exception e ) {
