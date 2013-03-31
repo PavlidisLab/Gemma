@@ -86,11 +86,6 @@
 			<attribute name="javadoc_location" value="http://docs.jboss.org/hibernate/core/3.6/javadocs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/mage/MAGEstk/2006-07-v1.x-compatible/MAGEstk-2006-07-v1.x-compatible.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="http://mged.sourceforge.net/software/javadocs/"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-core/3.0.2.RELEASE/spring-security-core-3.0.2.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/security/spring-security-core/3.0.2.RELEASE/spring-security-core-3.0.2.RELEASE-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>

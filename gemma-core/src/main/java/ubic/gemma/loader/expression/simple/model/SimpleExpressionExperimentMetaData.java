@@ -21,9 +21,8 @@ package ubic.gemma.loader.expression.simple.model;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.biomage.AuditAndSecurity.Contact;
-
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
