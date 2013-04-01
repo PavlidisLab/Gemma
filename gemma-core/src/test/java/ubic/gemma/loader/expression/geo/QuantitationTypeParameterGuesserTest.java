@@ -133,6 +133,12 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         assertEquals( "got " + s, PrimitiveType.INT, s );
     }
 
+    public void testMas5() {
+        String a = "MAS5.0 signal intensity";
+        ScaleType guessScaleType = QuantitationTypeParameterGuesser.guessScaleType( "VALUE", a.toLowerCase() );
+        assertEquals( ScaleType.LOG2, guessScaleType );
+    }
+
     @Test
     public void testPrimitiveType() {
         String a = "VALUE";

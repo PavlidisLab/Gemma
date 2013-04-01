@@ -112,7 +112,7 @@ public class QuantitationTypeParameterGuesser {
         derivedSignalDescPatterns.add( ".*processed_signal" );
         derivedSignalDescPatterns.add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
         derivedSignalDescPatterns.add( ".*relative abundance of a transcript.*" );
-        derivedSignalDescPatterns.add( "mas5 signal.*" );
+        derivedSignalDescPatterns.add( "mas5(\\.0)? signal.*" );
         derivedSignalDescPatterns
                 .add( ".*(?<!ratio).*background[\\s-](subtraction|substraction|subtracted|corrected).*(?!ratio).*" );
         derivedSignalDescPatterns.add( ".*processed.*" );
@@ -146,6 +146,7 @@ public class QuantitationTypeParameterGuesser {
         scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "log (base 2)" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma(\\W.*)?" );
+        scaleDescPatterns.get( ScaleType.LOG2 ).add( "mas5(\\.0)? signal.*" );
 
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "^%.*" );
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "pergtbch[12].*" );
