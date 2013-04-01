@@ -281,8 +281,7 @@ public class AuditAdvice {
             log.trace( "***********  Start Audit of " + methodName + " on " + auditable + " *************" );
         }
         assert auditable != null : "Null entity passed to auditing [" + methodName + " on " + auditable + "]";
-        assert auditable.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + auditable
-                + "]";
+        assert auditable.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + auditable + "]";
 
         if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
             addCreateAuditEvent( auditable, user, "" );
@@ -331,7 +330,8 @@ public class AuditAdvice {
 
                 String propertyName = propertyNames[j];
 
-                if ( ( canSkipAssociationCheck( object, propertyName ) || !crudUtils.needCascade( methodName, cs ) ) ) {
+                if ( !specialCaseForAssociationFollow( object, propertyName )
+                        && ( canSkipAssociationCheck( object, propertyName ) || !crudUtils.needCascade( methodName, cs ) ) ) {
                     continue;
                 }
 
@@ -426,6 +426,30 @@ public class AuditAdvice {
         if ( ArrayDesign.class.isAssignableFrom( object.getClass() )
                 && ( propertyName.equals( "compositeSequences" ) || propertyName.equals( "reporters" ) ) ) {
             log.trace( "Skipping probes" );
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * For cases where don't have a cascade but the other end is auditable.
+     * <p>
+     * Implementation note. This is kind of inelegant, but the alternative is to check _every_ association, which will
+     * often not be reachable.
+     * 
+     * @param object we are checking
+     * @param property of the object
+     * @return true if the association should be followed.
+     * @see AclAdvice for similar code
+     */
+    private boolean specialCaseForAssociationFollow( Object object, String property ) {
+
+        if ( BioAssay.class.isAssignableFrom( object.getClass() )
+                && ( property.equals( "samplesUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
+            return true;
+        } else if ( DesignElementDataVector.class.isAssignableFrom( object.getClass() )
+                && property.equals( "bioAssayDimension" ) ) {
             return true;
         }
 
