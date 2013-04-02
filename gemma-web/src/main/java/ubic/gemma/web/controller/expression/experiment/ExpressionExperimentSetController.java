@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -54,9 +53,8 @@ import ubic.gemma.web.persistence.SessionListManager;
 public class ExpressionExperimentSetController extends BaseController {
 
     @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService;
-    @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
     @Autowired
     private SessionListManager sessionListManager;
 
@@ -179,6 +177,7 @@ public class ExpressionExperimentSetController extends BaseController {
     /**
      * AJAX
      * 
+     * @param id of the set
      * @return the ExpressionExperimentSetValueObject for the id param
      * @throws IllegalArgumentException if the id param is null
      * @throws AccessDeniedException if the id param is not null but the loading function returns a null value
@@ -191,6 +190,7 @@ public class ExpressionExperimentSetController extends BaseController {
         ids.add( id );
 
         Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService.loadValueObjects( ids );
+
         // security.
         if ( sets == null || sets.isEmpty() ) {
             throw new AccessDeniedException( "No experiment set exists with id=" + id

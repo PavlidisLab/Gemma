@@ -987,7 +987,7 @@ public class ExpressionExperimentController {
         }
         Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
                 false, null, true );
-        this.expressionExperimentReportService.getReportInformation( result );
+        // this.expressionExperimentReportService.getReportInformation( result );
         return result;
     }
 

@@ -41,8 +41,11 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 	 * @param {ExperimentValueSetObject[]} experimentSet populate preview with members
 	 */
 	loadExperimentPreviewFromExperimentSet: function(eeSet){
-	
 		var ids = eeSet.expressionExperimentIds;
+		if ( ids.length === 0 ) {
+		   alert("No ids");
+		   return;
+		}
 		this.entityIds = ids;
 		// load some ees to display
 		this.loadExperimentPreviewFromIds(ids);
@@ -112,7 +115,9 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 			emptyText: 'Add experiments to your group'
 		});
 		withinSetExperimentCombo.setTaxonId(this.taxonId);
-		withinSetExperimentCombo.on('select', function(combo, record, index){
+		
+		// select and then recordSelected. note arguments are different.
+		withinSetExperimentCombo.on('recordSelected', function( record ){
 		
 			var allIds = this.entityIds;
 			var newIds = record.get('memberIds');
