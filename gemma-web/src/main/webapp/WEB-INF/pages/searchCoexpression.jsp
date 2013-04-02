@@ -1,15 +1,16 @@
 
-<%-- $Id$--%>
+<%-- $Id$
+@deprecated I don't think this is used any more.
+
+--%>
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="searchCoexpression.title" /></title>
+<title><fmt:message key="searchCoexpression.title" /></title>
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/CoexpressionSearch.js' />
+<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/app/CoexpressionSearch.js' />
 
-	<content tag="heading">
-	<fmt:message key="searchCoexpression.heading" />
-	</content>
+<content tag="heading"> <fmt:message key="searchCoexpression.heading" /> </content>
 
 </head>
 

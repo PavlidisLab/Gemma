@@ -1,6 +1,7 @@
 /**
  * @author keshav
  * @version $Id$
+ * @deprecated
  */
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';

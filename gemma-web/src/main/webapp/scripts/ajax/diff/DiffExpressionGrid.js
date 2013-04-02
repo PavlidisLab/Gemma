@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 Ext.namespace('Gemma');
 
 /*

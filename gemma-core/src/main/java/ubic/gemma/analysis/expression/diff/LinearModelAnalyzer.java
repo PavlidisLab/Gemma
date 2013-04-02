@@ -265,6 +265,25 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
+     * @param resultList
+     * @param probeToGeneMap
+     * @return
+     */
+    @Override
+    public int getNumberOfGenesTested( Collection<DifferentialExpressionAnalysisResult> resultList,
+            Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
+
+        Collection<Gene> gs = new HashSet<Gene>();
+        for ( DifferentialExpressionAnalysisResult d : resultList ) {
+            CompositeSequence probe = d.getProbe();
+            if ( probeToGeneMap.containsKey( probe ) ) {
+                gs.addAll( probeToGeneMap.get( probe ) );
+            }
+        }
+        return gs.size();
+    }
+
+    /**
      * @param matrix on which to perform regression.
      * @param config containing configuration of factors to include. Any interactions or subset configuration is
      *        ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qvaluethreshold will be
@@ -341,63 +360,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         return run( expressionExperiment, dmatrix, config );
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.
-     * ExpressionExperimentSubSet, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
-    @Override
-    public DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset,
-            DifferentialExpressionAnalysisConfig config ) {
-
-        /*
-         * Start by setting it up like the full experiment.
-         */
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( subset
-                .getSourceExperiment() );
-
-        ExperimentalFactor ef = config.getSubsetFactor();
-        Collection<BioMaterial> bmtmp = new HashSet<BioMaterial>();
-        for ( BioAssay ba : subset.getBioAssays() ) {
-            bmtmp.add( ba.getSampleUsed() );
-        }
-
-        List<BioMaterial> samplesInSubset = new ArrayList<BioMaterial>( bmtmp );
-
-        FactorValue subsetFactorValue = null;
-        for ( BioMaterial bm : samplesInSubset ) {
-            Collection<FactorValue> fvs = bm.getFactorValues();
-            for ( FactorValue fv : fvs ) {
-                if ( fv.getExperimentalFactor().equals( ef ) ) {
-                    if ( subsetFactorValue == null ) {
-                        subsetFactorValue = fv;
-                    } else if ( !subsetFactorValue.equals( fv ) ) {
-                        throw new IllegalStateException(
-                                "This subset has more than one factor value for the supposed subsetfactor: " + fv
-                                        + " and " + subsetFactorValue );
-                    }
-                }
-            }
-        }
-
-        samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset,
-                config.getFactorsToInclude() );
-
-        // slice.
-        ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( samplesInSubset, dmatrix );
-
-        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config );
-
-        DifferentialExpressionAnalysis analysis = doAnalysis( subset, subsetConfig, subsetMatrix, samplesInSubset,
-                config.getFactorsToInclude(), subsetFactorValue );
-
-        if ( analysis == null ) {
-            throw new IllegalStateException( "Subset could not be analyzed with config: " + config );
-        }
-        return analysis;
     }
 
     /**
@@ -511,6 +473,63 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
         return results;
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.
+     * ExpressionExperimentSubSet, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
+     */
+    @Override
+    public DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset,
+            DifferentialExpressionAnalysisConfig config ) {
+
+        /*
+         * Start by setting it up like the full experiment.
+         */
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( subset
+                .getSourceExperiment() );
+
+        ExperimentalFactor ef = config.getSubsetFactor();
+        Collection<BioMaterial> bmtmp = new HashSet<BioMaterial>();
+        for ( BioAssay ba : subset.getBioAssays() ) {
+            bmtmp.add( ba.getSampleUsed() );
+        }
+
+        List<BioMaterial> samplesInSubset = new ArrayList<BioMaterial>( bmtmp );
+
+        FactorValue subsetFactorValue = null;
+        for ( BioMaterial bm : samplesInSubset ) {
+            Collection<FactorValue> fvs = bm.getFactorValues();
+            for ( FactorValue fv : fvs ) {
+                if ( fv.getExperimentalFactor().equals( ef ) ) {
+                    if ( subsetFactorValue == null ) {
+                        subsetFactorValue = fv;
+                    } else if ( !subsetFactorValue.equals( fv ) ) {
+                        throw new IllegalStateException(
+                                "This subset has more than one factor value for the supposed subsetfactor: " + fv
+                                        + " and " + subsetFactorValue );
+                    }
+                }
+            }
+        }
+
+        samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset,
+                config.getFactorsToInclude() );
+
+        // slice.
+        ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( samplesInSubset, dmatrix );
+
+        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config );
+
+        DifferentialExpressionAnalysis analysis = doAnalysis( subset, subsetConfig, subsetMatrix, samplesInSubset,
+                config.getFactorsToInclude(), subsetFactorValue );
+
+        if ( analysis == null ) {
+            throw new IllegalStateException( "Subset could not be analyzed with config: " + config );
+        }
+        return analysis;
     }
 
     /**
@@ -640,35 +659,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * Log transform, if necessary
-     */
-    private void checkAndFixLogScale( QuantitationType quantitationType,
-            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
-
-        ScaleType scaleType = findScale( quantitationType, namedMatrix );
-
-        if ( scaleType.equals( ScaleType.LOG2 ) ) {
-            log.info( "Data is already on a log2 scale" );
-        } else if ( scaleType.equals( ScaleType.LN ) ) {
-            log.info( " **** Converting from ln to log2 **** " );
-            MatrixStats.convertToLog2( namedMatrix, Math.E );
-        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
-            log.info( " **** Converting from log10 to log2 **** " );
-            MatrixStats.convertToLog2( namedMatrix, 10 );
-        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
-            log.info( " **** LOG TRANSFORMING **** " );
-            MatrixStats.logTransform( namedMatrix );
-        } else if ( scaleType.equals( ScaleType.COUNT ) ) {
-            /*
-             * FIXME compute the log2 CPM.
-             */
-            throw new UnsupportedOperationException( "Count data not yet supported" );
-        } else {
-            throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
-        }
-    }
-
-    /**
      * @param genesForProbe
      * @param seenGenes
      * @return
@@ -737,9 +727,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             modelFormula = buildModelFormula( config, label2Factors, interceptFactor, interactionFactorLists );
         }
 
+        filterAndLogTransform( quantitationType, dmatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
-
-        checkAndFixLogScale( quantitationType, namedMatrix );
 
         if ( log.isDebugEnabled() ) outputForDebugging( dmatrix, designMatrix );
 
@@ -942,6 +931,39 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
+     * Log transform if necessary, do any required filtering prior to analysis.
+     * 
+     * @param quantitationType
+     * @param dmatrix
+     */
+    private void filterAndLogTransform( QuantitationType quantitationType, ExpressionDataDoubleMatrix dmatrix ) {
+
+        // dmatrix = ExpressionExperimentFilter.zeroVarianceFilter( dmatrix );
+        ScaleType scaleType = findScale( quantitationType, dmatrix.getMatrix() );
+
+        if ( scaleType.equals( ScaleType.LOG2 ) ) {
+            log.info( "Data is already on a log2 scale" );
+        } else if ( scaleType.equals( ScaleType.LN ) ) {
+            log.info( " **** Converting from ln to log2 **** " );
+            MatrixStats.convertToLog2( dmatrix.getMatrix(), Math.E );
+        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
+            log.info( " **** Converting from log10 to log2 **** " );
+            MatrixStats.convertToLog2( dmatrix.getMatrix(), 10 );
+        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
+            log.info( " **** LOG TRANSFORMING **** " );
+            MatrixStats.logTransform( dmatrix.getMatrix() );
+        } else if ( scaleType.equals( ScaleType.COUNT ) ) {
+            /*
+             * TODO compute the log2 CPM.
+             */
+            throw new UnsupportedOperationException( "Count data not yet supported" );
+        } else {
+            throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
+        }
+
+    }
+
+    /**
      * @param quantitationType
      * @param namedMatrix
      * @return
@@ -1061,25 +1083,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         return result;
 
-    }
-
-    /**
-     * @param resultList
-     * @param probeToGeneMap
-     * @return
-     */
-    @Override
-    public int getNumberOfGenesTested( Collection<DifferentialExpressionAnalysisResult> resultList,
-            Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
-
-        Collection<Gene> gs = new HashSet<Gene>();
-        for ( DifferentialExpressionAnalysisResult d : resultList ) {
-            CompositeSequence probe = d.getProbe();
-            if ( probeToGeneMap.containsKey( probe ) ) {
-                gs.addAll( probeToGeneMap.get( probe ) );
-            }
-        }
-        return gs.size();
     }
 
     /**
@@ -1444,27 +1447,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param qvalueThreshold
-     * @param results
-     */
-    private void removeUnwantedResults( Double qvalueThreshold, Collection<DifferentialExpressionAnalysisResult> results ) {
-
-        if ( qvalueThreshold != null ) {
-            int i = 0;
-            for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
-                DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) it.next();
-
-                if ( r.getCorrectedPvalue() == null || r.getCorrectedPvalue() >= qvalueThreshold ) {
-                    it.remove();
-                } else {
-                    i++;
-                }
-            }
-            log.info( "Retained " + i + " results meeting qvalue of " + qvalueThreshold );
-        }
-    }
-
-    /**
      * @param config
      * @param dmatrix
      * @param samplesUsed
@@ -1521,6 +1503,27 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         return subMatrices;
 
+    }
+
+    /**
+     * @param qvalueThreshold
+     * @param results
+     */
+    private void removeUnwantedResults( Double qvalueThreshold, Collection<DifferentialExpressionAnalysisResult> results ) {
+
+        if ( qvalueThreshold != null ) {
+            int i = 0;
+            for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
+                DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) it.next();
+
+                if ( r.getCorrectedPvalue() == null || r.getCorrectedPvalue() >= qvalueThreshold ) {
+                    it.remove();
+                } else {
+                    i++;
+                }
+            }
+            log.info( "Retained " + i + " results meeting qvalue of " + qvalueThreshold );
+        }
     }
 
     /**

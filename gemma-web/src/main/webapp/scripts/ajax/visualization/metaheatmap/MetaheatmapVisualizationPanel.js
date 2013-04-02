@@ -501,7 +501,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			condition.percentProbesMissing = numProbesMissing / this.geneTree.items.length;
 		}	
 
-		// Calculate visible scores for genes
+		/* Calculate visible scores for genes
+		 */
 		for (j = 0; j < this.geneTree.items.length; j++) {
 			gene = this.geneTree.items[j];			
 			var pValues = [];
@@ -522,7 +523,12 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					}
 				}				
 			}
-			gene.metaPvalue = GemmaStatUtils.computeMetaPvalue (pValues);
+			
+			/*
+			 * This is used as a sorting option, so we have to remove that if this is not computed 'correctly'. An alternative would be to simply count the fraction of times it is significant.
+			 */
+		   gene.metaPvalue = GemmaStatUtils.computeMetaPvalue (pValues);
+		   
 			gene.metaPvalueCount = pValues.length;
 			gene.percentProbesMissing = numProbesMissing / this.conditionTree.items.length;			
 			gene.metaPvalueBarChart = this.calculateBarChartValueBasedOnPvalue (gene.metaPvalue);			

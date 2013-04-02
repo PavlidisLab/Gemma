@@ -34,7 +34,6 @@ import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -72,9 +71,6 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
     @Autowired
     DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService = null;
 
     @Autowired
     ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;

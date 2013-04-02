@@ -1,6 +1,7 @@
 <%-- 
 author: keshav
 version: $Id$
+@deprecated - I don't think this is used.
 --%>
 <%@ include file="/common/taglibs.jsp"%>
 <head>

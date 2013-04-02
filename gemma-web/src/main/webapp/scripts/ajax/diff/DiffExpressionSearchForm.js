@@ -1,4 +1,4 @@
-/*
+/**
  * The input for differential expression searches. This form has two main parts: a GeneChooserPanel, and the
  * differential expression search parameters.
  * 
@@ -8,6 +8,7 @@
  * 
  * @author keshav
  * 
+ * @deprecated
  * @version $Id$
  */
 

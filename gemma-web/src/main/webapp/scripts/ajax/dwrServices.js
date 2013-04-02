@@ -333,11 +333,6 @@ DifferentialExpressionSearchController.getDiffExpressionForGenes = function(p0, 
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDiffExpressionForGenes', p0, callback);
 };
-DifferentialExpressionSearchController.getDifferentialExpressionForFactors = function(p0, p1, p2, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DifferentialExpressionSearchController/getDifferentialExpressionForFactors");
-	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'getDifferentialExpressionForFactors', p0, p1, p2, callback);
-};
 DifferentialExpressionSearchController.getFactors = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getFactors', p0, callback);

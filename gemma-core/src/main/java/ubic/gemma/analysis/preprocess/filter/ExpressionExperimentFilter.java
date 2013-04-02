@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.math.Constants;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
@@ -401,15 +402,16 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * Remove rows that have a variance of zero.
+     * Remove rows that have a variance of zero (within a small constant)
      * 
      * @param matrix
      * @return
+     * @see Constants.SMALL
      */
-    private ExpressionDataDoubleMatrix zeroVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
+    public static ExpressionDataDoubleMatrix zeroVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter();
         rowLevelFilter.setMethod( Method.VAR );
-        rowLevelFilter.setLowCut( 0 );
+        rowLevelFilter.setLowCut( Constants.SMALL );
         rowLevelFilter.setRemoveAllNegative( false );
         rowLevelFilter.setUseAsFraction( false );
         return rowLevelFilter.filter( matrix );
