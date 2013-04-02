@@ -58,13 +58,18 @@ public class DifferentialExpressionSearchController {
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
-    @Autowired private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    @Autowired private GeneDifferentialExpressionService geneDifferentialExpressionService;
-    @Autowired private GeneService geneService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired private TaskRunningService taskRunningService;
-
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired
+    private GeneDifferentialExpressionService geneDifferentialExpressionService;
+    @Autowired
+    private GeneService geneService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired
+    private TaskRunningService taskRunningService;
 
     /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
@@ -97,31 +102,6 @@ public class DifferentialExpressionSearchController {
         }
 
         return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
-    }
-
-    /**
-     * AJAX entry which returns differential expression results for the gene with the given id, in the selected factors,
-     * at the given significance threshold.
-     * 
-     * @param geneId
-     * @param threshold corrected pvalue threshold (normally this means FDR)
-     * @param factorMap
-     * @deprecated as far as I can tell this is not used.
-     * @return
-     */
-    @Deprecated
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionForFactors( Long geneId,
-            double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
-
-        if ( factorMap.isEmpty() || geneId == null ) {
-            return null;
-        }
-
-        Gene g = geneService.load( geneId );
-        Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
-                .getDifferentialExpression( g, threshold, factorMap );
-
-        return result;
     }
 
     /**
@@ -159,7 +139,8 @@ public class DifferentialExpressionSearchController {
      * Gets the differential expression results for the genes in {@link DiffExpressionSearchCommand}.
      * 
      * @param command
-     * @return
+     * @return <p>
+     *         FIXME is this actually used?
      */
     public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffExpressionForGenes(
             DiffExpressionSearchCommand command ) {
@@ -234,6 +215,8 @@ public class DifferentialExpressionSearchController {
      * AJAX entry.
      * <p>
      * Value objects returned contain experiments that have 2 factors and have had the diff analysis run on it.
+     * <p>
+     * FIXME Is this actually used?
      * 
      * @param eeIds
      */
@@ -302,7 +285,7 @@ public class DifferentialExpressionSearchController {
     }
 
     /**
-     * AJAX
+     * AJAX - method used for main display metaheatmap.
      * 
      * @param taxonId
      * @param datasetValueObjects
@@ -322,7 +305,17 @@ public class DifferentialExpressionSearchController {
         List<String> datasetGroupNames = new ArrayList<String>();
         for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
             if ( eevo != null ) {
-                experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
+                // fixme temporary workaroud.
+                if ( eevo.getExpressionExperimentIds().isEmpty() ) {
+                    if ( eevo.getId() != null ) {
+                        experiments.add( expressionExperimentSetService.getExperimentsInSet( eevo.getId() ) );
+                    } else {
+                        // session-bound.
+                        experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
+                    }
+                } else {
+                    experiments.add( expressionExperimentSetService.getExperimentsInSet( eevo.getId() ) );
+                }
                 datasetGroupNames.add( eevo.getName() );
             }
         }
@@ -342,9 +335,8 @@ public class DifferentialExpressionSearchController {
 
         log.info( "Got genes" );
 
-        final DifferentialExpressionSearchTaskCommand taskCommand = new DifferentialExpressionSearchTaskCommand(
-                                                                        genes, experiments,
-                                                                        geneGroupNames, datasetGroupNames );
+        final DifferentialExpressionSearchTaskCommand taskCommand = new DifferentialExpressionSearchTaskCommand( genes,
+                experiments, geneGroupNames, datasetGroupNames );
 
         String taskId = taskRunningService.submitLocalTask( taskCommand );
 
@@ -419,10 +411,14 @@ public class DifferentialExpressionSearchController {
      * @return
      */
     private Collection<ExpressionExperiment> loadExperimentsByIds( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            throw new IllegalArgumentException( "No ids were provided" );
+        }
+
         Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( ids );
 
         if ( experiments.isEmpty() ) {
-            throw new EntityNotFoundException( "Could not access any experiments." );
+            throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );
         }
 
         return experiments;
