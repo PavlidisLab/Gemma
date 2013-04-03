@@ -103,6 +103,60 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 				((this.totalCount > 1) ? " experiments)" : " experiment)"));
 	},
 	
+	mergeAndCreateSessionSet: function(combo, record, newIds){
+		
+		var allIds = this.entityIds;
+		var i;
+		// don't add duplicates
+		for (i = 0; i < newIds.length; i++) {
+			if (allIds.indexOf(newIds[i]) < 0) {
+				allIds.push(newIds[i]);
+			}
+		}
+		var currentTime = new Date();
+		var hours = currentTime.getHours();
+		var minutes = currentTime.getMinutes();
+		if (minutes < 10) {
+			minutes = "0" + minutes;
+		}
+		var time = '(' + hours + ':' + minutes + ') ';
+		
+		var editedGroup;
+		editedGroup = new SessionBoundExpressionExperimentSetValueObject();
+		editedGroup.id = null;
+		editedGroup.name = time+" Custom Experiment Group";
+		editedGroup.description = "Temporary experiment group created " + currentTime.toString();
+		editedGroup.expressionExperimentIds = allIds;
+		editedGroup.taxonId = record.get('taxonId');
+		editedGroup.taxonName = record.get('taxonName');
+		editedGroup.numExperiments = editedGroup.expressionExperimentIds.length;
+		editedGroup.modified = true;
+		editedGroup.publik = false;
+		
+		
+		ExpressionExperimentSetController.addSessionGroups([editedGroup], true, // returns datasets added
+				function(newValueObjects){
+			// should be at least one datasetSet
+			if (newValueObjects === null || newValueObjects.length === 0) {
+				// TODO error message
+				return;
+			} else {
+				
+				combo.reset();
+				this.focus(); // want combo to lose focus
+				this.loadExperimentPreviewFromIds(newValueObjects[0].expressionExperimentIds);
+				this.setSelectedSetValueObject(newValueObjects[0]);
+				this.updateTitle();
+				this.fireEvent('experimentListModified', newValueObjects);
+				this.fireEvent('doneModification');
+			}
+		}.createDelegate(this));
+		
+		
+		
+		
+	},
+	
 	initComponent: function(){
 	
 		var withinSetExperimentCombo = new Gemma.ExperimentAndExperimentGroupCombo({
@@ -114,61 +168,13 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 		withinSetExperimentCombo.setTaxonId(this.taxonId);
 		withinSetExperimentCombo.on('select', function(combo, record, index){
 			
-			ExpressionExperimentSetController.getExperimentIdsInSet(record.data.resultValueObject.id, { callback : function(expIds) {	            
-								
-				var allIds = this.entityIds;
-				
-				var newIds = expIds;
-				var i;
-				// don't add duplicates
-				for (i = 0; i < newIds.length; i++) {
-					if (allIds.indexOf(newIds[i]) < 0) {
-						allIds.push(newIds[i]);
-					}
-				}
-				var currentTime = new Date();
-				var hours = currentTime.getHours();
-				var minutes = currentTime.getMinutes();
-				if (minutes < 10) {
-					minutes = "0" + minutes;
-				}
-				var time = '(' + hours + ':' + minutes + ') ';
-				
-				var editedGroup;
-				editedGroup = new SessionBoundExpressionExperimentSetValueObject();
-				editedGroup.id = null;
-				editedGroup.name = time+" Custom Experiment Group";
-				editedGroup.description = "Temporary experiment group created " + currentTime.toString();
-				editedGroup.expressionExperimentIds = allIds;
-				editedGroup.taxonId = record.get('taxonId');
-				editedGroup.taxonName = record.get('taxonName');
-				editedGroup.numExperiments = editedGroup.expressionExperimentIds.length;
-				editedGroup.modified = true;
-				editedGroup.publik = false;
-				
-				
-				ExpressionExperimentSetController.addSessionGroups([editedGroup], true, // returns datasets added
-	 				function(newValueObjects){
-					// should be at least one datasetSet
-					if (newValueObjects === null || newValueObjects.length === 0) {
-						// TODO error message
-						return;
-					} else {
-						
-						withinSetExperimentCombo.reset();
-						this.focus(); // want combo to lose focus
-						this.loadExperimentPreviewFromIds(newValueObjects[0].expressionExperimentIds);
-						this.setSelectedSetValueObject(newValueObjects[0]);
-						this.updateTitle();
-						this.fireEvent('experimentListModified', newValueObjects);
-						this.fireEvent('doneModification');
-					}
-				}.createDelegate(this));
-				
-				
-				
-			}.createDelegate(this) });
-		
+			if (record.data.resultValueObject instanceof SessionBoundExpressionExperimentSetValueObject){
+				this.mergeAndCreateSessionSet(combo, record, record.data.resultValueObject.expressionExperimentIds);
+			}else{			
+				ExpressionExperimentSetController.getExperimentIdsInSet(record.data.resultValueObject.id, { callback : function(expIds) {
+					this.mergeAndCreateSessionSet(combo, record, expIds);
+				}.createDelegate(this) });			
+			}
 			
 		},this);
 
