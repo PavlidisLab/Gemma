@@ -314,7 +314,7 @@ public class DifferentialExpressionSearchController {
                         experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
                     }
                 } else {
-                    experiments.add( expressionExperimentSetService.getExperimentsInSet( eevo.getId() ) );
+                    experiments.add( expressionExperimentService.loadMultiple( eevo.getExpressionExperimentIds() ) );
                 }
                 datasetGroupNames.add( eevo.getName() );
             }
