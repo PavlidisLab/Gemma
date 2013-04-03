@@ -666,6 +666,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				});
 		this.experimentChoosers.items.each(function() {
 					if (this instanceof Gemma.ExperimentSearchAndPreview ) {
+						this.taxonId=taxonId;
 						this.experimentCombo.setTaxonId(taxonId);
 					}
 				});
@@ -832,6 +833,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	
 		// get the chooser to inject
 		var chooser = this.experimentChoosers.getComponent(0);
+		
+		chooser.selectedExperimentOrGroup=record.data;
 		
 		// get the chooser's gene combo
 		var eeCombo = chooser.experimentCombo;

@@ -308,7 +308,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			expressionExperimentGroup.data.memberIds=expIds;
 			expressionExperimentGroup.data.resultValueObject.expressionExperimentIds = expIds;
 			this.lastQuery = null;
-			this.fireEvent("recordSelected", this.getExpressionExperimentGroup(),combo, index);
+			this.fireEvent("recordSelected", this.selectedExpressionExperimentGroup,combo, index);
 		}.createDelegate(this) });
 		
 

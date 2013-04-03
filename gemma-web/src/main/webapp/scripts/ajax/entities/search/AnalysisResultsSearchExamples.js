@@ -168,19 +168,25 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend(Ext.Panel, {
 			},
 
 			eeSetCb : function(eeSet) {
+				
+				ExpressionExperimentSetController.getExperimentIdsInSet(eeSet.id, { callback : function(expIds) {
 
+				eeSet.expressionExperimentIds = expIds;
+					
 				var record = new Gemma.ExperimentAndExperimentGroupComboRecord({
 							name : eeSet.name,
-							description : eeSet.descrption,
+							description : eeSet.description,
 							isGroup : true,
-							size : eeSet.expressionExperimentIds.length,
+							size : expIds.length,
 							taxonId : eeSet.taxonId,
 							taxonName : eeSet.taxonName,
-							memberIds : eeSet.expressionExperimentIds,
+							memberIds : expIds,
 							resultValueObject : eeSet,
 							userOwned : false
 						});
 				this.fireEvent('eeExampleReady', record);
+				
+				}.createDelegate(this) });
 			},
 
 			/**
