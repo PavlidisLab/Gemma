@@ -475,7 +475,6 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                     width : 310,
                     hideTrigger : true
                 });
-    
         eeCombo.on("recordSelected", function(selectedGroup) {
                     if (selectedGroup !== null) {
 

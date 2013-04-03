@@ -41,11 +41,8 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 	 * @param {ExperimentValueSetObject[]} experimentSet populate preview with members
 	 */
 	loadExperimentPreviewFromExperimentSet: function(eeSet){
+	
 		var ids = eeSet.expressionExperimentIds;
-		if ( ids.length === 0 ) {
-		   alert("No ids");
-		   return;
-		}
 		this.entityIds = ids;
 		// load some ees to display
 		this.loadExperimentPreviewFromIds(ids);
@@ -115,57 +112,63 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 			emptyText: 'Add experiments to your group'
 		});
 		withinSetExperimentCombo.setTaxonId(this.taxonId);
-		
-		// select and then recordSelected. note arguments are different.
-		withinSetExperimentCombo.on('recordSelected', function( record ){
-		
-			var allIds = this.entityIds;
-			var newIds = record.get('memberIds');
-			var i;
-			// don't add duplicates
-			for (i = 0; i < newIds.length; i++) {
-				if (allIds.indexOf(newIds[i]) < 0) {
-					allIds.push(newIds[i]);
+		withinSetExperimentCombo.on('select', function(combo, record, index){
+			
+			ExpressionExperimentSetController.getExperimentIdsInSet(record.data.resultValueObject.id, { callback : function(expIds) {	            
+								
+				var allIds = this.entityIds;
+				
+				var newIds = expIds;
+				var i;
+				// don't add duplicates
+				for (i = 0; i < newIds.length; i++) {
+					if (allIds.indexOf(newIds[i]) < 0) {
+						allIds.push(newIds[i]);
+					}
 				}
-			}
-			var currentTime = new Date();
-			var hours = currentTime.getHours();
-			var minutes = currentTime.getMinutes();
-			if (minutes < 10) {
-				minutes = "0" + minutes;
-			}
-			var time = '(' + hours + ':' + minutes + ') ';
-			
-			var editedGroup;
-			editedGroup = new SessionBoundExpressionExperimentSetValueObject();
-			editedGroup.id = null;
-			editedGroup.name = time+" Custom Experiment Group";
-			editedGroup.description = "Temporary experiment group created " + currentTime.toString();
-			editedGroup.expressionExperimentIds = allIds;
-			editedGroup.taxonId = record.get('taxonId');
-			editedGroup.taxonName = record.get('taxonName');
-			editedGroup.numExperiments = editedGroup.expressionExperimentIds.length;
-			editedGroup.modified = true;
-			editedGroup.publik = false;
-			
-			
-			ExpressionExperimentSetController.addSessionGroups([editedGroup], true, // returns datasets added
- 				function(newValueObjects){
-				// should be at least one datasetSet
-				if (newValueObjects === null || newValueObjects.length === 0) {
-					// TODO error message
-					return;
-				} else {
-					
-					withinSetExperimentCombo.reset();
-					this.focus(); // want combo to lose focus
-					this.loadExperimentPreviewFromIds(newValueObjects[0].expressionExperimentIds);
-					this.setSelectedSetValueObject(newValueObjects[0]);
-					this.updateTitle();
-					this.fireEvent('experimentListModified', newValueObjects);
-					this.fireEvent('doneModification');
+				var currentTime = new Date();
+				var hours = currentTime.getHours();
+				var minutes = currentTime.getMinutes();
+				if (minutes < 10) {
+					minutes = "0" + minutes;
 				}
-			}.createDelegate(this));
+				var time = '(' + hours + ':' + minutes + ') ';
+				
+				var editedGroup;
+				editedGroup = new SessionBoundExpressionExperimentSetValueObject();
+				editedGroup.id = null;
+				editedGroup.name = time+" Custom Experiment Group";
+				editedGroup.description = "Temporary experiment group created " + currentTime.toString();
+				editedGroup.expressionExperimentIds = allIds;
+				editedGroup.taxonId = record.get('taxonId');
+				editedGroup.taxonName = record.get('taxonName');
+				editedGroup.numExperiments = editedGroup.expressionExperimentIds.length;
+				editedGroup.modified = true;
+				editedGroup.publik = false;
+				
+				
+				ExpressionExperimentSetController.addSessionGroups([editedGroup], true, // returns datasets added
+	 				function(newValueObjects){
+					// should be at least one datasetSet
+					if (newValueObjects === null || newValueObjects.length === 0) {
+						// TODO error message
+						return;
+					} else {
+						
+						withinSetExperimentCombo.reset();
+						this.focus(); // want combo to lose focus
+						this.loadExperimentPreviewFromIds(newValueObjects[0].expressionExperimentIds);
+						this.setSelectedSetValueObject(newValueObjects[0]);
+						this.updateTitle();
+						this.fireEvent('experimentListModified', newValueObjects);
+						this.fireEvent('doneModification');
+					}
+				}.createDelegate(this));
+				
+				
+				
+			}.createDelegate(this) });
+		
 			
 		},this);
 

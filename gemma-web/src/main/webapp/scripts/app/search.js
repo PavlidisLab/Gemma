@@ -599,8 +599,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
       } else if ( clazz === "BibliographicReferenceValueObject" ) {
          return data.citation.citation
                + (new Ext.Template(Gemma.Common.tpl.pubmedLink.simple)).apply({ pubmedURL : data.pubAccession });
-      } else if ( clazz === "ExpressionExperimentSetValueObject"
-            || clazz === "DatabaseBackedExpressionExperimentSetValueObject" ) {
+      } else if ( clazz === "ExpressionExperimentSetValueObject" ) {
          return "<a href=\"" + Gemma.LinkRoots.expressionExperimentSetPage + data.id + "\">" + data.name
                + "</a><span style='color:grey'> " + data.taxonName + "</span> (" + data.numExperiments + ")";
       } else if ( clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject" ) {
