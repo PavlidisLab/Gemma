@@ -304,13 +304,14 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		this.selectedExpressionExperimentGroup = expressionExperimentGroup.data;
 		
 		//we don't need to grab the ids if the selected group is a session group(they are already there)
-		if (expressionExperimentGroup.data.resultValueObject instanceof SessionBoundExpressionExperimentSetValueObject){
+		if (expressionExperimentGroup.data.resultValueObject instanceof SessionBoundExpressionExperimentSetValueObject ||
+				expressionExperimentGroup.data.resultValueObject instanceof ExpressionExperimentValueObject){
 			this.lastQuery = null;
 			this.fireEvent("recordSelected", this.selectedExpressionExperimentGroup,combo, index);			
 		}else{
 			ExpressionExperimentSetController.getExperimentIdsInSet(expressionExperimentGroup.data.resultValueObject.id, { callback : function(expIds) {
 	            
-				//why do we require that this is set in two places?  The answer has been lost to sands of time
+				//why do we require that this is set in two places?  The answer has been lost to the sands of time
 				expressionExperimentGroup.data.memberIds=expIds;
 				expressionExperimentGroup.data.resultValueObject.expressionExperimentIds = expIds;
 				this.lastQuery = null;

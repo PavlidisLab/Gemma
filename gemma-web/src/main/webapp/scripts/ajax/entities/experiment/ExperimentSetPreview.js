@@ -170,7 +170,12 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 			
 			if (record.data.resultValueObject instanceof SessionBoundExpressionExperimentSetValueObject){
 				this.mergeAndCreateSessionSet(combo, record, record.data.resultValueObject.expressionExperimentIds);
-			}else{			
+			}else if (record.data.resultValueObject instanceof ExpressionExperimentValueObject){
+				var singleId=[];
+				singleId.push(record.data.resultValueObject.id);
+				this.mergeAndCreateSessionSet(combo, record, singleId);
+			}
+			else{			
 				ExpressionExperimentSetController.getExperimentIdsInSet(record.data.resultValueObject.id, { callback : function(expIds) {
 					this.mergeAndCreateSessionSet(combo, record, expIds);
 				}.createDelegate(this) });			
