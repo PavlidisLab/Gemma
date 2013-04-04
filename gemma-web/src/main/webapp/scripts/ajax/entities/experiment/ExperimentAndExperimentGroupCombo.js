@@ -163,6 +163,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					'<b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
 		var dbSetTpl  = new Ext.XTemplate('<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})">'+
 					'<b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var dbMasterSetTpl  = new Ext.XTemplate('<div style="font-size:11px;background-color:#E6B2FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})">'+
+		'<b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
 		var sessionSetTpl = dbSetTpl;
 		var defaultTpl = dbSetTpl;
 		
@@ -184,7 +186,10 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					} else if (values.resultValueObject instanceof  ExpressionExperimentSetValueObject) {
 	                  if (values.userOwned) {
 	                     return userOwnedDbSetTpl.apply(values);
-	                  } else {
+	                  } else if(values.name.match("Master set for")){
+	                	  return dbMasterSetTpl.apply(values);	                	  
+	                  }
+	                  else {
 	                     return dbSetTpl.apply(values);
 	                  } 
 					}else if (values.resultValueObject instanceof ExpressionExperimentValueObject) {

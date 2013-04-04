@@ -74,6 +74,8 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    
+    private static String arbitraryMasterSetPrefix="Master set for";
 
     /*
      * (non-Javadoc)
@@ -100,40 +102,51 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return experimentValueObjects;
     }
 
-    /**
-     * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent session-bound
-     * sets called by ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController.
-     * searchExperimentsAndExperimentGroup(String, Long) does not include session bound sets
-     * 
-     * @param taxonId
-     * @return
-     */
-    private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( Long taxonId ) {
-        boolean taxonLimited = taxonId != null;
+	/**
+	 * if query is blank, return list of public sets, user-owned sets (if logged
+	 * in) and user's recent session-bound sets called by
+	 * ubic.gemma.web.controller
+	 * .expression.experiment.ExpressionExperimentController.
+	 * searchExperimentsAndExperimentGroup(String, Long) does not include
+	 * session bound sets
+	 * 
+	 * @param taxonId
+	 * @return
+	 */
+	private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery(
+			Long taxonId) {
+		boolean taxonLimited = taxonId != null;
 
-        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+		List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
 
-        Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
-                .loadAllExperimentSetValueObjects();
+		// These are widely considered to be the most important results and
+		// therefore need to be at the top
+		List<SearchResultDisplayObject> masterResults = new LinkedList<SearchResultDisplayObject>();
 
-        for ( ExpressionExperimentSetValueObject evo : evos ) {
-            SearchResultDisplayObject srdvo = new SearchResultDisplayObject( evo );
+		Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
+				.loadAllExperimentSetValueObjects();
 
-            // srdvo.setUserOwned( securityService.isPrivate( set ) ); // this would have been wrong anyway.S
+		for (ExpressionExperimentSetValueObject evo : evos) {
+			SearchResultDisplayObject srdvo = new SearchResultDisplayObject(evo);
 
-            if ( taxonLimited ) {
-                if ( evo.getTaxonId().equals( taxonId ) ) {
-                    displayResults.add( srdvo );
-                }
-            } else {
-                displayResults.add( srdvo );
-            }
-        }
+			if (taxonLimited && !evo.getTaxonId().equals(taxonId)) {
+				continue;
+			}
+			// could be spoofed by other users 'Master sets'
+			if (evo.getName().startsWith(arbitraryMasterSetPrefix)) {
+				masterResults.add(srdvo);
+			} else {
+				displayResults.add(srdvo);
+			}
+		}
 
-        Collections.sort( displayResults );
+		Collections.sort(displayResults);
 
-        return displayResults;
-    }
+		//should we also sort by which species is most important(humans obviously) or is that not politically correct???
+		displayResults.addAll(0, masterResults);
+
+		return displayResults;
+	}
 
     /*
      * (non-Javadoc)
