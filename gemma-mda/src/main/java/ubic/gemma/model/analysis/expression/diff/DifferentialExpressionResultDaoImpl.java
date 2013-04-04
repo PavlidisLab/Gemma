@@ -518,6 +518,11 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
                     if ( pvalue == null || correctedPvalue == null ) continue;
 
+                    /*
+                     * This is a hack to mimic the effect of storing only 'good' results.
+                     */
+                    // if ( correctedPvalue > CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) continue;
+
                     if ( !resultsFromDb.containsKey( resultSetId ) ) {
                         resultsFromDb.put( resultSetId, new HashMap<Long, DiffExprGeneSearchResult>() );
                     }
@@ -1056,6 +1061,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             r = new DiffExprGeneSearchResult( resultSetId, geneId );
             r.setResultId( probeAnalysisId );
             r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
+
+            // FIXME we want to make this always true.
             if ( correctedPvalue < CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
                 r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
             }
