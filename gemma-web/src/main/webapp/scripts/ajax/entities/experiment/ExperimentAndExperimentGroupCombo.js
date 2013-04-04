@@ -219,9 +219,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			
 			if (this.urlInitiatedQuery){
 				
-				this.fireEvent("select", this, records[0]);
-				this.urlInitiatedQuery=false;
-				this.fireEvent("experimentGroupUrlSelectionComplete");
+				this.fireEvent("select", this, records[0]);				
 				
 			}			
 			else if(this.getValue() !== query ){
@@ -316,6 +314,11 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				expressionExperimentGroup.data.resultValueObject.expressionExperimentIds = expIds;
 				this.lastQuery = null;
 				this.fireEvent("recordSelected", this.selectedExpressionExperimentGroup,combo, index);
+				
+				if (this.urlInitiatedQuery){
+					this.urlInitiatedQuery=false;
+					this.fireEvent("experimentGroupUrlSelectionComplete");
+				}		
 			}.createDelegate(this) });
 			
 		}
