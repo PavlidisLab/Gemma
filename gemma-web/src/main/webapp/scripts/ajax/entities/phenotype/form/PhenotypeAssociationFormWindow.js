@@ -89,17 +89,18 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 		var experimentalErrorMessages = [];
     	
 		// They are null when this form is used for creating evidence.
-		var evidenceId = null;		
+		var evidenceId = null;
 		var lastUpdated = null;
+
+		var submitFormLoadMaskMsg = evidenceId == null ?
+										"Adding new phenotype association ..." :
+										"Updating phenotype association ...";
+		var validateFormLoadMaskMsg = "Validating ...";
 
 		// loadMask needs to be set up on render because this.getEl() has not been defined yet before render.     	
 		this.on('render', function(thisPanel) {
 			if (!thisPanel.loadMask) {
-				thisPanel.loadMask = new Ext.LoadMask(thisPanel.getEl(), {
-					msg: evidenceId == null ?
-							"Adding new phenotype association ..." :
-							"Updating phenotype association ..."
-				});
+				thisPanel.loadMask = new Ext.LoadMask(thisPanel.getEl(), { msg: "" });
 			}
 		});    	
 
@@ -482,6 +483,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 			    if (this.getForm().isValid()) {
 			    	var isCreating = (evidenceId == null);
 
+					this.loadMask.msg = submitFormLoadMaskMsg;
 			    	this.loadMask.show();
 
 					PhenotypeController.processPhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {
@@ -539,8 +541,13 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 							if (isValid && evidenceCodeComboBox.getValue() !== '') {
 								var evidenceValueObject = generateEvidenceValueObject(selectedPhenotypes);
 
+								this.loadMask.msg = validateFormLoadMaskMsg;
+								this.loadMask.show();
+
 								// Ask the controller to validate only after all fields are filled.
 								PhenotypeController.validatePhenotypeAssociationForm(evidenceValueObject, function(validateEvidenceValueObject) {
+									this.loadMask.hide();
+
 									var hasError = false;								
 									var hasWarning = false;
 			
@@ -602,6 +609,11 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
 				    text: 'OK',
 				    formBind: true,
 				    handler: function() {
+				    	// Show the mask right after the OK button is clicked so that it cannot be clicked again.
+				    	// The mask will be shown again right before asking the server to validating and processing form, but it is fine.
+						this.loadMask.msg = validateFormLoadMaskMsg;
+						this.loadMask.show();
+
 						this.validateForm(true);
 				    },
 					scope: this
