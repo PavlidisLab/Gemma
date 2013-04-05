@@ -181,7 +181,13 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         sbgsvo.setName( gs.getName() );
         sbgsvo.setDescription( gs.getDescription() );
-        sbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
+        //GO group gene sets don't have ids
+        if (gs.getId()==null){
+        	sbgsvo.setSize( gs.getMembers()!=null?gs.getMembers().size():0 );        	
+        } else{//this case may never happen as this is only called from convertToGoValueObject() leaving here in case this method is ever called from somewhere else
+        	sbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
+        }
+        
 
         Collection<Long> gids = new HashSet<Long>();
         for ( GeneSetMember gm : gs.getMembers() ) {
