@@ -106,8 +106,7 @@ while (<IN>) {
 		if ($inPlatform) {
 			if ( $n < $opt_n && !$keepers{$probe} ) {
 				$keepers{$probe}++;
-				print STDERR
-"Keeping $probe, number $n, on line $i, printed $printed lines so far\n";
+				print STDERR "Keeping $probe, number $n, on line $i, printed $printed lines so far\n";
 				$n++;
 			} elsif ( $keepers{$probe} ) {
 				print STDERR "Seen $probe already \n";
@@ -124,14 +123,17 @@ while (<IN>) {
 		# data lines.
 		if ( $keepers{$probe} ) {
 			print OUT;              # includes sample data lines.
-			if ( $probe eq "gnf1h00001_x_at" ) {
-				print STDERR $_;
-			}
-
 			$printed++;
-			if ( $printed % 1000 == 0 ) {
-				print STDERR "Printed $printed lines\n";
-			}
+		} elsif ($keepers{uc($probe)}) {
+			print OUT;
+			$printed++;
+		} elsif ($keepers{lc($probe)}) {
+			print OUT;
+			$printed++;
+		}	
+		 
+		if ( $printed % 1000 == 0 ) {
+			print STDERR "Printed $printed lines\n";
 		}
 	}
 }
@@ -160,6 +162,10 @@ for ( my $i = 0 ; $i < scalar @ARGV ; $i++ ) {
 			my @vals = split "\t", $_;
 			my $probe = $vals[0];
 			if ( $keepers{$probe} ) {
+				print OUT;
+			} elsif ($keepers{uc($probe)}) {
+				print OUT;
+			} elsif ($keepers{lc($probe)}) {
 				print OUT;
 			}
 		}
