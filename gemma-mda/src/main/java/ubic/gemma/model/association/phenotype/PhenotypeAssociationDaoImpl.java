@@ -415,8 +415,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( !isAdmin ) {
             sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, true );
         }
-
+        
+        
+        if (taxon!=null){
         sqlQuery += addTaxonToQuery( "and", taxon );
+        }
 
         populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
 

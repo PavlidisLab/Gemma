@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -186,12 +187,23 @@ public class GeneSetSearchImpl implements GeneSetSearch {
                 .searchOntologyForPhenotypes( StringUtils.strip( phenotypeQuery ), null );
 
         Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
-
+        
+        StopWatch timer = new StopWatch();
+        timer.start();
+        log.info(" Converting CharacteristicValueObjects collection(size:"+phenotypes.size()+") into GeneSets for  phenotype query "+ phenotypeQuery);
+        int convertedCount=0;
         for ( CharacteristicValueObject cvo : phenotypes ) {
             GeneSetValueObject converted = phenotypeAssociationToGeneSet( cvo, taxon );
-            if ( converted != null ) results.add( converted );
-        }
+            if ( converted != null ){            	
+            	convertedCount++;
+            	results.add( converted );
+            }
+        } 
+        log.info("added "+convertedCount+" results");
 
+        if (timer.getTime()>1000){
+        	log.info("done Converting CharacteristicValueObjects into GeneSets for  phenotype query "+ phenotypeQuery+" this took "+timer.getTime()+" ms");        	
+        }
         return results;
 
     }
@@ -277,6 +289,10 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         transientGeneSet.setName( uri2phenoID( term ) );
         transientGeneSet.setDescription( term.getValue() );
         transientGeneSet.setGeneIds( geneIds );
+        if (!gvos.isEmpty()){
+        	transientGeneSet.setTaxonId(gvos.iterator().next().getTaxonId());
+        	transientGeneSet.setTaxonName(gvos.iterator().next().getTaxonCommonName());
+        }
 
         return transientGeneSet;
     }
