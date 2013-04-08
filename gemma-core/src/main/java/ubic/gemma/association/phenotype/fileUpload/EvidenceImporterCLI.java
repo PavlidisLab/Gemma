@@ -2,11 +2,15 @@ package ubic.gemma.association.phenotype.fileUpload;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
@@ -25,11 +29,11 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValu
 
 public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
+    // specify what is the name of the imported file
+    private static String fileName = "OMIM.tsv";
+
     // configuration here can replace if needed to use the command line
     private static String[] initArguments() {
-
-        // specify what is the name of the imported file
-        String fileName = "CTD.tsv";
 
         String[] args = new String[12];
         // user
@@ -43,7 +47,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/FilesToImport/" + fileName;
         // create the evidence in the database
         args[6] = "-c";
-        args[7] = "false";
+        args[7] = "true";
         // environment we dont have all genes on a test database, if we are using the production let it know should find
         // true == production database
         // false == testDatabase, put gene not found to NCBI 1
@@ -144,6 +148,11 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             this.logger.close();
 
             System.out.println( "Import of evidence is finish" );
+            // if created on production write the logs
+            if ( this.prodDatabase && this.createInDatabase ) {
+
+                createImportLog();
+            }
 
         } catch ( Exception e ) {
             return e;
@@ -554,6 +563,10 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             else if ( officialSymbol.equalsIgnoreCase( "PSORS1C3" ) ) {
                 theChosenGene = findCorrectGene( "100130889", genesFound );
             }
+            // MICA => 100507436
+            else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
+                theChosenGene = findCorrectGene( "100507436", genesFound );
+            }
         } else if ( this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "rat" ) ) {
 
             // Itga2b => 685269
@@ -588,7 +601,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     private Gene findCorrectGene( String ncbiId, Collection<Gene> genesFound ) {
-        
+
         for ( Gene gene : genesFound ) {
 
             if ( gene.getNcbiGeneId().toString().equalsIgnoreCase( ncbiId ) ) {
@@ -714,6 +727,25 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             writeError( "no score found for a evidence using Symbol: " + evidence.getGeneOfficialSymbol()
                     + "   and taxon: " + this.geneNcbiIdMissingUsingTaxon );
         }
+    }
+
+    private void createImportLog() throws IOException {
+
+        Calendar c = Calendar.getInstance();
+        Date d1 = c.getTime();
+        PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter(
+                "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/fileImported/ImportTraceLog",
+                true ) ) );
+        out.println( "File: " + d1 + "_" + EvidenceImporterCLI.fileName );
+        out.close();
+
+        // move the file
+        File mvFile = new File( inputFile );
+        mvFile.renameTo( new File(
+                "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/fileImported/" + d1 + "_"
+                        + EvidenceImporterCLI.fileName ) );
+
+        System.out.println( inputFile + "" );
     }
 
 }
