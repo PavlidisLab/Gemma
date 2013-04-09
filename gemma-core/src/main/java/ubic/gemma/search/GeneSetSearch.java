@@ -72,7 +72,7 @@ public interface GeneSetSearch {
      * @param maxGoTermsProcessed
      * @return a collection with the hits
      */
-    public abstract Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed );
+    public abstract Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed, Integer maxGeneSetSize );
 
     /**
      * @param name

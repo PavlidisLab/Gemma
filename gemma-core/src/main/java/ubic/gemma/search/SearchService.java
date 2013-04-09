@@ -64,6 +64,18 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings );
+    
+    
+    /**
+     * This speedSearch method is probably unneccessary right now considering we only call from geneSearch, just putting it in
+     * because we probably want to use something like this on the general search page
+     * 
+     * @param settings
+     * 
+     * @return
+     * @see SearchService.search(SearchSettings settings)
+     */
+    public Map<Class<?>, List<SearchResult>> speedSearch( SearchSettings settings );
 
     /**
      * Makes an attempt at determining of the query term is a valid URI from an Ontology in Gemma or a Gene URI (a GENE
@@ -76,10 +88,12 @@ public interface SearchService {
      *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
      *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
      *        false can be an optimization if all you need is the id.
+     * @param webSpeedSearch If true, the search will be faster but the results may not be as broad as when this is false. 
+     * 		  Set to true for frontend combo boxes like the gene combo    
      * @return
      * @see SearchService.search(SearchSettings settings)
      */
-    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects );
+    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch );
 
     /**
      * @param query if empty, all experiments for the taxon are returned; otherwise, we use the search facility.

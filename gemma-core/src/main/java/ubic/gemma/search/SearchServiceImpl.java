@@ -379,7 +379,28 @@ public class SearchServiceImpl implements SearchService {
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings ) {
         Map<Class<?>, List<SearchResult>> searchResults = new HashMap<Class<?>, List<SearchResult>>();
         try {
-            searchResults = this.search( settings, true );
+            searchResults = this.search( settings, true, false );
+
+        } catch ( org.compass.core.engine.SearchEngineQueryParseException qpe ) {
+            log.error( "Query parse Error: " + settings + "; message=" + qpe.getMessage(), qpe );
+
+        } catch ( Exception e ) {
+            log.error( "Search error on settings: " + settings + "; message=" + e.getMessage(), e );
+        }
+
+        return searchResults;
+    }
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.search.SearchService#search(ubic.gemma.search.SearchSettings)
+     */
+    @Override
+    public Map<Class<?>, List<SearchResult>> speedSearch( SearchSettings settings ) {
+        Map<Class<?>, List<SearchResult>> searchResults = new HashMap<Class<?>, List<SearchResult>>();
+        try {
+            searchResults = this.search( settings, true, true );
 
         } catch ( org.compass.core.engine.SearchEngineQueryParseException qpe ) {
             log.error( "Query parse Error: " + settings + "; message=" + qpe.getMessage(), qpe );
@@ -415,10 +436,10 @@ public class SearchServiceImpl implements SearchService {
      * @see ubic.gemma.search.SearchService#search(ubic.gemma.search.SearchSettings, boolean)
      */
     @Override
-    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
+    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) {
 
         if ( StringUtils.isBlank( settings.getTermUri() ) && !settings.getQuery().startsWith( "http://" ) ) {
-            return generalSearch( settings, fillObjects );
+            return generalSearch( settings, fillObjects, webSpeedSearch );
         }
 
         // we only attempt an ontology search if the uri looks remotely like a url.
@@ -553,7 +574,7 @@ public class SearchServiceImpl implements SearchService {
             if ( query.length() < MINIMUM_EE_QUERY_LENGTH ) return eeIds;
 
             // Initial list
-            List<SearchResult> results = this.search( SearchSettingsImpl.expressionExperimentSearch( query ), false )
+            List<SearchResult> results = this.search( SearchSettingsImpl.expressionExperimentSearch( query ), false, false )
                     .get( ExpressionExperiment.class );
             for ( SearchResult result : results ) {
                 eeIds.add( result.getId() );
@@ -1877,17 +1898,23 @@ public class SearchServiceImpl implements SearchService {
      * Combines compass style search, the db style search, and the compositeSequence search and returns 1 combined list
      * with no duplicates.
      * 
-     * @param searchString
+     * @param searchSettings
+     * @param returnOnDbHit if true and if there is a match for a gene from the database, return immediately
      * @return
      * @throws Exception
      */
-    private Collection<SearchResult> geneSearch( final SearchSettings settings ) {
+    private Collection<SearchResult> geneSearch( final SearchSettings settings, boolean returnOnDbHit ) {
 
         StopWatch watch = startTiming();
 
         String searchString = settings.getQuery();
 
         Collection<SearchResult> geneDbList = databaseGeneSearch( settings );
+        
+        if (returnOnDbHit && geneDbList.size()>0){
+        	return geneDbList;
+        }
+        
         Set<SearchResult> combinedGeneList = new HashSet<SearchResult>();
         combinedGeneList.addAll( geneDbList );
 
@@ -2263,9 +2290,11 @@ public class SearchServiceImpl implements SearchService {
      *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
      *        false can be an optimization if all you need is the id. Note: filtering by taxon will not be done unless
      *        objects are filled
+     * @param webSpeedSearch if true, this call is probably coming from a web app combo box and results will be limited to
+     * 		  improve speed
      * @return
      */
-    protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects ) {
+    protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) {
         String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );
 
         if ( settings.getTaxon() == null ) {
@@ -2336,7 +2365,7 @@ public class SearchServiceImpl implements SearchService {
 
         Collection<SearchResult> genes = null;
         if ( settings.getSearchGenes() ) {
-            genes = geneSearch( settings );
+            genes = geneSearch( settings, webSpeedSearch );
             accreteResults( rawResults, genes );
         }
 
@@ -2443,8 +2472,8 @@ public class SearchServiceImpl implements SearchService {
         SearchSettings settings = query.getSearchSettings();
 
         if ( StringUtils.isBlank( settings.getTermUri() ) && !settings.getQuery().startsWith( "http://" ) ) {
-            // fill objects=yes
-            searchResults = generalSearch( settings, true );
+            // fill objects=ture, speedySearch=false
+            searchResults = generalSearch( settings, true, false );
         } else {
             // we only attempt an ontology search if the uri looks remotely like a url.
             searchResults = ontologyUriSearch( settings );

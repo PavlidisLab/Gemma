@@ -140,7 +140,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
      */
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) {
-        return findByGoTermName( goTermName, taxon, null );
+        return findByGoTermName( goTermName, taxon, null, null );
     }
 
     /*
@@ -150,7 +150,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
      * java.lang.Integer)
      */
     @Override
-    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed ) {
+    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed, Integer maxGeneSetSize ) {
         Collection<? extends OntologyResource> matches = this.geneOntologyService.findTerm( StringUtils
                 .strip( goTermName ) );
 
@@ -159,14 +159,17 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         Integer termsProcessed = 0;
 
         for ( OntologyResource t : matches ) {
-            GeneSet converted = goTermToGeneSet( t, taxon );
-            if ( converted != null ) results.add( converted );
+            GeneSet converted = goTermToGeneSet( t, taxon, maxGeneSetSize );
+            //converted will be null if its size is more than maxGeneSetSize
+            if ( converted != null ) {
+            	results.add( converted );
 
-            if ( maxGoTermsProcessed != null ) {
-                termsProcessed++;
-                if ( termsProcessed > maxGoTermsProcessed ) {
-                    return results;
-                }
+            	if ( maxGoTermsProcessed != null ) {
+            		termsProcessed++;
+            		if ( termsProcessed > maxGoTermsProcessed ) {
+            			return results;
+            		}
+            	}
             }
         }
 
@@ -228,10 +231,15 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return geneSetService.findByName( StringUtils.strip( name ), taxon );
     }
 
+    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon){
+    	return goTermToGeneSet( term, taxon, null); 
+    	
+    }
+    
     /**
      * Convert a GO term to a 'GeneSet', including genes from all child terms.
      */
-    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon ) {
+    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon, Integer maxGeneSetSize ) {
         if ( term == null ) return null;
         if ( term.getUri() == null ) return null;
 
@@ -253,6 +261,10 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             	genes.addAll( this.gene2GoService.findByGOTerm( goId, taxon ) );
             } else{
             	genes.addAll(this.gene2GoService.findByGOTerm( goId) );
+            }
+            
+            if (maxGeneSetSize!=null && genes.size()>maxGeneSetSize){
+            	return null;            	
             }
         }
 
