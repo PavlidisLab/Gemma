@@ -28,6 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,8 +43,10 @@ import ubic.gemma.util.ConfigUtils;
 
 @Controller
 public class RssFeedController {
+    private static Log log = LogFactory.getLog( RssFeedController.class.getName() );
 	
 	@Autowired private WhatsNewService whatsNewService;
+	@Autowired private CustomRssViewer customRssViewer;
     
 	public RssFeedController() {
 	    // Dummy default constructor
@@ -62,8 +66,10 @@ public class RssFeedController {
 	@RequestMapping(value = {"/rssfeed"}, method = RequestMethod.GET)
 	public ModelAndView getLatestExperiments( HttpServletRequest request, HttpServletResponse response) {
 		ModelAndView mav = new ModelAndView();
+		log.info( "Checking if RSS is enabled." );
 		if (ConfigUtils.getBoolean("gemma.rss.enabled"))
 		{
+		    log.info( "RSS is enabled. Loading Experiments" );
 			WhatsNew wn = whatsNewService.retrieveReport();
 			if (wn == null) {
 				Calendar c = Calendar.getInstance();
@@ -71,7 +77,7 @@ public class RssFeedController {
 				date = DateUtils.addWeeks(date, -1);
 				wn = whatsNewService.getReport(date);
 			}
-			mav.setViewName("rssViewer");
+			mav.setView( customRssViewer );
 			
 			int updatedExperimentsCount = 0;
 			int newExperimentsCount = 0;
@@ -99,6 +105,7 @@ public class RssFeedController {
 			mav.addObject("updateCount", updatedExperimentsCount);
 			mav.addObject("newCount", newExperimentsCount);
 		}
+		log.info( "RSS experiments loaded." );
 		return mav;
 	}
 	
