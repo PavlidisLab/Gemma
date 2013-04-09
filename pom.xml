@@ -267,6 +267,16 @@
 			<version>3.0.2.RELEASE</version>
 		</dependency>
 		<dependency>
+		    <groupId>org.springframework.social</groupId>
+		    <artifactId>spring-social-core</artifactId>
+		    <version>1.0.2.RELEASE</version>
+		</dependency> 
+		<dependency>
+		    <groupId>org.springframework.social</groupId>
+		    <artifactId>spring-social-twitter</artifactId>
+		    <version>1.0.2.RELEASE</version>
+		</dependency> 
+		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>
 			<version>1.6.6</version>
