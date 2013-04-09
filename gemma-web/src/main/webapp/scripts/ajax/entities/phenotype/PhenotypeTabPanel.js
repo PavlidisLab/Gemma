@@ -18,7 +18,7 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 				storeAutoLoad: isFirstTab,
 				phenotypeStoreProxy: this.phenotypeStoreProxy
 			}
-		}
+		}.createDelegate(this);
     	
 		var gridPanels = [
 			new Gemma.PhenotypeTreeGridPanel(getGridPanelConfig(true)),
@@ -80,7 +80,7 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
 				var showOnlyEditable; 
 				
 				if (filters == null) {
-					taxonId = null;
+					taxonId = '-1';
 					showOnlyEditable = false; 
 				} else {
 					taxonId = filters.taxonId;

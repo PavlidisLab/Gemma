@@ -810,7 +810,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					function() {
 				    	evidenceStore.reload({
 				    		params: {
-								taxonId: null,
+								taxonId: '-1',
 								showOnlyEditable: false,
 				    			geneId: geneId
 				    		}
