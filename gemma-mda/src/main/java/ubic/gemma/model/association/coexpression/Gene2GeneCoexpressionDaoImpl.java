@@ -363,7 +363,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                     new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
                     new Object[] { queryGeneId, unseen, stringency, sourceAnalysis } );
             if ( timer.getTime() > 1000 ) {
-                log.info( firstQueryString + " for genes " + Arrays.toString( genes.toArray() ) + " and sourceAnalysis"
+                log.info( firstQueryString + " for sourceAnalysis"
                         + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
             }
 
@@ -376,8 +376,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                         new Object[] { queryGeneId, unseen, stringency, sourceAnalysis } ) );
 
                 if ( timer.getTime() > 1000 ) {
-                    log.info( "!SINGLE_QUERY_FOR_LINKS " + secondQueryString + " for genes "
-                            + Arrays.toString( genes.toArray() ) + " and sourceAnalysis" + sourceAnalysis.getId()
+                    log.info( "!SINGLE_QUERY_FOR_LINKS " + secondQueryString + " for sourceAnalysis" + sourceAnalysis.getId()
                             + " took " + timer.getTime() + "ms" );
                 }
             }
