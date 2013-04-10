@@ -37,9 +37,10 @@ public class ChannelUtils {
         return name.matches( "CH1B(N)?_(MEDIAN|MEAN)" ) || name.equals( "CH1_BKD" )
                 || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
                 || name.toUpperCase().equals( "BACKGROUND_CHANNEL 1MEDIAN" )
-                || name.toUpperCase().equals( "G_BG_MEDIAN" ) || name.equals( "Ch1BkgMedian" )
-                || name.equals( "ch1.Background" ) || name.toUpperCase().equals( "CH1_BKG_MEAN" )
-                || name.equals( "CH1_BKD_ Median" ) || name.equals( "BKG1Mean" );
+                || name.toUpperCase().equals( "CH1_BKD_MEDIAN" ) || name.toUpperCase().equals( "G_BG_MEDIAN" )
+                || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" )
+                || name.toUpperCase().equals( "CH1_BKG_MEAN" ) || name.equals( "CH1_BKD_ Median" )
+                || name.equals( "BKG1Mean" );
     }
 
     /**
@@ -52,9 +53,10 @@ public class ChannelUtils {
         return name.matches( "CH2B(N)?_(MEDIAN|MEAN)" ) || name.equals( "CH2_BKD" )
                 || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
                 || name.toUpperCase().equals( "BACKGROUND_CHANNEL 2MEDIAN" )
-                || name.toUpperCase().equals( "R_BG_MEDIAN" ) || name.equals( "Ch2BkgMedian" )
-                || name.equals( "ch2.Background" ) || name.toUpperCase().equals( "CH2_BKG_MEAN" )
-                || name.equals( "CH2_BKD_ Median" ) || name.equals( "BKG2Mean" );
+                || name.toUpperCase().equals( "CH2_BKD_MEDIAN" ) || name.toUpperCase().equals( "R_BG_MEDIAN" )
+                || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" )
+                || name.toUpperCase().equals( "CH2_BKG_MEAN" ) || name.equals( "CH2_BKD_ Median" )
+                || name.equals( "BKG2Mean" );
     }
 
     /**
