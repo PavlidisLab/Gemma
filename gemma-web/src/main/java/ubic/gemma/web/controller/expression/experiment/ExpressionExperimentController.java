@@ -1911,9 +1911,11 @@ public class ExpressionExperimentController {
             public int compare( ExpressionExperimentValueObject o1, ExpressionExperimentValueObject o2 ) {
                 return o1.getDateLastUpdated().compareTo( o2.getDateLastUpdated() );
             }
-        } );
-        initialListOfValueObject = initialListOfValueObject.subList( 0,
-                Math.max( limit, initialListOfValueObject.size() - 1 ) );
+        } );        
+        
+        if ( limit < initialListOfValueObject.size() ) {
+            initialListOfValueObject = initialListOfValueObject.subList( 0, limit );
+        }
         return initialListOfValueObject;
     }
 
