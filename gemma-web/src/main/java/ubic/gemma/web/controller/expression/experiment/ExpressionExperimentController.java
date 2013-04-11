@@ -1752,19 +1752,7 @@ public class ExpressionExperimentController {
 
         if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
 
-        if ( limit != 0 && eeValObjectCol.size() > Math.abs( limit ) ) {
-            log.info( "Still have to filter" );
-            Collections.sort( eeValObjectCol, new Comparator<ExpressionExperimentValueObject>() {
-
-                @Override
-                public int compare( ExpressionExperimentValueObject o1, ExpressionExperimentValueObject o2 ) {
-                    return -o1.getDateLastUpdated().compareTo( o2.getDateLastUpdated() );
-                }
-            } );
-
-            eeValObjectCol = eeValObjectCol.subList( 0, Math.abs( limit ) );
-
-        }
+        
 
         assert eeValObjectCol.size() <= Math.abs( limit );
 
@@ -1859,6 +1847,14 @@ public class ExpressionExperimentController {
         /*
          * FIXME remove troubled? Needs to be optional. For dataset management page, don't.
          */
+        
+        //the front end has the brilliant logic of sending in a negative limit to denote sorting in date ascending order
+        boolean descending;
+        if (limit==null || limit>0){
+            descending = true;                    
+        }else{
+            descending = false;
+        }
 
         if ( filterDataForUser ) {
             try {
@@ -1873,12 +1869,14 @@ public class ExpressionExperimentController {
 
                 Collection<Long> ownedOrShared = EntityUtils.getIds( ees );
 
-                valueobjects = loadInitialSetOfValueObjects( ownedOrShared, taxon );
+                
+                
+                valueobjects = loadInitialSetOfValueObjects( ownedOrShared, taxon, descending );
             } catch ( AccessDeniedException e ) {
                 return new ArrayList<ExpressionExperimentValueObject>();
             }
         } else {
-            valueobjects = loadInitialSetOfValueObjects( eeIds, taxon );
+            valueobjects = loadInitialSetOfValueObjects( eeIds, taxon, descending );
         }
 
         // Hide public data sets if desired.
@@ -1889,7 +1887,7 @@ public class ExpressionExperimentController {
 
         // Finally, trim the list.
         if ( limit != null ) {
-            valueobjects = sortAndFilterByUpdated( limit, valueobjects );
+            valueobjects = getSubList( Math.abs(limit), valueobjects );
         }
 
         if ( timer.getTime() > 1000 ) {
@@ -1904,14 +1902,8 @@ public class ExpressionExperimentController {
      * @param initialListOfValueObject
      * @return
      */
-    private List<ExpressionExperimentValueObject> sortAndFilterByUpdated( Integer limit,
+    private List<ExpressionExperimentValueObject> getSubList( Integer limit,
             List<ExpressionExperimentValueObject> initialListOfValueObject ) {
-        Collections.sort( initialListOfValueObject, new Comparator<ExpressionExperimentValueObject>() {
-            @Override
-            public int compare( ExpressionExperimentValueObject o1, ExpressionExperimentValueObject o2 ) {
-                return o1.getDateLastUpdated().compareTo( o2.getDateLastUpdated() );
-            }
-        } );        
         
         if ( limit < initialListOfValueObject.size() ) {
             initialListOfValueObject = initialListOfValueObject.subList( 0, limit );
@@ -1926,7 +1918,7 @@ public class ExpressionExperimentController {
      * @param taxon
      * @return
      */
-    private List<ExpressionExperimentValueObject> loadInitialSetOfValueObjects( Collection<Long> eeIds, Taxon taxon ) {
+    private List<ExpressionExperimentValueObject> loadInitialSetOfValueObjects( Collection<Long> eeIds, Taxon taxon, boolean descending ) {
         List<ExpressionExperimentValueObject> initialListOfValueObject = null;
         if ( eeIds != null && !eeIds.isEmpty() ) {
 
@@ -1946,11 +1938,11 @@ public class ExpressionExperimentController {
         } else if ( taxon != null ) {
             // everything for taxon
             initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
-                    expressionExperimentService.loadAllValueObjectsTaxon( taxon ) );
+                    expressionExperimentService.loadAllValueObjectsTaxonOrdered("dateLastUpdated",descending, taxon ) );
         } else {
             // everything
             initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
-                    expressionExperimentService.loadAllValueObjects() );
+                    expressionExperimentService.loadAllValueObjectsOrdered("dateLastUpdated",descending) );
         }
         return initialListOfValueObject;
     }

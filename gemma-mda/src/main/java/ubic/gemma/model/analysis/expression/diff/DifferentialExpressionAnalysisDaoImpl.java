@@ -694,24 +694,23 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
         for ( BioAssay ba : ( Collection<BioAssay> ) bioAssaySet.getBioAssays() ) {
               BioMaterial bm = ba.getSampleUsed() ;
-              
-            if ( bm != null ) {
-                for ( FactorValue fv : bm.getFactorValues() ) {
 
-                    Long experimentalFactorId = fv.getExperimentalFactor().getId();
+            for ( FactorValue fv : bm.getFactorValues() ) {
 
-                    if ( subsetFactor != null && experimentalFactorId.equals( subsetFactor.getId() ) ) {
-                        continue;
-                    }
+                Long experimentalFactorId = fv.getExperimentalFactor().getId();
 
-                    if ( !avo.getFactorValuesUsed().containsKey( experimentalFactorId ) ) {
-                        avo.getFactorValuesUsed().put( experimentalFactorId, new HashSet<FactorValueValueObject>() );
-                    }
-
-                    avo.getFactorValuesUsed().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
-
+                if ( subsetFactor != null && experimentalFactorId.equals( subsetFactor.getId() ) ) {
+                    continue;
                 }
+
+                if ( !avo.getFactorValuesUsed().containsKey( experimentalFactorId ) ) {
+                    avo.getFactorValuesUsed().put( experimentalFactorId, new HashSet<FactorValueValueObject>() );
+                }
+
+                avo.getFactorValuesUsed().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
+
             }
+
         }
     }
 
