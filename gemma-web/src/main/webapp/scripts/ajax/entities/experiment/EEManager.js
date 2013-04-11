@@ -20,7 +20,7 @@ Gemma.EEManager = Ext
                      { name : "description" }, { name : "taxon" }, { name : "taxonId" }, { name : "numAnnotations" },
                      { name : "numPopulatedFactors" }, { name : "publik", type : "boolean" },
                      { name : "shared", type : "boolean" }, { name : "writeableByUser" },
-                     { name : "usedOwned" }, { name : "sourceExperiment" },
+                     { name : "userOwned" }, { name : "sourceExperiment" },
                      { name : "coexpressionLinkCount" }, { name : "diffExpressedProbes" }, { name : "validated" },
                      { name : 'validatedAnnotations' }, { name : "troubled", type : "boolean" },
                      { name : "troubleDetails", type : "string" }, { name : "missingValueAnalysisEventType" },
