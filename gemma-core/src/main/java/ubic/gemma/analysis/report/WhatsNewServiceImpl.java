@@ -408,6 +408,9 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         for ( Auditable auditable : items ) {
             if ( auditable instanceof ExpressionExperiment ) {
+                // if ( securityService.isPrivate( ( ExpressionExperiment ) auditable ) ) {
+                // continue;
+                // }
                 ees.add( ( ExpressionExperiment ) auditable );
             }
         }
