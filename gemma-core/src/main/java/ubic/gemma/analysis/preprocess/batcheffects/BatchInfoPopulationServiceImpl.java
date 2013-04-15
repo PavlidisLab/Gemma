@@ -197,7 +197,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         removeExistingBatchFactor( ee );
 
-        ExperimentalFactor factor = batchInfoPopulationHelperService.convertToFactor( ee, dates );
+        ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
 
         if ( !dates.isEmpty() ) {
             int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues()

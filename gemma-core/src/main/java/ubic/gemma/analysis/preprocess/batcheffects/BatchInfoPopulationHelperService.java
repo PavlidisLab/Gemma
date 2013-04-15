@@ -32,6 +32,6 @@ public interface BatchInfoPopulationHelperService {
      * @param dates
      * @return
      */
-    public ExperimentalFactor convertToFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates );
+    public ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates );
 
 }

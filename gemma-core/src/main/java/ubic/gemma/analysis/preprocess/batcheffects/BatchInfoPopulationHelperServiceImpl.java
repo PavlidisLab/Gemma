@@ -90,7 +90,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * @return
      */
     @Override
-    public ExperimentalFactor convertToFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
+    public ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
 
         /*
          * Go through the dates and convert to factor values.
