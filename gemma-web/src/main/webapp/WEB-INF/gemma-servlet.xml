@@ -4,12 +4,12 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop"
 	xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
-
+	
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/context 
 	http://www.springframework.org/schema/context/spring-context-3.0.xsd 
-
+	
 	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
 	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd">
 
@@ -712,7 +712,6 @@
 			<dwr:converter id="characteristicConverter" class="ubic.gemma.web.remote.CharacteristicConverter" />
 			<dwr:converter id="standardQuantitationTypeConverter" class="ubic.gemma.web.remote.StandardQuantitationTypeConverter" />
 			<dwr:converter id="scaleTypeConverter" class="ubic.gemma.web.remote.ScaleTypeConverter" />
-			<dwr:converter id="ontologyTermConverter" class="ubic.gemma.web.remote.OntologyTermConverter" />
 			<dwr:converter id="goEvidenceCodeConverter" class="ubic.gemma.web.remote.GOEvidenceCodeConverter" />
 			<dwr:converter id="doublePointConverter" class="ubic.gemma.web.remote.DoublePointConverter" />
 			<dwr:converter id="diffAnalysisTypeConverter" class="ubic.gemma.web.remote.DiffAnalysisTypeConverter" />
@@ -721,15 +720,32 @@
 
 		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject"
 			javascript="FreeTextExpressionExperimentResultsValueObject" />
+			
 		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject"
-			javascript="SessionBoundExpressionExperimentSetValueObject" />
+			javascript="SessionBoundExpressionExperimentSetValueObject"  >
+			<dwr:exclude method="securableClass" /> 
+		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetValueObject" javascript="GeneSetValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject" javascript="FreeTextGeneResultsValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetValueObject" javascript="GeneSetValueObject" >
+			<dwr:exclude method="securableClass" /> 
+		</dwr:convert>
+		
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject" javascript="FreeTextGeneResultsValueObject"  >
+			<dwr:exclude method="securableClass" /> 
+		</dwr:convert>
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject"  >
+			<dwr:exclude method="securableClass" /> 
+		</dwr:convert>
+		
 		<dwr:convert type="bean" class="ubic.gemma.genome.gene.PhenotypeGroupValueObject" javascript="PhenotypeGroupValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject" javascript="DatabaseBackedGeneSetValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject" javascript="SessionBoundGeneSetValueObject" />
+		
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject" javascript="DatabaseBackedGeneSetValueObject"  >
+			<dwr:exclude method="securableClass" /> 
+		</dwr:convert>
+		
+		<dwr:convert type="bean" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject" javascript="SessionBoundGeneSetValueObject"  >
+			<dwr:exclude method="securableClass" /> 
+		</dwr:convert>
 
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.BibliographicReferenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.CitationValueObject" javascript="CitationValueObject" />
@@ -744,19 +760,29 @@
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject"
 			javascript="SimpleTreeValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject" />
+		
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneValueObject" javascript="GeneValueObject" />
+		
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject"
 			javascript="EvidenceValueObject" />
+			
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject"
 			javascript="ExperimentalEvidenceValueObject" />
+			
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject"
 			javascript="GroupEvidenceValueObject" />
+			
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject"
 			javascript="LiteratureEvidenceValueObject" />
+			
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject"
 			javascript="DiffExpressionEvidenceValueObject" />
+			
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject"
-			javascript="ExpressionExperimentSetValueObject" />
+			javascript="ExpressionExperimentSetValueObject" >
+			<dwr:exclude method="securableClass" /> 
+		</dwr:convert>
+		
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
 			javascript="ExpressionExperimentValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject"
@@ -967,7 +993,9 @@
 		<dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.Characteristic" />
 		<dwr:convert type="goEvidenceCodeConverter" class="ubic.gemma.model.association.GOEvidenceCode" />
 		<dwr:convert type="classConverter" class="java.lang.Class" />
-		<dwr:convert type="ontologyTermConverter" class="ubic.basecode.ontology.model.OntologyTermImpl">
+		
+		<!-- OntologyTerm might not be needed; we use Characteristics -->
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyTermImpl">
 			<dwr:include method="term" />
 			<dwr:include method="uri" />
 			<dwr:include method="label" />
