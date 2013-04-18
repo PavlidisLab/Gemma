@@ -1,4 +1,3 @@
-
 Ext.namespace('Gemma');
 
 /**
@@ -10,15 +9,12 @@ Ext.namespace('Gemma');
  * @version $Id: AnalysisResultsSearchForm.js,v 1.34 2011/05/06 04:02:25 paul
  *          Exp $
  */
-Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
-
-	// collapsible:true,
+Gemma.AnalysisResultsSearchForm = Ext.extend (Ext.FormPanel, {
 	layout : 'table',
 	layoutConfig : {
 		columns : 5
 	},
 	width : 900,
-	// height : 200,
 	frame : false,
 	border : false,
 	bodyBorder : false,
@@ -30,73 +26,79 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 	stateful : false,
 	stateEvents : ["beforesearch"],
-	eeSetReady : false,
-	taxonId: null,
 
+    eeSetReady : false,
+	taxonId: null,
 	defaultIsDiffEx: true,
-	
 	geneIds : [],
-	geneGroupId : null, // keep track of what gene group has been selected
 	experimentIds : [],
 
-	
-	handleWarning : function(msg, e) {
+    /**
+     * @private
+     *
+     * @param msg
+     */
+	handleWarning : function (msg) {
 		if (Ext.get("analysis-results-search-form-messages")) {
+            msg = (msg === "") ? "Error retrieving results" : msg;
+
 			Ext.DomHelper.overwrite("analysis-results-search-form-messages", {
 				tag: 'img',
 				src: '/Gemma/images/icons/warning.png'
 			});
 			
-			if (!(msg.length === 0)) {
-				Ext.DomHelper.append("analysis-results-search-form-messages", {
-					tag: 'span',
-					html: "&nbsp;&nbsp;" + msg
-				});
-			}
-			else {
-				Ext.DomHelper.append("analysis-results-search-form-messages", {
-					tag: 'span',
-					html: "&nbsp;&nbsp;Error retrieving results."
-				});
-			}
-		}
-		else {
-			if (!(msg.length === 0)) {
-				this.fireEvent("handleError", msg);
-			}
-			else {
-				this.fireEvent("handleError", "Error retrieving results.");
-			}
+			Ext.DomHelper.append("analysis-results-search-form-messages", {
+				tag: 'span',
+				html: "&nbsp;&nbsp;" + msg
+			});
+		} else {
+            this.fireEvent("search_error", msg);
 		}
 	},
 
-	handleError : function(msg, e) {
-		this.handleWarning(msg,e);
+    /**
+     * @private
+     *
+     * @param msg
+     * @param e
+     */
+	handleError : function (msg, e) {
+		this.handleWarning( msg );
 		
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, e);
-		if (e && !(msg.length === 0)) {
+		if (e && msg.length > 0) {
 			Ext.Msg.alert("Error", e + "/n" + msg);
 		}
 	},
 
-	clearError : function() {
+    /**
+     * @private
+     */
+	clearError: function() {
 		if (Ext.get("analysis-results-search-form-messages")) {
 			Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
 		}
 	},
 
-	wereSelectionsModified: function(){
+    /**
+     * @private
+     *
+     * @return {boolean}
+     */
+	wereSelectionsModified: function() {
 		var wereModified = false;
-		this.geneChoosers.items.each(function(){
+
+        this.geneChoosers.items.each( function() {
 			if ( this instanceof Gemma.GeneSearchAndPreview && this.getSelectedGeneOrGeneSetValueObject()) {
-				if( this.listModified){
+				if ( this.listModified){
 					wereModified = true;
 				}
 			}
 		});
-		if(!wereModified){
-			this.experimentChoosers.items.each(function(){
+
+		if (!wereModified) {
+			this.experimentChoosers.items.each( function() {
 				if ( this instanceof Gemma.ExperimentSearchAndPreview && this.getSelectedExperimentOrExperimentSetValueObject()) {
 					if( this.listModified){
 						wereModified = true;
@@ -107,9 +109,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 		return wereModified;
 	},
-	getGeneSessionGroupQueries: function(){
+
+    /**
+     *
+     * @return {Array}
+     */
+	getGeneSessionGroupQueries: function() {
 		var queries = [];
-		this.geneChoosers.items.each(function(){
+		this.geneChoosers.items.each( function() {
 			if ( this instanceof Gemma.GeneSearchAndPreview && this.getSelectedGeneOrGeneSetValueObject()) {
 				if( this.queryUsedToGetSessionGroup !== null ){
 					queries.push(this.queryUsedToGetSessionGroup);
@@ -118,6 +125,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 		return queries;
 	},
+
+    /**
+     *
+     * @return {Array}
+     */
 	getExperimentSessionGroupQueries: function(){
 		var queries = [];
 		this.experimentChoosers.items.each(function(){
@@ -129,24 +141,30 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 		return queries;
 	},
-	getSelectedGeneAndGeneSetValueObjects : function() {
+
+    /**
+     *
+     * @return {Array}
+     */
+	getSelectedGeneAndGeneSetValueObjects: function() {
 		var selectedVOs = [];
-		this.geneChoosers.items.each(function(){
+		this.geneChoosers.items.each( function() {
 			if ( this instanceof Gemma.GeneSearchAndPreview && this.getSelectedGeneOrGeneSetValueObject() ) {
-				selectedVOs.push(this.getSelectedGeneOrGeneSetValueObject());
+				selectedVOs.push( this.getSelectedGeneOrGeneSetValueObject() );
 			}
 		});
 		return selectedVOs;
 	},
+
 	/**
-	 * get selections as geneSetValueObjects (selected single genes will be wrapped as single-member geneSets)
+	 * Get selections as geneSetValueObjects (selected single genes will be wrapped as single-member geneSets)
 	 */
 	getSelectedAsGeneSetValueObjects : function() {
 		var selectedVOs = this.getSelectedGeneAndGeneSetValueObjects();
 		var selectedAsGeneSets = [];
 		var i;
-		for(i = 0; i<selectedVOs.length;i++){
-			if(selectedVOs[i] instanceof GeneValueObject){
+		for (i = 0; i < selectedVOs.length; i++) {
+			if (selectedVOs[i] instanceof GeneValueObject) {
 				var gene = selectedVOs[i];
 				var singleGeneSet = new SessionBoundGeneSetValueObject();
 				singleGeneSet.id = null;
@@ -158,24 +176,29 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				singleGeneSet.taxonId = gene.taxonId;
 				singleGeneSet.modified = false;
 				selectedAsGeneSets.push(singleGeneSet);
-			}else{
+			} else {
 				selectedAsGeneSets.push(selectedVOs[i]);
 			}
 		}
 		return selectedAsGeneSets;
 	},
 
+    /**
+     *
+     * @return {Array}
+     */
 	getSelectedExperimentAndExperimentSetValueObjects : function() {
 		var selectedVOs = [];
-		this.experimentChoosers.items.each(function() {
+		this.experimentChoosers.items.each ( function() {
 			if ( this instanceof Gemma.ExperimentSearchAndPreview  && this.getSelectedExperimentOrExperimentSetValueObject() ) {
 				selectedVOs.push(this.getSelectedExperimentOrExperimentSetValueObject());
 			}
 		});
 		return selectedVOs;
 	},
+
 	/**
-	 * get selections as expressionExperimentSetValueObjects (selected single genes will be wrapped as single-member experimentSets)
+	 * Get selections as expressionExperimentSetValueObjects (selected single genes will be wrapped as single-member experimentSets)
 	 */
 	getSelectedAsExperimentSetValueObjects : function() {
 		var selectedVOs = this.getSelectedExperimentAndExperimentSetValueObjects();
@@ -202,68 +225,39 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		return selectedAsExperimentSets;
 	},
 
-	getExperimentIds : function() {
-		var eeIds = [];
-		var i;
-		var j;
-		var selectedVOs = this.getSelectedExperimentAndExperimentSetValueObjects();
-		for (i = 0; i < selectedVOs.length; i++) {
-			var vo = selectedVOs[i];
-			if ( vo instanceof ExpressionExperimentValueObject) {
-				eeIds.push(vo.id);
-			} else if (vo instanceof ExpressionExperimentSetValueObject) {
-				eeIds = eeIds.concat(vo.expressionExperimentIds);
-			}
-		}
-		return eeIds;
-	},
+    /**
+     *
+     *
+     *
+     */
+    runSearch : function() {
+        // TODO: relay events...
 
-	getGeneIds : function() {
-		var geneIds = [];
-		var i;
-		var j;
-		var selectedVOs = this.getSelectedGeneAndGeneSetValueObjects();
-		for (i = 0; i < selectedVOs.length; i++) {
-			var vo = selectedVOs[i];
-			if (vo instanceof GeneValueObject) {
-				geneIds.push(vo.id);
-			} else if (vo instanceof GeneSetValueObject) {
-				geneIds = geneIds.concat(vo.geneIds);
-			}
-		}
-		return geneIds;
-	},
-	
-	runSearch :function(){
-					
 		this.searchMethods = new Gemma.AnalysisResultsSearchMethods({
 			taxonId: this.getTaxonId(),
-			taxonName: this.getTaxonName(),
-			showClassicDiffExResults: this.showClassicDiffExResults
+			taxonName: this.getTaxonName()
 		});
 		
 		this.searchMethods.on('beforesearch', function(){
 			this.fireEvent('beforesearch', this);
 		}, this);	
 				
-		this.searchMethods.on('showDiffExResults', function(result, data){
+		this.searchMethods.on('differential_expression_search_query_ready', function(result, data){
 			Ext.apply(data,{
 				geneSessionGroupQueries : this.getGeneSessionGroupQueries(),
 				experimentSessionGroupQueries : this.getExperimentSessionGroupQueries(),
 				selectionsModified : this.wereSelectionsModified(),
 				showTutorial: this.runningExampleQuery
 			});
-			this.fireEvent('showDiffExResults', this, result, data);
+			this.fireEvent('differential_expression_search_query_ready', this, result, data);
 		}, this);
 				
-		this.searchMethods.on('showCoexResults', function(result){
-			this.fireEvent('showCoexResults', this, result, this.runningExampleQuery);
+		this.searchMethods.on('coexpression_search_query_ready', function(searchCommand){
+			this.fireEvent('coexpression_search_query_ready', this, searchCommand, this.runningExampleQuery);
 		}, this);
 				
-		this.searchMethods.on('aftersearch', function(result, suppressNextEvent){
+		this.observableSearchResults.on('aftersearch', function(result){
 			this.loadMask.hide();
-			this.fireEvent('aftersearch', this, result);
-			
 		}, this);
 
 		this.searchMethods.on('warning', function(msg, e){
@@ -281,8 +275,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.searchMethods.on('searchAborted', function(){
 			this.loadMask.hide();
 		}, this);
-		
-		
+
 		this.collapsePreviews();
 		this.collapseExamples();
 		
@@ -290,45 +283,28 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
 						msg : Gemma.StatusText.Searching.analysisResults,
 						msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
-					});
+			});
 		}
 		this.loadMask.show();
+
 		if (this.coexToggle.pressed) {
-			this.searchMethods.searchCoexpression(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
+			this.searchMethods.searchCoexpression( this.getSelectedAsGeneSetValueObjects(),
+                                                   this.getSelectedAsExperimentSetValueObjects() );
 		} else {
-			this.searchMethods.searchDifferentialExpression(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
+			this.searchMethods.searchDifferentialExpression( this.getSelectedAsGeneSetValueObjects(),
+                                                             this.getSelectedAsExperimentSetValueObjects() );
 		}
 	},
 		
-	/**
-	 * public method to re-run the previous search with different options
-	 * used if the user changes an option (ex stringency)
-	 * applies new options to csc and makes a call to doCoexpressionSearch
-	 * 
-	 * no null or undefined parameters!
-	 * 
-	 * @param {Object} stringency must be an integer
-	 * @param {Object} probeLevel must be true or false
-	 * @param {Object} queryGenesOnly must be true or false
-	 */
-	redoRecentCoexpressionSearch: function(stringency, probeLevel, queryGenesOnly){
-		if (!this.searchMethods || this.searchMethods.getLastCSC() === null) {
-			return "No search to repeat";
-		}
-		
-		this.clearError();
-		var lastCSC = this.searchMethods.getLastCSC();
-		Ext.apply(lastCSC, {
-			stringency: stringency,
-			forceProbeLevelSearch: probeLevel,
-			queryGenesOnly: queryGenesOnly
-		});
-		this.searchMethods.doCoexpressionSearch(lastCSC);
-		return "";
-	},
+    /**
+     *
+     *
+     * @return {csc}
+     */
 	getLastCoexpressionSearchCommand: function(){
 		return (this.searchMethods)?this.searchMethods.getLastCoexpressionSearchCommand():null;
 	},
+
 	initComponent : function() {
 
 		// experiment chooser panels
@@ -423,10 +399,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					html: 'these experiments',
 					style: 'text-align:center;font-size:1.4em;',
 					tpl: new Ext.XTemplate('these <span class="blue-text-not-link" style="font-weight:bold " ',
-						 'ext:qtip="'+Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'">',
-						 '{taxonCommonName} </span> experiments ', 
-						 '<img src="/Gemma/images/icons/question_blue.png" title="'+
-						 Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'"/> '),
+                         'ext:qtip="'+Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'">',
+                         '{taxonCommonName} </span> experiments ',
+                         '<img src="/Gemma/images/icons/question_blue.png" title="'+
+                         Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'"/> '),
 					tplWriteMode: 'overwrite'
 				});
 				this.theseGenesPanel = new Ext.Panel({
@@ -480,7 +456,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				searchBar: this.searchBar,
 				listeners: {
 					render: function(c) {			
-						// Ext bug workaround 						
+                        // Ext bug workaround
 						var floatType = Ext.isIE ? 'styleFloat' : 'cssFloat'; 
 						c.header.child('span').applyStyles(floatType + ':left;padding:5px 5px 0 0');
 						this.searchBar.render(c.header, 1);
@@ -491,7 +467,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							single: true
 						});
 					}
-        
 				},
 				items: [{
 					layout: 'table', // needs to be table so panel stretches with content growth
@@ -548,23 +523,18 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 		Gemma.AnalysisResultsSearchForm.superclass.initComponent.call(this);
 		
-		
-		
-		this.on('queryUpdateFromCoexpressionViz', function (genesToPreview, genesToPreviewIds, taxonId, taxonName) {			
-			
+		this.on('queryUpdateFromCoexpressionViz', function (genesToPreview, genesToPreviewIds, taxonId, taxonName) {
 			this.getEl().unmask();
-			
-			this.geneChoosers.items.each(function() {
+
+			this.geneChoosers.items.each( function() {
 				if (this instanceof Gemma.GeneSearchAndPreview ) {
-					//close chooser window
 					if (this.preview){
 						this.preview.selectionEditorWindow.hide();
 					}
 				}
 			});
-			this.experimentChoosers.items.each(function() {
+			this.experimentChoosers.items.each( function() {
 				if (this instanceof Gemma.ExperimentSearchAndPreview ) {
-					//close chooser window
 					if (this.preview){
 						this.preview.selectionEditorWindow.hide();
 					}
@@ -572,40 +542,33 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			});
 			
 			this.geneChoosers.removeAll();
-	        // add new genesearchandpreview
-	        var geneChooser = this.addGeneChooser();
-	        
-	        geneChooser.getGenesFromGeneValueObjects(
-	        genesToPreview, genesToPreviewIds, taxonId, taxonName);
+
+            var geneChooser = this.addGeneChooser();
+
+            geneChooser.getGenesFromGeneValueObjects (
+                genesToPreview, genesToPreviewIds,
+                taxonId, taxonName );
 					
 		}, this);	
 
-		this.addEvents('beforesearch', 'aftersearch', 'showDiffExResults', 'showCoexResults');
+		this.addEvents('beforesearch', 'aftersearch',
+            'differential_expression_search_query_ready',
+            'coexpression_search_query_ready');
 
-		
 		this.relayEvents(this.initialExperimentChooser.experimentCombo, ['experimentGroupUrlSelectionComplete']);
 		this.relayEvents(this.initialGeneChooser, ['geneListUrlSelectionComplete']);
 		
 		this.on('experimentGroupUrlSelectionComplete', function(){
-			
-			this.experimentGroupUrlSelectionComplete=true;
+			this.experimentGroupUrlSelectionComplete = true;
 			this.initiateSearch();
-			
 		}, this);
 		
 		this.on('geneListUrlSelectionComplete', function(){
-			
-			this.geneListUrlSelectionComplete=true;
+			this.geneListUrlSelectionComplete = true;
 			this.initiateSearch();
-			
 		}, this);
 		
 		this.doLayout();
-		
-		
-		
-			
-
 	},
 	
 	checkUrlParams: function(){
@@ -618,18 +581,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			this.diffExToggle.toggle(false);
 			this.initialGeneChooser.getGenesFromUrl();
 			this.initialExperimentChooser.experimentCombo.getAllTaxonGroup();
-			
-			//TODO initiate Search once above has finished maybe have both those fire events and after both have returned initiate the search
-			
+			// TODO initiate Search once above has finished maybe have both those fire events and after both have returned initiate the search
 		}
-		
 	},
 	
 	initiateSearch: function(){
-		if (this.experimentGroupUrlSelectionComplete&&this.geneListUrlSelectionComplete){
+		if (this.experimentGroupUrlSelectionComplete && this.geneListUrlSelectionComplete){
 			this.runSearch();
 		}
-		
 	},
 	
 	reset: function(){
@@ -672,12 +631,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				});
 				
 	},
+
 	getTaxonName : function() {
 		return this.taxonName;
 	},
+
 	setTaxonName : function(taxonName) {
 		this.taxonName = taxonName;
-		
 		this.theseExperimentsPanel.update({taxonCommonName:taxonName});
 		this.theseGenesPanel.update({taxonCommonName:taxonName});
 	},
@@ -711,28 +671,27 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.collapseExperimentPreviews();
 	},
 
-	collapseGenePreviews : function() {
-		if (typeof this.geneChoosers.items !== 'undefined') {
-			this.geneChoosers.items.each(function() {
-						if (this instanceof Gemma.GeneSearchAndPreview ) {
-							this.collapsePreview(false);
-						}
-					});
-		}
-	},
+    collapseGenePreviews: function () {
+        if (typeof this.geneChoosers.items !== 'undefined') {
+            this.geneChoosers.items.each(function () {
+                if (this instanceof Gemma.GeneSearchAndPreview) {
+                    this.collapsePreview(false);
+                }
+            });
+        }
+    },
 
-	collapseExperimentPreviews : function() {
-		if (typeof this.experimentChoosers.items !== 'undefined') {
-			this.experimentChoosers.items.each(function() {
-						if (this instanceof Gemma.ExperimentSearchAndPreview ) {
-							this.collapsePreview(false);
-						}
-					});
-		}
+    collapseExperimentPreviews: function () {
+        if (typeof this.experimentChoosers.items !== 'undefined') {
+            this.experimentChoosers.items.each(function () {
+                if (this instanceof Gemma.ExperimentSearchAndPreview) {
+                    this.collapsePreview(false);
+                }
+            });
+        }
+    },
 
-	},
-
-	addGeneChooser : function( ) {
+    addGeneChooser : function( ) {
 		this.geneChooserIndex++;
 		
 		var chooser = new Gemma.GeneSearchAndPreview({
@@ -759,7 +718,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			Ext.getCmp('geneChooser' + (this.geneChooserIndex - 1) + 'Button').show()
 					.setIcon('/Gemma/images/icons/delete.png').setTooltip('Remove this gene or group from your search')
 					.setHandler(this.removeGeneChooser.createDelegate(this, ['geneChooserPanel' +
-									 (this.geneChooserIndex - 1)], false));
+                                        (this.geneChooserIndex - 1)], false));
 		}
 		this.geneChoosers.doLayout();
 		
@@ -811,20 +770,21 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 
 	},
+
 	/**
 	 * hide the example queries
 	 */
-	collapseExamples : function(){
-		
+	collapseExamples : function() {
 		this.searchExamples.collapseExamples(false);
-
 	},
+
 	/**
 	 * hide the example queries
 	 */
 	showExampleQueries : function(){
 		this.searchExamples.show();
 	},
+
 	/**
 	 * set the first experiment chooser to have chosen a set and show its preview
 	 * @param setId must be a valid id for a database-backed experimetn set
@@ -851,7 +811,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * set the gene chooser to have chosen a go group and show its preview
 	 * @param geneSetId must be a valid id for a database-backed gene group
 	 */
-	setFirstGeneSet: function(record){
+	setFirstGeneSet: function (record) {
 	
 		// get the chooser to inject
 		var chooser = this.geneChoosers.getComponent(0);
@@ -864,8 +824,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 	},
 	
-	runExampleQuery: function(taxonId, geneSetRecord, experimentSetRecord){
-		
+	runExampleQuery: function (taxonId, geneSetRecord, experimentSetRecord) {
 		// reset all the choosers
 		this.reset();
 		
@@ -878,9 +837,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 		this.runningExampleQuery = true;
 		this.runSearch();
-							
 	}
-
 });
 
 Ext.reg('analysisResultsSearchForm', Gemma.AnalysisResultsSearchForm);

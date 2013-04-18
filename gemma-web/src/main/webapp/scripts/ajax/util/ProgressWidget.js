@@ -1,14 +1,12 @@
 Ext.namespace('Gemma');
 
 /**
- * Config options;
+ * Task progress window that wraps ObservableSubmittedTask.
  *
- * @param taskId
- *            (required)
- * @param callback
- *            fired when finished, with the task payload as argument
- * @param showAllMessages
- *            when finished, show all the messages. Useful for complex jobs.
+ * Config options;
+ * @param {ObservableSubmittedTask} task
+ * @param [displayOptions]
+ *
  * @class Gemma.ProgressWindow
  * @extends Ext.Window
  */
@@ -22,86 +20,30 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
     collapsible: false,
     autoHeight: true,
 
-    // autoWidth : true,
     width: 400,
-    id: "progressWidget-window",
 
     initComponent: function () {
+        if (!Ext.isDefined( this.displayOptions )) { this.displayOptions = {}; }
 
-        this.progressBar = new Gemma.ProgressWidget({
-            taskId: this.taskId
+        this.progressWidget = new Gemma.ProgressWidget({
+            task: this.task,
+            displayOptions: this.displayOptions
         });
 
-        Ext.apply(this, {
-            items: [this.progressBar]
+        Ext.apply( this, {
+            items: [this.progressWidget]
         });
 
-        Gemma.ProgressWindow.superclass.initComponent.call(this);
+        Gemma.ProgressWindow.superclass.initComponent.call( this );
 
-        this.addEvents('done', 'fail');
-
-        this.on('show', this.start, this);
-
-        this.relayEvents(this.progressBar, ['done', 'fail']);
-    },
-
-    start: function () {
-        this.progressBar.on('done', function (payload) {
-            if (this.callback) {
-                this.callback(payload);
-            }
+        this.progressWidget.on('beforedestroy', function() {
             this.destroy();
         }, this);
 
-        this.progressBar.on('fail', function (message) {
-            if (this.errorHandler) {
-                this.errorHandler(message);
-            }
-            //this.destroy();
+        this.on("show", function() {
+            this.progressWidget.show();
         }, this);
-
-        this.progressBar.on('cancel', function (successfullyCancelled) {
-            if (this.errorHandler) {
-                if (successfullyCancelled) {
-                    this.errorHandler("Job was cancelled");
-                } else {
-                    this.errorHandler("Could not be cancelled?");
-                }
-            }
-            //this.destroy();
-        }, this);
-
-        this.progressBar.startProgress();
     }
-
-//    afterRender: function (a, b) {
-//        Gemma.ProgressWindow.superclass.afterRender.call(this, a, b);
-//
-//        this.progressBar.on('done', function (payload) {
-//            this.getEl().switchOff(
-//                {
-//                callback: function () {
-//                    if (this.showAllMessages && this.progressBar.allMessages.length > 0) {
-//                        this.progressBar.showAllMessages("Job completed normally");
-//                    }
-//                    this.destroy();
-//                },
-//                scope: this
-//            }
-//            );
-//        }.createDelegate(this));
-//
-//        this.progressBar.on('fail', function (message) {
-//            this.progressBar.allMessages = message + "<br/><br/>Other messages:<br/>" + this.progressBar.allMessages;
-//            this.progressBar.showLogMessages("Job failed!");
-//            this.destroy();
-//        }.createDelegate(this));
-//
-//        this.progressBar.on('cancel', function (successfullyCancelled) {
-//            this.destroy();
-//        }.createDelegate(this));
-//    }
-
 });
 
 /**
@@ -113,61 +55,50 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
  * @extends Ext.Panel
  */
 Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
-    BAR_UPDATE_INTERVAL: 2000,
-    refreshTaskProgressIntervalID: null,
-
-    waitingForReply: false,
-    noEmailOption: false,
-
-    allMessages: "",
-    previousMessage: '',
-
-    // layout : 'fit',
     resizable: false,
     bodyBorder: false,
     stateful: false,
 
-    id: "progressWidget-panel",
-
-    //TODO: probably shouldn't have side effects?
-    showLogMessages: function () {
-        if (!this.allMessages) {
-            return;
-        }
-
-        // TODO don't use 1, make it more clear
-        this.insert(1, new Ext.form.Label({
-            id: "logsProgressWidget",
-            html: this.allMessages
-        }));
-
-        this.doLayout();
-
-        this.on('message-received', function () {
-            Ext.DomHelper.overwrite('logsProgressWidget', {
-                id: 'logsProgressWidget',
-                html: this.allMessages
-            });
-        });
-    },
-
-    hideLogMessages: function() {
-        this.remove(1, true);
-    },
+    // Default options
+    showLogOnTaskFailure: false,
+    hideLogButton: true,
+    hideCloseButton: true,
+    closeOnTaskCompletion: true,
 
     initComponent: function () {
-        this.progressBar = new Ext.ProgressBar({
-            width: 400,
-            text: "Initializing ..."
-        });
+        if (!Ext.isDefined( this.task )) {
+            throw {name:"IllegalArgument", message:"Task is a required argument."};
+        }
+
+        Ext.apply(this, this.displayOptions);
 
         Ext.apply(this, {
-            items: [this.progressBar],
+            items: [
+                {
+                    xtype:'progress',
+                    ref: 'progressBar',
+                    width: 400,
+                    text: "Initializing ..."
+                },
+                {
+                    xtype:'panel',
+                    autoScroll: true,
+                    hidden: true,
+                    ref:'logPanel',
+                    items: [
+                        {
+                            xtype:'label',
+                            ref:'textLabel'
+                        }
+                    ]
+                }
+            ],
             buttons: [
                 {
                     text: "Logs",
-                    id: "progresslogsbutton",
+                    itemId: "progresslogsbutton",
                     tooltip: "Show log messages",
+                    hidden: this.hideLogButton,
                     enableToggle: true,
                     toggleHandler: function (button, enabled) {
                         if (enabled) {
@@ -180,7 +111,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
                 },
                 {
                     text: "Cancel Job",
-                    id: "progresscancelbutton",
+                    itemId: "progresscancelbutton",
                     tooltip: "Attempt to stop the job.",
                     handler: function () {
                         Ext.Msg.show({
@@ -189,44 +120,36 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
                             buttons: Ext.Msg.YESNO,
                             fn: function (btn) {
                                 if (btn === 'yes') {
-                                    this.cancelJob();
+                                    this.task.cancel();
                                 }
-                            }.createDelegate(this),
+                            },
+                            scope: this,
                             icon: Ext.MessageBox.QUESTION
                         });
                     },
                     scope: this
                 },
                 {
-                    text: "Hide",
-                    id: "progresshidebutton",
+                    text: "Close",
+                    itemId: "progresshidebutton",
                     tooltip: "Remove the progress bar and return to the page",
+                    hidden: this.hideCloseButton,
                     handler: function () {
-                        /*
-                         * FIXME add link to job listing
-                         */
                         Ext.Msg.show({
-                            title: "Discontinuing monitoring",
+                            title: "Run in background",
                             msg: "The job will continue to run. You can get an email on completion. ",
                             buttons: {
                                 ok: 'OK',
-                                cancel: 'Email me'
+                                emailMe: 'Email me'
                             },
                             fn: function (btn) {
-                                if (btn === 'cancel') {
-                                    ProgressStatusService.addEmailAlert(this.taskId);
+                                if (btn === 'emailMe') {
+                                    this.task.addEmailAlert();
                                 }
                             },
                             scope: this
                         });
-
-                        this.stopProgress();
-                        if (this.ownerCt) { // ugly.
-                            this.ownerCt.destroy();
-                        } else {
-                            this.destroy();
-                        }
-
+                        this.stopListening();
                     },
                     scope: this
                 }
@@ -235,201 +158,86 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
         Gemma.ProgressWidget.superclass.initComponent.call(this);
 
-        Ext.apply(this);
-
-        this.addEvents('done', 'fail', 'cancel', 'message-received');
-    },
-
-    /**
-     * Handle failure of the server to respond to a check.
-     *
-     * @param {}
-     *            data
-     * @param {}
-     *            e
-     */
-    handleResponseFailure: function (data, e) {
-        /*
-         * keep going. Hopefully just a temporary network lapse.
-         */
-        this.waitingForReply = false;
-        this.progressBar.updateText("Waiting...");
-    },
-
-    /**
-     * Handle failure of a job.
-     *
-     * @param {}
-     *            data
-     * @param {}
-     *            e
-     */
-    handleFailure: function (data, e) {
-        this.stopProgress();
-        var messageText = "";
-        if (data.description) {
-            messageText = data.description;
-        } else if (!e) {
-            messageText = data;
-        } else if (e.message) {
-            messageText = e.message;
-        } else {
-            messageText = e;
-        }
-        this.fireEvent("fail", messageText);
+        this.on('show', this.startListening, this, {single:true});
     },
 
     /**
      * Start the progressbar in motion.
+     * @private
      */
-    startProgress: function () {
-        /*
-         * Don't start twice.
-         */
-        if (this.waitingForReply) {
-            return;
-        }
+    startProgressBarAnimation: function () {
         this.progressBar.wait({
             text: "Starting ..."
         });
-
-        if (!this.taskId) {
-
-            var taskId = this.findTaskId();
-
-            if (!taskId) {
-                alert("no task id");
-                return;
-            }
-
-            this.taskId = taskId;
-
-        }
-
-        var callParams = [];
-        var callback = this.updateProgress.createDelegate(this);
-        var errorHandler = this.handleResponseFailure.createDelegate(this);
-        callParams.push(callback);
-        callParams.push(errorHandler);
-
-        /*
-         * Start it running on a delay.
-         */
-
-        var refreshTaskProgressFn = this.refreshProgress.createDelegate( this, callParams, false );
-        this.refreshTaskProgressIntervalID = window.setInterval( refreshTaskProgressFn, this.BAR_UPDATE_INTERVAL );
     },
 
-    stopProgress: function () {
-        window.clearInterval( this.refreshTaskProgressIntervalID );
-        this.previousMessage = null;
-        this.waitingForReply = false;
+    /**
+     * @private
+     */
+    stopProgressBarAnimation: function () {
         this.progressBar.reset();
     },
 
-    handleFinalResult: function (result) {
-        this.stopProgress();
-        this.fireEvent('done', result);
-    },
+    /**
+     *
+     * @private
+     */
+    startListening: function () {
+        this.startProgressBarAnimation();
 
-    done: false,
+        this.task.on("task-completed", function() {
+            this.stopListening();
+            this.destroy();
+        }, this);
 
-    updateProgress: function (data) {
+        this.task.on("task-failed", function() {
+            this.stopListening();
+        }, this);
 
-        // for testing: simulate a network failure.
-        // if (Math.random() < 0.3 ) {
-        // this.handleResponseFailure();
-        // this.le = 0.0;
-        // return;
-        // }
+        this.task.on('task-cancelling', function() {
+            this.stopListening();
+            this.destroy();
+        }, this );
 
-        this.waitingForReply = false;
-        var messages = "";
-        var messagesToSave = '';
-
-        while (data.length > 0) {
-           var progressUpdateItem = data.shift();
-
-            /*
-             * Only show the most recent message in the progress bar.
-             */
-            messages = progressUpdateItem.description;
-
-            /*
-             * But put all messages in the logs.
-             */
-            messagesToSave = messagesToSave + progressUpdateItem.description + "<br/>";
-
-            if (progressUpdateItem.failed) {
-                return this.handleFailure(progressUpdateItem);
-            } else if (progressUpdateItem.done && !this.done) {
-                // try to ensure we only call this once.
-                TaskCompletionController.checkResult(this.taskId, {
-                    callback: this.handleFinalResult.createDelegate(this),
-                    errorHandler: this.handleFailure.createDelegate(this)
-                });
-                this.done = true;
+        this.task.on("log-message-received", function (message) {
+            this.progressBar.updateText( message );
+            if ( this.logPanel.rendered ) {
+                this.logPanel.textLabel.setText( this.task.logs );
             }
-        }
+        }, this);
 
-        if (this.previousMessage !== messages && messages.length > 0) {
-            this.allMessages = this.allMessages + messagesToSave;
-
-            // chop them if they are too long
-            messages = Ext.util.Format.ellipsis(messages, 70);
-
-            this.previousMessage = messages;
-
-            this.progressBar.updateText(messages);
-
-            this.fireEvent('message-received', messages);
-        } else {
-            /*
-             * Just show dots to make it clear stuff is still happening.
-             */
-            this.progressBar.updateText(this.progressBar.text.replace('.......', ''));
-            this.progressBar.updateText(this.progressBar.text + '.');
-        }
+        this.task.on("synchronization-error", function() {
+            this.progressBar.updateText( "Couldn't get progress updates from the server." );
+        });
     },
 
-    /*
-     * Private Send a cancel notification to the server.
+    /**
+     *
+     * @private
      */
-    cancelJob: function () {
-        var f = this.cancelCallback.createDelegate(this);
-        ProgressStatusService.cancelJob(this.taskId, f);
+    stopListening: function() {
+       this.task.purgeListeners();
+       this.stopProgressBarAnimation();
     },
 
-    /*
-     * Private Check for status from server.
+    /**
+     *
+     * @private
      */
-    refreshProgress: function (callback, errorHandler) {
-        // only check for status if we aren't already waiting for a reply.
-        if (!this.waitingForReply) {
-            ProgressStatusService.getProgressStatus(this.taskId, {
-                callback: callback,
-                errorHandler: errorHandler
-            });
-            this.waitingForReply = true;
-        }
+    showLogMessages: function () {
+        this.logPanel.show();
+        this.logPanel.textLabel.setText( this.task.logs );
     },
 
-    /*
-     * Private callback to handle cancellation @param {Object} data
+    /**
+     *
+     * @private
      */
-    cancelCallback: function (successfullyCancelled) {
-
-        this.stopProgress();
-        this.fireEvent('cancel', successfullyCancelled);
-
-        if (!successfullyCancelled) {
-            Ext.Msg.alert("Couldn't cancel",
-                "Sorry, the job couldn't be cancelled; perhaps it finished or was cancelled already?");
-        } else {
-            this.showLogMessages("Job was cancelled");
-        }
+    hideLogMessages: function() {
+        this.logPanel.hide();
     },
 
+    //TODO: handle at the call site
     findTaskId: function () {
         // try to get from query string
 
@@ -443,14 +251,5 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
         // try to get from hidden input field.
         return dwr.util.getValue("taskId");
-    },
-
-    hideLogsButton: function () {
-        Ext.getCmp("progresslogsbutton").setVisible( false );
-    },
-
-    hideHideButton: function () {
-        Ext.getCmp("progresshidebutton").setVisible( false );
     }
-
 });

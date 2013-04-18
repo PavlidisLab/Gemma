@@ -56,7 +56,7 @@ Ext.namespace('Gemma.Metaheatmap');
 var makeSortFunction = function ( property , direction) {
 	if (direction === 'DESC') {
 		return function ( a, b ) {
-			if (typeof a[property] == "number") {
+			if (typeof a[property] === "number") {
 				return (b[property] - a[property]);
 			} else {
 			return ((a[property] > b[property]) ? -1 : ((a[property] < b[property]) ? 1 : 0));
@@ -64,7 +64,7 @@ var makeSortFunction = function ( property , direction) {
 		};			
 	} else {
 		return function ( a, b ) {
-			if (typeof a[property] == "number") {
+			if (typeof a[property] === "number") {
 				return (a[property] - b[property]);
 			} else {
 				return ((a[property] < b[property]) ? -1 : ((a[property] > b[property]) ? 1 : 0));

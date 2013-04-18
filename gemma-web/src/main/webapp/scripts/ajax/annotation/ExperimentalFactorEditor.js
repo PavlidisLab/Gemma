@@ -408,7 +408,7 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorWarningTitle,
 								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorWarningText,
 										function(but) {
-											if (but == 'yes') {
+											if (but === 'yes') {
 												this.deleteButton.disable();
 												this.fireEvent("delete");
 											}
@@ -447,12 +447,10 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 				this.addButton(this.saveButton);
 				this.addSeparator();
 				this.addButton(this.revertButton);
-
 			},
 
 			initComponent : function() {
 				Gemma.ExperimentalFactorToolbar.superclass.initComponent.call(this);
 				this.addEvents("create", "save", "undo", "delete");
 			}
-
 		});

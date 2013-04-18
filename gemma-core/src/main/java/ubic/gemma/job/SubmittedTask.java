@@ -43,6 +43,8 @@ public interface SubmittedTask <T extends TaskResult> {
      */
     public Queue<String> getProgressUpdates();
 
+    public String getLastProgressUpdates();
+
     /**
      * @return timestamp of task submission to TaskRunningService.
      */

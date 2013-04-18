@@ -236,13 +236,13 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 										id : record.id
 									});
 							callParams.push({
-										callback : function(data) {
-											var k = new Gemma.WaitHandler();
-											k.handleWait(data, false);
-											k.on('done', function(payload) {
+										callback : function(taskId) {
+											var task = new Gemma.ObservableSubmittedTask({'taskId':taskId});
+											task.on('task-completed', function(payload) {
 												window.location.reload();
 											});
-										}.createDelegate(this)
+                                            task.showTaskProgressWindow({});
+                                        }.createDelegate(this)
 									});
 						
 							ArrayDesignController.remove.apply(this, callParams);

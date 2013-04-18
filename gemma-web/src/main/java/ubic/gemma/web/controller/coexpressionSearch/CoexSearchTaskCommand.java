@@ -20,7 +20,6 @@
 package ubic.gemma.web.controller.coexpressionSearch;
 
 import ubic.gemma.job.TaskCommand;
-import ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand;
 
 
 
@@ -40,13 +39,11 @@ public class CoexSearchTaskCommand extends TaskCommand {
         super();
         this.searchOptions = searchOptions;
         this.setPersistJobDetails(false);
-       
     }
     
     public CoexpressionSearchCommand getSearchOptions() {
 		return searchOptions;
 	}
-
 
 	public void setSearchOptions(CoexpressionSearchCommand searchOptions) {
 		this.searchOptions = searchOptions;

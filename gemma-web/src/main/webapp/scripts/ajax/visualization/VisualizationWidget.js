@@ -285,7 +285,7 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
  * @return {}
  */
 Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth, cmpID) {
-   if ( cmpID == undefined || cmpID == null ) {
+   if ( cmpID == undefined || cmpID === null ) {
       cmpID = '';
    }
    var pvalueString = "";

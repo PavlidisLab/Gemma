@@ -1114,6 +1114,9 @@ ProgressStatusService._path = '/Gemma/dwr';
 ProgressStatusService.getProgressStatus = function(p0, callback) {
 	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getProgressStatus', p0, callback);
 };
+ProgressStatusService.getSubmittedTask = function(p0, callback) {
+    dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getSubmittedTask', p0, callback);
+};
 ProgressStatusService.cancelJob = function(p0, callback) {
 	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'cancelJob', p0, callback);
 };

@@ -310,11 +310,10 @@ public class DifferentialExpressionSearchController {
                     if ( eevo.getId() != null ) {
                         experiments.add( expressionExperimentSetService.getExperimentsInSet( eevo.getId() ) );
                     } else {
-                        // session-bound.
-                        experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
+                        throw new IllegalArgumentException( "Experiment group should either have an id or a list of ee ids." );
                     }
                 } else {
-                    experiments.add( expressionExperimentService.loadMultiple( eevo.getExpressionExperimentIds() ) );
+                    experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ));
                 }
                 datasetGroupNames.add( eevo.getName() );
             }

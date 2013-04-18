@@ -26,9 +26,10 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.TaskPostProcessing;
 
 import java.util.Date;
+import java.util.Deque;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * SubmittedTask implementation representing the task running on local TaskRunningService.
@@ -40,7 +41,7 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
 
     private ListenableFuture<T> future;
 
-    private Queue<String> progressUpdates = new ConcurrentLinkedQueue<String>();
+    private Deque<String> progressUpdates = new LinkedBlockingDeque<String>();
 
     public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing ) {
         super( taskCommand );
@@ -65,6 +66,11 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
     @Override
     public synchronized Queue<String> getProgressUpdates() {
         return this.progressUpdates;
+    }
+
+    @Override
+    public String getLastProgressUpdates() {
+        return this.progressUpdates.peekLast();
     }
 
     @Override
@@ -101,7 +107,7 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
 
     @Override
     public synchronized void addEmailAlert() {
-        if ( emailAlert == true ) return;
+        if (emailAlert) return;
         emailAlert = true;
         taskPostProcessing.addEmailNotification( (ListenableFuture<TaskResult>) future,
                 new EmailNotificationContext( taskCommand.getTaskId(), taskCommand.getSubmitter(),

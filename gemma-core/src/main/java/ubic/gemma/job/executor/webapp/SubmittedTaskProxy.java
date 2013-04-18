@@ -27,9 +27,10 @@ import ubic.gemma.job.executor.common.TaskControl;
 import ubic.gemma.job.executor.common.TaskStatusUpdate;
 
 import java.util.Date;
+import java.util.Deque;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * SubmittedTask implementation representing the task running on remote worker host.
@@ -41,7 +42,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstract<T> implements SubmittedTask<T> {
 
-    private Queue<String> progressUpdates = new ConcurrentLinkedQueue<String>();
+    private Deque<String> progressUpdates = new LinkedBlockingDeque<String>();
     private TaskResult taskResult;
 
     // These are used to get remote state of submitted task.
@@ -75,6 +76,11 @@ public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstr
             syncProgressUpdates();
             return progressUpdates;
         }
+    }
+
+    @Override
+    public String getLastProgressUpdates() {
+        return this.progressUpdates.peekLast();
     }
 
     @Override

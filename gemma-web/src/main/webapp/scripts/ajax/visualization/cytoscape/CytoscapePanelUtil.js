@@ -17,7 +17,7 @@ Ext.namespace('Gemma');
 
 Gemma.CytoscapePanelUtil = {};
 
-Gemma.CytoscapePanelUtil.ttSubstring= function (tString) {
+Gemma.CytoscapePanelUtil.ttSubstring = function (tString) {
 
     if (!tString) {
         return null;
@@ -58,103 +58,108 @@ Gemma.CytoscapePanelUtil.decimalPlaceRounder = function (number) {
 
 Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
 
-	 // no data for some genes
-	 if (nodeDegree == null) {
-	     return null;
-	 }	
+    // no data for some genes
+    if (nodeDegree == null) {
+        return null;
+    }
 
-	 
-	 if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest) {
-	     return Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name;
-	 } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light) {
-		 return Gemma.CytoscapeSettings.nodeDegreeColor.light.name;
-	 }  else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.moderate) {
-		 return Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name;
-	 } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark) {
-		 return Gemma.CytoscapeSettings.nodeDegreeColor.dark.name;
-	 } else  {
-		 return Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name;
-	 } 
-     
+
+    if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest) {
+        return Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name;
+    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light) {
+        return Gemma.CytoscapeSettings.nodeDegreeColor.light.name;
+    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.moderate) {
+        return Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name;
+    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark) {
+        return Gemma.CytoscapeSettings.nodeDegreeColor.dark.name;
+    } else {
+        return Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name;
+    }
+
 };
 
 Gemma.CytoscapePanelUtil.restrictResultsStringency = function (displayStringency) {
-	
-	 if (displayStringency > 5) {
-         return displayStringency - Math.round(displayStringency / 4);
-     }
-	 
-	 return 2;
-	
-	
+    if (displayStringency > 5) {
+        return displayStringency - Math.round(displayStringency / 4);
+    }
+
+    return 2;
 };
 
-Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand = function (csc){
-	
-	var newCsc = {};
-	
-	Ext.apply(newCsc, {
-				geneIds : csc.geneIds,
-				eeIds: csc.eeIds,				
-				stringency : Gemma.CytoscapePanelUtil.restrictResultsStringency(csc.displayStringency),
-				displayStringency : csc.displayStringency,
-				forceProbeLevelSearch : csc.forceProbeLevelSearch,
-				useMyDatasets : csc.useMyDatasets,
-				queryGenesOnly : csc.queryGenesOnly,
-				taxonId : csc.taxonId
-			});
-	
-	return newCsc;
-	
-	
+Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand = function (csc) {
+    var newCsc = {};
+
+    Ext.apply( newCsc, {
+        geneIds: csc.geneIds,
+        eeIds: csc.eeIds,
+        stringency: Gemma.CytoscapePanelUtil.restrictResultsStringency(csc.displayStringency),
+        displayStringency: csc.displayStringency,
+        forceProbeLevelSearch: csc.forceProbeLevelSearch,
+        useMyDatasets: csc.useMyDatasets,
+        queryGenesOnly: csc.queryGenesOnly,
+        taxonId: csc.taxonId
+    });
+
+    return newCsc;
 };
 
+Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function (searchResults) {
+    function meetsStringency (coexPair, stringency) {
+        return coexPair.posSupp >= stringency || coexPair.negSupp >= stringency;
+    }
 
-Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function (coexpressionSearchData){
-	
-	coexpressionSearchData.cytoscapeCoexCommand.geneIds = [];
-	
-    var qlength = coexpressionSearchData.coexGridResults.queryGenes.length;
-    
-    var queryGeneCountHash = {};
-    
+    function absent(element, array) {
+        return array.indexOf(element) === -1;
+    }
+
+    var originalQueryGeneIds = searchResults.getQueryGeneIds();
+    var originalCoexpressionPairs = searchResults.getCoexpressionPairs();
+
+    // Genes to get complete results for.
+    var geneIds = [];
+//    coexpressionSearchData.cytoscapeCoexCommand.geneIds = [];
+
+    var qlength = originalQueryGeneIds.length;
     var resultsPerQueryGene = Gemma.CytoscapeSettings.maxGeneIdsPerCoexVisQuery / qlength;
-    
+
+    var queryGeneCountHash = {};
+
     var i;
     for (i = 0; i < qlength; i++) {
-        coexpressionSearchData.cytoscapeCoexCommand.geneIds.push(coexpressionSearchData.coexGridResults.queryGenes[i].id);
-        
-        queryGeneCountHash[coexpressionSearchData.coexGridResults.queryGenes[i].id] = 0;
-        
+        geneIds.push( originalQueryGeneIds[i] );
+        queryGeneCountHash[ originalQueryGeneIds[i] ] = 0;
     }
 
-    var kglength = coexpressionSearchData.coexGridResults.knownGeneResults.length;
-    
-    //this needs to take in account the stringency of the forthcoming cytoscape query so that nodes that are connected at lower stringency to the query gene are not included
-//only add to cytoscapeCoexCommand.geneIds if current query gene has room in its 'resultsPerQueryGeneCount' entry
+    var kglength = originalCoexpressionPairs.length;
+
+    // This needs to take in account the stringency of the forthcoming cytoscape query
+    // so that nodes that are connected at lower stringency to the query gene are not included
+    // only add to cytoscapeCoexCommand.geneIds if current query gene has room in its 'resultsPerQueryGeneCount' entry
     for (i = 0; i < kglength; i++) {
-        if (coexpressionSearchData.cytoscapeCoexCommand.geneIds.indexOf(coexpressionSearchData.coexGridResults.knownGeneResults[i].foundGene.id) === -1 
-        		&& queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id]< resultsPerQueryGene
-        		&& (coexpressionSearchData.coexGridResults.knownGeneResults[i].posSupp >= coexpressionSearchData.cytoscapeCoexCommand.stringency 
-        				|| coexpressionSearchData.coexGridResults.knownGeneResults[i].negSupp >= coexpressionSearchData.cytoscapeCoexCommand.stringency))  {
-            coexpressionSearchData.cytoscapeCoexCommand.geneIds.push(coexpressionSearchData.coexGridResults.knownGeneResults[i].foundGene.id);
-            queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id] = queryGeneCountHash[coexpressionSearchData.coexGridResults.knownGeneResults[i].queryGene.id] + 1;
+
+        if (meetsStringency(originalCoexpressionPairs[i], searchResults.getResultsStringency()) &&
+            absent(originalCoexpressionPairs[i].foundGene.id, geneIds) &&
+            queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] < resultsPerQueryGene )
+        {
+            geneIds.push(originalCoexpressionPairs[i].foundGene.id);
+            queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] = queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] + 1;
         }
     }
-	
+
+    return geneIds;
 };
 
 
-Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects = function (selectedNodes){
-	
-	var selectedNodesGeneIdArray = [];
+Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects = function (selectedNodes) {
+
+    var selectedNodesGeneIdArray = [];
     var sNodesLength = selectedNodes.length;
     var i;
     for (i = 0; i < sNodesLength; i++) {
         selectedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
     }
-    
+
     return selectedNodesGeneIdArray;
-	
+
 };
 

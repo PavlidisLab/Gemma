@@ -82,11 +82,10 @@ Ext.onReady(function() {
 
 			geneid = dwr.util.getValue("gene"); 
 
-			var coexpressedGeneGrid = new Gemma.CoexpressionGrid({
+			var coexpressedGeneGrid = new Gemma.CoexpressionGridLight({
 						width : 400,
 						colspan : 2,
 						// user : false,
-						lite : true,
 						noSmallGemma:true,
 						renderTo : "coexpression-grid"
 					});

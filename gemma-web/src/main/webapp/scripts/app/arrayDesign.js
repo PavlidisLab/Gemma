@@ -81,26 +81,6 @@ function handleNewAlternateName(data) {
 		Ext.DomHelper.overwrite("alternate-names", data);
 	}
 }
-
-function handleReportUpdateSuccess(taskId) {
-	try {
-
-		reportFeedback("success");
-		var p = new progressbar({
-					taskId : taskId
-				});
-		p.createIndeterminateProgressBar();
-		p.on('fail', handleFailure);
-		p.on('cancel', reset);
-		p.on('done', handleDoneUpdateReport);
-		p.startProgress();
-	} catch (e) {
-		handleFailure(data, e);
-		return;
-	}
-
-}
-
 function updateArrayDesignReport(id, callerScope) {
 
 	var callParams = [];
@@ -108,18 +88,16 @@ function updateArrayDesignReport(id, callerScope) {
 				id : id
 			});
 	callParams.push({
-				callback : function(data) {
-					var config={};
-					var k;
+				callback : function(taskId) {
+                    var task = new Gemma.ObservableSubmittedTask({'taskId':taskId});
 					//e.g. refresh icon from showAllArrayDesigns
-					if(callerScope){
-						config.throbberEl = callerScope.getEl();
-						k = new Gemma.WaitHandler(config);
-					}else{//e.g. refresh button on showArrayDesign.html 
-						k = new Gemma.WaitHandler();
+					if (callerScope) {
+						var throbberEl = callerScope.getEl();
+                        task.showTaskProgressThrobber( throbberEl );
+					} else {//e.g. refresh button on showArrayDesign.html
+                        task.showTaskProgressWindow();
 					}
-					k.handleWait(data, false);
-					k.on('done', function(payload) {
+					task.on('task-completed', function(payload) {
 								// this.fireEvent('reportUpdated', payload)
 								handleDoneUpdateReport(id, callerScope);
 							});

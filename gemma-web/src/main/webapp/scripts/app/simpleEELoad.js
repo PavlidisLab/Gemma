@@ -105,18 +105,15 @@ function handleFailure(data, e) {
 function reset(data) {
 	// uploadButton.enable();
 }
-function handleSuccess(data) {
+function handleSuccess(taskId) {
 	try {
-		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");
-
-		p = new progressbar({taskId : taskId});
-		p.createIndeterminateProgressBar();
-		p.on("fail", handleFailure);
-		p.on("cancel", handleCancel);
-		p.startProgress();
+        var task = new Gemma.ObservableSubmittedTask({'taskId':taskId});
+        task.on('task-failed', handleFailure);
+        task.on('task-cancelling', handleCancel);
+        task.showTaskProgressWindow();
 	} catch (e) {
-		handleFailure(data, e);
+		handleFailure(taskId, e);
 		return;
 	}
 }

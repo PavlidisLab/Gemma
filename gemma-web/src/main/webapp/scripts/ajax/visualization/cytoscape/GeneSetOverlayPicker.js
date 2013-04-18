@@ -10,12 +10,9 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 	height : 400,
 	closeAction : 'hide',
 	easing : 3,
-	lastOverlayedIds: [],
 
 	initComponent : function() {
-
 		this.geneChoosers = new Ext.Panel({
-			// width: 319,
 			frame : false,
 			defaults : {
 				border : false
@@ -24,15 +21,10 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 			autoDestroy : true
 		});
 		this.geneChooserIndex = -1;
-
 		this.initialGeneChooser = this.addGeneChooser();
 
 		Ext.apply(this, {
-
-			items : [ this.geneChoosers
-
-			],
-
+			items : [ this.geneChoosers],
 			buttons : [ {
 				text : 'OK',
 				handler : function() {
@@ -53,9 +45,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 			} ]
 		});
 
-		Gemma.GeneSetOverlayPicker.superclass.initComponent.call(this);
-		
-		this.addEvents('nodesMatched');
+		Gemma.GeneSetOverlayPicker.superclass.initComponent.call( this );
 	},
 
 	reset : function() {
@@ -65,55 +55,33 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 	},
 
 	applyOverlay : function() {
-
-		var ids = this.getSelectedIds();
-		
-		this.lastOverlayedIds = ids;
-
-		var nodesMatched = this.display.applyGeneListOverlay(ids);
-		
-		if (nodesMatched){
-			this.fireEvent('nodesMatched');
-		}
-
+        this.display.observableDisplaySettings.setOverlayGeneIds( this.getSelectedIds() );
 		this.hide();
-
 	},
 	
 	getTextForTitle: function(numNodesMatched, numNodesMatchedWithHidden){
-		
-		var textForTitle =this.titleText+"<br/> ("+numNodesMatched+" gene matches in the graph";
-		
-		if (numNodesMatchedWithHidden>numNodesMatched){
-			
-			var hidden = numNodesMatchedWithHidden-numNodesMatched;
-			
-			textForTitle = textForTitle + ", "+hidden+" hidden due to stringency)";
+		var textForTitle = this.titleText + "<br/> (" + numNodesMatched + " gene matches in the graph";
+		if (numNodesMatchedWithHidden > 0){
+			textForTitle = textForTitle + ", " + numNodesMatchedWithHidden + " hidden due to stringency)";
 		} else {
 			textForTitle = textForTitle + ")";
 		}
-		
 		return textForTitle;
-		
 	},
-	
-	reactivateOverlayPicker : function(){
-		
+
+	show: function() {
 		if (this.getSelectedIds().length > 0){
-		
-			var numNodesMatched = this.display.getMatchedNodeCountForGeneListOverlay(this.getSelectedIds());
-		
-			var numNodesMatchedWithHidden = this.display.getMatchedNodeCountForGeneListOverlayWithHiddenGenes(this.getSelectedIds());
-		
+            var r = this.display.getNodeOverlap(this.getSelectedIds());
+            var numNodesMatched = r.total;
+            var numNodesMatchedWithHidden = r.hidden;
 			this.setTitle(this.getTextForTitle(numNodesMatched, numNodesMatchedWithHidden));
 		}
-		
-		this.show();
+        Gemma.GeneSetOverlayPicker.superclass.show.call( this );
 	},
 
 	addGeneChooser : function() {
 		this.geneChooserIndex++;
-
+        var cytoscapeDisplay = this.display;
 		var chooser = new Gemma.GeneSearchAndPreview({
 			searchForm : this,
 			style : 'padding-top:10px;padding-left:10px;',
@@ -122,41 +90,39 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 			showTaxonCombo : false,
 			listeners : {
 				geneSelected : function() {
-					
-					var numNodesMatched = this.searchForm.display.getMatchedNodeCountForGeneListOverlay(this.searchForm.getSelectedIds());
-					var numNodesMatchedWithHidden = this.searchForm.display.getMatchedNodeCountForGeneListOverlayWithHiddenGenes(this.searchForm.getSelectedIds());					
+                    var r = cytoscapeDisplay.getNodeOverlap(this.searchForm.getSelectedIds());
+					var numNodesMatched = r.total;
+					var numNodesMatchedWithHidden = r.hidden;
+
 					this.searchForm.setTitle(this.searchForm.getTextForTitle(numNodesMatched, numNodesMatchedWithHidden));
-					
 				},
 				removeGene : function() {
 					this.searchForm.removeGeneChooser(this.getId());
 				}
 			}
-		});
+        });
 
 		this.geneChoosers.add(chooser);
 
 		// change previous button to 'remove'
-		if (typeof Ext.getCmp('geneOverlayChooser'
-				+ (this.geneChooserIndex - 1) + 'Button') !== 'undefined') {
-			Ext.getCmp(
-					'geneOverlayChooser' + (this.geneChooserIndex - 1)
-							+ 'Button').show().setIcon(
-					'/Gemma/images/icons/delete.png').setTooltip(
-					'Remove this gene or group from your search').setHandler(
-					this.removeGeneChooser
-							.createDelegate(this, [ 'geneChooserPanel'
-									+ (this.geneChooserIndex - 1) ], false));
-		}
-		this.geneChoosers.doLayout();
-
+        if (typeof Ext.getCmp('geneOverlayChooser' +
+            (this.geneChooserIndex - 1) + 'Button') !== 'undefined') {
+            Ext.getCmp(
+                    'geneOverlayChooser' + (this.geneChooserIndex - 1) +
+                        'Button').show().setIcon(
+                    '/Gemma/images/icons/delete.png').setTooltip(
+                    'Remove this gene or group from your search').setHandler(
+                    this.removeGeneChooser
+                        .createDelegate(this, [ 'geneChooserPanel' +
+                            (this.geneChooserIndex - 1) ], false));
+        }
+        this.geneChoosers.doLayout();
 		return chooser;
 	},
 
 	removeGeneChooser : function(panelId) {
 		this.geneChoosers.remove(panelId, true);
 		this.geneChoosers.doLayout();
-
 	},
 
 	// The following two functions are present because the code of
@@ -203,10 +169,8 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 						selectedIds.push(vo.geneIds[i]);
 					}
 				}
-
 			}
 		});
 		return selectedIds;
 	}
-
 });

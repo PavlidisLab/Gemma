@@ -1,5 +1,11 @@
 Ext.namespace('Gemma');
 
+/**
+ *
+ *
+ *
+ * @type {*}
+ */
 Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
 	constructor : function(searchCommand) {
@@ -22,6 +28,10 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 	datasetGroupNames : [],
 	taxonId : null,
 
+    /**
+     *
+     * @param target
+     */
 	prepareVisualization : function(target) {
 
 		this.geneGroupNames = [];
@@ -30,10 +40,6 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		this.experimentGroupValueObjects = [];
 		this._selectedGeneGroups = [];
 		this._selectedDatasetGroups = [];
-		// control variables used if asynchronous session group creation is
-		// performed
-		this.waitingForGeneSessionGroupBinding = false;
-		this.waitingForDatasetSessionGroupBinding = false;
 
 		var i;
 		// populate list of selected groups
@@ -123,10 +129,11 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 	},
 
     _initBackgroundTaskProgress : function (taskId) {
-        var backgroundTask = new Gemma.WaitHandler();
-        backgroundTask.on( 'done', this._handleDiffExpSearchTaskResult, this );
-        backgroundTask.on( 'fail', this._handleFail, this );
-        backgroundTask.handleWait( taskId, false, true, true );
+        var task = new Gemma.ObservableSubmittedTask({'taskId':taskId});
+        task.on( 'task-completed', this._handleDiffExpSearchTaskResult, this );
+        task.on( 'task-failed', this._handleFail, this );
+        task.on( 'task-cancelling', this._handleFail, this );
+        task.showTaskProgressWindow({});
     },
 
     _handleDiffExpSearchTaskResult : function( data ) {
@@ -175,6 +182,11 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
         });
     },
 
+    /**
+     *
+     *
+     *
+     */
     doVisualization : function() {
 		
 		if (typeof this.param === 'undefined') { // if not loading text from search interface (ex: when using a bookmarked link)
@@ -222,12 +234,9 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
             this._initBackgroundTaskProgress.createDelegate(this)
         );
 	},
-		/**
+
+	/**
 	 * Restore state from the URL (e.g., bookmarkable link)
-	 * 
-	 * @param {}
-	 *            query
-	 * @return {}
 	 */
 	initializeSearchFromURL : function(url) {
 		

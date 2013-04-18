@@ -712,9 +712,7 @@ public class CoexpressionSearchController  {
         } else if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) {
             // this will be a 'my genes only' vis query since queryGeneIds !=null
             searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) );
-
         }
-
     }
 
     private Collection<Long> trimGeneIds( Collection<Long> geneIds, int limit ) {

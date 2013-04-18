@@ -90,10 +90,9 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		});
 	},
 	initCoexTab: function( geneId ){
-		var coexpressedGeneGrid = new Gemma.CoexpressionGrid({
+		var coexpressedGeneGrid = new Gemma.CoexpressionGridLight({
 			title: 'Coexpression',
 			colspan: 2,
-			lite: true,
 			noSmallGemma: true,
 			itemId: 'coex'
 		});

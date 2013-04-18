@@ -97,9 +97,9 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
             ProgressData data;
             if ( task.getStatus() == SubmittedTask.Status.COMPLETED) {
                 log.debug( "Job " + taskId + " is done" );
-                data = new ProgressData( taskId, 1, progressMessage+"Done!", true );
+                data = new ProgressData( taskId, 1, progressMessage + "Done!", true );
             } else if ( task.getStatus() == SubmittedTask.Status.FAILED ) {
-                data = new ProgressData( taskId, 1, progressMessage+"Failed!", true );
+                data = new ProgressData( taskId, 1, progressMessage + "Failed!", true );
                 data.setFailed( true );
             } else {
                 data = new ProgressData( taskId, 1, progressMessage+"Possibly canceled.", true );
@@ -110,6 +110,13 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
         }
 
         return statusObjects;
+    }
+
+    @Override
+    public SubmittedTaskValueObject getSubmittedTask( String taskId ) {
+        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
+        if (task == null) return null;
+        return new SubmittedTaskValueObject( task );
     }
 
     /*

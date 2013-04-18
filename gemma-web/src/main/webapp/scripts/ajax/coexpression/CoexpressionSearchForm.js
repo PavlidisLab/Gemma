@@ -275,7 +275,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.returnFromSearch({
 					errorState : msg
 				});
-
 	},
 
 	clearError : function() {

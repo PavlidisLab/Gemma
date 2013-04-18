@@ -1,5 +1,6 @@
 package ubic.gemma.job.progress;
 
+import org.apache.commons.lang.StringUtils;
 import ubic.gemma.job.SubmittedTask;
 
 import java.io.Serializable;
@@ -15,10 +16,13 @@ public class SubmittedTaskValueObject implements Serializable {
     private Date finishTime;
     private String submitter;
     private String taskType;
+    private String logMessages;
     private boolean runningRemotely;
     private boolean done;
     private boolean emailAlert;
     private String taskStatus;
+
+    private String lastLogMessage;
 
     public SubmittedTaskValueObject() {
     }
@@ -34,6 +38,16 @@ public class SubmittedTaskValueObject implements Serializable {
         this.taskStatus = submittedTask.getStatus().name();
         this.done = submittedTask.isDone();
         this.emailAlert = submittedTask.isEmailAlert();
+        this.logMessages = StringUtils.join( submittedTask.getProgressUpdates(), "\n" );
+        this.lastLogMessage = submittedTask.getLastProgressUpdates();
+    }
+
+    public String getLogMessages() {
+        return logMessages;
+    }
+
+    public String getLastLogMessage() {
+        return lastLogMessage;
     }
 
     public String getTaskStatus() {

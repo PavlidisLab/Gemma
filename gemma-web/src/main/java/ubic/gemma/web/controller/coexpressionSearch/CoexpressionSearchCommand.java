@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
-import java.util.Collection;
-
 import org.apache.commons.lang.StringUtils;
+
+import java.util.Collection;
 
 /**
  * @author luke
@@ -167,12 +167,12 @@ public class CoexpressionSearchCommand {
                 + StringUtils.abbreviate( StringUtils.join( getEeIds(), "," ), 100 );
     }
 
-    public void setDisplayStringency( Integer displayStringency ) {
-        this.displayStringency = displayStringency;
-    }
-
-    public Integer getDisplayStringency() {
-        return displayStringency;
-    }
+//    public void setDisplayStringency( Integer displayStringency ) {
+//        this.displayStringency = displayStringency;
+//    }
+//
+//    public Integer getDisplayStringency() {
+//        return displayStringency;
+//    }
 
 }

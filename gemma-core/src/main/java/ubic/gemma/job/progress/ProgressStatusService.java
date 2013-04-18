@@ -55,6 +55,8 @@ public interface ProgressStatusService {
      */
     public List<ProgressData> getProgressStatus( String taskId );
 
+    public SubmittedTaskValueObject getSubmittedTask( String taskId );
+
     /**
      * @return
      * @see ubic.gemma.job.executor.webapp.TaskRunningServiceImpl#getSubmittedTasks()

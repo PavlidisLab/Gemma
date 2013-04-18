@@ -72,19 +72,19 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
                             callParams.push(name);
                             callParams.push(description);
                             callParams.push({
-                                callback : function(data) {
-                                    var k = new Gemma.WaitHandler();
-                                    k.handleWait(data, true);
-                                    k.on('done', function(metaAnalysisReturned) {
+                                callback : function(taskId) {
+                                    var task = new Gemma.ObservableSubmittedTask({'taskId':taskId});
+                                    task.showTaskProgressWindow({'expandLogOnFinish': true});
+                                    task.on('task-completed', function(metaAnalysisReturned) {
 										// Assume if it is null, saving result is NOT successful.
-										if (metaAnalysisReturned == null) {
+										if (metaAnalysisReturned === null) {
 											Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorTitle.resultSetsNotSaved,
 														  Gemma.HelpText.CommonErrors.errorUnknown);
 										} else {
 											this.fireEvent('resultSaved');
 										}
                                     }.createDelegate(this));
-									k.on('fail', function(data) {
+									task.on('task-failed', function(data) {
 										Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorTitle.resultSetsNotSaved,
 													  data);
 									}.createDelegate(this));
@@ -109,14 +109,14 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
                 var callParams = [];
                 callParams.push(resultSetIds);
                 callParams.push({
-                    callback : function(data) {
-                        var k = new Gemma.WaitHandler();
-                        k.handleWait(data, true);
-                        k.on('done', function(metaAnalysisReturned) {
+                    callback : function(taskId) {
+                        var task = new Gemma.ObservableSubmittedTask({'taskId':taskId});
+                        task.showTaskProgressWindow({'expandLogOnFinish': true});
+                        task.on('task-completed', function(metaAnalysisReturned) {
 							resultPanel.setMetaAnalysis(metaAnalysisReturned);
 							nextButton.setDisabled(!metaAnalysisReturned);
                         }.createDelegate(this));
-						k.on('fail', function(data) {
+						task.on('task-failed', function() {
 							// Argument data is not used because data is Java exception class name which is not useful to the user.
 							resultPanel.clear(Gemma.HelpText.WidgetDefaults.MetaAnalysisShowResultPanel.ErrorMessage.resultSetsNotAnalyzed);
 							nextButton.setDisabled(true);

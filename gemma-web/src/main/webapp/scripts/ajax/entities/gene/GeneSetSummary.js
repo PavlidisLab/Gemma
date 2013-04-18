@@ -18,7 +18,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 		align:'stretch'
 	},
 	dirtyForm : false,
-	listeners:{
+	listeners: {
 		leavingTab: function(){
 			if(this.editModeOn && this.dirtyForm){
 				var leave = confirm("You are still in edit mode. Your unsaved changes will be discarded when you switch tabs. Do you want to continue?");
@@ -55,7 +55,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
     initComponent: function(){
 		
         Gemma.GeneSetSummary.superclass.initComponent.call(this);
-        	
+
         var g = this.geneSet;
 		
         if (g.writeableByUser) {
@@ -91,10 +91,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 				
 				this.dirtyForm = false;
 				this.saveMask.hide();
-	                
             }.createDelegate(this));
-			
-			
         }.createDelegate(this);
         
         var descriptionArea = new Ext.form.TextArea({
@@ -270,8 +267,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
         
         this.add(basics);
         
-		        
-		/*MEMBERS GRID*/
+		/* MEMBERS GRID */
 		var geneMembersGrid = new Gemma.GeneMembersSaveGrid({
 			title:'Gene Group Members',
 			name: 'geneMembersGrid',
@@ -291,7 +287,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 			flex: 1
 		});
 				
-		geneMembersGrid.on('geneListSavedOver',function(){
+		geneMembersGrid.on('geneListSavedOver', function() {
 			Ext.getBody().mask('Reloading set');
 			// could just update gene count, but this is easier for now since we'll probably change the tab layout soon
 			window.location.reload();
@@ -299,10 +295,10 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 				
 		geneMembersGrid.on('geneSetCreated',function(geneSet){
 			Ext.getBody().mask('Loading new set');
-			window.location = "/Gemma/geneSet/showGeneSet.html?id="+geneSet.id;
+			window.location = "/Gemma/geneSet/showGeneSet.html?id=" + geneSet.id;
 		});
 		
-		this.add(geneMembersGrid);
+		this.add( geneMembersGrid );
 		
 		/* EO member's grid */
 				
@@ -336,7 +332,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 					msg : 'Are you sure you want to delete gene group "'+this.geneSet.name+'"? This cannot be undone.',
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
-						if (btn == 'yes') {
+						if (btn === 'yes') {
 							var callParams = [];
 							callParams.push([{id:id}]);
 							if (!this.deleteMask) {

@@ -15,68 +15,103 @@
  */
 Ext.namespace('Gemma');
 
-Gemma.CoexpressionGraphData = function(coexpressionSearchData) {		
-			
-		this.originalResults={};
-		this.originalResults.geneResults = coexpressionSearchData.cytoscapeResults.knownGeneResults;
-		this.originalResults.trimStringency = coexpressionSearchData.cytoscapeResults.nonQueryGeneTrimmedValue;
-	
-		this.defaultSize = "medium";
-		
-		this.mediumGraphMaxSize = coexpressionSearchData.cytoscapeResults.maxEdges * 3 / 4;
-		this.smallGraphMaxSize = coexpressionSearchData.cytoscapeResults.maxEdges / 2;
-		
-		this.largeGraphDataEnabled=false;
-		this.mediumGraphDataEnabled=false;
-		this.smallGraphDataEnabled=false;
-		
-		this.getTrimmedGraphData = function(resultsSizeLimit){
-			
-			return Gemma.CoexValueObjectUtil.trimKnownGeneResultsForReducedGraph(this.originalResults.geneResults, coexpressionSearchData.coexGridCoexCommand.geneIds,
-	    			coexpressionSearchData.cytoscapeCoexCommand.stringency, coexpressionSearchData.cytoscapeCoexCommand.eeIds.length,
-	    			resultsSizeLimit);
-			
-		};
-		
-		if (this.mediumGraphMaxSize > this.originalResults.geneResults.length ){
-			this.graphDataMedium = this.originalResults;
-		}else {
-			this.graphDataMedium = this.getTrimmedGraphData(this.mediumGraphMaxSize);
-			if (this.graphDataMedium.geneResults.length < this.originalResults.geneResults.length){
-				this.mediumGraphDataEnabled = true;
-				this.largeGraphDataEnabled = true;
-			}
-		}
-		
-		if (this.smallGraphMaxSize > this.graphDataMedium.geneResults.length ){
-			this.graphDataSmall = this.graphDataMedium;
-		}else{
-			this.graphDataSmall = this.getTrimmedGraphData(this.smallGraphMaxSize);
-			if (this.graphDataSmall.geneResults.length < this.graphDataMedium.geneResults.length){
-				this.smallGraphDataEnabled = true;
-				this.mediumGraphDataEnabled = true;
-			}
-		}
-		
-		this.getGraphData = function(graphSize){
-			
-			if (!graphSize){
-				graphSize = this.defaultSize;
-			}
-			
-			if(graphSize=="medium"){
-				
-				return this.graphDataMedium;
-				
-			} else if (graphSize=="small"){
-				
-				return this.graphDataSmall;
-			}
-			
-			return this.originalResults;
-			
-		};		
-		
-		
+/**
+ *
+ * @param {CoexpressionMetaValueObject} searchResultsCytoscape
+ * @param cytoscapeCoexCommand
+ * @param queryGeneIds
+ * @constructor
+ */
+Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCommand, queryGeneIds) {
+    var maxStringency = cytoscapeCoexCommand.eeIds.length;
+
+    function getTrimmedGraphData (graphSizeLimit) {
+        var coexpressionPairs = searchResultsCytoscape.knownGeneResults;
+        var resultsStringency = cytoscapeCoexCommand.stringency;
+
+        return Gemma.CoexValueObjectUtil.trimGraphUpToRequestedSize(
+            coexpressionPairs,
+            queryGeneIds,
+            resultsStringency,
+            maxStringency,
+            graphSizeLimit);
+    }
+
+    var maxEdgesLimit = searchResultsCytoscape.maxEdges;
+
+    var fullGraph = {
+        geneResults: searchResultsCytoscape.knownGeneResults,
+        trimStringency:  searchResultsCytoscape.nonQueryGeneTrimmedValue,
+        size: searchResultsCytoscape.knownGeneResults.length
+    };
+
+    var graphSizeOptions = [];
+
+    this.getGraphData = function() {
+        return graphSizeOptions;
+    };
+
+    this.getSmallestGraph = function() {
+        return graphSizeOptions[graphSizeOptions.length-1].graph;
+    };
+
+    this.isTrimmedOnBackend = (searchResultsCytoscape.nonQueryGeneTrimmedValue > 0);
+    this.isTrimmedOnFrontEnd = false;
+
+    var targetNumberOfEdges = 0.5 * maxEdgesLimit;
+
+    // Happy case!
+    if ( fullGraph.size <= targetNumberOfEdges ) {
+        graphSizeOptions.push({label:'No edge number limit', graph: fullGraph});
+        return;
+    }
+/*
+    Extra trimming will be done on the front end to the
+    user's chosen graph size(the default will be significantly smaller than the
+    highest setting because older computers will have trouble with the highest
+    setting).  This way if the user wants more edges, the data has already been
+    sent to the front end and won't need a new call to the back end.
+*/
+
+    // Trim graph to be at or below target number of edges
+    // this will be default display value
+    // allow user to go higher than that
+    var graph;
+
+    if ( fullGraph.size <= maxEdgesLimit ) {
+        if (this.isTrimmedOnBackend) {
+            graphSizeOptions.push({
+                label: fullGraph.trimStringency + ' (' + fullGraph.size + " edges)",
+                graph: fullGraph });
+        } else {
+            graphSizeOptions.push({
+                label: 'No Trimming',
+                graph: fullGraph});
+        }
+    } else {
+        this.isTrimmedOnFrontEnd = true;
+        graph = getTrimmedGraphData(maxEdgesLimit);
+        graphSizeOptions.push({
+            label: graph.trimStringency + ' (' + graph.size + " edges)",
+            graph: graph});
+    }
+
+    // Keep going until maxStringency limit is reached or graph is small enough already.
+    if (graph.trimStringency >= maxStringency || graph.size < 0.75 * maxEdgesLimit) {
+        return;
+    }
+    graph = getTrimmedGraphData( 0.75 * maxEdgesLimit );
+    graphSizeOptions.push({
+        label: graph.trimStringency + ' (' + graph.size + " edges)",
+        graph: graph});
+
+    // Keep going until maxStringency limit is reached or graph is small enough already.
+    if (graph.trimStringency >= maxStringency || graph.size < 0.5 * maxEdgesLimit) {
+        return;
+    }
+    graph = getTrimmedGraphData( 0.5 * maxEdgesLimit );
+    graphSizeOptions.push({
+        label: graph.trimStringency + ' (' + graph.size + " edges)",
+        graph: graph});
 
 };

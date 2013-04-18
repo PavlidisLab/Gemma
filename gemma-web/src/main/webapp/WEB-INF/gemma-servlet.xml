@@ -500,7 +500,8 @@
 			<dwr:include method="cancelJob" />
 			<dwr:include method="addEmailAlert" />
 			<dwr:include method="getSubmittedTasks" />
-		</dwr:remote>
+            <dwr:include method="getSubmittedTask" />
+        </dwr:remote>
 	</bean>
 
 	<bean id="annotationController" class="ubic.gemma.web.controller.expression.experiment.AnnotationController">

@@ -1,12 +1,9 @@
-
 Ext.namespace('Gemma.HelpText','Gemma.StatusText');
 
 Gemma.CITATION = "Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.";
-
 Gemma.CITATION_DIRECTIONS = "If you use this file for your research, please cite: {0}" + Gemma.CITATION ;
 
 // TT = tooltip
-
 Gemma.EvidenceCodeInfo = {
 	getQtipInfo: function(code, evidenceCodeInfo) {
 		return {
@@ -338,9 +335,6 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	DatasetGroupGridPanel:{
 		protectedTT: "Protected; cannot have members changed, usually applies to automatically generated groups."
-	},
-	DiffExpressionGrid:{
-		// skipped this one, only had column TTs
 	},
 	EEDetailsVisualizationWidget:{
 		visualizaButtonTT: "Click to display data for selected genes, or a 'random' selection of data from this experiment",
