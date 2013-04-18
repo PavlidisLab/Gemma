@@ -58,6 +58,74 @@ public class ExpressionExperimentFilter {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
 
+    /**
+     * Remove rows that have a low variance, below the stated quantile
+     * 
+     * @param matrix
+     * @param quantile e.g. 10 to remove 10% lowest variance rows.
+     * @return
+     */
+    public static ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix, int quantile ) {
+        if ( quantile <= 0 || quantile >= 100 ) {
+            throw new IllegalArgumentException( "quantile must be between 1 and 100" );
+        }
+        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+        rowLevelFilter.setMethod( Method.VAR );
+        rowLevelFilter.setLowCut( quantile / 100.0 );
+        rowLevelFilter.setRemoveAllNegative( false );
+        rowLevelFilter.setUseAsFraction( true );
+        return rowLevelFilter.filter( matrix );
+    }
+
+    /**
+     * Remove rows that have a low diversity of values (equality judged based on tolerancee set in RowLevelFilter). This
+     * happens when people "set values less than 10 equal to 10" for example. This effectively filters rows that have
+     * too many missing values, because missing values are counted as a single value.
+     * 
+     * @param matrix
+     * @param threshold fraction of values that must be distinct. Thus if set to 0.5, a vector of 10 values must have at
+     *        least 5 distinct values.
+     * @return
+     */
+    public static ExpressionDataDoubleMatrix tooFewDistinctValues( ExpressionDataDoubleMatrix matrix, double threshold ) {
+        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+        rowLevelFilter.setMethod( Method.DISTINCTVALUES );
+        rowLevelFilter.setTolerance( Constants.SMALLISH );
+        rowLevelFilter.setRemoveAllNegative( false );
+
+        /*
+         * 0.5 means: 1/2 of the values must be distinct. Close to zero means none of the values are distinct. 1.0 means
+         * they are all distinct.
+         */
+        rowLevelFilter.setLowCut( threshold );
+        rowLevelFilter.setUseAsFraction( false );
+        return rowLevelFilter.filter( matrix );
+    }
+
+    /**
+     * @param matrix
+     * @return
+     */
+    public static ExpressionDataDoubleMatrix doNothingFilter( ExpressionDataDoubleMatrix matrix ) {
+        return new ExpressionDataDoubleMatrix( matrix, matrix.getRowNames() );
+    }
+
+    /**
+     * Remove rows that have a variance of zero (within a small constant)
+     * 
+     * @param matrix
+     * @return
+     * @see Constants.SMALLISH
+     */
+    public static ExpressionDataDoubleMatrix zeroVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
+        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+        rowLevelFilter.setMethod( Method.VAR );
+        rowLevelFilter.setLowCut( Constants.SMALLISH );
+        rowLevelFilter.setRemoveAllNegative( false );
+        rowLevelFilter.setUseAsFraction( false );
+        return rowLevelFilter.filter( matrix );
+    }
+
     Collection<ArrayDesign> arrayDesignsUsed;
 
     private final FilterConfig config;
@@ -93,23 +161,6 @@ public class ExpressionExperimentFilter {
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
         transform( eeDoubleMatrix );
         return filter( eeDoubleMatrix );
-    }
-
-    /**
-     * Transform the data as configured (e.g., take log) -- which could mean no action
-     */
-    private void transform( ExpressionDataDoubleMatrix datamatrix ) {
-
-        if ( !config.isLogTransform() ) {
-            return;
-        }
-
-        boolean alreadyLogged = this.isLogTransformed( datamatrix );
-        if ( !alreadyLogged ) {
-            MatrixStats.logTransform( datamatrix.getMatrix() );
-
-        }
-
     }
 
     /**
@@ -237,17 +288,6 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * Filter rows that lack BioSequences associated with the probes.
-     * 
-     * @param eeDoubleMatrix
-     * @return
-     */
-    private ExpressionDataDoubleMatrix noSequencesFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
-        RowsWithSequencesFilter f = new RowsWithSequencesFilter();
-        return f.filter( eeDoubleMatrix );
-    }
-
-    /**
      * @param eeDoubleMatrix , already masked for missing values.
      * @param ranks
      * @param arrayDesignsUsed
@@ -352,20 +392,6 @@ public class ExpressionExperimentFilter {
         return answer;
     }
 
-    //
-    // /**
-    // * @param matrix
-    // * @return filtered matrix
-    // */
-    // private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
-    // RowLevelFilter rowLevelFilter = new RowLevelFilter();
-    // rowLevelFilter.setMethod( Method.CV );
-    // rowLevelFilter.setLowCut( config.getLowVarianceCut() );
-    // rowLevelFilter.setRemoveAllNegative( false );
-    // rowLevelFilter.setUseAsFraction( true );
-    // return rowLevelFilter.filter( matrix );
-    // }
-
     /**
      * @param matrix
      * @param ranks
@@ -402,22 +428,6 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * Remove rows that have a variance of zero (within a small constant)
-     * 
-     * @param matrix
-     * @return
-     * @see Constants.SMALL
-     */
-    public static ExpressionDataDoubleMatrix zeroVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( Method.VAR );
-        rowLevelFilter.setLowCut( Constants.SMALL );
-        rowLevelFilter.setRemoveAllNegative( false );
-        rowLevelFilter.setUseAsFraction( false );
-        return rowLevelFilter.filter( matrix );
-    }
-
-    /**
      * Remove rows that have too many missing values.
      * 
      * @param matrix with missing values masked already
@@ -435,6 +445,34 @@ public class ExpressionExperimentFilter {
         rowMissingFilter.setMinPresentCount( MIN_NUMBER_OF_SAMPLES_PRESENT );
 
         return rowMissingFilter.filter( matrix );
+    }
+
+    /**
+     * Filter rows that lack BioSequences associated with the probes.
+     * 
+     * @param eeDoubleMatrix
+     * @return
+     */
+    private ExpressionDataDoubleMatrix noSequencesFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+        RowsWithSequencesFilter f = new RowsWithSequencesFilter();
+        return f.filter( eeDoubleMatrix );
+    }
+
+    /**
+     * Transform the data as configured (e.g., take log) -- which could mean no action
+     */
+    private void transform( ExpressionDataDoubleMatrix datamatrix ) {
+
+        if ( !config.isLogTransform() ) {
+            return;
+        }
+
+        boolean alreadyLogged = this.isLogTransformed( datamatrix );
+        if ( !alreadyLogged ) {
+            MatrixStats.logTransform( datamatrix.getMatrix() );
+
+        }
+
     }
 
     private boolean usesAffymetrix() {

@@ -37,8 +37,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
-
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
@@ -187,19 +185,21 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                     rawResults.addAll( getCoexpressionRelationshipsFromDB( batch, sourceAnalysis, className ) );
 
                     if ( timer.getTime() > 100 ) {
-                        log.info( "Fetching coexpression results for "+batch.size()+" genes took " + timer.getTime() + "ms" );
+                        log.info( "Fetching coexpression results for " + batch.size() + " genes took "
+                                + timer.getTime() + "ms" );
                     }
                     batch.clear();
                 }
             }
 
             if ( batch.size() > 0 ) {
-            	
-            	StopWatch timer = new StopWatch();
+
+                StopWatch timer = new StopWatch();
                 timer.start();
                 rawResults.addAll( getCoexpressionRelationshipsFromDB( batch, sourceAnalysis, className ) );
                 if ( timer.getTime() > 100 ) {
-                    log.info( "Fetching coexpression results for "+batch.size()+" genes took " + timer.getTime() + "ms" );
+                    log.info( "Fetching coexpression results for " + batch.size() + " genes took " + timer.getTime()
+                            + "ms" );
                 }
             }
         }
@@ -248,8 +248,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         if ( timer.getTime() > 100 ) {
             log.info( "Filtering " + rawResults.size() + " results took " + timer.getTime() + "ms" );
         }
-        
-       
+
         return finalResult;
     }
 
@@ -266,7 +265,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         Collection<Gene> genes = new HashSet<Gene>();
         genes.add( gene );
-        return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis ).get( gene.getId() );
+        return this.handleFindCoexpressionRelationships( genes, stringency, maxResults, sourceAnalysis ).get(
+                gene.getId() );
     }
 
     /*
@@ -363,8 +363,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                     new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
                     new Object[] { queryGeneId, unseen, stringency, sourceAnalysis } );
             if ( timer.getTime() > 1000 ) {
-                log.info( firstQueryString + " for sourceAnalysis"
-                        + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
+                log.info( firstQueryString + " for sourceAnalysis" + sourceAnalysis.getId() + " took "
+                        + timer.getTime() + "ms" );
             }
 
             if ( !SINGLE_QUERY_FOR_LINKS ) {
@@ -376,8 +376,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                         new Object[] { queryGeneId, unseen, stringency, sourceAnalysis } ) );
 
                 if ( timer.getTime() > 1000 ) {
-                    log.info( "!SINGLE_QUERY_FOR_LINKS " + secondQueryString + " for sourceAnalysis" + sourceAnalysis.getId()
-                            + " took " + timer.getTime() + "ms" );
+                    log.info( "!SINGLE_QUERY_FOR_LINKS " + secondQueryString + " for sourceAnalysis"
+                            + sourceAnalysis.getId() + " took " + timer.getTime() + "ms" );
                 }
             }
 
@@ -411,7 +411,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
              * DO NOT populate the cache with these results, as they are limited by stringency and the second gene
              * choice.
              */
-        }       
+        }
 
         return resultById;
 
@@ -567,7 +567,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         if ( timer.getTime() > 1000 ) {
             log.info( "pre-processing " + r.size() + " results to be cached took: " + timer.getTime() + "ms" );
         }
-        
+
         int totalResultsCached = 0;
         for ( Long geneId : forCache.keySet() ) {
 
@@ -577,7 +577,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                     .put( new Element( new GeneCached( geneId, sourceAnalysis.getId() ), resultsToCache ) );
 
             totalResultsCached = totalResultsCached + resultsToCache.size();
-        }        
+        }
 
     }
 

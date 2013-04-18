@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+// import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,9 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
@@ -43,7 +46,10 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
@@ -66,6 +72,12 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     private CompositeSequenceService compositeSequenceService;
 
     @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
+    @Autowired
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
 
     /*
@@ -77,57 +89,245 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds ) {
 
         /*
-         * FIXME: instead of retrieving the analysisresult, redo the analysis, since we might not have saved all the results.
+         * first pass: get full results.
          */
-        
-        
-        Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSet( analysisResultSetIds );
+        Collection<ExpressionAnalysisResultSet> updatedResultSets = prepare( analysisResultSetIds );
 
-        if ( resultSets.size() < 2 ) {
-            throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
+        /*
+         * Second pass. Organize the results by gene
+         */
+        Collection<DifferentialExpressionAnalysisResult> res2set = new HashSet<DifferentialExpressionAnalysisResult>();
+        Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = organizeResultsByGene(
+                updatedResultSets, res2set );
+
+        if ( gene2result == null ) {
+            throw new IllegalArgumentException( "There are no genes associated with any of the probes" );
         }
 
         /*
-         * 1. Thaw the result sets and do some validation. 2. Get all the probes for all the results sets that will be
-         * used. 3. Build a map of result to the source result set.
+         * third pass, do the actual meta-analysis.
          */
-        log.info( "Preparing to meta-analyze " + resultSets.size() + " resultSets ..." );
-        Map<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> res2set = new HashMap<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>();
-        Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = doMetaAnalysis( updatedResultSets, res2set, gene2result );
 
-            differentialExpressionResultService.thaw( rs );
-
-            validate( rs );
-
-            Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
-
-            log.info( results.size() + " results to check ..." );
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                assert r != null;
-                CompositeSequence probe = r.getProbe();
-                assert probe != null;
-                probes.add( probe );
-                res2set.put( r, rs ); // temporary data structure
-            }
-            log.info( results.size() + " results checked for resultset with ID=" + rs.getId() + ", found "
-                    + probes.size() + " probes/elements so far for " + res2set.size() + " results in total ..." );
+        if ( metaAnalysis.getResults().isEmpty() ) {
+            log.warn( "No results were significant, the analysis will not be completed" );
+            return null;
         }
 
-        Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = organizeResultsByGene( resultSets,
-                probes );
+        log.info( "Found " + metaAnalysis.getResults().size() + " results meeting meta-qvalue of "
+                + QVALUE_FOR_STORAGE_THRESHOLD );
 
+        return metaAnalysis;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DiffExMetaAnalyzerService#persist(ubic.gemma.model.analysis.expression.diff
+     * .GeneDifferentialExpressionMetaAnalysis)
+     */
+    @Override
+    public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
+        for ( ExpressionAnalysisResultSet r : analysis.getResultSetsIncluded() ) {
+            // this will only be necessary if there are new results added. FIXME perhaps don't save everything. Just
+            // save the ones we need. Remove the unneeded ones. Drawback: could end up redoing this multiple times.
+            r.setQvalueThresholdForStorage( 1.0 );
+            differentialExpressionResultService.update( r );
+        }
+
+        return analysisService.create( analysis );
+    }
+
+    /**
+     * @param res
+     * @return
+     */
+    private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
+        assert !res.isEmpty();
+        Double bestPvalue = Double.MAX_VALUE;
+        DifferentialExpressionAnalysisResult best = null;
+
+        for ( DifferentialExpressionAnalysisResult r : res ) {
+
+            Double pvalue = r.getPvalue();
+            if ( pvalue == null ) continue;
+
+            assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
+
+            if ( pvalue < bestPvalue ) {
+                bestPvalue = pvalue;
+                best = r;
+            }
+        }
+
+        if ( best == null ) return null;
+
+        if ( best.getContrasts().isEmpty() ) {
+            throw new IllegalStateException( "There was no contrast for result with ID=" + best.getId() + " resultset="
+                    + best.getResultSet().getId() );
+        }
+
+        assert best.getContrasts().size() == 1;
+
+        return best.getContrasts().iterator().next().getLogFoldChange();
+    }
+
+    /**
+     * For cases where there is more than one result for a gene in a data set (due to multiple probes), we aggregate
+     * them. Method: take the best pvalue. Later we correct for multiple testing.
+     * <p>
+     * The pvalues stored in a DifferentialExpressionAnalysisResult are two-tailed, so we have to divide by two, and
+     * then decide which tail to provide.
+     * 
+     * @param res that are all from the same gene, from a single resultset.
+     * @param upperTail if true, the upper tail probability is given, lower tail otehrwise.
+     * @return the pvalue that represents the overall results.
+     */
+    private Double aggregatePvaluesForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res,
+            boolean upperTail ) {
+        assert !res.isEmpty();
+        Double bestPvalue = Double.MAX_VALUE;
+
+        for ( DifferentialExpressionAnalysisResult r : res ) {
+
+            Double pvalue = r.getPvalue();
+
+            if ( pvalue == null || Double.isNaN( pvalue ) ) {
+                continue;
+            }
+
+            /*
+             * P-values stored with the per-experiment analyses are two-sided. To convert to a one-sided value, we
+             * consider just one tail.
+             */
+            pvalue /= 2.0;
+
+            /*
+             * Next decide if we should use the "up" or "down" part of the pvalue. We examine the fold change, and
+             * associate the original pvalue with that tail. We then switch tails if necessary.
+             */
+            assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
+            Double logFoldChange = r.getContrasts().iterator().next().getLogFoldChange();
+
+            if ( ( upperTail && logFoldChange < 0 ) || ( !upperTail && logFoldChange > 0 ) ) {
+                pvalue = 1.0 - pvalue;
+            }
+
+            if ( pvalue < bestPvalue ) {
+                bestPvalue = pvalue;
+            }
+        }
+
+        assert bestPvalue <= 1.0 && bestPvalue >= 0.0;
+
+        /*
+         * Because each gene gets two chances to be significant (up and down) we considered to _also_ do a Bonferroni
+         * correction. This would be too conservative because the pair of pvalues are correlated. If one pvalue is good
+         * the other is bad. There is no need for this correction.
+         */
+        // return Math.min( 1.0, 2.0 * bestPvalue );
+        return bestPvalue;
+    }
+
+    /**
+     * @param resultsToUse
+     * @param probes
+     * @param rs
+     */
+    private void checkAndAddResultSet( Collection<DifferentialExpressionAnalysisResult> resultsToUse,
+            Collection<CompositeSequence> probes, ExpressionAnalysisResultSet rs ) {
+        Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+
+        log.info( results.size() + " results to check ..." );
+        for ( DifferentialExpressionAnalysisResult r : results ) {
+            assert r != null;
+            CompositeSequence probe = r.getProbe();
+            assert probe != null;
+            probes.add( probe );
+
+            boolean added = resultsToUse.add( r );
+            assert added : "Failed to add: " + r;
+        }
+        log.info( results.size() + " results checked for resultset with ID=" + rs.getId() + ", found " + probes.size()
+                + " probes/elements so far for " + resultsToUse.size() + " results in total ..." );
+    }
+
+    /**
+     * Bonferonni correct across multiple pvalues. and clip really small pvalues to avoid them taking over.
+     * <p>
+     * FIXME make clipping adjustable.
+     * 
+     * @param usedResults tells us how many results we used to obtain the pvalue, for the purposes of multiple testing.
+     * @param pvalue
+     * @return adjusted and clipped pvalues.
+     */
+    private Double correctAndClip( Collection<DifferentialExpressionAnalysisResult> usedResults, Double pvalue ) {
+        pvalue = usedResults.size() == 1 ? pvalue : Math.min( pvalue * usedResults.size(), 1.0 );
+        pvalue = Math.max( pvalue, GeneDifferentialExpressionService.PVALUE_CLIP_THRESHOLD );
+        return pvalue;
+    }
+
+    /**
+     * spit out a bunch of debugging information.
+     * 
+     * @param g
+     * @param pvalues4geneUp
+     * @param pvalues4geneDown
+     * @param resultsUsed
+     * @param fisherPvalueUp
+     * @param fisherPvalueDown
+     */
+    private void debug( Gene g, DoubleArrayList pvalues4geneUp, DoubleArrayList pvalues4geneDown,
+            Collection<DifferentialExpressionAnalysisResult> resultsUsed, double fisherPvalueUp, double fisherPvalueDown ) {
+
+        // System.err.println( "Up\t" + g.getOfficialSymbol() + "\t" + StringUtils.join( pvalues4geneUp.toList(), '\t' )
+        // );
+        // System.err.println( "Down\t" + g.getOfficialSymbol() + "\t"
+        // + StringUtils.join( pvalues4geneDown.toList(), '\t' ) );
+
+        // System.err.print( "InputP\t" + g.getOfficialSymbol() );
+        // for ( DifferentialExpressionAnalysisResult w : resultsUsed ) {
+        // System.err.print( "\t" + w.getPvalue() );
+        // }
+        // System.err.println();
+        // System.err.print( "InputT\t" + g.getOfficialSymbol() );
+        // for ( DifferentialExpressionAnalysisResult w : resultsUsed ) {
+        // System.err.print( "\t" + w.getContrasts().iterator().next().getTstat() );
+        // }
+        // System.err.println();
+
+        if ( log.isDebugEnabled() )
+            log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g", g.getOfficialSymbol(),
+                    fisherPvalueUp, fisherPvalueDown ) );
+    }
+
+    /**
+     * @param updatedResultSets
+     * @param res2set
+     * @param gene2result
+     * @return
+     */
+    private GeneDifferentialExpressionMetaAnalysis doMetaAnalysis(
+            Collection<ExpressionAnalysisResultSet> updatedResultSets,
+            Collection<DifferentialExpressionAnalysisResult> res2set,
+            Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result ) {
         log.info( "Computing pvalues ..." );
         DoubleArrayList pvaluesUp = new DoubleArrayList();
         DoubleArrayList pvaluesDown = new DoubleArrayList();
 
-        // third pass: collate to get pvalues. First we have to aggregate within result set for genes which have more
+        // third pass: collate to get p-values. First we have to aggregate within result set for genes which have more
         // than one probe
         List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResultsUp = new ArrayList<GeneDifferentialExpressionMetaAnalysisResult>();
         List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResultsDown = new ArrayList<GeneDifferentialExpressionMetaAnalysisResult>();
         for ( Gene g : gene2result.keySet() ) {
+
             Map<ExpressionAnalysisResultSet, Collection<DifferentialExpressionAnalysisResult>> resultSet2Results4Gene = getResults4GenePerResultSet(
                     g, res2set, gene2result );
+
+            if ( g.getOfficialSymbol().equals( "GUK1" ) ) {
+                log.info( g );
+            }
 
             /*
              * Compute the pvalues for each resultset.
@@ -173,13 +373,14 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
                 /*
                  * Now when we correct, we have to 1) bonferroni correct for multiple probes and 2) clip really small
-                 * pvalues. We do this now, so that we don't skew the converse pvalues (up vs down).
+                 * pvalues. We do this now, so that we don't skew the converse pvalues (up vs. down).
                  */
-                pvalue4GeneInOneResultSetDown = correctAndClip( res, pvalue4GeneInOneResultSetDown );
                 pvalue4GeneInOneResultSetUp = correctAndClip( res, pvalue4GeneInOneResultSetUp );
+                pvalue4GeneInOneResultSetDown = correctAndClip( res, pvalue4GeneInOneResultSetDown );
 
                 // results used for this one gene's meta-analysis.
-                resultsUsed.addAll( res );
+                boolean added = resultsUsed.addAll( res );
+                assert added;
 
                 pvalues4geneUp.add( pvalue4GeneInOneResultSetUp );
                 pvalues4geneDown.add( pvalue4GeneInOneResultSetDown );
@@ -188,7 +389,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 if ( log.isDebugEnabled() )
                     log.debug( String.format( "%s %.4f %.4f %.1f", g.getOfficialSymbol(), pvalue4GeneInOneResultSetUp,
                             pvalue4GeneInOneResultSetDown, foldChange4GeneInOneResultSet ) );
-            }
+            } // loop over results for one gene
+            assert resultsUsed.size() >= pvalues4geneUp.size();
 
             /*
              * FIXME what to do if there is just one pvalue for the gene? Is this good enough?
@@ -221,24 +423,16 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                     resultsUsed, meanLogFoldChange, fisherPvalueDown, Boolean.FALSE );
             metaAnalysisResultsDown.add( metaAnalysisResultDown );
 
-            // debug code.
-            // System.err.println( "Up\t" + g.getOfficialSymbol() + "\t"
-            // + StringUtils.join( pvalues4geneUp.toList(), '\t' ) );
-            // System.err.println( "Down\t" + g.getOfficialSymbol() + "\t"
-            // + StringUtils.join( pvalues4geneDown.toList(), '\t' ) );
-
-            if ( log.isDebugEnabled() )
-                log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g", g.getOfficialSymbol(),
-                        fisherPvalueUp, fisherPvalueDown ) );
+            debug( g, pvalues4geneUp, pvalues4geneDown, resultsUsed, fisherPvalueUp, fisherPvalueDown );
         } // end loop over genes.
+
+        assert metaAnalysisResultsUp.size() == metaAnalysisResultsDown.size();
 
         if ( metaAnalysisResultsDown.isEmpty() ) {
             // can happen if platforms don't have any genes that match etc.
             log.warn( "No meta-analysis results were obtained" );
             return null;
         }
-
-        assert metaAnalysisResultsUp.size() == metaAnalysisResultsDown.size();
 
         log.info( metaAnalysisResultsUp.size() + " initial meta-analysis results" );
 
@@ -248,206 +442,67 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         DoubleArrayList qvaluesDown = MultipleTestCorrection.benjaminiHochberg( pvaluesDown );
         assert qvaluesDown.size() == metaAnalysisResultsDown.size();
 
-        /*
-         * create the analysis object
-         */
-        GeneDifferentialExpressionMetaAnalysis analysis = GeneDifferentialExpressionMetaAnalysis.Factory.newInstance();
-        analysis.setNumGenesAnalyzed( metaAnalysisResultsUp.size() ); // should be the same for both.
-        analysis.setQvalueThresholdForStorage( QVALUE_FOR_STORAGE_THRESHOLD );
-        analysis.getResultSetsIncluded().addAll( resultSets );
-
-        // reject values that don't meet the threshold
-        selectValues( metaAnalysisResultsUp, qvaluesUp, analysis );
-        selectValues( metaAnalysisResultsDown, qvaluesDown, analysis );
-
-        resolveConflicts( analysis );
-
-        if ( analysis.getResults().isEmpty() ) {
-            log.warn( "No results were significant, the analysis will not be completed" );
-            return null;
-        }
-
-        log.info( "Found " + analysis.getResults().size() + " results meeting meta-qvalue of "
-                + QVALUE_FOR_STORAGE_THRESHOLD );
-
-        return analysis;
+        return makeMetaAnalysisObject( updatedResultSets, metaAnalysisResultsUp, metaAnalysisResultsDown, qvaluesUp,
+                qvaluesDown );
     }
 
     /**
-     * Organize the results by gene. Results that have more than one gene (or no gene) are skipped.
+     * Redo analyses for the resultset, with the altered threshold, but don't persist the results.
      * 
-     * @param resultSets
-     * @param probes
+     * @param rs
+     * @param analysis
      * @return
      */
-    private Map<Gene, Collection<DifferentialExpressionAnalysisResult>> organizeResultsByGene(
-            Collection<ExpressionAnalysisResultSet> resultSets, Collection<CompositeSequence> probes ) {
-
-        log.info( "Matching up by genes ..." );
-        Map<CompositeSequence, Collection<Gene>> cs2genes = compositeSequenceService.getGenes( probes );
-        Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = new HashMap<Gene, Collection<DifferentialExpressionAnalysisResult>>();
-
-        // second pass: organize by gene
-        int numWithGenes = 0;
-        int numWithoutGenes = 0;
-        int numWithMultipleGenes = 0;
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                assert r != null;
-                CompositeSequence probe = r.getProbe();
-                Collection<Gene> genes = cs2genes.get( probe );
-                if ( genes == null || genes.isEmpty() ) {
-                    numWithoutGenes++;
-                    continue;
-                }
-                if ( genes.size() > 1 ) {
-                    numWithMultipleGenes++;
-                    continue;
-                }
-                Gene gene = genes.iterator().next();
-                if ( !gene2result.containsKey( gene ) ) {
-                    gene2result.put( gene, new HashSet<DifferentialExpressionAnalysisResult>() );
-                }
-                gene2result.get( gene ).add( r );
-                numWithGenes++;
-            }
-        }
-
-        if ( numWithGenes == 0 ) {
-            log.warn( "No probes were associated with genes" );
-            return null;
-        }
-
-        log.info( numWithGenes + " of the results had genes; " + numWithoutGenes + " had no gene; "
-                + numWithMultipleGenes + " had more than one gene" );
-        return gene2result;
-    }
-
-    @Override
-    public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
-        return analysisService.create( analysis );
-    }
-
-    /**
-     * @param res
-     * @return
-     */
-    private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
-        assert !res.isEmpty();
-        Double bestPvalue = Double.MAX_VALUE;
-        DifferentialExpressionAnalysisResult best = null;
-
-        for ( DifferentialExpressionAnalysisResult r : res ) {
-            Double pvalue = r.getPvalue();
-            if ( pvalue == null ) continue;
-
-            assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
-
-            if ( pvalue < bestPvalue ) {
-                bestPvalue = pvalue;
-                best = r;
-            }
-        }
-
-        if ( best == null ) return null;
-
-        if ( best.getContrasts().isEmpty() ) {
-            throw new IllegalStateException( "There was no contrast for result with ID=" + best.getId() );
-        }
-
-        assert best.getContrasts().size() == 1;
-
-        return best.getContrasts().iterator().next().getLogFoldChange();
-    }
-
-    /**
-     * For cases where there is more than one result for a gene in a data set (due to multiple probes), we aggregate
-     * them. Method: take the best pvalue.
-     * 
-     * @param res that are all from the same gene, from a single resultset.
-     * @return the pvalue that represents the overall results
-     */
-    private Double aggregatePvaluesForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res,
-            boolean upperTail ) {
-        assert !res.isEmpty();
-        Double bestPvalue = Double.MAX_VALUE;
-        for ( DifferentialExpressionAnalysisResult r : res ) {
-
-            Double pvalue = r.getPvalue();
-
-            if ( pvalue == null || Double.isNaN( pvalue ) ) {
-                continue;
-            }
-
-            /*
-             * P-values stored with the per-experiment analyses are two-sided. To convert to a one-sided value, we
-             * consider just one tail.
-             */
-            pvalue /= 2.0;
-
-            /*
-             * Next decide if we should use the "up" or "down" part of the pvalue. We examine the fold change, and
-             * associate the original pvalue with that tail. We then switch tails if necessary.
-             */
-            assert r.getContrasts().size() < 2 : "Wrong number of contrasts: " + r.getContrasts().size();
-            Double logFoldChange = r.getContrasts().iterator().next().getLogFoldChange();
-
-            if ( ( upperTail && logFoldChange < 0 ) || ( !upperTail && logFoldChange > 0 ) ) {
-                pvalue = 1.0 - pvalue;
-            }
-
-            if ( pvalue < bestPvalue ) {
-                bestPvalue = pvalue;
-            }
-        }
-
-        assert bestPvalue <= 1.0 && bestPvalue >= 0.0;
+    private ExpressionAnalysisResultSet extendAnalysis( ExpressionAnalysisResultSet rs,
+            DifferentialExpressionAnalysis analysis ) {
 
         /*
-         * Because each gene gets two chances to be significant (up and down) we considered to _also_ do a Bonferroni
-         * correction. This would be too conservative because the pair of pvalues are correlated. If one pvalue is good
-         * the other is bad. There is no need for this correction.
+         * FIXME if we're going to persist it anyway, we might as well do it here? Otherwise we could end up doing it
+         * over and over.
          */
-        // return Math.min( 1.0, 2.0 * bestPvalue );
-        return bestPvalue;
+        BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
+        ExpressionExperiment ee;
+
+        if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
+            ee = ( ( ExpressionExperimentSubSet ) experimentAnalyzed ).getSourceExperiment();
+        } else {
+            ee = ( ExpressionExperiment ) experimentAnalyzed;
+        }
+
+        for ( ExpressionAnalysisResultSet s : differentialExpressionAnalyzerService.extendAnalysis( ee, analysis ) ) {
+            if ( s.getId().equals( rs.getId() ) ) {
+                return s;
+            }
+        }
+        throw new IllegalStateException();
     }
 
     /**
-     * Bonferonni correct across multiple pvalues. and clip really small pvalues to avoid them taking over.
+     * This is necessary to deal with the case of more than one probe for a gene in a given resultset.
      * 
-     * @param res
-     * @param pvalue4GeneInOneResultSetDown
-     * @return FIXME make clipping adjustable.
-     */
-    private Double correctAndClip( Collection<DifferentialExpressionAnalysisResult> res,
-            Double pvalue4GeneInOneResultSetDown ) {
-
-        pvalue4GeneInOneResultSetDown = Math.min( pvalue4GeneInOneResultSetDown * res.size(), 1.0 );
-
-        pvalue4GeneInOneResultSetDown = Math.max( pvalue4GeneInOneResultSetDown,
-                GeneDifferentialExpressionService.PVALUE_CLIP_THRESHOLD );
-        return pvalue4GeneInOneResultSetDown;
-    }
-
-    /**
      * @param g
      * @param res2set
      * @param gene2result
-     * @return
+     * @return a map of result sets to the results from that resultset, for gene g.
      */
     private Map<ExpressionAnalysisResultSet, Collection<DifferentialExpressionAnalysisResult>> getResults4GenePerResultSet(
-            Gene g, Map<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> res2set,
+            Gene g, Collection<DifferentialExpressionAnalysisResult> res2set,
             Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result ) {
+
         Collection<DifferentialExpressionAnalysisResult> res4gene = gene2result.get( g );
 
         Map<ExpressionAnalysisResultSet, Collection<DifferentialExpressionAnalysisResult>> resultSet2Results4Gene = new HashMap<ExpressionAnalysisResultSet, Collection<DifferentialExpressionAnalysisResult>>();
+
         for ( DifferentialExpressionAnalysisResult r : res4gene ) {
             Collection<ContrastResult> contrasts = r.getContrasts();
+            if ( contrasts.isEmpty() ) {
+                // defensive; could indicate failed model fit, etc. - but shouldn't happen this late?
+                continue;
+            }
             assert contrasts.size() == 1;
 
-            ExpressionAnalysisResultSet rs = res2set.get( r );
-            // detect when the result set is repeated.
+            ExpressionAnalysisResultSet rs = r.getResultSet();
+
             if ( !resultSet2Results4Gene.containsKey( rs ) ) {
                 resultSet2Results4Gene.put( rs, new HashSet<DifferentialExpressionAnalysisResult>() );
             }
@@ -460,7 +515,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @param analysisResultSetIds
      * @return
      */
-    private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSet( Collection<Long> analysisResultSetIds ) {
+    private Collection<ExpressionAnalysisResultSet> loadAnalysisResultSets( Collection<Long> analysisResultSetIds ) {
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
         for ( Long analysisResultSetId : analysisResultSetIds ) {
@@ -478,6 +533,35 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     }
 
     /**
+     * @param updatedResultSets
+     * @param metaAnalysisResultsUp
+     * @param metaAnalysisResultsDown
+     * @param qvaluesUp
+     * @param qvaluesDown
+     * @return
+     */
+    private GeneDifferentialExpressionMetaAnalysis makeMetaAnalysisObject(
+            Collection<ExpressionAnalysisResultSet> updatedResultSets,
+            List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResultsUp,
+            List<GeneDifferentialExpressionMetaAnalysisResult> metaAnalysisResultsDown, DoubleArrayList qvaluesUp,
+            DoubleArrayList qvaluesDown ) {
+        /*
+         * create the analysis object
+         */
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = GeneDifferentialExpressionMetaAnalysis.Factory
+                .newInstance();
+        metaAnalysis.setNumGenesAnalyzed( metaAnalysisResultsUp.size() ); // should be the same for both.
+        metaAnalysis.setQvalueThresholdForStorage( QVALUE_FOR_STORAGE_THRESHOLD );
+        metaAnalysis.getResultSetsIncluded().addAll( updatedResultSets );
+
+        // reject values that don't meet the threshold
+        selectValues( metaAnalysisResultsUp, qvaluesUp, metaAnalysis );
+        selectValues( metaAnalysisResultsDown, qvaluesDown, metaAnalysis );
+        resolveConflicts( metaAnalysis );
+        return metaAnalysis;
+    }
+
+    /**
      * @param g
      * @param resultsUsed
      * @param meanLogFoldChange
@@ -492,10 +576,130 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         GeneDifferentialExpressionMetaAnalysisResult metaAnalysisResult = GeneDifferentialExpressionMetaAnalysisResult.Factory
                 .newInstance();
         metaAnalysisResult.setMetaPvalue( fisherPvalue );
-        metaAnalysisResult.getResultsUsed().addAll( resultsUsed );
+        for ( DifferentialExpressionAnalysisResult w : resultsUsed ) {
+            boolean added = metaAnalysisResult.getResultsUsed().add( w );
+            assert added;
+        }
         metaAnalysisResult.setGene( g );
         metaAnalysisResult.setUpperTail( upperTail );
         return metaAnalysisResult;
+    }
+
+    /**
+     * Organize the results by gene. Results that have more than one gene (or no gene) are skipped.
+     * 
+     * @param resultSets
+     * @param res2set
+     * @return a map of genes to the usable results for that gene. There can be more than one result for one resultset.
+     */
+    private Map<Gene, Collection<DifferentialExpressionAnalysisResult>> organizeResultsByGene(
+            Collection<ExpressionAnalysisResultSet> resultSets, Collection<DifferentialExpressionAnalysisResult> res2set ) {
+        Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
+
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+            validate( rs );
+            checkAndAddResultSet( res2set, probes, rs );
+        }
+        log.info( "Matching up by genes ..." );
+        Map<CompositeSequence, Collection<Gene>> cs2genes = compositeSequenceService.getGenes( probes );
+        Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = new HashMap<Gene, Collection<DifferentialExpressionAnalysisResult>>();
+
+        int numWithGenes = 0;
+        int numWithoutGenes = 0;
+        int numWithMultipleGenes = 0;
+        int numWithoutPvalues = 0;
+        assert !resultSets.isEmpty();
+
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+
+            Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+            assert !results.isEmpty();
+            for ( DifferentialExpressionAnalysisResult r : results ) {
+
+                if ( r.getPvalue() == null || Double.isNaN( r.getPvalue() ) ) {
+                    numWithoutPvalues++;
+                    continue;
+                }
+
+                assert r != null;
+                CompositeSequence probe = r.getProbe();
+                Collection<Gene> genes = cs2genes.get( probe );
+
+                if ( genes == null || genes.isEmpty() ) {
+                    numWithoutGenes++;
+                    continue;
+                }
+                if ( genes.size() > 1 ) {
+                    numWithMultipleGenes++;
+                    continue;
+                }
+
+                Gene gene = genes.iterator().next();
+
+                if ( !gene2result.containsKey( gene ) ) {
+                    gene2result.put( gene, new HashSet<DifferentialExpressionAnalysisResult>() );
+                }
+                boolean added = gene2result.get( gene ).add( r );
+                assert added : "Failed to add " + r;
+                numWithGenes++;
+            }
+        }
+
+        if ( numWithGenes == 0 ) {
+            log.warn( "No probes were associated with genes (or all had more than one gene; " + numWithMultipleGenes
+                    + ")" );
+            return null;
+        }
+
+        log.info( numWithGenes + " of the results had genes; " + numWithoutGenes + " had no gene; "
+                + numWithMultipleGenes + " had more than one gene" );
+        if ( numWithoutPvalues > 0 ) {
+            log.info( numWithoutPvalues
+                    + " of the results had no pvalue stored (typically indicates failed model fits) " );
+        }
+        return gene2result;
+    }
+
+    /**
+     * @param analysisResultSetIds
+     * @return
+     */
+    private Collection<ExpressionAnalysisResultSet> prepare( Collection<Long> analysisResultSetIds ) {
+        Collection<ExpressionAnalysisResultSet> resultSets = loadAnalysisResultSets( analysisResultSetIds );
+
+        if ( resultSets.size() < 2 ) {
+            throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
+        }
+
+        /*
+         * 1. Thaw the result sets and do some validation. 2. Get all the probes for all the results sets that will be
+         * used. 3. Build a map of result to the source result set.
+         */
+        log.info( "Preparing to meta-analyze " + resultSets.size() + " resultSets ..." );
+
+        Collection<ExpressionAnalysisResultSet> updatedResultSets = new HashSet<ExpressionAnalysisResultSet>();
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+            DifferentialExpressionAnalysis analysis = differentialExpressionResultService.getAnalysis( rs );
+            analysis = differentialExpressionAnalysisService.thawFully( analysis );
+
+            if ( rs.getQvalueThresholdForStorage() != null && rs.getQvalueThresholdForStorage() < 1.0 ) {
+
+                /*
+                 * We have to extend the analysis to include all probes, not just 'significant' ones.
+                 */
+
+                rs = extendAnalysis( rs, analysis );
+                updatedResultSets.add( rs );
+
+            } else {
+                // updatedResultSets.add( differentialExpressionResultService.thaw( rs ) );
+                updatedResultSets.add( rs );
+            }
+
+        }
+
+        assert !updatedResultSets.isEmpty();
+        return updatedResultSets;
     }
 
     /**
@@ -528,7 +732,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         }
 
         assert removed >= genesToRemove.size() * 2;
-        log.info( "Data for " + genesToRemove + " genes was removed because of conflicting results." );
+        log.info( "Data for " + genesToRemove.size() + " genes was removed because of conflicting results." );
 
     }
 

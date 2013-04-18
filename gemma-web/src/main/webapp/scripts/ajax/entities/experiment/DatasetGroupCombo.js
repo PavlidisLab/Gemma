@@ -128,7 +128,7 @@ Gemma.DatasetGroupCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 										name: 'All Experiments',
 										description: 'All expression experiments in the database.',
 										numExperiments: -10,
-										writeableByUser: false
+										userCanWrite: false
 									},0);
 									this.insert(0, allExperimentsRecord);
 							}

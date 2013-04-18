@@ -139,17 +139,17 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
     }
 
     @Override
-    public boolean isPublik() {
+    public boolean getIsPublic() {
         return this.isPublic;
     }
 
     @Override
-    public boolean isShared() {
+    public boolean getIsShared() {
         return shared;
     }
 
     @Override
-    public boolean isUserOwned() {
+    public boolean getUserOwned() {
         return this.userOwned;
     }
 
@@ -176,7 +176,7 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
     }
 
     @Override
-    public void setIsUserOwned( boolean isUserOwned ) {
+    public void setUserOwned( boolean isUserOwned ) {
         this.userOwned = isUserOwned;
     }
 
@@ -201,12 +201,12 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
     }
 
     @Override
-    public void setWriteableByUser( boolean userCanWrite ) {
+    public void setUserCanWrite( boolean userCanWrite ) {
         this.userCanWrite = userCanWrite;
     }
 
     @Override
-    public boolean isWriteableByUser() {
+    public boolean getUserCanWrite() {
         return this.userCanWrite;
     }
 

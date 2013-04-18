@@ -9,51 +9,51 @@ Ext.namespace('Gemma');
  */
 Gemma.DatasetGroupStore = function(config) {
 
-	/*
-	 * Leave this here so copies of records can be constructed.
-	 */
-	this.record = Ext.data.Record.create([{
-				name : "id",
-				type : "int"
-			}, {
-				name : "name",
-				type : "string"
-			}, {
-				name : "description",
-				type : "string"
-			}, {
-				name : "numExperiments",
-				type : "int"
-			}, {
-				name : "expressionExperimentIds"
-			}, {
-				name : "taxonId",
-				type : "int"
-			}, {
-				name : "taxonName"
-			}, {
-				name : "modifiable",
-				type : 'boolean'
-			}, {
-				name : "publik",
-				type : 'boolean'
-			}, {
-				name : "shared",
-				type : 'boolean'
-			}, {
-				name : "writeableByUser",
-				type : 'boolean'
-			}, {
-				name : "userOwned",
-				type : 'boolean'
-			}]);
+   /*
+    * Leave this here so copies of records can be constructed.
+    */
+   this.record = Ext.data.Record.create([{
+         name : "id",
+         type : "int"
+      }, {
+         name : "name",
+         type : "string"
+      }, {
+         name : "description",
+         type : "string"
+      }, {
+         name : "numExperiments",
+         type : "int"
+      }, {
+         name : "expressionExperimentIds"
+      }, {
+         name : "taxonId",
+         type : "int"
+      }, {
+         name : "taxonName"
+      }, {
+         name : "modifiable",
+         type : 'boolean'
+      }, {
+         name : "isPublic",
+         type : 'boolean'
+      }, {
+         name : "isShared",
+         type : 'boolean'
+      }, {
+         name : "userCanWrite",
+         type : 'boolean'
+      }, {
+         name : "userOwned",
+         type : 'boolean'
+      }]);
 
-	// todo replace with JsonReader.
-	this.reader = new Ext.data.ListRangeReader({
-				id : "id"
-			}, this.record);
+   // todo replace with JsonReader.
+   this.reader = new Ext.data.ListRangeReader({
+         id : "id"
+      }, this.record);
 
-	Gemma.DatasetGroupStore.superclass.constructor.call(this, config);
+   Gemma.DatasetGroupStore.superclass.constructor.call(this, config);
 
 };
 
@@ -64,68 +64,68 @@ Gemma.DatasetGroupStore = function(config) {
  */
 Ext.extend(Gemma.DatasetGroupStore, Ext.data.Store, {
 
-			autoLoad : true,
-			autoSave : false,
-			selected : null,
+      autoLoad : true,
+      autoSave : false,
+      selected : null,
 
-			proxy : new Ext.data.DWRProxy({
-						apiActionToHandlerMap : {
-							read : {
-								dwrFunction : ExpressionExperimentSetController.loadAll
-							},
-							create : {
-								dwrFunction : ExpressionExperimentSetController.create
-							},
-							update : {
-								dwrFunction : ExpressionExperimentSetController.update
-							},
-							destroy : {
-								dwrFunction : ExpressionExperimentSetController.remove
-							}
-						}
-					}),
+      proxy : new Ext.data.DWRProxy({
+            apiActionToHandlerMap : {
+               read : {
+                  dwrFunction : ExpressionExperimentSetController.loadAll
+               },
+               create : {
+                  dwrFunction : ExpressionExperimentSetController.create
+               },
+               update : {
+                  dwrFunction : ExpressionExperimentSetController.update
+               },
+               destroy : {
+                  dwrFunction : ExpressionExperimentSetController.remove
+               }
+            }
+         }),
 
-			writer : new Ext.data.JsonWriter({
-						writeAllFields : true
-					}),
+      writer : new Ext.data.JsonWriter({
+            writeAllFields : true
+         }),
 
-			getSelected : function() {
-				return this.selected;
-			},
+      getSelected : function() {
+         return this.selected;
+      },
 
-			setSelected : function(rec) {
-				this.previousSelection = this.getSelected();
-				if (rec) {
-					this.selected = rec;
-				}
-			},
+      setSelected : function(rec) {
+         this.previousSelection = this.getSelected();
+         if (rec) {
+            this.selected = rec;
+         }
+      },
 
-			getPreviousSelection : function() {
-				return this.previousSelection;
-			},
+      getPreviousSelection : function() {
+         return this.previousSelection;
+      },
 
-			clearSelected : function() {
-				this.selected = null;
-				delete this.selected;
-			},
+      clearSelected : function() {
+         this.selected = null;
+         delete this.selected;
+      },
 
-			listeners : {
-				exception : function(proxy, type, action, options, res, arg) {
-					if (type === 'remote') {
-						Ext.Msg.show({
-									title : 'Error',
-									msg : res.message,
-									icon : Ext.MessageBox.ERROR
-								});
-					} else {
-						Ext.Msg.show({
-									title : 'Error',
-									msg : arg.message ? arg.message : arg,
-									icon : Ext.MessageBox.ERROR
-								});
-					}
-				}
+      listeners : {
+         exception : function(proxy, type, action, options, res, arg) {
+            if (type === 'remote') {
+               Ext.Msg.show({
+                     title : 'Error',
+                     msg : res.message,
+                     icon : Ext.MessageBox.ERROR
+                  });
+            } else {
+               Ext.Msg.show({
+                     title : 'Error',
+                     msg : arg.message ? arg.message : arg,
+                     icon : Ext.MessageBox.ERROR
+                  });
+            }
+         }
 
-			}
+      }
 
-		});
+   });

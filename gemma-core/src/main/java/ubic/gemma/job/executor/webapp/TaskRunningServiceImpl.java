@@ -59,16 +59,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class TaskRunningServiceImpl implements TaskRunningService {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
 
-    @Autowired private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
-    @Autowired private TaskPostProcessing taskPostProcessing;
+    @Autowired
+    private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
+    @Autowired
+    private TaskPostProcessing taskPostProcessing;
 
-    @Autowired private JMSBrokerMonitor jmsBrokerMonitor;
-    @Autowired private JMSHelper jmsHelper;
-    @Resource(name = "taskSubmissionQueue") private javax.jms.Queue taskSubmissionQueue;
-    @Resource(name = "taskControlQueue") private javax.jms.Queue taskControlQueue;
+    @Autowired
+    private JMSBrokerMonitor jmsBrokerMonitor;
+    @Autowired
+    private JMSHelper jmsHelper;
+    @Resource(name = "taskSubmissionQueue")
+    private javax.jms.Queue taskSubmissionQueue;
+    @Resource(name = "taskControlQueue")
+    private javax.jms.Queue taskControlQueue;
 
-    private final ListeningExecutorService executorService =
-            MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( 20 ) );
+    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator( Executors
+            .newFixedThreadPool( 20 ) );
 
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<String, SubmittedTask>();
 
@@ -78,7 +84,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     @Override
-    public SubmittedTask getSubmittedTask(String taskId) {
+    public SubmittedTask getSubmittedTask( String taskId ) {
         return submittedTasks.get( taskId );
     }
 
@@ -112,20 +118,27 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         return taskId;
     }
 
-    private ExecutingTask<TaskResult> constructExecutingTask( BackgroundJob job, String taskId, final SubmittedTaskLocal submittedTask ) {
+    private ExecutingTask<TaskResult> constructExecutingTask( BackgroundJob job, String taskId,
+            final SubmittedTaskLocal submittedTask ) {
         ExecutingTask<TaskResult> executingTask = new ExecutingTask<TaskResult>( job );
 
         executingTask.setStatusCallback( new ExecutingTask.TaskLifecycleHandler() {
-            @Override public void onStart() {
+            @Override
+            public void onStart() {
                 submittedTask.updateStatus( SubmittedTask.Status.RUNNING, new Date() );
             }
-            @Override public void onFinish() {
+
+            @Override
+            public void onFinish() {
                 submittedTask.updateStatus( SubmittedTask.Status.COMPLETED, new Date() );
             }
-            @Override public void onFailure( Throwable e ) {
+
+            @Override
+            public void onFailure( Throwable e ) {
+                log.error( e, e );
                 submittedTask.updateStatus( SubmittedTask.Status.FAILED, new Date() );
             }
-        });
+        } );
 
         executingTask.setProgressAppender( new LogBasedProgressAppender( taskId, new ProgressUpdateCallback() {
             private final Queue<String> progressUpdates = submittedTask.getProgressUpdates();
@@ -134,7 +147,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             public void addProgressUpdate( String message ) {
                 progressUpdates.add( message );
             }
-        }));
+        } ) );
         return executingTask;
     }
 
@@ -152,7 +165,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     public String submitLocalTask( TaskCommand taskCommand ) throws ConflictingTaskException {
         final Task task = taskCommandToTaskMatcher.match( taskCommand );
         // TODO: fix once submitLocalJob is deprecated.
-        BackgroundJob<TaskCommand, TaskResult> job = new BackgroundJob<TaskCommand, TaskResult>(taskCommand) {
+        BackgroundJob<TaskCommand, TaskResult> job = new BackgroundJob<TaskCommand, TaskResult>( taskCommand ) {
             @Override
             protected TaskResult processJob() {
                 return task.execute();
@@ -163,13 +176,13 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     /**
-     *  We check if there are listeners on task submission queue to decide if remote tasks can be served.
+     * We check if there are listeners on task submission queue to decide if remote tasks can be served.
      */
-    //TODO: throw exception if remote worker is unavailable and allow client to submit locally? Or rename the method.
+    // TODO: throw exception if remote worker is unavailable and allow client to submit locally? Or rename the method.
     @Override
     public String submitRemoteTask( final TaskCommand taskCommand ) throws ConflictingTaskException {
         String taskId = taskCommand.getTaskId();
-        assert (taskId != null);
+        assert ( taskId != null );
 
         if ( ConfigUtils.isRemoteTasksEnabled() && jmsBrokerMonitor.canServiceRemoteTasks() ) {
             jmsHelper.sendMessage( taskSubmissionQueue, taskCommand );
@@ -183,7 +196,6 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     /**
-     *
      * @param taskCommand
      * @param taskId
      * @return
@@ -193,17 +205,14 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         String statusQueueName = ConfigUtils.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;
         String progressQueueName = ConfigUtils.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" ) + taskId;
 
-        MessageReceiver<TaskResult> resultReceiver =
-                new JmsMessageReceiver<TaskResult>( jmsHelper, resultQueueName );
+        MessageReceiver<TaskResult> resultReceiver = new JmsMessageReceiver<TaskResult>( jmsHelper, resultQueueName );
 
-        MessageReceiver<TaskStatusUpdate> statusUpdateReceiver =
-                new JmsMessageReceiver<TaskStatusUpdate>( jmsHelper, statusQueueName );
+        MessageReceiver<TaskStatusUpdate> statusUpdateReceiver = new JmsMessageReceiver<TaskStatusUpdate>( jmsHelper,
+                statusQueueName );
 
-        MessageReceiver<String> progressUpdateReceiver =
-                new JmsMessageReceiver<String>( jmsHelper, progressQueueName );
+        MessageReceiver<String> progressUpdateReceiver = new JmsMessageReceiver<String>( jmsHelper, progressQueueName );
 
-        MessageSender<TaskControl> taskControlSender =
-                new JmsMessageSender<TaskControl>( jmsHelper, taskControlQueue );
+        MessageSender<TaskControl> taskControlSender = new JmsMessageSender<TaskControl>( jmsHelper, taskControlQueue );
 
         return new SubmittedTaskProxy( taskCommand, resultReceiver, statusUpdateReceiver, progressUpdateReceiver,
                 taskControlSender );

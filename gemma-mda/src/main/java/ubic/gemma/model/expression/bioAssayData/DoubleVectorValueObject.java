@@ -29,9 +29,9 @@ import org.apache.commons.lang.ArrayUtils;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -146,9 +146,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * 
      * @param bioassayset, possibly a subset, which we are going to slice.
      * @param vec
-     * @param bad
+     * @param bad all we nee is the id, the name and the list of bioassays from this.S
      */
-    public DoubleVectorValueObject( BioAssaySet bioassayset, DoubleVectorValueObject vec, BioAssayDimension bad ) {
+    public DoubleVectorValueObject( BioAssaySet bioassayset, DoubleVectorValueObject vec,
+            BioAssayDimensionValueObject bad ) {
         this.masked = vec.masked;
         this.rankByMax = vec.rankByMax;
         this.rankByMean = vec.rankByMean;
@@ -163,15 +164,17 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
         this.setId( null ); // because this is a 'slice', not a persistent one.
         this.setQuantitationType( vec.getQuantitationType() );
+
         this.setBioAssayDimension( bad );
+
         this.sourceVectorId = vec.getId(); // so we can track this!
         this.sliced = true;
         this.data = new double[bad.getBioAssays().size()];
 
         Collection<Double> values = new ArrayList<Double>();
         int i = 0;
-        for ( BioAssay ba : vec.getBioAssayDimension().getBioAssays() ) {
-            if ( this.bioAssayDimension.getBioAssays().contains( ba ) ) {
+        for ( BioAssayValueObject ba : vec.getBioAssays() ) {
+            if ( this.getBioAssays().contains( ba ) ) {
                 values.add( vec.getData()[i] );
             }
             i++;
@@ -254,7 +257,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     /**
      * @param ee
      * @param cs required
-     * @param updatedQuantitationType required
+     * @param updatedQuantitationType required because this might be changed.
      * @return
      */
     public DesignElementDataVector toDesignElementDataVector( ExpressionExperiment ee, CompositeSequence cs,
@@ -269,9 +272,9 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             result = RawExpressionDataVector.Factory.newInstance();
         }
         result.setExpressionExperiment( ee );
-        result.setBioAssayDimension( this.bioAssayDimension );
-        assert this.bioAssayDimension != null;
-        assert this.bioAssayDimension.getBioAssays().size() > 0;
+
+        result.setBioAssayDimension( this.getBioAssayDimension().getEntity() );
+        assert this.getBioAssays().size() > 0;
 
         result.setQuantitationType( updatedQuantitationType );
 
@@ -284,41 +287,43 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * @param dimToMatch
      */
     private void addGaps( BioAssayDimension dimToMatch ) {
+
+        List<BioAssayValueObject> dimToMatchBioAssays = new BioAssayDimensionValueObject( dimToMatch ).getBioAssays();
+
         double[] expandedData = new double[dimToMatch.getBioAssays().size()];
         BioAssayDimension expandedDim = BioAssayDimension.Factory.newInstance();
-        expandedDim.setDescription( "Expanded bioassay dimension based on " + this.bioAssayDimension.getName() );
-        expandedDim.setName( "Expanded bioassay dimension based on " + this.bioAssayDimension.getName() );
+        expandedDim.setDescription( "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
+        expandedDim.setName( "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
 
-        Map<BioMaterial, BioAssay> bmap = new HashMap<BioMaterial, BioAssay>();
-        ArrayDesign arrayDesign = null;
-        for ( BioAssay b : this.getBioAssayDimension().getBioAssays() ) {
+        Map<BioMaterialValueObject, BioAssayValueObject> bmap = new HashMap<BioMaterialValueObject, BioAssayValueObject>();
+        ArrayDesignValueObject arrayDesign = null;
+        for ( BioAssayValueObject b : this.getBioAssays() ) {
 
-            bmap.put( b.getSampleUsed(), b );
-            arrayDesign = b.getArrayDesignUsed();
+            bmap.put( b.getSample(), b );
+            arrayDesign = b.getArrayDesign();
         }
 
-        List<BioAssay> expandedBioAssays = new ArrayList<BioAssay>();
+        List<BioAssayValueObject> expandedBioAssays = new ArrayList<BioAssayValueObject>();
         int i = 0;
         int indexInUngappedData = 0;
-        for ( BioAssay b : dimToMatch.getBioAssays() ) {
+        for ( BioAssayValueObject b : dimToMatchBioAssays ) {
 
-            BioMaterial bm = b.getSampleUsed();
+            BioMaterialValueObject bm = b.getSample();
 
             if ( !bmap.containsKey( bm ) ) {
                 /*
                  * This is one where we have to put in a gap.
                  */
                 expandedData[i] = Double.NaN;
-                BioAssay placeholder = BioAssay.Factory.newInstance();
+                BioAssayValueObject placeholder = new BioAssayValueObject();
                 placeholder.setName( "Missing bioassay for biomaterial=" + bm + " that was not run on " + arrayDesign );
                 placeholder
                         .setDescription( "This is to represent a biomaterial that was not run on the platform for the rest of the bioassaydimension." );
-                placeholder.setArrayDesignUsed( arrayDesign );
-                placeholder.setSampleUsed( bm );
+                placeholder.setArrayDesign( arrayDesign );
+                placeholder.setSample( bm );
                 expandedBioAssays.add( placeholder );
             } else {
-                expandedBioAssays.add( ( ( List<BioAssay> ) this.bioAssayDimension.getBioAssays() )
-                        .get( indexInUngappedData ) );
+                expandedBioAssays.add( this.getBioAssays().get( indexInUngappedData ) );
                 expandedData[i] = data[indexInUngappedData];
                 indexInUngappedData++;
             }
@@ -326,7 +331,11 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         }
 
         this.data = expandedData;
-        this.bioAssayDimension = expandedDim;
-        this.bioAssayDimension.setBioAssays( expandedBioAssays );
+        this.setBioAssayDimension( new BioAssayDimensionValueObject() );
+        this.getBioAssayDimension().setBioAssays( expandedBioAssays );
+        this.getBioAssayDimension().setId( null );
+        this.getBioAssayDimension().setName(
+                "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
+        assert this.getBioAssays() != null;
     }
 }

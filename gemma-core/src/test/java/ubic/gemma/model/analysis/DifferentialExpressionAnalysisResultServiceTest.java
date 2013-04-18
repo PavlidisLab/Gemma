@@ -73,6 +73,9 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
         }
 
         DifferentialExpressionAnalysis a = analyses.iterator().next();
+
+        a = analysisService.thawFully( a );
+
         Collection<ExpressionAnalysisResultSet> resultSets = a.getResultSets();
 
         assertEquals( 1, resultSets.size() );
@@ -107,6 +110,9 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
         }
 
         DifferentialExpressionAnalysis a = analyses.iterator().next();
+
+        a = analysisService.thawFully( a );
+
         Collection<ExpressionAnalysisResultSet> resultSets = a.getResultSets();
 
         assertEquals( 1, resultSets.size() );

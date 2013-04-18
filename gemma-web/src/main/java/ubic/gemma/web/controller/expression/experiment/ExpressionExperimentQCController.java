@@ -83,8 +83,10 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
 import ubic.gemma.analysis.preprocess.OutlierDetectionService;
@@ -93,6 +95,9 @@ import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -115,9 +120,12 @@ public class ExpressionExperimentQCController extends BaseController {
     private static final int MAX_HEATMAP_CELLSIZE = 12;
     public static final int DEFAULT_QC_IMAGE_SIZE_PX = 200;
 
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private SVDService svdService;
-    @Autowired ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private SVDService svdService;
+    @Autowired
+    ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     /**
      * @param id
@@ -329,29 +337,31 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * @param id
      * @param analysisId
-     * @param factorName
+     * @param rsId resultSet Id
+     * @param factorName deprecated, we will use rsId instead. Maintained for backwards compatibility.
      * @param size
      * @param os
      * @return
      * @throws Exception
      */
     @RequestMapping("/expressionExperiment/visualizePvalueDist.html")
-    public ModelAndView visualizePvalueDist( Long id, Long analysisId, String factorName, Integer size, OutputStream os ) throws Exception {
+    public ModelAndView visualizePvalueDist( Long id, Long analysisId, Long rsId, String factorName, Integer size,
+            OutputStream os ) throws Exception {
         ExpressionExperiment ee = this.expressionExperimentService.load( id );
         if ( ee == null ) {
             this.log.warn( "Could not load experiment with id " + id );
             return null;
         }
 
-        if (size == null) {
-        	if (!this.writePValueHistImage( os, ee, analysisId, factorName )) {
-        		writePlaceholderImage( os );
-        	}
+        if ( size == null ) {
+            if ( !this.writePValueHistImage( os, ee, analysisId, rsId, factorName ) ) {
+                writePlaceholderImage( os );
+            }
         } else {
-			if (!this.writePValueHistThumbnailImage( os, ee, analysisId, factorName, size )) {
-				writePlaceholderThumbnailImage( os, size );
-			}
-		}
+            if ( !this.writePValueHistThumbnailImage( os, ee, analysisId, rsId, factorName, size ) ) {
+                writePlaceholderThumbnailImage( os, size );
+            }
+        }
 
         return null; // nothing to return;
     }
@@ -503,30 +513,54 @@ public class ExpressionExperimentQCController extends BaseController {
         return series;
     }
 
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
+
     /**
      * @param ee
      * @param analysisId
+     * @param rsId
      * @param factorName
      * @return JFreeChart XYSeries representing the histogram for the requested result set
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, String factorName ) throws FileNotFoundException,
-            IOException {
-        if ( ee == null || analysisId == null || factorName == null ) {
-        	return null;
+    private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, Long rsId, String factorName )
+            throws FileNotFoundException, IOException {
+        if ( ee == null || analysisId == null || rsId == null ) {
+            log.warn( "Got invalid values" );
+            return null;
         }
-        
-    	XYSeries xySeries = null;
+
+        Histogram hist = differentialExpressionResultService.loadPvalueDistribution( rsId );
+
+        XYSeries xySeries = null;
+
+        if ( hist != null ) {
+            xySeries = new XYSeries( rsId, true, true );
+            Double[] binEdges = hist.getBinEdges();
+            double[] counts = hist.getArray();
+            assert binEdges.length == counts.length;
+            for ( int i = 0; i < binEdges.length; i++ ) {
+                xySeries.add( binEdges[i].doubleValue(), counts[i] );
+            }
+            return xySeries;
+        }
+
+        /*
+         * Rest of this is for backwards compatibility.
+         */
         File file = this.locatePvalueDistFile( ee, analysisId );
 
-         // Current format is to have just one file for each analysis.
+        // Current format is to have just one file for each analysis.
         if ( file != null ) {
             BufferedReader in = new BufferedReader( new FileReader( file ) );
 
             int factorNameIndex = -1;
 
             boolean readHeader = false;
+            PvalueDistribution pvalueDist = PvalueDistribution.Factory.newInstance();
+            DoubleArrayList counts = new DoubleArrayList();
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) continue;
@@ -539,33 +573,68 @@ public class ExpressionExperimentQCController extends BaseController {
 
                         // Note that currFactorName may have suffix such as __3
                         // (DifferentialExpressionAnalyzerService.FACTOR_NAME_MANGLING_DELIMITER followed by the ID).
-						if (currFactorName.length() >= factorName.length() &&
-							factorName.equals(currFactorName.substring(0, factorName.length()))) {
-							factorNameIndex = i;
-						}
+                        if ( currFactorName.length() >= factorName.length()
+                                && factorName.equals( currFactorName.substring( 0, factorName.length() ) ) ) {
+                            factorNameIndex = i;
+                        }
                     }
                     readHeader = true;
-					if ( factorNameIndex < 0 ) {
-						// If factorName cannot be found, don't need to continue reading file.
-						break;
-					}
-					continue;
+                    if ( factorNameIndex < 0 ) {
+                        // If factorName cannot be found, don't need to continue reading file.
+                        break;
+                    }
+                    continue;
                 }
 
                 try {
                     double x = Double.parseDouble( split[0] );
-				    double y = Double.parseDouble( split[factorNameIndex] );
-				    if ( xySeries == null ) {
-				    	xySeries = new XYSeries( factorName, true, true );
-				    }
-				    xySeries.add( x, y );
+                    double y = Double.parseDouble( split[factorNameIndex] );
+                    if ( xySeries == null ) {
+                        xySeries = new XYSeries( factorName, true, true );
+                    }
+                    xySeries.add( x, y );
+
+                    /*
+                     * Update the result set.
+                     */
+                    counts.add( y );
 
                 } catch ( NumberFormatException e ) {
                     // line wasn't useable.. no big deal. Heading is included.
                 }
             }
+
+            if ( counts.size() > 0 ) {
+                pvalueDistFileToPersistent( file, rsId, pvalueDist, counts );
+            }
+
         }
         return xySeries;
+    }
+
+    /**
+     * For conversion from legacy system.
+     * 
+     * @param file
+     * @param rsId
+     * @param pvalueDist
+     * @param counts
+     */
+    private void pvalueDistFileToPersistent( File file, Long rsId, PvalueDistribution pvalueDist, DoubleArrayList counts ) {
+        log.info( "Converting from pvalue distribution file to persistent stored version" );
+        ByteArrayConverter bac = new ByteArrayConverter();
+        Double[] countArray = ( Double[] ) counts.toList().toArray( new Double[] {} );
+        byte[] bytes = bac.doubleArrayToBytes( countArray );
+        pvalueDist.setBinCounts( bytes );
+        pvalueDist.setNumBins( countArray.length );
+        ExpressionAnalysisResultSet resultSet = differentialExpressionResultService.loadAnalysisResultSet( rsId );
+        resultSet.setPvalueDistribution( pvalueDist );
+        differentialExpressionResultService.update( resultSet );
+        if ( file.delete() ) {
+            log.info( "Old file deleted" );
+        } else {
+            log.info( "Old file could not be deleted" );
+        }
     }
 
     /**
@@ -600,33 +669,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return efs;
     }
 
-    //
-    // /**
-    // * @param ee
-    // * @return
-    // */
-    // private Collection<File> locateCorrectedPvalueDistFiles( ExpressionExperiment ee ) {
-    // String shortName = ee.getShortName();
-    //
-    // Collection<File> files = new HashSet<File>();
-    // File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
-    // if ( !directory.exists() ) {
-    // return files;
-    // }
-    //
-    // String[] fileNames = directory.list();
-    // String suffix = ".qvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-    // for ( String fileName : fileNames ) {
-    // if ( !fileName.endsWith( suffix ) ) {
-    // continue;
-    // }
-    // File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
-    // files.add( f );
-    // }
-    //
-    // return files;
-    // }
-
     /**
      * @param svdo
      * @return
@@ -644,33 +686,6 @@ public class ExpressionExperimentQCController extends BaseController {
         }
         return series;
     }
-
-    //
-    // /**
-    // * @param ee
-    // * @return
-    // */
-    // private Collection<File> locateEffectSizeDistFiles( ExpressionExperiment ee ) {
-    // String shortName = ee.getShortName();
-    //
-    // Collection<File> files = new HashSet<File>();
-    // File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
-    // if ( !directory.exists() ) {
-    // return files;
-    // }
-    //
-    // String[] fileNames = directory.list();
-    // String suffix = ".scores" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-    // for ( String fileName : fileNames ) {
-    // if ( !fileName.endsWith( suffix ) ) {
-    // continue;
-    // }
-    // File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
-    // files.add( f );
-    // }
-    //
-    // return files;
-    // }
 
     /**
      * @param ee
@@ -691,16 +706,16 @@ public class ExpressionExperimentQCController extends BaseController {
      * @return
      */
     private File locatePvalueDistFile( ExpressionExperiment ee, Long analysisId ) {
-    	File file = null;
+        File file = null;
 
         if ( ee != null && analysisId != null ) {
-	        String shortName = ee.getShortName();
-	        file = new File(DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName ),
-	        				shortName + ".an" + analysisId + ".pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX);
+            String shortName = ee.getShortName();
+            file = new File( DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName ), shortName
+                    + ".an" + analysisId + ".pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
 
-	        if (!file.exists()) {
-	        	file = null;
-	        }
+            if ( !file.exists() ) {
+                file = null;
+            }
         }
 
         return file;
@@ -1108,19 +1123,19 @@ public class ExpressionExperimentQCController extends BaseController {
      * @throws IOException
      */
     private void writePlaceholderThumbnailImage( OutputStream os, int placeholderSize ) throws IOException {
-		// Make the image a bit bigger to account for the empty space around the generated image.
-		// If we can find a way to remove this empty space, we don't need to make the chart bigger.
-        BufferedImage buffer = new BufferedImage( placeholderSize + 16, placeholderSize + 9 , BufferedImage.TYPE_INT_RGB );
+        // Make the image a bit bigger to account for the empty space around the generated image.
+        // If we can find a way to remove this empty space, we don't need to make the chart bigger.
+        BufferedImage buffer = new BufferedImage( placeholderSize + 16, placeholderSize + 9, BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
-        g.setColor( Color.white );        
+        g.setColor( Color.white );
         g.fillRect( 0, 0, placeholderSize + 16, placeholderSize + 9 );
-		g.setColor( Color.gray );
-		g.drawLine( 8, placeholderSize + 5, placeholderSize + 8, placeholderSize + 5 ); // x-axis		
-		g.drawLine( 8, 5, 8, placeholderSize + 5 ); // y-axis
-		g.setColor( Color.black );
-		Font font = g.getFont();
-		g.setFont(new Font(font.getName(), font.getStyle(), 8));
-		g.drawString( "N/A", 9, placeholderSize );
+        g.setColor( Color.gray );
+        g.drawLine( 8, placeholderSize + 5, placeholderSize + 8, placeholderSize + 5 ); // x-axis
+        g.drawLine( 8, 5, 8, placeholderSize + 5 ); // y-axis
+        g.setColor( Color.black );
+        Font font = g.getFont();
+        g.setFont( new Font( font.getName(), font.getStyle(), 8 ) );
+        g.drawString( "N/A", 9, placeholderSize );
         ImageIO.write( buffer, "png", os );
     }
 
@@ -1156,19 +1171,20 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param os
      * @param ee
      * @param analysisId
-     * @param factorName
+     * @param rsId
      * @throws IOException
      */
-    private boolean writePValueHistImage( OutputStream os, ExpressionExperiment ee, Long analysisId, String factorName ) throws IOException {
+    private boolean writePValueHistImage( OutputStream os, ExpressionExperiment ee, Long analysisId, Long rsId,
+            String factorName ) throws IOException {
 
-        XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, factorName );
+        XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
 
-		if (series == null) {
-			return false;
-		}
+        if ( series == null ) {
+            return false;
+        }
 
-        XYSeriesCollection xySeriesCollection = new XYSeriesCollection(series);
-        
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
+
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "P-value", "Frequency", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );
@@ -1188,34 +1204,35 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param os
      * @param ee
      * @param analysisId
-     * @param factorName
+     * @param rsId
      * @param size
      * @throws IOException
      */
-    private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId, String factorName, int size ) throws IOException {
-        XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, factorName );
+    private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId,
+            Long rsId, String factorName, int size ) throws IOException {
+        XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
 
-		if (series == null) {
-			return false;
-		}
+        if ( series == null ) {
+            return false;
+        }
 
-        XYSeriesCollection xySeriesCollection = new XYSeriesCollection(series);
-        
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
+
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
-        JFreeChart chart = ChartFactory.createXYLineChart( "", "", "", xySeriesCollection,
-                PlotOrientation.VERTICAL, false, false, false );
+        JFreeChart chart = ChartFactory.createXYLineChart( "", "", "", xySeriesCollection, PlotOrientation.VERTICAL,
+                false, false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
-		chart.getXYPlot().setOutlineVisible(false);
-		chart.getXYPlot().getRangeAxis().setTickMarksVisible(false);
-		chart.getXYPlot().getRangeAxis().setTickLabelsVisible(false);
-		chart.getXYPlot().getDomainAxis().setTickMarksVisible(false);
-		chart.getXYPlot().getDomainAxis().setTickLabelsVisible(false);
+        chart.getXYPlot().setOutlineVisible( false );
+        chart.getXYPlot().getRangeAxis().setTickMarksVisible( false );
+        chart.getXYPlot().getRangeAxis().setTickLabelsVisible( false );
+        chart.getXYPlot().getDomainAxis().setTickMarksVisible( false );
+        chart.getXYPlot().getDomainAxis().setTickLabelsVisible( false );
 
-		// Make the chart a bit bigger to account for the empty space around the generated image.
-		// If we can find a way to remove this empty space, we don't need to make the chart bigger.
+        // Make the chart a bit bigger to account for the empty space around the generated image.
+        // If we can find a way to remove this empty space, we don't need to make the chart bigger.
         ChartUtilities.writeChartAsPNG( os, chart, size + 16, size + 9 );
-	        
+
         return true;
     }
 }

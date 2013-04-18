@@ -24,6 +24,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
 
@@ -36,7 +37,7 @@ public interface ExpressionDataFileService {
     public static final String DATA_ARCHIVE_FILE_SUFFIX = ".archive.zip";
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
-    
+
     public static final String TMP_DATA_DIR = ConfigUtils.getString( "gemma.tmpdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
@@ -87,12 +88,23 @@ public interface ExpressionDataFileService {
     public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
 
     /**
+     * Intended for use when the analysis is not yet persisted fully, and before results below threshold are removed.
+     * 
+     * @param experimentAnalyzed
+     * @param analysis
+     * @param resultSets
+     * @return
+     */
+    public File getDiffExpressionAnalysisArchiveFile( BioAssaySet experimentAnalyzed,
+            DifferentialExpressionAnalysis analysis, Collection<ExpressionAnalysisResultSet> resultSets );
+
+    /**
      * @param ee
      * @param filtered if the data matrix is filtered
      * @return
      */
     public File getOutputFile( ExpressionExperiment ee, boolean filtered );
-    
+
     /**
      * @param ee
      * @param filtered if the data matrix is filtered
@@ -107,10 +119,11 @@ public interface ExpressionDataFileService {
      * @return File, with location in the appropriate target directory.
      */
     public File getOutputFile( String filename );
-    
+
     /**
      * @param filename without the path - that is, just the name of the file
-     * @param boolean temporary, if this is true then the file gets saved to the temporary location from the configuration file
+     * @param boolean temporary, if this is true then the file gets saved to the temporary location from the
+     *        configuration file
      * @return File, with location in the appropriate target directory.
      */
     public File getOutputFile( String filename, boolean temporary );
@@ -147,12 +160,12 @@ public interface ExpressionDataFileService {
      * @return
      */
     public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
-    
+
     /**
      * create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only). 
+     * expression applied (currently supports default settings only).
      * 
-     * @param ee     
+     * @param ee
      * @param filtered
      * @return
      */
@@ -176,9 +189,9 @@ public interface ExpressionDataFileService {
      * @return
      */
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
-    
-    public File writeTemporaryDesignFile( ExpressionExperiment ee);
-    
+
+    public File writeTemporaryDesignFile( ExpressionExperiment ee );
+
     /**
      * Locate or create the differential expression data file(s) for a given experiment.
      * 

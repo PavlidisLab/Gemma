@@ -60,10 +60,6 @@ public class ExpressionExperimentDetailsValueObject extends
 
     private String lastArrayDesignUpdateDate;
 
-    private boolean canCurrentUserEditExperiment;
-
-    private boolean doesCurrentUserOwnExperiment;
-
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
 
     public Boolean getHasMultipleTechnologyTypes() {
@@ -202,20 +198,6 @@ public class ExpressionExperimentDetailsValueObject extends
     }
 
     /**
-     * @param canCurrentUserEditExperiment the canCurrentUserEditExperiment to set
-     */
-    public void setCanCurrentUserEditExperiment( boolean canCurrentUserEditExperiment ) {
-        this.canCurrentUserEditExperiment = canCurrentUserEditExperiment;
-    }
-
-    /**
-     * @return the canCurrentUserEditExperiment
-     */
-    public boolean isCanCurrentUserEditExperiment() {
-        return canCurrentUserEditExperiment;
-    }
-
-    /**
      * @param expressionExperimentSets the expressionExperimentSets to set
      */
     public void setExpressionExperimentSets( Collection<ExpressionExperimentSetValueObject> expressionExperimentSets ) {
@@ -227,20 +209,6 @@ public class ExpressionExperimentDetailsValueObject extends
      */
     public Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets() {
         return expressionExperimentSets;
-    }
-
-    /**
-     * @param doesCurrentUserOwnExperiment the doesCurrentUserOwnExperiment to set
-     */
-    public void setDoesCurrentUserOwnExperiment( boolean doesCurrentUserOwnExperiment ) {
-        this.doesCurrentUserOwnExperiment = doesCurrentUserOwnExperiment;
-    }
-
-    /**
-     * @return the doesCurrentUserOwnExperiment
-     */
-    public boolean isDoesCurrentUserOwnExperiment() {
-        return doesCurrentUserOwnExperiment;
     }
 
 }

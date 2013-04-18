@@ -17,9 +17,9 @@ package ubic.gemma.analysis.expression.diff;
 import java.io.IOException;
 import java.util.Collection;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis; 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * @author Paul
@@ -28,8 +28,37 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 public interface DifferentialExpressionAnalyzerService {
 
     /**
+     * Delete all analyses associated with the experiment. Also deletes files associated with the analysis. (e.g.,
+     * results dumps)
+     * 
      * @param expressionExperiment
      * @return
+     */
+    public int deleteAnalyses( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Deletes the given analysis. Also deletes files associated with the analysis. (e.g., results dumps)
+     * 
+     * @param expressionExperiment
+     * @param existingAnalysis
+     */
+    public void deleteAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis existingAnalysis );
+
+    /**
+     * Like redo, but we don't save the results, we just add the full set of results to the analysis given. If we want
+     * to keep these results, must call update on the old one.
+     * 
+     * @param ee
+     * @param toUpdate
+     * @return
+     */
+    public Collection<ExpressionAnalysisResultSet> extendAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis toUpdate );
+
+    /**
+     * @param expressionExperiment
+     * @return all DifferentialExpressionAnalysis entitiess for the experiment.
      */
     public abstract Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
@@ -45,23 +74,17 @@ public interface DifferentialExpressionAnalyzerService {
     /**
      * @param expressionExperiment
      * @param config
-     * @return persistent analyses
+     * @return persistent analyses. The qvalue threshold configured for retention will be applied.
      */
     public abstract Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
 
     /**
-     * @param subset
-     * @param config
-     * @return
-     */
-    public abstract DifferentialExpressionAnalysis runDifferentialExpressionAnalysis(
-            ExpressionExperimentSubSet subset, DifferentialExpressionAnalysisConfig config );
-
-    /**
      * @param ee
      * @throws IOException
+     * @deprecated because we store this in the database, not a file; and it shouldn't be a problem any more
      */
+    @Deprecated
     public abstract void updateScoreDistributionFiles( ExpressionExperiment ee ) throws IOException;
 
     /**
@@ -69,22 +92,20 @@ public interface DifferentialExpressionAnalyzerService {
      * redoAnalysis but this should be faster.
      * 
      * @param toUpdate
+     * @deprecated because we store this in the database and it shouldn't be a problem any more
      */
+    @Deprecated
     public abstract void updateSummaries( DifferentialExpressionAnalysis toUpdate );
 
-    public int deleteAnalyses( ExpressionExperiment expressionExperiment );
-
-    public void deleteAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis existingAnalysis );
-
     /**
-     * This method is made available primarily for tests.
+     * Made public for testing purposes only.
      * 
      * @param expressionExperiment
      * @param analysis
+     * @param config
      * @return
      */
     public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis analysis );
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config );
 
 }

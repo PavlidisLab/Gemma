@@ -1724,7 +1724,9 @@ public class GeoConverterImpl implements GeoConverter {
         bioAssay.setName( sample.getTitle() );
         bioAssay.setDescription( sample.getDescription() );
         bioAssay.setAccession( convertDatabaseEntry( sample ) );
-
+        bioAssay.setIsOutlier(false);
+        bioAssay.setSequencePairedReads( false );
+        
         /*
          * NOTE - according to GEO (http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html) "variable information is
          * optional and does not appear in Series records or downloads, but will be used to assemble corresponding GEO

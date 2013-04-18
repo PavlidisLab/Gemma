@@ -55,9 +55,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double> {
 
-    private static final long serialVersionUID = 1L;
-    private static final int MAX_ROWS_TO_STRING = 100;
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
+    private static final int MAX_ROWS_TO_STRING = 200;
+    private static final long serialVersionUID = 1L;
     private DoubleMatrix<CompositeSequence, BioMaterial> matrix;
 
     private Map<CompositeSequence, Double> ranks = new HashMap<CompositeSequence, Double>();
@@ -157,7 +157,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
         this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
-
+        this.quantitationTypes = sourceMatrix.getQuantitationTypes();
         this.matrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( rowsToUse.size(), sourceMatrix.columns() );
         this.matrix.setColumnNames( sourceMatrix.getMatrix().getColNames() );
 
@@ -433,6 +433,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         return getRow( row );
     }
 
+    public double[] getRawRow( Integer index ) {
+        return matrix.getRow( index );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -442,6 +446,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     public Double[] getRow( Integer index ) {
         double[] rawRow = matrix.getRow( index );
         return ArrayUtils.toObject( rawRow );
+    }
+
+    public List<CompositeSequence> getRowNames() {
+        return this.getMatrix().getRowNames();
     }
 
     /*
@@ -532,8 +540,12 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         nf.setMaximumFractionDigits( 4 );
 
         StringBuffer buf = new StringBuffer();
-        buf.append( rows + " x " + columns + " matrix of double values, showing up to " + MAX_ROWS_TO_STRING
-                + " rows\n" );
+        if ( rows <= MAX_ROWS_TO_STRING ) {
+            buf.append( rows + " x " + columns + " matrix of double values\n" );
+        } else {
+            buf.append( rows + " x " + columns + " matrix of double values, showing up to " + MAX_ROWS_TO_STRING
+                    + " rows\n" );
+        }
         int stop = 0;
         buf.append( "Probe" );
         for ( int i = 0; i < columns; i++ ) {
@@ -557,11 +569,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             }
 
             buf.append( "\n" );
-            if ( stop > MAX_ROWS_TO_STRING ) {
-                buf.append( "...\n" );
+
+            if ( stop++ > MAX_ROWS_TO_STRING ) {
+                buf.append( "\n(Stopping after " + MAX_ROWS_TO_STRING + " rows) ...\n" );
                 break;
             }
-            stop++;
         }
         return buf.toString();
     }
@@ -647,14 +659,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
                 Integer column = this.columnAssayMap.get( bioAssay );
 
                 assert column != null;
-
-                // if ( log.isTraceEnabled() )
-                // log.trace( "Setting " + rowIndex + " " + column + " to " + vals[j] + " for " + bioAssay );
-
-                if ( vals[j] == Double.NEGATIVE_INFINITY ) {
-                    throw new IllegalArgumentException(
-                            "Whoops, negative infinity is a special value, we can't have it in the data" );
-                }
                 mat.set( rowIndex, column, vals[j] );
             }
 

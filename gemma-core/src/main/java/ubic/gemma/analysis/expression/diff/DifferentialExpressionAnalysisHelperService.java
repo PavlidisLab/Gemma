@@ -39,4 +39,12 @@ public interface DifferentialExpressionAnalysisHelperService {
      */
     public void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets );
 
+    /**
+     * Create a result set. The expectation is this would be a stub.S
+     * 
+     * @param rs
+     * @return
+     */
+    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs );
+
 }

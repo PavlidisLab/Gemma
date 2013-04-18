@@ -58,7 +58,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
                 .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "shortTest" ) ) );
         // also used in the GeoDatasetServiceIntegrationTest.
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GDS472", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE674", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {

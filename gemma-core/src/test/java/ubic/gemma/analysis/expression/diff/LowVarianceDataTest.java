@@ -16,6 +16,8 @@ package ubic.gemma.analysis.expression.diff;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.Collection;
 
 import org.junit.Before;
@@ -49,10 +51,21 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
     @Autowired
-    private GeoService geoService;
+    AnalysisSelectionAndExecutionService analysisService = null;
+
+    @Autowired
+    DiffExAnalyzer analyzer;
 
     @Autowired
     ExperimentalDesignImporter designImporter;
+
+    @Autowired
+    DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
+    @Autowired
+    DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    ExpressionExperiment ee;
 
     @Autowired
     ExperimentalFactorService experimentalFactorService;
@@ -61,21 +74,47 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    DiffExAnalyzer analyzer;
-
-    @Autowired
-    AnalysisSelectionAndExecutionService analysisService = null;
-
-    @Autowired
-    DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
-
-    @Autowired
-    DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
-    @Autowired
     ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
-    ExpressionExperiment ee;
+    @Autowired
+    private GeoService geoService;
+
+    /**
+     * @param analysis
+     */
+    public void checkResults( DifferentialExpressionAnalysis analysis ) {
+        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+
+        assertEquals( 2, resultSets.size() );
+
+        boolean found1 = false;
+
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+            Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+
+            // lose rows that have zero variance or lots of 'thresholded' values, but number of values is either 88 or
+            // 86 (factors are not the same)
+
+            for ( DifferentialExpressionAnalysisResult r : results ) {
+                CompositeSequence probe = r.getProbe();
+
+                // log.info( probe.getName() + " " + r.getPvalue() );
+
+                if ( probe.getName().equals( "1552338_at" ) ) {
+                    fail( "Should not have found a result for constant probe: 1552338_at" );
+                } else if ( probe.getName().equals( "1552337_s_at" ) ) {
+                    fail( "Should not have found a result for constant probe: 1552337_s_at" );
+                } else if ( probe.getName().equals( "1552391_at" ) ) {
+                    fail( "Should not have found a result for constant probe: 1552391_at" );
+                } else {
+                    found1 = true;
+                }
+            }
+
+        }
+
+        assertTrue( found1 );
+    }
 
     @Before
     public void setup() throws Exception {
@@ -134,41 +173,5 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         checkResults( analysis );
 
-    }
-
-    /**
-     * @param analysis
-     */
-    public void checkResults( DifferentialExpressionAnalysis analysis ) {
-        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
-
-        assertEquals( 2, resultSets.size() );
-
-        boolean found1 = false, found2 = false;
-
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
-
-            assertEquals( 100, results.size() );
-
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                CompositeSequence probe = r.getProbe();
-                Double pvalue = r.getPvalue();
-
-                // log.info( probe.getName() + " " + pvalue );
-
-                if ( probe.getName().equals( "1552338_at" ) ) {
-                    found1 = true;
-                    assertEquals( null, pvalue );
-
-                } else if ( probe.getName().equals( "1552335_at" ) ) {
-                    found2 = true;
-                    assertTrue( pvalue != null );
-                }
-            }
-
-        }
-
-        assertTrue( found1 && found2 );
     }
 }

@@ -205,7 +205,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.6.4/jena-2.6.4.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/jena/2.6.3/jena-2.6.3-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.8.7/arq-2.8.7.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/arq/2.7.0/arq-2.7.0-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.8.7/arq-2.8.7.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/arq/2.8.7/arq-2.8.7-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.openjena.org/ARQ/javadoc/"/>
 		</attributes>

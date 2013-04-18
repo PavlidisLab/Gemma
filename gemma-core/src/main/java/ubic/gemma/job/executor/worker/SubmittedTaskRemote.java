@@ -32,10 +32,10 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
- * author: anton
- * date: 10/02/13
+ * @author anton
+ * @version $Id$
  */
-public class SubmittedTaskRemote  {
+public class SubmittedTaskRemote {
     private TaskCommand taskCommand;
     private List<String> progressUpdates;
     private ListenableFuture<TaskResult> future;
@@ -49,12 +49,9 @@ public class SubmittedTaskRemote  {
 
     }
 
-    public SubmittedTaskRemote( TaskCommand taskCommand,
-                                List<String> progressUpdates,
-                                MessageSender<TaskResult> resultSender,
-                                MessageSender<TaskStatusUpdate> statusUpdateSender,
-                                MessageSender<String> progressUpdateSender,
-                                TaskPostProcessing taskPostProcessing ) {
+    public SubmittedTaskRemote( TaskCommand taskCommand, List<String> progressUpdates,
+            MessageSender<TaskResult> resultSender, MessageSender<TaskStatusUpdate> statusUpdateSender,
+            MessageSender<String> progressUpdateSender, TaskPostProcessing taskPostProcessing ) {
         this.taskCommand = taskCommand;
         this.progressUpdates = progressUpdates;
         this.resultSender = resultSender;
@@ -64,13 +61,13 @@ public class SubmittedTaskRemote  {
     }
 
     public void sendTaskResult() {
-        if (future.isDone()) {
+        if ( future.isDone() ) {
             try {
                 resultSender.send( future.get() );
-            } catch (InterruptedException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            } catch (ExecutionException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            } catch ( InterruptedException e ) {
+                e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
+            } catch ( ExecutionException e ) {
+                e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
             }
         }
     }

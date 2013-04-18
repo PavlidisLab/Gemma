@@ -29,10 +29,15 @@ public class ChannelUtilsTest extends TestCase {
     public final void testChannelASignal() {
         assertTrue( ChannelUtils.isSignalChannelA( "Cy3_foreground_low_pmt" ) );
         assertTrue( ChannelUtils.isSignalChannelA( "ch1_sig_mean" ) );
+        assertTrue( ChannelUtils.isSignalChannelA( "CH1_SIGNAL_MEDIAN" ) );
+        assertTrue( ChannelUtils.isSignalChannelB( "CH2_SIGNAL_MEDIAN" ) );
+
     }
 
     public final void testChannelBSignal() {
         assertTrue( ChannelUtils.isSignalChannelB( "Cy5_foreground_low_pmt" ) );
         assertTrue( ChannelUtils.isSignalChannelB( "ch2_sig_mean" ) );
+        assertTrue( ChannelUtils.isSignalChannelB( "CH2_SIGNAL_MEDIAN" ) );
+
     }
 }

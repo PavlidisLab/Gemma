@@ -1415,7 +1415,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
         GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
 
-        String designElement = tokens[0]; // ID_REF.
+        String designElement = tokens[0]; // ID_REF. For bug 1709, adding toLower() will fix this.
         Map<Integer, Integer> map = quantitationTypeTargetColumn.get( platformForSample );
 
         for ( int i = 1; i < tokens.length; i++ ) {

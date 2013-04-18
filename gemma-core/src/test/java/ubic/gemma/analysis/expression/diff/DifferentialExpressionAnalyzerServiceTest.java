@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -44,6 +45,8 @@ import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -57,8 +60,25 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest {
 
+    ExpressionExperiment ee = null;
+
+    @Autowired
+    protected GeoService geoService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
+
+    @Autowired
+    private ExperimentalDesignImporter experimentalDesignImporter;
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
@@ -67,24 +87,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private ProcessedExpressionDataVectorService processedDataVectorService;
 
     @Autowired
-    private ExpressionDataFileService expressionDataFileService;
-
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
-    @Autowired
-    protected GeoService geoService;
-
-    @Autowired
-    DiffExAnalyzer analyzer;
-
-    @Autowired
-    ExperimentalDesignImporter experimentalDesignImporter;
-
-    @Autowired
-    ExperimentalFactorService experimentalFactorService;
-
-    ExpressionExperiment ee = null;
+    private DifferentialExpressionResultService resultService;
 
     /*
      * (non-Javadoc)
@@ -113,9 +116,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-                assertEquals( bm + " " + ba, 2, bm.getFactorValues().size() );
-            }
-         
+            assertEquals( bm + " " + ba, 2, bm.getFactorValues().size() );
+        }
+
     }
 
     /**
@@ -136,6 +139,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertTrue( !analyses.isEmpty() );
         assertNotNull( analyses.iterator().next() );
 
+        DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.thawFully( analyses.iterator()
+                .next() );
+        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+            assertTrue( !rs.getResults().isEmpty() );
+            assertEquals( 99, rs.getResults().size() );
+        }
+
         /*
          * Exercise the matrix output services.
          */
@@ -148,7 +158,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DoubleMatrixReader r = new DoubleMatrixReader();
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
-        assertEquals( 100, readIn.rows() );
+        assertEquals( 99, readIn.rows() );
         assertEquals( 6, readIn.columns() );
 
         expressionDataFileService.deleteAllFiles( ee );
@@ -299,8 +309,15 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );
         config.setQvalueThreshold( null );
-        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
-        differentialExpressionAnalyzerService.updateScoreDistributionFiles( ee );
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee, config );
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+            differentialExpressionAnalysisService.thaw( analysis );
+            for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+                Histogram hist = resultService.loadPvalueDistribution( resultSet.getId() );
+                assertNotNull( hist );
+            }
+        }
 
     }
 }

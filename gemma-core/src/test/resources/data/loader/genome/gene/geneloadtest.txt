@@ -1,7 +1,7 @@
-9606	1	A1BG	HGNC:5	A1B|ABG|DKFZp686F0970|GAB|HYST2477	MIM:138670	19	19q13.4	alpha-1-B glycoprotein	protein-coding	A1BG	alpha-1-B glycoprotein	-
-9606	10	NAT2	HGNC:7646	AAC2	MIM:243400	8	8p22	N-acetyltransferase 2 (arylamine N-acetyltransferase)	protein-coding	NAT2	N-acetyltransferase 2 (arylamine N-acetyltransferase)	-
-9606	291	SLC25A4	HGNC:10990	ANT|ANT1|PEO2|PEO3|T1	MIM:103220	4	4q35	"solute carrier family 25 (mitochondrial carrier; adenine nucleotide translocator), member 4"	protein-coding	SLC25A4	"solute carrier family 25 (mitochondrial carrier; adenine nucleotide translocator), member 4"	-
-9606	2638	GC	HGNC:4187	DBP|DBP/GC|VDBG|VDBP	MIM:139200	4	4q12-q13	group-specific component (vitamin D binding protein)	protein-coding	GC	group-specific component (vitamin D binding protein)	-
-9606	5265	SERPINA1	HGNC:8941	A1A|A1AT|AAT|MGC23330|MGC9222|PI|PI1|PRO2275	MIM:107400	14	14q32.1	"serine (or cysteine) proteinase inhibitor, clade A (alpha-1 antiproteinase, antitrypsin), member 1"	protein-coding	SERPINA1	"serine (or cysteine) proteinase inhibitor, clade A (alpha-1 antiproteinase, antitrypsin), member 1"	-
-9606	7273	TTN	HGNC:12403	CMD1G|CMH9|CMPD4|DKFZp451N061|FLJ32040|LGMD2J|TMD	MIM:188840	2	2q31	titin	protein-coding	TTN	titin	-
-9606	81539	SLC38A1	HGNC:13447	ATA1|NAT2|SAT1|SNAT1	MIM:608490	12	12q13.11	"solute carrier family 38, member 1"	protein-coding	SLC38A1	"solute carrier family 38, member 1"	-
+9606	91	A1BGMM	HGNC:5	A1B|ABG|DKFZp686F0970|GAB|HYST2477	MIM:138670	19	19q13.4	alpha-1-B glycoprotein	protein-coding	A1BG	alpha-1-B glycoprotein	-
+9606	910	NAT2MM	HGNC:7646	AAC2	MIM:243400	8	8p22	N-acetyltransferase 2 (arylamine N-acetyltransferase)	protein-coding	NAT2	N-acetyltransferase 2 (arylamine N-acetyltransferase)	-
+9606	9291	SLC25A4MM	HGNC:10990	ANT|ANT1|PEO2|PEO3|T1	MIM:103220	4	4q35	"solute carrier family 25 (mitochondrial carrier; adenine nucleotide translocator), member 4"	protein-coding	SLC25A4	"solute carrier family 25 (mitochondrial carrier; adenine nucleotide translocator), member 4"	-
+9606	92638	GCMM	HGNC:4187	DBP|DBP/GC|VDBG|VDBP	MIM:139200	4	4q12-q13	group-specific component (vitamin D binding protein)	protein-coding	GC	group-specific component (vitamin D binding protein)	-
+9606	95265	SERPINA1MM	HGNC:8941	A1A|A1AT|AAT|MGC23330|MGC9222|PI|PI1|PRO2275	MIM:107400	14	14q32.1	"serine (or cysteine) proteinase inhibitor, clade A (alpha-1 antiproteinase, antitrypsin), member 1"	protein-coding	SERPINA1	"serine (or cysteine) proteinase inhibitor, clade A (alpha-1 antiproteinase, antitrypsin), member 1"	-
+9606	97273	TTNMM	HGNC:12403	CMD1G|CMH9|CMPD4|DKFZp451N061|FLJ32040|LGMD2J|TMD	MIM:188840	2	2q31	titin	protein-coding	TTN	titin	-
+9606	981539	SLC38A1MM	HGNC:13447	ATA1|NAT2|SAT1|SNAT1	MIM:608490	12	12q13.11	"solute carrier family 38, member 1"	protein-coding	SLC38A1	"solute carrier family 38, member 1"	-

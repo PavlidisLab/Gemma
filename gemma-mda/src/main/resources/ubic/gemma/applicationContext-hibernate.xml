@@ -122,6 +122,7 @@
 				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvalue.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/PvalueDistribution.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml</value>

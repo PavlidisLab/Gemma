@@ -122,7 +122,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         ExpressionExperimentSet newEESet = create( newSet );
 
         // make groups private by default
-        if ( eesvo.isPublik() ) {
+        if ( eesvo.getIsPublic() ) {
             securityService.makePublic( newEESet );
         } else {
             securityService.makePrivate( newEESet );

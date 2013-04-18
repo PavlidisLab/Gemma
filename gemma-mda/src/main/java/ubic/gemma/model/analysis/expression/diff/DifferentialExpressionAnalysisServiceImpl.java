@@ -252,4 +252,9 @@ public class DifferentialExpressionAnalysisServiceImpl implements
         return this.getExpressionAnalysisResultSetDao().canDelete( differentialExpressionAnalysis );
     }
 
+    @Override
+    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        return this.getExpressionAnalysisResultSetDao().thawFully( differentialExpressionAnalysis );
+    }
+
 }

@@ -89,7 +89,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
 
         List<ExpressionAnalysisResultSet> resultSets = addConditionsToSearchResultValueObject( searchResult );
 
-        fillHeatmapCells( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
+        fetchDifferentialExpressionResults( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
 
         log.info( "Finished DiffExpSearchTask." );
 
@@ -99,7 +99,8 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
     /**
      * Get information on the conditions to be searched. This is not part of the query for the results themselves, but
      * uses the database to get metadata/summaries about the analyses that will be used. Initializes the searchResult
-     * value object.
+     * value object. Later, values which are non-missing will be replaced with either 'non-significant' or 'significant'
+     * results.
      * 
      * @param searchResult to be initialized
      * @return lsit of the resultSets that should be queried.
@@ -168,9 +169,6 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
                              * SANITY CHECKS these fields should be filled in. If not, we are going to skip the results.
                              */
                             if ( condition.getNumberDiffExpressedProbes() == -1 ) {
-                                // Sorry, this is too slow and the hitlists should be filled in.
-                                // total = differentialExpressionAnalysisService.countProbesMeetingThreshold(
-                                // resultSet, 0.5 );
                                 log.warn( bas + ": Error: No hit list sizes for resultSet with ID=" + resultSet.getId() );
                                 continue;
                             }
@@ -185,6 +183,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
                             }
 
                             searchResult.addCondition( condition );
+
                             i++;
                         }
                     }
@@ -260,7 +259,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
      * @param geneIds
      * @param searchResult holds the results
      */
-    private void fillBatchOfHeatmapCells(
+    private void fetchDifferentialExpressionResults(
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, List<Long> geneIds,
             DifferentialExpressionGenesConditionsValueObject searchResult ) {
 
@@ -293,7 +292,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
      * @param geneIds to be searched
      * @param searchResult holds the results
      */
-    private void fillHeatmapCells( List<ExpressionAnalysisResultSet> resultSets, List<Long> geneIds,
+    private void fetchDifferentialExpressionResults( List<ExpressionAnalysisResultSet> resultSets, List<Long> geneIds,
             DifferentialExpressionGenesConditionsValueObject searchResult ) {
         log.info( "Filling heatmap cells..." );
 
@@ -311,7 +310,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
             log.info( "Fetch array designs used: " + timer.getTotalTimeMillis() + "ms" );
         }
 
-        fillBatchOfHeatmapCells( resultSetIdsToArrayDesignsUsed, geneIds, searchResult );
+        fetchDifferentialExpressionResults( resultSetIdsToArrayDesignsUsed, geneIds, searchResult );
 
     }
 
@@ -457,14 +456,19 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
         StopWatch timer = new StopWatch();
         timer.start();
         List<Long> resultsWithContrasts = new ArrayList<Long>();
+
         for ( DiffExprGeneSearchResult r : diffExResults ) {
             if ( r.getResultId() == null ) {
                 // it is a dummy result. It means there is no result for this gene in this resultset.
                 continue;
             }
 
+            /*
+             * FIXME this check will not be needed if we only store the 'good' results?
+             */
             // Here I am trying to avoid fetching them when there is no hope that the results will be interesting.
-            if ( r.getCorrectedPvalue() == null || r.getCorrectedPvalue() > PVALUE_CONTRAST_SELECT_THRESHOLD ) {
+            if ( r instanceof MissingResult || r instanceof NonRetainedResult
+                    || r.getCorrectedPvalue() > PVALUE_CONTRAST_SELECT_THRESHOLD ) {
                 // Then it won't have contrasts; no need to fetch.
                 continue;
             }
@@ -474,6 +478,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
 
         Map<Long, DifferentialExpressionAnalysisResult> detailedResults = new HashMap<Long, DifferentialExpressionAnalysisResult>();
         if ( !resultsWithContrasts.isEmpty() ) {
+            // uses a left join so it will have all the results.
             detailedResults = EntityUtils.getIdMap( differentialExpressionResultService
                     .loadEagerContrasts( resultsWithContrasts ) );
         }
@@ -584,11 +589,22 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
             for ( Long geneId : geneToProbeResult.keySet() ) {
                 DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
 
+                if ( diffExprGeneSearchResult instanceof MissingResult ) {
+                    continue;
+                }
+
+                if ( diffExprGeneSearchResult instanceof NonRetainedResult ) {
+                    /*
+                     * FIXME mark the cell as non-significant, otherwise it will just be left as missing. Add values for
+                     * all the contrasts
+                     */
+                    searchResult.setAsNonSignficant( geneId, diffExprGeneSearchResult.getResultSetId() );
+                    continue;
+                }
+
                 Double correctedPvalue = diffExprGeneSearchResult.getCorrectedPvalue();
                 Double uncorrectedPvalue = diffExprGeneSearchResult.getPvalue();
 
-                // this means we got a 'dummy' value, indicating missing data.
-                if ( correctedPvalue == null ) continue;
                 assert uncorrectedPvalue != null;
 
                 // arbitrary fixing (meant to deal with zeros). Remember these are usually FDRs.

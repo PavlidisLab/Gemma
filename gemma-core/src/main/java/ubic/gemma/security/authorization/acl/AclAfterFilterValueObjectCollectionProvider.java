@@ -160,12 +160,12 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
                     Acl acl = acls.get( s );
                     svo.setIsPublic( !SecurityUtil.isPrivate( acl ) );
                     svo.setIsShared( SecurityUtil.isShared( acl ) );
-                    svo.setIsUserOwned( areOwnedByCurrentUser.get( s ) );
+                    svo.setUserOwned( areOwnedByCurrentUser.get( s ) );
 
-                    if ( svo.isUserOwned() || userIsAdmin || requirePermission.contains( BasePermission.WRITE ) ) {
-                        svo.setWriteableByUser( true );
+                    if ( svo.getUserOwned() || userIsAdmin || requirePermission.contains( BasePermission.WRITE ) ) {
+                        svo.setUserCanWrite( true );
                     } else {
-                        svo.setWriteableByUser( canWrite.containsKey( s ) && canWrite.get( s ) );
+                        svo.setUserCanWrite( canWrite.containsKey( s ) && canWrite.get( s ) );
                     }
                 }
 

@@ -38,34 +38,34 @@ public interface SecureValueObject extends Serializable, Securable {
     /**
      * @return true if the object is public
      */
-    public boolean isPublik();
+    public boolean getIsPublic();
 
     public void setIsPublic( boolean isPublic );
 
     /**
      * @return true if the object is owned by the current user
      */
-    public boolean isUserOwned();
+    public boolean getUserOwned();
 
     /**
      * @param isUserOwned
      */
-    public void setIsUserOwned( boolean isUserOwned );
+    public void setUserOwned( boolean isUserOwned );
 
     /**
      * @return
      */
-    public boolean isWriteableByUser();
+    public boolean getUserCanWrite();
 
     /**
      * @param userCanWrite
      */
-    public void setWriteableByUser( boolean userCanWrite );
+    public void setUserCanWrite( boolean userCanWrite );
 
     /**
      * @return
      */
-    public boolean isShared();
+    public boolean getIsShared();
 
     /**
      * @param isShared

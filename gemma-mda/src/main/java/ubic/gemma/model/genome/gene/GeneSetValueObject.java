@@ -35,7 +35,7 @@ public class GeneSetValueObject implements SecureValueObject {
 
     private static final long serialVersionUID = 6212231006289412683L;
 
-    private boolean currentUserHasWritePermission = false;
+    private boolean userOwned = false;
     private boolean currentUserIsOwner = false;
     private String description;
     private Collection<Long> geneIds = new HashSet<Long>();
@@ -113,17 +113,17 @@ public class GeneSetValueObject implements SecureValueObject {
     }
 
     @Override
-    public boolean isPublik() {
+    public boolean getIsPublic() {
         return this.isPublic;
     }
 
     @Override
-    public boolean isShared() {
+    public boolean getIsShared() {
         return this.isShared;
     }
 
     @Override
-    public boolean isUserOwned() {
+    public boolean getUserOwned() {
         return this.currentUserIsOwner;
     }
 
@@ -161,7 +161,7 @@ public class GeneSetValueObject implements SecureValueObject {
     }
 
     @Override
-    public void setIsUserOwned( boolean isUserOwned ) {
+    public void setUserOwned( boolean isUserOwned ) {
         this.currentUserIsOwner = isUserOwned;
 
     }
@@ -189,12 +189,12 @@ public class GeneSetValueObject implements SecureValueObject {
     }
 
     @Override
-    public void setWriteableByUser( boolean userCanWrite ) {
-        this.currentUserHasWritePermission = userCanWrite;
+    public void setUserCanWrite( boolean userCanWrite ) {
+        this.userOwned = userCanWrite;
     }
 
     @Override
-    public boolean isWriteableByUser() {
-        return this.currentUserHasWritePermission;
+    public boolean getUserCanWrite() {
+        return this.userOwned;
     }
 }

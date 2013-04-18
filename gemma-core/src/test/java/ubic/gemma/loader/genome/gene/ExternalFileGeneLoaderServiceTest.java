@@ -40,25 +40,23 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
 
-    /*
-     * This doesn't matter for test so long as it's in the system. Actual examples are fish genes
-     */
-    private static final String TAXON_NAME = "mouse";
-    @Autowired
-    GeneService geneService;
+    private static final String TAXON_NAME = "human";
 
     @Autowired
-    ExternalFileGeneLoaderService externalFileGeneLoaderService = null;
+    private GeneService geneService;
 
-    String geneFile = null;
+    @Autowired
+    private ExternalFileGeneLoaderService externalFileGeneLoaderService = null;
+
+    private String geneFile = null;
 
     @Before
     public void setup() throws Exception {
         geneFile = FileTools.resourceToPath( "/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
         try {
-            Collection<Gene> zyx = geneService.findByOfficialSymbol( "ZYX" );
+            Collection<Gene> zyx = geneService.findByOfficialSymbol( "ZYXMMMM" );
             if ( !zyx.isEmpty() ) geneService.remove( zyx );
-            zyx = geneService.findByOfficialSymbol( "ZXDC" );
+            zyx = geneService.findByOfficialSymbol( "ZXDCMMMM" );
             if ( !zyx.isEmpty() ) geneService.remove( zyx );
             zyx = geneService.findByOfficialSymbol( "ZYXIN" );
             if ( !zyx.isEmpty() ) geneService.remove( zyx );

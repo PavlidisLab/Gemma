@@ -53,25 +53,25 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class AclAdviceTest extends BaseSpringContextTest {
 
     @Autowired
-    MutableAclService aclService;
+    private MutableAclService aclService;
 
     @Autowired
-    AclTestUtils aclTestUtils;
+    private AclTestUtils aclTestUtils;
 
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
     @Autowired
-    ExperimentalDesignService experimentalDesignService;
+    private ExperimentalDesignService experimentalDesignService;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    ExpressionExperimentSetService expressionExperimentSetService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
     /**
      * Create Array design, check ACLs are put on correctly and removed when the design is removed. Array Designs are
@@ -154,8 +154,8 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         diffExpressionAnalysis.setExperimentAnalyzed( ee );
 
-        diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) differentialExpressionAnalyzerService
-                .persistAnalysis( ee, diffExpressionAnalysis );
+        diffExpressionAnalysis = differentialExpressionAnalyzerService.persistAnalysis( ee, diffExpressionAnalysis,
+                config );
 
         aclTestUtils.checkHasAcl( ee );
         aclTestUtils.checkHasAcl( diffExpressionAnalysis );

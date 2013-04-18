@@ -44,7 +44,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -126,8 +126,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * Create the vectors. Do a sanity check that we don't have more than we should
          */
         Collection<CompositeSequence> seenDes = new HashSet<CompositeSequence>();
-        QuantitationType preferredMaskedDataQuantitationType = getPreferredMaskedDataQuantitationType( preferredDataVectors
-                .iterator().next().getQuantitationType() );
+        RawExpressionDataVector preferredDataVectorExemplar = preferredDataVectors.iterator().next();
+        QuantitationType preferredMaskedDataQuantitationType = getPreferredMaskedDataQuantitationType( preferredDataVectorExemplar
+                .getQuantitationType() );
 
         int i = 0;
         for ( CompositeSequence cs : maskedVectorObjects.keySet() ) {
@@ -1193,30 +1194,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         this.getHibernateTemplate().lock( ee, LockMode.NONE );
         Hibernate.initialize( ee.getBioAssays() );
-        List<BioAssay> sliceBioAssays = new ArrayList<BioAssay>();
+        List<BioAssayValueObject> sliceBioAssays = new ArrayList<BioAssayValueObject>();
 
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+        DoubleVectorValueObject exemplar = obs.iterator().next();
+
+        BioAssayDimensionValueObject bad = new BioAssayDimensionValueObject();
         bad.setId( null ); // because it isn't a real bioassaydimension
+        bad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
+        bad.setDescription( "Subset slice" );
 
-        BioAssayDimension bioAssayDimension = obs.iterator().next().getBioAssayDimension();
-        this.getHibernateTemplate().lock( bioAssayDimension, LockMode.NONE );
-        Hibernate.initialize( bioAssayDimension );
-        sliceBioAssays.clear();
-        Hibernate.initialize( bioAssayDimension.getBioAssays() );
-        for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-            if ( !ee.getBioAssays().contains( ba ) ) {
+        Collection<Long> subsetBioAssayIds = EntityUtils.getIds( ee.getBioAssays() );
+
+        for ( BioAssayValueObject ba : exemplar.getBioAssays() ) {
+            if ( !subsetBioAssayIds.contains( ba.getId() ) ) {
                 continue;
             }
-            Hibernate.initialize( ba.getSampleUsed() );
-            BioMaterial bm = ba.getSampleUsed();
-            Hibernate.initialize( bm.getBioAssaysUsedIn() );
-            Hibernate.initialize( bm.getFactorValues() );
 
             sliceBioAssays.add( ba );
         }
         bad.setBioAssays( sliceBioAssays );
-
-        bad.setName( "Subset of " + bioAssayDimension );
 
         for ( DoubleVectorValueObject vec : obs ) {
             DoubleVectorValueObject s = new DoubleVectorValueObject( ee, vec, bad );

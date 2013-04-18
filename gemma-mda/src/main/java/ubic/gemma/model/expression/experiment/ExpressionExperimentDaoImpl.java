@@ -324,7 +324,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
-        final String queryString = "from ProcessedExpressionDataVector where expressionExperiment = :ee";
+        final String queryString = "from ProcessedExpressionDataVectorImpl where expressionExperiment = :ee";
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 

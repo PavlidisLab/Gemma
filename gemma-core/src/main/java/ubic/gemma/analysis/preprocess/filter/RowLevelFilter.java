@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.math.Constants;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -41,13 +42,13 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     private static Log log = LogFactory.getLog( RowLevelFilter.class.getName() );
     private boolean removeAllNegative = false;
     private Method method = Method.MAX;
-    protected double lowCut = -Double.MAX_VALUE;
+    private double lowCut = -Double.MAX_VALUE;
 
-    protected double highCut = Double.MAX_VALUE;
+    private double highCut = Double.MAX_VALUE;
 
-    protected boolean useLowAsFraction = false;
+    private boolean useLowAsFraction = false;
 
-    protected boolean useHighAsFraction = false;
+    private boolean useHighAsFraction = false;
     private Map<CompositeSequence, Double> ranks = null;
 
     /**
@@ -198,7 +199,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      */
     public void setUseHighCutAsFraction( boolean setting ) {
         if ( setting == true && !Stats.isValidFraction( highCut ) ) {
-            highCut = 0.0; // temporary, use sets this later, we hope.
+            highCut = 0.0; // temporary, user sets this later, we hope.
         }
         useHighAsFraction = setting;
     }
@@ -260,10 +261,27 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
                 criteria.set( i, DescriptiveWithMissing.variance( rowAsList ) );
                 break;
             }
+            case DISTINCTVALUES: {
+                criteria.set( i,
+                        Stats.numberofDistinctValues( rowAsList, this.tolerance ) / ( double ) rowAsList.size() );
+                break;
+            }
             default: {
                 break;
             }
         }
+    }
+
+    private double tolerance = Constants.SMALL;
+
+    /**
+     * Set the value considered to be an insignificant difference between two numbers. Default is Constants.SMALL. Used
+     * by DISTINCTVALUE filter.
+     * 
+     * @param tolerance
+     */
+    public void setTolerance( Double tolerance ) {
+        this.tolerance = Math.abs( tolerance );
     }
 
     /**
@@ -285,7 +303,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             int numNeg = 0;
             /* stupid, copy into a DoubleArrayList so we can do stats */
             for ( int j = 0; j < numCols; j++ ) {
-                double item = row[j].doubleValue();
+                Double item = row[j];
                 if ( Double.isNaN( item ) )
                     rowAsList.set( j, 0 );
                 else
@@ -368,6 +386,6 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     }
 
     public enum Method {
-        RANK, MIN, MAX, MEDIAN, MEAN, RANGE, CV, VAR
+        RANK, MIN, MAX, MEDIAN, MEAN, RANGE, CV, VAR, DISTINCTVALUES
     }
 }

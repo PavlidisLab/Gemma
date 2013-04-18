@@ -290,7 +290,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
         // make groups private by default
         // can't do this to newGeneSet variable because the entity's id needs to be non-null
-        if ( geneSetVo.isPublik() ) {
+        if ( geneSetVo.getIsPublic() ) {
             securityService.makePublic( gset );
         } else {
             securityService.makePrivate( gset );

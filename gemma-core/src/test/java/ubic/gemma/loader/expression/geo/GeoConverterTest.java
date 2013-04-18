@@ -1054,6 +1054,31 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
+     * bug 3393/1709 - case change in probe names messing things up.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public final void testGSE44903() throws Exception {
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE44903.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE44903" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Set<?> result = ( Set<?> ) this.gc.convert( series );
+        ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
+
+        /*
+         * This is the current condition, because the probes are not matched up.
+         */
+        assertEquals( 0, e.getRawExpressionDataVectors().size() );
+    }
+
+    /**
      * Has image clones.
      * 
      * @throws Exception

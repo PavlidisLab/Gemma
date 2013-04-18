@@ -19,7 +19,9 @@
 package ubic.gemma.tasks.visualization;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -36,13 +38,13 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * Represents a complete set of data for a differential expression query over a set of genes x conditions (resultSets x
  * contrasts).
  * 
- * @author Anton
+ * @author anton
  * @version $Id$
  */
 public class DifferentialExpressionGenesConditionsValueObject {
     // The details of the result for a gene x condition combination.
     public class Cell {
-        private boolean isProbeMissing;
+        private Boolean isProbeMissing;
         private Double visualizationValue;
         private Double pValue = null; // important!
         private Double logFoldChange = 0.0;
@@ -50,12 +52,21 @@ public class DifferentialExpressionGenesConditionsValueObject {
         private Integer numberOfProbes = 0;
         private Integer numberOfProbesDiffExpressed = 0;
         private Double correctedPValue = null; // important
+        private boolean isProbeOmitted = false;
+
+        public boolean getIsProbeOmitted() {
+            return isProbeOmitted;
+        }
+
+        public void setIsProbeOmitted( boolean isProbeOmitted ) {
+            this.isProbeOmitted = isProbeOmitted;
+        }
 
         public Double getCorrectedPValue() {
             return correctedPValue;
         }
 
-        public int getDirection() {
+        public Integer getDirection() {
             return direction;
         }
 
@@ -85,7 +96,9 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
     }
 
-    // Represents one column in the differential expression view; one contrast in a resultset in an experiment.
+    /**
+     * Represents one column in the differential expression view; one contrast in a resultset in an experiment.
+     */
     public class Condition {
         private String baselineFactorValue;
         private String contrastFactorValue;
@@ -433,6 +446,8 @@ public class DifferentialExpressionGenesConditionsValueObject {
      */
     private Map<String, Map<Long, Cell>> cellData;
 
+    private Map<Long, Collection<Condition>> resultSetConditions = new HashMap<Long, Collection<Condition>>();
+
     /*
      * The Condition dimension
      */
@@ -506,6 +521,13 @@ public class DifferentialExpressionGenesConditionsValueObject {
      */
     public void addCondition( Condition condition ) {
         conditions.add( condition );
+
+        long resultSetId = condition.getResultSetId();
+        if ( !resultSetConditions.containsKey( resultSetId ) ) {
+            resultSetConditions.put( resultSetId, new HashSet<Condition>() );
+        }
+
+        resultSetConditions.get( resultSetId ).add( condition );
         // // Start with a column of missing values.
         for ( Gene gene : this.genes ) {
             this.addProbeMissingCell( gene.getId(), condition.getId() );
@@ -524,6 +546,28 @@ public class DifferentialExpressionGenesConditionsValueObject {
      */
     public Map<String, Map<Long, Cell>> getCellData() {
         return cellData;
+    }
+
+    /**
+     * Mark data as available, but not significant (so details will be missing)
+     * 
+     * @param geneId
+     * @param resultSetId
+     */
+    public void setAsNonSignficant( Long geneId, Long resultSetId ) {
+        Collection<Condition> cs = resultSetConditions.get( resultSetId );
+        for ( Condition c : cs ) {
+            Cell cell = new Cell();
+            cell.isProbeMissing = false;
+            cell.isProbeOmitted = true;
+            cell.correctedPValue = 1.0;
+            cell.pValue = 1.0;
+            cell.logFoldChange = 0.0;
+            cell.numberOfProbes = 0;
+            cell.numberOfProbesDiffExpressed = 0;
+            cell.direction = 0;
+            addCell( geneId, c.getId(), cell );
+        }
     }
 
     /**

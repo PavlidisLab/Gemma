@@ -198,7 +198,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             assert bioAssayDimension.getBioAssays().size() == vct.getData().length;
 
             vct.setRank( probeLoading.getLoadingRank().doubleValue() );
-            vct.setBioAssayDimension( bioAssayDimension );
+            // vct.setBioAssayDimension( bioAssayDimension ); // why do we need to do this?
             vct.setExpressionExperiment( new ExpressionExperimentValueObject( ee ) );
             result.put( probeLoading, vct );
         }

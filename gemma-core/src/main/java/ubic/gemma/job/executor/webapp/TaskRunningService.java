@@ -23,9 +23,7 @@ import java.util.Collection;
 
 /**
  * TODO: document me
- *
- *
- *
+ * 
  * @author paul
  * @version $Id$
  */
@@ -35,9 +33,10 @@ public interface TaskRunningService {
      * @return the submittedTasks
      */
     public Collection<SubmittedTask> getSubmittedTasks();
-    //TODO: Make this user specific. Probably in a controller with a session scoped collection.
-    //TODO: at that level (WebAwareTaskRunnningService) have a rate limiter for task submission by the same user
-    //TODO: this is to detect duplicate task submission (e.g. within a few seconds)
+
+    // TODO: Make this user specific. Probably in a controller with a session scoped collection.
+    // TODO: at that level (WebAwareTaskRunnningService) have a rate limiter for task submission by the same user
+    // TODO: this is to detect duplicate task submission (e.g. within a few seconds)
 
     /**
      * @param taskId id of the task
@@ -49,16 +48,16 @@ public interface TaskRunningService {
      * Submit a task and track its progress. When it is finished, the results can be retrieved with checkResult(). Tasks
      * can be cancelled with cancelTask().
      * 
-     * @param taskCommand The command to run. The submissionTime of the task is set after this call. This does not mean that the job
-     *        has started - it might be queued.
-     * @throws ubic.gemma.job.ConflictingTaskException if the task is disallowed due to another conflicting task (e.g., two tasks of
-     *         the same type by the same user).
+     * @param taskCommand The command to run. The submissionTime of the task is set after this call. This does not mean
+     *        that the job has started - it might be queued.
+     * @throws ubic.gemma.job.ConflictingTaskException if the task is disallowed due to another conflicting task (e.g.,
+     *         two tasks of the same type by the same user).
      */
     public String submitLocalTask( TaskCommand taskCommand ) throws ConflictingTaskException;
 
     /**
      * Run task remotely if possible, otherwise run locally.
-     *
+     * 
      * @param taskCommand
      * @return
      * @throws ConflictingTaskException

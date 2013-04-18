@@ -18,71 +18,69 @@
 
 Ext.namespace('Gemma');
 
-
 /**
  * 
  * @param {}
- *            config
+ *           config
  */
 Gemma.SessionGeneGroupStore = function(config) {
 
-	/*
-	 * Leave this here so copies of records can be constructed.
-	 */
-	this.record = Ext.data.Record.create([
-			{
-				name : "id",
-				type : "int"
-			},{
-				name : "taxonId",
-				type : "int"
-			},{
-				name : "name",
-				type : "string",
-				convert : function(v, rec) {
-					if (v.startsWith("GO")) {
-						return rec.description;
-					}
-					return v;
-				}
-			},{
-				name : "taxonName",
-				type : "string"				
-			},{
-				name : "description",
-				type : "string",
-				convert : function(v, rec) {
-					if (rec.name.startsWith("GO")) {
-						return rec.name;
-					}
-					return v;
-				}
+   /*
+    * Leave this here so copies of records can be constructed.
+    */
+   this.record = Ext.data.Record.create([{
+         name : "id",
+         type : "int"
+      }, {
+         name : "taxonId",
+         type : "int"
+      }, {
+         name : "name",
+         type : "string",
+         convert : function(v, rec) {
+            if (v.startsWith("GO")) {
+               return rec.description;
+            }
+            return v;
+         }
+      }, {
+         name : "taxonName",
+         type : "string"
+      }, {
+         name : "description",
+         type : "string",
+         convert : function(v, rec) {
+            if (rec.name.startsWith("GO")) {
+               return rec.name;
+            }
+            return v;
+         }
 
-			}, {
-				name : "publik",
-				type : "boolean"
-			}, {
-				name : "size",
-				type : "int"
-			}, {
-				name : "shared",
-				type : 'boolean'
-			}, {
-				name : "writeableByUser",
-				type : 'boolean'
-			},{
-				name : "session",
-				type : 'boolean'
-			},{
-				name : "geneIds"
-			}]);
+      }, {
+         name : "isPublic",
+         type : "boolean"
+      }, {
+         name : "size",
+         type : "int"
+      }, {
+         name : "isShared",
+         type : 'boolean'
+      }, {
+         name : "userCanWrite",
+         type : 'boolean'
+      }, {
+         name : "session",
+         type : 'boolean'
+      }, {
+         name : "geneIds"
+      }]);
 
-	// todo replace with JsonReader.
-	this.reader = new Ext.data.ListRangeReader({
-				//id : "id"
-			}, this.record);
+   // todo replace with JsonReader.
+   this.reader = new Ext.data.ListRangeReader({
+      // id : "id"
+      }, this.record);
 
-	Gemma.SessionGeneGroupStore.superclass.constructor.call(this, config);
+   Gemma.SessionGeneGroupStore.superclass.constructor.call(this, config);
 
 };
 
@@ -93,83 +91,83 @@ Gemma.SessionGeneGroupStore = function(config) {
  */
 Ext.extend(Gemma.SessionGeneGroupStore, Ext.data.Store, {
 
-			autoLoad : true,
-			autoSave : false,
-			selected : null,
-			name : "geneGroupSessionData-store",
+      autoLoad : true,
+      autoSave : false,
+      selected : null,
+      name : "geneGroupSessionData-store",
 
-			proxy : new Ext.data.DWRProxy({
-						apiActionToHandlerMap : {
-							read : {
-								dwrFunction : GeneSetController.getUserAndSessionGeneGroups,
-								getDwrArgsFunction : function(request) {
-									if (request.params.length > 0) {
-										return [request.params[0], request.params[1]];
-									}
-									return [false, null];
-								}
-							},
-							create : {
-								dwrFunction : GeneSetController.addSessionGroups
-							},
-							update : {
-								dwrFunction : GeneSetController.updateSessionGroups
-							},
-							destroy : {
-								dwrFunction : GeneSetController.removeSessionGroups
-							}
-						}
-					}),
+      proxy : new Ext.data.DWRProxy({
+            apiActionToHandlerMap : {
+               read : {
+                  dwrFunction : GeneSetController.getUserAndSessionGeneGroups,
+                  getDwrArgsFunction : function(request) {
+                     if (request.params.length > 0) {
+                        return [request.params[0], request.params[1]];
+                     }
+                     return [false, null];
+                  }
+               },
+               create : {
+                  dwrFunction : GeneSetController.addSessionGroups
+               },
+               update : {
+                  dwrFunction : GeneSetController.updateSessionGroups
+               },
+               destroy : {
+                  dwrFunction : GeneSetController.removeSessionGroups
+               }
+            }
+         }),
 
-			writer : new Ext.data.JsonWriter({
-						writeAllFields : true
-					}),
+      writer : new Ext.data.JsonWriter({
+            writeAllFields : true
+         }),
 
-			getSelected : function() {
-				return this.selected;
-			},
+      getSelected : function() {
+         return this.selected;
+      },
 
-			setSelected : function(rec) {
-				this.previousSelection = this.getSelected();
-				if (rec) {
-					this.selected = rec;
-				}
-			},
+      setSelected : function(rec) {
+         this.previousSelection = this.getSelected();
+         if (rec) {
+            this.selected = rec;
+         }
+      },
 
-			getPreviousSelection : function() {
-				return this.previousSelection;
-			},
+      getPreviousSelection : function() {
+         return this.previousSelection;
+      },
 
-			clearSelected : function() {
-				this.selected = null;
-				delete this.selected;
-			},
+      clearSelected : function() {
+         this.selected = null;
+         delete this.selected;
+      },
 
-			listeners : {
-				write : function(store, action, result, res, rs) {
-					// Ext.Msg.show({
-					// title : "Saved",
-					// msg : "Changes were saved",
-					// icon : Ext.MessageBox.INFO
-					// });
-				},
-				exception : function(proxy, type, action, options, res, arg) {
-					//console.log(res);
-					if (type === 'remote') {
-						Ext.Msg.show({
-									title : 'Error',
-									msg : res,
-									icon : Ext.MessageBox.ERROR
-								});
-					} else {
-						Ext.Msg.show({
-									title : 'Error',
-									msg : arg,
-									icon : Ext.MessageBox.ERROR
-								});
-					}
-				}
+      listeners : {
+         write : function(store, action, result, res, rs) {
+            // Ext.Msg.show({
+            // title : "Saved",
+            // msg : "Changes were saved",
+            // icon : Ext.MessageBox.INFO
+            // });
+         },
+         exception : function(proxy, type, action, options, res, arg) {
+            // console.log(res);
+            if (type === 'remote') {
+               Ext.Msg.show({
+                     title : 'Error',
+                     msg : res,
+                     icon : Ext.MessageBox.ERROR
+                  });
+            } else {
+               Ext.Msg.show({
+                     title : 'Error',
+                     msg : arg,
+                     icon : Ext.MessageBox.ERROR
+                  });
+            }
+         }
 
-			}
+      }
 
-		});
+   });

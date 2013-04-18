@@ -34,8 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis; 
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -64,12 +63,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
     public void setup() {
 
         ee = this.getTestPersistentCompleteExpressionExperiment( false );
-
-        Collection<QuantitationType> qts = ees.getQuantitationTypes( ee );
-
-        // this is bogus, it should represent "pearson correlation" for example, but doesn't matter for this test.
-        QuantitationType qt = qts.iterator().next();
-
+ 
         Collection<ProcessedExpressionDataVector> dvs = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
 

@@ -42,6 +42,7 @@ import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -214,7 +215,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             // debugging
             if ( first ) {
                 for ( int j = 0; j < row.length; j++ ) {
-                    BioAssay ba = ( ( List<BioAssay> ) v.getBioAssayDimension().getBioAssays() ).get( j );
+                    BioAssayValueObject ba = v.getBioAssays().get( j );
                     System.err.println( ba.getName() );
                 }
                 first = false;
@@ -227,7 +228,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
             assertEquals( 10, row.length );
             for ( int j = 0; j < row.length; j++ ) {
-                BioAssay ba = ( ( List<BioAssay> ) v.getBioAssayDimension().getBioAssays() ).get( j );
+                assertNotNull( v.getBioAssays() );
+                BioAssayValueObject ba = v.getBioAssays().get( j );
                 if ( ba.getName().startsWith( "Missing bioassay for biomaterial" )
                         && ( el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" )
                                 || el.getName().equals( "100003_at" ) || el.getName().equals( "100004_at" )

@@ -99,14 +99,14 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
             // Delete contrasts
             final String nativeDeleteContrastsQuery = "DELETE c FROM CONTRAST_RESULT c, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
-                    + " where d.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rsid and d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
+                    + " where d.RESULT_SET_FK = :rsid and d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
             SQLQuery q = session.createSQLQuery( nativeDeleteContrastsQuery );
             q.setParameter( "rsid", rs.getId() );
             contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table delete.
 
             // Delete AnalysisResults
             String nativeDeleteARQuery = "DELETE d from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
-                    + " where d.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rsid  ";
+                    + " where d.RESULT_SET_FK = :rsid  ";
             q = session.createSQLQuery( nativeDeleteARQuery );
             q.setParameter( "rsid", rs.getId() );
             resultsDone += q.executeUpdate();
@@ -693,7 +693,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         ExperimentalFactorValueObject subsetFactor = avo.getSubsetFactor();
 
         for ( BioAssay ba : ( Collection<BioAssay> ) bioAssaySet.getBioAssays() ) {
-              BioMaterial bm = ba.getSampleUsed() ;
+            BioMaterial bm = ba.getSampleUsed();
 
             for ( FactorValue fv : bm.getFactorValues() ) {
 

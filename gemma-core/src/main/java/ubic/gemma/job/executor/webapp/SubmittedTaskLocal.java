@@ -20,7 +20,6 @@ package ubic.gemma.job.executor.webapp;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import ubic.gemma.job.EmailNotificationContext;
-import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.TaskPostProcessing;
@@ -33,9 +32,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * SubmittedTask implementation representing the task running on local TaskRunningService.
- *
  */
-public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstract<T> implements SubmittedTask<T> {
+public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstract<T> {
 
     private TaskPostProcessing taskPostProcessing;
 
@@ -81,8 +79,8 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
 
     @Override
     public synchronized void requestCancellation() {
-        boolean isCancelled = this.future.cancel (true);
-        if (isCancelled) {
+        boolean isCancelled = this.future.cancel( true );
+        if ( isCancelled ) {
             status = Status.CANCELLING;
         }
     }
@@ -105,13 +103,13 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
         return this.emailAlert;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized void addEmailAlert() {
         if (emailAlert) return;
         emailAlert = true;
-        taskPostProcessing.addEmailNotification( (ListenableFuture<TaskResult>) future,
-                new EmailNotificationContext( taskCommand.getTaskId(), taskCommand.getSubmitter(),
-                        taskCommand.getTaskClass().getSimpleName() ) );
+        taskPostProcessing.addEmailNotification( ( ListenableFuture<TaskResult> ) future, new EmailNotificationContext(
+                taskCommand.getTaskId(), taskCommand.getSubmitter(), taskCommand.getTaskClass().getSimpleName() ) );
     }
 
     @Override
@@ -121,9 +119,8 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
 
     /*
      * Package-private methods, used by TaskRunningService
-     *
      */
-    void setFuture(ListenableFuture<T> future) {
+    void setFuture( ListenableFuture<T> future ) {
         this.future = future;
     }
 
@@ -131,7 +128,7 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
         return future;
     }
 
-    synchronized void updateStatus( Status status, Date timeStamp ) {
-        setTimeStampAndStatus( status, timeStamp );
+    synchronized void updateStatus( Status s, Date timeStamp ) {
+        setTimeStampAndStatus( s, timeStamp );
     }
 }

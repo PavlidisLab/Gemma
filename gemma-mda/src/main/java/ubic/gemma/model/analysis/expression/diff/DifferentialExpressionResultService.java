@@ -19,6 +19,8 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
+
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -33,6 +35,9 @@ import java.util.Map;
  * @version $Id$
  */
 public interface DifferentialExpressionResultService {
+
+    // FIXME not used?
+    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
@@ -94,9 +99,6 @@ public interface DifferentialExpressionResultService {
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
             double threshold, Integer limit );
 
-    public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
-            Collection<Long> arrayDesignIds, Integer limit );
-
     /**
      * Retrieve differential expression results in bulk. This is an important method for the differential expression
      * interfaces.
@@ -106,6 +108,12 @@ public interface DifferentialExpressionResultService {
      */
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds );
+
+    public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
+            Collection<Long> arrayDesignIds, Integer limit );
+
+    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet ar,
+            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults );
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
@@ -117,6 +125,14 @@ public interface DifferentialExpressionResultService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
+
+    /**
+     * Fetch the analysis associated with a result set.
+     * 
+     * @param rs
+     * @return
+     */
+    public DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
 
     /**
      * 
@@ -132,17 +148,23 @@ public interface DifferentialExpressionResultService {
     public Collection<ExperimentalFactor> getExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
-    public ExpressionAnalysisResultSet loadAnalysisResultSet( Long analysisResultSetId );
-
-    public void thaw( Collection<DifferentialExpressionAnalysisResult> results );
-
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids );
+
+    public ExpressionAnalysisResultSet loadAnalysisResultSet( Long analysisResultSetId );
 
     public Collection<DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids );
 
-    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
+    /**
+     * @param analysisResultSetId
+     * @return
+     */
+    public Histogram loadPvalueDistribution( Long analysisResultSetId );
+
+    public void thaw( Collection<DifferentialExpressionAnalysisResult> results );
 
     public void thaw( DifferentialExpressionAnalysisResult result );
+
+    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Does not thaw the collection of probes (just the factor information)
@@ -150,12 +172,6 @@ public interface DifferentialExpressionResultService {
      * @param resultSet
      */
     public void thawLite( ExpressionAnalysisResultSet resultSet );
-
-    // FIXME not used?
-    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
-
-    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet ar,
-            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults );
 
     // this is here for 'cleanup' purposes, usually we would consider these immutable.
     @Secured({ "GROUP_ADMIN" })

@@ -526,21 +526,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             double[] dvals = new double[bioMaterials.size()];
             for ( int j = 0; j < dvals.length; j++ ) {
 
-                // if ( randomData.nextUniform( 0, 1 ) < FRACTION_MISSING_DATA ) {
-                // dvals[j] = Double.NaN;
-                // } else if ( i < 20 ) {
-                // // make it a little more interesting
-                // if ( bioMaterials.get( j ).getFactorValues().contains( this.factorValuesA.iterator().next() ) ) {
-                // dvals[j] = dataMatrix.get( i, j ) + Math.abs( randomData.nextGaussian( 200, 1 ) );
-                // } else if ( bioMaterials.get( j ).getFactorValues().contains( this.factorValuesB.iterator().next() )
-                // ) {
-                // dvals[j] = dataMatrix.get( i, j ) - Math.abs( randomData.nextGaussian( 4, 1 ) );
-                // } else {
-                // dvals[j] = dataMatrix.get( i, j );
-                // }
-                // } else {
                 dvals[j] = dataMatrix.get( i, j );
-                // }
             }
 
             byte[] bvals = bac.doubleArrayToBytes( dvals );

@@ -18,7 +18,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -38,7 +38,7 @@ public interface ExperimentalDesignVisualizationService {
      * @deprecated as it is not used anywhere at the moment except a test.
      */
     @Deprecated
-    public abstract LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
+    public abstract LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
             ExpressionExperiment e );
 
     /**
@@ -48,7 +48,7 @@ public interface ExperimentalDesignVisualizationService {
      * @param dedvs
      * @return Map of EE ids to Map of BioAssays ...
      */
-    public abstract Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
+    public abstract Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedvs );
 
     /**
@@ -59,8 +59,8 @@ public interface ExperimentalDesignVisualizationService {
      * @param layouts
      * @return sorted layouts
      */
-    public abstract Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
-            Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts );
+    public abstract Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
+            Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts );
 
     /**
      * removed the cached layouts and cached BioAssayDimensions for this experiment (could be a subset?)

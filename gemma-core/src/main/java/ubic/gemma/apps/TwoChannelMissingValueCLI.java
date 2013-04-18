@@ -54,10 +54,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     private static final String MISSING_VALUE_OPTION = "mvind";
 
     /**
-     * 
-     */
-
-    /**
      * @param args
      */
     public static void main( String[] args ) {
@@ -133,8 +129,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             if ( ee instanceof ExpressionExperiment ) {
                 processExperiment( ( ExpressionExperiment ) ee );
             } else {
-                throw new UnsupportedOperationException(
-                        "Can't do two-channel missing values on non-expressionExperiment bioassaysets" );
+                throw new UnsupportedOperationException( "Can't do two-channel missing values on "
+                        + ee.getClass().getName() );
             }
         }
 
@@ -180,7 +176,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         if ( !wasProcessed ) {
             errorObjects.add( ee.getShortName() );
         } else {
-            // Aduit iting is done separately.
+            // Aduititing is done separately.
             successObjects.add( ee.toString() );
         }
 

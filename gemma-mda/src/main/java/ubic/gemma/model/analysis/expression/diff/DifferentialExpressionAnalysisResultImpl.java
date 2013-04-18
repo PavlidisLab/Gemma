@@ -50,34 +50,45 @@ public class DifferentialExpressionAnalysisResultImpl extends
 
     @Override
     public String toString() {
-        return "DiffExRes[" + this.getId() + "]: " + this.getProbe() + " p=" + String.format( "%g", this.getPvalue() );
-    }
-
-    @Override
-    public int hashCode() {
-        if ( this.getId() != null ) return super.hashCode();
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ( ( super.getProbe() == null ) ? 0 : super.getProbe().hashCode() );
-        return result;
+        return "DiffExRes[" + this.getId() + "]: " + this.getProbe() + " p=" + String.format( "%g", this.getPvalue() )
+                + " ressetId=" + this.getResultSet().getId();
     }
 
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
-
+        if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
-
         DifferentialExpressionAnalysisResult other = ( DifferentialExpressionAnalysisResult ) obj;
 
-        if ( this.getId() != null ) {
-            return other.getId() != null && this.getId().equals( other.getId() );
+        if ( this.getId() == null ) {
+            if ( other.getId() != null ) return false;
+        } else if ( !getId().equals( other.getId() ) ) {
+            return false;
+        } else {
+            return getId().equals( other.getId() );
         }
 
-        if ( super.getProbe() == null ) {
+        // fallback.
+        if ( this.getResultSet() == null ) {
+            if ( other.getResultSet() != null ) return false;
+        } else if ( !getResultSet().equals( other.getResultSet() ) ) return false;
+        if ( this.getProbe() == null ) {
             if ( other.getProbe() != null ) return false;
-        } else if ( !super.getProbe().equals( other.getProbe() ) ) return false;
-
+        } else if ( !getProbe().equals( other.getProbe() ) ) return false;
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( getId() == null ) ? 0 : getId().hashCode() );
+
+        if ( getId() == null ) {
+            result = prime * result + ( ( getResultSet() == null ) ? 0 : getResultSet().hashCode() );
+            result = prime * result + ( ( getProbe() == null ) ? 0 : getProbe().hashCode() );
+        }
+        return result;
     }
 }

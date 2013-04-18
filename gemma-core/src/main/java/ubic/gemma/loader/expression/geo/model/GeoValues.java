@@ -207,7 +207,7 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "Detection_p-value" );
         skippableQuantitationTypes.add( "Detection_pvalue" );
         skippableQuantitationTypes.add( "D_P-VALUE" );
- 
+
         skippableQuantitationTypes.add( "Detection" );
         skippableQuantitationTypes.add( "Detection call" );
         skippableQuantitationTypes.add( "rIsWellAboveBG" );
@@ -240,9 +240,9 @@ public class GeoValues implements Serializable {
         skippableQuantitationTypes.add( "Pos_Fraction" );
         skippableQuantitationTypes.add( "Pairs_Used" );
 
-        String[] moreSkip = new String[] { "Pos_Fraction", "% > B635+2SD", "% > B635+1SD", "% > B532+2SD", "% > B532+1SD", "F532 % Sat.",
-                "F635 % Sat.", "rIsSaturated", "gIsSaturated", "ch1 Signal Noise Ratio", "ch2 Signal Noise Ratio",
-                "gIsFeatNonUnifOL", "gIsPosAndSignif", "rIsPosAndSignif", "rIsFeatNonUnifOL" };
+        String[] moreSkip = new String[] { "Pos_Fraction", "% > B635+2SD", "% > B635+1SD", "% > B532+2SD",
+                "% > B532+1SD", "F532 % Sat.", "F635 % Sat.", "rIsSaturated", "gIsSaturated", "ch1 Signal Noise Ratio",
+                "ch2 Signal Noise Ratio", "gIsFeatNonUnifOL", "gIsPosAndSignif", "rIsPosAndSignif", "rIsFeatNonUnifOL" };
 
         skippableQuantitationTypes.addAll( Arrays.asList( moreSkip ) );
 
@@ -474,6 +474,9 @@ public class GeoValues implements Serializable {
      * @return Collection of Objects representing the quantitation types for the given platform.
      */
     public Collection<Object> getQuantitationTypes( GeoPlatform samplePlatform ) {
+        assert samplePlatform != null;
+        assert this.data != null;
+        assert this.data.get( samplePlatform ) != null;
         return this.data.get( samplePlatform ).keySet();
     }
 

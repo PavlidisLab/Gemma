@@ -347,6 +347,8 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             assay.setName( columnName.toString() );
             assay.setArrayDesignUsed( arrayDesign );
             assay.setSampleUsed( bioMaterial );
+            assay.setIsOutlier( false );
+            assay.setSequencePairedReads( false );
             bad.getBioAssays().add( assay );
         }
 

@@ -48,7 +48,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control, so
- * we treat this synonymous with "outler removal".
+ * we treat this synonymous with "outlier removal".
  * <p>
  * This does not actually remove the samples. It just replaces the data in the processed data with "missing values".
  * This means the data are only recoverable by regenerating the processed data from the raw data

@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -727,7 +726,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             modelFormula = buildModelFormula( config, label2Factors, interceptFactor, interactionFactorLists );
         }
 
-        filterAndLogTransform( quantitationType, dmatrix );
+        dmatrix = filterAndLogTransform( quantitationType, dmatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
         if ( log.isDebugEnabled() ) outputForDebugging( dmatrix, designMatrix );
@@ -818,9 +817,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 probeAnalysisResult.setProbe( el );
 
                 if ( lm.getCoefficients() == null ) {
-                    probeAnalysisResult.setPvalue( null );
-                    pvaluesForQvalue.get( factorName ).add( overallPValue );
-                    resultLists.get( factorName ).add( probeAnalysisResult );
+                    // probeAnalysisResult.setPvalue( null );
+                    // pvaluesForQvalue.get( factorName ).add( overallPValue );
+                    // resultLists.get( factorName ).add( probeAnalysisResult );
+                    notUsable++;
                     continue;
                 }
 
@@ -858,9 +858,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                             log.warn( "Interaction could not be computed for " + el + ", further warnings suppressed" );
                             warned = true;
                         }
-                        notUsable++; // will over count?
+
                         if ( log.isDebugEnabled() )
                             log.debug( "Interaction could not be computed for " + el + ", further warnings suppressed" );
+
+                        notUsable++; // will over count?
+                        continue;
                     }
 
                 } else {
@@ -902,24 +905,27 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                                     + ", further warnings suppressed" );
                             warned = true;
                         }
-                        notUsable++; // will over count?
+
                         if ( log.isDebugEnabled() )
                             log.debug( "ANOVA could not be done for " + experimentalFactor + " on " + el );
+
+                        notUsable++; // will over count?
+                        continue;
                     }
                 }
 
                 probeAnalysisResult.setPvalue( nan2Null( overallPValue ) );
                 pvaluesForQvalue.get( factorName ).add( overallPValue );
                 resultLists.get( factorName ).add( probeAnalysisResult );
-            }
+            } // over terms
 
-        }
-
-        getRanksAndQvalues( resultLists, pvaluesForQvalue );
+        } // over probes
 
         if ( notUsable > 0 ) {
             log.info( notUsable + " elements or results were not usable - model could not be fit, etc." );
         }
+
+        getRanksAndQvalues( resultLists, pvaluesForQvalue );
 
         DifferentialExpressionAnalysis expressionAnalysis = makeAnalysisEntity( bioAssaySet, config, label2Factors,
                 baselineConditions, interceptFactor, interactionFactorLists, oneSampleTtest, resultLists,
@@ -936,9 +942,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param quantitationType
      * @param dmatrix
      */
-    private void filterAndLogTransform( QuantitationType quantitationType, ExpressionDataDoubleMatrix dmatrix ) {
+    private ExpressionDataDoubleMatrix filterAndLogTransform( QuantitationType quantitationType,
+            ExpressionDataDoubleMatrix dmatrix ) {
 
-        // dmatrix = ExpressionExperimentFilter.zeroVarianceFilter( dmatrix );
         ScaleType scaleType = findScale( quantitationType, dmatrix.getMatrix() );
 
         if ( scaleType.equals( ScaleType.LOG2 ) ) {
@@ -960,6 +966,29 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         } else {
             throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
         }
+
+        /*
+         * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
+         * really track this down).
+         * 
+         * Remove zero-variance rows, but also rows that have lots of equal values even if variance is non-zero. This
+         * happens when data is "clipped" (e.g., all values under 10 set to 10).
+         */
+        int r = dmatrix.rows();
+        dmatrix = ExpressionExperimentFilter.zeroVarianceFilter( dmatrix );
+        if ( dmatrix.rows() < r ) {
+            log.info( ( r - dmatrix.rows() ) + " rows removed due to low variance" );
+        }
+        r = dmatrix.rows();
+        /* FIXME refactor as constant. Idea is to skip this if the data set is really small, but this is totally ad hoc. */
+        if ( dmatrix.columns() > 4 ) {
+            dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, 0.5 );
+            if ( dmatrix.rows() < r ) {
+                log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
+            }
+        }
+
+        return dmatrix;
 
     }
 
@@ -1126,6 +1155,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 log.warn( "No pvalues for " + fName + ", ignoring." );
                 continue;
             }
+            log.info( pvals.size() + " pvalues for " + fName );
 
             Double[] pvalArray = pvals.toArray( new Double[] {} );
             for ( int i = 0; i < pvalArray.length; i++ ) {
@@ -1212,7 +1242,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
         Collection<ExpressionAnalysisResultSet> resultSets = makeResultSets( label2Factors, baselineConditions,
-                oneSampleTtest, expressionAnalysis, resultLists, config.getQvalueThreshold() );
+                oneSampleTtest, expressionAnalysis, resultLists );
 
         expressionAnalysis.setResultSets( resultSets );
 
@@ -1239,7 +1269,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         Double contrastTstat = tstats.get( term );
         Double coefficient = coeffs.get( term );
 
-        // no reason to store this.
+        // no reason to store this. Note: Tiny coefficient could also be treated as a missing value, but hopefully such
+        // situations would have been dealt with at a lower level.
         if ( coefficient == null || contrastTstat == null ) {
             return;
         }
@@ -1396,14 +1427,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param oneSampleTtest
      * @param expressionAnalysis
      * @param resultLists
-     * @param qValueThreshold for retention of results
      * @return
      */
     private Collection<ExpressionAnalysisResultSet> makeResultSets(
             final Map<String, Collection<ExperimentalFactor>> label2Factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions, boolean oneSampleTtest,
             DifferentialExpressionAnalysis expressionAnalysis,
-            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists, Double qvalueThreshold ) {
+            Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists ) {
 
         Map<CompositeSequence, Collection<Gene>> probeToGeneMap = getProbeToGeneMap( resultLists );
 
@@ -1432,12 +1462,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             int numberOfProbesTested = results.size();
             int numberOfGenesTested = getNumberOfGenesTested( results, probeToGeneMap );
 
-            removeUnwantedResults( qvalueThreshold, results );
-
             // make List into Set
             ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( factorsUsed,
-                    numberOfProbesTested, numberOfGenesTested, baselineGroup, expressionAnalysis,
-                    new HashSet<DifferentialExpressionAnalysisResult>( results ), hitListSizes );
+                    numberOfProbesTested, numberOfGenesTested, null, baselineGroup,
+                    new HashSet<DifferentialExpressionAnalysisResult>( results ), expressionAnalysis, null /*
+                                                                                                            * pvalue
+                                                                                                            * dists
+                                                                                                            */,
+                    hitListSizes );
             resultSets.add( resultSet );
 
             log.info( "Finished with result set for " + fName );
@@ -1506,28 +1538,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param qvalueThreshold
-     * @param results
-     */
-    private void removeUnwantedResults( Double qvalueThreshold, Collection<DifferentialExpressionAnalysisResult> results ) {
-
-        if ( qvalueThreshold != null ) {
-            int i = 0;
-            for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
-                DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) it.next();
-
-                if ( r.getCorrectedPvalue() == null || r.getCorrectedPvalue() >= qvalueThreshold ) {
-                    it.remove();
-                } else {
-                    i++;
-                }
-            }
-            log.info( "Retained " + i + " results meeting qvalue of " + qvalueThreshold );
-        }
-    }
-
-    /**
-     * Important bit. Run the analysis via R
+     * Important bit. Run the analysis
      * 
      * @param namedMatrix
      * @param factorNameMap

@@ -122,7 +122,7 @@ public class ExpressionExperimentSetController extends BaseController {
             groupIsDBBacked = true;
             try {
                 ExpressionExperimentSetValueObject set = expressionExperimentSetService.loadValueObject( eesvo.getId() );
-                userCanEditGroup = ( set.isWriteableByUser() && set.isModifiable() );
+                userCanEditGroup = ( set.getUserCanWrite() && set.isModifiable() );
 
             } catch ( org.springframework.security.access.AccessDeniedException ade ) {
                 return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + false + "}";

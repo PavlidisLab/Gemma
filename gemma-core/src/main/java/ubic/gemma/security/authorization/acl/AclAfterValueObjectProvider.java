@@ -79,15 +79,15 @@ public class AclAfterValueObjectProvider extends
                 Acl acl = securityService.getAcl( svo );
                 svo.setIsPublic( !SecurityUtil.isPrivate( acl ) );
                 svo.setIsShared( SecurityUtil.isShared( acl ) );
-                svo.setIsUserOwned( securityService.isOwnedByCurrentUser( svo ) );
+                svo.setUserOwned( securityService.isOwnedByCurrentUser( svo ) );
 
-                if ( svo.isUserOwned() || SecurityServiceImpl.isUserAdmin()
+                if ( svo.getUserOwned() || SecurityServiceImpl.isUserAdmin()
                         || requirePermission.contains( BasePermission.WRITE ) ) {
-                    svo.setWriteableByUser( true );
+                    svo.setUserCanWrite( true );
                 } else {
                     List<Permission> writePermissions = new ArrayList<Permission>();
                     writePermissions.add( BasePermission.WRITE );
-                    svo.setWriteableByUser( securityService.hasPermission( svo, writePermissions, authentication ) );
+                    svo.setUserCanWrite( securityService.hasPermission( svo, writePermissions, authentication ) );
                 }
             }
             return svo;

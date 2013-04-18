@@ -31,7 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -286,7 +286,8 @@ public class VisualizationValueObject {
      * 
      * @param layout
      */
-    public void setUpFactorProfiles( LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout ) {
+    public void setUpFactorProfiles(
+            LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout ) {
         if ( layout == null ) {
             log.warn( "Null layout, ignoring" );
             return;

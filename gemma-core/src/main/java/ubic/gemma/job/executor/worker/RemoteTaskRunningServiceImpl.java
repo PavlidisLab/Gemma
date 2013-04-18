@@ -42,33 +42,28 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This will run on remote worker jvm
- *
- * CompletionService backed by ThreadPoolExecutor is used to execute tasks.
- *
- * TODO: document me
- * ActiveMQ communication.
- *
- * ApplicationContext is injected and is used to load classes implementing Tasks.
- *
+ * This will run on remote worker jvm CompletionService backed by ThreadPoolExecutor is used to execute tasks. TODO:
+ * document me ActiveMQ communication. ApplicationContext is injected and is used to load classes implementing Tasks.
  * TODO: use MessageSender/Receiver here
  */
 @Component("remoteTaskRunningService")
 public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
     private static Log log = LogFactory.getLog( RemoteTaskRunningServiceImpl.class );
 
-    @Autowired private TaskPostProcessing taskPostProcessing;
-    @Autowired private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
-    @Autowired private JMSHelper jmsHelper;
+    @Autowired
+    private TaskPostProcessing taskPostProcessing;
+    @Autowired
+    private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
+    @Autowired
+    private JMSHelper jmsHelper;
 
     private final Map<String, SubmittedTaskRemote> submittedTasks = new ConcurrentHashMap<String, SubmittedTaskRemote>();
 
-    /*  TODO: configure me through properties/constants
-        thread pool with 10 core threads and a maximum of 15 threads.
+    /*
+     * TODO: configure me through properties/constants thread pool with 10 core threads and a maximum of 15 threads.
      */
-    private final ListeningExecutorService executorService =
-            MoreExecutors.listeningDecorator( new ThreadPoolExecutor( 10, 15, 10, TimeUnit.MINUTES,
-                    new LinkedBlockingQueue<Runnable>() ) );
+    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator( new ThreadPoolExecutor(
+            10, 15, 10, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>() ) );
 
     // Take completed Task and send its result to the SubmittedTaskProxy via JMS queue.
     private FutureCallback<TaskResult> sendTaskResultCallback = new FutureCallback<TaskResult>() {
@@ -77,7 +72,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             // Clean up.
             SubmittedTaskRemote task = submittedTasks.remove( taskResult.getTaskId() );
             task.sendTaskResult();
-            //TODO: this should update status as well
+            // TODO: this should update status as well
 
         }
 
@@ -96,7 +91,8 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         final Task task = getTask( taskCommand );
 
         final List<String> localProgressUpdates = new LinkedList<String>();
-        final SubmittedTaskRemote submittedTask = consrtuctSubmittedTaskRemote( taskCommand, taskId, localProgressUpdates );
+        final SubmittedTaskRemote submittedTask = consrtuctSubmittedTaskRemote( taskCommand, taskId,
+                localProgressUpdates );
 
         // Called from log appender that's attached to 'ubic.basecode' and 'ubic.gemma' loggers.
         final ProgressUpdateCallback progressUpdateCallback = new ProgressUpdateCallback() {
@@ -115,12 +111,15 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             public void onStart() {
                 submittedTask.updateStatus( new TaskStatusUpdate( SubmittedTask.Status.RUNNING ) );
             }
+
             @Override
             public void onFinish() {
                 submittedTask.updateStatus( new TaskStatusUpdate( SubmittedTask.Status.COMPLETED ) );
             }
+
             @Override
             public void onFailure( Throwable e ) {
+                log.error( e, e );
                 submittedTask.updateStatus( new TaskStatusUpdate( SubmittedTask.Status.FAILED ) );
             }
         } );
@@ -139,14 +138,16 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
     }
 
     private void checkTaskCommand( TaskCommand taskCommand ) {
-        if ( taskCommand == null ) throw new NullPointerException("taskCommand cannot be null.");
+        if ( taskCommand == null ) throw new NullPointerException( "taskCommand cannot be null." );
         assert taskCommand.getTaskId() != null;
         assert taskCommand.getTaskClass() != null;
     }
 
     private Task getTask( TaskCommand taskCommand ) {
         final Task task = taskCommandToTaskMatcher.match( taskCommand );
-        if (task == null) throw new IllegalArgumentException( "Can't find bean for Task "+ taskCommand.getTaskClass().getSimpleName() );
+        if ( task == null )
+            throw new IllegalArgumentException( "Can't find bean for Task "
+                    + taskCommand.getTaskClass().getSimpleName() );
         task.setCommand( taskCommand );
         return task;
     }
@@ -161,21 +162,20 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         this.executorService.shutdownNow();
     }
 
-    private SubmittedTaskRemote consrtuctSubmittedTaskRemote( TaskCommand taskCommand, String taskId, List<String> progressUpdates) {
+    private SubmittedTaskRemote consrtuctSubmittedTaskRemote( TaskCommand taskCommand, String taskId,
+            List<String> progressUpdates ) {
         String resultQueueName = ConfigUtils.getString( "gemma.remoteTasks.resultQueuePrefix" ) + taskId;
         String statusQueueName = ConfigUtils.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;
         String progressQueueName = ConfigUtils.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" ) + taskId;
 
-        MessageSender<TaskResult> resultSender =
-                new JmsMessageSender<TaskResult>( jmsHelper, resultQueueName );
+        MessageSender<TaskResult> resultSender = new JmsMessageSender<TaskResult>( jmsHelper, resultQueueName );
 
-        MessageSender<TaskStatusUpdate> statusUpdateSender =
-                new JmsMessageSender<TaskStatusUpdate>( jmsHelper, statusQueueName );
+        MessageSender<TaskStatusUpdate> statusUpdateSender = new JmsMessageSender<TaskStatusUpdate>( jmsHelper,
+                statusQueueName );
 
-        MessageSender<String> progressUpdateReceiver =
-                new JmsMessageSender<String>( jmsHelper, progressQueueName );
+        MessageSender<String> progressUpdateReceiver = new JmsMessageSender<String>( jmsHelper, progressQueueName );
 
-        return new SubmittedTaskRemote( taskCommand, progressUpdates,
-                resultSender, statusUpdateSender, progressUpdateReceiver, taskPostProcessing );
+        return new SubmittedTaskRemote( taskCommand, progressUpdates, resultSender, statusUpdateSender,
+                progressUpdateReceiver, taskPostProcessing );
     }
 }

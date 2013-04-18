@@ -30,7 +30,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated because it uses R, which we are trying to avoid (brittle); and we are not currently using this.
  */
+@Deprecated
 public class RMA extends RCommander implements ProbeSummarizer {
 
     private ArrayDesign arrayDesign = null;

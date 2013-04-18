@@ -87,7 +87,6 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
             Collection<Long> investigationIds );
 
-    
     /**
      * 
      */
@@ -99,8 +98,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
-    
-    
+
     /**
      * Return a collection of experiments in which the given gene was analyzed.
      */
@@ -146,6 +144,9 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( DifferentialExpressionAnalysis o );

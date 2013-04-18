@@ -54,6 +54,16 @@ public class FactorValueValueObject implements Serializable {
 
     private String categoryUri;
 
+    private Boolean isBaseline = false;
+
+    public Boolean getIsBaseline() {
+        return isBaseline;
+    }
+
+    public void setIsBaseline( Boolean isBaseline ) {
+        this.isBaseline = isBaseline;
+    }
+
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
@@ -78,11 +88,11 @@ public class FactorValueValueObject implements Serializable {
 
     }
 
+    /*
+     * FIXME this constructor is messed up. We should not be using the Factor, this is for FactorValues!
+     */
     public FactorValueValueObject( ExperimentalFactor ef ) {
 
-        /*
-         * FIXME this constructor is messed up. We should not be using the Factor, this is for FactorValues!
-         */
         this.description = ef.getDescription();
         this.factor = ef.getName();
         this.id = ef.getId();
@@ -134,9 +144,14 @@ public class FactorValueValueObject implements Serializable {
         if ( charId == null ) {
             if ( other.charId != null ) return false;
         } else if ( !charId.equals( other.charId ) ) return false;
+
         if ( id == null ) {
             if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
+        else
+            return id.equals( other.id );
+
         if ( value == null ) {
             if ( other.value != null ) return false;
         } else if ( !value.equals( other.value ) ) return false;
@@ -193,9 +208,13 @@ public class FactorValueValueObject implements Serializable {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( charId == null ) ? 0 : charId.hashCode() );
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        result = prime * result + ( ( value == null ) ? 0 : value.hashCode() );
+
+        if ( id == null ) {
+            result = prime * result + ( ( charId == null ) ? 0 : charId.hashCode() );
+
+            result = prime * result + ( ( value == null ) ? 0 : value.hashCode() );
+        }
         return result;
     }
 
@@ -283,6 +302,7 @@ public class FactorValueValueObject implements Serializable {
         this.setId( val.getId() );
         this.setFactorValue( getSummaryString( val ) );
         this.setFactorId( val.getExperimentalFactor().getId() );
+        this.isBaseline = val.getIsBaseline() != null ? val.getIsBaseline() : this.isBaseline;
 
         if ( val.getMeasurement() != null ) {
             this.setMeasurement( true );

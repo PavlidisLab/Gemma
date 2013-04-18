@@ -21,12 +21,15 @@ apply(tup, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["SEPW1"]
 apply(tdw, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["BCAP31"]
 apply(tup, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["BCAP31"]
 apply(tup, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["CAPRIN1"]
-
-# trouble genes, that don't necessarily show up.
+apply(tup, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["PPM1G"]
 apply(tup, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["ACLY"]
 apply(tup, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["ACTA2"]
 apply(tdw, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["ABCF1"]
 apply(tdw, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["ACO2" ]
+apply(tdw, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["PPM1G"]
 
 1-pchisq(-2*sum(log(c(0.17976911531153372 , 0.6371425366325183	,0.0034514804690969347))), 6)
+ 1-pchisq(-2*sum(log(c(0.025860712382681672,	0.004219274651296734,	0.2788962037860936))), 6)
  
+tdw["PPM1G",]
+tup["GUK1",]

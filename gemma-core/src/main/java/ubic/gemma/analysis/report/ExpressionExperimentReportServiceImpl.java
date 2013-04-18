@@ -223,9 +223,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      */
     @Override
     public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
- 
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids,
-                false );
+
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids, false );
         getStats( vos );
 
         for ( ExpressionExperimentValueObject vo : vos ) {

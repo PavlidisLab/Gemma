@@ -233,10 +233,10 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
                 otherBean.getArrayDesignCount(), otherBean.getShortName(), otherBean.getLinkAnalysisEventType(),
                 otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidated(), otherBean.getTechnologyType(),
                 otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
-                otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.isPublik(),
-                otherBean.isCurrentUserHasWritePermission(), otherBean.getClazz(), otherBean.getSourceExperiment(),
-                otherBean.getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(),
-                otherBean.getDateCreated(), otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
+                otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.getIsPublic(),
+                otherBean.getUserCanWrite(), otherBean.getClazz(), otherBean.getSourceExperiment(), otherBean
+                        .getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(), otherBean.getDateCreated(),
+                otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
                         .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
                 otherBean.getDateLinkAnalysis(), otherBean.getDateProcessedDataVectorComputation(), otherBean
                         .getDateMissingValueAnalysis(), otherBean.getProcessedExpressionVectorCount(), otherBean
@@ -363,7 +363,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
             this.setNumPopulatedFactors( otherBean.getNumPopulatedFactors() );
             this.setDateDifferentialAnalysis( otherBean.getDateDifferentialAnalysis() );
             this.setSampleRemovedFlags( otherBean.getSampleRemovedFlags() );
-            this.setIsPublic( otherBean.isPublik() );
+            this.setIsPublic( otherBean.getIsPublic() );
             this.setClazz( otherBean.getClazz() );
             this.setSourceExperiment( otherBean.getSourceExperiment() );
             this.setPubmedId( otherBean.getPubmedId() );
@@ -761,13 +761,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     /**
-     * @return the currentUserHasWritePermission
-     */
-    public boolean isCurrentUserHasWritePermission() {
-        return currentUserHasWritePermission;
-    }
-
-    /**
      * 
      */
     public boolean isHasBothIntensities() {
@@ -993,22 +986,22 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     @Override
-    public boolean isUserOwned() {
+    public boolean getUserOwned() {
         return this.currentUserIsOwner;
     }
 
     @Override
-    public void setIsUserOwned( boolean isUserOwned ) {
+    public void setUserOwned( boolean isUserOwned ) {
         this.currentUserIsOwner = isUserOwned;
     }
 
     @Override
-    public boolean isWriteableByUser() {
+    public boolean getUserCanWrite() {
         return this.currentUserHasWritePermission;
     }
 
     @Override
-    public void setWriteableByUser( boolean userCanWrite ) {
+    public void setUserCanWrite( boolean userCanWrite ) {
         this.currentUserHasWritePermission = userCanWrite;
     }
 
@@ -1018,12 +1011,12 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     @Override
-    public boolean isPublik() {
+    public boolean getIsPublic() {
         return this.isPublic;
     }
 
     @Override
-    public boolean isShared() {
+    public boolean getIsShared() {
         return this.isShared;
     }
 

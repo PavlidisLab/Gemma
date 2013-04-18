@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -88,18 +90,41 @@ public class ExpressionAnalysisResultSetDaoImpl extends
 
         List<ExpressionAnalysisResultSet> res = this.getHibernateTemplate().findByNamedParam(
                 "select r from ExpressionAnalysisResultSetImpl r left join fetch r.results res "
-                        + "join fetch res.probe left join fetch res.contrasts where r = :rs ", "rs", resultSet );
+                        + " left outer join fetch res.probe left join fetch res.contrasts where r = :rs ", "rs",
+                resultSet );
 
         if ( timer.getTime() > 1000 ) {
             Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
         }
 
-        if ( res.isEmpty() ) {
-            throw new IllegalStateException( "There was no result with ID=" + resultSet.getId()
-                    + ", or it had no results?" );
-        }
+        assert !res.isEmpty();
 
         return res.get( 0 );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetDao#thawFully(ubic.gemma.model.analysis.
+     * expression.diff.DifferentialExpressionAnalysis)
+     */
+    @Override
+    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSession().load(
+                DifferentialExpressionAnalysisImpl.class, differentialExpressionAnalysis.getId() );
+        // Hibernate.initialize( differentialExpressionAnalysis );
+        // Hibernate.initialize( differentialExpressionAnalysis.getResultSets() );
+        Collection<ExpressionAnalysisResultSet> thawed = new HashSet<ExpressionAnalysisResultSet>();
+        for ( ExpressionAnalysisResultSet rs : differentialExpressionAnalysis.getResultSets() ) {
+            thawed.add( this.thaw( rs ) );
+        }
+        boolean changed = differentialExpressionAnalysis.getResultSets().addAll( thawed );
+        assert !changed; // they are the same objects, just updated.
+        return differentialExpressionAnalysis;
     }
 }

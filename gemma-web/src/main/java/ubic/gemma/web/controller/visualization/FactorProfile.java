@@ -27,7 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.DoublePoint;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -44,9 +44,9 @@ public class FactorProfile {
     /**
      * In which case the Y values will not be constant and we provide but a single vector.
      */
-    Boolean isContinuous = false;
+    private Boolean isContinuous = false;
 
-    List<List<DoublePoint>> plots;
+    private List<List<DoublePoint>> plots;
 
     public FactorProfile() {
     }
@@ -56,7 +56,8 @@ public class FactorProfile {
      * @param layouts The double values are either just dummy values to tell us the extent of each factor value; or for
      *        continuous measurements it is the actual measurement.
      */
-    public FactorProfile( ExperimentalFactor ef, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layouts ) {
+    public FactorProfile( ExperimentalFactor ef,
+            LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layouts ) {
         super();
         checkIfFactorIsContinuous( ef );
         List<Double> values = extractFactorPlotValues( ef, layouts );
@@ -117,7 +118,7 @@ public class FactorProfile {
         for ( Double d : values ) {
             if ( d == null ) {
                 nullCount++;
-            }else{
+            } else {
                 if ( this.isContinuous ) {
                     currentList.add( new DoublePoint( i, d ) );
                     i++;
@@ -143,8 +144,8 @@ public class FactorProfile {
                 lastValue = d;
             }
         }
-        if(nullCount > 0){
-            log.warn( nullCount+" null value(s) not added to plot list of DoublePoints." );
+        if ( nullCount > 0 ) {
+            log.warn( nullCount + " null value(s) not added to plot list of DoublePoints." );
         }
 
         if ( currentList.size() > 0 ) {
@@ -175,9 +176,9 @@ public class FactorProfile {
     }
 
     private List<Double> extractFactorPlotValues( ExperimentalFactor ef,
-            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> profiles ) {
+            LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> profiles ) {
         List<Double> values = new ArrayList<Double>();
-        for ( BioAssay ba : profiles.keySet() ) {
+        for ( BioAssayValueObject ba : profiles.keySet() ) {
             for ( ExperimentalFactor bef : profiles.get( ba ).keySet() ) {
                 if ( bef.equals( ef ) ) {
                     values.add( profiles.get( ba ).get( ef ) );

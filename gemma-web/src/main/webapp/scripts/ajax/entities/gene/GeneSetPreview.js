@@ -146,7 +146,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
          editedGroup.taxonName = record.get('taxonName');
          editedGroup.size = editedGroup.geneIds.length;
          editedGroup.modified = true;
-         editedGroup.publik = false;
+         editedGroup.isPublic = false;
 
          GeneSetController.addSessionGroups([ editedGroup ], true, // returns datasets added
          function(geneSets) {

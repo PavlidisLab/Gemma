@@ -68,8 +68,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
     private DiffExAnalyzer analyzer = null;
 
     /**
-     * Test where probes have constant values. See bug 3177. This test really could be moved to a lower-level one in
-     * bascode.
+     * Test where probes have constant values. See bug 3177.
      */
     @Test
     public void testGSE35930() throws Exception {
@@ -118,14 +117,15 @@ public class DiffExTest extends AbstractGeoServiceTest {
         boolean found = false;
         ExpressionAnalysisResultSet resultSet = results.getResultSets().iterator().next();
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            Double pvalue = r.getPvalue();
             // this probe has a constant value
             if ( r.getProbe().getName().equals( "1622910_at" ) ) {
-                found = true;
-                assertTrue( "Got: " + pvalue, pvalue == null || pvalue.equals( Double.NaN ) );
+                fail( "Should not have found a result for constant probe" );
+                // found = true;
+                // assertTrue( "Got: " + pvalue, pvalue == null || pvalue.equals( Double.NaN ) );
+            } else {
+                found = true; // got to have something...
             }
         }
         assertTrue( found );
     }
-
 }

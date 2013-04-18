@@ -54,7 +54,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -157,21 +156,22 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 36, ba.getSequenceReadLength().intValue() );
 
             if ( ba.getDescription().contains( "GSM475204" ) ) {
-                assertEquals( 3949585, ba.getSequenceReadCount().intValue() );
+                assertEquals( 3947638, ba.getSequenceReadCount().intValue() );
                 found = true;
             }
         }
+
         assertTrue( found );
 
-        assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
+        assertEquals( 390, updatedee.getRawExpressionDataVectors().size() );
 
-        assertEquals( 199, updatedee.getProcessedExpressionDataVectors().size() );
+        assertEquals( 195, updatedee.getProcessedExpressionDataVectors().size() );
 
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
+        assertEquals( 195, processedDataArrays.size() );
 
         for ( DoubleVectorValueObject v : processedDataArrays ) {
-            BioAssayDimension bad = v.getBioAssayDimension();
-            assertEquals( 6, bad.getBioAssays().size() );
+            assertEquals( 6, v.getBioAssays().size() );
 
         }
 
@@ -245,22 +245,22 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 36, ba.getSequenceReadLength().intValue() );
 
             if ( ba.getDescription().contains( "GSM718709" ) ) {
-                assertEquals( 317488, ba.getSequenceReadCount().intValue() );
+                assertEquals( 320383, ba.getSequenceReadCount().intValue() );
                 found = true;
             }
         }
         assertTrue( found );
 
-        assertEquals( 390, updatedee.getRawExpressionDataVectors().size() );
+        assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
 
-        assertEquals( 195, updatedee.getProcessedExpressionDataVectors().size() );
+        assertEquals( 199, updatedee.getProcessedExpressionDataVectors().size() );
 
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
 
-        for ( DoubleVectorValueObject v : processedDataArrays ) {
-            BioAssayDimension bad = v.getBioAssayDimension();
-            assertEquals( 4, bad.getBioAssays().size() );
+        assertEquals( 199, processedDataArrays.size() );
 
+        for ( DoubleVectorValueObject v : processedDataArrays ) {
+            assertEquals( 4, v.getBioAssays().size() );
         }
 
     }
@@ -355,8 +355,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
 
         for ( DoubleVectorValueObject v : processedDataArrays ) {
-            BioAssayDimension bad = v.getBioAssayDimension();
-            assertEquals( 31, bad.getBioAssays().size() );
+            assertEquals( 31, v.getBioAssays().size() );
         }
 
         /*

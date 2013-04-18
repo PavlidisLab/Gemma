@@ -18,7 +18,13 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
@@ -35,11 +41,11 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
         ubic.gemma.model.common.description.BibliographicReferenceDao {
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(int, Collection)
      */
     @Override
-    public java.util.Collection<? extends BibliographicReference> create(
-            final java.util.Collection<? extends BibliographicReference> entities ) {
+    public Collection<? extends BibliographicReference> create(
+            final Collection<? extends BibliographicReference> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibliographicReference.create - 'entities' can not be null" );
         }
@@ -48,7 +54,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends BibliographicReference> entityIterator = entities.iterator(); entityIterator
+                        for ( Iterator<? extends BibliographicReference> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             create( entityIterator.next() );
                         }
@@ -92,15 +98,14 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
 
     public BibliographicReference findByExternalId( final java.lang.String queryString, final java.lang.String id,
             final java.lang.String databaseName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        List<String> argNames = new ArrayList<String>();
+        List<Object> args = new ArrayList<Object>();
         args.add( id );
         argNames.add( "id" );
         args.add( databaseName );
         argNames.add( "databaseName" );
-        java.util.Set<BibliographicReference> results = new java.util.LinkedHashSet<BibliographicReference>( this
-                .getHibernateTemplate().findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ),
-                        args.toArray() ) );
+        Set<BibliographicReference> results = new LinkedHashSet<BibliographicReference>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         BibliographicReference result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -120,13 +125,12 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
 
     public BibliographicReference findByExternalId( final java.lang.String queryString,
             final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        List<String> argNames = new ArrayList<String>();
+        List<Object> args = new ArrayList<Object>();
         args.add( externalId );
         argNames.add( "externalId" );
-        java.util.Set<BibliographicReference> results = new java.util.LinkedHashSet<BibliographicReference>( this
-                .getHibernateTemplate().findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ),
-                        args.toArray() ) );
+        Set<BibliographicReference> results = new LinkedHashSet<BibliographicReference>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         BibliographicReference result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -154,13 +158,12 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      */
 
     public BibliographicReference findByTitle( final java.lang.String queryString, final java.lang.String title ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        List<String> argNames = new ArrayList<String>();
+        List<Object> args = new ArrayList<Object>();
         args.add( title );
         argNames.add( "title" );
-        java.util.Set<BibliographicReference> results = new java.util.LinkedHashSet<BibliographicReference>( this
-                .getHibernateTemplate().findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ),
-                        args.toArray() ) );
+        Set<BibliographicReference> results = new LinkedHashSet<BibliographicReference>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         BibliographicReference result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -177,7 +180,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAllExperimentLinkedReferences()
      */
     @Override
-    public java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
+    public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
         return this.handleGetAllExperimentLinkedReferences();
     }
 
@@ -185,7 +188,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
-    public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
+    public Collection<ExpressionExperiment> getRelatedExperiments(
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         return this.handleGetRelatedExperiments( bibliographicReference );
     }
@@ -205,15 +208,15 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadMultiple(java.util.Collection)
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadMultiple(Collection)
      */
     @Override
-    public java.util.Collection<BibliographicReference> load( final java.util.Collection<Long> ids ) {
+    public Collection<BibliographicReference> load( final Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceDao.loadMultiple(java.util.Collection ids)' --> "
+                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceDao.loadMultiple(Collection ids)' --> "
                             + th, th );
         }
     }
@@ -224,8 +227,8 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
 
     @Override
     @SuppressWarnings("unchecked")
-    public java.util.Collection<BibliographicReference> loadAll() {
-        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
+    public Collection<BibliographicReference> loadAll() {
+        final Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.description.BibliographicReferenceImpl.class );
         return ( Collection<BibliographicReference> ) results;
     }
@@ -246,11 +249,11 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     }
 
     /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     * @see ubic.gemma.model.common.SecurableDao#remove(Collection)
      */
 
     @Override
-    public void remove( java.util.Collection<? extends BibliographicReference> entities ) {
+    public void remove( Collection<? extends BibliographicReference> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibliographicReference.remove - 'entities' can not be null" );
         }
@@ -270,11 +273,11 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     }
 
     /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     * @see ubic.gemma.model.common.SecurableDao#update(Collection)
      */
 
     @Override
-    public void update( final java.util.Collection<? extends BibliographicReference> entities ) {
+    public void update( final Collection<? extends BibliographicReference> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibliographicReference.update - 'entities' can not be null" );
         }
@@ -283,7 +286,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends BibliographicReference> entityIterator = entities.iterator(); entityIterator
+                        for ( Iterator<? extends BibliographicReference> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             update( entityIterator.next() );
                         }
@@ -307,18 +310,18 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * Performs the core logic for {@link #getAllExperimentLinkedReferences()}
      */
-    protected abstract java.util.Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences();
+    protected abstract Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences();
 
     /**
      * Performs the core logic for
      * {@link #getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)}
      */
-    protected abstract java.util.Collection<ExpressionExperiment> handleGetRelatedExperiments(
+    protected abstract Collection<ExpressionExperiment> handleGetRelatedExperiments(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
+     * Performs the core logic for {@link #loadMultiple(Collection)}
      */
-    protected abstract java.util.Collection<BibliographicReference> handleLoadMultiple( java.util.Collection<Long> ids );
+    protected abstract Collection<BibliographicReference> handleLoadMultiple( Collection<Long> ids );
 
 }

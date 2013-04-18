@@ -38,4 +38,10 @@ public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalys
 
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
+    /**
+     * @param differentialExpressionAnalysis
+     * @return
+     */
+    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
 }

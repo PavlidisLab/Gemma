@@ -269,6 +269,7 @@ public class DataUpdater {
             ee = addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
+        assert !experimentService.getProcessedDataVectors( ee ).isEmpty();
     }
 
     /**

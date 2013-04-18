@@ -180,7 +180,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         assertEquals( 3, resultSets.size() );
 
-        boolean found1 = false, found2 = false, found3 = false, found4 = false, found5 = false;
+        boolean found1 = false, found2 = false, found3 = false, found4 = false;
 
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             boolean interaction = false;
@@ -198,7 +198,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
                 interaction = true;
             }
 
-            assertEquals( 9, results.size() );
+            assertEquals( 8, results.size() );
 
             /*
              * Test values here are computed in R, using anova(lm(unlist(expData["205969_at",])~Treatment*Sex )) etc.
@@ -223,14 +223,12 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
                         assertEquals( 0.7621, pvalue, 0.001 );
                     }
                 } else if ( probe.getName().equals( "constant" ) ) {
-                    // confirm that pvalues that are uncomputable end up as null.
-                    found5 = true;
-                    assertEquals( null, pvalue );
+                    fail( "Should not have found a result for constant probe" );
                 }
             }
 
         }
 
-        assertTrue( found1 && found2 && found3 && found4 && found5 );
+        assertTrue( found1 && found2 && found3 && found4 );
     }
 }

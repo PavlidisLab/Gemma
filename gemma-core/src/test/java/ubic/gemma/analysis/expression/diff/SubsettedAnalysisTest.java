@@ -16,6 +16,7 @@ package ubic.gemma.analysis.expression.diff;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
@@ -59,8 +60,7 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
             ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
             int numResults = resultSet.getResults().size();
 
-            assertEquals( 100, numResults );
-
+            assertTrue( numResults < 100 ); // we should have filtered some out.
         }
     }
 

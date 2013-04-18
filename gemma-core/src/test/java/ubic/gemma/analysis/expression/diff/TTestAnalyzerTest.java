@@ -165,7 +165,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         int numResults = resultSet.getResults().size();
 
-        assertEquals( numResults, NUM_DESIGN_ELEMENTS );
+        assertEquals( NUM_DESIGN_ELEMENTS - 4, numResults );
 
         // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {

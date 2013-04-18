@@ -171,7 +171,7 @@ public class CommonQueries {
      * @param genes
      * @param arrayDesigns
      * @param session
-     * @return
+     * @return map of probe IDs to collections of gene IDs.
      */
     public static Map<Long, Collection<Long>> getCs2GeneIdMap( Collection<Long> genes, Collection<Long> arrayDesigns,
             Session session ) {
@@ -330,5 +330,31 @@ public class CommonQueries {
         results.close();
 
         return cs2genes;
+    }
+
+    /**
+     * @param probes
+     * @param arrayDesignIds
+     * @param session
+     * @return
+     */
+    public static Collection<Long> filterProbesByPlatform( Collection<Long> probes, Collection<Long> arrayDesignIds,
+            Session session ) {
+        assert probes != null && !probes.isEmpty();
+        assert arrayDesignIds != null && !arrayDesignIds.isEmpty();
+        String queryString = "SELECT CS as csid FROM GENE2CS where AD in (:adids) AND CS in (:probes)";
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "csid", LongType.INSTANCE );
+        queryObject.setParameterList( "probes", probes, LongType.INSTANCE );
+        queryObject.setParameterList( "adids", arrayDesignIds, LongType.INSTANCE );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        List<Long> r = new ArrayList<Long>();
+        while ( results.next() ) {
+            r.add( results.getLong( 0 ) );
+
+        }
+        results.close();
+        return r;
     }
 }

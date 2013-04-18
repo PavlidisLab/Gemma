@@ -81,7 +81,7 @@ Gemma.ExpressionExperimentSetPage = Ext.extend(Ext.TabPanel, {
     eeSetCb : function(experimentSetVO) {
 
         this.experimentSet = experimentSetVO;
-        this.editable = experimentSetVO.writeableByUser;
+        this.editable = experimentSetVO.userCanWrite;
         this.loadMask.hide();
         /* DETAILS TAB */
         this.add(new Gemma.ExpressionExperimentSetSummary({

@@ -164,7 +164,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         TaskCommand taskCommand = new TaskCommand();
         runAsAdmin();
 
-        Task task = new SuccessTestTask();
+        Task<TaskResult, TaskCommand> task = new SuccessTestTask();
         task.setCommand( taskCommand );
 
         ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
@@ -195,7 +195,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     @Test
     public void testOrderOfExecutionSuccess() {
         TaskCommand taskCommand = new TaskCommand();
-        Task task = new SuccessTestTask();
+        Task<TaskResult, TaskCommand> task = new SuccessTestTask();
         task.setCommand( taskCommand );
 
         ExecutingTask executingTask = new ExecutingTask( task, taskCommand );

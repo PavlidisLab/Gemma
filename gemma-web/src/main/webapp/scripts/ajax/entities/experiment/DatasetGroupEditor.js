@@ -240,7 +240,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
       var canSave = this.isLoggedIn;
       for ( var i = 0; i < numModified; i++) {
          var r = this.datasetGroupStore.getModifiedRecords()[i];
-         if ( r.get('writeableByUser') ) {
+         if ( r.get('userCanWrite') ) {
             canSave = true;
             break;
          }

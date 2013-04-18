@@ -23,22 +23,26 @@ import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Interface representing handler on a task submitted to TaskRunningService.
- * It provides access to task status, task progress updates and task result.
- * It allows to request task cancellation, add email notification of task completion.
- *
+ * Interface representing handler on a task submitted to TaskRunningService. It provides access to task status, task
+ * progress updates and task result. It allows to request task cancellation, add email notification of task completion.
+ * 
  * @param <T> TaskResult (or subclass) representing type of result of submitted task.
+ * @version $Id$
+ * @author anton
  */
-public interface SubmittedTask <T extends TaskResult> {
+public interface SubmittedTask<T extends TaskResult> {
 
-    static enum Status { QUEUED, RUNNING, COMPLETED, FAILED, CANCELLING, UNKNOWN }
+    static enum Status {
+        QUEUED, RUNNING, COMPLETED, FAILED, CANCELLING, UNKNOWN
+    }
 
     public String getTaskId();
+
     public TaskCommand getTaskCommand();
 
     /**
-     * Returns queue of log statements from the running task.
-     * TODO: Support multiple clients accessing this.
+     * Returns queue of log statements from the running task. TODO: Support multiple clients accessing this.
+     * 
      * @return Queue of log statements from the running task.
      */
     public Queue<String> getProgressUpdates();
@@ -72,7 +76,7 @@ public interface SubmittedTask <T extends TaskResult> {
 
     /**
      * Get the result of the task. The call blocks until the result is retrieved.
-     *
+     * 
      * @return result of produced by the task.
      * @throws ExecutionException
      * @throws InterruptedException
@@ -80,9 +84,8 @@ public interface SubmittedTask <T extends TaskResult> {
     public T getResult() throws ExecutionException, InterruptedException;
 
     /**
-     * Send cancellation request. It's not guaranteed that this will cancel the task
-     * but it will request task cancellation.
-     * Client can check task's status at some later point to verify that task got cancelled.
+     * Send cancellation request. It's not guaranteed that this will cancel the task but it will request task
+     * cancellation. Client can check task's status at some later point to verify that task got cancelled.
      */
     public void requestCancellation();
 

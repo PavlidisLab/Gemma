@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetDao;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -46,6 +47,9 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
 
     @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao = null;
+
+    @Autowired
+    private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -67,6 +71,13 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         return entity;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService#addResults(ubic.gemma.model.analysis
+     * .expression.diff.DifferentialExpressionAnalysis, java.util.Collection)
+     */
     @Override
     public void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets ) {
         StopWatch timer = new StopWatch();
@@ -76,6 +87,18 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         if ( timer.getTime() > 5000 ) {
             log.info( "Save results: " + timer.getTime() + "ms" );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService#create(ubic.gemma.model.analysis
+     * .expression.diff.ExpressionAnalysisResultSet)
+     */
+    @Override
+    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs ) {
+        return ( ExpressionAnalysisResultSet ) this.expressionAnalysisResultSetDao.create( rs );
     }
 
 }

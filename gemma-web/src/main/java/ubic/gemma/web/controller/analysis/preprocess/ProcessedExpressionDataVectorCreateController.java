@@ -63,7 +63,7 @@ public class ProcessedExpressionDataVectorCreateController {
          * Check if there are any outliers, because this will revert them. Later we can override this behaviour.
          */
         for ( BioAssay ba : ee.getBioAssays() ) {
-            if ( ba.getIsOutlier() ) {
+            if ( ba.getIsOutlier() != null && ba.getIsOutlier() ) {
                 throw new IllegalArgumentException(
                         "This experiment has outliers marked; recomputing processed data will revert this so this action is currently disabled." );
             }

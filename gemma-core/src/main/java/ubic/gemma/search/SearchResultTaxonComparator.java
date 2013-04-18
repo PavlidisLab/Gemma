@@ -20,11 +20,15 @@ package ubic.gemma.search;
 
 import java.util.Comparator;
 
+/**
+ * @author tvrossum
+ * @version $Id$
+ */
+public class SearchResultTaxonComparator implements Comparator<SearchResultDisplayObject> {
 
-public class SearchResultTaxonComparator implements Comparator<SearchResultDisplayObject>{
-    
     @Override
-    public int compare(SearchResultDisplayObject o1, SearchResultDisplayObject o2) {
-        return (o1.getTaxonId()<o2.getTaxonId() ? -1 : (o1.getTaxonId()==o2.getTaxonId() ? o1.compareTo( o2 ) : 1));
+    public int compare( SearchResultDisplayObject o1, SearchResultDisplayObject o2 ) {
+        return ( o1.getTaxonId() < o2.getTaxonId() ? -1
+                : ( o1.getTaxonId() == o2.getTaxonId() ? o1.compareTo( o2 ) : 1 ) );
     }
 }

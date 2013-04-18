@@ -721,7 +721,7 @@ Gemma.GeneMembersSaveGrid = Ext
                   detailsWin.on("commit", function(args) {
                      this.newGroupName = args.name;
                      this.newGroupDescription = args.description;
-                     this.newGroupPublik = args.publik;
+                     this.newGroupPublik = args.isPublic;
                      this.newGroupTaxon = args.taxon;
                      this.createInDatabase();
                   }, this);
@@ -750,7 +750,7 @@ Gemma.GeneMembersSaveGrid = Ext
                   editedGroup.taxonId = this.taxonId;
                   editedGroup.size = this.getGeneIds().length;
                   editedGroup.modified = true;
-                  editedGroup.publik = false;
+                  editedGroup.isPublic = false;
 
                   GeneSetController.addSessionGroups([ editedGroup ], true, // returns datasets added
                   function(geneSets) {
@@ -779,7 +779,7 @@ Gemma.GeneMembersSaveGrid = Ext
                   editedGroup.id = null;
                   editedGroup.name = this.newGroupName;
                   editedGroup.description = this.newGroupDescription;
-                  editedGroup.publik = this.newGroupPublik;
+                  editedGroup.isPublic = this.newGroupPublik;
                   editedGroup.geneIds = this.getGeneIds();
                   editedGroup.taxonId = (this.newGroupTaxon) ? this.newGroupTaxon.id : this.taxonId;
                   editedGroup.size = this.getGeneIds().length;

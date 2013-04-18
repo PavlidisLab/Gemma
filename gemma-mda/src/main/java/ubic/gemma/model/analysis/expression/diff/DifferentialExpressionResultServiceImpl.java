@@ -19,6 +19,8 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import org.springframework.stereotype.Service;
+
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
@@ -34,6 +36,12 @@ import java.util.Map;
  */
 @Service
 public class DifferentialExpressionResultServiceImpl extends DifferentialExpressionResultServiceBase {
+
+    @Override
+    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
+        return this.getDifferentialExpressionResultDao().countNumberOfDifferentiallyExpressedProbes( resultSetId,
+                threshold );
+    }
 
     public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             Collection<BioAssaySet> experimentsAnalyzed, double threshold ) {
@@ -72,12 +80,6 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
         return this.getDifferentialExpressionResultDao().find( gene, threshold, limit );
     }
 
-    @Override
-    public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
-            Collection<Long> arrayDesignIds, Integer limit ) {
-        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, arrayDesignIds, limit );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -93,9 +95,33 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
+    public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
+            Collection<Long> arrayDesignIds, Integer limit ) {
+        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, arrayDesignIds, limit );
+    }
+
+    @Override
+    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet,
+            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults ) {
+        return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn,
+                minNumberOfResults );
+    }
+
+    @Override
     public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().findInResultSets( resultsAnalyzed, threshold, limit );
+    }
+
+    @Override
+    public DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs ) {
+        return this.getDifferentialExpressionResultDao().getAnalysis( rs );
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
+        return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
+                .load( ids );
     }
 
     @Override
@@ -104,13 +130,24 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
-    public void thaw( DifferentialExpressionAnalysisResult result ) {
-        this.getDifferentialExpressionResultDao().thaw( result );
+    public Collection<DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids ) {
+        return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
+                .loadEagerContrasts( ids );
+    }
+
+    @Override
+    public Histogram loadPvalueDistribution( Long resultSetId ) {
+        return this.getDifferentialExpressionResultDao().loadPvalueDistribution( resultSetId );
     }
 
     @Override
     public void thaw( Collection<DifferentialExpressionAnalysisResult> results ) {
         this.getDifferentialExpressionResultDao().thaw( results );
+    }
+
+    @Override
+    public void thaw( DifferentialExpressionAnalysisResult result ) {
+        this.getDifferentialExpressionResultDao().thaw( result );
     }
 
     @Override
@@ -152,31 +189,6 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     @Override
     protected ExpressionAnalysisResultSet handleThaw( ExpressionAnalysisResultSet resultSet ) {
         return this.getExpressionAnalysisResultSetDao().thaw( resultSet );
-    }
-
-    @Override
-    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
-        return this.getDifferentialExpressionResultDao().countNumberOfDifferentiallyExpressedProbes( resultSetId,
-                threshold );
-    }
-
-    @Override
-    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet,
-            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults ) {
-        return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn,
-                minNumberOfResults );
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
-        return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
-                .load( ids );
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids ) {
-        return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
-                .loadEagerContrasts( ids );
     }
 
 }

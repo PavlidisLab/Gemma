@@ -17,6 +17,7 @@ package ubic.gemma.analysis.expression.diff;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.InputStream;
@@ -139,6 +140,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         addGenes();
     }
 
+    /**
+     * @throws Exception
+     */
     @Test
     public void testAnalyze() throws Exception {
 
@@ -242,7 +246,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
 
             String gene = r.getGene().getOfficialSymbol();
-
+            // log.info( logComponentResults( r, gene ));
             /*
              * GSE6575, GSE7329
              * 
@@ -259,8 +263,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 assertTrue( r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 0.003375654, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "ABCF1" ) ) {
-                foundTests++;
-                assertEquals( logComponentResults( r, gene ), 0.01664992, r.getMetaPvalue(), 0.00001 );
+                fail( "Should have gotten removed due to conflicting results" );
             } else if ( gene.equals( "ACLY" ) ) {
                 foundTests++;
                 assertEquals( logComponentResults( r, gene ), 1.505811e-06, r.getMetaPvalue(), 0.00001 );
@@ -269,26 +272,26 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 assertEquals( logComponentResults( r, gene ), 0.0002415006, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "ACO2" ) ) {
                 foundTests++;
-                assertEquals( logComponentResults( r, gene ), 0.002218716, r.getMetaPvalue(), 0.00001 );
+                assertEquals( logComponentResults( r, gene ), 0.003461225, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "THRA" ) ) {
                 foundTests++;
                 assertTrue( !r.getUpperTail() );
-                assertEquals( logComponentResults( r, gene ), 0.007901338, r.getMetaPvalue(), 0.00001 );
+                assertEquals( logComponentResults( r, gene ), 0.008188016, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "PPM1G" ) ) {
                 foundTests++;
                 assertTrue( !r.getUpperTail() );
-                assertEquals( logComponentResults( r, gene ), 0.001611389, r.getMetaPvalue(), 0.00001 );
+                assertEquals( logComponentResults( r, gene ), 0.001992656, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "SEPW1" ) ) {
                 foundTests++;
                 assertTrue( r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 0.006142644, r.getMetaPvalue(), 0.0001 );
             } else if ( gene.equals( "GUK1" ) ) {
                 foundTests++;
-                assertEquals( logComponentResults( r, gene ), 2.866101e-06, r.getMetaPvalue(), 1e-8 );
+                assertEquals( logComponentResults( r, gene ), 2.820089e-06, r.getMetaPvalue(), 1e-8 );
             } else if ( gene.equals( "KXD1" ) ) {
                 foundTests++;
                 assertTrue( r.getUpperTail() );
-                assertEquals( 3.78401e-06, r.getMetaPvalue(), 1e-8 );
+                assertEquals( logComponentResults( r, gene ), 4.027476e-06, r.getMetaPvalue(), 1e-8 );
             }
 
             assertNotNull( r.getUpperTail() );
@@ -300,10 +303,10 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             }
         }
 
-        // assertEquals( 10, foundTests );
-        // assertEquals( 215, numUp ); // R, minus 4 that we skip as they are duplicated genes.
-        // assertEquals( 101, numDown ); // R
-        // assertEquals( 316, metaAnalysis.getResults().size() );
+        assertEquals( 9, foundTests );
+        assertEquals( 230, numUp ); // R gives 235; minus 5 that we skip due to conflicting results.
+        assertEquals( 91, numDown ); // R gives 96, minus 5
+        assertEquals( 321, metaAnalysis.getResults().size() );
 
         /*
          * Test ancillary methods
@@ -338,7 +341,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config1.setFactorsToInclude( factors );
-        config1.setQvalueThreshold( null );
+        config1.setQvalueThreshold( 0.05 ); // realistic
         return config1;
     }
 
@@ -438,24 +441,24 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
      * @return details
      */
     private String logComponentResults( GeneDifferentialExpressionMetaAnalysisResult r, String gene ) {
-        StringBuilder buf = new StringBuilder();
+        StringBuilder buf = new StringBuilder( "\n" );
         for ( DifferentialExpressionAnalysisResult rr : r.getResultsUsed() ) {
-            buf.append( String.format( "%s  %s fv=%d  p=%.4f t=%.2f", gene, rr.getProbe().getName(), rr.getContrasts()
-                    .iterator().next().getFactorValue().getId(), rr.getPvalue(), rr.getContrasts().iterator().next()
-                    .getCoefficient() )
+            buf.append( String.format( "%s  %s fv=%d  p=%.4g t=%.2f id=%d", gene, rr.getProbe().getName(), rr
+                    .getContrasts().iterator().next().getFactorValue().getId(), rr.getPvalue(), rr.getContrasts()
+                    .iterator().next().getCoefficient(), rr.getId() )
                     + "\n" );
         }
         return buf.toString();
     }
 
-    private String logFailure( GeneDifferentialExpressionMetaAnalysis metaAnalysis ) {
-        StringBuilder buf = new StringBuilder();
-        for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
-            buf.append( "----" );
-            String gene = r.getGene().getOfficialSymbol();
-            buf.append( logComponentResults( r, gene ) );
-        }
-
-        return buf.toString();
-    }
+    // private String logFailure( GeneDifferentialExpressionMetaAnalysis metaAnalysis ) {
+    // StringBuilder buf = new StringBuilder();
+    // for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
+    // buf.append( "----" );
+    // String gene = r.getGene().getOfficialSymbol();
+    // buf.append( logComponentResults( r, gene ) );
+    // }
+    //
+    // return buf.toString();
+    // }
 }

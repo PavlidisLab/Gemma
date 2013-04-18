@@ -86,7 +86,7 @@ Gemma.GeneSetPage = Ext.extend(Ext.TabPanel, {
 				}*/
 				
                 this.geneSet = geneSetVO;
-                this.editable = geneSetVO.writeableByUser;
+                this.editable = geneSetVO.userCanWrite;
                 this.loadMask.hide();
 				
                 /*DETAILS TAB*/

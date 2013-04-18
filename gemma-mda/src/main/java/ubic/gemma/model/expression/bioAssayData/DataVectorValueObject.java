@@ -20,9 +20,11 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
@@ -47,14 +49,15 @@ public abstract class DataVectorValueObject implements Serializable {
     protected ExpressionExperimentValueObject expressionExperiment;
     private Collection<Long> genes;
 
-    // FIXME Replace with a valueobject
-    protected BioAssayDimension bioAssayDimension;
+    private BioAssayDimensionValueObject bioAssayDimension;
 
     public DataVectorValueObject() {
     }
 
     public DataVectorValueObject( DesignElementDataVector dedv ) {
-        this.bioAssayDimension = dedv.getBioAssayDimension();
+
+        BioAssayDimension badim = dedv.getBioAssayDimension();
+        this.bioAssayDimension = new BioAssayDimensionValueObject( badim );
         assert !this.bioAssayDimension.getBioAssays().isEmpty();
         this.quantitationType = new QuantitationTypeValueObject( dedv.getQuantitationType() );
         this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
@@ -79,8 +82,13 @@ public abstract class DataVectorValueObject implements Serializable {
         return true;
     }
 
-    public BioAssayDimension getBioAssayDimension() {
-        return bioAssayDimension;
+    public BioAssayDimensionValueObject getBioAssayDimension() {
+        return this.bioAssayDimension;
+    }
+
+    public List<BioAssayValueObject> getBioAssays() {
+        assert bioAssayDimension != null;
+        return bioAssayDimension.getBioAssays();
     }
 
     public CompositeSequenceValueObject getDesignElement() {
@@ -114,7 +122,7 @@ public abstract class DataVectorValueObject implements Serializable {
         return result;
     }
 
-    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
+    public void setBioAssayDimension( BioAssayDimensionValueObject bioAssayDimension ) {
         this.bioAssayDimension = bioAssayDimension;
     }
 

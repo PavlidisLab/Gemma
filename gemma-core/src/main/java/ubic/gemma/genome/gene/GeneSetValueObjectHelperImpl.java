@@ -107,8 +107,8 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
             dbgsvo.setTaxonName( null );
         }
 
-        dbgsvo.setWriteableByUser( this.securityService.isEditable( gs ) );
-        dbgsvo.setIsUserOwned( this.securityService.isOwnedByCurrentUser( gs ) );
+        dbgsvo.setUserCanWrite( this.securityService.isEditable( gs ) );
+        dbgsvo.setUserOwned( this.securityService.isOwnedByCurrentUser( gs ) );
         dbgsvo.setIsPublic( this.securityService.isPublic( gs ) );
         dbgsvo.setIsShared( this.securityService.isShared( gs ) );
 
@@ -181,13 +181,13 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         sbgsvo.setName( gs.getName() );
         sbgsvo.setDescription( gs.getDescription() );
-        //GO group gene sets don't have ids
-        if (gs.getId()==null){
-        	sbgsvo.setSize( gs.getMembers()!=null?gs.getMembers().size():0 );        	
-        } else{//this case may never happen as this is only called from convertToGoValueObject() leaving here in case this method is ever called from somewhere else
-        	sbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
+        // GO group gene sets don't have ids
+        if ( gs.getId() == null ) {
+            sbgsvo.setSize( gs.getMembers() != null ? gs.getMembers().size() : 0 );
+        } else {// this case may never happen as this is only called from convertToGoValueObject() leaving here in case
+                // this method is ever called from somewhere else
+            sbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
         }
-        
 
         Collection<Long> gids = new HashSet<Long>();
         for ( GeneSetMember gm : gs.getMembers() ) {
