@@ -121,6 +121,11 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         }
 
         ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+
+        if ( arrayDesignUsed.getTechnologyType().equals( TechnologyType.NONE ) ) {
+            log.warn( "Skipping postprocessing since this data set isn't using a regular platform. If this is an error, just run postprocessing manually." );
+        }
+
         processForMissingValues( ee, arrayDesignUsed );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
