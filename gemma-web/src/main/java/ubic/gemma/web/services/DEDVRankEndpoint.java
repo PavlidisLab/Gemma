@@ -39,11 +39,12 @@ import ubic.gemma.model.genome.Gene;
  * Given a collection of gene IDs, a collection of experiment IDs, and the method, the service will return a list of
  * genes mapped to a list of space delimited ranks. Each rank in the space delimited result is ordered based on the a
  * list of experiments returned in the field, "ee_ids". The output can be pictured as a matrix where the rows are the
- * genes and the columns are the experiments. (Ranks are per-array based.) Method can be one of the following: MIN, MAX,
- * MEAN, MEDIAN, VARIANCE
+ * genes and the columns are the experiments. (Ranks are per-array based.) Method can be one of the following: MEAN or
+ * MAX
  * 
  * @author gavin
  * @version$Id$
+ * @see ProcessedExpressionDataVectorDao.RankMethod
  */
 public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
 
