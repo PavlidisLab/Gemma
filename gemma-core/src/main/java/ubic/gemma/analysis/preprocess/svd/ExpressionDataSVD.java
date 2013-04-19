@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
@@ -33,6 +35,7 @@ import ubic.gemma.analysis.preprocess.filter.RowLevelFilter;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.analysis.preprocess.filter.RowMissingValueFilter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import cern.colt.list.DoubleArrayList;
@@ -82,8 +85,12 @@ public class ExpressionDataSVD {
     public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData, boolean normalizeMatrix ) {
         this.expressionData = expressionData;
 
-        AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
-        this.expressionData = affyProbeNameFilter.filter( this.expressionData );
+        ArrayDesign arrayDesign = expressionData.getRowElement( 0 ).getDesignElement().getArrayDesign();
+        if ( StringUtils.isNotBlank( arrayDesign.getName() )
+                && arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" ) ) {
+            AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
+            this.expressionData = affyProbeNameFilter.filter( this.expressionData );
+        }
 
         // /*
         // * FIXME Remove any columns which have only missing data. We have to put in dummy values, otherwise things
