@@ -269,10 +269,14 @@ public class ExpressionExperimentDataFetchController {
     public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private ExpressionDataFileService expressionDataFileService;
-    @Autowired private QuantitationTypeService quantitationTypeService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     /**
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the

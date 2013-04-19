@@ -29,14 +29,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
+
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -83,6 +88,11 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
+    private ExpressionDataMatrixService dataMatrixService;
+
+    private ArrayDesign targetArrayDesign;
+
     @After
     public void tearDown() {
         ExpressionExperiment e1 = experimentService.findByShortName( "GSE29006" );
@@ -94,6 +104,13 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         if ( e2 != null ) {
             experimentService.delete( e2 );
         }
+
+        ExpressionExperiment e3 = experimentService.findByShortName( "GSE37646" );
+        if ( e3 != null ) {
+            experimentService.delete( e3 );
+        }
+
+        if ( targetArrayDesign != null ) arrayDesignService.remove( targetArrayDesign );
     }
 
     /**
@@ -132,8 +149,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         assertEquals( 199, probeNames.size() );
 
         // we have to find the right generic platform to use.
-        ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
-                taxonService.findByCommonName( "human" ) );
+        targetArrayDesign = this.getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
         targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
         assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
@@ -149,6 +165,15 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
         }
 
+        // GSM475204 GSM475205 GSM475206 GSM475207 GSM475208 GSM475209
+        // 3949585 3929008 3712314 3693219 3574068 3579631
+
+        ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
+        assertEquals( 199, mat.rows() );
+        Double[] column = mat.getColumn( 0 );
+        double sum = Descriptive.sum( new DoubleArrayList( ArrayUtils.toPrimitive( column ) ) );
+        assertEquals( 3949585, sum, 0.01 );
+
         boolean found = false;
         for ( BioAssay ba : updatedee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
@@ -156,19 +181,19 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 36, ba.getSequenceReadLength().intValue() );
 
             if ( ba.getDescription().contains( "GSM475204" ) ) {
-                assertEquals( 3947638, ba.getSequenceReadCount().intValue() );
+                assertEquals( 3949585, ba.getSequenceReadCount().intValue() );
                 found = true;
             }
         }
 
         assertTrue( found );
 
-        assertEquals( 390, updatedee.getRawExpressionDataVectors().size() );
+        assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
 
-        assertEquals( 195, updatedee.getProcessedExpressionDataVectors().size() );
+        assertEquals( 199, updatedee.getProcessedExpressionDataVectors().size() );
 
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
-        assertEquals( 195, processedDataArrays.size() );
+        assertEquals( 199, processedDataArrays.size() );
 
         for ( DoubleVectorValueObject v : processedDataArrays ) {
             assertEquals( 6, v.getBioAssays().size() );
@@ -216,8 +241,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         List<String> probeNames = countMatrix.getRowNames();
 
         // we have to find the right generic platform to use.
-        ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
-                taxonService.findByCommonName( "human" ) );
+        targetArrayDesign = this.getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
         targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
         try {
@@ -236,7 +260,21 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
         }
 
+        ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
+        assertEquals( 199, mat.rows() );
+        Double[] column = mat.getColumn( 0 );
+        double sum = Descriptive.sum( new DoubleArrayList( ArrayUtils.toPrimitive( column ) ) );
+        assertEquals( 437324.86, sum, 0.01 );
+
         assertEquals( 4, updatedee.getBioAssays().size() );
+
+        assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
+
+        assertEquals( 199, updatedee.getProcessedExpressionDataVectors().size() );
+
+        Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
+
+        assertEquals( 199, processedDataArrays.size() );
 
         boolean found = false;
         for ( BioAssay ba : updatedee.getBioAssays() ) {
@@ -250,14 +288,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             }
         }
         assertTrue( found );
-
-        assertEquals( 398, updatedee.getRawExpressionDataVectors().size() );
-
-        assertEquals( 199, updatedee.getProcessedExpressionDataVectors().size() );
-
-        Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
-
-        assertEquals( 199, processedDataArrays.size() );
 
         for ( DoubleVectorValueObject v : processedDataArrays ) {
             assertEquals( 4, v.getBioAssays().size() );
@@ -300,7 +330,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             bms.add( ba.getSampleUsed() );
         }
 
-        ArrayDesign targetArrayDesign = getTestPersistentArrayDesign( 100, true );
+        targetArrayDesign = getTestPersistentArrayDesign( 100, true );
 
         DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
                 targetArrayDesign.getCompositeSequences().size(), bms.size() );
@@ -398,7 +428,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     private ArrayDesign getTestPersistentArrayDesign( List<String> probeNames, Taxon t ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
-        ad.setShortName( "Generic_" + t.getCommonName() + "_" + RandomStringUtils.random( 10 ) );
+        ad.setShortName( "Generic_" + t.getCommonName() + "_" + RandomStringUtils.randomAlphabetic( 10 ) );
         ad.setName( "Generic test platform for " + t.getCommonName() );
         ad.setTechnologyType( TechnologyType.NONE );
         ad.setPrimaryTaxon( t );

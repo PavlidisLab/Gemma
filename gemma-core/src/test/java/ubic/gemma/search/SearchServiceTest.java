@@ -192,6 +192,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     public void tearDown() {
         if ( gene != null ) geneService.remove( gene );
         if ( ee != null ) eeService.delete( ee );
+        ontologyService.getFmaOntologyService().closeIndex(); // could this interfere with other tests?
     }
 
     @Test

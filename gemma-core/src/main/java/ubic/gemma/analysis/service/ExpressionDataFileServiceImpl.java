@@ -58,7 +58,6 @@ import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.ProbeLink;
@@ -84,8 +83,6 @@ import ubic.gemma.util.EntityUtils;
  * Supports the creation and location of 'flat file' versions of data in the system, for download by users. Files are
  * cached on the filesystem and reused if possible, rather than recreating them every time.
  * <p>
- * FIXME there is a possibility of having stale data, if the data have been updated since the last file was generated.
- * This can be tested for. Also the gene annotations are (generally) read in from a file, which can also be stale.
  * 
  * @author paul
  * @version $Id$
@@ -121,9 +118,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
@@ -346,7 +340,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         deleteAndLog( getOutputFile( getCoexpressionDataFilename( ee ) ) );
 
         // design file
-        deleteAndLog( getOutputFile( getDesignFileName( ee ) ) );
+        deleteAndLog( getOutputFile( getDesignFileName( ee, DATA_FILE_SUFFIX_COMPRESSED ) ) );
     }
 
     /**
@@ -696,7 +690,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         ee = expressionExperimentService.thawLite( ee );
 
-        String filename = getDesignFileName( ee );
+        String filename = getDesignFileName( ee, DATA_FILE_SUFFIX_COMPRESSED );
         try {
             File f = getOutputFile( filename );
             if ( !forceWrite && f.canRead() ) {
@@ -705,19 +699,26 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
 
             log.info( "Creating new experimental design file: " + f.getName() );
-            writeDesignMatrix( f, ee, true );
-            return f;
+            return writeDesignMatrix( f, ee, true ); 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.service.ExpressionDataFileService#writeTemporaryDesignFile(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment)
+     */
     @Override
     public File writeTemporaryDesignFile( ExpressionExperiment ee ) {
 
         ee = expressionExperimentService.thawLite( ee );
 
+        // not compressed
         String filename = getDesignFileName( ee, DATA_FILE_SUFFIX );
 
         filename = RandomStringUtils.randomAlphabetic( 6 ) + filename;
@@ -725,8 +726,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             File f = getOutputFile( filename, true );
 
             log.info( "Creating new experimental design file: " + f.getName() );
-            writeDesignMatrix( f, ee, true, false );
-            return f;
+            return writeDesignMatrix( f, ee, true, false );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -918,12 +918,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
         }
         return matrix;
-    }
-
-    private String getDesignFileName( ExpressionExperiment ee ) {
-
-        return getDesignFileName( ee, DATA_FILE_SUFFIX_COMPRESSED );
-
     }
 
     /**
@@ -1252,15 +1246,25 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @param file
      * @param expressionExperiment
      * @param orderByesign
+     * @return file that was written
      * @throws IOException
      * @throws FileNotFoundException
      */
-    private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign )
+    private File writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign )
             throws IOException, FileNotFoundException {
-        writeDesignMatrix( file, expressionExperiment, orderByDesign, true );
+        return writeDesignMatrix( file, expressionExperiment, orderByDesign, true );
     }
 
-    private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign,
+    /**
+     * @param file
+     * @param expressionExperiment
+     * @param orderByDesign
+     * @param compress
+     * @return file that was written
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    private File writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign,
             boolean compress ) throws IOException, FileNotFoundException {
 
         OutputStream ostream;
@@ -1270,6 +1274,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
             // TODO note that the file name will still have a .gz extension even though it is uncompressed, change later
             // if necessary
+            file = new File( file.getAbsolutePath().replace( DATA_FILE_SUFFIX_COMPRESSED, DATA_FILE_SUFFIX ) );
             ostream = new FileOutputStream( file );
         }
 
@@ -1278,6 +1283,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         edWriter.write( writer, expressionExperiment, true, orderByDesign );
         writer.flush();
         writer.close();
+        return file;
     }
 
     /**

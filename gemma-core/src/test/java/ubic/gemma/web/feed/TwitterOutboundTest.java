@@ -32,25 +32,27 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author sshao
- *
+ * @version $Id$
  */
 public class TwitterOutboundTest extends BaseSpringContextTest {
-	@Autowired TwitterOutbound twitterOutbound;
-	@Autowired ExpressionExperimentService experimentService;
-	
-	@Before
-	public void setup() {
-	    ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+    @Autowired
+    TwitterOutbound twitterOutbound;
+    @Autowired
+    ExpressionExperimentService experimentService;
+
+    @Before
+    public void setup() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-        
+
         experimentService.create( ee );
-	}
-	
-	@Test
-	public void testTweetLength() {
-		String status = twitterOutbound.generateDailyFeed();
-		assertNotNull(status);
-		assertTrue((status.length() <= 140));
-	}
+    }
+
+    @Test
+    public void testTweetLength() {
+        String status = twitterOutbound.generateDailyFeed();
+        assertNotNull( status );
+        assertTrue( ( status.length() <= 140 ) );
+    }
 }

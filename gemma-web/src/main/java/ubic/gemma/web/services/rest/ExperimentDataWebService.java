@@ -35,147 +35,133 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * 
- * REST webservice to access experiment related data using an experiments eeId
- * 
- * The code writes to and reads from files because it is leveraging existing code (technically no file creation is necessary for these tasks)
- * 
+ * REST webservice to access experiment related data using an experiments eeId The code writes to and reads from files
+ * because it is leveraging existing code (technically no file creation is necessary for these tasks)
  */
 @Service
 @Path("/experimentData")
 public class ExperimentDataWebService {
 
-	protected Log log = LogFactory.getLog(this.getClass().getName());
+    protected Log log = LogFactory.getLog( this.getClass().getName() );
 
-	@Autowired
-	private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
-	@Autowired
-	private ExpressionDataFileService expressionDataFileService;
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
 
-	@GET
-	@Path("/findExpressionDataByEeId/{eeId},{filtered}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getExpressionDataByEeId(@PathParam("eeId") Long eeId,
-			@PathParam("filtered") boolean filtered) {
-		
-		ExpressionExperiment ee = null;
+    @GET
+    @Path("/findExpressionDataByEeId/{eeId},{filtered}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getExpressionDataByEeId( @PathParam("eeId") Long eeId, @PathParam("filtered") boolean filtered ) {
 
-		ee = expressionExperimentService.load(eeId);
+        ExpressionExperiment ee = null;
 
-		if (ee == null) {
-			return	"No data available (either due to lack of authorization, or use of an invalid experiment identifier)";
-		}
+        ee = expressionExperimentService.load( eeId );
 
-		return getOutputForExpressionData(ee, filtered);
-		
-		
-	}
-	
-	@GET
-	@Path("/findExpressionDataByEeName/{eeName},{filtered}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getExpressionDataByEeName(@PathParam("eeName") String eeName,
-			@PathParam("filtered") boolean filtered) {
+        if ( ee == null ) {
+            return "No data available (either due to lack of authorization, or use of an invalid experiment identifier)";
+        }
 
-		ExpressionExperiment ee = null;
-		
-		ee = expressionExperimentService.findByShortName(eeName);
+        return getOutputForExpressionData( ee, filtered );
 
-		if (ee == null) {
-			return	"No data available (either due to lack of authorization, or use of an invalid experiment identifier)";
-		}
-		
-		return getOutputForExpressionData(ee, filtered);
-		
-	}
-	
-	private String getOutputForExpressionData(ExpressionExperiment ee, boolean filtered){
-		
+    }
 
-		StopWatch watch = new StopWatch();
-		watch.start();
-		
-		ee = expressionExperimentService.thawLite(ee);
+    @GET
+    @Path("/findExpressionDataByEeName/{eeName},{filtered}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getExpressionDataByEeName( @PathParam("eeName") String eeName, @PathParam("filtered") boolean filtered ) {
 
-		File f = null;
+        ExpressionExperiment ee = null;
 
-		/* write out the file using text format */
+        ee = expressionExperimentService.findByShortName( eeName );
 
-		f = expressionDataFileService.writeTemporaryDataFile(ee, filtered);
+        if ( ee == null ) {
+            return "No data available (either due to lack of authorization, or use of an invalid experiment identifier)";
+        }
 
-		if (f == null)
-			throw new IllegalStateException("No file was obtained");
+        return getOutputForExpressionData( ee, filtered );
 
-		watch.stop();
-		log.info("Finished writing a file; done in " + watch.getTime()
-				+ " milliseconds");
+    }
 
-		String output = "";
+    private String getOutputForExpressionData( ExpressionExperiment ee, boolean filtered ) {
 
-		try {
-			output = FileUtils.readFileToString(f, "UTF-8");
-		} catch (IOException e) {
-			return "There has been an error";
+        StopWatch watch = new StopWatch();
+        watch.start();
 
-		}
-		
-		//delete file
-		if ( f.canWrite() && f.delete() ) {
+        ee = expressionExperimentService.thawLite( ee );
+
+        File f = null;
+
+        /* write out the file using text format */
+
+        f = expressionDataFileService.writeTemporaryDataFile( ee, filtered );
+
+        if ( f == null ) throw new IllegalStateException( "No file was obtained" );
+
+        watch.stop();
+        log.info( "Finished writing a file; done in " + watch.getTime() + " milliseconds" );
+
+        String output = "";
+
+        try {
+            output = FileUtils.readFileToString( f, "UTF-8" );
+        } catch ( IOException e ) {
+            return "There has been an error";
+
+        }
+
+        // delete file
+        if ( f.canWrite() && f.delete() ) {
             log.info( "Deleted: " + f );
         }
-		
-		return output;
-		
-	}
 
-	@GET
-	@Path("/findExperimentDesignByEeId/{eeId}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getExperimentDataByEeId(@PathParam("eeId") Long eeId) {
+        return output;
 
-		StopWatch watch = new StopWatch();
-		watch.start();
+    }
 
-		ExpressionExperiment ee = null;
+    @GET
+    @Path("/findExperimentDesignByEeId/{eeId}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getExperimentDataByEeId( @PathParam("eeId") Long eeId ) {
 
-		log.info("Request is for design file for eeId:"+ eeId);
-		ee = expressionExperimentService.load(eeId);
-		if (ee == null) {
-			return "Expression experiment id "
-					+ eeId
-					+ " was invalid: doesn't exist in system, or you lack authorization.";
-		}
+        StopWatch watch = new StopWatch();
+        watch.start();
 
-		ee = expressionExperimentService.thawLite(ee);
+        ExpressionExperiment ee = null;
 
-		File f = null;
-		
-		f = expressionDataFileService.writeTemporaryDesignFile(ee);
+        log.info( "Request is for design file for eeId:" + eeId );
+        ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) {
+            return "Expression experiment id " + eeId
+                    + " was invalid: doesn't exist in system, or you lack authorization.";
+        }
 
-		if (f == null)
-			throw new IllegalStateException("No file was obtained");
+        ee = expressionExperimentService.thawLite( ee );
 
-		watch.stop();
-		log.info("Finished writing a file; done in "
-				+ watch.getTime() + " milliseconds");
+        File f = expressionDataFileService.writeTemporaryDesignFile( ee );
 
-		String output = "";
-		
-		try {
-			output = FileUtils.readFileToString(f, "UTF-8");
-		} catch (IOException e) {
-			return "There has been an error";
+        if ( f == null || !f.exists() ) throw new IllegalStateException( "No file was obtained" );
 
-		}
-		
-		//delete file
-		if ( f.canWrite() && f.delete() ) {
+        watch.stop();
+        log.info( "Finished writing a file; done in " + watch.getTime() + " milliseconds" );
+
+        String output = "";
+
+        try {
+            output = FileUtils.readFileToString( f, "UTF-8" );
+        } catch ( IOException e ) {
+            return "There has been an error";
+
+        }
+
+        // delete file
+        if ( f.canWrite() && f.delete() ) {
             log.info( "Deleted: " + f );
         }
-		
-		return output;
 
-	}
+        return output;
+
+    }
 
 }

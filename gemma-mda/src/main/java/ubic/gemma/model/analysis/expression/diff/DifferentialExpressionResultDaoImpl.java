@@ -464,6 +464,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         StopWatch timer = new StopWatch();
         timer.start();
         int numResults = 0;
+        long timeForFillingNonSig = 0;
 
         Map<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
 
@@ -561,8 +562,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
                 numGeneBatchesDone++;
 
-                fillNonSignificant( pbL, resultSetIds, resultSetIdsToArrayDesignsUsed, resultsFromDb, resultSetIdBatch,
-                        cs2GeneIdMap, session );
+                timeForFillingNonSig += fillNonSignificant( pbL, resultSetIds, resultSetIdsToArrayDesignsUsed,
+                        resultsFromDb, resultSetIdBatch, cs2GeneIdMap, session );
 
             }// over probes.
 
@@ -574,6 +575,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             log.info( "Fetching DiffEx from DB took total of " + timer.getTime() + " ms : geneIds="
                     + StringUtils.abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
                     + StringUtils.abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
+            log.info( "Filling in non-significant values: " + timeForFillingNonSig + "ms in total" );
         }
 
         // Add the DB results to the cached results.
@@ -1088,13 +1090,14 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * @param resultSetIdBatch
      * @param cs2GeneIdMap
      * @param session
+     * @return ms taken
      */
-    private void fillNonSignificant( List<Long> pbL, Map<Long, ExpressionAnalysisResultSet> resultSetIds,
+    private long fillNonSignificant( List<Long> pbL, Map<Long, ExpressionAnalysisResultSet> resultSetIds,
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed,
             Map<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb, Collection<Long> resultSetIdBatch,
             Map<Long, Collection<Long>> cs2GeneIdMap, Session session ) {
 
-        if ( pbL.isEmpty() ) return;
+        if ( pbL.isEmpty() ) return 0;
         int d = 0;
         StopWatch t = new StopWatch();
         t.start();
@@ -1105,7 +1108,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
              */
             Collection<Long> arrayDesignIds = resultSetIdsToArrayDesignsUsed.get( resultSetIds.get( resultSetId ) );
 
-            // SLOW?
+            // FIXME SLOW?
             Collection<Long> probesForResultSet = CommonQueries.filterProbesByPlatform( pbL, arrayDesignIds, session );
 
             for ( Long probeId : probesForResultSet ) {
@@ -1126,6 +1129,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         if ( t.getTime() > 200 ) {
             log.info( "Fill in " + d + " non-significant values: " + t.getTime() + "ms" );
         }
+        return t.getTime();
     }
 
     /**

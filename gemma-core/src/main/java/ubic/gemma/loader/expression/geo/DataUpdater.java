@@ -513,6 +513,8 @@ public class DataUpdater {
             Double[] col = countEEMatrix.getColumn( ba );
             double librarySize = DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) );
 
+            log.info( ba + " total library size=" + librarySize );
+
             ba.setDescription( ba.getDescription() + " totalCounts=" + Math.floor( librarySize ) );
             ba.setSequenceReadLength( readLength );
             ba.setSequencePairedReads( isPairedReads );
