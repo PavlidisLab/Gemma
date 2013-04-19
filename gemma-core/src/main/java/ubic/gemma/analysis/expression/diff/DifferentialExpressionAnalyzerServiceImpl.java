@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -628,7 +630,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
 
         deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
 
         analysis.setResultSets( new HashSet<ExpressionAnalysisResultSet>() );
@@ -636,8 +639,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // first transaction, gets us an ID
         DifferentialExpressionAnalysis persistentAnalysis = helperService.persistStub( analysis );
 
-        postProcessBeforeSave( expressionExperiment, config, persistentAnalysis, resultSets );
-
+        // second set of transactions creates the empty resultSets.
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
 
@@ -650,43 +652,33 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             analysis.getResultSets().add( prs );
             rs.getResults().addAll( results );
 
+            prs.setQvalueThresholdForStorage( config.getQvalueThreshold() );
+            addPvalueDistribution( prs );
+
         }
 
-        // second transaction
+        // we do this here because now we have IDs for everything.
+        expressionDataFileService.getDiffExpressionAnalysisArchiveFile( expressionExperiment, analysis, resultSets );
+
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+            removeUnwantedResults( config.getQvalueThreshold(), rs.getResults() );
+        }
+
+        // third transaction - add results.
+        log.info( "Saving results" );
         helperService.addResults( persistentAnalysis, resultSets );
 
-        // third transaction.
+        // final transaction: audit.
         auditTrailService.addUpdateEvent( expressionExperiment,
                 DifferentialExpressionAnalysisEvent.Factory.newInstance(), persistentAnalysis.getDescription()
                         + "; analysis id=" + persistentAnalysis.getId() );
+
+        if ( timer.getTime() > 5000 ) {
+            log.info( "Save results: " + timer.getTime() + "ms" );
+        }
+
         return persistentAnalysis;
 
-    }
-
-    /**
-     * @param ee
-     * @param config
-     * @param analysis
-     * @param resultSets
-     */
-    private void postProcessBeforeSave( ExpressionExperiment ee, DifferentialExpressionAnalysisConfig config,
-            DifferentialExpressionAnalysis analysis, Collection<ExpressionAnalysisResultSet> resultSets ) {
-        assert analysis.getId() != null;
-        /*
-         * FIXME: do we want to do this now, for every analysis?
-         */
-        File resultFile = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( ee, analysis, resultSets );
-        log.info( "Full results are stored in " + resultFile.getAbsolutePath() );
-
-        for ( ExpressionAnalysisResultSet res : resultSets ) {
-
-            addPvalueDistribution( res );
-
-            res.setQvalueThresholdForStorage( config.getQvalueThreshold() );
-
-            removeUnwantedResults( config.getQvalueThreshold(), res.getResults() );
-
-        }
     }
 
     /**
@@ -753,10 +745,45 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             log.info( "No qvalue threshold was set, retaining all " + results.size() + " results" );
             return;
         }
+        Double workingThreshold = qvalueThreshold;
 
+        int i = trimAboveThreshold( results, workingThreshold );
+
+        /*
+         * We want to have a minimum number so we always have something to look at. FIXME should there be a maximum?
+         */
+        if ( i < MINIMUM_NUMBER_OF_HITS_TO_SAVE && results.size() > MINIMUM_NUMBER_OF_HITS_TO_SAVE ) {
+            List<DifferentialExpressionAnalysisResult> rl = new ArrayList<DifferentialExpressionAnalysisResult>(
+                    results );
+            Collections.sort( rl, new Comparator<DifferentialExpressionAnalysisResult>() {
+                @Override
+                public int compare( DifferentialExpressionAnalysisResult o1, DifferentialExpressionAnalysisResult o2 ) {
+                    return o1.getPvalue().compareTo( o2.getPvalue() );
+                }
+            } );
+
+            int indexOfLast = Math.min( results.size(), MINIMUM_NUMBER_OF_HITS_TO_SAVE ) - 1;
+            workingThreshold = rl.get( indexOfLast ).getCorrectedPvalue();
+
+            if ( workingThreshold == null || Double.isNaN( workingThreshold ) ) {
+                throw new IllegalStateException( "Threshold was null or NaN" );
+            }
+            i = trimAboveThreshold( results, workingThreshold );
+        }
+
+        log.info( "Retained " + i + " results meeting qvalue of " + workingThreshold );
+
+    }
+
+    /**
+     * @param results
+     * @param qvalueThreshold
+     * @return
+     */
+    private int trimAboveThreshold( Collection<DifferentialExpressionAnalysisResult> results, Double qvalueThreshold ) {
         int i = 0;
         for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
-            DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) it.next();
+            DifferentialExpressionAnalysisResult r = it.next();
 
             if ( r.getPvalue() == null || Double.isNaN( r.getPvalue() ) || r.getCorrectedPvalue() == null
                     || r.getCorrectedPvalue() >= qvalueThreshold ) {
@@ -764,10 +791,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             } else {
                 i++;
             }
-        }
-        log.info( "Retained " + i + " results meeting qvalue of " + qvalueThreshold );
 
+        }
+        return i;
     }
+
+    private static final int MINIMUM_NUMBER_OF_HITS_TO_SAVE = 50;
 
     /**
      * Print the distributions to a file.

@@ -126,16 +126,26 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private static Log log = LogFactory.getLog( LinkAnalysisServiceImpl.class );
     private static final boolean useDB = true; // useful for debugging.
 
-    @Autowired private AuditTrailService auditTrailService;
-    @Autowired private CompositeSequenceService csService;
-    @Autowired private ExpressionExperimentService eeService;
-    @Autowired private ExpressionDataMatrixService expressionDataMatrixService;
-    @Autowired private ExpressionExperimentReportService expressionExperimentReportService;
-    @Autowired private Persister persisterHelper;
-    @Autowired private Probe2ProbeCoexpressionService ppService;
-    @Autowired private QuantitationTypeService quantitationTypeService;
-    @Autowired private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    @Autowired private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
+    @Autowired
+    private AuditTrailService auditTrailService;
+    @Autowired
+    private CompositeSequenceService csService;
+    @Autowired
+    private ExpressionExperimentService eeService;
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired
+    private Persister persisterHelper;
+    @Autowired
+    private Probe2ProbeCoexpressionService ppService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired
+    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
 
     /**
      * Perform the analysis. No hibernate session is used. This step is purely computational.
@@ -148,6 +158,11 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     @Override
     public LinkAnalysis doAnalysis( ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,
             FilterConfig filterConfig ) {
+
+        if ( !filterConfig.isDistinctValueThresholdSet() ) {
+            filterConfig.setLowDistinctValueCut( FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION );
+        }
+
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
         la.clear();
 
@@ -515,7 +530,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             ProbeCoexpressionAnalysis analysisObj ) {
         Probe2ProbeCoexpression ppCoexpression = c.create();
         ppCoexpression.setScore( w );
-        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) ); 
+        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
         ppCoexpression.setSourceAnalysis( analysisObj );
         return ppCoexpression;
     }

@@ -540,6 +540,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( ee );
+
+        if ( oldAnalyses.isEmpty() ) {
+            throw new IllegalArgumentException( "There are no old analyses to redo" );
+        }
+
         log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {

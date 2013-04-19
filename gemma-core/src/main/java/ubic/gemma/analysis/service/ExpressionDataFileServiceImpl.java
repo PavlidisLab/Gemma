@@ -271,7 +271,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         buf.append( '\n' );
 
-        differentialExpressionResultService.thaw( resultSet.getResults() );
+        // if ( resultSet.getId() != null ) {
+        // // we might be doing this before persisting, so don't thaw in that case.
+        // differentialExpressionResultService.thaw( resultSet.getResults() );
+        // }
 
         // Generate probe details
         for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
@@ -403,6 +406,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
 
         try {
+            analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
             writeDiffExArchiveFile( experimentAnalyzed, analysis );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -411,6 +415,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return f;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.service.ExpressionDataFileService#getDiffExpressionAnalysisArchiveFile(ubic.gemma.model.
+     * expression.experiment.BioAssaySet, ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis,
+     * java.util.Collection)
+     */
     @Override
     public File getDiffExpressionAnalysisArchiveFile( BioAssaySet experimentAnalyzed,
             DifferentialExpressionAnalysis analysis, Collection<ExpressionAnalysisResultSet> resultSets ) {
@@ -432,7 +443,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             zipOut.putNextEntry( new ZipEntry( "analysis.data.txt" ) );
 
             StringBuilder buf = new StringBuilder();
-            buf.append( makeDiffExpressionFileHeader( analysis, geneAnnotations ) );
+            buf.append( makeDiffExpressionFileHeader( analysis, resultSets, geneAnnotations ) );
             analysisResultSetsToString( resultSets, geneAnnotations, buf );
             String analysisData = buf.toString();
 
@@ -440,7 +451,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             zipOut.closeEntry();
 
             // Add a file for each result set with contrasts information.
-            for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+            for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
                 if ( resultSet.getExperimentalFactors().size() > 1 ) {
                     continue; // Skip interactions.
                 }
@@ -455,6 +466,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+        log.info( "Full results are stored in " + f.getAbsolutePath() );
         return f;
     }
 
@@ -823,7 +835,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         StringBuilder buf = new StringBuilder();
 
-        buf.append( makeDiffExpressionFileHeader( analysis, geneAnnotations ) );
+        buf.append( makeDiffExpressionFileHeader( analysis, analysis.getResultSets(), geneAnnotations ) );
         analysisResultSetsToString( results, geneAnnotations, buf );
 
         return buf.toString();
@@ -1068,7 +1080,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @return header string
      */
     private String makeDiffExpressionFileHeader( DifferentialExpressionAnalysis analysis,
-            Map<Long, String[]> geneAnnotations ) {
+            Collection<ExpressionAnalysisResultSet> resultSets, Map<Long, String[]> geneAnnotations ) {
         StringBuilder buf = new StringBuilder();
 
         BioAssaySet bas = analysis.getExperimentAnalyzed();
@@ -1086,7 +1098,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
 
         buf.append( "# The following factors were used\n" );
-        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             String f = StringUtils.join( rs.getExperimentalFactors(), ":" );
             buf.append( "# " + f + "\n" );

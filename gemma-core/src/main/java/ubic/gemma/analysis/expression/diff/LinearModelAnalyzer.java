@@ -885,7 +885,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     /*
                      * Add contrasts unless overallpvalue is NaN
                      */
-                    if ( !Double.isNaN( overallPValue ) ) {
+                    if ( overallPValue != null && !Double.isNaN( overallPValue ) ) {
 
                         Map<String, Double> mainEffectContrastTStats = lm.getContrastTStats( factorName );
                         Map<String, Double> mainEffectContrastPvalues = lm.getContrastPValues( factorName );
@@ -913,6 +913,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                         continue;
                     }
                 }
+
+                assert !Double.isNaN( overallPValue ) : "We should not be keeping non-number pvalues (null or NaNs)";
 
                 probeAnalysisResult.setPvalue( nan2Null( overallPValue ) );
                 pvaluesForQvalue.get( factorName ).add( overallPValue );
@@ -1159,14 +1161,25 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             Double[] pvalArray = pvals.toArray( new Double[] {} );
             for ( int i = 0; i < pvalArray.length; i++ ) {
-                if ( pvalArray[i] == null ) pvalArray[i] = Double.NaN;
+
+                assert pvalArray[i] != null;
+                assert !Double.isNaN( pvalArray[i] );
+
+                // if ( Double.isNaN( pvalArray[i] ) ) {
+                // log.warn( "Pvalue was NaN" );
+                // }
+                //
+                // if ( pvalArray[i] == null ) {
+                // log.warn( "Pvalue was null" );
+                // pvalArray[i] = Double.NaN;
+                // }
+
             }
 
             double[] ranks = super.computeRanks( ArrayUtils.toPrimitive( pvalArray ) );
 
             if ( ranks == null ) {
                 log.error( "Ranks could not be computed " + fName );
-                // savePvaluesForDebugging( ArrayUtils.toPrimitive( pvalArray ) );
                 continue;
             }
 

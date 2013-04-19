@@ -438,6 +438,15 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                                 + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
         addOption( lowVarianceCut );
 
+        Option distinctValueCut = OptionBuilder
+                .hasArg()
+                .withArgName( "Fraction distinct values threshold" )
+                .withDescription(
+                        "Fraction of values which must be distinct (NaN counts as one value), default="
+                                + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION ).withLongOpt( "distinctValCut" )
+                .create( "dv" );
+        addOption( distinctValueCut );
+
         Option knownGenesOnlyOption = OptionBuilder.withDescription(
                 "Only save (or print) results for links between 'known genes'" ).create( "knownGenesOnly" );
         addOption( knownGenesOnlyOption );
@@ -453,6 +462,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
         if ( hasOption( "lv" ) ) {
             filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
+        }
+        if ( hasOption( "dv" ) ) {
+            filterConfig.setLowDistinctValueCut( Double.parseDouble( getOptionValue( "dv" ) ) );
         }
     }
 

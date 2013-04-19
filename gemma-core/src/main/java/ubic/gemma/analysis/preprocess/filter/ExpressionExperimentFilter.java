@@ -59,6 +59,14 @@ public class ExpressionExperimentFilter {
     private static Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
 
     /**
+     * @param matrix
+     * @return
+     */
+    public static ExpressionDataDoubleMatrix doNothingFilter( ExpressionDataDoubleMatrix matrix ) {
+        return new ExpressionDataDoubleMatrix( matrix, matrix.getRowNames() );
+    }
+
+    /**
      * Remove rows that have a low variance, below the stated quantile
      * 
      * @param matrix
@@ -100,14 +108,6 @@ public class ExpressionExperimentFilter {
         rowLevelFilter.setLowCut( threshold );
         rowLevelFilter.setUseAsFraction( false );
         return rowLevelFilter.filter( matrix );
-    }
-
-    /**
-     * @param matrix
-     * @return
-     */
-    public static ExpressionDataDoubleMatrix doNothingFilter( ExpressionDataDoubleMatrix matrix ) {
-        return new ExpressionDataDoubleMatrix( matrix, matrix.getRowNames() );
     }
 
     /**
@@ -202,6 +202,7 @@ public class ExpressionExperimentFilter {
         int afterLowVarianceCut = afterSequenceRemovalRows;
         int afterLowExpressionCut = afterSequenceRemovalRows;
         int afterZeroVarianceCut = afterSequenceRemovalRows;
+        int afterDistinctValueCut = afterSequenceRemovalRows;
 
         if ( usesAffymetrix() ) {
             log.info( "Filtering Affymetrix controls" );
@@ -232,6 +233,17 @@ public class ExpressionExperimentFilter {
             throw new IllegalStateException( "No rows left after filtering rows with zero variance" );
         }
 
+        if ( config.isDistinctValueThresholdSet() ) {
+            log.info( "Filtering rows that have too few distincti values" );
+            filteredMatrix = lowDistinctValueFilter( filteredMatrix );
+            afterDistinctValueCut = filteredMatrix.rows();
+            config.setAfterDistinctValueCut( afterDistinctValueCut );
+
+            if ( filteredMatrix.rows() == 0 ) {
+                throw new IllegalStateException( "No rows left after distinct value filtering" );
+            }
+        }
+
         /*
          * Note that variance filtering is a little tricky. For ratiometric arrays, you clearly should use the variance.
          * For 'signal' arrays, we used the CV, but this has problems when the mean is near zero. We could use a
@@ -241,13 +253,8 @@ public class ExpressionExperimentFilter {
          * Vaneet has not found variance filtering to be all that effective, at least for coexpression analysis.
          */
         if ( config.isLowVarianceCutIsSet() ) {
-            // if ( twoColor ) {
             log.info( "Filtering for low variance " );
             filteredMatrix = lowVarianceFilter( filteredMatrix );
-            // } else {
-            // log.info( "Filtering for low CV (signals)" );
-            // filteredMatrix = lowCVFilter( filteredMatrix );
-            // }
             afterLowVarianceCut = filteredMatrix.rows();
             config.setAfterLowVarianceCut( afterLowVarianceCut );
 
@@ -390,6 +397,14 @@ public class ExpressionExperimentFilter {
             answer = isTwoC;
         }
         return answer;
+    }
+
+    /**
+     * @param filteredMatrix
+     * @return
+     */
+    private ExpressionDataDoubleMatrix lowDistinctValueFilter( ExpressionDataDoubleMatrix filteredMatrix ) {
+        return tooFewDistinctValues( filteredMatrix, config.getLowDistinctValueCut() );
     }
 
     /**

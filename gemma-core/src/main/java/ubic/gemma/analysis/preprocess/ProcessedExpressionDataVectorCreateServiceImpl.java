@@ -109,7 +109,8 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
         // WARNING long transaction.
         try {
-            // Delete any existing links from previous link analyses before computing new vectors
+            // Delete any existing links from previous link analyses before computing new vectors (FIXME: do in a
+            // separate transaction?)
             probe2ProbeCoexpressionService.deleteLinks( ee );
 
             ee = processedDataService.createProcessedDataVectors( ee );
@@ -163,11 +164,6 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
         }
 
         Collection<BioAssayDimension> dims = this.eeService.getBioAssayDimensions( ee );
-
-        // Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-        // for ( ProcessedExpressionDataVector v : processedDataVectors ) {
-        // dims.add( v.getBioAssayDimension() );
-        // }
 
         if ( dims.size() > 1 ) {
             checkAllBioAssayDimensionsMatch( dims );

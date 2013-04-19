@@ -28,6 +28,8 @@ import java.io.Serializable;
  */
 public class FilterConfig implements Serializable {
 
+    public static final double DEFAULT_DISTINCTVALUE_FRACTION = 0.5;
+
     public static final double DEFAULT_HIGHEXPRESSION_CUT = 0.0;
 
     public static final double DEFAULT_LOWEXPRESSIONCUT = 0.3;
@@ -55,32 +57,45 @@ public class FilterConfig implements Serializable {
      */
     private static final long serialVersionUID = 1L;
 
-    private int afterInitialFilter = 0;
+    private int afterDistinctValueCut = 0;
 
+    private int afterInitialFilter = 0;
     private int afterLowExpressionCut = 0;
     private int afterLowVarianceCut = 0;
     private int afterMinPresentFilter = 0;
     private int afterZeroVarianceCut = 0;
+
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
+
     /**
      * If true, the MINIMUM_ROWS_TO_BOTHER is ignored.
      */
     private boolean ignoreMinimumRowsThreshold = false;
+
     /**
      * If true, MINIMUM_SAMPLE is ignored.
      */
     private boolean ignoreMinimumSampleThreshold = false;
     private boolean knownGenesOnly = false;
     private boolean logTransform = false;
+    private double lowDistinctValueCut = DEFAULT_DISTINCTVALUE_FRACTION;
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
     private boolean lowExpressionCutIsSet = true;
     private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
     private boolean lowVarianceCutIsSet = true;
     private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
-
     private boolean minPresentFractionIsSet = true;
-
     private int startingRows = 0;
+
+    private boolean lowDistinctValueIsSet = false;;
+
+    public boolean isLowDistinctValueIsSet() {
+        return lowDistinctValueIsSet;
+    }
+
+    public int getAfterDistinctValueCut() {
+        return afterDistinctValueCut;
+    }
 
     /**
      * @return the afterInitialFilter
@@ -116,6 +131,10 @@ public class FilterConfig implements Serializable {
 
     public double getHighExpressionCut() {
         return highExpressionCut;
+    }
+
+    public double getLowDistinctValueCut() {
+        return lowDistinctValueCut;
     }
 
     public double getLowExpressionCut() {
@@ -169,6 +188,10 @@ public class FilterConfig implements Serializable {
 
     public boolean isMinPresentFractionIsSet() {
         return minPresentFractionIsSet;
+    }
+
+    public void setAfterDistinctValueCut( int afterDistinctValueCut ) {
+        this.afterDistinctValueCut = afterDistinctValueCut; 
     }
 
     /**
@@ -229,6 +252,11 @@ public class FilterConfig implements Serializable {
         this.logTransform = logTransform;
     }
 
+    public void setLowDistinctValueCut( double lowDistinctValueCut ) {
+        this.lowDistinctValueCut = lowDistinctValueCut;
+        this.lowDistinctValueIsSet = true;
+    }
+
     public void setLowExpressionCut( double lowExpressionCut ) {
         this.lowExpressionCutIsSet = true;
         this.lowExpressionCut = lowExpressionCut;
@@ -258,6 +286,7 @@ public class FilterConfig implements Serializable {
         buf.append( "# lowExpressionCut:" + this.getLowExpressionCut() + "\n" );
         buf.append( "# minPresentFraction:" + this.getMinPresentFraction() + "\n" );
         buf.append( "# lowVarianceCut:" + this.getLowVarianceCut() + "\n" );
+        buf.append( "# distinctValuecut:" + this.lowDistinctValueCut + "\n" );
         buf.append( "# startingProbes:" + this.getStartingRows() + "\n" );
         buf.append( "# afterInitialFilter:" + this.getAfterInitialFilter() + "\n" );
         buf.append( "# afterMinPresentFilter:" + this.getAfterMinPresentFilter() + "\n" );
@@ -266,6 +295,11 @@ public class FilterConfig implements Serializable {
         buf.append( "# logTransform:" + this.isLogTransform() + "\n" );
         // buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
         return buf.toString();
+    }
+
+    public boolean isDistinctValueThresholdSet() {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

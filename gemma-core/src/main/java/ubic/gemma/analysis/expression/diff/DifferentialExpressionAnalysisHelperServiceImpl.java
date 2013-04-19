@@ -80,13 +80,10 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      */
     @Override
     public void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
+
         entity.getResultSets().addAll( resultSets );
         differentialExpressionAnalysisDao.update( entity ); // could be sped up.
-        if ( timer.getTime() > 5000 ) {
-            log.info( "Save results: " + timer.getTime() + "ms" );
-        }
+
     }
 
     /*
