@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2012 University of British Columbia
+ * Copyright (c) 2013 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -20,23 +20,31 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * @author paul
+ * @author Paul
  * @version $Id$
  */
-public interface ProcessedExpressionDataVectorCreateService {
+public interface ProcessedExpressionDataVectorCreateHelperService {
 
     /**
      * @param ee
-     * @return the vectors that were modified.
+     * @return
      */
-    public abstract Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee );
+    public Collection<ProcessedExpressionDataVector> createProcessedExpressionData( ExpressionExperiment ee );
 
     /**
-     * Creates new bioAssayDimensions to match the experimental design, reorders the data to match, updates.
+     * If possible, update the ranks for the processed data vectors. For data sets with only ratio expression values
+     * provided, ranks will not be computable.
      * 
      * @param ee
+     * @param processedVectors
+     * @return The vectors after updating them, or just the original vectors if ranks could not be computed. (The
+     *         vectors may be thawed in the process)
      */
-    public abstract void reorderByDesign( Long eeId );
+    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> processedVectors );
 
-  
+    /**
+     * @param eeId
+     */
+    public void reorderByDesign( Long eeId );
 }
