@@ -1,3 +1,9 @@
+/**
+ * Modification of a ExtJS extension - Ext.ux.maximgb.tg, http://max-bazhenov.com/dev/ux.maximgb.tg/index.php. Small
+ * tweaks, performance related; Phenotype tree is where this is used.
+ * 
+ * @version $Id$
+ */
 if (Ext.version == '3.0') {
    Ext.override(Ext.grid.GridView, {
          ensureVisible : function(row, col, hscroll) {
@@ -879,22 +885,23 @@ Ext.ux.maximgb.tg.AdjacencyListStore = Ext.extend(Ext.ux.maximgb.tg.AbstractTree
       },
 
       /*
-       * PP modified
+       * PP modified for speed with Phenotype tree.
        */
       getNodeChildren : function(rc) {
          var i, len, result = [], records;
 
-         // big savings here? [PP added]
+         // Don't check for children if leaf [PP]
          if (rc.get(this.leaf_field_name)) {
             return result;
          }
 
+         // Initialize just once; getRange is costly [PP]
          if (!this.records) {
-            // quite costly, do it just once. [PP]
+         	// console.log("initializing");
             this.records = this.data.getRange();
          }
 
-         // this alternative approach isn't much faster.
+         // this alternative approach isn't much faster, but skips initialization.[PP]
          // var j = 0;
          // this.data.each(function(rec) {
          // if (rec.get(this.parent_id_field_name) == rc.id) {
