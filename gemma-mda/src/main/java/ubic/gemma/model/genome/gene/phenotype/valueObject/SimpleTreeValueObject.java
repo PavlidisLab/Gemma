@@ -27,6 +27,10 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     private String urlId = "";
     private boolean dbPhenotype = false;
 
+    /**
+     * @param treeCharacteristicValueObject
+     * @param parent
+     */
     public SimpleTreeValueObject( TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
 
         this.urlId = treeCharacteristicValueObject.getUrlId();
@@ -148,7 +152,10 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         if ( !this.valueUri.equalsIgnoreCase( o.valueUri ) ) {
             return this.valueUri.compareToIgnoreCase( o.valueUri );
         }
-        return this._parent.compareToIgnoreCase( o._parent );
+
+        if ( this._parent != null ) return this._parent.compareToIgnoreCase( o._parent );
+
+        return this._id.compareTo( o._id );
     }
 
 }

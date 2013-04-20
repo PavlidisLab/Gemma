@@ -47,8 +47,14 @@ public class PhenotypeAssoOntologyHelper {
         resetOntologies();
     }
 
-    /** Gemma might be ready but the ontology thread not finish loading */
+    /**
+     * Gemma might be ready but the ontology thread not finish loading
+     */
     public boolean areOntologiesAllLoaded() {
+        /*
+         * FIXME: if these ontologies are not configured, we will never be ready. Check for valid configuration.
+         */
+
         return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded()
                 && this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
                 .getMammalianPhenotypeOntologyService().isOntologyLoaded() );

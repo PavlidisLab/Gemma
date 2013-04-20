@@ -1713,7 +1713,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return evidenceValueObjectsRegrouped;
     }
 
-    /** To be regrouped an evidence must have the same phenotypes + type + evidenceCode + isNegative */
+    /**
+     * To be regrouped an evidence must have the same phenotypes + type + evidenceCode + isNegative
+     */
     private String makeUniqueKey( LiteratureEvidenceValueObject evidence ) {
 
         String key = "";
@@ -1737,7 +1739,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return key;
     }
 
-    /** take the trees made and put them in the exact way the client wants them */
+    /**
+     * take the trees made and put them in the exact way the client wants them
+     */
     private void convertToFlatTree( Collection<SimpleTreeValueObject> simpleTreeValueObjects,
             TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
 
