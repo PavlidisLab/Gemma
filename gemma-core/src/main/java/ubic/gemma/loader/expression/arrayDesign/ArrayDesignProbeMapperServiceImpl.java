@@ -342,21 +342,23 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
             BioSequence bs = c.getBiologicalCharacteristic();
 
-            if ( bs != null && StringUtils.isNotBlank( seqName ) ) {
-                bs = bioSequenceService.thaw( bs );
-                if ( !bs.getName().equals( seqName ) ) {
-                    log.warn( "Sequence name '" + seqName + "' given for " + probeId
-                            + " does not match existing entry " + bs.getName() + ", skipping" );
-                    numSkipped++;
-                    continue;
-                }
-                // Otherwise, we just forget about the text they provided for the bs name, it's fine.
+            if ( bs != null ) {
+                if ( StringUtils.isNotBlank( seqName ) ) {
+                    bs = bioSequenceService.thaw( bs );
+                    if ( !bs.getName().equals( seqName ) ) {
+                        log.warn( "Sequence name '" + seqName + "' given for " + probeId
+                                + " does not match existing entry " + bs.getName() + ", skipping" );
+                        numSkipped++;
+                        continue;
+                    }
 
+                }
+                // otherwise we assume everything is okay.
             } else {
-                // create one based on the text.
+                // create one based on the text provided.
                 if ( StringUtils.isBlank( seqName ) ) {
-                    log.warn( "You must provide sequence names for probes which are not already mapped. " + probeId
-                            + " had no sequence associated an no name provided; skipping" );
+                    log.warn( "You must provide sequence names for probes which are not already mapped. probeName="
+                            + probeId + " had no sequence associated and no name provided; skipping" );
                     numSkipped++;
                     continue;
                 }
