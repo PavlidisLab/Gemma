@@ -65,6 +65,14 @@ Ext.ux.maximgb.tg.AbstractTreeStore = Ext.extend(Ext.data.Store, {
    leaf_field_name : '_is_leaf',
 
    /**
+    * [PP added]
+    * 
+    * @cfg {string} children_field_name Record child field name
+    * 
+    */
+   children_field_name : 'children',
+
+   /**
     * Current page offset.
     * 
     * @access private
@@ -625,10 +633,15 @@ Ext.ux.maximgb.tg.AbstractTreeStore = Ext.extend(Ext.data.Store, {
     * @access public
     */
    expandAll : function() {
-      var r, i, len, records = this.data.getRange();
+      var r, i, len;
+      // Initialize just once; getRange is costly [PP]
+      if (!this.records) {
+         // console.log("initializing");
+         this.records = this.data.getRange();
+      }
       this.suspendEvents();
-      for (i = 0, len = records.length; i < len; i++) {
-         r = records[i];
+      for (i = 0, len = this.records.length; i < len; i++) {
+         r = this.records[i];
          if (!this.isExpandedNode(r)) {
             this.expandNode(r);
          }
@@ -643,11 +656,15 @@ Ext.ux.maximgb.tg.AbstractTreeStore = Ext.extend(Ext.data.Store, {
     * @access public
     */
    collapseAll : function() {
-      var r, i, len, records = this.data.getRange();
-
+      var r, i, len;
+      // Initialize just once; getRange is costly [PP]
+      if (!this.records) {
+         // console.log("initializing");
+         this.records = this.data.getRange();
+      }
       this.suspendEvents();
-      for (i = 0, len = records.length; i < len; i++) {
-         r = records[i];
+      for (i = 0, len = this.records.length; i < len; i++) {
+         r = this.records[i];
          if (this.isExpandedNode(r)) {
             this.collapseNode(r);
          }
@@ -864,16 +881,26 @@ Ext.ux.maximgb.tg.AdjacencyListStore = Ext.extend(Ext.ux.maximgb.tg.AbstractTree
        */
       parent_id_field_name : '_parent',
 
-      getRootNodes : function() {
-         var i, len, result = [], records = this.data.getRange();
+      // cache this so we don't have to recompute it over and over [PP]
+      rootNodes : [],
 
-         for (i = 0, len = records.length; i < len; i++) {
-            if (records[i].get(this.parent_id_field_name) == null) {
-               result.push(records[i]);
+      getRootNodes : function() {
+         var i, len;
+         // Initialize just once; getRange is costly [PP]
+         if (!this.records) {
+            this.records = this.data.getRange();
+         }
+
+         if (this.rootNodes.length === 0) {
+
+            for (i = 0, len = this.records.length; i < len; i++) {
+               if (this.records[i].get(this.parent_id_field_name) == null) {
+                  this.rootNodes.push(this.records[i]);
+               }
             }
          }
 
-         return result;
+         return this.rootNodes;
       },
 
       getNodeDepth : function(rc) {
@@ -888,17 +915,32 @@ Ext.ux.maximgb.tg.AdjacencyListStore = Ext.extend(Ext.ux.maximgb.tg.AbstractTree
        * PP modified for speed with Phenotype tree.
        */
       getNodeChildren : function(rc) {
-         var i, len, result = [], records;
+
+         if (!rc) {
+            return [];
+         }
 
          // Don't check for children if leaf [PP]
          if (rc.get(this.leaf_field_name)) {
-            return result;
+            return [];
          }
 
          // Initialize just once; getRange is costly [PP]
          if (!this.records) {
-         	// console.log("initializing");
+            // console.log("initializing");
             this.records = this.data.getRange();
+         }
+
+         var c = rc.get(this.children_field_name);
+
+         if (c.length === 0) {
+            return [];
+         }
+
+         var result = [];
+         for (var i = 0, len = c.length; i < len; i++) {
+            // console.log(c[i]);
+            result.push(this.getById(c[i]));
          }
 
          // this alternative approach isn't much faster, but skips initialization.[PP]
@@ -911,11 +953,11 @@ Ext.ux.maximgb.tg.AdjacencyListStore = Ext.extend(Ext.ux.maximgb.tg.AbstractTree
          // }, this);
 
          // this iterates over all the records, just to find the children. [PP]
-         for (i = 0, len = this.records.length; i < len; i++) {
-            if (this.records[i].get(this.parent_id_field_name) == rc.id) {
-               result.push(this.records[i]);
-            }
-         }
+         // for (i = 0, len = this.records.length; i < len; i++) {
+         // if (this.records[i].get(this.parent_id_field_name) == rc.id) {
+         // result.push(this.records[i]);
+         // }
+         // }
 
          return result;
       },
@@ -957,11 +999,17 @@ Ext.ux.maximgb.tg.NestedSetStore = Ext.extend(Ext.ux.maximgb.tg.AbstractTreeStor
       root_node_level : 1,
 
       getRootNodes : function() {
-         var i, len, result = [], records = this.data.getRange();
+         var i, len, result = [];
 
-         for (i = 0, len = records.length; i < len; i++) {
-            if (records[i].get(this.level_field_name) == this.root_node_level) {
-               result.push(records[i]);
+         // Initialize just once; getRange is costly [PP]
+         if (!this.records) {
+            // console.log("initializing");
+            this.records = this.data.getRange();
+         }
+
+         for (i = 0, len = this.records.length; i < len; i++) {
+            if (this.records[i].get(this.level_field_name) == this.root_node_level) {
+               result.push(this.records[i]);
             }
          }
 
@@ -973,14 +1021,20 @@ Ext.ux.maximgb.tg.NestedSetStore = Ext.extend(Ext.ux.maximgb.tg.AbstractTreeStor
       },
 
       getNodeParent : function(rc) {
-         var result = null, rec, records = this.data.getRange(), i, len, lft, r_lft, rgt, r_rgt, level, r_level;
+         var result = null, rec, i, len, lft, r_lft, rgt, r_rgt, level, r_level;
+
+         // Initialize just once; getRange is costly [PP]
+         if (!this.records) {
+            // console.log("initializing");
+            this.records = this.data.getRange();
+         }
 
          lft = rc.get(this.left_field_name);
          rgt = rc.get(this.right_field_name);
          level = rc.get(this.level_field_name);
 
-         for (i = 0, len = records.length; i < len; i++) {
-            rec = records[i];
+         for (i = 0, len = this.records.length; i < len; i++) {
+            rec = this.records[i];
             r_lft = rec.get(this.left_field_name);
             r_rgt = rec.get(this.right_field_name);
             r_level = rec.get(this.level_field_name);
@@ -997,14 +1051,23 @@ Ext.ux.maximgb.tg.NestedSetStore = Ext.extend(Ext.ux.maximgb.tg.AbstractTreeStor
       getNodeChildren : function(rc) {
          var lft, r_lft, rgt, r_rgt, level, r_level, records, rec, result = [];
 
-         records = this.data.getRange();
+         // Don't check for children if leaf [PP]
+         if (rc.get(this.leaf_field_name)) {
+            return result;
+         }
+
+         // Initialize just once; getRange is costly [PP]
+         if (!this.records) {
+            // console.log("initializing");
+            this.records = this.data.getRange();
+         }
 
          lft = rc.get(this.left_field_name);
          rgt = rc.get(this.right_field_name);
          level = rc.get(this.level_field_name);
 
-         for (i = 0, len = records.length; i < len; i++) {
-            rec = records[i];
+         for (i = 0, len = this.records.length; i < len; i++) {
+            rec = this.records[i];
             r_lft = rec.get(this.left_field_name);
             r_rgt = rec.get(this.right_field_name);
             r_level = rec.get(this.level_field_name);

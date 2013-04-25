@@ -188,7 +188,7 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 				proxy: commonConfig.getStoreProxy(this.phenotypeStoreProxy),
 				baseParams: commonConfig.getBaseParams(),
 				reader: new Ext.data.JsonReader({
-				 	// Use _id instead of urlId so that we can have duplicate phenotype values in the tree.
+				 	// Use _id instead of urlId so phenotypes can show up more than once in different parts of the tree.
 					idProperty: '_id',
 					fields: commonConfig.getStoreReaderFields()
 				}),

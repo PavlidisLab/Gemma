@@ -393,7 +393,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // undo the tree in a simple structure
         for ( TreeCharacteristicValueObject t : ontologyTrees ) {
-            convertToFlatTree( simpleTreeValueObjects, t, null );
+            convertToFlatTree( simpleTreeValueObjects, t, null /* parent of root */);
         }
 
         return simpleTreeValueObjects;
@@ -1745,20 +1745,22 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private void convertToFlatTree( Collection<SimpleTreeValueObject> simpleTreeValueObjects,
             TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
 
-        if ( treeCharacteristicValueObject != null ) {
-            SimpleTreeValueObject simpleTreeValueObject = new SimpleTreeValueObject( treeCharacteristicValueObject,
-                    parent );
-
-            if ( treeCharacteristicValueObject.getChildren().isEmpty() ) {
-                simpleTreeValueObject.set_is_leaf( true );
-            }
-
-            simpleTreeValueObjects.add( simpleTreeValueObject );
-
-            for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
-                convertToFlatTree( simpleTreeValueObjects, tree, simpleTreeValueObject.get_id() );
-            }
+        if ( treeCharacteristicValueObject == null ) {
+            return;
         }
+
+        SimpleTreeValueObject simpleTreeValueObject = new SimpleTreeValueObject( treeCharacteristicValueObject, parent );
+
+        if ( treeCharacteristicValueObject.getChildren().isEmpty() ) {
+            simpleTreeValueObject.set_is_leaf( true );
+        }
+
+        simpleTreeValueObjects.add( simpleTreeValueObject );
+
+        for ( TreeCharacteristicValueObject tree : treeCharacteristicValueObject.getChildren() ) {
+            convertToFlatTree( simpleTreeValueObjects, tree, simpleTreeValueObject.get_id() );
+        }
+
     }
 
     /** add all the keySet together and return a set representing all children for all valueUri given */

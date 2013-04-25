@@ -72,6 +72,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
 			     	'_id',       // for phenotype tree only
 			     	'_parent',   // for phenotype tree only
 			     	'_is_leaf',  // for phenotype tree only
+			     	'children', // for phenotype tree only, ids of the children.
 					'dbPhenotype',                                              // for phenotype list only
 			     	{ name: 'isChecked', sortDir: 'DESC', defaultValue: false } // for phenotype list only
 		     	];
