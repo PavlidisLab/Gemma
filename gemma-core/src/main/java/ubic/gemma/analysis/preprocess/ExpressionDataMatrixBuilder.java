@@ -39,8 +39,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType; 
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -216,7 +215,7 @@ public class ExpressionDataMatrixBuilder {
 
     private ExpressionExperiment expressionExperiment;
 
-    private Collection<ProcessedExpressionDataVector> processedDataVectors = null;
+    private Collection<ProcessedExpressionDataVector> processedDataVectors = new HashSet<ProcessedExpressionDataVector>();
 
     private QuantitationTypeData dat = null;
 
@@ -231,6 +230,13 @@ public class ExpressionDataMatrixBuilder {
         if ( vectors == null || vectors.size() == 0 ) throw new IllegalArgumentException( "No vectors" );
         this.vectors = new HashSet<DesignElementDataVector>();
         this.vectors.addAll( vectors );
+
+        for ( DesignElementDataVector vec : vectors ) {
+            if ( vec instanceof ProcessedExpressionDataVector ) {
+                this.processedDataVectors.add( ( ProcessedExpressionDataVector ) vec );
+            }
+        }
+
         this.expressionExperiment = vectors.iterator().next().getExpressionExperiment();
     }
 
@@ -312,10 +318,11 @@ public class ExpressionDataMatrixBuilder {
             if ( !dimMap.containsKey( adUsed ) ) {
                 dimMap.put( adUsed, vector.getBioAssayDimension() );
             }
-            // if ( arrayDesign == null || adUsed.equals( arrayDesign ) ) {
             assert vector.getBioAssayDimension() != null;
+            assert vector.getBioAssayDimension().getId() != null;
+            vector.getBioAssayDimension().hashCode();
+
             dimensions.add( vector.getBioAssayDimension() );
-            // }
         }
 
         log.debug( "got " + dimensions.size() + " bioassaydimensions" );
@@ -444,19 +451,13 @@ public class ExpressionDataMatrixBuilder {
 
         for ( BioAssayDimension dimension : dimensions ) {
             for ( DesignElementDataVector vector : vectors ) {
-
                 if ( !vector.getBioAssayDimension().equals( dimension ) ) continue;
 
                 QuantitationType qType = vector.getQuantitationType();
-                if ( !qType.getIsPreferred() ) continue;
-
-                // ArrayDesign adUsed = arrayDesignForVector( vector );
-                // if ( arrayDesign != null && !adUsed.equals( arrayDesign ) ) continue;
-
+                if ( !qType.getIsPreferred() && !qType.getIsMaskedPreferred() ) continue;
                 // if we get here, we're in the right place.
                 result.add( qType );
                 break; // on to the next dimension.
-
             }
         }
 
@@ -569,17 +570,18 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     private ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
-        Collection<BioAssay> bioAssays = vector.getBioAssayDimension().getBioAssays();
-        if ( bioAssays.size() == 0 ) throw new IllegalArgumentException( "No bioassays for vector." );
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        for ( BioAssay ba : bioAssays ) {
-            ads.add( ba.getArrayDesignUsed() );
-        }
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle vectors with multiple array design represented" );
-        }
-        ArrayDesign adUsed = ads.iterator().next();
-        return adUsed;
+        return vector.getDesignElement().getArrayDesign();
+        // Collection<BioAssay> bioAssays = vector.getBioAssayDimension().getBioAssays();
+        // if ( bioAssays.size() == 0 ) throw new IllegalArgumentException( "No bioassays for vector." );
+        // Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        // for ( BioAssay ba : bioAssays ) {
+        // ads.add( ba.getArrayDesignUsed() );
+        // }
+        // if ( ads.size() > 1 ) {
+        // throw new IllegalArgumentException( "Can't handle vectors with multiple array design represented" );
+        // }
+        // ArrayDesign adUsed = ads.iterator().next();
+        // return adUsed;
     }
 
     /**

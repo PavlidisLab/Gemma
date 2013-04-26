@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -160,21 +162,12 @@ public abstract class DesignElementDataVectorServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)
-     */
-    @Override
-    public void thaw( final DesignElementDataVector designElementDataVector ) {
-        this.handleThaw( designElementDataVector );
-
-    }
-
-    /**
+     * @return
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(java.util.Collection)
      */
     @Override
     public void thaw( final java.util.Collection<? extends DesignElementDataVector> designElementDataVectors ) {
         this.handleThaw( designElementDataVectors );
-
     }
 
     /**
@@ -262,14 +255,11 @@ public abstract class DesignElementDataVectorServiceBase implements
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)}
-     */
-    protected abstract void handleThaw( DesignElementDataVector designElementDataVector );
-
-    /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
+     * 
+     * @return
      */
-    protected abstract void handleThaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
+    protected abstract void handleThaw( Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)}

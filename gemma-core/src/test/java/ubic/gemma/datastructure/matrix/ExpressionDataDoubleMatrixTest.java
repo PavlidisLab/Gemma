@@ -20,12 +20,15 @@ package ubic.gemma.datastructure.matrix;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,6 +38,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
+import ubic.gemma.analysis.service.SampleRemoveService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -48,11 +54,11 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -67,25 +73,31 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
-    SimpleExpressionExperimentMetaData metaData = null;
+    private SimpleExpressionExperimentMetaData metaData = null;
 
-    ExpressionExperiment ee = null;
-    ExpressionExperiment newee = null;
-
-    @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperiment ee = null;
+    private ExpressionExperiment newee = null;
 
     @Autowired
-    DesignElementDataVectorService designElementDataVectorService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+    private DesignElementDataVectorService designElementDataVectorService;
 
     @Autowired
-    ArrayDesignService adService;
+    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorCreateService processedDataVectorService;
 
     @Autowired
     protected GeoService geoService;
+
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService = null;
+
+    @Autowired
+    private SampleRemoveService sampleRemoveService;
 
     /*
      * (non-Javadoc)
@@ -289,28 +301,77 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void testMatrixConversionGSE432() throws Exception {
+    public void testMatrixConversion() throws Exception {
 
         try {
 
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gse432Short" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE432", false, true, false, false );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "" ) ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE8294", false, true, false, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
+            newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
         newee = expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
 
-        Collection<RawExpressionDataVector> designElementDataVectors = newee.getRawExpressionDataVectors();
-        designElementDataVectorService.thaw( designElementDataVectors );
+        Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
+        designElementDataVectorService.thaw( vectors );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
-        assertEquals( 40, matrix.rows() ); // there would be 100 but there are lots of missing values.
-        assertEquals( 11, matrix.columns() );
+        assertTrue( !Double.isNaN( matrix.get( 10, 0 ) ) );
+        assertEquals( 66, matrix.rows() );
+        assertEquals( 9, matrix.columns() );
+
+        /*
+         * Additional tests for files and outlier marking.
+         */
+
+        processedDataVectorService.computeProcessedExpressionData( newee );
+
+        File f1 = expressionDataFileService.writeOrLocateDataFile( newee, true, true );
+        assertNotNull( f1 );
+        assertTrue( f1.exists() );
+
+        expressionDataFileService.deleteAllFiles( newee );
+        assertTrue( !f1.exists() );
+
+        /*
+         * outlier removal.
+         */
+        BioAssay tba = newee.getBioAssays().iterator().next();
+        sampleRemoveService.markAsMissing( tba );
+
+        assertTrue( tba.getIsOutlier() );
+
+        newee = expressionExperimentService.thaw( newee );
+        Collection<ProcessedExpressionDataVector> vecs = newee.getProcessedExpressionDataVectors();
+
+        this.designElementDataVectorService.thaw( vecs );
+
+        assertTrue( !vecs.isEmpty() );
+
+        ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( vecs );
+        ExpressionDataDoubleMatrix data = matrixBuilder.getProcessedData();
+
+        assertNotNull( data );
+
+        assertTrue( Double.isNaN( data.getColumn( tba )[10] ) );
+
+        sampleRemoveService.unmarkAsMissing( tba );
+        newee = expressionExperimentService.thaw( expressionExperimentService.load( newee.getId() ) );
+        vecs = newee.getProcessedExpressionDataVectors();
+
+        this.designElementDataVectorService.thaw( vecs );
+
+        assertTrue( !vecs.isEmpty() );
+
+        matrixBuilder = new ExpressionDataMatrixBuilder( vecs );
+        data = matrixBuilder.getProcessedData();
+        assertTrue( !tba.getIsOutlier() );
+        assertTrue( !Double.isNaN( data.getColumn( tba )[10] ) );
+
     }
 
     @After

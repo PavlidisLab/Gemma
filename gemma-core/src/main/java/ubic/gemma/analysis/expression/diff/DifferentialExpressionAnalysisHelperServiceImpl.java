@@ -21,9 +21,6 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,8 +47,6 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
 
     @Autowired
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
-
-    private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
     private Persister persisterHelper = null;

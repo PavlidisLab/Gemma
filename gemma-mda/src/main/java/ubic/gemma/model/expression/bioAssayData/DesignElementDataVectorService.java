@@ -18,10 +18,13 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * @author Paul
@@ -37,93 +40,79 @@ public interface DesignElementDataVectorService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
-    public java.util.Collection<? extends DesignElementDataVector> create(
-            java.util.Collection<? extends DesignElementDataVector> vectors );
+    @Secured({ "GROUP_USER" })
+    public Collection<? extends DesignElementDataVector> create( Collection<? extends DesignElementDataVector> vectors );
 
     /**
      * Load all vectors meeting the criteria
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    public java.util.Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType );
 
     /**
      * @param bioAssayDimension
      * @return any vectors that reference the given bioAssayDimensin
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    public java.util.Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
 
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
-    public java.util.Collection<? extends DesignElementDataVector> find(
-            java.util.Collection<QuantitationType> quantitationTypes );
+    @Secured({ "GROUP_ADMIN" })
+    public Collection<? extends DesignElementDataVector> find( Collection<QuantitationType> quantitationTypes );
 
     /**
      * Load all vectors meeting the criteria
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    public java.util.Collection<? extends DesignElementDataVector> find(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    public Collection<? extends DesignElementDataVector> find( QuantitationType quantitationType );
 
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public DesignElementDataVector load( java.lang.Long id );
 
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
-    public void remove( java.util.Collection<? extends DesignElementDataVector> vectors );
+    @Secured({ "GROUP_ADMIN" })
+    public void remove( Collection<? extends DesignElementDataVector> vectors );
 
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
-    public void remove( ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector designElementDataVector );
+    @Secured({ "GROUP_ADMIN" })
+    public void remove( RawExpressionDataVector designElementDataVector );
 
     /**
      * <p>
      * remove Design Element Data Vectors and Probe2ProbeCoexpression entries for a specified CompositeSequence.
      * </p>
      */
-    @Secured( { "GROUP_ADMIN" })
-    public void removeDataForCompositeSequence(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
+    @Secured({ "GROUP_ADMIN" })
+    public void removeDataForCompositeSequence( CompositeSequence compositeSequence );
 
     /**
-     * <p>
      * Removes the DesignElementDataVectors and Probe2ProbeCoexpressions for a quantitation type, given a
      * QuantitationType (which always comes from a specific ExpressionExperiment)
-     * </p>
      */
-    @Secured( { "GROUP_ADMIN" })
-    public void removeDataForQuantitationType(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    @Secured({ "GROUP_ADMIN" })
+    public void removeDataForQuantitationType( QuantitationType quantitationType );
 
     /**
-     * <p>
-     * Thaws associations of the given DesignElementDataVector
-     * </p>
+     * @return
      */
-    public void thaw( DesignElementDataVector designElementDataVector );
-
-    /**
-     * 
-     */
-    public void thaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
+    public void thaw( Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
      * <p>
      * updates an already existing dedv
      * </p>
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( DesignElementDataVector dedv );
 
     /**
@@ -131,7 +120,7 @@ public interface DesignElementDataVectorService {
      * updates a collection of designElementDataVectors
      * </p>
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( java.util.Collection<? extends DesignElementDataVector> dedvs );
 
 }

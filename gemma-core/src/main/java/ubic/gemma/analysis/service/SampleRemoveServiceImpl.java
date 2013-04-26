@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.service;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -28,11 +29,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
@@ -42,6 +45,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -56,7 +60,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulatingService implements
         SampleRemoveService {
 
@@ -76,6 +80,18 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
+    @Autowired
+    private BioAssayDimensionService assayDimensionService;
+
+    @Autowired
+    private ExpressionDataFileService dataFileService;
+
+    @Autowired
+    private Probe2ProbeCoexpressionService coexpressionService;
+
+    @Autowired
+    private DifferentialExpressionAnalyzerService analyzerService;
 
     /*
      * (non-Javadoc)
@@ -103,6 +119,22 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
         Collection<BioAssay> bms = new HashSet<BioAssay>();
         bms.add( bioAssay );
         this.markAsMissing( expExp, bms );
+
+    }
+
+    /**
+     * @param expExp
+     */
+    private void removeInvalidatedData( ExpressionExperiment expExp, Collection<ProcessedExpressionDataVector> vecs ) {
+
+        sampleSoexpressionMatrixService.create( expExp, vecs );
+        try {
+            dataFileService.deleteAllFiles( expExp );
+            coexpressionService.deleteLinks( expExp );
+            analyzerService.deleteAnalyses( expExp );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /*
@@ -129,7 +161,7 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( expExp );
 
-        sampleSoexpressionMatrixService.create( expExp, vecs );
+        removeInvalidatedData( expExp, vecs );
 
     }
 
@@ -162,6 +194,7 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
         for ( DesignElementDataVector vector : oldVectors ) {
 
             BioAssayDimension bad = vector.getBioAssayDimension();
+            bad = assayDimensionService.thaw( bad );
 
             assert vector.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE );
 
@@ -194,11 +227,6 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
 
         designElementDataVectorService.update( oldVectors );
 
-        /*
-         * Update the correlation heatmaps.
-         */
-        sampleSoexpressionMatrixService.create( expExp, oldVectors );
-
         for ( BioAssay ba : assaysToRemove ) {
             ba.setIsOutlier( true );
             bioAssayService.update( ba );
@@ -210,6 +238,8 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
 
         auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(), assaysToRemove.size()
                 + " flagged as outliers: " + StringUtils.join( assaysToRemove, "," ) );
+
+        removeInvalidatedData( expExp, oldVectors );
     }
 
     /**

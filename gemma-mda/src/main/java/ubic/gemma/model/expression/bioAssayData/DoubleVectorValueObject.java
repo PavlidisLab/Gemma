@@ -121,6 +121,14 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             this.rankByMax = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMax();
             this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();
         }
+
+        int i = 0;
+        for ( BioAssayValueObject bvao : this.getBioAssays() ) {
+            if ( bvao.isOutlier() ) {
+                data[i] = Double.NaN;
+            }
+            i++;
+        }
     }
 
     /**

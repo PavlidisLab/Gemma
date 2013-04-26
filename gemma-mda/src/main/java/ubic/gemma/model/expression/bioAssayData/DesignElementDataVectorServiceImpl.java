@@ -157,15 +157,6 @@ public class DesignElementDataVectorServiceImpl extends
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void handleThaw( DesignElementDataVector dedv ) {
-        if ( dedv instanceof RawExpressionDataVector )
-            this.getRawExpressionDataVectorDao().thaw( ( Collection<? extends DesignElementDataVector> ) dedv );
-        else if ( dedv instanceof ProcessedExpressionDataVector )
-            this.getProcessedExpressionDataVectorDao().thaw( ( Collection<? extends DesignElementDataVector> ) dedv );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
     protected void handleUpdate( Collection<? extends DesignElementDataVector> vectors ) {
 
         if ( vectors == null || vectors.isEmpty() ) {

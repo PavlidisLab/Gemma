@@ -17,7 +17,7 @@ package ubic.gemma.analysis.preprocess;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component; 
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMatrixService {
 
     /**
@@ -112,7 +112,7 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
     @Override
     public DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
-        // WARNING long transaction.
+
         FilterConfig fconfig = new FilterConfig();
         fconfig.setIgnoreMinimumRowsThreshold( true );
         fconfig.setIgnoreMinimumSampleThreshold( true );

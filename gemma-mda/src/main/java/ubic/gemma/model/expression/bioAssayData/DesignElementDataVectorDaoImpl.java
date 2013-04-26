@@ -38,12 +38,9 @@ import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 
 /**
@@ -145,13 +142,19 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+        Map<BioAssayDimension, Collection<DesignElementDataVector>> dims = new HashMap<BioAssayDimension, Collection<DesignElementDataVector>>();
         Collection<CompositeSequence> cs = new HashSet<CompositeSequence>();
         for ( DesignElementDataVector vector : designElementDataVectors ) {
             session.buildLockRequest( LockOptions.NONE ).lock( vector );
             Hibernate.initialize( vector );
             Hibernate.initialize( vector.getQuantitationType() );
-            dims.add( vector.getBioAssayDimension() );
+
+            BioAssayDimension bad = vector.getBioAssayDimension();
+            if ( !dims.containsKey( bad ) ) {
+                dims.put( bad, new HashSet<DesignElementDataVector>() );
+            }
+
+            dims.get( bad ).add( vector );
             cs.add( vector.getDesignElement() );
             ees.add( vector.getExpressionExperiment() );
             session.evict( vector.getQuantitationType() );
@@ -178,35 +181,60 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         timer.reset();
         timer.start();
-        // thaw the bioassaydimensions we saw -- This requires a lot of queries, but there usually aren't very many dims
-        // to do. Usually one or more rarely two.
-        for ( BioAssayDimension bad : dims ) {
-            Hibernate.initialize( bad );
-            for ( BioAssay ba : bad.getBioAssays() ) {
-                Hibernate.initialize( ba );
-                Hibernate.initialize( ba.getSampleUsed() );
 
-                Collection<BioAssay> bioAssaysUsedIn = null;
-                BioMaterial bm = ba.getSampleUsed();
-                EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
-                Hibernate.initialize( bm );
-                bioAssaysUsedIn = bm.getBioAssaysUsedIn();
-                Hibernate.initialize( bioAssaysUsedIn );
-                Hibernate.initialize( bm.getFactorValues() );
-                session.evict( bm );
+        // thaw the bioassaydimensions we saw -- usually one, more rarely two.
+        for ( BioAssayDimension bad : dims.keySet() ) {
 
-                Hibernate.initialize( ba.getArrayDesignUsed() );
-                Hibernate.initialize( ba.getDerivedDataFiles() );
+            BioAssayDimension tbad = ( BioAssayDimension ) this
+                    .getHibernateTemplate()
+                    .findByNamedParam(
+                            "select distinct bad from BioAssayDimensionImpl bad fetch all properties join fetch bad.bioAssays ba join fetch ba.sampleUsed "
+                                    + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues where bad.id= :bad",
+                            "bad", bad.getId() ).get( 0 );
 
-                /*
-                 * We have to do it this way, or we risk having the bioassay in the session already.
-                 */
-                if ( bioAssaysUsedIn != null ) {
-                    for ( BioAssay baui : bioAssaysUsedIn ) {
-                        session.evict( baui );
-                    }
+            assert tbad != null;
+
+            // update the vectors ... do wee need to do this?
+            // Hibernate.initialize( tbad );
+            assert !dims.get( tbad ).isEmpty();
+            // tbad.hashCode();
+            for ( DesignElementDataVector v : designElementDataVectors ) {
+                if ( v.getBioAssayDimension().getId().equals( tbad.getId() ) ) {
+                    v.setBioAssayDimension( tbad );
                 }
             }
+            // for ( DesignElementDataVector v : dims.get( tbad ) ) {
+            // v.setBioAssayDimension( tbad );
+            // // tbad.getBioAssays().iterator().next().getArrayDesignUsed().getId();
+            // }
+
+            // Hibernate.initialize( bad );
+            // Hibernate.initialize( bad.getBioAssays() );
+            //
+            // for ( BioAssay ba : bad.getBioAssays() ) {
+            // EntityUtils.attach( session, ba, BioAssayImpl.class, ba.getId() );
+            // Hibernate.initialize( ba );
+            // Hibernate.initialize( ba.getSampleUsed() );
+            // Hibernate.initialize( ba.getArrayDesignUsed() );
+            //
+            // BioMaterial bm = ba.getSampleUsed();
+            // EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
+            // Hibernate.initialize( bm );
+            // Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
+            // Hibernate.initialize( bioAssaysUsedIn );
+            // Hibernate.initialize( bm.getFactorValues() );
+            // session.evict( bm );
+            //
+            // /*
+            // * We have to do this, or we risk having the bioassay in the session already.
+            // */
+            // if ( bioAssaysUsedIn != null ) {
+            // for ( BioAssay baui : bioAssaysUsedIn ) {
+            // session.evict( baui );
+            // }
+            // }
+            // // session.evict( ba );
+            // }
         }
 
         if ( timer.getTime() > 1000 ) {
@@ -241,7 +269,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 200 ) {
             log.info( "Thaw phase 4 " + cs.size() + " vector-associated probes thawed in " + timer.getTime() + "ms" );
         }
-
     }
 
     @Override

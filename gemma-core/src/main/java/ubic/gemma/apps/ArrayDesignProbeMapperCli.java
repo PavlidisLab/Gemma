@@ -382,8 +382,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .hasArg()
                 .withArgName( "taxon" )
                 .withDescription(
-                        "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all ArrayDesigns from that taxon (overrides -a)" )
-                .create( 't' );
+                        "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all"
+                                + " ArrayDesigns from that taxon (overrides -a)" ).create( 't' );
 
         addOption( taxonOption );
 
