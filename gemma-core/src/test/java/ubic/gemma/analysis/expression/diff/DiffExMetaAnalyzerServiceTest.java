@@ -234,6 +234,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( analysisResultSetIds );
         assertNotNull( metaAnalysis );
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
+        assertEquals( 321, metaAnalysis.getResults().size() );
 
         // for upregulated genes, length(which (p.adjust(apply(tup, 1, function(x) 1 -
         // pchisq(-2*sum(log(x)), 2*length(x)) ), method="BH") < 0.1))
@@ -241,6 +242,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         int numUp = 0;
         int numDown = 0;
         int foundTests = 0;
+        boolean foundcaprin1 = false, foundacly = false, foundacta2 = false, foundaco2 = false, foundthra = false, foundppm1g = false, foundSep21 = false, foundGuk1 = false, foundKxd1 = false;
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
@@ -258,38 +260,48 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             /*
              * apply(tdw, 1, function(x) 1 - pchisq(-2*sum(log(x)), 2*length(x)) )["TCEB2"]
              */
+
             if ( gene.equals( "CAPRIN1" ) ) {
                 foundTests++;
                 assertTrue( r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 0.003375654, r.getMetaPvalue(), 0.00001 );
+                foundcaprin1 = true;
             } else if ( gene.equals( "ABCF1" ) ) {
                 fail( "Should have gotten removed due to conflicting results" );
             } else if ( gene.equals( "ACLY" ) ) {
                 foundTests++;
+                foundacly = true;
                 assertEquals( logComponentResults( r, gene ), 1.505811e-06, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "ACTA2" ) ) {
                 foundTests++;
+                foundacta2 = true;
                 assertEquals( logComponentResults( r, gene ), 0.0002415006, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "ACO2" ) ) {
                 foundTests++;
+                foundaco2 = true;
                 assertEquals( logComponentResults( r, gene ), 0.003461225, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "THRA" ) ) {
                 foundTests++;
+                foundthra = true;
                 assertTrue( !r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 0.008188016, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "PPM1G" ) ) {
                 foundTests++;
+                foundppm1g = true;
                 assertTrue( !r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 0.001992656, r.getMetaPvalue(), 0.00001 );
             } else if ( gene.equals( "SEPW1" ) ) {
                 foundTests++;
+                foundSep21 = true;
                 assertTrue( r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 0.006142644, r.getMetaPvalue(), 0.0001 );
             } else if ( gene.equals( "GUK1" ) ) {
+                foundGuk1 = true;
                 foundTests++;
                 assertEquals( logComponentResults( r, gene ), 2.820089e-06, r.getMetaPvalue(), 1e-8 );
             } else if ( gene.equals( "KXD1" ) ) {
                 foundTests++;
+                foundKxd1 = true;
                 assertTrue( r.getUpperTail() );
                 assertEquals( logComponentResults( r, gene ), 4.027476e-06, r.getMetaPvalue(), 1e-8 );
             }
@@ -302,11 +314,20 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 numDown++;
             }
         }
+        assertTrue( "Failed to find caprin1", foundcaprin1 );
+        assertTrue( "Failed to find acly", foundacly );
+        assertTrue( "Failed to find acta2", foundacta2 );
+        assertTrue( "Failed to find guk1", foundGuk1 );
+        assertTrue( "Failed to find kxd1", foundKxd1 );
+        assertTrue( "Failed to find sep21", foundSep21 );
+        assertTrue( "Failed to find ppm1g", foundppm1g );
+        assertTrue( "Failed to find thra", foundthra );
+        assertTrue( "Failed to find aco2", foundaco2 );
 
-        assertEquals( 9, foundTests );
         assertEquals( 230, numUp ); // R gives 235; minus 5 that we skip due to conflicting results.
         assertEquals( 91, numDown ); // R gives 96, minus 5
-        assertEquals( 321, metaAnalysis.getResults().size() );
+
+        assertEquals( 9, foundTests );
 
         /*
          * Test ancillary methods

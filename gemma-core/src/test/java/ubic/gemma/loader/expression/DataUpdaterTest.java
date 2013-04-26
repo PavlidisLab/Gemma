@@ -168,7 +168,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // GSM475204 GSM475205 GSM475206 GSM475207 GSM475208 GSM475209
         // 3949585 3929008 3712314 3693219 3574068 3579631
 
-        ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( updatedee );
         assertEquals( 199, mat.rows() );
         Double[] column = mat.getColumn( 0 );
         double sum = Descriptive.sum( new DoubleArrayList( ArrayUtils.toPrimitive( column ) ) );
@@ -199,6 +199,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 6, v.getBioAssays().size() );
 
         }
+        assertTrue( !dataVectorService.getProcessedDataVectors( experimentService.load( updatedee.getId() ) ).isEmpty() );
 
     }
 
