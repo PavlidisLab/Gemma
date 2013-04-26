@@ -99,7 +99,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         Collection<GeneProduct> geneProducts = gene.getProducts();
 
         assertEquals( TAXON_NAME, gene.getTaxon().getCommonName() );
-        assertEquals( "ZYX", gene.getName() );
+        assertEquals( "ZYXMMMM", gene.getName() );
         assertEquals( "ZYX", gene.getOfficialSymbol() );
 
         assertEquals( 1, geneProducts.size() );
