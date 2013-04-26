@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.Collection;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +67,20 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         }
     }
 
+    @After
+    public void tearDown() throws Exception {
+        try {
+            Collection<Gene> zyx = geneService.findByOfficialSymbol( "ZYXMMMM" );
+            if ( !zyx.isEmpty() ) geneService.remove( zyx );
+            zyx = geneService.findByOfficialSymbol( "ZXDCMMMM" );
+            if ( !zyx.isEmpty() ) geneService.remove( zyx );
+            zyx = geneService.findByOfficialSymbol( "ZYXIN" );
+            if ( !zyx.isEmpty() ) geneService.remove( zyx );
+        } catch ( Exception e ) {
+            log.warn( e );
+        }
+    }
+
     /**
      * Tests that if the file is not in the correct format of 3 tab delimited fields exception thrown.
      */
@@ -99,8 +114,9 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         Collection<GeneProduct> geneProducts = gene.getProducts();
 
         assertEquals( TAXON_NAME, gene.getTaxon().getCommonName() );
-        assertEquals( "ZYXMMMM", gene.getName() );
-        assertEquals( "ZYX", gene.getOfficialSymbol() );
+        assertEquals( "ZYXMMMM", gene.getName() ); // same as the symbol
+        assertEquals( "ZYXMMMM", gene.getOfficialSymbol() );
+        assertEquals( "zyxin", gene.getOfficialName() );
 
         assertEquals( 1, geneProducts.size() );
         GeneProduct prod = geneProducts.iterator().next();
