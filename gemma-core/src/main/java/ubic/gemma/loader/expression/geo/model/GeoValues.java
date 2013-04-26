@@ -292,6 +292,15 @@ public class GeoValues implements Serializable {
             log.warn( "Column #" + index + " has an additional name: " + columnName + ", it already has names: "
                     + StringUtils.join( qtIndexMapForPlatform.get( index ), " " ) );
 
+            /*
+             * We check here to see if the quantitation type is actually an unwanted one, based on the name.
+             */
+            boolean newNameIsWanted = isWantedQuantitationType( columnName, false );
+
+            if ( !newNameIsWanted ) {
+                log.warn( "Alternate name is an unwanted quantitation type; data may be retaining anyway because of other name" );
+            }
+
             qtIndexMapForPlatform.get( index ).add( columnName ); // add it anyway.
 
         }

@@ -712,6 +712,37 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
+     * bug 3415. The samples do not have the same quantitation types. In some it is "detection pval" and others
+     * "raw_value". We would reject "detection pval" but if the qt already has the name "raw_value" we won't. The way
+     * the current setup works, we sort of throw up our hands and keep the data, even though it is messed up.
+     * <p>
+     * This tests that behaviour. If we start rejecting the data, this test will fail (note that rejecting the data is
+     * not unreasonable).
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testParseGSE44625() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE44625.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoParseResult result = ( GeoParseResult ) parser.getResults().iterator().next();
+
+        GeoSeries series = result.getSeries().values().iterator().next();
+
+        series.getValues();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object convert = this.gc.convert( series );
+        ExpressionExperiment ee = ( ExpressionExperiment ) ( ( Collection<?> ) convert ).iterator().next();
+
+        assertEquals( 2, ee.getQuantitationTypes().size() );
+    }
+
+    /**
      * Ends up with too few vectors, because of a problem with the quantitation type guesser.
      * 
      * @throws Exception
