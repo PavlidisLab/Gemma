@@ -3,8 +3,8 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
-       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
 
 	<!-- Make all "serviceMethod"s transactional. See http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch10s05.html#transaction-declarative-txadvice-settings -->
@@ -130,6 +130,7 @@
 				<value>classpath:ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/MeanVarianceRelation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml</value>
