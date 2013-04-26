@@ -14,10 +14,15 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.util.List;
+import java.util.Vector;
+
+import org.apache.commons.lang.StringUtils;
+
 // simple way to represent a phenotype for the tree, sending the minimal information
 public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> {
 
-    private String _id = "";
+    // private String _id = "";
     private String _parent = null;
     private boolean _is_leaf = false;
     private String value = "";
@@ -26,29 +31,61 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     private long privateGeneCount = 0L;
     private String urlId = "";
     private boolean dbPhenotype = false;
+    private List<String> children = new Vector<String>();
+
+    /**
+     * @return ids of the children.
+     */
+    public List<String> getChildren() {
+        return children;
+    }
+
+    /**
+     * Not used directly in java, allow constructor to manage.
+     * 
+     * @param children
+     */
+    public void setChildren( List<String> children ) {
+        this.children = children;
+    }
 
     /**
      * @param treeCharacteristicValueObject
-     * @param parent
+     * @param parent the unique ID of the parent (get_id())
      */
     public SimpleTreeValueObject( TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
 
         this.urlId = treeCharacteristicValueObject.getUrlId();
-        this._id = treeCharacteristicValueObject.get_id() + parent;
+        // this._id = makeUniqueId( treeCharacteristicValueObject.get_id(), parent );
+        this._is_leaf = treeCharacteristicValueObject.getChildren().isEmpty();
         this._parent = parent;
         this.value = treeCharacteristicValueObject.getValue();
         this.valueUri = treeCharacteristicValueObject.getValueUri();
         this.publicGeneCount = treeCharacteristicValueObject.getPublicGeneCount();
         this.privateGeneCount = treeCharacteristicValueObject.getPrivateGeneCount();
         this.dbPhenotype = treeCharacteristicValueObject.isDbPhenotype();
+
+        for ( TreeCharacteristicValueObject child : treeCharacteristicValueObject.getChildren() ) {
+            children.add( makeUniqueId( child.get_id(), this.get_id() ) );
+        }
+
+    }
+
+    private String makeUniqueId( String u, String p ) {
+        if ( StringUtils.isBlank( p ) ) {
+            return u;
+        }
+        return u + "<" + p;
     }
 
     public String get_id() {
-        return this._id;
+        // return this._id;
+        return this.makeUniqueId( urlId, _parent );
     }
 
     public void set_id( String _id ) {
-        this._id = _id;
+        throw new UnsupportedOperationException( "Don't set this manually" );
+        // this._id = _id;
     }
 
     public String get_parent() {
@@ -155,7 +192,7 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
 
         if ( this._parent != null ) return this._parent.compareToIgnoreCase( o._parent );
 
-        return this._id.compareTo( o._id );
+        return this.makeUniqueId( this.urlId, this._parent ).compareTo( o.get_id() );
     }
 
 }
