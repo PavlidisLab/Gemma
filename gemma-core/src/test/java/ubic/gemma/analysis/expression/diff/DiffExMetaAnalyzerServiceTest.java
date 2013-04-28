@@ -234,7 +234,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         GeneDifferentialExpressionMetaAnalysis metaAnalysis = analyzerService.analyze( analysisResultSetIds );
         assertNotNull( metaAnalysis );
         assertEquals( 3, metaAnalysis.getResultSetsIncluded().size() );
-        assertEquals( 321, metaAnalysis.getResults().size() );
 
         // for upregulated genes, length(which (p.adjust(apply(tup, 1, function(x) 1 -
         // pchisq(-2*sum(log(x)), 2*length(x)) ), method="BH") < 0.1))
@@ -326,6 +325,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
         assertEquals( 230, numUp ); // R gives 235; minus 5 that we skip due to conflicting results.
         assertEquals( 91, numDown ); // R gives 96, minus 5
+
+        assertEquals( 321, metaAnalysis.getResults().size() );
 
         assertEquals( 9, foundTests );
 
