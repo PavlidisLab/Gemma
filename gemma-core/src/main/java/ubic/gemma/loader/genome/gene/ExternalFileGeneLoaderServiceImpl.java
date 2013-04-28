@@ -39,6 +39,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.persistence.Persister;
 
 /**
@@ -95,10 +96,14 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * Creates a gene, where gene name and official gene symbol is set to gene symbol(from file) and official name is
      * set to geneName(from file). The gene description is set to a message indicating that the gene was imported from
      * an external file and the associated uniprot id.
+     * <p>
+     * If the gene already exists, then it is not modified, unless it lacks a gene product. In that case we add one and
+     * return it.
      * 
      * @param fields A string array containing gene symbol, gene name and uniprot id.
      * @param taxon Taxon relating to gene
-     * @return Gene with associated gene product for loading into Gemma.
+     * @return Gene with associated gene product for loading into Gemma. Null if no gene was loaded (exists, or invalid
+     *         fields) or modified.
      */
     private Gene createGene( String[] fields, Taxon taxon ) {
 
@@ -110,21 +115,34 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         if ( fields.length > 2 ) uniProt = fields[2];
         Gene gene = null;
         // need at least the gene symbol and gene name
-        if ( !StringUtils.isBlank( geneSymbol ) && !StringUtils.isBlank( geneName ) ) {
-            if ( log.isDebugEnabled() ) log.debug( "Creating gene " + geneSymbol );
-            gene = geneService.findByOfficialSymbol( geneSymbol, taxon );
-            if ( gene != null ) return null; // no need to create it.
-            gene = Gene.Factory.newInstance();
-            gene.setName( geneSymbol );
-            gene.setOfficialSymbol( geneSymbol );
-            gene.setOfficialName( StringUtils.lowerCase( geneName ) );
-            gene.setDescription( "Imported from external annotation file" );
-            gene.setTaxon( taxon );
-            gene.setProducts( createGeneProducts( gene ) );
-        } else {
-            log.warn( "Line does not contain valid gene information; GeneSymbol is: " + geneSymbol + "GeneName is: "
-                    + geneName + " Uni Prot id is  " + uniProt );
+        if ( StringUtils.isBlank( geneSymbol ) || StringUtils.isBlank( geneName ) ) {
+            log.warn( "Line did not contain valid gene information; GeneSymbol=" + geneSymbol + "GeneName=" + geneName
+                    + " UniProt=" + uniProt );
+            return null;
         }
+
+        if ( log.isDebugEnabled() ) log.debug( "Creating gene " + geneSymbol );
+        gene = geneService.findByOfficialSymbol( geneSymbol, taxon );
+        if ( gene != null ) {
+            Collection<GeneProductValueObject> existingProducts = geneService.getProducts( gene.getId() );
+            if ( existingProducts.isEmpty() ) {
+                log.warn( "Gene " + gene + " exists, but has no products; adding one" );
+                gene = geneService.thaw( gene );
+                gene.getProducts().addAll( createGeneProducts( gene ) );
+                return gene; // the persisterhelper should add the product.
+            } else {
+                log.info( "Gene " + gene + " already exists and is valid, will not update" );
+                return null; // no need to create it, though we ignore the name.
+            }
+        }
+
+        gene = Gene.Factory.newInstance();
+        gene.setName( geneSymbol );
+        gene.setOfficialSymbol( geneSymbol );
+        gene.setOfficialName( StringUtils.lowerCase( geneName ) );
+        gene.setDescription( "Imported from external annotation file" );
+        gene.setTaxon( taxon );
+        gene.setProducts( createGeneProducts( gene ) );
         return gene;
     }
 
@@ -159,9 +177,10 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         while ( ( line = bufferedReaderGene.readLine() ) != null ) {
             String[] lineContents = readLine( line );
             if ( lineContents != null ) {
+
                 Gene gene = createGene( lineContents, taxon );
                 if ( gene != null ) {
-                    persisterHelper.persistOrUpdate( gene );
+                    gene = ( Gene ) persisterHelper.persistOrUpdate( gene );
                     loadedGeneCount++;
                 } else {
                     linesSkipped++;
@@ -169,7 +188,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
             }
         }
         updateTaxonWithGenesLoaded( taxon );
-        log.info( "Genes loaded: " + loadedGeneCount + " ,Lines skipped: " + linesSkipped );
+        log.info( "Genes loaded: " + loadedGeneCount + ", lines skipped: " + linesSkipped );
         return loadedGeneCount;
     }
 

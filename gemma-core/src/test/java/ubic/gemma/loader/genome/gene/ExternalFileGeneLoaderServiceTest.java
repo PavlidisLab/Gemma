@@ -30,6 +30,7 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -50,6 +51,9 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
     private ExternalFileGeneLoaderService externalFileGeneLoaderService = null;
 
     private String geneFile = null;
+
+    @Autowired
+    private GeneProductService geneProductService;
 
     @Before
     public void setup() throws Exception {
@@ -121,6 +125,25 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         assertEquals( 1, geneProducts.size() );
         GeneProduct prod = geneProducts.iterator().next();
         assertEquals( "Gene product placeholder", prod.getDescription() );
+
+        // should not involve any updates if we try loading it again.
+        numbersGeneLoaded = externalFileGeneLoaderService.load( geneFile, TAXON_NAME );
+        assertEquals( 0, numbersGeneLoaded );
+
+        // show that we add a product if the gene exists, but is missing one.
+        GeneProduct gp = gene.getProducts().iterator().next();
+        gene.getProducts().clear();
+        geneProductService.delete( gp );
+        geneService.update( gene );
+        assertEquals( 0, geneService.getProducts( gene.getId() ).size() );
+        numbersGeneLoaded = externalFileGeneLoaderService.load( geneFile, TAXON_NAME );
+        assertEquals( 1, numbersGeneLoaded );
+
+        assertEquals( 1, geneService.getProducts( gene.getId() ).size() );
+
+        // should not involve any updates if we try loading it again as it is now complete.
+        numbersGeneLoaded = externalFileGeneLoaderService.load( geneFile, TAXON_NAME );
+        assertEquals( 0, numbersGeneLoaded );
 
     }
 
