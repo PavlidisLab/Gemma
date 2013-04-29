@@ -21,7 +21,6 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,20 +70,6 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         }
     }
 
-    @After
-    public void tearDown() throws Exception {
-        try {
-            Collection<Gene> zyx = geneService.findByOfficialSymbol( "ZYXMMMM" );
-            if ( !zyx.isEmpty() ) geneService.remove( zyx );
-            zyx = geneService.findByOfficialSymbol( "ZXDCMMMM" );
-            if ( !zyx.isEmpty() ) geneService.remove( zyx );
-            zyx = geneService.findByOfficialSymbol( "ZYXIN" );
-            if ( !zyx.isEmpty() ) geneService.remove( zyx );
-        } catch ( Exception e ) {
-            log.warn( e );
-        }
-    }
-
     /**
      * Tests that if the file is not in the correct format of 3 tab delimited fields exception thrown.
      */
@@ -110,7 +95,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
 
         int numbersGeneLoaded = externalFileGeneLoaderService.load( geneFile, TAXON_NAME );
         assertEquals( 2, numbersGeneLoaded );
-        Collection<Gene> geneCollection = geneService.findByOfficialName( "ZYXIN" );
+        Collection<Gene> geneCollection = geneService.findByOfficialSymbol( "ZYXMMMM" );
         Gene gene = geneCollection.iterator().next();
 
         gene = geneService.thaw( gene );

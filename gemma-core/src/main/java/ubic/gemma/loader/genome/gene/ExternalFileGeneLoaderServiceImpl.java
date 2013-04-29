@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -38,6 +37,7 @@ import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.persistence.Persister;
@@ -67,6 +67,9 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
     @Autowired
     private TaxonService taxonService;
+
+    @Autowired
+    private GeneProductService geneProductService;
 
     @Override
     public int load( InputStream geneInputStream, String taxonName ) throws Exception {
@@ -123,15 +126,19 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
         if ( log.isDebugEnabled() ) log.debug( "Creating gene " + geneSymbol );
         gene = geneService.findByOfficialSymbol( geneSymbol, taxon );
+
         if ( gene != null ) {
             Collection<GeneProductValueObject> existingProducts = geneService.getProducts( gene.getId() );
             if ( existingProducts.isEmpty() ) {
                 log.warn( "Gene " + gene + " exists, but has no products; adding one" );
                 gene = geneService.thaw( gene );
-                gene.getProducts().addAll( createGeneProducts( gene ) );
-                return gene; // the persisterhelper should add the product.
+                GeneProduct newgp = createGeneProduct( gene );
+                newgp = geneProductService.create( newgp );
+                gene.getProducts().add( newgp );
+                geneService.update( gene );
+                return gene;
             } else {
-                log.info( "Gene " + gene + " already exists and is valid, will not update" );
+                log.info( gene + " already exists and is valid, will not update" );
                 return null; // no need to create it, though we ignore the name.
             }
         }
@@ -142,7 +149,8 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         gene.setOfficialName( StringUtils.lowerCase( geneName ) );
         gene.setDescription( "Imported from external annotation file" );
         gene.setTaxon( taxon );
-        gene.setProducts( createGeneProducts( gene ) );
+        gene.getProducts().add( createGeneProduct( gene ) );
+        gene = ( Gene ) persisterHelper.persistOrUpdate( gene );
         return gene;
     }
 
@@ -153,15 +161,13 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * @param gene The gene associated to this gene product
      * @return Collection of gene products in this case just 1.
      */
-    private Collection<GeneProduct> createGeneProducts( Gene gene ) {
-        Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
+    private GeneProduct createGeneProduct( Gene gene ) {
         GeneProduct geneProduct = GeneProduct.Factory.newInstance();
         geneProduct.setType( GeneProductType.RNA );
         geneProduct.setGene( gene );
         geneProduct.setName( gene.getName() );
         geneProduct.setDescription( "Gene product placeholder" );
-        geneProducts.add( geneProduct );
-        return geneProducts;
+        return geneProduct;
     }
 
     /**
@@ -180,7 +186,6 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
                 Gene gene = createGene( lineContents, taxon );
                 if ( gene != null ) {
-                    gene = ( Gene ) persisterHelper.persistOrUpdate( gene );
                     loadedGeneCount++;
                 } else {
                     linesSkipped++;
