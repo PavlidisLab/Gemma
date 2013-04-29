@@ -6,7 +6,7 @@
        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <!-- ActiveMQ broker, embedded into unit tests. This shouldn't be picked up by Worker or Application context -->
-    <amq:broker useJmx="true" persistent="false">
+    <amq:broker useJmx="false" persistent="false">
         <amq:transportConnectors>
             <amq:transportConnector uri="tcp://${gemma.test.jms.brokerURL}" />
         </amq:transportConnectors>
@@ -36,7 +36,7 @@
     <amq:queue id="taskControlQueue" physicalName="${gemma.remoteTasks.controlQueue}" />
 
     <!-- JMS ConnectionFactory to use, configuring the embedded broker using XML -->
-    <amq:connectionFactory id="jmsFactory" brokerURL="vm://${gemma.jms.brokerURL}"/>
+    <amq:connectionFactory id="jmsFactory" brokerURL="vm://${gemma.test.jms.brokerURL}"/>
 
     <!-- Spring JMS Template -->
     <bean id="amqJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
