@@ -345,7 +345,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @throws Exception
      */
     @RequestMapping("/expressionExperiment/visualizePvalueDist.html")
-    public ModelAndView visualizePvalueDist( Long id, Long analysisId, Long rsId, String factorName, Integer size,
+    public ModelAndView visualizePvalueDist( Long id, Long analysisId, Long rsid, String factorName, Integer size,
             OutputStream os ) throws Exception {
         ExpressionExperiment ee = this.expressionExperimentService.load( id );
         if ( ee == null ) {
@@ -354,11 +354,11 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         if ( size == null ) {
-            if ( !this.writePValueHistImage( os, ee, analysisId, rsId, factorName ) ) {
+            if ( !this.writePValueHistImage( os, ee, analysisId, rsid, factorName ) ) {
                 writePlaceholderImage( os );
             }
         } else {
-            if ( !this.writePValueHistThumbnailImage( os, ee, analysisId, rsId, factorName, size ) ) {
+            if ( !this.writePValueHistThumbnailImage( os, ee, analysisId, rsid, factorName, size ) ) {
                 writePlaceholderThumbnailImage( os, size );
             }
         }
@@ -528,7 +528,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, Long rsId, String factorName )
             throws FileNotFoundException, IOException {
         if ( ee == null || analysisId == null || rsId == null ) {
-            log.warn( "Got invalid values" );
+            log.warn( "Got invalid values: " + ee + " " + analysisId + " " + rsId + " " + factorName );
             return null;
         }
 
@@ -548,67 +548,68 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         /*
-         * Rest of this is for backwards compatibility.
+         * Rest of this is for backwards compatibility - read from the file.
          */
         File file = this.locatePvalueDistFile( ee, analysisId );
 
         // Current format is to have just one file for each analysis.
-        if ( file != null ) {
-            BufferedReader in = new BufferedReader( new FileReader( file ) );
-
-            int factorNameIndex = -1;
-
-            boolean readHeader = false;
-            PvalueDistribution pvalueDist = PvalueDistribution.Factory.newInstance();
-            DoubleArrayList counts = new DoubleArrayList();
-            while ( in.ready() ) {
-                String line = in.readLine().trim();
-                if ( line.startsWith( "#" ) ) continue;
-                String[] split = StringUtils.split( line, "\t" );
-                if ( split.length < 2 ) continue;
-
-                if ( !readHeader ) {
-                    for ( int i = 1; i < split.length; i++ ) {
-                        String currFactorName = split[i];
-
-                        // Note that currFactorName may have suffix such as __3
-                        // (DifferentialExpressionAnalyzerService.FACTOR_NAME_MANGLING_DELIMITER followed by the ID).
-                        if ( currFactorName.length() >= factorName.length()
-                                && factorName.equals( currFactorName.substring( 0, factorName.length() ) ) ) {
-                            factorNameIndex = i;
-                        }
-                    }
-                    readHeader = true;
-                    if ( factorNameIndex < 0 ) {
-                        // If factorName cannot be found, don't need to continue reading file.
-                        break;
-                    }
-                    continue;
-                }
-
-                try {
-                    double x = Double.parseDouble( split[0] );
-                    double y = Double.parseDouble( split[factorNameIndex] );
-                    if ( xySeries == null ) {
-                        xySeries = new XYSeries( factorName, true, true );
-                    }
-                    xySeries.add( x, y );
-
-                    /*
-                     * Update the result set.
-                     */
-                    counts.add( y );
-
-                } catch ( NumberFormatException e ) {
-                    // line wasn't useable.. no big deal. Heading is included.
-                }
-            }
-
-            if ( counts.size() > 0 ) {
-                pvalueDistFileToPersistent( file, rsId, pvalueDist, counts );
-            }
-
+        if ( file == null ) {
+            return null;
         }
+
+        BufferedReader in = new BufferedReader( new FileReader( file ) );
+        int factorNameIndex = -1;
+
+        boolean readHeader = false;
+        PvalueDistribution pvalueDist = PvalueDistribution.Factory.newInstance();
+        DoubleArrayList counts = new DoubleArrayList();
+        while ( in.ready() ) {
+            String line = in.readLine().trim();
+            if ( line.startsWith( "#" ) ) continue;
+            String[] split = StringUtils.split( line, "\t" );
+            if ( split.length < 2 ) continue;
+
+            if ( !readHeader ) {
+                for ( int i = 1; i < split.length; i++ ) {
+                    String currFactorName = split[i];
+
+                    // Note that currFactorName may have suffix such as __3
+                    // (DifferentialExpressionAnalyzerService.FACTOR_NAME_MANGLING_DELIMITER followed by the ID).
+                    if ( currFactorName.length() >= factorName.length()
+                            && factorName.equals( currFactorName.substring( 0, factorName.length() ) ) ) {
+                        factorNameIndex = i;
+                    }
+                }
+                readHeader = true;
+                if ( factorNameIndex < 0 ) {
+                    // If factorName cannot be found, don't need to continue reading file.
+                    break;
+                }
+                continue;
+            }
+
+            try {
+                double x = Double.parseDouble( split[0] );
+                double y = Double.parseDouble( split[factorNameIndex] );
+                if ( xySeries == null ) {
+                    xySeries = new XYSeries( factorName, true, true );
+                }
+                xySeries.add( x, y );
+
+                /*
+                 * Update the result set.
+                 */
+                counts.add( y );
+
+            } catch ( NumberFormatException e ) {
+                // line wasn't useable.. no big deal. Heading is included.
+            }
+        }
+
+        if ( counts.size() > 0 ) {
+            pvalueDistFileToPersistent( file, rsId, pvalueDist, counts );
+        }
+
         return xySeries;
     }
 
