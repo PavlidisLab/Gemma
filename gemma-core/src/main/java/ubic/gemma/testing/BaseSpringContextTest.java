@@ -79,7 +79,7 @@ import java.util.List;
         "classpath*:ubic/gemma/applicationContext-search.xml",
         "classpath*:ubic/gemma/applicationContext-hibernate.xml",
         "classpath*:ubic/gemma/applicationContext-component-scan.xml",
-        "classpath*:ubic/gemma/applicationContext-jms.xml",
+        "classpath*:ubic/gemma/testContext-jms.xml",
         "classpath*:ubic/gemma/applicationContext-serviceBeans.xml",
         "classpath*:ubic/gemma/applicationContext-schedule.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {

@@ -5,10 +5,10 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-    <!-- ActiveMQ broker, embedded into Gemma webapp. This shouldn't be picked up by Worker app context -->
+    <!-- ActiveMQ broker, embedded into unit tests. This shouldn't be picked up by Worker or Application context -->
     <amq:broker useJmx="true" persistent="false">
         <amq:transportConnectors>
-            <amq:transportConnector uri="tcp://${gemma.jms.brokerURL}" />
+            <amq:transportConnector uri="tcp://${gemma.test.jms.brokerURL}" />
         </amq:transportConnectors>
         <amq:destinations>
             <amq:queue physicalName="${gemma.remoteTasks.taskSubmissionQueue}" />
