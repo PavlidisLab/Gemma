@@ -166,7 +166,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = vectorMergingService.mergeVectors( ee );
-        ee = vectorMergingService.postProcess( ee );
         ee = eeService.thaw( ee );
 
         // check we got the right processed data

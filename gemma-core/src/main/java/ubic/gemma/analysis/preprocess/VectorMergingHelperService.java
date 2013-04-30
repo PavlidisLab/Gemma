@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2012 University of British Columbia
+ * Copyright (c) 2013 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -14,17 +14,23 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.util.Collection;
+
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * @author paul
+ * TODO Document Me
+ * 
+ * @author Paul
  * @version $Id$
  */
-public interface VectorMergingService {
+public interface VectorMergingHelperService {
 
-    /**
-     * @param expExp
-     */
-    public abstract ExpressionExperiment mergeVectors( ExpressionExperiment expExp );
+    public void persist( ExpressionExperiment expExp, QuantitationType type,
+            Collection<DesignElementDataVector> newVectors );
+
+    public ExpressionExperiment postProcess( ExpressionExperiment ee );
 
 }

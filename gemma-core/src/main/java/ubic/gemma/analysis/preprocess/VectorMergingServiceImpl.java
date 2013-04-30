@@ -31,7 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.expression.AnalysisUtilService;
@@ -43,7 +43,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVe
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -78,7 +77,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  * @see ExpressionDataMatrixBuilder
  */
-@Service
+@Component
 public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipulatingService implements
         VectorMergingService {
 
@@ -90,6 +89,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     private AuditTrailService auditTrailService;
 
     @Autowired
+    private VectorMergingHelperService vectorMergingHelperService;
+
+    @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
 
     @Autowired
@@ -97,12 +99,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    @Autowired
-    private TwoChannelMissingValues twoChannelMissingValueService;
 
     @Autowired
     private AnalysisUtilService analysisUtilService;
@@ -122,13 +118,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             throw new IllegalArgumentException( "Cannot cope with more than one platform" );
         }
 
-        this.processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
-
         expExp = expressionExperimentService.thawLite( expExp );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
-
         log.info( qts.size() + " quantitation types for potential merge" );
-
         /*
          * Load all the bioassay dimensions, which will be merged.
          */
@@ -223,14 +215,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
             }
 
-            // print( newVectors ); // debugging
-
-            if ( newVectors.size() > 0 ) {
-                log.info( "Creating " + newVectors.size() + " new vectors for " + type );
-                designElementDataVectorService.create( newVectors );
-            } else {
-                throw new IllegalStateException( "Unexpectedly, no new vectors for " + type );
-            }
+            // TRANSACTION
+            vectorMergingHelperService.persist( expExp, type, newVectors );
 
             if ( numAllMissing > 0 ) {
                 log.info( numAllMissing + " vectors had all missing values and were junked for " + type );
@@ -249,13 +235,16 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             throw new IllegalStateException( "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
 
+        // Several transactions
         cleanUp( expExp, allOldBioAssayDims, newBioAd );
 
+        // transaction
         audit( expExp,
                 "Vector merging peformed, merged " + allOldBioAssayDims + " old bioassay dimensions for " + qts.size()
                         + " quantitation types." );
 
-        return expExp;
+        // transaction
+        return vectorMergingHelperService.postProcess( expExp );
     }
 
     /**
@@ -273,7 +262,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
      */
     private void cleanUp( ExpressionExperiment expExp, Collection<BioAssayDimension> allOldBioAssayDims,
             BioAssayDimension newBioAd ) {
-        // Clean up old crap.
+
         analysisUtilService.deleteOldAnalyses( expExp );
 
         /*
@@ -400,15 +389,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             if ( deVMap.get( designElement ).size() > 1 ) {
                 atLeastOneMatch = true;
             }
-            if ( designElement.getBiologicalCharacteristic() != null
-                    && designElement.getBiologicalCharacteristic().getName().equals( "N57553" ) ) {
-                log.info( designElement.getBiologicalCharacteristic() + " " + designElement + " " + vector );
-            }
         }
 
         if ( !atLeastOneMatch ) {
-            // throw new IllegalStateException(
-            // "Vector merging doesn't make much sense: there is already only one vector per design element." );
             return null;
         }
         return deVMap;
@@ -531,29 +514,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     }
 
     /**
-     * Do missing value and processed vector creation steps.
-     * 
-     * @param ees
-     */
-    @Override
-    public ExpressionExperiment postProcess( ExpressionExperiment ee ) {
-
-        log.info( "Postprocessing ..." );
-
-        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            log.warn( "Skipping postprocessing because experiment uses "
-                    + "multiple platform types. Please check valid entry and run postprocessing separately." );
-        }
-
-        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-        processForMissingValues( ee, arrayDesignUsed );
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-        return ee;
-
-    }
-
-    /**
      * Just for debugging.
      * 
      * @param newVectors
@@ -591,25 +551,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         }
 
         log.info( "\n" + buf );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
-
-        boolean wasProcessed = false;
-
-        TechnologyType tt = design.getTechnologyType();
-        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            ee = expressionExperimentService.thawLite( ee );
-            twoChannelMissingValueService.computeMissingValues( ee );
-            wasProcessed = true;
-        }
-
-        return wasProcessed;
     }
 
     /**

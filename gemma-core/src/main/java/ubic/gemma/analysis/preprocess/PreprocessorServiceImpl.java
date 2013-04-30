@@ -101,8 +101,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     ExpressionExperimentBatchCorrectionService batchCorrectionService;
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.PreprocessorService#createProcessedVectors(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.PreprocessorService#createProcessedVectors(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment)
      */
     // private void process( ExpressionExperiment ee ) {
     //
@@ -129,33 +133,36 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
     }
 
-    /**
-     * @param ee
-     * @return
-     */
-    private boolean processForMissingValues( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            log.warn( "Skipping postprocessing because experiment uses "
-                    + "multiple platform types. Please check valid entry and run postprocessing separately." );
-        }
+    // /**
+    // * @param ee
+    // * @return
+    // */
+    // private boolean processForMissingValues( ExpressionExperiment ee ) {
+    // Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+    // if ( arrayDesignsUsed.size() > 1 ) {
+    // log.warn( "Skipping postprocessing because experiment uses "
+    // + "multiple platform types. Please check valid entry and run postprocessing separately." );
+    // }
+    //
+    // ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+    // boolean wasProcessed = false;
+    //
+    // TechnologyType tt = arrayDesignUsed.getTechnologyType();
+    // if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+    // log.info( ee + " uses a two-color array design, processing for missing values ..." );
+    // ee = expressionExperimentService.thawLite( ee );
+    // twoChannelMissingValueService.computeMissingValues( ee );
+    // wasProcessed = true;
+    // }
+    //
+    // return wasProcessed;
+    // }
 
-        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-        boolean wasProcessed = false;
-
-        TechnologyType tt = arrayDesignUsed.getTechnologyType();
-        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            ee = expressionExperimentService.thawLite( ee );
-            twoChannelMissingValueService.computeMissingValues( ee );
-            wasProcessed = true;
-        }
-
-        return wasProcessed;
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.PreprocessorService#process(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.preprocess.PreprocessorService#process(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment)
      */
     @Override
     public void process( ExpressionExperiment ee ) {

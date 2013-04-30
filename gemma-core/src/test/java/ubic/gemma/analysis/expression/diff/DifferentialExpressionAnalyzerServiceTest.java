@@ -60,10 +60,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest {
 
-    ExpressionExperiment ee = null;
+    private ExpressionExperiment ee = null;
 
     @Autowired
-    protected GeoService geoService;
+    private GeoService geoService;
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
@@ -155,6 +155,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         File outputLocation = outputLocations.iterator().next();
 
+        /*
+         * Problem: this file could contain gene annotations. But might not.
+         */
         DoubleMatrixReader r = new DoubleMatrixReader();
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 

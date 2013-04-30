@@ -61,8 +61,10 @@ public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissin
     public Collection<RawExpressionDataVector> persist( ExpressionExperiment source,
             Collection<RawExpressionDataVector> results ) {
 
+        source = expressionExperimentService.load( source.getId() );
         log.info( "Persisting " + results.size() + " vectors ... " );
         results = ( Collection<RawExpressionDataVector> ) designElementDataVectorService.create( results );
+        source.getRawExpressionDataVectors().addAll( results );
         expressionExperimentService.update( source ); // this is needed to get the QT filled in properly.
         auditTrailService.addUpdateEvent( source, MissingValueAnalysisEvent.Factory.newInstance(),
                 "Computed missing value data" );
