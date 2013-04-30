@@ -251,7 +251,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
     public Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
 
         try {
-            Criteria queryObject = super.getSession().createCriteria( Gene2GeneProteinAssociation.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Gene2GeneProteinAssociation.class );
             // have to have gene 1 and gene 2 there
             BusinessKey.checkKey( gene2GeneProteinAssociation );
 
@@ -290,7 +290,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
     @Override
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene ) {
         String queryStr = "from Gene2GeneProteinAssociationImpl where :gene = firstGene.id or :gene = secondGene.id";
-        Query queryObject = super.getSession().createQuery( queryStr ).setLong( "gene", gene.getId() );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryStr ).setLong( "gene", gene.getId() );
         return queryObject.list();
     }
 
@@ -305,7 +305,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         if ( gene2GeneProteinAssociation == null ) return;
         if ( gene2GeneProteinAssociation.getId() == null ) return;
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         EntityUtils.attach( session, gene2GeneProteinAssociation, Gene2GeneProteinAssociationImpl.class,
                 gene2GeneProteinAssociation.getId() );

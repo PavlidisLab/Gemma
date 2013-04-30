@@ -67,7 +67,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
     @Override
     public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
         for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
@@ -115,7 +115,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         StopWatch timer = new StopWatch();
         timer.start();
 
-        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSession().load(
+        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory().getCurrentSession().load(
                 DifferentialExpressionAnalysisImpl.class, differentialExpressionAnalysis.getId() );
         // Hibernate.initialize( differentialExpressionAnalysis );
         // Hibernate.initialize( differentialExpressionAnalysis.getResultSets() );

@@ -62,7 +62,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
         log.debug( "Start find" );
-        Criteria queryObject = super.getSession().createCriteria( BioMaterial.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );
 
@@ -244,7 +244,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from BioMaterialImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -262,7 +262,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         Collection<BioMaterial> bs = null;
         final String queryString = "select distinct b from BioMaterialImpl b where b.id in (:ids)";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
             bs = queryObject.list();
 

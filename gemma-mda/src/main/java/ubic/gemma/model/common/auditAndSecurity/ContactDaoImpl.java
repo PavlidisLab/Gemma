@@ -51,7 +51,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
     public Contact find( Contact contact ) {
 
         BusinessKey.checkKey( contact );
-        Criteria queryObject = super.getSession().createCriteria( Contact.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Contact.class );
 
         BusinessKey.addRestrictions( queryObject, contact );
 

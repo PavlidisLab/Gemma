@@ -66,7 +66,8 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         try {
 
             BusinessKey.checkValidKey( gene2GOAssociation );
-            Criteria queryObject = super.getSession().createCriteria( Gene2GOAssociation.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession()
+                    .createCriteria( Gene2GOAssociation.class );
             BusinessKey.addRestrictions( queryObject, gene2GOAssociation );
 
             java.util.List<?> results = queryObject.list();
@@ -207,7 +208,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         Collection<Gene> results;
 
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
             queryObject.setParameter( "taxon", taxon );
 
@@ -230,7 +231,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         Collection<Gene> results;
 
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
 
             results = queryObject.list();
@@ -272,7 +273,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         // this.getHibernateTemplate().bulkUpdate( queryString );
 
         int total = 0;
-        Session sess = getSession();
+        Session sess = getSessionFactory().getCurrentSession();
 
         // this should do the deletion, right? -- Confirmed. (PP)
         while ( true ) {

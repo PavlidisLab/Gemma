@@ -57,14 +57,15 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
     public void update( Auditable a, AuditEventType auditEventType ) {
 
         // note that according to the docs, HibernateProxyHelper is being "phased out".
-        a = ( Auditable ) this.getSession().get( HibernateProxyHelper.getClassWithoutInitializingProxy( a ), a.getId() );
+        a = ( Auditable ) this.getSessionFactory().getCurrentSession()
+                .get( HibernateProxyHelper.getClassWithoutInitializingProxy( a ), a.getId() );
 
         Date now = new Date();
         if ( a.getStatus() == null ) {
             a.setStatus( create() );
         } else {
             Hibernate.initialize( a.getStatus() );
-            this.getSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() );
+            this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() );
             a.getStatus().setLastUpdateDate( now );
             this.update( a.getStatus() );
         }

@@ -84,7 +84,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             throw new IllegalArgumentException( "analysis cannot be null" );
         }
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession(); // hopefully okay.
         session.flush();
         session.clear();
 
@@ -535,7 +535,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
+        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSessionFactory()
+                .getCurrentSession() );
         Collection<BioAssaySet> result = new HashSet<BioAssaySet>();
         if ( probes.size() == 0 ) {
             return result;
@@ -612,7 +613,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     private void doThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
@@ -641,7 +642,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
         if ( probes.isEmpty() ) return;
 
-        SQLQuery nativeQ = this.getSession().createSQLQuery( nativeQuery );
+        SQLQuery nativeQ = this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQuery );
         nativeQ.setParameterList( "probes", EntityUtils.getIds( probes ) );
         nativeQ.setParameter( "taxon", taxon );
         List<?> list = nativeQ.list();

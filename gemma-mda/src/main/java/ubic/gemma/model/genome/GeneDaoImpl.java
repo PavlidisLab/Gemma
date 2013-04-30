@@ -101,7 +101,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public Gene find( Gene gene ) {
 
-        Criteria queryObject = super.getSession().createCriteria( Gene.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Gene.class );
 
         BusinessKey.checkKey( gene );
 
@@ -211,7 +211,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public Collection<Gene> findByOfficialNameInexact( String officialName ) {
         final String query = "from GeneImpl g where g.officialName like :officialName order by g.officialName";
-        org.hibernate.Query queryObject = this.getSession().createQuery( query );
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( query );
         queryObject.setParameter( "officialName", officialName );
         queryObject.setMaxResults( MAX_RESULTS );
         return queryObject.list();
@@ -223,7 +223,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
         final String query = "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
-        org.hibernate.Query queryObject = this.getSession().createQuery( query );
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( query );
         queryObject.setParameter( "officialSymbol", officialSymbol );
         queryObject.setMaxResults( MAX_RESULTS );
         return queryObject.list();
@@ -420,7 +420,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch( "getCoexpressionNodeDegree" );
 
         Map<Long, Gene> idMap = EntityUtils.getIdMap( genes );
-        Map<Long, Collection<Long>> cs2GeneMap = CommonQueries.getCs2GeneIdMap( idMap.keySet(), this.getSession() );
+        Map<Long, Collection<Long>> cs2GeneMap = CommonQueries.getCs2GeneIdMap( idMap.keySet(), this
+                .getSessionFactory().getCurrentSession() );
 
         /*
          * When we aggregate, it's only over data sets that had the gene tested (inner join)
@@ -497,7 +498,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         /*
          * Typically this is being run for all data sets for a taxon, so this unconstrained query is okay.
          */
-        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
+        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSessionFactory()
+                .getCurrentSession() );
 
         if ( ees.isEmpty() ) throw new IllegalArgumentException( "You must provide at least one experiment" );
 
@@ -768,7 +770,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String queryString = getNativeBatchQueryString( p2pClassName, "firstVector", "secondVector", eeIds,
                 interGeneOnly );
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.Query queryObject = setCoexpQueryParameters( session, genes, queryString );
 
         StopWatch overallWatch = new StopWatch();
@@ -921,7 +923,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "arrayDesign", arrayDesign );
             queryObject.setParameter( "gene", gene );
             compSeq = queryObject.list();
@@ -1052,8 +1054,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                                 + " left join fetch g.auditTrail at left join fetch at.events "
                                 + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
                                 + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                                + " left join fetch g.taxon t left join fetch t.externalDatabase left join fetch g.multifunctionality " + " where g.id=:gid",
-                        "gid", gene.getId() );
+                                + " left join fetch g.taxon t left join fetch t.externalDatabase left join fetch g.multifunctionality "
+                                + " where g.id=:gid", "gid", gene.getId() );
 
         return ( Gene ) res.iterator().next();
     }
@@ -1207,7 +1209,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         int CHUNK_SIZE = 1000;
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         for ( Collection<Long> chunk : new BatchIterator<Long>( css, CHUNK_SIZE ) ) {
             csId2geneIds.putAll( processCS2GeneChunk( chunk, session ) );

@@ -172,7 +172,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          */
         boolean isTwoChannel = false;
         Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment,
-                this.getSession() );
+                this.getSessionFactory().getCurrentSession() );
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             TechnologyType technologyType = ad.getTechnologyType();
 
@@ -194,7 +194,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
                 + "and dev.quantitationType = :quantitationType ";
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameter( "quantitationType", quantitationType );
         queryObject.setParameter( "adid", arrayDesign.getId() );
 
@@ -270,7 +270,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return unpack( pedvs ).values();
         }
 
-        Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneMapForProbes( probes, this.getSession() );
+        Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneMapForProbes( probes, this.getSessionFactory()
+                .getCurrentSession() );
 
         Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
 
@@ -319,8 +320,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         if ( probes.isEmpty() ) return results;
 
-        Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneMapForProbes( EntityUtils.getIds( probes ),
-                this.getSession() );
+        Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneMapForProbes( EntityUtils.getIds( probes ), this
+                .getSessionFactory().getCurrentSession() );
 
         Map<Long, Collection<Long>> noGeneProbes = new HashMap<Long, Collection<Long>>();
 
@@ -429,8 +430,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return result;
         }
 
-        Query q = this.getSession().createQuery(
-                " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment.id = :ee" );
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createQuery( " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment.id = :ee" );
         q.setReadOnly( true );
         q.setFlushMode( FlushMode.MANUAL );
         q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
@@ -454,7 +455,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSessionFactory()
+                .getCurrentSession() );
         if ( cs2gene.keySet().size() == 0 ) {
             log.warn( "No composite sequences found for genes" );
             return new HashMap<ExpressionExperiment, Map<Gene, Collection<Double>>>();
@@ -512,7 +514,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method ) {
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSessionFactory()
+                .getCurrentSession() );
         if ( cs2gene.keySet().size() == 0 ) {
             log.warn( "No composite sequences found for genes" );
             return new HashMap<Gene, Collection<Double>>();
@@ -591,7 +594,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSessionFactory()
+                .getCurrentSession() );
         if ( cs2gene.keySet().size() == 0 ) {
             log.warn( "No composite sequences found for genes" );
             return new HashMap<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>>();
@@ -734,7 +738,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     protected Integer handleCountAll() {
         final String query = "select count(*) from ProcessedExpressionDataVectorImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -1004,9 +1008,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         if ( needToSearch.size() != 0 ) {
 
             Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed(
-                    EntityUtils.getIds( getExperiments( ees ) ), this.getSession() ).keySet();
+                    EntityUtils.getIds( getExperiments( ees ) ), this.getSessionFactory().getCurrentSession() ).keySet();
             Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneIdMap( genesToSearch,
-                    EntityUtils.getIds( arrays ), this.getSession() );
+                    EntityUtils.getIds( arrays ), this.getSessionFactory().getCurrentSession() );
 
             if ( cs2gene.size() == 0 ) {
                 if ( results.isEmpty() ) {
@@ -1021,7 +1025,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
              * Fill in the map, because we want to track information on the specificity of the probes used in the data
              * vectors.
              */
-            cs2gene = CommonQueries.getCs2GeneMapForProbes( cs2gene.keySet(), this.getSession() );
+            cs2gene = CommonQueries.getCs2GeneMapForProbes( cs2gene.keySet(), this.getSessionFactory().getCurrentSession() );
 
             Map<ProcessedExpressionDataVector, Collection<Long>> processedDataVectors = getProcessedVectors(
                     EntityUtils.getIds( needToSearch ), cs2gene );

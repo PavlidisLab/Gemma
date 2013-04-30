@@ -59,7 +59,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = super.getSession().createCriteria( BlatAssociation.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
 
@@ -85,7 +85,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
             BusinessKey.checkValidKey( geneProduct );
 
-            Criteria queryObject = super.getSession().createCriteria( BlatAssociation.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
 
             if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {

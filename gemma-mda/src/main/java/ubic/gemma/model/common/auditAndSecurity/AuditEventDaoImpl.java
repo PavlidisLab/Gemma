@@ -102,7 +102,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
                 + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameterList( "trails", atmap.keySet() );
 
         List<?> qr = queryObject.list();
@@ -211,7 +211,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         if ( !ees.isEmpty() ) {
             Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
             Map<ArrayDesign, Collection<Long>> ads = CommonQueries.getArrayDesignsUsed( eemap.keySet(),
-                    this.getSession() );
+                    this.getSessionFactory().getCurrentSession() );
 
             Map<Auditable, AuditEvent> arrayDesignTrouble = getLastOutstandingTroubleEvents( ads.keySet() );
 
@@ -341,7 +341,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                 + "fetch all properties where trail = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
                 + ") order by event.date desc ";
 
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setCacheable( true );
         queryObject.setReadOnly( true );
         queryObject.setParameter( "trail", auditTrail );
@@ -388,7 +388,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             batch.add( at );
 
             if ( batch.size() == BATCHSIZE ) {
-                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+                org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
                 queryObject.setParameterList( "trails", batch );
                 queryObject.setReadOnly( true );
 
@@ -413,7 +413,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         }
 
         if ( !batch.isEmpty() ) {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameterList( "trails", batch ); // if too many will fail.
             queryObject.setReadOnly( true );
 
@@ -457,7 +457,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> result = new HashMap<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>>();
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setParameter( "trails", atmap.keySet() );
 
@@ -505,7 +505,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                     + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
             try {
-                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+                org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
                 queryObject.setParameter( "date", date );
                 result.addAll( queryObject.list() );
             } catch ( org.hibernate.HibernateException ex ) {
@@ -529,7 +529,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                     + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
             try {
-                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+                org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
                 queryObject.setParameter( "date", date );
                 result.addAll( queryObject.list() );
             } catch ( org.hibernate.HibernateException ex ) {

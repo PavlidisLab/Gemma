@@ -118,7 +118,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         if ( compositeSequence.getName() == null ) return null;
 
-        Criteria queryObject = super.getSession().createCriteria( CompositeSequence.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( CompositeSequence.class );
 
         queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
 
@@ -205,7 +205,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     protected Integer handleCountAll() {
         final String query = "select count(*) from CompositeSequenceImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -226,7 +226,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs where cs.biologicalCharacteristic = :id";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "id", bioSequence );
             compositeSequences = queryObject.list();
 
@@ -248,7 +248,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "name", name );
             compositeSequences = queryObject.list();
 
@@ -276,7 +276,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
 
         List<Object> csGene = new ArrayList<Object>();
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
         queryObject.addScalar( "cs", new LongType() );
         queryObject.addScalar( "gene", new LongType() );
@@ -332,7 +332,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         Collection<Gene> genes = new HashSet<Gene>();
         String geneQuery = "from GeneImpl g where g.id in ( :gs )";
 
-        org.hibernate.Query geneQueryObject = super.getSession().createQuery( geneQuery ).setFetchSize( 1000 );
+        org.hibernate.Query geneQueryObject = super.getSessionFactory().getCurrentSession().createQuery( geneQuery ).setFetchSize( 1000 );
 
         for ( Long gene : genesToFetch ) {
             batch.add( gene );
@@ -457,7 +457,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             // get all probes. Uses a light-weight version of this query that omits as much as possible.
             final String queryString = nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign.getId();
             try {
-                org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+                org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
                 queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                         .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
                 queryObject.setMaxResults( MAX_CS_RECORDS );
@@ -519,7 +519,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         // This uses the 'full' query, assuming that this list isn't too big.
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( nativeQueryString );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQueryString );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
                 .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
@@ -552,7 +552,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             limit = Math.min( numResults, MAX_CS_RECORDS );
         }
 
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( nativeQueryString );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQueryString );
         queryObject.setParameter( "id", id );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
@@ -576,7 +576,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
 
         final String queryString = "select cs from CompositeSequenceImpl cs where cs.id in (:ids)";
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         int batchSize = 2000;
         Collection<Long> batch = new HashSet<Long>();
         Collection<CompositeSequence> results = new HashSet<CompositeSequence>();

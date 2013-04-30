@@ -55,7 +55,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
     @Override
     public FactorValue find( FactorValue factorValue ) {
         try {
-            Criteria queryObject = super.getSession().createCriteria( FactorValue.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
 
             BusinessKey.checkKey( factorValue );
 

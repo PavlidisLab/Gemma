@@ -78,7 +78,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
 
         sas.setSampleCoexpressionMatrix( scm );
 
-        this.getSession().save( sas );
+        this.getSessionFactory().getCurrentSession().save( sas );
     }
 
     /**

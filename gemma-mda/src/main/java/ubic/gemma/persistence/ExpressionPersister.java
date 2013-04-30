@@ -121,7 +121,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             log.info( ">>>>>>>>>> Persisting " + ee );
 
-            this.getSession().setFlushMode( FlushMode.COMMIT );
+            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
             ee.setPrimaryPublication( ( BibliographicReference ) persist( ee.getPrimaryPublication() ) );
 
@@ -175,7 +175,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( entity instanceof ExpressionExperiment ) {
             log.warn( "Consider doing the 'setup' step in a separate transaction" );
-            this.getSession().setFlushMode( FlushMode.AUTO );
+            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.AUTO );
             ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService
                     .prepare( ( ExpressionExperiment ) entity );
             return persist( ( ExpressionExperiment ) entity, c );
@@ -303,7 +303,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 throw new IllegalStateException( "You must provide the platform in the cache object" );
             }
 
-            arrayDesignUsed = ( ArrayDesign ) this.getSession().load( ArrayDesignImpl.class, arrayDesignUsed.getId() );
+            arrayDesignUsed = ( ArrayDesign ) this.getSessionFactory().getCurrentSession()
+                    .load( ArrayDesignImpl.class, arrayDesignUsed.getId() );
 
             if ( arrayDesignUsed == null ) {
                 throw new IllegalStateException( "No platform matching " + arrayDesign.getShortName() );
@@ -384,7 +385,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         assert dataVector.getQuantitationType() != null;
         QuantitationType qt = persistQuantitationType( dataVector.getQuantitationType() );
-        qt = ( QuantitationType ) this.getSession().merge( qt );
+        qt = ( QuantitationType ) this.getSessionFactory().getCurrentSession().merge( qt );
         dataVector.setQuantitationType( qt );
 
         return bioAssayDimension;

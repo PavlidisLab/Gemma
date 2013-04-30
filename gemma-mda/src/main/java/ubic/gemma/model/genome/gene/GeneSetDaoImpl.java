@@ -287,7 +287,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
         // using Query because I want to be able to limit the number of row returned to one
 
-        Query q = this.getSession().createQuery(
+        Query q = this.getSessionFactory().getCurrentSession().createQuery(
                 "select g.id, g.taxon.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
         q.setParameter( "id", id );
         q.setMaxResults( 1 );
@@ -307,7 +307,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
         // using Query because I want to be able to limit the number of row returned to one
 
-        Query q = this.getSession().createQuery(
+        Query q = this.getSessionFactory().getCurrentSession().createQuery(
                 "select g.id, g.taxon from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
         q.setParameter( "id", id );
         q.setMaxResults( 1 );

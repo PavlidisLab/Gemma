@@ -58,7 +58,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     @Override
     public GeneProduct find( GeneProduct geneProduct ) {
         try {
-            Criteria queryObject = super.getSession().createCriteria( GeneProduct.class )
+            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
                     .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
 
             BusinessKey.checkValidKey( geneProduct );
@@ -172,7 +172,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         final String queryString = "select distinct gp from GeneProductImpl gp where gp.id = :id";
 
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setLong( "id", geneProductValueObject.getId() );
             java.util.List<?> results = queryObject.list();
 
@@ -189,7 +189,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from GeneProductImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -207,7 +207,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp where  gp.name = :search";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -228,7 +228,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp where gp.ncbiGi = :search";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -249,7 +249,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         Collection<GeneProduct> geneProducts = null;
         final String queryString = "select distinct gp from GeneProductImpl gp where gp.id in (:ids)";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
             geneProducts = queryObject.list();
 

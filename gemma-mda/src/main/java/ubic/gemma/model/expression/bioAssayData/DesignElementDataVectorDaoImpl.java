@@ -63,7 +63,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     protected Map<T, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene,
             final String queryString ) {
 
-        Session session = super.getSession();
+        Session session = super.getSessionFactory().getCurrentSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
@@ -99,7 +99,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     protected Map<T, Collection<Long>> getVectorsForProbesInExperiments( Map<Long, Collection<Long>> cs2gene,
             final String queryString ) {
 
-        Session session = super.getSession();
+        Session session = super.getSessionFactory().getCurrentSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );

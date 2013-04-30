@@ -461,7 +461,7 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
                 + " from ExpressionExperimentSetImpl as eeset inner join eeset.taxon taxon inner join eeset.experiments ees "
                 + idClause + " group by eeset.id ";
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         if ( ids != null ) queryObject.setParameterList( "ids", ids );
         return queryObject;
     }

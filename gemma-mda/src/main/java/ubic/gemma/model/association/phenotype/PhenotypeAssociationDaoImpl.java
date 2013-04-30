@@ -66,7 +66,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Set<String> phenotypesURI = new HashSet<String>();
 
         String queryString = "select distinct value_uri from CHARACTERISTIC where phenotype_association_fk is not null";
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
@@ -84,14 +84,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Collection<PhenotypeAssociation> phenotypeAssociationsFound = new HashSet<PhenotypeAssociation>();
 
         // Literature Evidence have BibliographicReference
-        Criteria geneQueryCriteria = super.getSession().createCriteria( LiteratureEvidence.class )
+        org.hibernate.classic.Session session = super.getSessionFactory().getCurrentSession();
+        Criteria geneQueryCriteria = session.createCriteria( LiteratureEvidence.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "citation" )
                 .createCriteria( "pubAccession" ).add( Restrictions.like( "accession", pubMedID ) );
 
         phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
 
         // Experimental Evidence have a primary BibliographicReference
-        geneQueryCriteria = super.getSession().createCriteria( ExperimentalEvidence.class )
+        geneQueryCriteria = session.createCriteria( ExperimentalEvidence.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "experiment" )
                 .createCriteria( "primaryPublication" ).createCriteria( "pubAccession" )
                 .add( Restrictions.like( "accession", pubMedID ) );
@@ -99,7 +100,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
 
         // Experimental Evidence have relevant BibliographicReference
-        geneQueryCriteria = super.getSession().createCriteria( ExperimentalEvidence.class )
+        geneQueryCriteria = session.createCriteria( ExperimentalEvidence.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "experiment" )
                 .createCriteria( "otherRelevantPublications" ).createCriteria( "pubAccession" )
                 .add( Restrictions.like( "accession", pubMedID ) );
@@ -115,7 +116,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             Integer limit ) {
         if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
         if ( limit == 0 || ( paIds != null && paIds.size() == 0 ) ) return new ArrayList<PhenotypeAssociation>();
-        Session s = this.getSession();
+        Session s = this.getSessionFactory().getCurrentSession();
         String queryString = "select p from PhenotypeAssociationImpl p " + "join p.status s "
                 + ( paIds != null || taxonId != null ? "where " : "" )
                 + ( paIds == null ? "" : "p.id in (:paIds) " + ( taxonId == null ? "" : "and " ) )
@@ -134,7 +135,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
 
-        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+        Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
+                .createCriteria( PhenotypeAssociation.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "gene" )
                 .add( Restrictions.like( "id", geneId ) );
 
@@ -145,7 +147,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all PhenotypeAssociation for a specific NCBI id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
 
-        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+        Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
+                .createCriteria( PhenotypeAssociation.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "gene" )
                 .add( Restrictions.like( "ncbiGeneId", geneNCBI ) );
 
@@ -159,7 +162,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Collection<CharacteristicValueObject> mgedCategory = new TreeSet<CharacteristicValueObject>();
 
         String queryString = "SELECT distinct CATEGORY_URI, category FROM PHENOTYPE_ASSOCIATION join INVESTIGATION on PHENOTYPE_ASSOCIATION.EXPERIMENT_FK = INVESTIGATION.ID join CHARACTERISTIC on CHARACTERISTIC.INVESTIGATION_FK= INVESTIGATION.ID";
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
@@ -178,7 +181,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
 
-        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+        Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
+                .createCriteria( PhenotypeAssociation.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "evidenceSource" )
                 .createCriteria( "externalDatabase" ).add( Restrictions.like( "name", externalDatabaseName ) );
 
@@ -188,7 +192,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all evidence that doesn't come from an external course */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
-        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+        Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
+                .createCriteria( PhenotypeAssociation.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
                 .add( Restrictions.isNull( "evidenceSource" ) );
 
@@ -355,7 +360,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         String sqlQuery = "SELECT DISTINCT VALUE_URI,VALUE FROM CHARACTERISTIC WHERE PHENOTYPE_ASSOCIATION_FK is not null";
 
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
@@ -415,10 +420,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( !isAdmin ) {
             sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, true );
         }
-        
-        
-        if (taxon!=null){
-        sqlQuery += addTaxonToQuery( "and", taxon );
+
+        if ( taxon != null ) {
+            sqlQuery += addTaxonToQuery( "and", taxon );
         }
 
         populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
@@ -437,7 +441,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
 
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
@@ -458,7 +462,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         String sqlQuery = "select distinct acl_sid.sid from acl_object_identity join acl_entry on acl_entry.acl_object_identity = acl_object_identity.id join acl_class on acl_class.id = acl_object_identity.object_id_class join acl_sid on acl_sid.id = acl_object_identity.owner_sid where acl_class.class in('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl','ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl','ubic.gemma.model.association.phenotype.UrlEvidenceImpl') ";
 
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
@@ -519,7 +523,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     private void populateGenesAssociations( String sqlQuery,
             HashMap<String, HashSet<Integer>> phenotypesGenesAssociations ) {
 
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
@@ -610,7 +614,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     private void populateGenesWithPhenotypes( String sqlQuery,
             HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes ) {
 
-        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {

@@ -43,7 +43,7 @@ public class ProtocolDaoImpl extends ubic.gemma.model.common.protocol.ProtocolDa
 
     @Override
     public Protocol find( Protocol protocol ) {
-        Criteria queryObject = super.getSession().createCriteria( Protocol.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Protocol.class );
         queryObject.add( Restrictions.eq( "name", protocol.getName() ) );
 
         if ( protocol.getDescription() != null )

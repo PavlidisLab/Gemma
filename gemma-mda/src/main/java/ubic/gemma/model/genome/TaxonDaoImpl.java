@@ -57,7 +57,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
 
         BusinessKey.checkValidKey( taxon );
 
-        Criteria queryObject = super.getSession().createCriteria( Taxon.class ).setReadOnly( true );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Taxon.class ).setReadOnly( true );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         BusinessKey.addRestrictions( queryObject, taxon );

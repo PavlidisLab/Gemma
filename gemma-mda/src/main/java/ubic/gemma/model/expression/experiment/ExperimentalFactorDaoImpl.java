@@ -42,8 +42,8 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
     @Override
     public void remove( ExperimentalFactor experimentalFactor ) {
         Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
-        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSession().load( ExperimentalDesignImpl.class,
-                experimentalDesignId );
+        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
+                .load( ExperimentalDesignImpl.class, experimentalDesignId );
 
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee where ee.experimentalDesign = :ed";
         List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
@@ -61,7 +61,7 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
             for ( FactorValue factorValue : bm.getFactorValues() ) {
                 if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
                     factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    this.getSession().evict( factorValue.getExperimentalFactor() );
+                    this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
                 }
             }
 
@@ -97,7 +97,7 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
 
         BusinessKey.checkValidKey( experimentalFactor );
-        Criteria queryObject = super.getSession().createCriteria( ExperimentalFactor.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
         BusinessKey.addRestrictions( queryObject, experimentalFactor );
 
         java.util.List<?> results = queryObject.list();

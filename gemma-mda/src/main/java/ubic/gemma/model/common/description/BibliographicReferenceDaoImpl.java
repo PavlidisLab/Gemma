@@ -55,7 +55,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
      */
     @Override
     public List<BibliographicReference> browse( Integer start, Integer limit ) {
-        Query query = this.getSession().createQuery( "from BibliographicReferenceImpl" );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( "from BibliographicReferenceImpl" );
         query.setMaxResults( limit );
         query.setFirstResult( start );
         return query.list();
@@ -68,8 +68,11 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
      */
     @Override
     public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        Query query = this.getSession().createQuery(
-                "from BibliographicReferenceImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );
+        Query query = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "from BibliographicReferenceImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );
         query.setMaxResults( limit );
         query.setFirstResult( start );
         return query.list();
@@ -85,7 +88,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
 
         BusinessKey.checkKey( bibliographicReference );
-        Criteria queryObject = super.getSession().createCriteria( BibliographicReference.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BibliographicReference.class );
 
         /*
          * This syntax allows you to look at an association.

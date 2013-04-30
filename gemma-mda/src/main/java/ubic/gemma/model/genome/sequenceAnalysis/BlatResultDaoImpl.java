@@ -53,7 +53,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
     public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = super.getSession().createCriteria( BlatResult.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatResult.class );
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
 

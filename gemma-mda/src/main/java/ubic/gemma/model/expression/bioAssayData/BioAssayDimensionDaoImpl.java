@@ -62,7 +62,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
 
-        Criteria queryObject = super.getSession().createCriteria( BioAssayDimension.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BioAssayDimension.class );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 

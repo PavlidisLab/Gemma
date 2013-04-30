@@ -45,7 +45,7 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
 
     @Override
     public QuantitationType find( QuantitationType quantitationType ) {
-        Criteria queryObject = super.getSession().createCriteria( QuantitationType.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
 
         BusinessKey.addRestrictions( queryObject, quantitationType );
 
@@ -96,7 +96,7 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
     @Override
     public List<QuantitationType> loadByDescription( String description ) {
         final String query = "from QuantitationTypeImpl q where q.description like :description";
-        org.hibernate.Query queryObject = this.getSession().createQuery( query );
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( query );
         queryObject.setParameter( "description", description );
         return queryObject.list();
     }

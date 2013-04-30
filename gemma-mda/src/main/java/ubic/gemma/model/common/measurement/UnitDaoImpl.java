@@ -44,7 +44,7 @@ public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase
 
             BusinessKey.checkValidKey( unit );
 
-            Criteria queryObject = BusinessKey.createQueryObject( super.getSession(), unit );
+            Criteria queryObject = BusinessKey.createQueryObject( super.getSessionFactory().getCurrentSession(), unit );
 
             java.util.List<?> results = queryObject.list();
             Object result = null;

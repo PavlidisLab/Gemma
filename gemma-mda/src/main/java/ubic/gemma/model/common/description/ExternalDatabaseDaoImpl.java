@@ -52,7 +52,7 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
             throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
         }
 
-        Criteria queryObject = super.getSession().createCriteria( ExternalDatabase.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExternalDatabase.class );
         queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
         queryObject.setFlushMode( FlushMode.COMMIT );
         java.util.List<?> results = queryObject.list();

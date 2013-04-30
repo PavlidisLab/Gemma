@@ -75,7 +75,7 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from DatabaseEntryImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {

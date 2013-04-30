@@ -111,7 +111,8 @@ public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao 
     @Override
     public BioAssay find( BioAssay bioAssay ) {
         try {
-            Criteria queryObject = BusinessKey.createQueryObject( super.getSession(), bioAssay );
+            Criteria queryObject = BusinessKey.createQueryObject( super.getSessionFactory().getCurrentSession(),
+                    bioAssay );
 
             java.util.List<?> results = queryObject.list();
             Object result = null;
@@ -203,13 +204,13 @@ public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao 
                 session.buildLockRequest( LockOptions.NONE ).lock( bioAssay );
                 Hibernate.initialize( bioAssay.getArrayDesignUsed() );
                 Hibernate.initialize( bioAssay.getDerivedDataFiles() );
-                BioMaterial bm = bioAssay.getSampleUsed() ;
-                    session.buildLockRequest( LockOptions.NONE ).lock( bm );
-                    Hibernate.initialize( bm );
-                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                    Hibernate.initialize( bm.getFactorValues() );
-                    session.evict( bm );
-                 
+                BioMaterial bm = bioAssay.getSampleUsed();
+                session.buildLockRequest( LockOptions.NONE ).lock( bm );
+                Hibernate.initialize( bm );
+                Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                Hibernate.initialize( bm.getFactorValues() );
+                session.evict( bm );
+
                 session.evict( bioAssay );
                 return null;
             }
@@ -355,7 +356,7 @@ public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao 
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from BioAssayImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
             queryObject.setCacheable( true );
             return ( ( Long ) queryObject.iterate().next() ).intValue();
         } catch ( org.hibernate.HibernateException ex ) {

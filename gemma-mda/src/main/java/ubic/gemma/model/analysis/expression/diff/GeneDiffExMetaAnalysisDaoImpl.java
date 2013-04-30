@@ -136,7 +136,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     @Override
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
 
-        Criteria geneQueryMetaAnalysis = super.getSession()
+        Criteria geneQueryMetaAnalysis = super.getSessionFactory().getCurrentSession()
                 .createCriteria( GeneDifferentialExpressionMetaAnalysis.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "results" )
                 .add( Restrictions.like( "id", idResult ) );
@@ -148,7 +148,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     @Override
     public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult ) {
 
-        Criteria geneQueryMetaAnalysis = super.getSession()
+        Criteria geneQueryMetaAnalysis = super.getSessionFactory().getCurrentSession()
                 .createCriteria( GeneDifferentialExpressionMetaAnalysisResult.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
                 .add( Restrictions.like( "id", idResult ) );
@@ -167,7 +167,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
                     + "left join a.resultSetsIncluded rs " + "left join a.results r " + "where a.id in (:aIds) "
                     + "group by a.id ";
 
-            Session s = this.getSession();
+            Session s = this.getSessionFactory().getCurrentSession();
             Query q = s.createQuery( queryString );
             q.setParameterList( "aIds", metaAnalysisIds );
 

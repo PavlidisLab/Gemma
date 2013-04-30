@@ -84,7 +84,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
             return false;
         }
 
-        org.hibernate.Session session = this.getSession();
+        org.hibernate.Session session = this.getSessionFactory().getCurrentSession();
         if ( session.contains( entity ) ) {
             if ( log.isDebugEnabled() )
                 log.debug( "Found object in session: " + entity.getClass().getSimpleName() + ":" + id );

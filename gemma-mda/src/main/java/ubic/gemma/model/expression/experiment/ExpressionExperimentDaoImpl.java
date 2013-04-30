@@ -92,7 +92,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
-        Query query = this.getSession().createQuery( "from ExpressionExperimentImpl" );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperimentImpl" );
         query.setMaxResults( limit );
         query.setFirstResult( start );
         return query.list();
@@ -105,8 +105,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        Query query = this.getSession().createQuery(
-                "from ExpressionExperimentImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );
+        Query query = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "from ExpressionExperimentImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );
         query.setMaxResults( limit );
         query.setFirstResult( start );
         return query.list();
@@ -114,7 +117,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     @Override
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
-        Query query = this.getSession().createQuery( "from ExpressionExperimentImpl where id in (:ids) " );
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "from ExpressionExperimentImpl where id in (:ids) " );
         query.setParameterList( "ids", ids );
         query.setMaxResults( limit );
         query.setFirstResult( start );
@@ -125,9 +129,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
             boolean descending, Collection<Long> ids ) {
 
-        Query query = this.getSession().createQuery(
-                "from ExpressionExperimentImpl where id in (:ids) order by " + orderField + " "
-                        + ( descending ? "desc" : "" ) );
+        Query query = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "from ExpressionExperimentImpl where id in (:ids) order by " + orderField + " "
+                                + ( descending ? "desc" : "" ) );
         query.setParameterList( "ids", ids );
         query.setMaxResults( limit );
         query.setFirstResult( start );
@@ -230,7 +237,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
         if ( ids.isEmpty() || limit <= 0 ) return new ArrayList<ExpressionExperiment>();
 
-        Session s = this.getSession();
+        Session s = this.getSessionFactory().getCurrentSession();
 
         String queryString = "select e from ExpressionExperimentImpl e join e.status s where e.id in (:ids) order by s.lastUpdateDate desc ";
 
@@ -245,7 +252,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
         if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
         if ( limit == 0 ) return new ArrayList<ExpressionExperiment>();
-        Session s = this.getSession();
+        Session s = this.getSessionFactory().getCurrentSession();
         String queryString = "select e from ExpressionExperimentImpl e join e.status s order by s.lastUpdateDate "
                 + ( limit < 0 ? "asc" : "desc" );
         Query q = s.createQuery( queryString );
@@ -293,13 +300,14 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         assert ee != null;
 
-        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( ee, getSession() );
+        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( ee, this.getSessionFactory()
+                .getCurrentSession() );
         return ADs;
     }
 
     @Override
     public Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids ) {
-        return CommonQueries.getArrayDesignsUsed( eeids, this.getSession() );
+        return CommonQueries.getArrayDesignsUsed( eeids, this.getSessionFactory().getCurrentSession() );
     }
 
     @Override
@@ -384,7 +392,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Collection<ExpressionExperiment> ees = null;
         final String queryString = "from ExpressionExperimentImpl";
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         queryObject.setReadOnly( true );
         queryObject.setCacheable( true );
@@ -414,7 +422,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
             qs += " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
-        Query query = this.getSession().createQuery( qs );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( qs );
         return query.list();
     }
 
@@ -423,8 +431,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         final String queryString = getLoadValueObjectsQueryString( null, null );
 
-        Query queryObject = super.getSession().createQuery( queryString );
-
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         List<?> list = queryObject.list();
 
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
@@ -450,7 +457,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         final String queryString = getLoadValueObjectsQueryString( null, orderByClause );
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         List<?> list = queryObject.list();
 
@@ -467,7 +474,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         queryObject.setParameter( "tid", taxon.getId() );
 
@@ -499,7 +506,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         queryObject.setParameter( "t", taxon );
 
@@ -571,7 +578,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         List<Long> idl = new ArrayList<Long>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
@@ -640,7 +647,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         queryObject.setParameterList( "ids", ids );
 
@@ -676,152 +683,157 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @Override
     public void remove( final ExpressionExperiment toDelete ) {
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
-        // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
+        try {
+            // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
-        // At this point, the ee is probably still in the session, as the service already has gotten it
-        // in this transaction.
-        session.flush();
-        session.clear();
+            // At this point, the ee is probably still in the session, as the service already has gotten it
+            // in this transaction.
+            session.flush();
+            // session.clear();
 
-        session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
+            session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
 
-        Hibernate.initialize( toDelete.getAuditTrail() );
+            Hibernate.initialize( toDelete.getAuditTrail() );
 
-        Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-        Set<QuantitationType> qts = new HashSet<QuantitationType>();
-        Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
-        Hibernate.initialize( designElementDataVectors );
-        toDelete.setRawExpressionDataVectors( null );
+            Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+            Set<QuantitationType> qts = new HashSet<QuantitationType>();
+            Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
+            Hibernate.initialize( designElementDataVectors );
+            toDelete.setRawExpressionDataVectors( null );
 
-        /*
-         * We don't delete the investigators, just breaking the association.
-         */
-        toDelete.getInvestigators().clear();
+            /*
+             * We don't delete the investigators, just breaking the association.
+             */
+            toDelete.getInvestigators().clear();
 
-        int count = 0;
-        if ( designElementDataVectors != null ) {
-            log.info( "Removing Design Element Data Vectors ..." );
-            for ( RawExpressionDataVector dv : designElementDataVectors ) {
-                BioAssayDimension bad = dv.getBioAssayDimension();
-                dims.add( bad );
-                QuantitationType qt = dv.getQuantitationType();
-                qts.add( qt );
-                dv.setBioAssayDimension( null );
-                dv.setQuantitationType( null );
-                session.delete( dv );
-                if ( ++count % 1000 == 0 ) {
-                    session.flush();
+            int count = 0;
+            if ( designElementDataVectors != null ) {
+                log.info( "Removing Design Element Data Vectors ..." );
+                for ( RawExpressionDataVector dv : designElementDataVectors ) {
+                    BioAssayDimension bad = dv.getBioAssayDimension();
+                    dims.add( bad );
+                    QuantitationType qt = dv.getQuantitationType();
+                    qts.add( qt );
+                    dv.setBioAssayDimension( null );
+                    dv.setQuantitationType( null );
+                    session.delete( dv );
+                    if ( ++count % 1000 == 0 ) {
+                        session.flush();
+                    }
+                    // put back...
+                    dv.setBioAssayDimension( bad );
+                    dv.setQuantitationType( qt );
+
+                    if ( count % 20000 == 0 ) {
+                        log.info( count + " design Element data vectors deleted" );
+                    }
                 }
-                // put back...
-                dv.setBioAssayDimension( bad );
-                dv.setQuantitationType( qt );
-
-                if ( count % 20000 == 0 ) {
-                    log.info( count + " design Element data vectors deleted" );
-                }
+                count = 0;
+                // designElementDataVectors.clear();
             }
-            count = 0;
-            // designElementDataVectors.clear();
-        }
 
-        Collection<ProcessedExpressionDataVector> processedVectors = toDelete.getProcessedExpressionDataVectors();
+            Collection<ProcessedExpressionDataVector> processedVectors = toDelete.getProcessedExpressionDataVectors();
 
-        Hibernate.initialize( processedVectors );
-        if ( processedVectors != null && processedVectors.size() > 0 ) {
+            Hibernate.initialize( processedVectors );
+            if ( processedVectors != null && processedVectors.size() > 0 ) {
 
-            toDelete.setProcessedExpressionDataVectors( null );
+                toDelete.setProcessedExpressionDataVectors( null );
 
-            for ( ProcessedExpressionDataVector dv : processedVectors ) {
-                BioAssayDimension bad = dv.getBioAssayDimension();
-                dims.add( bad );
-                QuantitationType qt = dv.getQuantitationType();
-                qts.add( qt );
-                dv.setBioAssayDimension( null );
-                dv.setQuantitationType( null );
-                session.delete( dv );
-                if ( ++count % 1000 == 0 ) {
-                    session.flush();
+                for ( ProcessedExpressionDataVector dv : processedVectors ) {
+                    BioAssayDimension bad = dv.getBioAssayDimension();
+                    dims.add( bad );
+                    QuantitationType qt = dv.getQuantitationType();
+                    qts.add( qt );
+                    dv.setBioAssayDimension( null );
+                    dv.setQuantitationType( null );
+                    session.delete( dv );
+                    if ( ++count % 1000 == 0 ) {
+                        session.flush();
+                    }
+                    if ( count % 20000 == 0 ) {
+                        log.info( count + " processed design Element data vectors deleted" );
+                    }
+
+                    // put back..
+                    dv.setBioAssayDimension( bad );
+                    dv.setQuantitationType( qt );
                 }
-                if ( count % 20000 == 0 ) {
-                    log.info( count + " processed design Element data vectors deleted" );
-                }
-
-                // put back..
-                dv.setBioAssayDimension( bad );
-                dv.setQuantitationType( qt );
+                // processedVectors.clear();
             }
-            // processedVectors.clear();
+
+            session.flush();
+            session.clear();
+            session.update( toDelete );
+
+            log.info( "Removing BioAssay Dimensions ..." );
+            for ( BioAssayDimension dim : dims ) {
+                dim.getBioAssays().clear();
+                session.update( dim );
+                session.delete( dim );
+            }
+            dims.clear();
+            session.flush();
+
+            log.info( "Removing Bioassays and biomaterials ..." );
+
+            // keep to put back in the object.
+            Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<BioAssay, BioMaterial>();
+
+            Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
+            Collection<BioAssay> bioAssays = toDelete.getBioAssays();
+
+            for ( BioAssay ba : bioAssays ) {
+                // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
+                // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
+
+                BioMaterial biomaterial = ba.getSampleUsed();
+                bioMaterialsToDelete.add( biomaterial );
+
+                copyOfRelations.put( ba, biomaterial );
+
+                // see bug 855
+                session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
+                Hibernate.initialize( biomaterial );
+
+                // this can easily end up with an unattached object.
+                Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
+
+                biomaterial.getFactorValues().clear();
+                biomaterial.getBioAssaysUsedIn().clear();
+
+                ba.setSampleUsed( null );
+            }
+
+            log.info( "Last bits ..." );
+
+            // We delete them here in case they are associated to more than one bioassay-- no cascade is possible.
+            for ( BioMaterial bm : bioMaterialsToDelete ) {
+                session.delete( bm );
+            }
+
+            for ( QuantitationType qt : qts ) {
+                session.delete( qt );
+            }
+
+            session.flush();
+            session.delete( toDelete );
+
+            /*
+             * Put transient instances back. This is possibly useful for clearing ACLS.
+             */
+            toDelete.setProcessedExpressionDataVectors( processedVectors );
+            toDelete.setRawExpressionDataVectors( designElementDataVectors );
+            for ( BioAssay ba : toDelete.getBioAssays() ) {
+                ba.setSampleUsed( copyOfRelations.get( ba ) );
+            }
+
+            log.info( "Deleted " + toDelete );
+
+        } finally {
+            // session.disconnect();
         }
-
-        session.flush();
-        session.clear();
-        session.update( toDelete );
-
-        log.info( "Removing BioAssay Dimensions ..." );
-        for ( BioAssayDimension dim : dims ) {
-            dim.getBioAssays().clear();
-            session.update( dim );
-            session.delete( dim );
-        }
-        dims.clear();
-        session.flush();
-
-        log.info( "Removing Bioassays and biomaterials ..." );
-
-        // keep to put back in the object.
-        Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<BioAssay, BioMaterial>();
-
-        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
-        Collection<BioAssay> bioAssays = toDelete.getBioAssays();
-
-        for ( BioAssay ba : bioAssays ) {
-            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
-
-            BioMaterial biomaterial = ba.getSampleUsed();
-            bioMaterialsToDelete.add( biomaterial );
-
-            copyOfRelations.put( ba, biomaterial );
-
-            // see bug 855
-            session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
-            Hibernate.initialize( biomaterial );
-
-            // this can easily end up with an unattached object.
-            Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
-
-            biomaterial.getFactorValues().clear();
-            biomaterial.getBioAssaysUsedIn().clear();
-
-            ba.setSampleUsed( null );
-        }
-
-        log.info( "Last bits ..." );
-
-        // We delete them here in case they are associated to more than one bioassay-- no cascade is possible.
-        for ( BioMaterial bm : bioMaterialsToDelete ) {
-            session.delete( bm );
-        }
-
-        for ( QuantitationType qt : qts ) {
-            session.delete( qt );
-        }
-
-        session.flush();
-        session.delete( toDelete );
-
-        /*
-         * Put transient instances back. This is possibly useful for clearing ACLS.
-         */
-        toDelete.setProcessedExpressionDataVectors( processedVectors );
-        toDelete.setRawExpressionDataVectors( designElementDataVectors );
-        for ( BioAssay ba : toDelete.getBioAssays() ) {
-            ba.setSampleUsed( copyOfRelations.get( ba ) );
-        }
-
-        log.info( "Deleted " + toDelete );
     }
 
     @Override
@@ -926,7 +938,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Collection<Long> eeIds = null;
 
         try {
-            Session session = super.getSession();
+            Session session = super.getSessionFactory().getCurrentSession();
             org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
             queryObject.setLong( "geneID", gene.getId() );
             queryObject.setDouble( "rank", rank );
@@ -1050,7 +1062,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Collection<Long> eeIds = null;
 
         try {
-            Session session = super.getSession();
+            Session session = super.getSessionFactory().getCurrentSession();
             org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
             queryObject.setLong( "geneID", gene.getId() );
             queryObject.addScalar( "eeID", new LongType() );
@@ -1418,7 +1430,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "inner join su.sourceTaxon t group by t order by t.scientificName ";
 
         // it is important to cache this, as it gets called on the home page. Though it's actually fast.
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setCacheable( true );
         ScrollableResults list = queryObject.scroll();
         while ( list.next() ) {
@@ -1998,7 +2010,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         if ( eeids != null ) {
             queryString = queryString + " where ee.id in (:eeids)";
         }
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         // make sure we use the cache.
         if ( eeids != null ) {
             List<Long> idList = new ArrayList<Long>( eeids );

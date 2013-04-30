@@ -414,7 +414,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         Map<Long, Map<Long, DiffExprGeneSearchResult>> results = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
 
-        Session session = super.getSession();
+        Session session = super.getSessionFactory().getCurrentSession();
 
         Map<Long, ExpressionAnalysisResultSet> resultSetIds = EntityUtils.getIdMap( resultSetIdsToArrayDesignsUsed
                 .keySet() );
@@ -610,7 +610,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         List<Double> results = null;
 
-        Session session = super.getSession();
+        Session session = super.getSessionFactory().getCurrentSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( fetchResultsByResultSetAndGeneQuery );
 
         queryObject.setLong( "gene_id", gene.getId() );
@@ -892,7 +892,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      */
     @Override
     public void thaw( final Collection<DifferentialExpressionAnalysisResult> results ) {
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         for ( DifferentialExpressionAnalysisResult result : results ) {
             session.buildLockRequest( LockOptions.NONE ).lock( result );
             Hibernate.initialize( result );
@@ -912,7 +912,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      */
     @Override
     public void thaw( final DifferentialExpressionAnalysisResult result ) {
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         session.buildLockRequest( LockOptions.NONE ).lock( result );
         Hibernate.initialize( result );

@@ -41,7 +41,7 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
      */
     @Override
     public Person find( Person person ) {
-        Criteria queryObject = super.getSession().createCriteria( Person.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Person.class );
 
         BusinessKey.addRestrictions( queryObject, person );
 

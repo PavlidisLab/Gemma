@@ -66,7 +66,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      */
     @Override
     public List<Characteristic> browse( Integer start, Integer limit ) {
-        Query query = this.getSession().createQuery( "from CharacteristicImpl where value not like 'GO_%'" );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( "from CharacteristicImpl where value not like 'GO_%'" );
         query.setMaxResults( limit );
         query.setFirstResult( start );
         return query.list();
@@ -80,7 +80,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      */
     @Override
     public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        Query query = this.getSession().createQuery(
+        Query query = this.getSessionFactory().getCurrentSession().createQuery(
                 "from CharacteristicImpl where value not like 'GO_%' order by " + orderField + " "
                         + ( descending ? "desc" : "" ) );
         query.setMaxResults( limit );

@@ -100,7 +100,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
 
         Collection<Probe2ProbeCoexpression> batch = new HashSet<Probe2ProbeCoexpression>();
 
-        Query query = super.getSession().createQuery( "DELETE from " + className + " d where d in (:vals)" );
+        Query query = super.getSessionFactory().getCurrentSession()
+                .createQuery( "DELETE from " + className + " d where d in (:vals)" );
 
         int count = 0;
         for ( Probe2ProbeCoexpression o : entities ) {
@@ -242,7 +243,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
     protected Collection<? extends Probe2ProbeCoexpression> handleCreate(
             final Collection<? extends Probe2ProbeCoexpression> links ) {
 
-        Session session = getSession();
+        Session session = getSessionFactory().getCurrentSession();
 
         int numDone = 0;
         List<Probe2ProbeCoexpression> result = new ArrayList<Probe2ProbeCoexpression>();
@@ -297,7 +298,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
                     + " where EXPRESSION_EXPERIMENT_FK = :eeid limit " + DELETE_CHUNK_SIZE;
 
-            SQLQuery q = super.getSession().createSQLQuery( nativeDeleteQuery );
+            SQLQuery q = super.getSessionFactory().getCurrentSession().createSQLQuery( nativeDeleteQuery );
             q.setParameter( "eeid", ba.getId() );
 
             StopWatch timer = new StopWatch();
@@ -346,7 +347,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
             throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
         }
 
-        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
+        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSessionFactory()
+                .getCurrentSession() );
 
         if ( probes.size() == 0 ) return new HashSet<BioAssaySet>();
 
@@ -413,7 +415,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
         if ( genes == null || genes.isEmpty() ) return result;
 
         // this step is fast.
-        Map<Long, Collection<Long>> cs2genes = CommonQueries.getCs2GeneIdMap( genes, this.getSession() );
+        Map<Long, Collection<Long>> cs2genes = CommonQueries.getCs2GeneIdMap( genes, this.getSessionFactory()
+                .getCurrentSession() );
 
         if ( log.isDebugEnabled() )
             log.debug( cs2genes.size() + " probes for " + genes.size() + " genes to examined in "
@@ -547,7 +550,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
             throw new IllegalStateException( "Attempt to create table named " + tableName );
         }
 
-        Session session = getSession();
+        Session session = getSessionFactory().getCurrentSession();
 
         String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
 
@@ -614,7 +617,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
         final Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
         if ( csIds == null || csIds.size() == 0 ) return cs2genes;
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         int CHUNK_LIMIT = 1000;
 
@@ -678,7 +681,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
         int chunkSize = 500000;
         Collection<ProbeLink> links = new ArrayList<ProbeLink>();
 
-        Session session = getSession();
+        Session session = getSessionFactory().getCurrentSession();
 
         long offset = 0;
 
@@ -724,7 +727,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
         final int chunkSize = 500000;
         final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
 
-        Session session = getSession();
+        Session session = getSessionFactory().getCurrentSession();
 
         long offset = 0;
 

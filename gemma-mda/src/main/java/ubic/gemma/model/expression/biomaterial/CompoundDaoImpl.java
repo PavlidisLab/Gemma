@@ -50,7 +50,7 @@ public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.Com
     @Override
     public Compound find( Compound compound ) {
 
-        Criteria queryObject = super.getSession().createCriteria( Compound.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Compound.class );
         queryObject.add( Restrictions.eq( "name", compound.getName() ) );
 
         java.util.List<?> results = queryObject.list();

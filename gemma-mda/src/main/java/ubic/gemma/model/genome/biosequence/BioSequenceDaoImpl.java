@@ -65,7 +65,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = BusinessKey.createQueryObject( getSession(), bioSequence );
+        Criteria queryObject = BusinessKey.createQueryObject( getSessionFactory().getCurrentSession(), bioSequence );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         /*
@@ -234,7 +234,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp where gp=bs2gp.geneProduct "
                 + " and bs2gp.bioSequence.name like :search ";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 

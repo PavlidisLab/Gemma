@@ -85,7 +85,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes ) {
         for ( CompositeSequence compositeSequence : newprobes ) {
             compositeSequence.setArrayDesign( arrayDesign );
-            this.getSession().update( compositeSequence );
+            this.getSessionFactory().getCurrentSession().update( compositeSequence );
         }
         this.update( arrayDesign );
     }
@@ -238,7 +238,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         StopWatch timer = new StopWatch();
         timer.start();
         BusinessKey.checkValidKey( arrayDesign );
-        Criteria queryObject = super.getSession().createCriteria( ArrayDesign.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
         BusinessKey.addRestrictions( queryObject, arrayDesign );
 
         java.util.List<?> results = queryObject.list();
@@ -489,7 +489,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         Map<Taxon, Integer> result = new HashMap<Taxon, Integer>();
 
         final String csString = "select t, count(ad) from ArrayDesignImpl ad inner join ad.primaryTaxon t group by t ";
-        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
+        org.hibernate.Query csQueryObject = super.getSessionFactory().getCurrentSession().createQuery( csString );
         csQueryObject.setReadOnly( true );
         csQueryObject.setCacheable( true );
 
@@ -1276,7 +1276,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 + "ad.technologyType, ad.description,s.createDate, m, s.troubled, s.validated, t.commonName"
                 + " from ArrayDesignImpl ad join ad.status s join ad.primaryTaxon t  left join ad.mergedInto m";
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         Collection<ArrayDesignValueObject> result = processADValueObjectQueryResults( eeCounts, queryObject );
 
@@ -1323,7 +1323,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 + "ad.technologyType, ad.description,s.createDate, m, s.troubled, s.validated, t.commonName"
                 + " from ArrayDesignImpl ad join ad.status s join ad.primaryTaxon t left join ad.mergedInto m where ad.id in (:ids)  ";
 
-        Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameterList( "ids", ids );
 
         return processADValueObjectQueryResults( eeCounts, queryObject );
@@ -1651,7 +1651,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 lastTime = timer.getTime();
                 batch.clear();
             }
-            this.getSession().evict( cs );
+            this.getSessionFactory().getCurrentSession().evict( cs );
         }
 
         if ( !batch.isEmpty() ) { // tail end

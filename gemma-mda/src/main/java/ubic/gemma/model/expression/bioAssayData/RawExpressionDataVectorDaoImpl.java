@@ -67,7 +67,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
                 + "and dev.quantitationType = :quantitationType ";
 
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameter( "quantitationType", quantitationType );
         queryObject.setParameter( "adid", arrayDesign.getId() );
 
@@ -94,7 +94,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  where  "
                 + "  dev.quantitationType in ( :quantitationTypes) ";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameterList( "quantitationTypes", quantitationTypes );
             return queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -107,7 +107,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         final String queryString = "select dev from RawExpressionDataVectorImpl dev   where  "
                 + "  dev.quantitationType = :quantitationType ";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "quantitationType", quantitationType );
             return queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -222,7 +222,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     protected Integer handleCountAll() {
         final String query = "select count(*) from RawExpressionDataVectorImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
