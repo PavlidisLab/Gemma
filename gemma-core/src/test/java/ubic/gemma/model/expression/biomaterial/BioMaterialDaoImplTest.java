@@ -41,6 +41,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
 
     @Before
     public void setup() {
+        log.info( "Starting setup" );
         BioMaterial testbm = this.getTestPersistentBioMaterial();
         searchkeyName = testbm.getName();
         searchkeyAcc = testbm.getExternalAccession().getAccession();
@@ -48,6 +49,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
         // create a couple more.
         this.getTestPersistentBioMaterial();
         this.getTestPersistentBioMaterial();
+        log.info( "Ending setup" );
     }
 
     /**
@@ -57,6 +59,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
      */
     @Test
     public final void testFindBioMaterial() {
+        log.info( "Starting test" );
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( searchkeyName );
         bm.setExternalAccession( DatabaseEntry.Factory.newInstance() );
@@ -67,6 +70,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testFindBioMaterialByAccessionOnly() {
+        log.info( "Starting test" );
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setExternalAccession( DatabaseEntry.Factory.newInstance() );
         bm.getExternalAccession().setAccession( searchkeyAcc );
@@ -76,6 +80,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testFindBioMaterialByNameOnly() {
+        log.info( "Starting test" );
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( searchkeyName );
         BioMaterial found = this.bioMaterialDao.find( bm );
