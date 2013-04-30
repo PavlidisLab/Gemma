@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -47,6 +48,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisS
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -88,6 +90,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     @Autowired
     private DifferentialExpressionResultService resultService;
+
+    @Autowired
+    private ArrayDesignAnnotationService arrayDesignAnnotationService;
 
     /*
      * (non-Javadoc)
@@ -149,15 +154,17 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         /*
          * Exercise the matrix output services.
          */
+        // avoid adding annotations for genes, it confuses the reader.
+        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            this.arrayDesignAnnotationService.deleteExistingFiles( ad );
+        }
         Collection<File> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
 
         assertEquals( 1, outputLocations.size() );
 
         File outputLocation = outputLocations.iterator().next();
 
-        /*
-         * Problem: this file could contain gene annotations. But might not.
-         */
+        // NOte that this reader generally won't work for experiment files because of the gene annotations.
         DoubleMatrixReader r = new DoubleMatrixReader();
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
