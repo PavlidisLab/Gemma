@@ -56,22 +56,22 @@ public class GeneSetServiceImpl implements GeneSetService {
     private static final Double DEFAULT_SCORE = 0.0;
 
     @Autowired
-    private GeneSetDao geneSetDao = null;
-
-    @Autowired
     private GeneService geneService;
 
     @Autowired
+    private GeneSetDao geneSetDao = null;
+
+    @Autowired
     private GeneSetSearch geneSetSearch;
+
+    @Autowired
+    private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     @Autowired
     private SecurityService securityService;
 
     @Autowired
     private TaxonService taxonService;
-
-    @Autowired
-    private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     /*
      * (non-Javadoc)
@@ -91,6 +91,64 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Override
     public GeneSet create( GeneSet geneset ) {
         return this.geneSetDao.create( geneset );
+    }
+
+    /**
+     * @param geneSetVo
+     * @return
+     */
+    @Override
+    public GeneSetValueObject createDatabaseEntity( GeneSetValueObject geneSetVo ) {
+        GeneSet newGeneSet = GeneSet.Factory.newInstance();
+        newGeneSet.setName( geneSetVo.getName() );
+        newGeneSet.setDescription( geneSetVo.getDescription() );
+
+        Collection<Long> geneIds = geneSetVo.getGeneIds();
+
+        // If no gene Ids just create group and return.
+        if ( geneIds != null && !geneIds.isEmpty() ) {
+            Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+            if ( geneIds.size() != genes.size() ) {
+                Log.warn( "Not all genes were found by id: " + geneIds.size() + " ids, " + genes.size()
+                        + " genes fetched" );
+            }
+
+            Collection<GeneSetMember> geneMembers = new HashSet<GeneSetMember>();
+            for ( Gene g : genes ) {
+                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                gmember.setGene( g );
+                gmember.setScore( DEFAULT_SCORE );
+                geneMembers.add( gmember );
+            }
+
+            newGeneSet.setMembers( geneMembers );
+        }
+
+        GeneSet gset = create( newGeneSet );
+
+        // make groups private by default
+        // can't do this to newGeneSet variable because the entity's id needs to be non-null
+        if ( geneSetVo.getIsPublic() ) {
+            securityService.makePublic( gset );
+        } else {
+            securityService.makePrivate( gset );
+        }
+
+        return geneSetValueObjectHelper.convertToValueObject( load( gset.getId() ) );
+    }
+
+    @Override
+    public void deleteDatabaseEntities( Collection<DatabaseBackedGeneSetValueObject> vos ) {
+        for ( DatabaseBackedGeneSetValueObject geneSetValueObject : vos ) {
+            deleteDatabaseEntity( geneSetValueObject );
+        }
+    }
+
+    @Override
+    public void deleteDatabaseEntity( DatabaseBackedGeneSetValueObject geneSetVO ) {
+        GeneSet gset = load( geneSetVO.getId() );
+        if ( gset != null ) remove( gset );
     }
 
     /*
@@ -120,6 +178,226 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Override
     public Collection<GeneSet> findByName( String name, Taxon taxon ) {
         return this.geneSetDao.findByName( name, taxon );
+    }
+
+    /**
+     * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
+     * 
+     * @param geneId
+     * @return collection of geneSetValueObject
+     */
+    @Override
+    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
+
+        Gene gene = geneService.load( geneId );
+
+        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
+
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( genesets, false ) );
+        return gsvos;
+    }
+
+    /**
+     * @param query string to match to gene sets
+     * @param taxonId
+     * @return collection of GeneSetValueObjects that match name query
+     */
+    @Override
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
+
+        if ( StringUtils.isBlank( query ) ) {
+            return new HashSet<GeneSetValueObject>();
+        }
+        Collection<GeneSet> foundGeneSets = null;
+        Taxon tax = null;
+        if ( taxonId == null ) {
+            // throw new IllegalArgumentException( "Taxon must not be null" );
+            foundGeneSets = geneSetSearch.findByName( query );
+        } else {
+
+            tax = taxonService.load( taxonId );
+
+            if ( tax == null ) {
+                // throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
+                foundGeneSets = geneSetSearch.findByName( query );
+            } else {
+                foundGeneSets = geneSetSearch.findByName( query, tax );
+            }
+        }
+
+        /*
+         * Behaviour implemented here (easy to change): If we have a match in our system we stop here. Otherwise, we go
+         * on to search the Gene Ontology.
+         */
+
+        // need taxon ID to be set for now, easy to change in Gene2GOAssociationDaoImpl.handleFindByGoTerm(String,
+        // Taxon)
+
+        if ( foundGeneSets.isEmpty() && tax != null ) {
+            if ( query.toUpperCase().startsWith( "GO" ) ) {
+                GeneSet goSet = this.geneSetSearch.findByGoId( query, tax );
+                if ( goSet != null ) foundGeneSets.add( goSet );
+            } else {
+                foundGeneSets.addAll( geneSetSearch.findByGoTermName( query, tax ) );
+            }
+        }
+
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        // gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
+        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( foundGeneSets ) );
+        return gsvos;
+    }
+
+    /**
+     * Get the gene value objects for the members of the group param
+     * 
+     * @param groupId
+     * @return
+     */
+    @Override
+    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
+
+        Collection<GeneValueObject> results = null;
+
+        GeneSet gs = load( groupId );
+        if ( gs == null ) return null; // FIXME: Send and error code/feedback?
+
+        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
+
+        return results;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.genome.gene.service.GeneSetService#getSize(java.lang.Long)
+     */
+    @Override
+    public int getSize( Long groupId ) {
+        return this.geneSetDao.getGeneCount( groupId );
+    }
+
+    /**
+     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
+     * all the genes
+     * 
+     * @param geneSet
+     * @return the taxon or null if the gene set param was null
+     */
+    @Override
+    public Taxon getTaxon( GeneSet geneSet ) {
+        if ( geneSet == null ) return null;
+        Taxon tmpTax = null;
+        tmpTax = geneSetDao.getTaxon( geneSet.getId() );
+        // check top-level parent
+        while ( tmpTax != null && tmpTax.getParentTaxon() != null ) {
+            tmpTax = tmpTax.getParentTaxon();
+        }
+        return tmpTax;
+    }
+
+    /**
+     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
+     * all the genes
+     * 
+     * @param geneSetVos
+     * @return the taxon or null if the gene set param was null
+     */
+    @Override
+    public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO ) {
+
+        if ( geneSetVO == null ) return null;
+
+        TaxonValueObject taxonVO = null;
+        // get taxon from members
+        for ( Long l : geneSetVO.getGeneIds() ) {
+            Gene gene = geneService.load( l );
+
+            if ( gene != null && gene.getTaxon() != null ) {
+                taxonVO = TaxonValueObject.fromEntity( gene.getTaxon() );
+                break;// assuming that the taxon will be the same for all genes in the set so no need to load all genes
+                      // from set
+            }
+        }
+
+        return taxonVO;
+    }
+
+    /**
+     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
+     * or private
+     * 
+     * @param privateOnly only return private sets owned by the user or private sets shared with the user
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon (can be null)
+     * @param sharedPublicOnly if true, the only public sets returned will be those that are owned by the user or have
+     *        been shared with the user. If param privateOnly is true, this will have no effect.
+     * @return
+     */
+    @Override
+    public Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly ) {
+
+        Taxon tax = null;
+        if ( taxonId != null ) {
+            tax = taxonService.load( taxonId );
+            if ( tax == null ) {
+                throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
+            }
+        }
+
+        Collection<GeneSet> geneSets = new LinkedList<GeneSet>();
+
+        if ( privateOnly ) {
+            // gets all groups user can see (includes: owned by user, shared with user & public)
+            geneSets = loadAll( tax );
+
+            // this filtering is to filter out public sets
+            try {
+                if ( !geneSets.isEmpty() ) {
+                    geneSets.retainAll( securityService.choosePrivate( geneSets ) );
+                }
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+        } else if ( sharedPublicOnly ) {
+            // gets all groups shared with the user and all groups owned by the user, except public ones
+            geneSets = loadMySharedGeneSets( tax );
+        } else {
+            geneSets = loadAll( tax );
+        }
+
+        return geneSets;
+    }
+
+    /**
+     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
+     * or private
+     * 
+     * @param privateOnly
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return
+     */
+    @Override
+    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly,
+            Long taxonId ) {
+        Collection<GeneSet> geneSets = getUsersGeneGroups( privateOnly, taxonId, false );
+        return geneSetValueObjectHelper.convertToValueObjects( geneSets );
+    }
+
+    @Override
+    public DatabaseBackedGeneSetValueObject getValueObject( Long id ) {
+        GeneSet geneSet = load( id );
+        return geneSetValueObjectHelper.convertToValueObject( geneSet );
+    }
+
+    @Override
+    public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> ids ) {
+        Collection<DatabaseBackedGeneSetValueObject> vos = new ArrayList<DatabaseBackedGeneSetValueObject>();
+        for ( Long id : ids ) {
+            vos.add( getValueObject( id ) );
+        }
+        return vos;
     }
 
     /*
@@ -239,144 +517,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-    @Override
-    public DatabaseBackedGeneSetValueObject getValueObject( Long id ) {
-        GeneSet geneSet = load( id );
-        return geneSetValueObjectHelper.convertToValueObject( geneSet );
-    }
-
-    @Override
-    public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> ids ) {
-        Collection<DatabaseBackedGeneSetValueObject> vos = new ArrayList<DatabaseBackedGeneSetValueObject>();
-        for ( Long id : ids ) {
-            vos.add( getValueObject( id ) );
-        }
-        return vos;
-    }
-
-    /**
-     * @param geneSetVo
-     * @return
-     */
-    @Override
-    public GeneSetValueObject createDatabaseEntity( GeneSetValueObject geneSetVo ) {
-        GeneSet newGeneSet = GeneSet.Factory.newInstance();
-        newGeneSet.setName( geneSetVo.getName() );
-        newGeneSet.setDescription( geneSetVo.getDescription() );
-
-        Collection<Long> geneIds = geneSetVo.getGeneIds();
-
-        // If no gene Ids just create group and return.
-        if ( geneIds != null && !geneIds.isEmpty() ) {
-            Collection<Gene> genes = geneService.loadMultiple( geneIds );
-
-            if ( geneIds.size() != genes.size() ) {
-                Log.warn( "Not all genes were found by id: " + geneIds.size() + " ids, " + genes.size()
-                        + " genes fetched" );
-            }
-
-            Collection<GeneSetMember> geneMembers = new HashSet<GeneSetMember>();
-            for ( Gene g : genes ) {
-                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-                gmember.setGene( g );
-                gmember.setScore( DEFAULT_SCORE );
-                geneMembers.add( gmember );
-            }
-
-            newGeneSet.setMembers( geneMembers );
-        }
-
-        GeneSet gset = create( newGeneSet );
-
-        // make groups private by default
-        // can't do this to newGeneSet variable because the entity's id needs to be non-null
-        if ( geneSetVo.getIsPublic() ) {
-            securityService.makePublic( gset );
-        } else {
-            securityService.makePrivate( gset );
-        }
-
-        return geneSetValueObjectHelper.convertToValueObject( load( gset.getId() ) );
-    }
-
-    /**
-     * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
-     * 
-     * @param geneId
-     * @return collection of geneSetValueObject
-     */
-    @Override
-    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
-
-        Gene gene = geneService.load( geneId );
-
-        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
-
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( genesets, false ) );
-        return gsvos;
-    }
-
-    /**
-     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
-     * gene to be added to the gene set twice. Cannot update name or description, just members
-     * 
-     * @param groupId id of the gene set being updated
-     * @param geneIds
-     */
-    @Override
-    public String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds ) {
-
-        String msg = null;
-
-        GeneSet gset = load( groupId );
-        if ( gset == null ) {
-            throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
-        }
-        Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
-
-        if ( geneIds.isEmpty() ) {
-            throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
-        }
-
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
-
-        if ( genes.isEmpty() ) {
-            throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
-                    + " provided)" );
-        }
-        if ( genes.size() < geneIds.size() ) {
-            throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
-                    + " out of " + geneIds.size() + " provided)" );
-        }
-
-        assert genes.size() == geneIds.size();
-
-        for ( Gene g : genes ) {
-
-            GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
-
-            // Gene not in list create memember and add it.
-            if ( gsm == null ) {
-                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-                gmember.setGene( g );
-                gmember.setScore( DEFAULT_SCORE );
-                gset.getMembers().add( gmember );
-                updatedGenelist.add( gmember );
-            } else {
-                updatedGenelist.add( gsm );
-            }
-        }
-
-        gset.getMembers().clear();
-        gset.getMembers().addAll( updatedGenelist );
-
-        update( gset );
-
-        return msg;
-
-    }
-
     /**
      * AJAX Updates the database entity (permission permitting) with the fields of the param value object
      * 
@@ -450,6 +590,66 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice. Cannot update name or description, just members
+     * 
+     * @param groupId id of the gene set being updated
+     * @param geneIds
+     */
+    @Override
+    public String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds ) {
+
+        String msg = null;
+
+        GeneSet gset = load( groupId );
+        if ( gset == null ) {
+            throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+        }
+        Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+
+        if ( geneIds.isEmpty() ) {
+            throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
+        }
+
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+        if ( genes.isEmpty() ) {
+            throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
+                    + " provided)" );
+        }
+        if ( genes.size() < geneIds.size() ) {
+            throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
+                    + " out of " + geneIds.size() + " provided)" );
+        }
+
+        assert genes.size() == geneIds.size();
+
+        for ( Gene g : genes ) {
+
+            GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+
+            // Gene not in list create memember and add it.
+            if ( gsm == null ) {
+                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                gmember.setGene( g );
+                gmember.setScore( DEFAULT_SCORE );
+                gset.getMembers().add( gmember );
+                updatedGenelist.add( gmember );
+            } else {
+                updatedGenelist.add( gsm );
+            }
+        }
+
+        gset.getMembers().clear();
+        gset.getMembers().addAll( updatedGenelist );
+
+        update( gset );
+
+        return msg;
+
+    }
+
+    /**
      * AJAX Updates the database entity (permission permitting) with the name and description fields of the param value
      * object
      * 
@@ -471,195 +671,5 @@ public class GeneSetServiceImpl implements GeneSetService {
 
         return geneSetValueObjectHelper.convertToValueObject( gset );
 
-    }
-
-    @Override
-    public void deleteDatabaseEntity( DatabaseBackedGeneSetValueObject geneSetVO ) {
-        GeneSet gset = load( geneSetVO.getId() );
-        if ( gset != null ) remove( gset );
-    }
-
-    @Override
-    public void deleteDatabaseEntities( Collection<DatabaseBackedGeneSetValueObject> vos ) {
-        for ( DatabaseBackedGeneSetValueObject geneSetValueObject : vos ) {
-            deleteDatabaseEntity( geneSetValueObject );
-        }
-    }
-
-    /**
-     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
-     * or private
-     * 
-     * @param privateOnly only return private sets owned by the user or private sets shared with the user
-     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon (can be null)
-     * @param sharedPublicOnly if true, the only public sets returned will be those that are owned by the user or have
-     *        been shared with the user. If param privateOnly is true, this will have no effect.
-     * @return
-     */
-    @Override
-    public Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly ) {
-
-        Taxon tax = null;
-        if ( taxonId != null ) {
-            tax = taxonService.load( taxonId );
-            if ( tax == null ) {
-                throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
-            }
-        }
-
-        Collection<GeneSet> geneSets = new LinkedList<GeneSet>();
-
-        if ( privateOnly ) {
-            // gets all groups user can see (includes: owned by user, shared with user & public)
-            geneSets = loadAll( tax );
-
-            // this filtering is to filter out public sets
-            try {
-                if ( !geneSets.isEmpty() ) {
-                    geneSets.retainAll( securityService.choosePrivate( geneSets ) );
-                }
-            } catch ( AccessDeniedException e ) {
-                // okay, they just aren't allowed to see those.
-            }
-        } else if ( sharedPublicOnly ) {
-            // gets all groups shared with the user and all groups owned by the user, except public ones
-            geneSets = loadMySharedGeneSets( tax );
-        } else {
-            geneSets = loadAll( tax );
-        }
-
-        return geneSets;
-    }
-
-    /**
-     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
-     * or private
-     * 
-     * @param privateOnly
-     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
-     * @return
-     */
-    @Override
-    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly,
-            Long taxonId ) {
-        Collection<GeneSet> geneSets = getUsersGeneGroups( privateOnly, taxonId, false );
-        return geneSetValueObjectHelper.convertToValueObjects( geneSets );
-    }
-
-    /**
-     * Get the gene value objects for the members of the group param
-     * 
-     * @param groupId
-     * @return
-     */
-    @Override
-    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
-
-        Collection<GeneValueObject> results = null;
-
-        GeneSet gs = load( groupId );
-        if ( gs == null ) return null; // FIXME: Send and error code/feedback?
-
-        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
-
-        return results;
-
-    }
-
-    /**
-     * @param query string to match to gene sets
-     * @param taxonId
-     * @return collection of GeneSetValueObjects that match name query
-     */
-    @Override
-    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
-
-        if ( StringUtils.isBlank( query ) ) {
-            return new HashSet<GeneSetValueObject>();
-        }
-        Collection<GeneSet> foundGeneSets = null;
-        Taxon tax = null;
-        if ( taxonId == null ) {
-            // throw new IllegalArgumentException( "Taxon must not be null" );
-            foundGeneSets = geneSetSearch.findByName( query );
-        } else {
-
-            tax = taxonService.load( taxonId );
-
-            if ( tax == null ) {
-                // throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
-                foundGeneSets = geneSetSearch.findByName( query );
-            } else {
-                foundGeneSets = geneSetSearch.findByName( query, tax );
-            }
-        }
-
-        /*
-         * Behaviour implemented here (easy to change): If we have a match in our system we stop here. Otherwise, we go
-         * on to search the Gene Ontology.
-         */
-
-        // need taxon ID to be set for now, easy to change in Gene2GOAssociationDaoImpl.handleFindByGoTerm(String,
-        // Taxon)
-
-        if ( foundGeneSets.isEmpty() && tax != null ) {
-            if ( query.toUpperCase().startsWith( "GO" ) ) {
-                GeneSet goSet = this.geneSetSearch.findByGoId( query, tax );
-                if ( goSet != null ) foundGeneSets.add( goSet );
-            } else {
-                foundGeneSets.addAll( geneSetSearch.findByGoTermName( query, tax ) );
-            }
-        }
-
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        // gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
-        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( foundGeneSets ) );
-        return gsvos;
-    }
-
-    /**
-     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
-     * all the genes
-     * 
-     * @param geneSetVos
-     * @return the taxon or null if the gene set param was null
-     */
-    @Override
-    public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO ) {
-
-        if ( geneSetVO == null ) return null;
-
-        TaxonValueObject taxonVO = null;
-        // get taxon from members
-        for ( Long l : geneSetVO.getGeneIds() ) {
-            Gene gene = geneService.load( l );
-
-            if ( gene != null && gene.getTaxon() != null ) {
-                taxonVO = TaxonValueObject.fromEntity( gene.getTaxon() );
-                break;// assuming that the taxon will be the same for all genes in the set so no need to load all genes
-                      // from set
-            }
-        }
-
-        return taxonVO;
-    }
-
-    /**
-     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
-     * all the genes
-     * 
-     * @param geneSet
-     * @return the taxon or null if the gene set param was null
-     */
-    @Override
-    public Taxon getTaxonForGeneSet( GeneSet geneSet ) {
-        if ( geneSet == null ) return null;
-        Taxon tmpTax = null;
-        tmpTax = geneSetDao.getTaxon( geneSet.getId() );
-        // check top-level parent
-        while ( tmpTax != null && tmpTax.getParentTaxon() != null ) {
-            tmpTax = tmpTax.getParentTaxon();
-        }
-        return tmpTax;
     }
 }

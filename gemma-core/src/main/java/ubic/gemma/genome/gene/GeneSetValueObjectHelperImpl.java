@@ -25,17 +25,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetDao;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * This class will handle population of GeneSetValueObjects. Services need to be accessed in order to define values for
@@ -48,7 +48,7 @@ import ubic.gemma.security.SecurityService;
 public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
     @Autowired
-    private GeneSetDao geneSetDao;
+    private GeneSetService geneSetService;
 
     @Autowired
     private SecurityService securityService;
@@ -64,8 +64,8 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
         if ( dbgsvo != null ) {
             // no duplicates
-            Set<Long> ids = new HashSet<Long>( this.geneSetDao.getGeneIds( gs.getId() ) );
-            dbgsvo.setGeneIds( ids );
+            Collection<Long> ids = EntityUtils.getIds( this.geneSetService.getGenesInGroup( gs.getId() ) );
+            dbgsvo.getGeneIds().addAll( ids );
             dbgsvo.setSize( ids.size() );
         }
 
@@ -90,12 +90,12 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         dbgsvo.setId( gs.getId() );
 
-        dbgsvo.setGeneIds( null );
+        dbgsvo.setGeneIds( new HashSet<Long>() );
 
         dbgsvo.setDescription( gs.getDescription() );
-        dbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
+        dbgsvo.setSize( this.geneSetService.getSize( gs.getId() ) );
 
-        Taxon tax = this.geneSetDao.getTaxon( gs.getId() );
+        Taxon tax = this.geneSetService.getTaxon( gs );
         if ( tax != null ) {
             while ( tax.getParentTaxon() != null ) {
                 tax = tax.getParentTaxon();
@@ -155,7 +155,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         List<DatabaseBackedGeneSetValueObject> results = new ArrayList<DatabaseBackedGeneSetValueObject>();
 
         for ( GeneSet gs : genesets ) {
-            if ( !includeOnesWithoutGenes && this.geneSetDao.getGeneCount( gs.getId() ) <= 0 ) {
+            if ( !includeOnesWithoutGenes && this.geneSetService.getSize( gs.getId() ) <= 0 ) {
                 continue;
             }
 
@@ -186,7 +186,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
             sbgsvo.setSize( gs.getMembers() != null ? gs.getMembers().size() : 0 );
         } else {// this case may never happen as this is only called from convertToGoValueObject() leaving here in case
                 // this method is ever called from somewhere else
-            sbgsvo.setSize( this.geneSetDao.getGeneCount( gs.getId() ) );
+            sbgsvo.setSize( this.geneSetService.getSize( gs.getId() ) );
         }
 
         Collection<Long> gids = new HashSet<Long>();
@@ -195,7 +195,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         }
         sbgsvo.setGeneIds( gids );
 
-        Taxon tax = this.geneSetDao.getTaxon( gs.getId() );
+        Taxon tax = this.geneSetService.getTaxon( gs );
         if ( tax != null ) {
             while ( tax.getParentTaxon() != null ) {
                 tax = tax.getParentTaxon();

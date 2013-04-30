@@ -31,13 +31,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author pavlidis
  * @version $Id$
  */
-public class BioMaterialDaoImplTest extends BaseSpringContextTest {
+public class BioMaterialServiceTest extends BaseSpringContextTest {
 
     private String searchkeyName;
     private String searchkeyAcc;
 
     @Autowired
-    BioMaterialDao bioMaterialDao;
+    private BioMaterialService bioMaterialService;
 
     @Before
     public void setup() {
@@ -64,7 +64,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
         bm.setName( searchkeyName );
         bm.setExternalAccession( DatabaseEntry.Factory.newInstance() );
         bm.getExternalAccession().setAccession( searchkeyAcc );
-        BioMaterial found = this.bioMaterialDao.find( bm );
+        BioMaterial found = this.bioMaterialService.findOrCreate( bm );
         assertTrue( found != null );
     }
 
@@ -74,7 +74,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setExternalAccession( DatabaseEntry.Factory.newInstance() );
         bm.getExternalAccession().setAccession( searchkeyAcc );
-        BioMaterial found = this.bioMaterialDao.find( bm );
+        BioMaterial found = this.bioMaterialService.findOrCreate( bm );
         assertTrue( found != null );
     }
 
@@ -83,7 +83,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
         log.info( "Starting test" );
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( searchkeyName );
-        BioMaterial found = this.bioMaterialDao.find( bm );
+        BioMaterial found = this.bioMaterialService.findOrCreate( bm );
         assertTrue( found != null );
     }
 

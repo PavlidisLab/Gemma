@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +50,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
     @Override
@@ -68,6 +68,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
     @Override
@@ -83,6 +84,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -93,6 +95,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -104,6 +107,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -120,6 +124,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
     @Override
@@ -129,6 +134,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
      */
     @Override
@@ -142,6 +148,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#loadAll()
      */
     @Override
@@ -152,6 +159,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#loadAll(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -164,6 +172,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
      */
     @Override
@@ -176,6 +185,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
      */
     @Override
@@ -189,6 +199,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
      */
     @Override
@@ -205,6 +216,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
      */
     @Override
@@ -221,6 +233,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
      */
     @Override
@@ -267,28 +280,15 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     }
 
     @Override
-    public Collection<Long> getGeneIds( Long id ) {
-
-        List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select gs.id, g.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :ids", "ids", id );
-        Collection<Long> results = new ArrayList<Long>();
-
-        for ( Object object : o ) {
-            Object[] oa = ( Object[] ) object;
-            results.add( ( Long ) oa[1] );
-        }
-
-        return results;
-
-    }
-
-    @Override
     public Long getTaxonId( Long id ) {
 
         // using Query because I want to be able to limit the number of row returned to one
 
-        Query q = this.getSessionFactory().getCurrentSession().createQuery(
-                "select g.id, g.taxon.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
+        Query q = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select g.id, g.taxon.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
         q.setParameter( "id", id );
         q.setMaxResults( 1 );
 
@@ -307,8 +307,11 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
         // using Query because I want to be able to limit the number of row returned to one
 
-        Query q = this.getSessionFactory().getCurrentSession().createQuery(
-                "select g.id, g.taxon from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
+        Query q = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select g.id, g.taxon from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
         q.setParameter( "id", id );
         q.setMaxResults( 1 );
 

@@ -17,7 +17,7 @@ package ubic.gemma.analysis.preprocess;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component; 
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -71,7 +71,7 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
-    private SampleCoexpressionAnalysisDao sampleCoexpressionMatrixDao;
+    private SampleCoexpressionMatrixHelperService sampleCoexpressionMatrixHelperService;
 
     /*
      * (non-Javadoc)
@@ -82,7 +82,7 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
      */
     @Override
     public DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee, boolean forceRecompute ) {
-        DoubleMatrix<BioAssay, BioAssay> mat = sampleCoexpressionMatrixDao.load( ee );
+        DoubleMatrix<BioAssay, BioAssay> mat = sampleCoexpressionMatrixHelperService.load( ee );
 
         if ( forceRecompute || mat == null ) {
 
@@ -122,7 +122,7 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
         DoubleMatrix<BioAssay, BioAssay> mat = getMatrix( datamatrix );
         assert mat != null;
 
-        sampleCoexpressionMatrixDao.create( mat, datamatrix.getBestBioAssayDimension(),
+        sampleCoexpressionMatrixHelperService.create( mat, datamatrix.getBestBioAssayDimension(),
                 datamatrix.getExpressionExperiment() );
 
         return mat;
@@ -137,7 +137,7 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
      */
     @Override
     public void delete( ExpressionExperiment ee ) {
-        sampleCoexpressionMatrixDao.removeForExperiment( ee );
+        sampleCoexpressionMatrixHelperService.removeForExperiment( ee );
     }
 
     /*
@@ -161,6 +161,6 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
      */
     @Override
     public boolean hasMatrix( ExpressionExperiment ee ) {
-        return sampleCoexpressionMatrixDao.load( ee ) != null;
+        return sampleCoexpressionMatrixHelperService.load( ee ) != null;
     }
 }

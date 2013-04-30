@@ -1800,7 +1800,7 @@ public class SearchServiceImpl implements SearchService {
 
                 } else if ( o instanceof GeneSet ) {
                     GeneSet geneSet = ( GeneSet ) o;
-                    currentTaxon = geneSetService.getTaxonForGeneSet( geneSet );
+                    currentTaxon = geneSetService.getTaxon( geneSet );
 
                 } else if ( o instanceof CharacteristicValueObject ) {
                     CharacteristicValueObject charVO = ( CharacteristicValueObject ) o;

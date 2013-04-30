@@ -42,15 +42,15 @@ public interface SampleCoexpressionMatrixService {
      */
     public abstract DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee, boolean forceRecompute );
 
+    public abstract boolean hasMatrix( ExpressionExperiment ee );
+
+    public abstract void delete( ExpressionExperiment ee );
+
     /**
      * @param processedVectors
      * @return correlation matrix. The matrix is NOT sorted by the experimental design.
      */
     public abstract DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors );
-
-    public abstract boolean hasMatrix( ExpressionExperiment ee );
-
-    public abstract void delete( ExpressionExperiment ee );
 
 }

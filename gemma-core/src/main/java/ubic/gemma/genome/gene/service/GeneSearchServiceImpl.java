@@ -209,7 +209,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 GeneSet gs = ( GeneSet ) sr.getResultObject();
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
-                taxon = geneSetService.getTaxonForGeneSet( ( GeneSet ) sr.getResultObject() );
+                taxon = geneSetService.getTaxon( ( GeneSet ) sr.getResultObject() );
                 GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gs );
                 srdo = new SearchResultDisplayObject( gsvo );
                 srdo.setTaxonId( taxon.getId() );
