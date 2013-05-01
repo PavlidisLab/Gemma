@@ -35,7 +35,6 @@ import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -51,30 +50,24 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
     @Autowired
-    AnalysisSelectionAndExecutionService analysisService = null;
+    private AnalysisSelectionAndExecutionService analysisService = null;
 
     @Autowired
-    DiffExAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     @Autowired
-    ExperimentalDesignImporter designImporter;
+    private ExperimentalDesignImporter designImporter;
+
+    private ExpressionExperiment ee;
 
     @Autowired
-    DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private ExperimentalFactorService experimentalFactorService;
 
     @Autowired
-    DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
-
-    ExpressionExperiment ee;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    ExperimentalFactorService experimentalFactorService;
-
-    @Autowired
-    ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Autowired
     private GeoService geoService;
@@ -135,7 +128,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             experimentalFactorService.delete( ef );
         }
-
+        ee = expressionExperimentService.thawLite( ee );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         ee = expressionExperimentService.thaw( ee );
