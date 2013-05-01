@@ -195,8 +195,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
         QuantitationType newQt = qts.iterator().next();
 
-        assert newQt.getId() == null;
-        newQt = this.quantitationTypeDao.create( newQt );
+        newQt = this.quantitationTypeDao.findOrCreate( newQt );
 
         for ( RawExpressionDataVector vec : newVectors ) {
             vec.setBioAssayDimension( bad );

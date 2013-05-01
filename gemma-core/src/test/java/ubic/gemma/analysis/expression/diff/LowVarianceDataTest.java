@@ -127,8 +127,11 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             experimentalFactorService.delete( ef );
+            ee.getExperimentalDesign().getExperimentalFactors().remove( ef );
         }
-        ee = expressionExperimentService.thawLite( ee );
+
+        expressionExperimentService.update( ee );
+
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         ee = expressionExperimentService.thaw( ee );

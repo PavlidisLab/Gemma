@@ -93,8 +93,11 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         newee = eeService.thawLite( newee );
 
         for ( ExperimentalFactor ef : newee.getExperimentalDesign().getExperimentalFactors() ) {
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                assertTrue( fv.getValue().startsWith( "Batch_0" ) ); // Batch_01, Batch_02 etc.
+            if ( ef.getName().equals( "batch" ) ) {
+                for ( FactorValue fv : ef.getFactorValues() ) {
+                    assertNotNull( fv.getValue() );
+                    assertTrue( fv.getValue().startsWith( "Batch_0" ) ); // Batch_01, Batch_02 etc.
+                }
             }
         }
 

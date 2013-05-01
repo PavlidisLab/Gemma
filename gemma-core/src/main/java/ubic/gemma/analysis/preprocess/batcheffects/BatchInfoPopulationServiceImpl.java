@@ -267,7 +267,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         log.info( "Removing existing batch factor: " + toRemove );
         experimentalFactorService.delete( toRemove );
-
+        ee.getExperimentalDesign().getExperimentalFactors().remove( toRemove );
+        this.expressionExperimentService.update( ee );
     }
 
 }
