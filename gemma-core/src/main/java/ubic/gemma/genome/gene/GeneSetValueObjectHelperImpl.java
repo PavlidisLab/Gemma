@@ -60,9 +60,12 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
      */
     @Override
     public DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {
+        if ( gs == null ) return null;
 
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
-        if ( dbgsvo != null ) {
+        if ( dbgsvo != null ) { // FIXME why would it be null?
+
+            // FIXME are we sure this
             Collection<Long> ids = EntityUtils.getIds( this.geneSetService.getGenesInGroup( gs.getId() ) );
             dbgsvo.getGeneIds().addAll( ids );
             dbgsvo.setSize( ids.size() );
@@ -106,6 +109,9 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
             dbgsvo.setTaxonName( null );
         }
 
+        /*
+         * FIXME this should be done by the security interceptor.
+         */
         dbgsvo.setUserCanWrite( this.securityService.isEditable( gs ) );
         dbgsvo.setUserOwned( this.securityService.isOwnedByCurrentUser( gs ) );
         dbgsvo.setIsPublic( this.securityService.isPublic( gs ) );
@@ -176,6 +182,10 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         return results;
     }
 
+    /**
+     * @param sbgsvo
+     * @param gs
+     */
     private void fillSessionBoundValueObject( SessionBoundGeneSetValueObject sbgsvo, GeneSet gs ) {
 
         sbgsvo.setName( gs.getName() );
