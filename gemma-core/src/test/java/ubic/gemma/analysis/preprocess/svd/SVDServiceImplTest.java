@@ -62,7 +62,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
-            ee = ( ExpressionExperiment ) e.getData();
+            ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
         }
         assertNotNull( ee );
         ee = eeService.thaw( ee );
