@@ -28,11 +28,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface DifferentialExpressionAnalyzerService {
 
     /**
-     * Delete all analyses associated with the experiment. Also deletes files associated with the analysis. (e.g.,
-     * results dumps)
+     * Delete any differential expression analyses associated with the experiment. Also deletes files associated with
+     * the analysis (e.g., results dumps) and associated hitlist sizes and pvalue distributions.
      * 
      * @param expressionExperiment
-     * @return
+     * @return the number of analyses that were deleted
      */
     public int deleteAnalyses( ExpressionExperiment expressionExperiment );
 
@@ -70,6 +70,16 @@ public interface DifferentialExpressionAnalyzerService {
      */
     public abstract Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis copyMe, Double qvalueThreshold );
+
+    /**
+     * Redo with the deault qvalueThreshold.
+     * 
+     * @param ee
+     * @param copyMe
+     * @return
+     */
+    public abstract Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis copyMe );
 
     /**
      * @param expressionExperiment

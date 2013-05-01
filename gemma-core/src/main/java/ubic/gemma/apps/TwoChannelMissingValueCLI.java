@@ -28,7 +28,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.PreprocessingException;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
@@ -68,17 +69,17 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
     }
 
-    private TwoChannelMissingValues tcmv;
-
     private DesignElementDataVectorService dedvs;
-
-    private ProcessedExpressionDataVectorCreateService pedvs;
-
-    private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
 
     private Collection<Double> extraMissingValueIndicators = new HashSet<Double>();
 
+    private PreprocessorService preprocessorService;
+
     private QuantitationTypeService quantitationTypeService;
+
+    private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
+
+    private TwoChannelMissingValues tcmv;
 
     @Override
     public String getShortDesc() {
@@ -164,7 +165,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         dedvs = this.getBean( DesignElementDataVectorService.class );
         eeService = this.getBean( ExpressionExperimentService.class );
         quantitationTypeService = this.getBean( QuantitationTypeService.class );
-        this.pedvs = this.getBean( ProcessedExpressionDataVectorCreateService.class );
+        this.preprocessorService = this.getBean( PreprocessorService.class );
     }
 
     /**
@@ -227,9 +228,11 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             return false;
         }
 
-        log.info( "Saving processed data vectors" );
-
-        pedvs.computeProcessedExpressionData( ee );
+        try {
+            preprocessorService.process( ee, true );
+        } catch ( PreprocessingException e ) {
+            log.error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );
+        }
 
         return true;
     }

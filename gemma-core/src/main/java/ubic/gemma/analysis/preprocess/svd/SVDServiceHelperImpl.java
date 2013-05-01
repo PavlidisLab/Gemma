@@ -261,10 +261,15 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     public SVDValueObject svd( ExpressionExperiment ee ) {
         assert ee != null;
 
-        Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
-        processedExpressionDataVectorService.thaw( vectos );
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalArgumentException( "Experiment must have processed data already to do SVD" );
+        }
+
+        processedExpressionDataVectorService.thaw( vectors );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
 
         log.info( "Starting SVD" );
         ExpressionDataSVD svd = new ExpressionDataSVD( mat );

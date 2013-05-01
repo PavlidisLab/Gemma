@@ -70,8 +70,8 @@ public class BioAssayController {
      * @param id
      * @return
      */
-    public String markOutlier( Long id ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( id ) );
+    public String markOutlier( Collection<Long> ids ) {
+        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids ) );
     }
 
     /**
@@ -80,8 +80,8 @@ public class BioAssayController {
      * @param id
      * @return
      */
-    public String unmarkOutlier( Long id ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( id, true ) );
+    public String unmarkOutlier( Collection<Long> ids ) { 
+        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
     /**

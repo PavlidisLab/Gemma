@@ -1,5 +1,7 @@
 package ubic.gemma.tasks.analysis.expression;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -34,17 +36,16 @@ public class BioAssayOutlierProcessingTaskImpl implements BioAssayOutlierProcess
 
     @Override
     public TaskResult execute() {
-        BioAssay bioAssay = bioAssayService.load( command.getEntityId() );
-        if ( bioAssay == null ) {
-            throw new RuntimeException( "BioAssay with id=" + command.getEntityId() + " not found" );
+        Collection<BioAssay> bioAssays = bioAssayService.load( command.getBioAssayIds() );
+        if ( bioAssays.isEmpty() ) {
+            throw new RuntimeException( "did not find bioAssays" );
         }
 
         if ( command.isRevert() ) {
-            sampleRemoveService.unmarkAsMissing( bioAssay );
+            sampleRemoveService.unmarkAsMissing( bioAssays );
         } else {
-            sampleRemoveService.markAsMissing( bioAssay );
+            sampleRemoveService.markAsMissing( bioAssays );
         }
-        return new TaskResult( command, bioAssay );
+        return new TaskResult( command, bioAssays );
     }
-
 }

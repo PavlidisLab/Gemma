@@ -18,36 +18,23 @@
  */
 package ubic.gemma.analysis.service;
 
-import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
+import ubic.gemma.analysis.preprocess.PreprocessingException;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -64,7 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulatingService implements
         SampleRemoveService {
 
-    private static Log log = LogFactory.getLog( SampleRemoveServiceImpl.class.getName() );
+    private static Log log = LogFactory.getLog( SampleRemoveServiceImpl.class );
 
     @Autowired
     private BioAssayService bioAssayService;
@@ -76,66 +63,7 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private SampleCoexpressionMatrixService sampleSoexpressionMatrixService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    @Autowired
-    private BioAssayDimensionService assayDimensionService;
-
-    @Autowired
-    private ExpressionDataFileService dataFileService;
-
-    @Autowired
-    private Probe2ProbeCoexpressionService coexpressionService;
-
-    @Autowired
-    private DifferentialExpressionAnalyzerService analyzerService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.service.SampleRemoveService#markAsMissing(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    @Override
-    public void markAsMissing( BioAssay bioAssay ) {
-        Collection<BioAssay> bms = new HashSet<BioAssay>();
-        bms.add( bioAssay );
-        bioAssayService.thaw( bioAssay );
-        ExpressionExperiment expExp = expressionExperimentService.findByBioMaterial( bioAssay.getSampleUsed() );
-        assert expExp != null;
-        this.markAsMissing( expExp, bms );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.service.SampleRemoveService#markAsMissing(ubic.gemma.model.expression.experiment.
-     * ExpressionExperiment, ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    @Override
-    public void markAsMissing( ExpressionExperiment expExp, BioAssay bioAssay ) {
-        Collection<BioAssay> bms = new HashSet<BioAssay>();
-        bms.add( bioAssay );
-        this.markAsMissing( expExp, bms );
-
-    }
-
-    /**
-     * @param expExp
-     */
-    private void removeInvalidatedData( ExpressionExperiment expExp, Collection<ProcessedExpressionDataVector> vecs ) {
-
-        sampleSoexpressionMatrixService.create( expExp, vecs );
-        try {
-            dataFileService.deleteAllFiles( expExp );
-            coexpressionService.deleteLinks( expExp );
-            analyzerService.deleteAnalyses( expExp );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
+    private PreprocessorService preprocessorService;
 
     /*
      * (non-Javadoc)
@@ -144,25 +72,32 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
      * ubic.gemma.analysis.service.SampleRemoveService#unmarkAsMissing(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     @Override
-    public void unmarkAsMissing( BioAssay bioAssay ) {
-        if ( bioAssay.getIsOutlier() != null && !bioAssay.getIsOutlier() ) {
-            throw new IllegalArgumentException( "Sample is not already marked as an outlier, can't revert." );
+    public void unmarkAsMissing( Collection<BioAssay> bioAssays ) {
+        if ( bioAssays.isEmpty() ) return;
+
+        for ( BioAssay bioAssay : bioAssays ) {
+
+            if ( bioAssay.getIsOutlier() != null && !bioAssay.getIsOutlier() ) {
+                throw new IllegalArgumentException( "Sample is not already marked as an outlier, can't revert." );
+            }
+
+            // Rather long transaction.
+            bioAssay.setIsOutlier( false );
+            bioAssayService.update( bioAssay );
         }
 
-        // Rather long transaction.
-        bioAssay.setIsOutlier( false );
-        bioAssayService.update( bioAssay );
+        ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
+        auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.Factory.newInstance(), "Marked "
+                + bioAssays.size() + " bioassays as non-missing", StringUtils.join( bioAssays, "" ) );
 
-        ExpressionExperiment expExp = expressionExperimentService.findByBioMaterial( bioAssay.getSampleUsed() );
         assert expExp != null;
 
-        auditTrailService.addUpdateEvent( bioAssay, SampleRemovalReversionEvent.Factory.newInstance(), "" );
-
-        Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( expExp );
-
-        removeInvalidatedData( expExp, vecs );
-
+        // several transactions
+        try {
+            preprocessorService.process( expExp );
+        } catch ( PreprocessingException e ) {
+            log.error( "Error during postprocessing, make sure additional steps are completed", e );
+        }
     }
 
     /*
@@ -172,74 +107,24 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
      * ExpressionExperiment, java.util.Collection)
      */
     @Override
-    public void markAsMissing( ExpressionExperiment expExp, Collection<BioAssay> assaysToRemove ) {
+    public void markAsMissing( Collection<BioAssay> bioAssays ) {
 
-        if ( assaysToRemove == null || assaysToRemove.size() == 0 ) return;
+        if ( bioAssays == null || bioAssays.size() == 0 ) return;
 
-        // thaw vectors for each QT
-        expExp = expressionExperimentService.thawLite( expExp );
-
-        Collection<ProcessedExpressionDataVector> oldVectors = processedExpressionDataVectorService
-                .getProcessedDataVectors( expExp );
-
-        if ( oldVectors.isEmpty() ) {
-            // this should not happen.
-            throw new IllegalArgumentException(
-                    "The data set must have processed data first before outliers can be marked." );
-        }
-
-        Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-
-        int count = 0;
-        for ( DesignElementDataVector vector : oldVectors ) {
-
-            BioAssayDimension bad = vector.getBioAssayDimension();
-            bad = assayDimensionService.thaw( bad );
-
-            assert vector.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE );
-
-            dims.add( bad );
-            List<BioAssay> vectorAssays = ( List<BioAssay> ) bad.getBioAssays();
-
-            if ( !CollectionUtils.containsAny( vectorAssays, assaysToRemove ) ) continue;
-
-            LinkedList<Object> data = new LinkedList<Object>();
-            convertFromBytes( data, PrimitiveType.DOUBLE, vector );
-
-            // now set data as missing.
-            int i = 0;
-            for ( BioAssay vecAs : vectorAssays ) {
-                if ( assaysToRemove.contains( vecAs ) ) {
-                    data.set( i, Double.NaN );
-                }
-                i++;
-            }
-
-            // convert it back.
-            byte[] newDataAr = converter.toBytes( data.toArray() );
-            vector.setData( newDataAr );
-            if ( ++count % 5000 == 0 ) {
-                log.info( "Edited " + count + " vectors ... " );
-            }
-        }
-
-        log.info( "Committing changes to " + oldVectors.size() + " vectors" );
-
-        designElementDataVectorService.update( oldVectors );
-
-        for ( BioAssay ba : assaysToRemove ) {
+        for ( BioAssay ba : bioAssays ) {
             ba.setIsOutlier( true );
             bioAssayService.update( ba );
             audit( ba, "Sample " + ba.getName() + " marked as missing data." );
         }
+        ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
+        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(), bioAssays.size()
+                + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
 
-        auditTrailService.addUpdateEvent( expExp, ProcessedVectorComputationEvent.Factory.newInstance(),
-                "Updated as part of outlier handling." );
-
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(), assaysToRemove.size()
-                + " flagged as outliers: " + StringUtils.join( assaysToRemove, "," ) );
-
-        removeInvalidatedData( expExp, oldVectors );
+        try {
+            preprocessorService.process( expExp );
+        } catch ( PreprocessingException e ) {
+            log.error( "Error during postprocessing, make sure additional steps are completed", e );
+        }
     }
 
     /**

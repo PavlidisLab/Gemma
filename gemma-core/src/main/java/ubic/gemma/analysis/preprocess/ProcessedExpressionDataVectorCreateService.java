@@ -26,8 +26,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface ProcessedExpressionDataVectorCreateService {
 
     /**
+     * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary
+     * refreshing.
+     * 
      * @param ee
      * @return the vectors that were modified.
+     * @see PreprocessorService
      */
     public abstract Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee );
 
@@ -38,5 +42,4 @@ public interface ProcessedExpressionDataVectorCreateService {
      */
     public abstract void reorderByDesign( Long eeId );
 
-  
 }

@@ -34,6 +34,8 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.AnalysisUtilService;
+import ubic.gemma.analysis.preprocess.PreprocessingException;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -100,13 +102,7 @@ public class DataUpdater {
     private GeoService geoService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
-
-    @Autowired
-    private SVDService svdService;
+    private PreprocessorService preprocessorService;
 
     public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
@@ -417,11 +413,13 @@ public class DataUpdater {
     /**
      * @param ee
      */
-    public void postprocess( ExpressionExperiment ee ) {
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-        sampleCoexpressionMatrixService.delete( ee );
-        sampleCoexpressionMatrixService.create( ee, true );
-        svdService.svd( ee.getId() );
+    private void postprocess( ExpressionExperiment ee ) {
+        // several transactions
+        try {
+            preprocessorService.process( ee );
+        } catch ( PreprocessingException e ) {
+            log.error( "Error during postprocessing", e );
+        }
     }
 
     /**

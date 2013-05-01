@@ -5,6 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.geo.service.GeoService;
@@ -110,7 +112,12 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
         log.info( "Postprocessing ..." );
         for ( ExpressionExperiment ee : ees ) {
 
-            preprocessorService.process( ee );
+            try {
+                preprocessorService.process( ee );
+            } catch ( PreprocessingException e ) {
+                log.error( "Error during postprocessing", e );
+            }
+
         }
     }
 

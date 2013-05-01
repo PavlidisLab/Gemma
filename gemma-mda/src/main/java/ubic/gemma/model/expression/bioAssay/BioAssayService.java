@@ -45,7 +45,7 @@ public interface BioAssayService {
      */
     public Integer countAll();
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public BioAssay create( BioAssay bioAssay );
 
     /**
@@ -53,38 +53,44 @@ public interface BioAssayService {
      * Locate all BioAssayDimensions in which the selected BioAssay occurs
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     /**
      * @param accession eg GSM12345.
      * @return BioAssays that match based on the plain accession (unconstrained by ExternalDatabase).
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioAssay> findByAccession( String accession );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     public BioAssay findOrCreate( BioAssay bioAssay );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public BioAssay load( java.lang.Long id );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<BioAssay> loadAll();
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<BioAssay> loadAll();
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<BioAssay> load( Collection<Long> ids );
+
+    /**
+     * 
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void remove( BioAssay bioAssay );
 
     /**
@@ -92,22 +98,22 @@ public interface BioAssayService {
      * Removes the association between a specific bioMaterial and a bioAssay.
      * </p>
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void removeBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( BioAssay bioAssay );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( BioAssay bioAssay );
 
 }

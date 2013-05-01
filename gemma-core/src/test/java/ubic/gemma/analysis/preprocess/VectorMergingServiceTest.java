@@ -77,7 +77,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Test
     final public void test() throws Exception {
-
+        tearDown();
         /*
          * Need a persistent experiment that uses multiple array designs. Then merge the designs, switch the vectors,
          * and merge the vectors. GSE3443

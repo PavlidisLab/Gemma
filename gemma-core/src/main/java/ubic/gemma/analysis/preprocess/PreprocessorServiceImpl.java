@@ -14,48 +14,52 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
-import ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
+
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Encapsulates steps that are done to expression data sets after they are loaded, or which can be triggered by certain
  * later events in the lifecycle of a data set. These include:
  * <ol>
- * <li>Reprocess from raw data?
- * <li>Computing missing values
- * <li>Switching to a merged array design and merging vectors
+ * <li>Deleting old analysis files and results, as these are invalidated by the subsequent steps.S
+ * <li>Computing missing values - Basic processing
  * <li>Creation of "processed" vectors
- * <li>(Re)normalization
- * <li>Getting information on batches
  * <li>PCA
- * <li>Computing sample-wise correlation matrices
- * <li>Outlier detection
- * <li>Batch correction
- * <li>Populating the experimental design (guesses)?
- * <li>Ordering of vectors with respect to the experimental design? [probably not, this isn't a problem]
- * <li>Autotagger
+ * <li>Computing sample-wise correlation matrices for diagnostic plot
+ * <li>Computing mean-variance data for diagnostic plots
  * </ol>
  * <p>
  * WORK IN PROGRESS
- * </p
- * .
+ * </p>
+ * <p>
+ * Other elements that can be considered
+ * <ol>
+ * <li>Reprocess from raw data? - not yet
+ * <li>Switching to a merged array design and merging vectors
+ * <li>(Re)normalization
+ * <li>Getting information on batches
+ * <li>Outlier detection
+ * <li>Batch correction
+ * <li>Ordering of vectors with respect to the experimental design? [probably not, this isn't a big problem]
+ * <li>Populating the experimental design (guesses)?
+ * <li>Autotagger .
  * 
  * @author paul
  * @version $Id$
@@ -66,97 +70,31 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private static Log log = LogFactory.getLog( PreprocessorServiceImpl.class );
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private DifferentialExpressionAnalyzerService analyzerService;
 
     @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
+    private Probe2ProbeCoexpressionService coexpressionService;
 
     @Autowired
-    private BioAssayService bioAssayService;
+    private ExpressionDataFileService dataFileService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private DesignElementDataVectorService designElementDataVectorService = null;
-
-    @Autowired
-    private ProcessedExpressionDataVectorService processedDataService = null;
-
-    @Autowired
-    private ExpressionDataMatrixService expressionDataMatrixService;
-
-    @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Autowired
-    private TwoChannelMissingValues twoChannelMissingValueService;
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
     @Autowired
     private SVDServiceHelper svdService;
 
     @Autowired
-    private BatchInfoPopulationService batchInfoPopulationService;
-
-    @Autowired
-    ExpressionExperimentBatchCorrectionService batchCorrectionService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.PreprocessorService#createProcessedVectors(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment)
-     */
-    // private void process( ExpressionExperiment ee ) {
-    //
-    // processForMissingValues( ee );
-    //
-    // /*
-    // * Normalize here?
-    // */
-    //
-
-    //
-    // batchInfoPopulationService.fillBatchInformation( ee );
-    // svdService.svd( ee );
-    //
-    // /*
-    // * Batch correct here.
-    // */
-    //
-    // sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
-    // }
-
-    @Override
-    public void createProcessedVectors( ExpressionExperiment ee ) {
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-    }
-
-    // /**
-    // * @param ee
-    // * @return
-    // */
-    // private boolean processForMissingValues( ExpressionExperiment ee ) {
-    // Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-    // if ( arrayDesignsUsed.size() > 1 ) {
-    // log.warn( "Skipping postprocessing because experiment uses "
-    // + "multiple platform types. Please check valid entry and run postprocessing separately." );
-    // }
-    //
-    // ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-    // boolean wasProcessed = false;
-    //
-    // TechnologyType tt = arrayDesignUsed.getTechnologyType();
-    // if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-    // log.info( ee + " uses a two-color array design, processing for missing values ..." );
-    // ee = expressionExperimentService.thawLite( ee );
-    // twoChannelMissingValueService.computeMissingValues( ee );
-    // wasProcessed = true;
-    // }
-    //
-    // return wasProcessed;
-    // }
+    private TwoChannelMissingValues twoChannelMissingValueService;
 
     /*
      * (non-Javadoc)
@@ -165,10 +103,46 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * ExpressionExperiment)
      */
     @Override
-    public void process( ExpressionExperiment ee ) {
+    public void process( ExpressionExperiment ee ) throws PreprocessingException {
 
-        ee = expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
+        try {
+            removeInvalidatedData( ee );
+            processForMissingValues( ee );
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+
+            // // refresh into context.
+            ee = expressionExperimentService.thawLite( ee );
+
+            processForSampleCorrelation( ee );
+            // processForMeanVarianceRealtion(ee ); TODO
+
+            processForPca( ee );
+
+            /*
+             * Redo old diff ex analyses
+             */
+            Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
+                    .findByInvestigation( ee );
+            log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
+            Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+            for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
+                results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+            }
+
+            // Alternatively, delete all the old analyses.
+            // analyzerService.deleteAnalyses( ee );
+        } catch ( Exception e ) {
+            throw new PreprocessingException( e );
+        }
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         if ( arrayDesignsUsed.size() > 1 ) {
             log.warn( "Skipping postprocessing because experiment uses "
@@ -176,20 +150,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
 
         ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-        processForMissingValues( ee, arrayDesignUsed );
-        processForSampleCorrelation( ee );
-        processForPca( ee );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
-
         boolean wasProcessed = false;
 
-        TechnologyType tt = design.getTechnologyType();
+        TechnologyType tt = arrayDesignUsed.getTechnologyType();
         if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
             log.info( ee + " uses a two-color array design, processing for missing values ..." );
             ee = expressionExperimentService.thawLite( ee );
@@ -216,6 +179,41 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         sampleCoexpressionMatrixService.findOrCreate( ee );
     }
 
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    /**
+     * @param expExp
+     */
+    private void removeInvalidatedData( ExpressionExperiment expExp ) {
+        coexpressionService.deleteLinks( expExp );
+
+        try {
+            dataFileService.deleteAllFiles( expExp );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.preprocess.PreprocessorService#process(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, boolean)
+     */
+    @Override
+    public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
+        if ( light ) {
+            try {
+                removeInvalidatedData( ee );
+                processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+                processForSampleCorrelation( ee );
+                // processForMeanVarianceRealtion(ee ); TODO
+                processForPca( ee );
+                // analyzerService.deleteAnalyses( ee ); ??
+            } catch ( Exception e ) {
+                throw new PreprocessingException( e );
+            }
+        } else {
+            process( ee );
+        }
+
+    }
 }

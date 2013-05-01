@@ -104,6 +104,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     private static Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
 
+    private static final int MINIMUM_NUMBER_OF_HITS_TO_SAVE = 50;
+
     @Autowired
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
 
@@ -257,6 +259,83 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 .getAnalyses( expressionExperiment );
         differentialExpressionAnalysisService.thaw( expressionAnalyses );
         return expressionAnalyses;
+    }
+
+    /**
+     * Made public for testing purposes only.
+     * 
+     * @param expressionExperiment
+     * @param analysis
+     * @param config
+     * @return
+     */
+    @Override
+    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
+
+        deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+
+        analysis.setResultSets( new HashSet<ExpressionAnalysisResultSet>() );
+
+        // first transaction, gets us an ID
+        DifferentialExpressionAnalysis persistentAnalysis = helperService.persistStub( analysis );
+
+        // second set of transactions creates the empty resultSets.
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+            Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+
+            rs.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
+            ExpressionAnalysisResultSet prs = helperService.create( rs );
+            assert prs != null;
+            for ( DifferentialExpressionAnalysisResult r : results ) {
+                r.setResultSet( prs );
+            }
+            analysis.getResultSets().add( prs );
+            rs.getResults().addAll( results );
+
+            prs.setQvalueThresholdForStorage( config.getQvalueThreshold() );
+            addPvalueDistribution( prs );
+
+        }
+
+        // we do this here because now we have IDs for everything.
+        expressionDataFileService.getDiffExpressionAnalysisArchiveFile( expressionExperiment, analysis, resultSets );
+
+        for ( ExpressionAnalysisResultSet rs : resultSets ) {
+            removeUnwantedResults( config.getQvalueThreshold(), rs.getResults() );
+        }
+
+        // third transaction - add results.
+        log.info( "Saving results" );
+        helperService.addResults( persistentAnalysis, resultSets );
+
+        // final transaction: audit.
+        auditTrailService.addUpdateEvent( expressionExperiment,
+                DifferentialExpressionAnalysisEvent.Factory.newInstance(), persistentAnalysis.getDescription()
+                        + "; analysis id=" + persistentAnalysis.getId() );
+
+        if ( timer.getTime() > 5000 ) {
+            log.info( "Save results: " + timer.getTime() + "ms" );
+        }
+
+        return persistentAnalysis;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService#redoAnalysis(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment, ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis copyMe ) {
+        return this.redoAnalysis( ee, copyMe, DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD );
     }
 
     /*
@@ -441,6 +520,27 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     /**
+     * @param resultSet
+     * @return
+     */
+    private Histogram addPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
+        Histogram pvalHist = new Histogram( "", 100, 0.0, 1.0 );
+
+        for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
+
+            Double pvalue = result.getPvalue();
+            if ( pvalue != null ) pvalHist.fill( pvalue );
+        }
+
+        PvalueDistribution pvd = PvalueDistribution.Factory.newInstance();
+        pvd.setNumBins( 100 );
+        ByteArrayConverter bac = new ByteArrayConverter();
+        pvd.setBinCounts( bac.doubleArrayToBytes( pvalHist.getArray() ) );
+        resultSet.setPvalueDistribution( pvd ); // do not save yet.
+        return pvalHist;
+    }
+
+    /**
      * @param temprs
      * @param oldrs
      * @return
@@ -618,70 +718,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     /**
-     * Made public for testing purposes only.
-     * 
-     * @param expressionExperiment
-     * @param analysis
-     * @param config
-     * @return
-     */
-    @Override
-    public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
-
-        deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
-
-        analysis.setResultSets( new HashSet<ExpressionAnalysisResultSet>() );
-
-        // first transaction, gets us an ID
-        DifferentialExpressionAnalysis persistentAnalysis = helperService.persistStub( analysis );
-
-        // second set of transactions creates the empty resultSets.
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
-
-            rs.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
-            ExpressionAnalysisResultSet prs = helperService.create( rs );
-            assert prs != null;
-            for ( DifferentialExpressionAnalysisResult r : results ) {
-                r.setResultSet( prs );
-            }
-            analysis.getResultSets().add( prs );
-            rs.getResults().addAll( results );
-
-            prs.setQvalueThresholdForStorage( config.getQvalueThreshold() );
-            addPvalueDistribution( prs );
-
-        }
-
-        // we do this here because now we have IDs for everything.
-        expressionDataFileService.getDiffExpressionAnalysisArchiveFile( expressionExperiment, analysis, resultSets );
-
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            removeUnwantedResults( config.getQvalueThreshold(), rs.getResults() );
-        }
-
-        // third transaction - add results.
-        log.info( "Saving results" );
-        helperService.addResults( persistentAnalysis, resultSets );
-
-        // final transaction: audit.
-        auditTrailService.addUpdateEvent( expressionExperiment,
-                DifferentialExpressionAnalysisEvent.Factory.newInstance(), persistentAnalysis.getDescription()
-                        + "; analysis id=" + persistentAnalysis.getId() );
-
-        if ( timer.getTime() > 5000 ) {
-            log.info( "Save results: " + timer.getTime() + "ms" );
-        }
-
-        return persistentAnalysis;
-
-    }
-
-    /**
      * @param expressionExperiment
      * @return the directory where the files should be written.
      */
@@ -776,29 +812,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     /**
-     * @param results
-     * @param qvalueThreshold
-     * @return
-     */
-    private int trimAboveThreshold( Collection<DifferentialExpressionAnalysisResult> results, Double qvalueThreshold ) {
-        int i = 0;
-        for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
-            DifferentialExpressionAnalysisResult r = it.next();
-
-            if ( r.getPvalue() == null || Double.isNaN( r.getPvalue() ) || r.getCorrectedPvalue() == null
-                    || r.getCorrectedPvalue() >= qvalueThreshold ) {
-                it.remove();
-            } else {
-                i++;
-            }
-
-        }
-        return i;
-    }
-
-    private static final int MINIMUM_NUMBER_OF_HITS_TO_SAVE = 50;
-
-    /**
      * Print the distributions to a file.
      * 
      * @param extraSuffix eg qvalue, pvalue, score
@@ -866,6 +879,27 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     /**
+     * @param results
+     * @param qvalueThreshold
+     * @return
+     */
+    private int trimAboveThreshold( Collection<DifferentialExpressionAnalysisResult> results, Double qvalueThreshold ) {
+        int i = 0;
+        for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
+            DifferentialExpressionAnalysisResult r = it.next();
+
+            if ( r.getPvalue() == null || Double.isNaN( r.getPvalue() ) || r.getCorrectedPvalue() == null
+                    || r.getCorrectedPvalue() >= qvalueThreshold ) {
+                it.remove();
+            } else {
+                i++;
+            }
+
+        }
+        return i;
+    }
+
+    /**
      * Print the p-value and score distributions. Note that if there are multiple analyses for the experiment, each one
      * will get a set of files. The analysis must be 'thawed' already.
      * 
@@ -921,27 +955,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         if ( timer.getTime() > 5000 ) {
             log.info( "Done writing distributions: " + timer.getTime() + "ms" );
         }
-    }
-
-    /**
-     * @param resultSet
-     * @return
-     */
-    private Histogram addPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
-        Histogram pvalHist = new Histogram( "", 100, 0.0, 1.0 );
-
-        for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
-
-            Double pvalue = result.getPvalue();
-            if ( pvalue != null ) pvalHist.fill( pvalue );
-        }
-
-        PvalueDistribution pvd = PvalueDistribution.Factory.newInstance();
-        pvd.setNumBins( 100 );
-        ByteArrayConverter bac = new ByteArrayConverter();
-        pvd.setBinCounts( bac.doubleArrayToBytes( pvalHist.getArray() ) );
-        resultSet.setPvalueDistribution( pvd ); // do not save yet.
-        return pvalHist;
     }
 
 }

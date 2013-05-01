@@ -32,16 +32,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.analysis.preprocess.PreprocessingException;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
@@ -59,55 +57,6 @@ import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
  */
 @Controller
 public class ExpressionExperimentLoadController {
-
-    public ExpressionExperimentLoadController() {
-        super();
-    }
-
-    @RequestMapping("/admin/loadExpressionExperiment.html")
-    @SuppressWarnings("unused")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "/admin/loadExpressionExperimentForm" );
-    }
-
-    /**
-     * Job that loads in a javaspace.
-     * 
-     * @author Paul
-     * @version $Id$
-     */
-    private class LoadRemoteJob extends LoadLocalJob {
-
-        ExpressionExperimentLoadTask eeLoadTask;
-
-        public LoadRemoteJob( ExpressionExperimentLoadTaskCommand commandObj ) {
-            super( commandObj );
-
-        }
-
-        @Override
-        protected TaskResult processGEODataJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
-            TaskResult result = this.process( eeLoadCommand );
-            return super.processGeoLoadResult( ( Collection<ExpressionExperiment> ) result.getAnswer() );
-        }
-
-        @Override
-        protected TaskResult processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
-            TaskResult result = this.process( eeLoadCommand );
-            return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result.getAnswer() );
-        }
-
-        private TaskResult process( ExpressionExperimentLoadTaskCommand cmd ) {
-            cmd.setTaskId( this.taskId );
-            try {
-                TaskResult result = eeLoadTask.execute();
-                return result;
-            } catch ( Exception e ) {
-                throw new RuntimeException( e );
-            }
-        }
-
-    }
 
     /**
      * Regular job.
@@ -254,48 +203,67 @@ public class ExpressionExperimentLoadController {
             log.info( "Postprocessing ..." );
             for ( ExpressionExperiment ee : ees ) {
 
-                Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-                if ( arrayDesignsUsed.size() > 1 ) {
-                    log.warn( "Skipping postprocessing because experiment uses "
-                            + "multiple platforms. Please check valid entry and run postprocessing separately." );
+                try {
+                    preprocessorService.process( ee );
+                } catch ( PreprocessingException e ) {
+                    log.error( "Error during postprocessing of " + ee, e );
                 }
 
-                ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-                processForMissingValues( ee, arrayDesignUsed );
-                processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
             }
         }
 
-        /**
-         * @param ee
-         * @return
-         */
-        private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+    }
 
-            boolean wasProcessed = false;
+    /**
+     * Job that loads in a javaspace.
+     * 
+     * @author Paul
+     * @version $Id$
+     */
+    private class LoadRemoteJob extends LoadLocalJob {
 
-            TechnologyType tt = design.getTechnologyType();
-            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-                log.info( ee + " uses a two-color array design, processing for missing values ..." );
-                ee = eeService.thawLite( ee );
-                twoChannelMissingValueService.computeMissingValues( ee );
-                wasProcessed = true;
-            }
+        ExpressionExperimentLoadTask eeLoadTask;
 
-            return wasProcessed;
+        public LoadRemoteJob( ExpressionExperimentLoadTaskCommand commandObj ) {
+            super( commandObj );
+
         }
+
+        @Override
+        protected TaskResult processGEODataJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
+            TaskResult result = this.process( eeLoadCommand );
+            return super.processGeoLoadResult( ( Collection<ExpressionExperiment> ) result.getAnswer() );
+        }
+
+        @Override
+        protected TaskResult processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
+            TaskResult result = this.process( eeLoadCommand );
+            return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result.getAnswer() );
+        }
+
+        private TaskResult process( ExpressionExperimentLoadTaskCommand cmd ) {
+            cmd.setTaskId( this.taskId );
+            try {
+                TaskResult result = eeLoadTask.execute();
+                return result;
+            } catch ( Exception e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
     }
 
     @Autowired
-    private TaskRunningService taskRunningService;
-    @Autowired
     private GeoService geoDatasetService;
+
     @Autowired
-    private ExpressionExperimentService eeService;
+    private PreprocessorService preprocessorService;
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-    @Autowired
-    private TwoChannelMissingValues twoChannelMissingValueService;
+    private TaskRunningService taskRunningService;
+
+    public ExpressionExperimentLoadController() {
+        super();
+    }
 
     /**
      * Main entry point for AJAX calls.
@@ -314,24 +282,10 @@ public class ExpressionExperimentLoadController {
         return taskRunningService.submitRemoteTask( command );
     }
 
-    public void setEeService( ExpressionExperimentService eeService ) {
-        this.eeService = eeService;
-    }
-
-    /**
-     * @param geoDatasetService the geoDatasetService to set
-     */
-    public void setGeoDatasetService( GeoService geoDatasetService ) {
-        this.geoDatasetService = geoDatasetService;
-    }
-
-    public void setProcessedExpressionDataVectorCreateService(
-            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
-        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
-    }
-
-    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
-        this.twoChannelMissingValueService = twoChannelMissingValueService;
+    @RequestMapping("/admin/loadExpressionExperiment.html")
+    @SuppressWarnings("unused")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "/admin/loadExpressionExperimentForm" );
     }
 
 }

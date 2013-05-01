@@ -14,6 +14,8 @@
  */
 package ubic.gemma.tasks.analysis.expression;
 
+import java.util.Collection;
+
 import ubic.gemma.job.TaskCommand;
 
 /**
@@ -27,12 +29,22 @@ public class BioAssayOutlierProcessingTaskCommand extends TaskCommand {
         return revert;
     }
 
-    public BioAssayOutlierProcessingTaskCommand( Long id ) {
-        this.setEntityId( id );
+    private Collection<Long> bioAssayIds;
+
+    public Collection<Long> getBioAssayIds() {
+        return bioAssayIds;
     }
 
-    public BioAssayOutlierProcessingTaskCommand( Long id, boolean revertAsOutlier ) {
-        this( id );
+    public void setBioAssayIds( Collection<Long> bioAssayIds ) {
+        this.bioAssayIds = bioAssayIds;
+    }
+
+    public BioAssayOutlierProcessingTaskCommand( Collection<Long> ids ) {
+        this.setBioAssayIds( ids );
+    }
+
+    public BioAssayOutlierProcessingTaskCommand( Collection<Long> ids, boolean revertAsOutlier ) {
+        this( ids );
         this.revert = revertAsOutlier;
     }
 

@@ -36,6 +36,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -273,7 +274,11 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         experiment = persisterHelper.persist( experiment, persisterHelper.prepare( experiment ) );
 
-        preprocessorService.createProcessedVectors( experiment );
+        try {
+            preprocessorService.process( experiment );
+        } catch ( PreprocessingException e ) {
+            log.error( "Error during postprocessing", e );
+        }
 
         return experiment;
     }

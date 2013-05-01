@@ -341,7 +341,9 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
          * outlier removal.
          */
         BioAssay tba = newee.getBioAssays().iterator().next();
-        sampleRemoveService.markAsMissing( tba );
+        Collection<BioAssay> ol = new HashSet<BioAssay>();
+        ol.add( tba );
+        sampleRemoveService.markAsMissing( ol );
 
         assertTrue( tba.getIsOutlier() );
 
@@ -359,7 +361,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         assertTrue( Double.isNaN( data.getColumn( tba )[10] ) );
 
-        sampleRemoveService.unmarkAsMissing( tba );
+        sampleRemoveService.unmarkAsMissing( ol );
         newee = expressionExperimentService.thaw( expressionExperimentService.load( newee.getId() ) );
         vecs = newee.getProcessedExpressionDataVectors();
 

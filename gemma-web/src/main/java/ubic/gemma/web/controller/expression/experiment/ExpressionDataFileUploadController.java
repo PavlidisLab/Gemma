@@ -17,6 +17,17 @@
  *
  */package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -25,9 +36,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.PreprocessingException;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.TaskResult;
@@ -40,16 +53,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Replaces SimpleExpressionExperimentLoadController
@@ -87,8 +90,11 @@ public class ExpressionDataFileUploadController {
                 stream.close();
 
                 log.info( "Preprocessing the data for analysis" );
-                processedExpressionDataVectorCreateService.computeProcessedExpressionData( result );
-
+                try {
+                    preprocessorService.process( result );
+                } catch ( PreprocessingException e ) {
+                    log.error( "Error during postprocessing", e );
+                }
                 // In theory we could do the link analysis right away. However, when a data set has new array designs,
                 // we won't be ready yet.
 
@@ -172,7 +178,7 @@ public class ExpressionDataFileUploadController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private PreprocessorService preprocessorService;
     @Autowired
     private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
     @Autowired
@@ -187,34 +193,6 @@ public class ExpressionDataFileUploadController {
     public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand ) {
         loadEECommand.setValidateOnly( false );
         return taskRunningService.submitLocalJob( new SimpleEELoadLocalJob( loadEECommand ) );
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setProcessedExpressionDataVectorCreateService(
-            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
-        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
-    }
-
-    /**
-     * @param simpleExpressionDataLoaderService the simpleExpressionDataLoaderService to set
-     */
-    public void setSimpleExpressionDataLoaderService(
-            SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
-        this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     @RequestMapping("/expressionExperiment/upload.html")

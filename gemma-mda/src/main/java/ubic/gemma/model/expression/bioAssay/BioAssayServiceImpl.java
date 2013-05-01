@@ -35,10 +35,10 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 public class BioAssayServiceImpl implements BioAssayService {
 
     @Autowired
-    private ubic.gemma.model.expression.biomaterial.BioMaterialDao bioMaterialDao;
+    private ubic.gemma.model.expression.bioAssay.BioAssayDao bioAssayDao;
 
     @Autowired
-    private ubic.gemma.model.expression.bioAssay.BioAssayDao bioAssayDao;
+    private ubic.gemma.model.expression.biomaterial.BioMaterialDao bioMaterialDao;
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#addBioMaterialAssociation(ubic.gemma.model.expression.bioAssay.BioAssay,
@@ -90,6 +90,11 @@ public class BioAssayServiceImpl implements BioAssayService {
     public BioAssay findOrCreate( final BioAssay bioAssay ) {
         return this.handleFindOrCreate( bioAssay );
 
+    }
+
+    @Override
+    public Collection<BioAssay> load( Collection<Long> ids ) {
+        return ( Collection<BioAssay> ) this.getBioAssayDao().load( ids );
     }
 
     /**

@@ -24,7 +24,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -44,9 +43,6 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
     private AuditTrailService auditTrailService;
 
     @Autowired
-    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
-
-    @Autowired
     private ProcessedExpressionDataVectorCreateHelperService helperService;
 
     /*
@@ -60,8 +56,6 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
         // WARNING long transaction.
         try {
-            // First transaction: Delete any existing links from previous link analyses before computing new vectors
-            probe2ProbeCoexpressionService.deleteLinks( ee );
 
             // should also delete any differential expression analyses.
 
@@ -71,10 +65,6 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
             // third transaction.
             return helperService.updateRanks( ee, processedVectors );
-
-            /*
-             * TODO Reorder & renormalize?
-             */
 
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),

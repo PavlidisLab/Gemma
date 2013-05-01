@@ -126,7 +126,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
                 return;
             }
             this.processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-            // Note tha tauditing is done by the service.
+            // Note tha auditing is done by the service.
             successObjects.add( ee.toString() );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );

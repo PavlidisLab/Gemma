@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -41,9 +40,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissingValueHelperService {
 
     private static Log log = LogFactory.getLog( TwoChannelMissingValueHelperServiceImpl.class );
-
-    @Autowired
-    private DesignElementDataVectorService designElementDataVectorService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;

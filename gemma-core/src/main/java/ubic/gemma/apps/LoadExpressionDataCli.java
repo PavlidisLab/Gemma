@@ -22,6 +22,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
+
+import ubic.gemma.analysis.preprocess.PreprocessingException;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
@@ -81,16 +84,12 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
     // Service Beans
     private ExpressionExperimentService eeService;
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-    private TwoChannelMissingValues tcmv;
 
     private boolean splitByPlatform = false;
     private boolean allowSuperSeriesLoad = false;
     private boolean allowSubSeriesLoad = false;
     private boolean suppressPostProcessing = false;
-
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
-    private SVDService svdService;
+    private PreprocessorService preprocessorService;
 
     @Override
     public String getShortDesc() {
@@ -106,52 +105,13 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         log.info( "Postprocessing ..." );
         for ( ExpressionExperiment ee : ees ) {
 
-            postProcess( ee );
+            try {
+                preprocessorService.process( ee );
+            } catch ( PreprocessingException e ) {
+                log.error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );
+            }
+
         }
-    }
-
-    /**
-     * @param ee
-     */
-    private void postProcess( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            log.warn( "Skipping postprocessing because experiment uses "
-                    + "multiple array types. Please check valid entry and run postprocessing separately." );
-        }
-
-        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-
-        if ( arrayDesignUsed.getTechnologyType().equals( TechnologyType.NONE ) ) {
-            log.warn( "Skipping postprocessing since this data set isn't using a regular platform. If this is an error, just run postprocessing manually." );
-        }
-
-        processForMissingValues( ee, arrayDesignUsed );
-
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-
-        sampleCoexpressionMatrixService.findOrCreate( ee );
-
-        svdService.svd( ee.getId() );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
-
-        boolean wasProcessed = false;
-
-        TechnologyType tt = design.getTechnologyType();
-        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            ee = eeService.thawLite( ee );
-            tcmv.computeMissingValues( ee );
-            wasProcessed = true;
-        }
-
-        return wasProcessed;
     }
 
     /*
@@ -347,10 +307,8 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         this.suppressPostProcessing = hasOption( "nopost" );
 
         this.eeService = getBean( ExpressionExperimentService.class );
-        this.processedExpressionDataVectorCreateService = getBean( ProcessedExpressionDataVectorCreateService.class );
-        this.tcmv = this.getBean( TwoChannelMissingValues.class );
-        this.sampleCoexpressionMatrixService = getBean( SampleCoexpressionMatrixService.class );
-        this.svdService = getBean( SVDService.class );
+        this.preprocessorService = getBean( PreprocessorService.class );
+
     }
 
     /**
