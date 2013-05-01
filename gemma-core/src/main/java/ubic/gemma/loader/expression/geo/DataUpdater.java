@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,9 +37,6 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.AnalysisUtilService;
 import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.AffyPowerToolsProbesetSummarize;
@@ -652,7 +650,8 @@ public class DataUpdater {
         for ( String colName : colNames ) {
             BioMaterial bm = bmMap.get( colName );
             if ( bm == null ) {
-                throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName );
+                throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName
+                        + "; Available keys were:\n" + StringUtils.join( bmMap.keySet(), "\n" ) );
             }
             newColNames.add( bm );
             usedBioAssays.addAll( bm.getBioAssaysUsedIn() );
