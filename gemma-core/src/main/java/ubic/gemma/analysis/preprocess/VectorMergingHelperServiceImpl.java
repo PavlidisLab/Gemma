@@ -35,10 +35,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -61,15 +58,6 @@ public class VectorMergingHelperServiceImpl implements VectorMergingHelperServic
     @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    @Autowired
-    private TwoChannelMissingValues twoChannelMissingValueService;
-
     /**
      * @param expExp
      * @param type
@@ -87,48 +75,6 @@ public class VectorMergingHelperServiceImpl implements VectorMergingHelperServic
         } else {
             throw new IllegalStateException( "Unexpectedly, no new vectors for " + type );
         }
-    }
-
-    /**
-     * Do missing value and processed vector creation steps.
-     * 
-     * @param ees
-     */
-    @Override
-    public ExpressionExperiment postProcess( ExpressionExperiment ee ) {
-
-        log.info( "Postprocessing ..." );
-
-        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            log.warn( "Skipping postprocessing because experiment uses "
-                    + "multiple platform types. Please check valid entry and run postprocessing separately." );
-        }
-
-        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-        processForMissingValues( ee, arrayDesignUsed );
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-        return ee;
-
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
-
-        boolean wasProcessed = false;
-
-        TechnologyType tt = design.getTechnologyType();
-        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            // ee = expressionExperimentService.thawLite( ee );
-            twoChannelMissingValueService.computeMissingValues( ee );
-            wasProcessed = true;
-        }
-
-        return wasProcessed;
     }
 
 }

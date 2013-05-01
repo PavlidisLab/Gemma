@@ -254,7 +254,6 @@ public class DataUpdater {
         addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
 
         if ( rpkmMatrix != null ) {
-            ee = experimentService.thawLite( ee );
 
             DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = matchElementsToRowNames( targetArrayDesign,
                     rpkmMatrix );

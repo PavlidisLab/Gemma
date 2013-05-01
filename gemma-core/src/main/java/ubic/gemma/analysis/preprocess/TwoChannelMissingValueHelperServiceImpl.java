@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissingValueHelperService {
 
     private static Log log = LogFactory.getLog( TwoChannelMissingValueHelperServiceImpl.class );
+
     @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
 

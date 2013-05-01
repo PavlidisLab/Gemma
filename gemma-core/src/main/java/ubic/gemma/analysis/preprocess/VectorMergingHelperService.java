@@ -30,7 +30,6 @@ public interface VectorMergingHelperService {
 
     public void persist( ExpressionExperiment expExp, QuantitationType type,
             Collection<DesignElementDataVector> newVectors );
-
-    public ExpressionExperiment postProcess( ExpressionExperiment ee );
+ 
 
 }

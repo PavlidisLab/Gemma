@@ -43,6 +43,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVe
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -102,6 +103,12 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     @Autowired
     private AnalysisUtilService analysisUtilService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
+    @Autowired
+    private TwoChannelMissingValues twoChannelMissingValueService;
 
     /*
      * (non-Javadoc)
@@ -244,7 +251,48 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                         + " quantitation types." );
 
         // transaction
-        return vectorMergingHelperService.postProcess( expExp );
+        return postProcess( expExp );
+    }
+
+    /**
+     * Do missing value and processed vector creation steps.
+     * 
+     * @param ees
+     */
+    private ExpressionExperiment postProcess( ExpressionExperiment ee ) {
+
+        log.info( "Postprocessing ..." );
+
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+        if ( arrayDesignsUsed.size() > 1 ) {
+            log.warn( "Skipping postprocessing because experiment uses "
+                    + "multiple platform types. Please check valid entry and run postprocessing separately." );
+        }
+
+        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+        processForMissingValues( ee, arrayDesignUsed );
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        return ee;
+
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+        boolean wasProcessed = false;
+
+        TechnologyType tt = design.getTechnologyType();
+        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            // ee = expressionExperimentService.thawLite( ee );
+            twoChannelMissingValueService.computeMissingValues( ee );
+            wasProcessed = true;
+        }
+
+        return wasProcessed;
     }
 
     /**
