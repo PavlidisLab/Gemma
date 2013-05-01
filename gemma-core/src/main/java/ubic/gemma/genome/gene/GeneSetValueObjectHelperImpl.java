@@ -63,7 +63,6 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
         if ( dbgsvo != null ) {
-            // no duplicates
             Collection<Long> ids = EntityUtils.getIds( this.geneSetService.getGenesInGroup( gs.getId() ) );
             dbgsvo.getGeneIds().addAll( ids );
             dbgsvo.setSize( ids.size() );

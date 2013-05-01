@@ -26,9 +26,10 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
@@ -39,14 +40,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author paul
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContextTest {
-
-    /* to load data, use mini-gemma */
-    @Autowired
-    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao = null;
+public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    private DifferentialExpressionResultDao differentialExpressionResultDao = null;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService = null;
 
     @Autowired
     private GeneDao geneDao = null;
@@ -67,7 +67,7 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
         }
 
         for ( Gene g : genes ) {
-            Collection<BioAssaySet> experiments = differentialExpressionAnalysisDao.findExperimentsWithAnalyses( g );
+            Collection<BioAssaySet> experiments = differentialExpressionAnalysisService.findExperimentsWithAnalyses( g );
             assertNotNull( experiments );
             log.info( experiments.size() );
         }
@@ -87,11 +87,11 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
         }
 
         for ( Gene g : genes ) {
-            Collection<BioAssaySet> experiments = differentialExpressionAnalysisDao.findExperimentsWithAnalyses( g );
+            Collection<BioAssaySet> experiments = differentialExpressionAnalysisService.findExperimentsWithAnalyses( g );
 
             log.info( "num experiments for " + g.getOfficialSymbol() + ": " + experiments.size() );
 
-            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultDao
+            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultService
                     .find( g, experiments );
 
             for ( BioAssaySet e : results.keySet() ) {
