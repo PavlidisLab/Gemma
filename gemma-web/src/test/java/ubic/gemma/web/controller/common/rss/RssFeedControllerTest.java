@@ -35,17 +35,18 @@ import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
  * @author sshao
  * @version $Id$
  */
-public class RssFeedControllerTest extends BaseSpringContextTest {
+public class RssFeedControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private WhatsNewService whatsNewService;
 
+    @Autowired
     private RssFeedController rssFeedController;
 
     private int updateCount;
@@ -55,8 +56,6 @@ public class RssFeedControllerTest extends BaseSpringContextTest {
 
     @Before
     public void setup() {
-
-        rssFeedController = new RssFeedController( whatsNewService );
 
         WhatsNew wn = whatsNewService.retrieveReport();
 

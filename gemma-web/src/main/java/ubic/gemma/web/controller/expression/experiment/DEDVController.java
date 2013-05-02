@@ -63,8 +63,6 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -142,8 +140,6 @@ public class DEDVController {
         return factorColoursMap;
     }
 
-    @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
     @Autowired

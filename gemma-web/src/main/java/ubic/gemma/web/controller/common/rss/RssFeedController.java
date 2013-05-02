@@ -50,16 +50,9 @@ public class RssFeedController {
 
     @Autowired
     private WhatsNewService whatsNewService;
+
     @Autowired
     private CustomRssViewer customRssViewer;
-
-    public RssFeedController() {
-        // Dummy default constructor
-    }
-
-    public RssFeedController( WhatsNewService whatsNewService ) {
-        this.whatsNewService = whatsNewService;
-    }
 
     /**
      * Show all experiments
