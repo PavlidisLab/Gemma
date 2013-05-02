@@ -19,6 +19,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -125,13 +126,12 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
+        toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+        for ( ExperimentalFactor ef : toremove ) {
             experimentalFactorService.delete( ef );
-
-        }
-
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             ee.getExperimentalDesign().getExperimentalFactors().remove( ef );
+
         }
 
         expressionExperimentService.update( ee );
