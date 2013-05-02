@@ -21,13 +21,10 @@ package ubic.gemma.web.feed;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -36,17 +33,11 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class TwitterOutboundTest extends BaseSpringContextTest {
     @Autowired
-    TwitterOutbound twitterOutbound;
-    @Autowired
-    ExpressionExperimentService experimentService;
+    private TwitterOutbound twitterOutbound;
 
     @Before
     public void setup() {
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setDescription( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-        ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-
-        experimentService.create( ee );
+        super.getTestPersistentExpressionExperiment();
     }
 
     @Test

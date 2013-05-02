@@ -138,9 +138,11 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     @Override
     public WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );
+
         Collection<Auditable> updatedObjects = auditEventService.getUpdatedSinceDate( date );
         wn.setUpdatedObjects( updatedObjects );
         log.info( wn.getUpdatedObjects().size() + " updated objects since " + date );
+
         Collection<Auditable> newObjects = auditEventService.getNewSinceDate( date );
         wn.setNewObjects( newObjects );
         log.info( wn.getNewObjects().size() + " new objects since " + date );

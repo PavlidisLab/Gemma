@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * Basically a value object to hold onto the 'new' objects.
+ * A value object to hold onto the 'new' objects.
  * 
  * @author pavlidis
  * @version $Id$
@@ -83,7 +83,7 @@ public class WhatsNew {
     }
 
     /**
-     * @return
+     * @return experiments updated, in time span as set when the report was generated
      */
     public Collection<ExpressionExperiment> getUpdatedExpressionExperiments() {
         Collection<ExpressionExperiment> result = new HashSet<ExpressionExperiment>();
@@ -96,7 +96,7 @@ public class WhatsNew {
     }
 
     /**
-     * @return
+     * @return new experiments, in time span as set when the report was generated
      */
     public Collection<ExpressionExperiment> getNewExpressionExperiments() {
         Collection<ExpressionExperiment> result = new HashSet<ExpressionExperiment>();
@@ -168,57 +168,63 @@ public class WhatsNew {
     public void setUpdatedObjects( Collection<Auditable> updatedObjects ) {
         this.updatedObjects = updatedObjects;
     }
-    
+
     /**
      * @param a map for the total number expression experiments per taxon
      */
-    public void setEeCountPerTaxon( Map<Taxon, Long> eeCountPerTaxon) {
+    public void setEeCountPerTaxon( Map<Taxon, Long> eeCountPerTaxon ) {
         this.eeCountPerTaxon = eeCountPerTaxon;
     }
+
     /**
      * get a map for the total number expression experiments per taxon
      */
-    public Map<Taxon, Long> getEeCountPerTaxon( ) {
+    public Map<Taxon, Long> getEeCountPerTaxon() {
         return this.eeCountPerTaxon;
     }
+
     /**
      * @param a map for the number of new expression experiments per taxon
      */
-    public void setNewEEIdsPerTaxon( Map<Taxon, Collection<Long>> eeCountPerTaxon) {
+    public void setNewEEIdsPerTaxon( Map<Taxon, Collection<Long>> eeCountPerTaxon ) {
         this.newEEIdsPerTaxon = eeCountPerTaxon;
     }
+
     /**
      * get a map for the number of new expression experiments per taxon
      */
     public Map<Taxon, Collection<Long>> getNewEEIdsPerTaxon() {
         return this.newEEIdsPerTaxon;
     }
+
     /**
      * @param a map for the number of updated expression experiments per taxon
      */
-    public void setUpdatedEEIdsPerTaxon( Map<Taxon, Collection<Long>> map) {
+    public void setUpdatedEEIdsPerTaxon( Map<Taxon, Collection<Long>> map ) {
         this.updatedEEIdsPerTaxon = map;
     }
+
     /**
      * get a map for the number of updated expression experiments per taxon
      */
-    public Map<Taxon, Collection<Long>> getUpdatedEEIdsPerTaxon( ) {
+    public Map<Taxon, Collection<Long>> getUpdatedEEIdsPerTaxon() {
         return this.updatedEEIdsPerTaxon;
     }
 
     /**
      * @param a count of the number of assays in the new expression experiments
      */
-    public void setNewAssayCount( int count) {
-        this.newAssayCount= count;
+    public void setNewAssayCount( int count ) {
+        this.newAssayCount = count;
     }
+
     /**
      * get a count of the number of assays in the new expression experiments
      */
-    public int getNewAssayCount( ) {
+    public int getNewAssayCount() {
         return this.newAssayCount;
     }
-    
+
     public Date getDate() {
         return date;
     }

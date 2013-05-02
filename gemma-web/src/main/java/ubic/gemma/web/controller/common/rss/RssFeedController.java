@@ -39,75 +39,77 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
 
+/**
+ * @author sshao
+ * @version $Id$
+ */
 @Controller
 public class RssFeedController {
     private static Log log = LogFactory.getLog( RssFeedController.class.getName() );
-	
-	@Autowired private WhatsNewService whatsNewService;
-	@Autowired private CustomRssViewer customRssViewer;
-    
-	public RssFeedController() {
-	    // Dummy default constructor
-	}
-	
-	public RssFeedController(WhatsNewService whatsNewService) {
-	    this.whatsNewService = whatsNewService;
-	}
-	
-	/**
+
+    @Autowired
+    private WhatsNewService whatsNewService;
+    @Autowired
+    private CustomRssViewer customRssViewer;
+
+    public RssFeedController() {
+        // Dummy default constructor
+    }
+
+    public RssFeedController( WhatsNewService whatsNewService ) {
+        this.whatsNewService = whatsNewService;
+    }
+
+    /**
      * Show all experiments
      * 
      * @param request
      * @param response
      * @return ModelAndView
      */
-	@RequestMapping(value = {"/rssfeed"}, method = RequestMethod.GET)
-	public ModelAndView getLatestExperiments( HttpServletRequest request, HttpServletResponse response) {
-		ModelAndView mav = new ModelAndView();
-		log.info( "Checking if RSS is enabled." );
-		if (ConfigUtils.getBoolean("gemma.rss.enabled"))
-		{
-		    log.info( "RSS is enabled. Loading Experiments" );
-			WhatsNew wn = whatsNewService.retrieveReport();
-			if (wn == null) {
-				Calendar c = Calendar.getInstance();
-				Date date = c.getTime();
-				date = DateUtils.addWeeks(date, -1);
-				wn = whatsNewService.getReport(date);
-			}
-			mav.setView( customRssViewer );
-			
-			int updatedExperimentsCount = 0;
-			int newExperimentsCount = 0;
-			Map<ExpressionExperiment, String> experiments = new HashMap<ExpressionExperiment, String>();
-			
-			if (wn != null)
-			{
-				Collection<ExpressionExperiment> updatedExperiments = wn.getUpdatedExpressionExperiments();
-				Collection<ExpressionExperiment> newExperiments = wn.getNewExpressionExperiments();
-				
-				for (ExpressionExperiment e : updatedExperiments)
-				{
-					experiments.put(e, "Updated");
-				}
-				for (ExpressionExperiment e : newExperiments)
-				{
-					experiments.put(e, "New");
-				}
-				
-				updatedExperimentsCount = updatedExperiments.size();
-				newExperimentsCount = newExperiments.size();
-			}
-			
-			mav.addObject("feedContent", experiments);
-			mav.addObject("updateCount", updatedExperimentsCount);
-			mav.addObject("newCount", newExperimentsCount);
-		}
-		log.info( "RSS experiments loaded." );
-		return mav;
-	}
-	
+    @RequestMapping(value = { "/rssfeed" }, method = RequestMethod.GET)
+    public ModelAndView getLatestExperiments( HttpServletRequest request, HttpServletResponse response ) {
+        ModelAndView mav = new ModelAndView();
+        // log.debug( "Checking if RSS is enabled." );
+        // if ( !ConfigUtils.getBoolean( "gemma.rss.enabled" ) ) {
+        // return mav;
+        // }
+        log.debug( "RSS is enabled. Loading Experiments" );
+        WhatsNew wn = whatsNewService.retrieveReport();
+        if ( wn == null ) {
+            Calendar c = Calendar.getInstance();
+            Date date = c.getTime();
+            date = DateUtils.addWeeks( date, -1 );
+            wn = whatsNewService.getReport( date );
+        }
+        mav.setView( customRssViewer );
+
+        int updatedExperimentsCount = 0;
+        int newExperimentsCount = 0;
+        Map<ExpressionExperiment, String> experiments = new HashMap<ExpressionExperiment, String>();
+
+        if ( wn != null ) {
+            Collection<ExpressionExperiment> updatedExperiments = wn.getUpdatedExpressionExperiments();
+            Collection<ExpressionExperiment> newExperiments = wn.getNewExpressionExperiments();
+
+            for ( ExpressionExperiment e : updatedExperiments ) {
+                experiments.put( e, "Updated" );
+            }
+            for ( ExpressionExperiment e : newExperiments ) {
+                experiments.put( e, "New" );
+            }
+
+            updatedExperimentsCount = updatedExperiments.size();
+            newExperimentsCount = newExperiments.size();
+        }
+
+        mav.addObject( "feedContent", experiments );
+        mav.addObject( "updateCount", updatedExperimentsCount );
+        mav.addObject( "newCount", newExperimentsCount );
+
+        log.debug( "RSS experiments loaded." );
+        return mav;
+    }
 
 }

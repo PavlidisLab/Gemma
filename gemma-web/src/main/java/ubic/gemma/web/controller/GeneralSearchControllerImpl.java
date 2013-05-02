@@ -18,6 +18,19 @@
  */
 package ubic.gemma.web.controller;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +42,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -65,10 +78,6 @@ import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.*;
 
 /**
  * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
@@ -302,81 +311,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         return new ModelAndView( "generalSearch" );
-    }
-
-    /**
-     * @param entityClass
-     * @param results
-     * @return ValueObjects for the entities (in some cases, this is just the entities again). They are returned in the
-     *         same order as the entities.
-     */
-    private void fillValueObjects( Map<Class<?>, List<SearchResult>> results, SearchSettingsImpl settings ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Collection<?> vos = null;
-        for ( Class<?> entityClass : results.keySet() ) {
-            List<SearchResult> classSearchResults = results.get( entityClass );
-
-            if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-                vos = filterEE(
-                        expressionExperimentService.loadValueObjects( EntityUtils.getIds( classSearchResults ), false ),
-                        settings );
-
-                if ( !SecurityServiceImpl.isUserAdmin() ) {
-                    auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
-                }
-
-            } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-                vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( classSearchResults ) ),
-                        settings );
-
-                if ( !SecurityServiceImpl.isUserAdmin() ) {
-                    auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
-                }
-            } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
-                return;
-            } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
-                vos = bibliographicReferenceService.loadMultipleValueObjects( EntityUtils.getIds( classSearchResults ) );
-            } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
-                vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils
-                        .getIds( classSearchResults ) ) );
-            } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
-                Collection<Characteristic> characs = new ArrayList<Characteristic>();
-                for ( SearchResult sr : classSearchResults ) {
-                    // extra check
-                    if ( Characteristic.class.isAssignableFrom( sr.getResultClass() ) ) {
-                        Characteristic ch = ( Characteristic ) sr.getResultObject();
-                        characs.add( ch );
-                    }
-                }
-                vos = CharacteristicValueObject.characteristic2CharacteristicVO( characs );
-                return;
-            } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
-                return;
-            } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
-                vos = geneSetService.getValueObjects( EntityUtils.getIds( classSearchResults ) );
-            } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-                vos = experimentSetService.loadValueObjects( EntityUtils.getIds( classSearchResults ) );
-            } else {
-                throw new UnsupportedOperationException( "Don't know how to make value objects for class="
-                        + entityClass );
-            }
-            // retained objects...
-            Map<Long, Object> idMap = EntityUtils.getIdMap( vos );
-
-            for ( Iterator<SearchResult> it = classSearchResults.iterator(); it.hasNext(); ) {
-                SearchResult sr = it.next();
-                if ( !idMap.containsKey( sr.getId() ) ) {
-                    it.remove();
-                    continue;
-                }
-                sr.setResultObject( idMap.get( sr.getId() ) );
-            }
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Value object conversion after search: " + timer.getTime() + "ms" );
-        }
     }
 
     /**
