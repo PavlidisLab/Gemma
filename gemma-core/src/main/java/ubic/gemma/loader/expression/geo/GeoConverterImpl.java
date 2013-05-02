@@ -1683,6 +1683,7 @@ public class GeoConverterImpl implements GeoConverter {
     private FactorValue convertReplicationToFactorValue( GeoReplication replication ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
         VocabCharacteristic term = convertReplicatationType( replication.getType() );
+        factorValue.setValue( term.getValue() );
         factorValue.getCharacteristics().add( term );
         return factorValue;
     }
@@ -1724,9 +1725,9 @@ public class GeoConverterImpl implements GeoConverter {
         bioAssay.setName( sample.getTitle() );
         bioAssay.setDescription( sample.getDescription() );
         bioAssay.setAccession( convertDatabaseEntry( sample ) );
-        bioAssay.setIsOutlier(false);
+        bioAssay.setIsOutlier( false );
         bioAssay.setSequencePairedReads( false );
-        
+
         /*
          * NOTE - according to GEO (http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html) "variable information is
          * optional and does not appear in Series records or downloads, but will be used to assemble corresponding GEO
@@ -2173,6 +2174,7 @@ public class GeoConverterImpl implements GeoConverter {
         term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
         factorValue.getCharacteristics().add( term );
         factorValue.setExperimentalFactor( experimentalFactor );
+        factorValue.setValue( term.getValue() );
 
         /* Check that there isn't already a factor value for this in the factor */
 
@@ -2195,6 +2197,7 @@ public class GeoConverterImpl implements GeoConverter {
         FactorValue factorValue = FactorValue.Factory.newInstance();
         Characteristic term = convertVariableType( type );
         term.setValue( value ); // TODO map onto an ontology.
+        factorValue.setValue( term.getValue() );
         factorValue.getCharacteristics().add( term );
         return factorValue;
     }

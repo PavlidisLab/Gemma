@@ -51,7 +51,7 @@ public interface ExperimentalFactorService {
     public ExperimentalFactor create( ExperimentalFactor experimentalFactor );
 
     /**
-     * Delete the factor, its associated factor values and all differential expression analyses in which it is used
+     * Delete the factor, its associated factor values and all differential expression analyses in which it is used.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( ExperimentalFactor experimentalFactor );
