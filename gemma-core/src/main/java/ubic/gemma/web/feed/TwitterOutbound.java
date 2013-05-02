@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -116,43 +117,48 @@ public class TwitterOutbound {
             newExperimentsCount = newExperiments.size();
         }
 
-        String status = "";
-        ExpressionExperiment experiment;
+        ExpressionExperiment experiment = null;
 
         // Query latest experiments if there are no updated / new experiments
         if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
             Collection<ExpressionExperiment> latestExperiments = expressionExperimentService.findByUpdatedLimit( 10 );
             Collection<Securable> publicExperiments = securityService.choosePublic( latestExperiments );
 
+            if ( publicExperiments.isEmpty() ) {
+                throw new IllegalStateException( "There are no valid experiments to tweet about" );
+            }
+
             experiment = ( ExpressionExperiment ) publicExperiments.toArray()[rand.nextInt( publicExperiments.size() )];
         } else {
+            if ( experiments.isEmpty() ) {
+                throw new IllegalStateException( "There are no valid experiments to tweet about" );
+            }
+
             experiment = ( ExpressionExperiment ) experiments.toArray()[rand.nextInt( experiments.size() )];
         }
 
-        status = statusWithExperiment( experiment.getName(), updatedExperimentsCount, newExperimentsCount );
+        assert experiment != null;
 
-        // Regenerate status if larger than Twitter required length of 140 characters
-        if ( status.length() > 140 ) {
-            status = statusWithExperiment( experiment.getName().substring( 0, status.length() - 140 ),
-                    updatedExperimentsCount, newExperimentsCount );
-        }
-        return status;
+        String status = statusWithExperiment( StringUtils.abbreviate( experiment.getName(), 90 ),
+                updatedExperimentsCount, newExperimentsCount );
+
+        return StringUtils.abbreviate( status, 140 ); // this will look a bit weird, and might chop off the url...but
+                                                      // have to ensure.
     }
 
     /**
      * @param experimentName
      * @param updatedExperimentsCount
      * @param newExperimentsCount
-     * @return a status that provides the number of updated and new experiments, a randomly chosen experiment and a link
-     *         back to Gemma
+     * @return a status that provides the number of updated and new experiments, a "randomly" chosen experiment and a
+     *         link back to Gemma
      */
     private String statusWithExperiment( String experimentName, int updatedExperimentsCount, int newExperimentsCount ) {
         if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
-            return "Experiment of the day: " + experimentName
-                    + "... See all latest experiments at www.chibi.ubc.ca/Gemma/rssfeed";
+            return "Experiment of the day: " + experimentName + "; See all latest at www.chibi.ubc.ca/Gemma/rssfeed";
         } else {
-            return "Experiment of the day: " + experimentName + "... See all " + updatedExperimentsCount
-                    + " updated and " + newExperimentsCount + " new experiments at www.chibi.ubc.ca/Gemma/rssfeed";
+            return "Experiment of the day: " + experimentName + "; See all " + updatedExperimentsCount
+                    + " updated and " + newExperimentsCount + " new at www.chibi.ubc.ca/Gemma/rssfeed";
         }
     }
 }
