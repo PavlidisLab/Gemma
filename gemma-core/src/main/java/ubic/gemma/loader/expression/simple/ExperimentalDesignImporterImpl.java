@@ -333,7 +333,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
                 for ( FactorValue factorValue : factorValuesInCurrentExperimentalFactor ) {
                     String fvvalue = factorValue.getValue();
-                    assert StringUtils.isNotBlank( fvvalue );
+                    if ( StringUtils.isNotBlank( fvvalue ) ) {
+                        continue;
+                    }
                     if ( fvvalue.trim().equalsIgnoreCase( currentFactorValueValue.trim() ) ) {
                         currentFactorValue = factorValue;
                     }
@@ -390,9 +392,14 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         VocabCharacteristic category = ( VocabCharacteristic ) experimentalFactor.getCategory();
 
         Set<String> values = factorSampleValues.get( experimentalFactor.getName() );
+        assert !values.isEmpty();
         for ( String value : values ) {
 
-            assert StringUtils.isNotBlank( value );
+            if ( StringUtils.isNotBlank( value ) ) {
+                log.warn( "Value was missing for : " + experimentalFactor );
+                continue;
+            }
+
             FactorValue factorValue = FactorValue.Factory.newInstance();
             factorValue.setValue( value );
 

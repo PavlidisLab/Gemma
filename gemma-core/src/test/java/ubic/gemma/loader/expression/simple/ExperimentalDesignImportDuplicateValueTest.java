@@ -55,20 +55,20 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContextTest {
 
     @Autowired
-    OntologyService os;
+    private OntologyService os;
 
-    MgedOntologyService mos;
+    private MgedOntologyService mos;
 
-    ExpressionExperiment ee;
-
-    @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperiment ee;
 
     @Autowired
-    SimpleExpressionDataLoaderService s;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    ExperimentalDesignImporter experimentalDesignImporter;
+    private SimpleExpressionDataLoaderService s;
+
+    @Autowired
+    private ExperimentalDesignImporter experimentalDesignImporter;
 
     @Before
     public void setup() throws Exception {
@@ -120,9 +120,8 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-                bms.add( bm );
-            }
-        
+            bms.add( bm );
+        }
 
         checkResults( bms );
     }
