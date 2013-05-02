@@ -23,21 +23,23 @@ import java.util.Date;
 import org.springframework.security.access.annotation.Secured;
 
 /**
+ * Creates reports that can be shown on the web pages or in social media feeds.
+ * 
  * @author paul
  * @version $Id$
  */
 public interface WhatsNewService {
 
     /**
-     * save the report from last week. This will be the report that will be used by the WhatsNew box.
+     * save the report from last week.
      * 
      * @param date
      */
-    @Secured( { "GROUP_AGENT" })
+    @Secured({ "GROUP_AGENT" })
     public void generateWeeklyReport();
 
     /**
-     * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
+     * save the report from the date specified.
      * 
      * @param date
      */

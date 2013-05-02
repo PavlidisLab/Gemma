@@ -52,10 +52,10 @@ import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenc
 public class BibRefControllerTest extends BaseSpringWebTest {
 
     @Autowired
-    BibliographicReferenceController brc;
+    private BibliographicReferenceController brc;
 
     @Autowired
-    BibliographicReferenceService brs;
+    private BibliographicReferenceService brs;
 
     private BibliographicReference br = null;
     private MockHttpServletRequest req = null;

@@ -137,7 +137,6 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         while ( ( line = r.readLine() ) != null ) {
             if ( line.startsWith( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) ) {
                 experimentalFactorLines.add( line );
-
             } else if ( line.startsWith( "#" ) || StringUtils.isBlank( line ) ) {
                 continue;
             } else if ( !readHeader ) {
@@ -333,7 +332,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                         .getFactorValues();
 
                 for ( FactorValue factorValue : factorValuesInCurrentExperimentalFactor ) {
-                    if ( factorValue.getValue().trim().equalsIgnoreCase( currentFactorValueValue.trim() ) ) {
+                    String fvvalue = factorValue.getValue();
+                    assert StringUtils.isNotBlank( fvvalue );
+                    if ( fvvalue.trim().equalsIgnoreCase( currentFactorValueValue.trim() ) ) {
                         currentFactorValue = factorValue;
                     }
                 }
@@ -391,6 +392,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         Set<String> values = factorSampleValues.get( experimentalFactor.getName() );
         for ( String value : values ) {
 
+            assert StringUtils.isNotBlank( value );
             FactorValue factorValue = FactorValue.Factory.newInstance();
             factorValue.setValue( value );
 
@@ -721,14 +723,15 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     /**
      * Simple file content validation checking that the 3 file components are present in the file
      * 
-     * @param experimentalFactorLine Lines identified by $# detailing experimental factor values.
+     * @param experimentalFactorLines Lines identified by EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR (#$) detailing
+     *        experimental factor values.
      * @param sampleHeaderLine Header Giving order of experimental factor values in the file
      * @param factorValues The factor values in this file
      * @throws IOException File was not in correct format.
      */
-    private void validateFileComponents( List<String> experimentalFactorLine, String sampleHeaderLine,
+    private void validateFileComponents( List<String> experimentalFactorLines, String sampleHeaderLine,
             List<String> factorValues ) throws IOException {
-        if ( experimentalFactorLine.isEmpty() ) {
+        if ( experimentalFactorLines.isEmpty() ) {
             throw new IOException( "No experimentalFactorLine definitions found in the design file." );
         }
         if ( StringUtils.isBlank( sampleHeaderLine ) ) {

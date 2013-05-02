@@ -176,9 +176,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             experimentalFactorService.delete( ef );
         }
 
-        ds1 = experimentService.thawLite( ds1 );
-        ds2 = experimentService.thawLite( ds2 );
-        ds3 = experimentService.thawLite( ds3 );
+        ds1 = experimentService.thawLite( experimentService.load( ds1.getId() ) );
+        ds2 = experimentService.thawLite( experimentService.load( ds2.getId() ) );
+        ds3 = experimentService.thawLite( experimentService.load( ds3.getId() ) );
 
         designImporter.importDesign( ds1,
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2018.design.txt" ) );
