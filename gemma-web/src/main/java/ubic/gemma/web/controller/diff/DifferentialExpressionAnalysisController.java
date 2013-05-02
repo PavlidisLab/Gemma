@@ -48,13 +48,18 @@ import java.util.HashSet;
  */
 @Controller
 public class DifferentialExpressionAnalysisController {
-    protected static Log log = LogFactory.getLog(DifferentialExpressionAnalysisController.class.getName());
+    protected static Log log = LogFactory.getLog( DifferentialExpressionAnalysisController.class.getName() );
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    @Autowired private ExpressionExperimentReportService experimentReportService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
 
     /**
      * Ajax method. Pick the analysis type when we want it to be completely automated.

@@ -54,6 +54,12 @@ public class RssFeedController {
     @Autowired
     private CustomRssViewer customRssViewer;
 
+    //
+    // // satisfy javabean contract
+    // public RssFeedController() {
+    // super();
+    // }
+
     /**
      * Show all experiments
      * 
@@ -68,7 +74,7 @@ public class RssFeedController {
         // if ( !ConfigUtils.getBoolean( "gemma.rss.enabled" ) ) {
         // return mav;
         // }
-        log.debug( "RSS is enabled. Loading Experiments" );
+        // log.debug( "RSS is enabled. Loading Experiments" );
         WhatsNew wn = whatsNewService.retrieveReport();
         if ( wn == null ) {
             Calendar c = Calendar.getInstance();

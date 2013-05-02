@@ -41,69 +41,72 @@ import com.sun.syndication.feed.rss.Content;
 import com.sun.syndication.feed.rss.Item;
 
 /**
- * 
  * @author sshao
- *
+ * @version $Id$
  */
 @Component
 public class CustomRssViewer extends AbstractRssFeedView {
-	
-	@Autowired StatusService statusService;
-	@Autowired ExpressionExperimentService expressionExperimentService;
-	
-	@Override
-	protected void buildFeedMetadata(Map<String, Object> model, Channel feed,
-		HttpServletRequest request) {
- 
-		Calendar c = Calendar.getInstance();
-		Date date = c.getTime();
-		date = DateUtils.addWeeks(date, -1);
-		
-		int updateCount = (Integer) model.get("updateCount");
-		int newCount = (Integer) model.get("newCount");
-		feed.setTitle("RSS | Gemma");
-		feed.setDescription(updateCount + " updated experiments and " + newCount + " new experiments since " + date);
-		feed.setLink("http://www.chibi.ubc.ca/Gemma/");
- 
-		super.buildFeedMetadata(model, feed, request);
-	}
-	
-	@Override
-	protected List<Item> buildFeedItems(Map<String, Object> model,
-			HttpServletRequest request, HttpServletResponse response) throws Exception {
-		
-		@SuppressWarnings("unchecked")
-		Map<ExpressionExperiment, String> experiments = (Map<ExpressionExperiment, String>) model.get("feedContent");
-		List<Item> items = new ArrayList<Item>(experiments.size());
-		
-		// Set content of each expression experiment
-		for(Map.Entry<ExpressionExperiment, String> entry : experiments.entrySet())
-		{	
-			ExpressionExperiment e = entry.getKey();
-			
-			String title = e.getShortName() + " ("+entry.getValue()+"): " + e.getName();
-			String link = request.getServerName()+":"+request.getServerPort()+"/Gemma/expressionExperiment/showExpressionExperiment.html?id="+e.getId().toString();
-			
-			int maxlength = 500;
-			if (e.getDescription().length() < 500)
-			{
-				maxlength = e.getDescription().length();
-			}
-			
-			Item item = new Item();
-			Content content = new Content();
-			content.setValue(e.getDescription().substring(0, maxlength)+" ...");
-			item.setContent(content);
-			item.setTitle(title);
-			item.setLink(link);
 
-			if (statusService.getStatus(e) != null)
-			{
-				item.setPubDate(statusService.getStatus(e).getLastUpdateDate());
-			}
-			items.add(item);
-		}
-		return items;
-	}
+    @Autowired
+    StatusService statusService;
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
+
+    @Override
+    protected void buildFeedMetadata( Map<String, Object> model, Channel feed, HttpServletRequest request ) {
+
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addWeeks( date, -1 );
+
+        int updateCount = ( Integer ) model.get( "updateCount" );
+        int newCount = ( Integer ) model.get( "newCount" );
+        feed.setTitle( "RSS | Gemma" );
+        feed.setDescription( updateCount + " updated experiments and " + newCount + " new experiments since " + date );
+        feed.setLink( "http://www.chibi.ubc.ca/Gemma/" );
+
+        super.buildFeedMetadata( model, feed, request );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.view.feed.AbstractRssFeedView#buildFeedItems(java.util.Map,
+     * javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     */
+    @Override
+    protected List<Item> buildFeedItems( Map<String, Object> model, HttpServletRequest request,
+            HttpServletResponse response ) throws Exception {
+
+        Map<ExpressionExperiment, String> experiments = ( Map<ExpressionExperiment, String> ) model.get( "feedContent" );
+        List<Item> items = new ArrayList<Item>( experiments.size() );
+
+        // Set content of each expression experiment
+        for ( Map.Entry<ExpressionExperiment, String> entry : experiments.entrySet() ) {
+            ExpressionExperiment e = entry.getKey();
+
+            String title = e.getShortName() + " (" + entry.getValue() + "): " + e.getName();
+            String link = request.getServerName() + ":" + request.getServerPort()
+                    + "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + e.getId().toString();
+
+            int maxlength = 500;
+            if ( e.getDescription().length() < 500 ) {
+                maxlength = e.getDescription().length();
+            }
+
+            Item item = new Item();
+            Content content = new Content();
+            content.setValue( e.getDescription().substring( 0, maxlength ) + " ..." );
+            item.setContent( content );
+            item.setTitle( title );
+            item.setLink( link );
+
+            if ( statusService.getStatus( e ) != null ) {
+                item.setPubDate( statusService.getStatus( e ).getLastUpdateDate() );
+            }
+            items.add( item );
+        }
+        return items;
+    }
 
 }

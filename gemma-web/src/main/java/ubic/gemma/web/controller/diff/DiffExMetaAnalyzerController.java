@@ -47,16 +47,20 @@ import java.util.Collection;
  */
 @Controller
 public class DiffExMetaAnalyzerController {
-    protected static Log log = LogFactory.getLog(DiffExMetaAnalyzerController.class.getName());
+    protected static Log log = LogFactory.getLog( DiffExMetaAnalyzerController.class.getName() );
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
-    @Autowired private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
-    @Autowired private UserManager userManager;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
+    @Autowired
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+    @Autowired
+    private UserManager userManager;
 
     private BaseValueObject generateBaseValueObject( Throwable throwable ) {
         final BaseValueObject baseValueObject = new BaseValueObject();
-        baseValueObject.setErrorFound(true);
+        baseValueObject.setErrorFound( true );
 
         if ( throwable instanceof AccessDeniedException ) {
             if ( this.userManager.loggedIn() ) {
@@ -85,44 +89,45 @@ public class DiffExMetaAnalyzerController {
      * @param id
      * @return
      */
-	public BaseValueObject findDetailMetaAnalysisById(Long id) {
-		BaseValueObject baseValueObject = new BaseValueObject();
-		
+    public BaseValueObject findDetailMetaAnalysisById( Long id ) {
+        BaseValueObject baseValueObject = new BaseValueObject();
+
         try {
-        	GeneDifferentialExpressionMetaAnalysisDetailValueObject analysisVO = this.geneDiffExMetaAnalysisHelperService.findDetailMetaAnalysisById(id);        	
-        	
-        	if (analysisVO == null) {
-        		baseValueObject.setErrorFound(true);
-        		baseValueObject.setObjectAlreadyRemoved(true);
-        	} else {
-            	baseValueObject.setValueObject(analysisVO);
-        	}
+            GeneDifferentialExpressionMetaAnalysisDetailValueObject analysisVO = this.geneDiffExMetaAnalysisHelperService
+                    .findDetailMetaAnalysisById( id );
+
+            if ( analysisVO == null ) {
+                baseValueObject.setErrorFound( true );
+                baseValueObject.setObjectAlreadyRemoved( true );
+            } else {
+                baseValueObject.setValueObject( analysisVO );
+            }
         } catch ( Throwable throwable ) {
             baseValueObject = generateBaseValueObject( throwable );
         }
         return baseValueObject;
-	}
-	
+    }
+
     /**
      * @return
      */
-	public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses() {
-		return this.geneDiffExMetaAnalysisHelperService.loadAllMetaAnalyses();
-	}
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses() {
+        return this.geneDiffExMetaAnalysisHelperService.loadAllMetaAnalyses();
+    }
 
     /**
      * @param id
      */
-	public BaseValueObject removeMetaAnalysis(Long id) {
-		BaseValueObject baseValueObject;
-		
+    public BaseValueObject removeMetaAnalysis( Long id ) {
+        BaseValueObject baseValueObject;
+
         try {
-            baseValueObject = this.geneDiffExMetaAnalysisService.delete(id);
+            baseValueObject = this.geneDiffExMetaAnalysisService.delete( id );
         } catch ( Throwable throwable ) {
             baseValueObject = generateBaseValueObject( throwable );
         }
         return baseValueObject;
-	}
+    }
 
     /**
      * @param analysisResultSetIds

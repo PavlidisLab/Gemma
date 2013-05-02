@@ -63,11 +63,20 @@ public class CharacteristicBrowserController {
 
     private static final int MAX_RESULTS = 1000;
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ExperimentalDesignService experimentalDesignService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private FactorValueService factorValueService;
-    @Autowired private CharacteristicService characteristicService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    @Autowired
+    private ExperimentalDesignService experimentalDesignService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private FactorValueService factorValueService;
+
+    @Autowired
+    private CharacteristicService characteristicService;
 
     /**
      * @param valuePrefix
@@ -101,8 +110,7 @@ public class CharacteristicBrowserController {
             if ( ( searchEEs && parent instanceof ExpressionExperiment )
                     || ( searchBMs && parent instanceof BioMaterial )
                     || ( searchFVs && ( parent instanceof FactorValue || parent instanceof ExperimentalFactor ) )
-                    || ( searchNos && parent == null ) 
-                    || ( searchPAs && parent instanceof PhenotypeAssociation)) {
+                    || ( searchNos && parent == null ) || ( searchPAs && parent instanceof PhenotypeAssociation ) ) {
                 AnnotationValueObject avo = new AnnotationValueObject();
                 avo.setId( c.getId() );
                 avo.setClassName( c.getCategory() );
@@ -145,7 +153,8 @@ public class CharacteristicBrowserController {
             }
         }
 
-        log.info( "Characteristic search for: '" + valuePrefix + "*': " + results.size() + " results, returning up to " + MAX_RESULTS );
+        log.info( "Characteristic search for: '" + valuePrefix + "*': " + results.size() + " results, returning up to "
+                + MAX_RESULTS );
         return results.subList( 0, Math.min( results.size(), MAX_RESULTS ) );
     }
 
@@ -276,8 +285,8 @@ public class CharacteristicBrowserController {
             if ( ee != null ) {
                 avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
                 // avo.setParentOfParentDescription( ee.getDescription() );
-                avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
-                        .getParentOfParentName() ) );
+                avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(),
+                        avo.getParentOfParentName() ) );
             } else {
                 log.warn( "Expression experiment for " + bm + " was null" );
             }
@@ -297,13 +306,13 @@ public class CharacteristicBrowserController {
                     "Exp. Factor: " + ef.getName() ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
             avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
-            avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
-                    .getParentOfParentName() ) );
-        } else if (parent instanceof PhenotypeAssociation){
-            PhenotypeAssociation pa = (PhenotypeAssociation) parent;
-            avo.setParentLink("PhenotypeAssociation");
+            avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(),
+                    avo.getParentOfParentName() ) );
+        } else if ( parent instanceof PhenotypeAssociation ) {
+            PhenotypeAssociation pa = ( PhenotypeAssociation ) parent;
+            avo.setParentLink( "PhenotypeAssociation" );
             avo.setParentDescription( pa.getId().toString() );
-            
+
         }
     }
 
