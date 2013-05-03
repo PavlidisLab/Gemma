@@ -79,6 +79,7 @@ Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCom
     var graph;
 
     if ( fullGraph.size <= maxEdgesLimit ) {
+        graph = fullGraph;
         if (this.isTrimmedOnBackend) {
             graphSizeOptions.push({
                 label: fullGraph.trimStringency + ' (' + fullGraph.size + " edges)",

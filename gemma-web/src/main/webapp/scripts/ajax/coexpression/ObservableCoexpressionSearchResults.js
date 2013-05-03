@@ -184,7 +184,7 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         }
 
         ExtCoexpressionSearchController.doSearchQuick2Complete (
-            coexpressionSearchCommand, geneIdsSubset, {
+            coexpressionSearchCommand, this.searchCommandUsed.geneIds, {
                 callback: function (results) {
                     this.cytoscapeSearchResults = results;
                     this.cytoscapeResultsUpToDate = true;
