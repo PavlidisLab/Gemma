@@ -22,25 +22,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  */
 public class DatabaseEntryValueObject {
 
-    private String accession;
-    private ExternalDatabaseValueObject externalDatabase;
-
-    public String getAccession() {
-        return this.accession;
-    }
-
-    public void setAccession( String accession ) {
-        this.accession = accession;
-    }
-
-    public ExternalDatabaseValueObject getExternalDatabase() {
-        return this.externalDatabase;
-    }
-
-    public void setExternalDatabase( ExternalDatabaseValueObject externalDatabase ) {
-        this.externalDatabase = externalDatabase;
-    }
-
     public static DatabaseEntryValueObject fromEntity( DatabaseEntry de ) {
         if ( de == null ) return null;
         DatabaseEntryValueObject vo = new DatabaseEntryValueObject();
@@ -48,23 +29,17 @@ public class DatabaseEntryValueObject {
         vo.setExternalDatabase( ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() ) );
         return vo;
     }
+    private String accession;
+
+    private ExternalDatabaseValueObject externalDatabase;
 
     public DatabaseEntryValueObject() {
     }
 
     public DatabaseEntryValueObject( DatabaseEntry de ) {
-        if( de == null ) throw new NullPointerException("Database entry is null");
+        if ( de == null ) throw new IllegalArgumentException( "Database entry is null" );
         this.accession = de.getAccession();
         this.externalDatabase = ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() );
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( this.accession == null ) ? 0 : this.accession.hashCode() );
-        result = prime * result + ( ( this.externalDatabase == null ) ? 0 : this.externalDatabase.hashCode() );
-        return result;
     }
 
     @Override
@@ -80,6 +55,31 @@ public class DatabaseEntryValueObject {
             if ( other.externalDatabase != null ) return false;
         } else if ( !this.externalDatabase.equals( other.externalDatabase ) ) return false;
         return true;
+    }
+
+    public String getAccession() {
+        return this.accession;
+    }
+
+    public ExternalDatabaseValueObject getExternalDatabase() {
+        return this.externalDatabase;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( this.accession == null ) ? 0 : this.accession.hashCode() );
+        result = prime * result + ( ( this.externalDatabase == null ) ? 0 : this.externalDatabase.hashCode() );
+        return result;
+    }
+
+    public void setAccession( String accession ) {
+        this.accession = accession;
+    }
+
+    public void setExternalDatabase( ExternalDatabaseValueObject externalDatabase ) {
+        this.externalDatabase = externalDatabase;
     }
 
 }

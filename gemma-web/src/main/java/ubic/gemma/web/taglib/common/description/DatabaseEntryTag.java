@@ -46,9 +46,10 @@ public class DatabaseEntryTag extends TagSupport {
      * @param databaseEntry
      */
     public void setDatabaseEntry( DatabaseEntry databaseEntry ) {
-        if( databaseEntry == null ){
-           log.error( "Trying to create new DatabaseEntryTag but DatabaseEntry is null" ); 
-           this.databaseEntry = null;
+        if ( databaseEntry == null ) {
+            // if it is a user-owned data set.
+            this.databaseEntry = null;
+            return;
         }
         this.databaseEntry = new DatabaseEntryValueObject( databaseEntry );
     }
