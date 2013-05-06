@@ -1217,18 +1217,26 @@ public class ExpressionExperimentQCController extends BaseController {
             return false;
         }
 
+        series.add( -0.01, 0.0 );
+
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
 
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "", "", xySeriesCollection, PlotOrientation.VERTICAL,
                 false, false, false );
+
+        chart.getXYPlot().setBackgroundPaint( new Color( 230, 230, 230 ) );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
-        chart.getXYPlot().setOutlineVisible( false );
+        chart.getXYPlot().setOutlineVisible( false ); // around the plot
         chart.getXYPlot().getRangeAxis().setTickMarksVisible( false );
         chart.getXYPlot().getRangeAxis().setTickLabelsVisible( false );
+        chart.getXYPlot().getRangeAxis().setAxisLineVisible( false );
         chart.getXYPlot().getDomainAxis().setTickMarksVisible( false );
         chart.getXYPlot().getDomainAxis().setTickLabelsVisible( false );
+        chart.getXYPlot().getDomainAxis().setAxisLineVisible( false );
+        chart.getXYPlot().getRenderer().setSeriesPaint( 0, Color.RED );
+        // chart.getXYPlot().getRenderer().setSeriesStroke( 0, new BasicStroke( 1 ) );
 
         // Make the chart a bit bigger to account for the empty space around the generated image.
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
