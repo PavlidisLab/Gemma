@@ -26,7 +26,6 @@ Ext.onReady(function() {
 
 function submitForm() {
 
-	var dh = Ext.DomHelper;
 	var accession = Ext.get("accession").dom.value;
 	var suppressMatching = Ext.get("suppressMatching").dom.checked;
 	var loadPlatformOnly = Ext.get("loadPlatformOnly").dom.checked;
@@ -54,15 +53,7 @@ function submitForm() {
 	};
 
 	callParams.push(commandObj);
-
-	var delegate = handleSuccess.createDelegate(this, [], true);
-	var errorHandler = handleFailure.createDelegate(this, [], true);
-
-	callParams.push({
-				callback : delegate,
-				errorHandler : errorHandler
-			});
-
+	
 	// this should return quickly, with the task id.
 	Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
@@ -72,7 +63,25 @@ function submitForm() {
 
 	uploadButton.disable();
 
-	ExpressionExperimentLoadController.load.apply(this, callParams);
+	//ExpressionExperimentLoadController.load.apply(this, callParams);
+	
+	ExpressionExperimentLoadController.load(commandObj, {
+        callback : function(taskId) {
+           var task = new Gemma.ObservableSubmittedTask({
+                 'taskId' : taskId
+              });
+           
+           task.on('task-completed', function(payload) {
+        	   Ext.DomHelper.overwrite("messages", payload);
+        	   
+        	   
+            });
+           
+           task.showTaskProgressWindow({});
+           
+        },
+        errorHandler : handleFailure
+     });
 
 };
 
@@ -92,21 +101,3 @@ function reset(data) {
 	uploadButton.enable();
 }
 
-function handleSuccess(taskId) {
-	try {
-		Ext.DomHelper.overwrite("messages", "");
-
-		var p = new Gemma.ProgressWindow({
-					taskId : taskId,
-					callback : function(p) {
-						window.location = p;
-					},
-					errorHandler : handleFailure
-				});
-
-		p.show('upload-button');
-	} catch (e) {
-		handleFailure(e);
-		return;
-	}
-};

@@ -423,36 +423,12 @@ function toggleUsability(accession) {
 	});
 }
 
-function handleLoadSuccess(taskId) {
-	try {
-		Ext.DomHelper.overwrite("messages", "");
-
-		var p = new Gemma.ProgressWindow({
-			taskId : taskId,
-			errorHandler : handleFailure,
-			callback : function() {
-				document.location.reload(true);
-				Ext.DomHelper.overwrite("messages", "Successfully loaded");
-			}
-		});
-
-		p.show('upload-button');
-
-	} catch (e) {
-		handleFailure(data, e);
-		return;
-	}
-
-}
-
 function load(accession) {
 
 	var suppressMatching = "false";
 	var loadPlatformOnly = "false";
 	var arrayExpress = "false";
 	var arrayDesign = "";
-
-	var callParams = [];
 
 	var commandObj = {
 			accession : accession,
@@ -461,24 +437,31 @@ function load(accession) {
 			arrayExpress : arrayExpress,
 			arrayDesignName : arrayDesign
 	};
-
-	callParams.push(commandObj);
-
-	var delegate = handleLoadSuccess.createDelegate(this, [], true);
+	
 	var errorHandler = handleFailure.createDelegate(this, [], true);
 
-	callParams.push({
-		callback : delegate,
-		errorHandler : errorHandler
-	});
-
-	// this should return quickly, with the task id.
 	Ext.DomHelper.overwrite("messages", {
 		tag : 'img',
 		src : '/Gemma/images/default/tree/loading.gif'
 	});
 	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");
-	ExpressionExperimentLoadController.load.apply(this, callParams);
+	
+	ExpressionExperimentLoadController.load(commandObj, {
+        callback : function(taskId) {
+           var task = new Gemma.ObservableSubmittedTask({
+                 'taskId' : taskId
+              });
+           
+           task.on('task-completed', function(payload) {
+        	   document.location.reload(true);
+				Ext.DomHelper.overwrite("messages", "Successfully loaded");
+            });
+           
+           task.showTaskProgressWindow({});
+           
+        },
+        errorHandler : errorHandler
+     });
 
 }
 

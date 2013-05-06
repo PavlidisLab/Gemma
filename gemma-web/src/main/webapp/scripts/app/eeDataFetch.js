@@ -17,24 +17,6 @@ function handleDoneGeneratingFile(url) {
 	window.location = url;
 }
 
-/*
- * Handler for after the data file creation has been initiated.
- */
-function handleStartSuccess(taskId) {
-	try {
-		Ext.DomHelper.overwrite("messages", "");
-		var p = new Gemma.ProgressWindow({
-					taskId : taskId,
-					callback : handleDoneGeneratingFile
-				});
-		p.show();
-	} catch (e) {
-		//console.log(e);
-		handleFailure(data, e);
-		return;
-	}
-}
-
 function fetchData( filter, eeId, formatType, qtId, eeDId ) {
 
 	// Get the parameters from the form.
