@@ -37,8 +37,6 @@ function handleStartSuccess(taskId) {
 
 function fetchData( filter, eeId, formatType, qtId, eeDId ) {
 
-	var callParams = [];
-
 	// Get the parameters from the form.
 	var commandObj = {
 		quantitationTypeId : qtId,
@@ -48,24 +46,27 @@ function fetchData( filter, eeId, formatType, qtId, eeDId ) {
 		experimentalDesignId : eeDId
 	};
 
-	callParams.push(commandObj);
-
-	// callback is just for initiating the process.
-	var cb = handleStartSuccess;
-	var errorHandler = handleFailure;
-
-	callParams.push({
-				callback : cb,
-				errorHandler : errorHandler
-			});
-
 	Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
 				src : '/Gemma/images/default/tree/loading.gif'
 			});
 	Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
-
-	ExpressionExperimentDataFetchController.getDataFile.apply(this, callParams);
+	
+	ExpressionExperimentDataFetchController.getDataFile(commandObj, {
+        callback : function(taskId) {
+           var task = new Gemma.ObservableSubmittedTask({
+                 'taskId' : taskId
+              });
+           
+           task.on('task-completed', function(url) {
+        	   handleDoneGeneratingFile(url);
+            });
+           
+           task.showTaskProgressWindow({});
+           
+        },
+        errorHandler : handleFailure
+     });
 
 }
 
@@ -73,48 +74,52 @@ function fetchData( filter, eeId, formatType, qtId, eeDId ) {
 
 function fetchCoExpressionData( eeId ) {
 
-	var callParams = [];
-	callParams.push(eeId);
-
-	// callback is just for initiating the process.
-	var cb = handleStartSuccess;
-	var errorHandler = handleFailure;
-
-	callParams.push({
-				callback : cb,
-				errorHandler : errorHandler
-			});
-
 	Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
 				src : '/Gemma/images/default/tree/loading.gif'
 			});
 	Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
-
-	ExpressionExperimentDataFetchController.getCoExpressionDataFile.apply(this, callParams);
+	
+	ExpressionExperimentDataFetchController.getCoExpressionDataFile(eeId, {
+        callback : function(taskId) {
+           var task = new Gemma.ObservableSubmittedTask({
+                 'taskId' : taskId
+              });
+           
+           task.on('task-completed', function(url) {
+        	   handleDoneGeneratingFile(url);
+            });
+           
+           task.showTaskProgressWindow({});
+           
+        },
+        errorHandler : handleFailure
+     });
 }
 
 
 function fetchDiffExpressionData(analysisId) {
 
-	var callParams = [];
-	callParams.push(analysisId);
-
-	// callback is just for initiating the process.
-	var cb = handleStartSuccess;
-	var errorHandler = handleFailure;
-
-	callParams.push({
-				callback : cb,
-				errorHandler : errorHandler
-			});
-
 	Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
 				src : '/Gemma/images/default/tree/loading.gif'
 			});
 	Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
-
-	ExpressionExperimentDataFetchController.getDiffExpressionDataFile.apply(this, callParams);
+	
+	ExpressionExperimentDataFetchController.getDiffExpressionDataFile(analysisId, {
+        callback : function(taskId) {
+           var task = new Gemma.ObservableSubmittedTask({
+                 'taskId' : taskId
+              });
+           
+           task.on('task-completed', function(url) {
+        	   handleDoneGeneratingFile(url);
+            });
+           
+           task.showTaskProgressWindow({});
+           
+        },
+        errorHandler : handleFailure
+     });
 
 }
