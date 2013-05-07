@@ -693,6 +693,7 @@ public class SecurityServiceImpl implements SecurityService {
         /*
          * Take advantage of fast bulk loading of ACLs.
          */
+
         Map<ObjectIdentity, Acl> acls = aclService
                 .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
 
@@ -709,7 +710,7 @@ public class SecurityServiceImpl implements SecurityService {
                 boolean granted = acl.isGranted( requiredPermissions, sids, false );
 
                 result.put( objectIdentities.get( oi ), granted );
-            } catch ( NotFoundException ignore ) {
+            } catch ( NotFoundException ignore ) { // this won't happen?
                 /*
                  * The user is anonymous.
                  */
