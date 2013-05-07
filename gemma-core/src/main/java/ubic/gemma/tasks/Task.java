@@ -1,18 +1,32 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2013 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.tasks;
 
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 
 /**
- * Created with IntelliJ IDEA.
- * User: anton
- * Date: 03/01/13
- * Time: 2:23 PM
- * To change this template use File | Settings | File Templates.
+ * TODO document me
+ * 
+ * @author anton
+ * @version $Id$
  */
-public interface Task<T extends TaskResult, C extends TaskCommand>  {
+public interface Task<T extends TaskResult, C extends TaskCommand> {
 
-    void setCommand (C taskCommand);
+    void setCommand( C taskCommand );
+
     T execute();
 
 }
