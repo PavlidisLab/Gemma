@@ -47,7 +47,9 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
@@ -338,13 +340,34 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
         assertNotNull( metaAnalysis.getId() );
 
+        /*
+         * Test validity of stored analysis.
+         */
         Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> myMetaAnalyses = geneDiffExMetaAnalysisHelperService
                 .loadAllMetaAnalyses();
         assertTrue( myMetaAnalyses.size() > 0 );
+        for ( GeneDifferentialExpressionMetaAnalysisSummaryValueObject mvo : myMetaAnalyses ) {
+            assertEquals( 3, mvo.getNumResultSetsIncluded().intValue() );
+        }
 
         GeneDifferentialExpressionMetaAnalysisDetailValueObject mdvo = geneDiffExMetaAnalysisHelperService
                 .findDetailMetaAnalysisById( metaAnalysis.getId() );
         assertNotNull( mdvo );
+
+        for ( GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject gdemairsivo : mdvo
+                .getIncludedResultSetsInfo() ) {
+            DifferentialExpressionAnalysis thawedAnalysis = this.differentialExpressionAnalysisService
+                    .thawFully( this.differentialExpressionAnalysisService.load( gdemairsivo.getAnalysisId() ) );
+            // see bug 3365 for policy on storing results that are part of a meta-analysis.
+            for ( ExpressionAnalysisResultSet rs : thawedAnalysis.getResultSets() ) {
+                assertEquals( 1.0, rs.getQvalueThresholdForStorage(), 0.0001 );
+            }
+        }
+
+        for ( GeneDifferentialExpressionMetaAnalysisResultValueObject vo : mdvo.getResults() ) {
+            assertNotNull( vo.getMetaPvalue() );
+            assertNotNull( vo.getGeneSymbol() );
+        }
 
         // this is a little extra test, related to bug 3341
         differentialExpressionResultService.thaw( rs1 );

@@ -64,6 +64,7 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
      * @param metaAnalysisIds
      * @return
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
             Collection<Long> metaAnalysisIds );
 
@@ -73,8 +74,16 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
      */
     public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
 
+    /**
+     * @param idResult
+     * @return
+     */
     public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
 
+    /**
+     * @param idResult
+     * @return
+     */
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

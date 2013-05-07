@@ -19,40 +19,55 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.io.Serializable;
-
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
 
 /**
  * @author frances
  * @version $Id$
  */
-public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements Serializable {
+public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements SecureValueObject {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1856182824742323129L;
 
     private String description;
+    private DiffExpressionEvidenceValueObject diffExpressionEvidence;
     private Long id;
-    private String name;
-    private Integer numGenesAnalyzed;
-    private Integer numResults;
-    private Integer numResultSetsIncluded;
-    
     private boolean isEditable;
     private boolean isOwnedByCurrentUser;
     private boolean isPublic;
+
     private boolean isShared;
-    
-    private DiffExpressionEvidenceValueObject diffExpressionEvidence; 
+    private String name;
+    private Integer numGenesAnalyzed;
+    private Integer numResults;
+
+    private Integer numResultSetsIncluded;
 
     public String getDescription() {
         return this.description;
     }
 
+    public DiffExpressionEvidenceValueObject getDiffExpressionEvidence() {
+        return this.diffExpressionEvidence;
+    }
+
+    @Override
     public Long getId() {
         return this.id;
+    }
+
+    @Override
+    public boolean getIsPublic() {
+        return this.isPublic;
+    }
+
+    @Override
+    public boolean getIsShared() {
+        return this.isShared;
     }
 
     public String getName() {
@@ -71,12 +86,70 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
         return this.numResultSetsIncluded;
     }
 
+    @Override
+    public Class<? extends Securable> getSecurableClass() {
+        return GeneDifferentialExpressionMetaAnalysisImpl.class;
+    }
+
+    @Override
+    public boolean getUserCanWrite() {
+        return this.isEditable;
+    }
+
+    @Override
+    public boolean getUserOwned() {
+        return this.isOwnedByCurrentUser;
+    }
+
+    @Deprecated
+    public boolean isEditable() {
+        return this.isEditable;
+    }
+
+    @Deprecated
+    public boolean isOwnedByCurrentUser() {
+        return this.isOwnedByCurrentUser;
+    }
+
+    @Deprecated
+    public boolean isPublic() {
+        return this.isPublic;
+    }
+
+    @Deprecated
+    public boolean isShared() {
+        return this.isShared;
+    }
+
     public void setDescription( String description ) {
         this.description = description;
     }
 
+    public void setDiffExpressionEvidence( DiffExpressionEvidenceValueObject diffExpressionEvidence ) {
+        this.diffExpressionEvidence = diffExpressionEvidence;
+        if ( diffExpressionEvidence != null ) {
+            this.diffExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisSummaryValueObject( this );
+        }
+
+    }
+
+    @Deprecated
+    public void setEditable( boolean isEditable ) {
+        this.isEditable = isEditable;
+    }
+
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    @Override
+    public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
+
+    @Override
+    public void setIsShared( boolean isShared ) {
+        this.isShared = isShared;
     }
 
     public void setName( String name ) {
@@ -95,48 +168,28 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
         this.numResultSetsIncluded = numResultSetsIncluded;
     }
 
-	public boolean isEditable() {
-		return this.isEditable;
-	}
+    @Deprecated
+    public void setOwnedByCurrentUser( boolean isOwnedByCurrentUser ) {
+        this.isOwnedByCurrentUser = isOwnedByCurrentUser;
+    }
 
-	public void setEditable(boolean isEditable) {
-		this.isEditable = isEditable;
-	}
+    @Deprecated
+    public void setPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
 
-	public boolean isOwnedByCurrentUser() {
-		return this.isOwnedByCurrentUser;
-	}
+    @Deprecated
+    public void setShared( boolean isShared ) {
+        this.isShared = isShared;
+    }
 
-	public void setOwnedByCurrentUser(boolean isOwnedByCurrentUser) {
-		this.isOwnedByCurrentUser = isOwnedByCurrentUser;
-	}
+    @Override
+    public void setUserCanWrite( boolean userCanWrite ) {
+        this.isEditable = userCanWrite;
+    }
 
-	public boolean isPublic() {
-		return this.isPublic;
-	}
-
-	public void setPublic(boolean isPublic) {
-		this.isPublic = isPublic;
-	}
-
-	public boolean isShared() {
-		return this.isShared;
-	}
-
-	public void setShared(boolean isShared) {
-		this.isShared = isShared;
-	}
-
-	public DiffExpressionEvidenceValueObject getDiffExpressionEvidence() {
-		return this.diffExpressionEvidence;
-	}
-
-	public void setDiffExpressionEvidence(
-			DiffExpressionEvidenceValueObject diffExpressionEvidence) {
-		this.diffExpressionEvidence = diffExpressionEvidence;
-		if(diffExpressionEvidence!=null){
-		    this.diffExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisSummaryValueObject( this );
-		}
-		
-	}
+    @Override
+    public void setUserOwned( boolean isUserOwned ) {
+        this.isOwnedByCurrentUser = isUserOwned;
+    }
 }
