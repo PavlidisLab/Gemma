@@ -274,7 +274,9 @@ Gemma.CytoscapeDisplay = Ext.extend( Ext.FlashComponent, {
                 this.currentStyleBypass.nodes[overlayIds[i]] = Gemma.CytoscapeSettings.secondGeneListBypassOverlay;
             } else if (this.currentStyle === this.visualStyles['nodeDegreeEmphasis']) {
                 var node = this.visualization.node( overlayIds[i] );
-                this.currentStyleBypass.nodes[overlayIds[i]] = pickBypass( node.data.nodeDegreeBin );
+                if (node !== null) {
+                    this.currentStyleBypass.nodes[overlayIds[i]] = pickBypass( node.data.nodeDegreeBin );
+                }
             }
         }
         this.visualization.visualStyleBypass( this.currentStyleBypass );

@@ -80,7 +80,13 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
         // Extjs event, fired by TabPanel when this tab is activated/displayed.
         this.on('activate', this.onPanelActivation, this);
 
-        this.on('complete-search-results-ready', function (searchResults, cytoscapSearchCommmand) {
+        this.observableSearchResults.on('search-started', function() {
+            if (this.loadMask) {
+                this.loadMask.show();
+            }
+        }, this);
+
+        this.observableSearchResults.on('complete-search-results-ready', function (searchResults, cytoscapSearchCommmand) {
             // TODO: move this to controlbar? or just delete?
             if (this.observableSearchResults.getQueryGeneIds().length < 2) {
                 this.observableDisplaySettings.setQueryGenesOnly(false);
@@ -138,7 +144,8 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
      */
     searchForCytoscapeData: function () {
         this.loadMask.show();
-        this.observableSearchResults.searchForCytoscapeData();
+        var stringency = this.observableDisplaySettings.getStringency();
+        this.observableSearchResults.searchForCytoscapeDataWithStringency( stringency );
     },
 
     /**
@@ -165,8 +172,8 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
                     title: 'New Search Required to View Graph at Current Stringency',
                     msg: String.format(
                         Gemma.HelpText.WidgetDefaults.CytoscapePanel.newSearchOrReturnToCurrentStringencyOption,
-                        displayStringency,
-                        resultsStringency),
+                        resultsStringency,
+                        displayStringency),
                     buttons: {
                         ok: 'Search for new graph data',
                         cancel: 'Use lowest graph stringency'
@@ -176,7 +183,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
                         if (button === 'ok') {
                             resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency);
                             this.observableSearchResults.searchForCytoscapeDataWithStringency(resultsStringency);
-                            this.observableDisplaySettings.setStringency(resultsStringency);
+                            this.observableDisplaySettings.setStringency(displayStringency);
                         } else { // 'cancel'
                             this.observableDisplaySettings.setStringency(resultsStringency);
                         }
