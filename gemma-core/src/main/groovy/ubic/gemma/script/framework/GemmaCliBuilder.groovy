@@ -1,17 +1,27 @@
 package ubic.gemma.script.framework
+import  org.apache.log4j.*
 import groovy.transform.InheritConstructors
+import org.apache.commons.cli.Option
 
-import org.apache.log4j.*
-
+/**
+ * To use this in a way that permits omitting the user name and password, use
+ * <pre>
+ * def u = opt.u ?: ""
+ * def p = opt.p ?: ""
+ * sx = new SpringSupport(u,p)
+ * </pre>
+ * Otherwise you will get a "no matching constructor" error when the username and password are not provided.
+ */
 @InheritConstructors
 class GemmaCliBuilder extends CliBuilder {
 
     GemmaCliBuilder(String u) {
+        super()
         usage = u
-        super.v(argName: 'verbosity', longOpt:'verbosity', args:1, 'verbosity [0=silent;5=debug]')
-        super.h(longOpt: 'help', 'usage information')
-        super.u(argName: 'username', longOpt:'username', args:1, required:false)
-        super.p(argName: 'password', longOpt:'password', args:1, required:false)
+        this.v([argName: 'verbosity', longOpt:'verbosity', args:1], 'verbosity [0=silent;5=debug]')
+        this.h([longOpt: 'help'], 'usage information')
+        this.u([argName: 'username', longOpt:'username', args:1, required:false], "")
+        this.p([argName: 'password', longOpt:'password', args:1, required:false], "")
     }
 
     def setGemmaLogging(int verbosity) {
@@ -40,15 +50,19 @@ class GemmaCliBuilder extends CliBuilder {
         }
     }
 
-    def parse() {
-        def opts = super.parse()
+    @Override
+    def OptionAccessor parse(args) {
+        def opts = super.parse(args)
+
+        if (!opts) {
+            return opts
+        }
+
         if (opts.h) {
             super.usage()
         }
         if (opts.v) {
             setGemmaLogging(opts.v)
         }
-        return opts
     }
 }
-

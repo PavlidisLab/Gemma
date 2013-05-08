@@ -10,9 +10,10 @@ if (!opt || opt.h ) {
     cli.usage()
     return
 }
+def u = opt.u ?: ""
+def p = opt.p ?: ""
+sx = new SpringSupport(u,p)
 
-
-sx = new SpringSupport(userName : opt.u, password : opt.p)
 ees = sx.getBean("expressionExperimentService")
 
 for (id in opt.arguments()) {

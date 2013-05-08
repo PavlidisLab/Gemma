@@ -1,11 +1,23 @@
 package ubic.gemma.script.framework
+import ubic.gemma.util.SpringContextUtil
+import ubic.gemma.security.authentication.ManualAuthenticationService
 import java.util.concurrent.atomic.AtomicBoolean
-
 import org.apache.commons.lang.time.StopWatch
 
-import ubic.gemma.security.authentication.ManualAuthenticationService
-import ubic.gemma.util.SpringContextUtil
-
+/**
+ * Class for creation of a spring context. Example usage:
+ * <pre>
+ * sx = new SpringSupport();
+ * gs = sx.getBean("geneService");
+ * listogenes = gs.findByOfficialSymbol("Grin1");
+ * listogenes.each{println(it)}
+ * sx.shutdown();
+ * </pre>
+ * With authentication use constructore that takes user name and password.
+ * 
+ * @author Paul
+ * @version $Id$
+ */
 class SpringSupport {
 
     private ctx
@@ -28,7 +40,10 @@ class SpringSupport {
             System.err.println "Ready in ${timer.getTime()}ms"
         }
 
-        ctx = SpringContextUtil.getApplicationContext()
+        // scan for beans, but exclude jms, web
+        ctx = SpringContextUtil.getApplicationContext((String[])[
+            "classpath*:ubic/gemma/cliContext-component-scan.xml"
+        ])
         b.set(true)
         t.join()
 
