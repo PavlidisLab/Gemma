@@ -191,21 +191,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                             "keyup": {
                                 fn: function (textField) {
                                     this.observableDisplaySettings.setSearchTextValue(textField.getValue());
-
-                                    var value = new RegExp(Ext.escapeRe(textField.getValue()), 'i');
-                                    this.getStore().filterBy(function (record) {
-                                        var foundGene = (record.get("foundGene"));
-                                        var queryGene = (record.get("queryGene"));
-
-                                        if (value.test(foundGene.officialSymbol) ||
-                                            value.test(queryGene.officialSymbol) ||
-                                            value.test(foundGene.officialName) ||
-                                            value.test(queryGene.officialName)) {
-                                            return true;
-                                        } else {
-                                            return false;
-                                        }
-                                    });
                                 },
                                 scope: this,
                                 delay: 400
@@ -419,31 +404,37 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
         if (text && text.length > 1) {
             value = new RegExp(Ext.escapeRe(text), 'i');
         }
-        return function (record, id) {
+
+        return function filterFn (record) {
 
             if (record.get("supportKey") < stringency) {
                 return false;
             }
 
-            if (queryGenesOnly && (queryGeneIds.indexOf(record.get('queryGene').id) === -1 ||
-                queryGeneIds.indexOf(record.get('foundGene').id) === -1)) {
-                return false;
+            if (queryGenesOnly) {
+                if (! (queryGeneIds.indexOf(record.get('queryGene').id) !== -1 &&
+                       queryGeneIds.indexOf(record.get('foundGene').id) !== -1) )
+                {
+                    return false;
+                }
             }
 
-            if (!value) {
-                return true;
-            } else {
+            if (value) {
                 var foundGene = (record.get("foundGene"));
                 var queryGene = (record.get("queryGene"));
 
                 if (value.test(foundGene.officialSymbol) ||
                     value.test(queryGene.officialSymbol) ||
                     value.test(foundGene.officialName) ||
-                    value.test(queryGene.officialName)) {
+                    value.test(queryGene.officialName))
+                {
                     return true;
+                } else {
+                    return false;
                 }
             }
-            return false;
+
+            return true;
         };
     },
 

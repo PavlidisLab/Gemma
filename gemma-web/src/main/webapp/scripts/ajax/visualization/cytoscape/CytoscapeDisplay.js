@@ -309,6 +309,8 @@ Gemma.CytoscapeDisplay = Ext.extend( Ext.FlashComponent, {
      * @param text
      */
     selectNodesMatchingText: function (text) {
+        if (!this.ready) {return;}
+
         this.deselectNodesAndEdges();
         if (text.length < 2) {
             return;
