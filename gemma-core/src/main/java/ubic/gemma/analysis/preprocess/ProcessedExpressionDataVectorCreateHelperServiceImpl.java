@@ -122,20 +122,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     private void audit( ExpressionExperiment ee, String note ) {
         AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( ee, eventType, note );
-
-        AuditEvent sampleRemoval = auditEventService.getLastEvent( ee, SampleRemovalEvent.class );
-        if ( sampleRemoval != null ) {
-
-            AuditEvent reversion = auditEventService.getLastEvent( ee, SampleRemovalReversionEvent.class );
-
-            if ( reversion == null || reversion.getDate().before( sampleRemoval.getDate() ) ) {
-                // if it was before, it means we removed a sample more recently.
-                auditTrailService.addUpdateEvent( ee, SampleRemovalReversionEvent.Factory.newInstance(),
-                        "Removed samples reverted by regenerating processed data vector" );
-            }
-
-        }
-
     }
 
     /**
