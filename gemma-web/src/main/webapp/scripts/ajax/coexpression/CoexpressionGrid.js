@@ -269,48 +269,46 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
         Gemma.CoexpressionGrid.superclass.initComponent.call(this);
 
-        this.observableSearchResults.on("search-results-ready", function (results) {
-            this.loadData(results.queryGenes.length, results.knownGeneResults, null);
-            this.applyFilters();
-        }, this);
+        var coexpressionGrid = this;
 
-        // TODO: fix me
-        this.observableSearchResults.on('search-stringency-changed', function (displayStringency) {
+        this.observableSearchResults.on("search-results-ready", function (results) {
+            var displayStringency = coexpressionGrid.observableDisplaySettings.getStringency();
             if (displayStringency > Gemma.MIN_STRINGENCY) {
-                var bbarText = this.getBottomToolbar().getComponent('bbarStatus');
-                this.currentbbarText = "Display Stringency set to " + displayStringency +
-                    " based on number of experiments chosen.";
-                bbarText.setText(this.currentbbarText);
+                var bbarText = coexpressionGrid.getBottomToolbar().getComponent('bbarStatus');
+                bbarText.setText("Display Stringency set to " + displayStringency + " based on number of experiments chosen.");
             } else {
-                this.hideBottomToolbar();
+                coexpressionGrid.hideBottomToolbar();
             }
-        }, this);
+
+            coexpressionGrid.loadData(results.queryGenes.length, results.knownGeneResults, null);
+            coexpressionGrid.applyFilters();
+        });
 
         this.observableSearchResults.on('query-genes-changed', function (queryGeneIds) {
             if (queryGeneIds.length < 2) {
-                this.getTopToolbar().getComponent('queryGenesOnly').setDisabled(true);
-                this.getTopToolbar().getComponent('queryGenesOnly').setValue(false);
+                coexpressionGrid.getTopToolbar().getComponent('queryGenesOnly').setDisabled(true);
+                coexpressionGrid.getTopToolbar().getComponent('queryGenesOnly').setValue(false);
             } else {
-                this.getTopToolbar().getComponent('queryGenesOnly').setDisabled(false);
+                coexpressionGrid.getTopToolbar().getComponent('queryGenesOnly').setDisabled(false);
             }
-        }, this);
+        });
 
         this.observableDisplaySettings.on("stringency_change", function (displayStringency) {
-            this.getTopToolbar().getComponent('stringencySpinner').setValue(displayStringency);
-            this.applyFilters();
-        }, this);
+            coexpressionGrid.getTopToolbar().getComponent('stringencySpinner').setValue(displayStringency);
+            coexpressionGrid.applyFilters();
+        });
 
         this.observableDisplaySettings.on('query_genes_only_change', function (checked) {
-            this.getTopToolbar().getComponent('queryGenesOnly').setValue(checked);
-            this.applyFilters();
-        }, this);
+            coexpressionGrid.getTopToolbar().getComponent('queryGenesOnly').setValue(checked);
+            coexpressionGrid.applyFilters();
+        });
 
         this.observableDisplaySettings.on('search_text_change', function (text) {
-            this.getTopToolbar().getComponent(this.id + '-search-in-grid').setValue(text);
-            this.applyFilters();
-        }, this);
+            coexpressionGrid.getTopToolbar().getComponent(coexpressionGrid.id + '-search-in-grid').setValue(text);
+            coexpressionGrid.applyFilters();
+        });
 
-        this.on("cellclick", this.rowClickHandler, this);
+        this.on("cellclick", coexpressionGrid.rowClickHandler);
     },
 
     // called from toolbar
@@ -333,8 +331,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
     },
 
     hideBottomToolbar: function () {
-        if (!this.getBottomToolbar.hidden) {
-            this.currentbbarText = "";
+        if (!this.getBottomToolbar().hidden) {
             this.getBottomToolbar().hide();
             this.doLayout();
         }
@@ -637,6 +634,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
         }
     },
 
+    // TODO: would it be simpler just returning items currently in the store? i.e. let the grid do all the filtering?
     exportData: function () {
         var filteredData;
         var queryGenesOnly = this.observableDisplaySettings.getQueryGenesOnly();
@@ -644,14 +642,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
         if (queryGenesOnly) {
             filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(
-                this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults,
+                this.observableSearchResults.getQueryGenesOnlyResults(),
                 stringency);
         } else {
-            var combinedData = this.coexpressionSearchData.coexGridResults.knownGeneResults;
-            if (this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults) {
+            var combinedData = this.observableSearchResults.getCoexpressionPairs();
+            if (this.observableSearchResults.getQueryGenesOnlyResults()) {
                 combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(
-                    this.coexpressionSearchData.coexGridResults.knownGeneResults,
-                    this.coexpressionSearchData.coexGridResults.queryGenesOnlyResults);
+                    this.observableSearchResults.getCoexpressionPairs(),
+                    this.observableSearchResults.getQueryGenesOnlyResults());
             }
             filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(combinedData, stringency);
         }

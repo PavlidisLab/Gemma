@@ -38,7 +38,7 @@ Ext.onReady(function() {
 	searchPanel.checkUrlParams();
 			
 	// panel to hold all results of searches 
-	this.coexpressionSearchResultsPanel = new Ext.TabPanel({
+	var coexpressionSearchResultsPanel = new Ext.TabPanel({
 			id:'analysis-results-search-form-results-panel',
 			height: 610,
 			defaults: {
@@ -52,50 +52,83 @@ Ext.onReady(function() {
 
 	// uncomment this to have results grid resize with window, (panel must have layout: 'fit')
 	// Ext.EventManager.onWindowResize(resultsPanel.doLayout, resultsPanel);
-	
-	// get ready to show results
+
+    function hideBannerElements() {
+        if (Ext.get('frontPageContent')) {
+            Ext.get('frontPageContent').remove();
+        }
+        if (Ext.get('frontPageSlideShow')) {
+            Ext.get('frontPageSlideShow').remove();
+        }
+        if (Ext.get('sloganText')) {
+            Ext.get('sloganText').remove();
+        }
+    }
+
+    function hideTutorials() {
+        var tutorial = Ext.getCmp('tutorial-cntlPanel-diff-ex');
+        if (tutorial) {
+            tutorial.hideTutorial();
+        }
+        tutorial = Ext.getCmp('tutorial-cntlPanel-coex');
+        if (tutorial) {
+            tutorial.hideTutorial();
+        }
+    }
+
+    // Remove previous diff visualization result
+    function removeDiffExpressionVisualizer() {
+        Ext.DomHelper.overwrite('meta-heatmap-div', {html: ''});
+    }
+
+    // get ready to show results
 	searchPanel.on("beforesearch", function( panel ) {
-		// before every search, clear the results in preparation for new (possibly blank) results
+		// Before every search, clear the results in preparation for new (possibly blank) results
 		var flashPanel = coexpressionSearchResultsPanel.getItem('cytoscaperesults');
 		if (flashPanel) {
 			flashPanel.stopRender = true;
 		}
-		this.coexpressionSearchResultsPanel.removeAll();
-		this.coexpressionSearchResultsPanel.hide();
+
+        observableSearchResults.purgeListeners();
+        observableSearchResults.on('aftersearch', function(result){
+            searchPanel.loadMask.hide();
+        });
+
+        observableSearchResults.on('search-started', function(result){
+            searchPanel.loadMask.show();
+        });
+
+        coexpressionSearchResultsPanel.setActiveTab(null);
+        coexpressionSearchResultsPanel.removeAll();
+        coexpressionSearchResultsPanel.hide();
 
         if (panel) {
             panel.clearError();
         }
 
-        if (Ext.get('frontPageContent')) {
-			Ext.get('frontPageContent').remove();
-		}
-				
-		if (Ext.get('frontPageSlideShow')) {
-			Ext.get('frontPageSlideShow').remove();
-		}
-						
-		if (Ext.get('sloganText')) {
-			Ext.get('sloganText').remove();
-		}
-		
-		// Remove previous diff visualization result
-		Ext.DomHelper.overwrite('meta-heatmap-div',{html:''});
-		
-		var tutorial = Ext.getCmp('tutorial-cntlPanel-diff-ex');
-		if (tutorial) {
-			tutorial.hideTutorial();
-		}
-		tutorial = Ext.getCmp('tutorial-cntlPanel-coex');
-		if (tutorial) {
-			tutorial.hideTutorial();
-		}
-	}, this);
+        hideBannerElements();
+        hideTutorials();
+
+        removeDiffExpressionVisualizer();
+    });
 
     searchPanel.on("coexpression_search_query_ready", function( panel, searchCommand, showTutorial ) {
         coexpressionSearchResultsPanel.showCoexTutorial = showTutorial;
 
+        function decideInitialDisplayStringency ( searchStringency ) {
+            if (searchStringency < 5) {
+                return searchStringency;
+            } else {
+                return Math.round( (4/3) * searchStringency );
+            }
+        }
+
         var observableDisplaySettings = new Gemma.ObservableCoexpressionDisplaySettings();
+        var displayStringency = decideInitialDisplayStringency( searchCommand.stringency );
+        observableDisplaySettings.setStringency( displayStringency );
+
+        observableSearchResults.setSearchCommand(searchCommand);
+
         var coexpressionGrid = new Gemma.CoexpressionGrid({
             width: 900,
             height: 400,
@@ -142,6 +175,7 @@ Ext.onReady(function() {
             coexpressionSearchResultsPanel.show();
             coexpressionSearchResultsPanel.doLayout();
 
+            coexpressionSearchResultsPanel.setActiveTab(0);
             coexpressionGrid.show();
         });
     });

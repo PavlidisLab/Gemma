@@ -48,13 +48,13 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 		Gemma.GeneSetOverlayPicker.superclass.initComponent.call( this );
 	},
 
-	reset : function() {
+	reset: function() {
 		this.geneChoosers.removeAll();
 		this.addGeneChooser();
 		this.setTitle(this.titleText);
 	},
 
-	applyOverlay : function() {
+	applyOverlay: function() {
         this.display.observableDisplaySettings.setOverlayGeneIds( this.getSelectedIds() );
 		this.hide();
 	},
@@ -79,7 +79,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
         Gemma.GeneSetOverlayPicker.superclass.show.call( this );
 	},
 
-	addGeneChooser : function() {
+	addGeneChooser: function() {
 		this.geneChooserIndex++;
         var cytoscapeDisplay = this.display;
 		var chooser = new Gemma.GeneSearchAndPreview({

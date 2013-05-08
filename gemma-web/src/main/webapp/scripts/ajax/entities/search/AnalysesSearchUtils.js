@@ -1,11 +1,3 @@
-/**
- * Created with IntelliJ IDEA.
- * User: anton
- * Date: 19/03/13
- * Time: 2:12 PM
- * To change this template use File | Settings | File Templates.
- */
-
 Ext.namespace('Gemma');
 
 
@@ -22,9 +14,6 @@ Ext.namespace('Gemma');
 Gemma.AnalysesSearchUtils = {
 
     /**
-     *
-     *
-     *
      * @return {Array}
      */
     getGeneIds : function(geneSetValueObjects) {
@@ -42,8 +31,6 @@ Gemma.AnalysesSearchUtils = {
     },
 
     /**
-     *
-     *
      * @return {Array}
      */
     getExperimentIds : function(experimentSetValueObjects) {
@@ -61,8 +48,6 @@ Gemma.AnalysesSearchUtils = {
     },
 
     /**
-     *
-     *
      * fires 'searchAborted' event
      * @private
      * @param {GeneSetValueObject[]} geneSetValueObjects
@@ -72,7 +57,7 @@ Gemma.AnalysesSearchUtils = {
         // verify that the array is not empty AND doesn't have empty sets.
         var isEmpty = false;
         if (geneSetValueObjects.length === 0) {
-            isEmpty = true;
+            return true;
         }
         if (geneSetValueObjects[0].geneIds && geneSetValueObjects[0].geneIds.length === 0) {
             isEmpty = true;
@@ -83,7 +68,6 @@ Gemma.AnalysesSearchUtils = {
     },
 
     /**
-     *
      * fires 'searchAborted' event
      * @private
      * @param {ExperimentSetValueObject[]} experimentSetValueObjects
@@ -97,8 +81,6 @@ Gemma.AnalysesSearchUtils = {
     },
 
     /**
-     *
-     *
      * @param {GeneSetValueObject[]} geneSetValueObjects
      */
     getGeneCount : function (geneSetValueObjects) {
@@ -265,7 +247,6 @@ Gemma.AnalysesSearchUtils = {
     },
 
     /**
-     *
      * @param result
      * @param lastSearchCommand
      * @param displayedResults
@@ -289,5 +270,4 @@ Gemma.AnalysesSearchUtils = {
         }
         return coexpressionSearchData;
     }
-
 };

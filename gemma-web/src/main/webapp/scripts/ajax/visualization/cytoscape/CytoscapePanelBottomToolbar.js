@@ -46,6 +46,7 @@ Gemma.CytoscapeBottomToolbar = Ext.extend( Ext.Toolbar, {
         var toolbar = this;
         var graphSizeButton = this.getComponent('graphSizeMenu');
         var graphSizeMenu = graphSizeButton.menu;
+        graphSizeMenu.removeAll();
         toolbar.status = this.getComponent('bbarStatus');
 
         var cytoscapePanel = this.cytoscapePanel;

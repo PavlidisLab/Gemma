@@ -83,8 +83,8 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
         this.on('complete-search-results-ready', function (searchResults, cytoscapSearchCommmand) {
             // TODO: move this to controlbar? or just delete?
             if (this.observableSearchResults.getQueryGeneIds().length < 2) {
+                this.observableDisplaySettings.setQueryGenesOnly(false);
                 this.controlBar.disableQueryGenesOnlyCheckBox(true);
-                this.controlBar.setQueryGenesOnly(false);
             } else {
                 this.controlBar.disableQueryGenesOnlyCheckBox(false);
             }
@@ -95,7 +95,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
                 this.observableSearchResults.getQueryGeneIds());
 
             // If we had to trim the graph on front-end or back-end, communicate this to the user.
-            if (this.coexpressionGraphData.isTrimmedOnFrontEnd) {
+            if (this.coexpressionGraphData.graphSizeOptions.length > 1) {
                 this.changeGraph( this.coexpressionGraphData.getSmallestGraph() );
                 bottomToolbar.showMessageBar(this.coexpressionGraphData, this.observableSearchResults.getNonQueryGeneTrimmedValue(), /*show menu*/ true);
             } else if (this.coexpressionGraphData.isTrimmedOnBackend) {
@@ -105,6 +105,12 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
                 this.drawGraph();
                 this.getBottomToolbar().hide();
                 this.doLayout();
+            }
+        }, this);
+
+        this.observableSearchResults.on('aftersearch', function() {
+            if (this.loadMask) {
+                this.loadMask.hide();
             }
         }, this);
 
@@ -187,6 +193,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
         this.clearError();
 
         var selectedGeneIds = this.display.getVisibleSelectedGeneIds();
+        var currentResultsStringency = this.observableSearchResults.getResultsStringency();
 
         if (selectedGeneIds.length === 0) {
             Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
@@ -204,7 +211,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
 
         this.updateSearchFormGenes(selectedGeneIds);
         this.loadMask.show();
-        this.observableSearchResults.searchWithGeneIds(selectedGeneIds);
+        this.observableSearchResults.searchWithGeneIds(selectedGeneIds, currentResultsStringency);
     },
 
     extendSelectedNodes: function () {
@@ -212,6 +219,10 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
 
         var selectedGeneIds = this.display.getVisibleSelectedGeneIds();
         var queryGeneIds = this.observableSearchResults.getQueryGeneIds();
+        var currentResultsStringency = this.observableSearchResults.getResultsStringency();
+
+        // TODO: merge arrays
+        // TODO: check if it's the same as original query genes
 
         function containsAll(needles, haystack) {
             for (var i = 0, len = needles.length; i < len; i++) {
@@ -241,7 +252,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
             }
             this.updateSearchFormGenes(queryGeneIds);
             this.loadMask.show();
-            this.observableSearchResults.searchWithGeneIds(queryGeneIds);
+            this.observableSearchResults.searchWithGeneIds( queryGeneIds, currentResultsStringency );
         } else {
             Ext.Msg.confirm(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
                 String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce,
@@ -258,7 +269,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
                         }
                         this.updateSearchFormGenes(queryGeneIds);
                         this.loadMask.show();
-                        this.observableSearchResults.searchWithGeneIds(queryGeneIds);
+                        this.observableSearchResults.searchWithGeneIds( queryGeneIds, currentResultsStringency );
                     }
                 }, this);
         }

@@ -117,7 +117,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                     minValue: Gemma.MIN_STRINGENCY,
                     maxValue: 999,
                     fieldLabel: 'Stringency ',
-                    value: 2,
+                    value: this.observableDisplaySettings.getStringency(),
                     width: 60,
                     enableKeyEvents: true,
                     listeners: {

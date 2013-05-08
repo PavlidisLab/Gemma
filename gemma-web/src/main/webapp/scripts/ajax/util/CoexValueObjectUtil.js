@@ -55,7 +55,6 @@ Gemma.CoexValueObjectUtil = {
             return (_edgeSet.indexOf(coexPair.queryGene.officialSymbol + "to" + coexPair.foundGene.officialSymbol) !== -1);
         }
 
-
         for (i = 0; i < coexPairs.length; i++) {
             // if either gene is part of query genes set AND edge meets stringency threshold
             // that means we only add nodes and edges around query genes
@@ -139,51 +138,37 @@ Gemma.CoexValueObjectUtil = {
     /**
      *
      *
-     * @param kgResults
-     * @param qgoResults
+     * @param knownGeneResults
+     * @param queryGeneOnlyResults
      * @returns {*}
      */
-    combineKnownGeneResultsAndQueryGeneOnlyResults: function (kgResults, qgoResults) {
-        // only one query gene will result in no qgoResults
-        if (!qgoResults) {
-            return kgResults;
-        }
-        var coexEdgeSet = [];
-        var combinedResults = [];
-        var kglength = kgResults.length;
-        var i;
+    combineKnownGeneResultsAndQueryGeneOnlyResults: function (knownGeneResults, queryGeneOnlyResults) {
+        var _edgeSet = [];
+        var coexpressionPairs = [];
+        var i, len;
 
-        for (i = 0; i < kglength; i++) {
+        function addCoexPairIfAbsent(coexPair) {
+            if (!isEdgePresentInGraph(coexPair)) {
+                coexpressionPairs.push(coexPair);
 
-            if (coexEdgeSet.indexOf(kgResults[i].foundGene.officialSymbol +
-                "to" + kgResults[i].queryGene.officialSymbol) === -1 &&
-                coexEdgeSet.indexOf(kgResults[i].queryGene.officialSymbol + "to" +
-                    kgResults[i].foundGene.officialSymbol) === -1)
-            {
-                combinedResults.push(kgResults[i]);
-                coexEdgeSet.push(kgResults[i].foundGene.officialSymbol + "to" +
-                    kgResults[i].queryGene.officialSymbol);
-                coexEdgeSet.push(kgResults[i].queryGene.officialSymbol + "to" +
-                    kgResults[i].foundGene.officialSymbol);
+                // Edges going in the opposite direction are equivalent, so we keep track of both.
+                _edgeSet.push(coexPair.foundGene.officialSymbol + "to" + coexPair.queryGene.officialSymbol);
+                _edgeSet.push(coexPair.queryGene.officialSymbol + "to" + coexPair.foundGene.officialSymbol);
             }
         }
 
-        var qgolength = qgoResults.length;
-        for (i = 0; i < qgolength; i++) {
-            if (coexEdgeSet.indexOf(qgoResults[i].foundGene.officialSymbol +
-                "to" + qgoResults[i].queryGene.officialSymbol) === -1 &&
-                coexEdgeSet
-                    .indexOf(qgoResults[i].queryGene.officialSymbol +
-                        "to" +
-                        qgoResults[i].foundGene.officialSymbol) === -1) {
-                combinedResults.push(qgoResults[i]);
-                coexEdgeSet.push(qgoResults[i].foundGene.officialSymbol + "to" +
-                    qgoResults[i].queryGene.officialSymbol);
-                coexEdgeSet.push(qgoResults[i].queryGene.officialSymbol + "to" +
-                    qgoResults[i].foundGene.officialSymbol);
-            }
+        function isEdgePresentInGraph (coexPair) {
+            return (_edgeSet.indexOf(
+                coexPair.queryGene.officialSymbol + "to" + coexPair.foundGene.officialSymbol) !== -1);
         }
-        return combinedResults;
+
+        for (i = 0, len = knownGeneResults.length; i < len; i++) {
+            addCoexPairIfAbsent(knownGeneResults[i]);
+        }
+        for (i = 0, len = queryGeneOnlyResults.length; i < len; i++) {
+            addCoexPairIfAbsent(queryGeneOnlyResults[i]);
+        }
+        return coexpressionPairs;
     },
 
     // used by coexpressionGrid to grab results for exporting

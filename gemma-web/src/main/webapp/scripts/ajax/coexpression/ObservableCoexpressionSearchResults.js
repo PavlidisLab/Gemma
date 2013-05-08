@@ -33,6 +33,10 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         return this.searchResults.knownGeneResults;
     },
 
+    getQueryGenesOnlyResults: function() {
+        return this.searchResults.queryGenesOnlyResults;
+    },
+
     getNonQueryGeneTrimmedValue: function() {
         return this.cytoscapeSearchResults.nonQueryGeneTrimmedValue;
     },
@@ -97,6 +101,10 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         return this.searchCommandUsed.taxonId;
     },
 
+    setSearchCommand: function (searchCommand) {
+        this.searchCommandUsed = searchCommand;
+    },
+
     searchForCytoscapeDataWithStringency : function (newStringency) {
         var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency( newStringency );
 
@@ -110,11 +118,11 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         this.searchForCytoscapeData();
     },
 
-    searchWithGeneIds: function (geneIds) {
+    searchWithGeneIds: function (geneIds, searchStringency) {
         var coexpressionSearchCommand = {
             geneIds : geneIds,
             eeIds : this.searchCommandUsed.eeIds,
-            stringency : 2,
+            stringency : searchStringency,
             forceProbeLevelSearch : false,
             useMyDatasets : false,
             queryGenesOnly : false,
@@ -128,6 +136,7 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
     search : function (searchCommand) {
         this.searchCommandUsed = searchCommand;
         var me = this;
+        me.fireEvent('search-started');
         ExtCoexpressionSearchController.doBackgroundCoexSearch(
             searchCommand,
             {
@@ -179,7 +188,7 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         if (geneIdsSubset.length < 2) {
             // There is a bug where if you can get a gene back in results but if you search for it by itself there are no results(PPP2R1A human)
             this.cytoscapeSearchResults.knownGeneResults = [];
-            this.fireEvent('complete-search-results-ready', this.cytoscapeSearchResults);
+            this.fireEvent('complete-search-results-ready', this.cytoscapeSearchResults, coexpressionSearchCommand);
             return;
         }
 

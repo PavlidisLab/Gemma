@@ -179,9 +179,10 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			coexGridResults: result				
 		});
 		
-		var displayedResults = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults( result.knownGeneResults, result.queryGenesOnlyResults );
+		var displayedResults = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(
+            result.knownGeneResults, result.queryGenesOnlyResults );
 		
-		// Sometimes initial display stringency is set higher than a stringency we have results for, check this
+		// Sometimes initial display stringency is set higher than a stringency we have results for, check this.
 		var highestResultStringency = Gemma.CoexValueObjectUtil.getHighestResultStringencyUpToInitialDisplayStringency( displayedResults,
 				coexpressionSearchResults.coexGridCoexCommand.displayStringency);
 		
@@ -224,14 +225,11 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 	coexResultsTabPanel.add(coexpressionGrid);
 	coexResultsTabPanel.add(cytoscapePanel);    
 	
-	// won't fire the render event if it's already rendered
-	//coexResultsTabPanel.render('analysis-results-search-form-results');
-	
     coexResultsTabPanel.show();
     coexResultsTabPanel.doLayout();
 
-	coexpressionGrid.loadData( result.isCannedAnalysis, 2, displayedResults,
-			result.knownGeneDatasets);
+	coexpressionGrid.loadData( result.isCannedAnalysis, 2,
+        displayedResults, result.knownGeneDatasets);
 	
 	coexpressionGrid.applyFilters();
 	

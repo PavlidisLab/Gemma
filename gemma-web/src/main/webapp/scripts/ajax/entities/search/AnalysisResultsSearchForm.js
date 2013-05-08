@@ -1,13 +1,12 @@
 Ext.namespace('Gemma');
 
 /**
- * The input form to run coexpression and differential expression searches. This
+ * The input form to pick genes and experiments, and run coexpression or differential expression searches. This
  * form has three main parts: a search mode chooser, an experiment (group) searcher, and a
  * gene (group) searcher
  *  
  * @author thea
- * @version $Id: AnalysisResultsSearchForm.js,v 1.34 2011/05/06 04:02:25 paul
- *          Exp $
+ * @version $Id$
  */
 Gemma.AnalysisResultsSearchForm = Ext.extend (Ext.FormPanel, {
 	layout : 'table',
@@ -35,7 +34,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend (Ext.FormPanel, {
 
     /**
      * @private
-     *
      * @param msg
      */
 	handleWarning : function (msg) {
@@ -255,13 +253,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend (Ext.FormPanel, {
 		this.searchMethods.on('coexpression_search_query_ready', function(searchCommand){
 			this.fireEvent('coexpression_search_query_ready', this, searchCommand, this.runningExampleQuery);
 		}, this);
-				
-		this.observableSearchResults.on('aftersearch', function(result){
-			this.loadMask.hide();
-		}, this);
+
+//        this.observableSearchResults.on('aftersearch', function(result){
+//            this.loadMask.hide();
+//        }, this);
 
 		this.searchMethods.on('warning', function(msg, e){
-			this.handleWarning(msg, e);
+			this.handleWarning(msg);
 		}, this);
 				
 		this.searchMethods.on('error', function(msg, e){

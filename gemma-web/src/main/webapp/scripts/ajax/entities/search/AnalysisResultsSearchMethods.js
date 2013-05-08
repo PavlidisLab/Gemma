@@ -46,31 +46,24 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
             return;
         }
 
-        // trim  -- coexpression search uses a hard limit so trimming isn't optional and is handled elsewhere
-
         // register sets with session on the server
-        var scope = this;
+        var me = this;
         this.registerSetsIfNeeded( geneSetValueObjects, experimentSetValueObjects ).then (
             function done (sets) {
-                scope.fireEvent('beforesearch');
-                var searchCommand = scope.getCoexpressionSearchCommand( sets.geneSets, sets.experimentSets );
-                var errorMessage = scope.validateCoexSearch( searchCommand );
+                me.fireEvent('beforesearch');
+                var searchCommand = me.getCoexpressionSearchCommand( sets.geneSets, sets.experimentSets );
+                var errorMessage = me.validateCoexSearch( searchCommand );
                 if (errorMessage === "") {
-                    scope.enforceCoexpressionSearchLimits( searchCommand );
-                    scope.lastCSC = searchCommand;
-                    scope.fireEvent('coexpression_search_query_ready', searchCommand);
+                    //me.lastCSC = searchCommand;
+                    me.fireEvent('coexpression_search_query_ready', searchCommand);
                 } else {
-                    scope.fireEvent('error', errorMessage);
+                    me.fireEvent('error', errorMessage);
                 }
             },
             function error (reason) {
-
+                me.fireEvent('error', "Error dealing with gene/experiment groups.");
             }
         );
-
-        // pick search parameters
-
-        // search
     },
 
 	/**
@@ -189,10 +182,14 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 	 * @return {Object} CoexpressionSearchCommand
 	 */
 	getCoexpressionSearchCommand : function( geneSetValueObjects, experimentSetValueObjects ) {
+        var geneIds = Gemma.AnalysesSearchUtils.getGeneIds(geneSetValueObjects);
+        var eeIds = Gemma.AnalysesSearchUtils.getExperimentIds(experimentSetValueObjects);
+        var stringency = this.decideCoexpressionSearchStringency( eeIds.length );
+
         var coexpressionSearchCommand = {
-            geneIds : Gemma.AnalysesSearchUtils.getGeneIds(geneSetValueObjects),
-            eeIds : Gemma.AnalysesSearchUtils.getExperimentIds(experimentSetValueObjects),
-            stringency : this.DEFAULT_STRINGENCY,
+            geneIds : geneIds,
+            eeIds : eeIds,
+            stringency : stringency,
             forceProbeLevelSearch : this.DEFAULT_forceProbeLevelSearch,
             useMyDatasets : this.DEFAULT_useMyDatasets,
             queryGenesOnly : this.DEFAULT_queryGenesOnly,
@@ -206,39 +203,40 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 	/**
      * TODO: move this out of here
      *
-	 * @return csc
+	 * @return searchStringency
 	 */
 	getLastCoexpressionSearchCommand : function() {
 		return this.lastCSC;
 	},
 
     /**
-     * @private
-     * Crazy AI stuff :)
-     * Overrides 'displayStringency' and 'stringency' settings with more sensible ones.
+     * We pick appropriate search stringency based on number of experiments
+     * (low stringency results aren't meaningful in large experiment sets).
      *
-     * @param coexpressionSearchCommand
+     * @private
+     * @param numDatasets
      */
-	enforceCoexpressionSearchLimits : function( coexpressionSearchCommand ) {
+	decideCoexpressionSearchStringency : function( numDatasets ) {
 		var k = 50;
-		var numDatasets = coexpressionSearchCommand.eeIds.length;
-		
-		var displayStringency = 2;
+
+		var searchStringency = 2;
 		
 		if (numDatasets > k) {
-			displayStringency = 2 + Math.round(numDatasets / k);
+			searchStringency = 2 + Math.round(numDatasets / k);
 		}
 		
-		if (displayStringency > 20) {
-			displayStringency = 20;
+		if (searchStringency > 20) {
+			searchStringency = 20;
 		}
-		coexpressionSearchCommand.displayStringency = displayStringency;
-		coexpressionSearchCommand.stringency = Gemma.MIN_STRINGENCY;
+
+        searchStringency = Math.round( (3/4) * searchStringency );
+
+        return searchStringency;
 	},
 
 	/**
 	 * @private
-     * Do some more checks before running the coex search
+     * Do some more checks before running the coexpression search
 	 * @private
 	 * @param {Object} coexSearchCommand
 	 */

@@ -37,7 +37,7 @@ Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCom
             graphSizeLimit);
     }
 
-    var maxEdgesLimit = searchResultsCytoscape.maxEdges;
+    var maxEdgesLimit = 2000; //searchResultsCytoscape.maxEdges;
 
     var fullGraph = {
         geneResults: searchResultsCytoscape.knownGeneResults,
@@ -45,74 +45,67 @@ Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCom
         size: searchResultsCytoscape.knownGeneResults.length
     };
 
-    var graphSizeOptions = [];
+    this.graphSizeOptions = [];
 
     this.getGraphData = function() {
-        return graphSizeOptions;
+        return this.graphSizeOptions;
     };
 
     this.getSmallestGraph = function() {
-        return graphSizeOptions[graphSizeOptions.length-1].graph;
+        return this.graphSizeOptions[this.graphSizeOptions.length-1].graph;
     };
 
     this.isTrimmedOnBackend = (searchResultsCytoscape.nonQueryGeneTrimmedValue > 0);
     this.isTrimmedOnFrontEnd = false;
 
+    /*
+     Extra trimming will be done on the front end to the
+     user's chosen graph size(the default will be significantly smaller than the
+     highest setting because older computers will have trouble with the highest
+     setting).  This way if the user wants more edges, the data has already been
+     sent to the front end and won't need a new call to the back end.
+     */
     var targetNumberOfEdges = 0.5 * maxEdgesLimit;
 
-    // Happy case!
     if ( fullGraph.size <= targetNumberOfEdges ) {
-        graphSizeOptions.push({label:'No edge number limit', graph: fullGraph});
-        return;
+        this.graphSizeOptions.push( { label:'No edge number limit',
+                                 graph: fullGraph } );
+        return; // Ideal case, we are done.
     }
-/*
-    Extra trimming will be done on the front end to the
-    user's chosen graph size(the default will be significantly smaller than the
-    highest setting because older computers will have trouble with the highest
-    setting).  This way if the user wants more edges, the data has already been
-    sent to the front end and won't need a new call to the back end.
-*/
 
-    // Trim graph to be at or below target number of edges
-    // this will be default display value
-    // allow user to go higher than that
+    // Trim graph to be at or below target number of edges.
+    // This will be default display value,
+    // but we allow user to go higher than that.
     var graph;
 
     if ( fullGraph.size <= maxEdgesLimit ) {
         graph = fullGraph;
         if (this.isTrimmedOnBackend) {
-            graphSizeOptions.push({
+            this.graphSizeOptions.push({
                 label: fullGraph.trimStringency + ' (' + fullGraph.size + " edges)",
                 graph: fullGraph });
         } else {
-            graphSizeOptions.push({
+            this.graphSizeOptions.push({
                 label: 'No Trimming',
                 graph: fullGraph});
         }
     } else {
         this.isTrimmedOnFrontEnd = true;
         graph = getTrimmedGraphData(maxEdgesLimit);
-        graphSizeOptions.push({
+        this.graphSizeOptions.push({
             label: graph.trimStringency + ' (' + graph.size + " edges)",
             graph: graph});
     }
 
-    // Keep going until maxStringency limit is reached or graph is small enough already.
-    if (graph.trimStringency >= maxStringency || graph.size < 0.75 * maxEdgesLimit) {
-        return;
+    // Keep going until maxStringency limit is reached or graph is small enough.
+    var ratio = 0.75;
+    while (graph.trimStringency < maxStringency && graph.size > targetNumberOfEdges && ratio >= 0.5) {
+        if (graph.size > ratio * maxEdgesLimit) {
+            graph = getTrimmedGraphData( ratio * maxEdgesLimit );
+            this.graphSizeOptions.push({
+                label: graph.trimStringency + ' (' + graph.size + " edges)",
+                graph: graph});
+        }
+        ratio = ratio - 0.25;
     }
-    graph = getTrimmedGraphData( 0.75 * maxEdgesLimit );
-    graphSizeOptions.push({
-        label: graph.trimStringency + ' (' + graph.size + " edges)",
-        graph: graph});
-
-    // Keep going until maxStringency limit is reached or graph is small enough already.
-    if (graph.trimStringency >= maxStringency || graph.size < 0.5 * maxEdgesLimit) {
-        return;
-    }
-    graph = getTrimmedGraphData( 0.5 * maxEdgesLimit );
-    graphSizeOptions.push({
-        label: graph.trimStringency + ' (' + graph.size + " edges)",
-        graph: graph});
-
 };

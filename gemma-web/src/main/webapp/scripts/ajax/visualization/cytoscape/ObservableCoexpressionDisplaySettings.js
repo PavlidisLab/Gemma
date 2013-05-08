@@ -19,7 +19,7 @@ Ext.namespace('Gemma');
  * Shared coexpression search results display settings for grid and cytoscape views.
  * It's used to synchronize settings between different clients.
  *
- * TODO: ideally it shouldn't notify the client who called the set method, since it already know about the change.
+ * TODO: ideally it shouldn't notify the client who called the set method, since it already knows about the change.
  *
  * @class
  */
