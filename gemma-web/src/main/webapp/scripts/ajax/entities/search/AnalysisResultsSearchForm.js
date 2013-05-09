@@ -283,7 +283,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend (Ext.FormPanel, {
 						msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 			});
 		}
-		this.loadMask.show();
+//		this.loadMask.show();
 
 		if (this.coexToggle.pressed) {
 			this.searchMethods.searchCoexpression( this.getSelectedAsGeneSetValueObjects(),

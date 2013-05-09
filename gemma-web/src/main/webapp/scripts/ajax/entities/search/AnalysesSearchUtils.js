@@ -144,14 +144,14 @@ Gemma.AnalysesSearchUtils = {
         var runningCount = 0;
         var i; var valObj;
         var trimmedValueObjects = [];
-        for(i = 0; i< valueObjects.length; i++){
+        for (i = 0; i < valueObjects.length; i++){
             valObj = valueObjects[i];
-            if(valObj.expressionExperimentIds && (runningCount+valObj.expressionExperimentIds.length)<max){
+            if (valObj.expressionExperimentIds && (runningCount + valObj.expressionExperimentIds.length) < max) {
                 runningCount += valObj.expressionExperimentIds.length;
-                trimmedValueObjects.push(valObj);
-            }else if(valObj.expressionExperimentIds){
+                trimmedValueObjects.push( valObj );
+            } else if (valObj.expressionExperimentIds) {
                 var trimmedIds = valObj.expressionExperimentIds.slice(0, (max - runningCount));
-                // clone the object so you don't effect the original
+                // clone the object so you don't affect the original
                 var trimmedValObj = Object.clone(valObj);
                 trimmedValObj.expressionExperimentIds = trimmedIds;
                 trimmedValObj.id = null;
@@ -182,7 +182,6 @@ Gemma.AnalysesSearchUtils = {
         return {stateText: stateText, maxText: maxText};
     },
 
-    // MOVE TO ANOTHER FILE
     showTrimInputDialogWindow: function (maxNumGenes, geneCount, geneSetValueObjects, maxNumExperiments, experimentCount, experimentSetValueObjects, handlerScope) {
         var handlers = {
             trim : function () {
@@ -193,11 +192,11 @@ Gemma.AnalysesSearchUtils = {
                     experimentSetValueObjects = Gemma.AnalysesSearchUtils.trimExperimentValObjs( experimentSetValueObjects, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY );
                 }
 
-                this.doSearch( geneSetValueObjects, experimentSetValueObjects );
+                this.startDifferentialExpressionSearch( geneSetValueObjects, experimentSetValueObjects );
                 trimWindow.close();
             },
             notrim : function () {
-                this.doSearch( geneSetValueObjects, experimentSetValueObjects );
+                this.startDifferentialExpressionSearch( geneSetValueObjects, experimentSetValueObjects );
                 trimWindow.close();
             },
             cancel : function () {

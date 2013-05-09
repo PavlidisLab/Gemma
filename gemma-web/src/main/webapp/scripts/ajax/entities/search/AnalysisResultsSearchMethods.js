@@ -82,37 +82,38 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
          * If there are too many experiments or genes, warn the user and offer to trim the sets.
          */
 
-        // trim (optional)
         // Check if counts exceed maximums
         var geneCount = Gemma.AnalysesSearchUtils.getGeneCount( geneSetValueObjects );
         var experimentCount = Gemma.AnalysesSearchUtils.getExperimentCount( experimentSetValueObjects );
 
         if ( geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY ||
              experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY ) {
-
-            Gemma.AnalysesSearchUtils.showTrimInputDialogWindow( geneCount, geneSetValueObjects,
-                                experimentCount, experimentSetValueObjects,
-                                this );
+            // trim (optional)
+            Gemma.AnalysesSearchUtils.showTrimInputDialogWindow( Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY,
+                                                                 geneCount,
+                                                                 geneSetValueObjects,
+                                                                 Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY,
+                                                                 experimentCount,
+                                                                 experimentSetValueObjects,
+                                                                 this );
+        } else {
+            // skip trimming
+            this.startDifferentialExpressionSearch (geneSetValueObjects, experimentSetValueObjects);
         }
-        // skip trimming
+    },
 
-        // register sets with session on the server (moved out)
-
+    startDifferentialExpressionSearch: function  (geneSetValueObjects, experimentSetValueObjects) {
         var scope = this;
         this.registerSetsIfNeeded(geneSetValueObjects, experimentSetValueObjects).then (
             function done (sets) {
                 scope.fireEvent('beforesearch');
-                var data = scope.getDataForDiffVisualization( sets.geneSets, sets.experimentSets );
-                scope.fireEvent('differential_expression_search_query_ready', null, data);
+                var query = scope.getDataForDiffVisualization( sets.geneSets, sets.experimentSets );
+                scope.fireEvent('differential_expression_search_query_ready', null, query);
             },
             function error (reason) {
 
             }
         );
-
-        // pick search parameters (ok)
-
-        // search
     },
 
     /**
@@ -156,22 +157,6 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
                 return {'geneSets' : results[0], 'experimentSets' : results[1]};
             });
         return promise;
-    },
-
-
-    /**
-     * @private
-     *
-     * Run the search with entity set value objects.
-     * If any of the parameter sets have a null, undefined, or negative id
-     * then they are not "saved" anywhere (in the db or in the session-bound set list).
-     * Before the search runs, these sets are "saved" to the session-bound list.
-     *
-     * @param {GeneSetValueObject[]} geneSets
-     * @param {ExperimentSetValueObject[]} experimentSets
-     */
-    doSearch : function (geneSets, experimentSets) {
-        //TODO: finish migration, called from other places
     },
 
 	/**

@@ -251,7 +251,7 @@ Ext.onReady(function() {
 		
 	};
 
-	searchPanel.on("differential_expression_search_query_ready", function (panel,result, data) {
+	searchPanel.on('differential_expression_search_query_ready', function (panel,result, data) {
 			// show metaheatmap viewer (but not control panel)
 			// control panel is responsible for creating the visualisation view space
 			Ext.apply(data, {applyTo : 'meta-heatmap-div'});
