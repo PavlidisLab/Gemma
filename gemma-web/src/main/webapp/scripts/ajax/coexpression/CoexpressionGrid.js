@@ -265,7 +265,13 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                 coexpressionGrid.hideBottomToolbar();
             }
 
-            coexpressionGrid.loadData(results.queryGenes.length, results.knownGeneResults, null);
+            var combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(
+                coexpressionGrid.observableSearchResults.getCoexpressionPairs(),
+                coexpressionGrid.observableSearchResults.getQueryGenesOnlyResults());
+
+            var numQueryGenes = coexpressionGrid.observableSearchResults.getQueryGeneIds().length;
+            coexpressionGrid.decideQueryColumn(numQueryGenes);
+            coexpressionGrid.loadData(combinedData, null);
             coexpressionGrid.applyFilters();
         });
 
@@ -322,20 +328,22 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
         }
     },
 
+    decideQueryColumn: function (numQueryGenes) {
+        var queryIndex = this.getColumnModel().getIndexById('query');
+        if (numQueryGenes > 1) {
+            this.getColumnModel().setHidden(queryIndex, false);
+        } else {
+            this.getColumnModel().setHidden(queryIndex, true);
+        }
+    },
+
     /**
      *
      * @param numQueryGenes
      * @param data
      * @param datasets
      */
-    loadData: function (numQueryGenes, data, datasets) {
-        var queryIndex = this.getColumnModel().getIndexById('query');
-        if (numQueryGenes > 1) {
-            this.getColumnModel().setHidden(queryIndex, false);
-        } else {
-            this.getColumnModel().setHidden(queryIndex, true);
-
-        }
+    loadData: function (data, datasets) {
         this.getStore().proxy.data = data;
         this.getStore().reload({
             resetPage: true
