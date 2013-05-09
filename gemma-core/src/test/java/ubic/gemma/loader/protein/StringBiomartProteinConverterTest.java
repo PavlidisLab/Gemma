@@ -45,7 +45,9 @@ import ubic.gemma.model.genome.Taxon;
  * 
  * @author ldonnison
  * @version $Id$
+ * @deprecated use the stored ensembl ids instead in Gemma
  */
+@Deprecated
 public class StringBiomartProteinConverterTest {
 
     StringProteinProteinInteractionConverter stringBiomartProteinConverter = null;
@@ -172,7 +174,7 @@ public class StringBiomartProteinConverterTest {
         Collection<Gene> genes = stringBiomartProteinConverter.getNcbiGene( "ENSMUSP00000111623" );
         assertEquals( 2, genes.size() );
         for ( Gene gene : genes ) {
-            assertTrue( ( gene.getNcbiGeneId().equals(  100040601  ) ) || ( gene.getNcbiGeneId().equals(  245269  ) ) );
+            assertTrue( ( gene.getNcbiGeneId().equals( 100040601 ) ) || ( gene.getNcbiGeneId().equals( 245269 ) ) );
         }
     }
 
