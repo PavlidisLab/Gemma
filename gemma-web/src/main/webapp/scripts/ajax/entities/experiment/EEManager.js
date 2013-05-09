@@ -480,7 +480,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
          var eeManager = this;
          Ext.Msg.show({
                title : 'Are you sure?',
-               msg : 'Are you sure you want to revert the outlier status of this assay? This can be undone only by regenerating the "processed data".',
+               msg : 'Are you sure you want to revert the outlier status of this assay?',
                buttons : Ext.Msg.YESNO,
                fn : function(btn, text) {
                   if (btn === 'yes') {
