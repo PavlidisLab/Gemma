@@ -115,16 +115,31 @@ Ext.onReady(function() {
     searchPanel.on("coexpression_search_query_ready", function( panel, searchCommand, showTutorial ) {
         coexpressionSearchResultsPanel.showCoexTutorial = showTutorial;
 
-        function decideInitialDisplayStringency ( searchStringency ) {
-            if (searchStringency < 5) {
-                return searchStringency;
-            } else {
-                return Math.round( (4/3) * searchStringency );
+        /**
+         * We pick appropriate initial display stringency based on number of experiments
+         * (low stringency results aren't meaningful in large experiment sets).
+         *
+         * @private
+         * @param numDatasets
+         */
+        function decideInitialDisplayStringency ( numDatasets ) {
+            var k = 50;
+            var initialDisplayStringency = 2;
+
+            if (numDatasets > k) {
+                initialDisplayStringency = 2 + Math.round(numDatasets / k);
             }
+
+            if (initialDisplayStringency > 20) {
+                initialDisplayStringency = 20;
+            }
+
+            return initialDisplayStringency;
         }
 
         var observableDisplaySettings = new Gemma.ObservableCoexpressionDisplaySettings();
-        var displayStringency = decideInitialDisplayStringency( searchCommand.stringency );
+
+        var displayStringency = decideInitialDisplayStringency( searchCommand.eeIds.length );
         observableDisplaySettings.setStringency( displayStringency );
 
         observableSearchResults.setSearchCommand(searchCommand);

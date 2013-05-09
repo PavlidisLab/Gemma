@@ -169,12 +169,11 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 	getCoexpressionSearchCommand : function( geneSetValueObjects, experimentSetValueObjects ) {
         var geneIds = Gemma.AnalysesSearchUtils.getGeneIds(geneSetValueObjects);
         var eeIds = Gemma.AnalysesSearchUtils.getExperimentIds(experimentSetValueObjects);
-        var stringency = this.decideCoexpressionSearchStringency( eeIds.length );
 
         var coexpressionSearchCommand = {
             geneIds : geneIds,
             eeIds : eeIds,
-            stringency : stringency,
+            stringency : this.DEFAULT_STRINGENCY,
             forceProbeLevelSearch : this.DEFAULT_forceProbeLevelSearch,
             useMyDatasets : this.DEFAULT_useMyDatasets,
             queryGenesOnly : this.DEFAULT_queryGenesOnly,
@@ -192,31 +191,6 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 	 */
 	getLastCoexpressionSearchCommand : function() {
 		return this.lastCSC;
-	},
-
-    /**
-     * We pick appropriate search stringency based on number of experiments
-     * (low stringency results aren't meaningful in large experiment sets).
-     *
-     * @private
-     * @param numDatasets
-     */
-	decideCoexpressionSearchStringency : function( numDatasets ) {
-		var k = 50;
-
-		var searchStringency = 2;
-		
-		if (numDatasets > k) {
-			searchStringency = 2 + Math.round(numDatasets / k);
-		}
-		
-		if (searchStringency > 20) {
-			searchStringency = 20;
-		}
-
-        searchStringency = Math.round( (3/4) * searchStringency );
-
-        return searchStringency;
 	},
 
 	/**

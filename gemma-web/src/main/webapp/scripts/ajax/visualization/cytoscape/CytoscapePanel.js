@@ -156,8 +156,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
      */
     onPanelActivation: function () {
         if (!this.observableSearchResults.cytoscapeResultsUpToDate) {
-            this.loadMask.show();
-            this.observableSearchResults.searchForCytoscapeData();
+            this.searchForCytoscapeData();
             return;
         }
 
@@ -200,7 +199,6 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
         this.clearError();
 
         var selectedGeneIds = this.display.getVisibleSelectedGeneIds();
-        var currentResultsStringency = this.observableSearchResults.getResultsStringency();
 
         if (selectedGeneIds.length === 0) {
             Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
@@ -218,7 +216,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
 
         this.updateSearchFormGenes(selectedGeneIds);
         this.loadMask.show();
-        this.observableSearchResults.searchWithGeneIds(selectedGeneIds, currentResultsStringency);
+        this.observableSearchResults.searchWithGeneIds(selectedGeneIds);
     },
 
     extendSelectedNodes: function () {
@@ -226,7 +224,6 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
 
         var selectedGeneIds = this.display.getVisibleSelectedGeneIds();
         var queryGeneIds = this.observableSearchResults.getQueryGeneIds();
-        var currentResultsStringency = this.observableSearchResults.getResultsStringency();
 
         // TODO: merge arrays
         // TODO: check if it's the same as original query genes
@@ -259,7 +256,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
             }
             this.updateSearchFormGenes(queryGeneIds);
             this.loadMask.show();
-            this.observableSearchResults.searchWithGeneIds( queryGeneIds, currentResultsStringency );
+            this.observableSearchResults.searchWithGeneIds( queryGeneIds );
         } else {
             Ext.Msg.confirm(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
                 String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce,
@@ -276,7 +273,7 @@ Gemma.CytoscapePanel = Ext.extend(Ext.Panel, {
                         }
                         this.updateSearchFormGenes(queryGeneIds);
                         this.loadMask.show();
-                        this.observableSearchResults.searchWithGeneIds( queryGeneIds, currentResultsStringency );
+                        this.observableSearchResults.searchWithGeneIds( queryGeneIds );
                     }
                 }, this);
         }

@@ -11,6 +11,7 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
     cytoscapeSearchResults:{},
     cytoscapeResultsUpToDate: false,
     coexSearchTimeout: 420000,
+    stringency: null,
 
     initComponent: function () {
         this.searchParameters.stringency =
@@ -86,7 +87,7 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
     },
 
     getResultsStringency: function () {
-        return this.searchCommandUsed.stringency;
+        return this.stringency;
     },
 
     getQueryGeneIds: function () {
@@ -105,8 +106,10 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         this.searchCommandUsed = searchCommand;
     },
 
-    searchForCytoscapeDataWithStringency : function (newStringency) {
+    searchForCytoscapeDataWithStringency: function (newStringency) {
         var searchStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency( newStringency );
+        this.stringency = searchStringency; //FIXME: later
+
         var geneIdsSubset = Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery( this );
 
         var coexpressionSearchCommand = {
@@ -147,11 +150,11 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         );
     },
 
-    searchWithGeneIds: function (geneIds, searchStringency) {
+    searchWithGeneIds: function (geneIds) {
         var coexpressionSearchCommand = {
             geneIds : geneIds,
             eeIds : this.searchCommandUsed.eeIds,
-            stringency : searchStringency,
+            stringency : 2,
             forceProbeLevelSearch : false,
             useMyDatasets : false,
             queryGenesOnly : false,
@@ -162,7 +165,7 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         this.search(coexpressionSearchCommand);
     },
 
-    search : function (searchCommand) {
+    search: function (searchCommand) {
         this.searchCommandUsed = searchCommand;
         var me = this;
         me.fireEvent('search-started');
@@ -192,12 +195,9 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
                 } // sometimes got triggered without timeout
             }
         );
-    },
+    }
 
-    /**
-     *
-     */
-    searchForCytoscapeData: function () {
+/*    searchForCytoscapeData: function () {
         var geneIdsSubset = Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery( this );
 
         // Construct searchcommand
@@ -205,7 +205,7 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
         var coexpressionSearchCommand = {
             geneIds : geneIdsSubset,
             eeIds : this.searchCommandUsed.eeIds,
-            stringency : this.searchCommandUsed.stringency,
+            stringency : this.stringency,
             forceProbeLevelSearch : false,
             useMyDatasets : false,
             queryGenesOnly : true,
@@ -233,5 +233,5 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
                 }.createDelegate(this),
                 timeout: this.coexSearchTimeout
             });
-    }
+    }*/
 });
