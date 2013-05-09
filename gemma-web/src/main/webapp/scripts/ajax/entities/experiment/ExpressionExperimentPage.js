@@ -91,8 +91,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             initFromExperimentValueObject : function(experimentDetails, isAdmin) {
 
                 this.experimentDetails = experimentDetails;
-                this.editable = experimentDetails.canCurrentUserEditExperiment;
-                this.ownedByCurrentUser = experimentDetails.doesCurrentUserOwnExperiment;
+                this.editable = experimentDetails.currentUserHasWritePermission || isAdmin;
+                this.ownedByCurrentUser = experimentDetails.currentUserIsOwner;
 
                 if (this.loadMask) {
                     this.loadMask.hide();
