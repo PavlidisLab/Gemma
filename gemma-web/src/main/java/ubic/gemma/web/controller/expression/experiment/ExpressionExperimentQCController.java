@@ -344,13 +344,13 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param id
-     * @param analysisId
+     * @param id of the experiment
+     * @param analysisId of the analysis
      * @param rsId resultSet Id
      * @param factorName deprecated, we will use rsId instead. Maintained for backwards compatibility.
-     * @param size
-     * @param os
-     * @return
+     * @param size of the image.
+     * @param os stream to write the image to.
+     * @return null
      * @throws Exception
      */
     @RequestMapping("/expressionExperiment/visualizePvalueDist.html")
@@ -753,7 +753,9 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param ee
      * @param analysisId
      * @return
+     * @deprecated because we store this in the db now.
      */
+    @Deprecated
     private File locatePvalueDistFile( ExpressionExperiment ee, Long analysisId ) {
         File file = null;
 
