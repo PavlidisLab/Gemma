@@ -18,6 +18,12 @@
  */
 package ubic.gemma.testing;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,6 +48,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.SimpleJdbcTestUtils;
+
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -51,8 +58,10 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -63,11 +72,6 @@ import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.CompassUtils;
 
-import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 /**
  * subclass for tests that need the container and use the database
  * 
@@ -75,11 +79,9 @@ import java.util.List;
  * @version $Id$
  */
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/testDataSource.xml",
-        "classpath*:ubic/gemma/applicationContext-security.xml",
-        "classpath*:ubic/gemma/applicationContext-search.xml",
+        "classpath*:ubic/gemma/applicationContext-security.xml", "classpath*:ubic/gemma/applicationContext-search.xml",
         "classpath*:ubic/gemma/applicationContext-hibernate.xml",
-        "classpath*:ubic/gemma/applicationContext-component-scan.xml",
-        "classpath*:ubic/gemma/testContext-jms.xml",
+        "classpath*:ubic/gemma/applicationContext-component-scan.xml", "classpath*:ubic/gemma/testContext-jms.xml",
         "classpath*:ubic/gemma/applicationContext-serviceBeans.xml",
         "classpath*:ubic/gemma/applicationContext-schedule.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
@@ -309,6 +311,46 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
             return readOnlyad;
         }
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
+    }
+
+    /**
+     * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
+     * 
+     * @param probeNames will be assigned to each CompositeSequence in the ArrayDesign
+     * @param taxon of the ArrayDesign
+     * @return ArrayDesign with no TechnologyType
+     */
+    protected ArrayDesign getTestPersistentArrayDesign( List<String> probeNames, Taxon taxon ) {
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+
+        ad.setShortName( "Generic_" + taxon.getCommonName() + "_" + RandomStringUtils.randomAlphabetic( 10 ) );
+        ad.setName( "Generic test platform for " + taxon.getCommonName() );
+        ad.setTechnologyType( TechnologyType.NONE );
+        ad.setPrimaryTaxon( taxon );
+
+        for ( int i = 0; i < probeNames.size(); i++ ) {
+
+            // Reporter reporter = Reporter.Factory.newInstance();
+            CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
+
+            compositeSequence.setName( probeNames.get( i ) );
+
+            // compositeSequence.getComponentReporters().add( reporter );
+            compositeSequence.setArrayDesign( ad );
+            ad.getCompositeSequences().add( compositeSequence );
+
+            BioSequence bioSequence = getTestPersistentBioSequence();
+            compositeSequence.setBiologicalCharacteristic( bioSequence );
+            bioSequence.setBioSequence2GeneProduct( this.getTestPersistentBioSequence2GeneProducts( bioSequence ) );
+
+        }
+
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            cs.setArrayDesign( ad );
+        }
+        assert ( ad.getCompositeSequences().size() == probeNames.size() );
+
+        return ( ArrayDesign ) persisterHelper.persist( ad );
     }
 
     /**

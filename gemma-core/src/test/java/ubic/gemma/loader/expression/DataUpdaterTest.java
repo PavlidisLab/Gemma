@@ -30,13 +30,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -57,7 +53,6 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -65,8 +60,8 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
+import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
 
 /**
  * @author paul
@@ -425,38 +420,4 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         qt.setRepresentation( PrimitiveType.DOUBLE );
         return qt;
     }
-
-    private ArrayDesign getTestPersistentArrayDesign( List<String> probeNames, Taxon t ) {
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-
-        ad.setShortName( "Generic_" + t.getCommonName() + "_" + RandomStringUtils.randomAlphabetic( 10 ) );
-        ad.setName( "Generic test platform for " + t.getCommonName() );
-        ad.setTechnologyType( TechnologyType.NONE );
-        ad.setPrimaryTaxon( t );
-
-        for ( int i = 0; i < probeNames.size(); i++ ) {
-
-            // Reporter reporter = Reporter.Factory.newInstance();
-            CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
-
-            compositeSequence.setName( probeNames.get( i ) );
-
-            // compositeSequence.getComponentReporters().add( reporter );
-            compositeSequence.setArrayDesign( ad );
-            ad.getCompositeSequences().add( compositeSequence );
-
-            BioSequence bioSequence = getTestPersistentBioSequence();
-            compositeSequence.setBiologicalCharacteristic( bioSequence );
-            bioSequence.setBioSequence2GeneProduct( this.getTestPersistentBioSequence2GeneProducts( bioSequence ) );
-
-        }
-
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            cs.setArrayDesign( ad );
-        }
-        assert ( ad.getCompositeSequences().size() == probeNames.size() );
-
-        return ( ArrayDesign ) persisterHelper.persist( ad );
-    }
-
 }

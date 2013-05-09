@@ -31,8 +31,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import cern.colt.list.DoubleArrayList;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
@@ -42,13 +40,10 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -63,6 +58,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * Transactional methods.
@@ -199,14 +195,14 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     }
 
     /**
+     * Computes expression intensities depending on which ArrayDesign TechnologyType is used.
+     * 
      * @param ee
      * @param processedVectors
-     * @return
+     * @return ExpressionDataDoubleMatrix
      */
-    @Override
-    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
+    public ExpressionDataDoubleMatrix computeIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
-
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
         assert !arrayDesignsUsed.isEmpty();
@@ -245,19 +241,33 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
             if ( missingValues == null ) {
                 log.warn( "Could not locate missing value matrix for " + ee
                         + ", rank computation skipped (needed for two-color data)" );
-                return processedVectors;
+                return intensities;
             }
 
             if ( intensities == null ) {
                 log.warn( "Could not locate intensity matrix for " + ee
                         + ", rank computation skipped (needed for two-color data)" );
-                return processedVectors;
+                return intensities;
             }
             this.maskMissingValues( intensities, missingValues );
 
         } else {
             intensities = new ExpressionDataDoubleMatrix( processedVectors );
         }
+
+        return intensities;
+    }
+
+    /**
+     * @param ee
+     * @param processedVectors
+     * @return expression ranks based on computed intensities
+     */
+    @Override
+    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> processedVectors ) {
+
+        ExpressionDataDoubleMatrix intensities = computeIntensities( ee, processedVectors );
 
         Collection<ProcessedExpressionDataVector> updatedVectors = computeRanks( processedVectors, intensities );
         if ( updatedVectors == null ) {

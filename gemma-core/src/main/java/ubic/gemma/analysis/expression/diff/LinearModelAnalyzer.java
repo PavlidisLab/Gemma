@@ -51,6 +51,7 @@ import ubic.basecode.math.DesignMatrix;
 import ubic.basecode.math.LeastSquaresFit;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.MatrixStats;
+import ubic.basecode.math.MeanVarianceEstimator;
 import ubic.basecode.util.r.type.LinearModelSummary;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
@@ -324,7 +325,17 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
         DoubleMatrix<String, String> sNamedMatrix = makeDataMatrix( designMatrix, namedMatrix );
-        LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
+
+        // perform weighted least squares regression on COUNT data
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+        LeastSquaresFit fit = null;
+        if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
+            log.info( " Calculating residuals of weighted least squares regression on COUNT data " );
+            MeanVarianceEstimator mv = new MeanVarianceEstimator( properDesignMatrix, sNamedMatrix );
+            fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix, mv.getWeights() );
+        } else {
+            fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
+        }
 
         DoubleMatrix2D residuals = fit.getResiduals();
 
@@ -741,7 +752,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          * Run the analysis NOTE this can be simplified if we strip out R code.
          */
         final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, sNamedMatrix, label2Factors,
-                modelFormula, properDesignMatrix, interceptFactor, interactionFactorLists, baselineConditions );
+                modelFormula, properDesignMatrix, interceptFactor, interactionFactorLists, baselineConditions,
+                quantitationType );
 
         if ( rawResults.size() == 0 ) {
             log.error( "Got no results from the analysis" );
@@ -961,10 +973,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             log.info( " **** LOG TRANSFORMING **** " );
             MatrixStats.logTransform( dmatrix.getMatrix() );
         } else if ( scaleType.equals( ScaleType.COUNT ) ) {
-            /*
-             * TODO compute the log2 CPM.
-             */
-            throw new UnsupportedOperationException( "Count data not yet supported" );
+            // note: counts per million log2 transform is already taken care of in MeanVarianceEstimator
         } else {
             throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
         }
@@ -1010,6 +1019,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 return ScaleType.LOG10;
             } else if ( quantitationType.getScale().equals( ScaleType.LN ) ) {
                 return ScaleType.LN;
+            } else if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
+                return ScaleType.COUNT;
             } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
                 throw new UnsupportedOperationException(
                         "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, "
@@ -1560,6 +1571,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param interceptFactor
      * @param designMatrix
      * @param baselineConditions
+     * @param quantitationType
      * @return results
      */
     private Map<String, LinearModelSummary> runAnalysis(
@@ -1567,11 +1579,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             final DoubleMatrix<String, String> sNamedMatrix,
             final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
             DesignMatrix designMatrix, ExperimentalFactor interceptFactor, List<String[]> interactionFactorLists,
-            Map<ExperimentalFactor, FactorValue> baselineConditions ) {
+            Map<ExperimentalFactor, FactorValue> baselineConditions, QuantitationType quantitationType ) {
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
 
-        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults );
+        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, quantitationType );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1625,10 +1637,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param designMatrix
      * @param data
      * @param rawResults
+     * @param quantitationType
      * @return
      */
     private Future<?> runAnalysisFuture( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
-            final Map<String, LinearModelSummary> rawResults ) {
+            final Map<String, LinearModelSummary> rawResults, final QuantitationType quantitationType ) {
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<?> f = service.submit( new Runnable() {
@@ -1636,7 +1649,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             public void run() {
                 StopWatch timer = new StopWatch();
                 timer.start();
-                LeastSquaresFit fit = new LeastSquaresFit( designMatrix, data );
+                LeastSquaresFit fit = null;
+                if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
+                    log.info( " Performing weighted least squares regression on COUNT data " );
+                    MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, data );
+                    fit = new LeastSquaresFit( designMatrix, data, mv.getWeights() );
+                } else {
+                    fit = new LeastSquaresFit( designMatrix, data );
+                }
                 log.info( "Model fit data matrix " + data.rows() + " x " + data.columns() + ": " + timer.getTime()
                         + "ms" );
                 timer.reset();

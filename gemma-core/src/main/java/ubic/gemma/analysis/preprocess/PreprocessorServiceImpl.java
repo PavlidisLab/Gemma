@@ -91,6 +91,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
     @Autowired
+    private MeanVarianceService meanVarianceService;
+
+    @Autowired
     private SVDServiceHelper svdService;
 
     @Autowired
@@ -116,7 +119,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             ee = expressionExperimentService.thawLite( ee );
 
             processForSampleCorrelation( ee );
-            // processForMeanVarianceRealtion(ee ); TODO
+            processForMeanVarianceRelation( ee.getId() );
 
             processForPca( ee );
 
@@ -180,6 +183,15 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     /**
+     * Create the scatter plot to evaluate heteroscedasticity.
+     * 
+     * @param eeId
+     */
+    private void processForMeanVarianceRelation( Long eeId ) {
+        meanVarianceService.findOrCreate( eeId );
+    }
+
+    /**
      * @param expExp
      */
     private void removeInvalidatedData( ExpressionExperiment expExp ) {
@@ -205,7 +217,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 removeInvalidatedData( ee );
                 processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
                 processForSampleCorrelation( ee );
-                // processForMeanVarianceRealtion(ee ); TODO
+                processForMeanVarianceRelation( ee.getId() );
                 processForPca( ee );
                 // analyzerService.deleteAnalyses( ee ); ??
             } catch ( Exception e ) {

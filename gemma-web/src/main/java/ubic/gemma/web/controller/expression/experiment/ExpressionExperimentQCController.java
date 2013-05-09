@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -65,6 +66,7 @@ import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.ScatterRenderer;
 import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.DefaultMultiValueCategoryDataset;
@@ -88,6 +90,7 @@ import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
+import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
 import ubic.gemma.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
@@ -100,6 +103,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -109,6 +113,9 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.view.TextView;
 import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.doublealgo.Formatter;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
 /**
  * @author paul
@@ -126,6 +133,8 @@ public class ExpressionExperimentQCController extends BaseController {
     private SVDService svdService;
     @Autowired
     ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
+    @Autowired
+    private MeanVarianceService meanVarianceService;
 
     /**
      * @param id
@@ -689,6 +698,45 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
+     * @param mvr MeanVarianceRelation object that contains the datapoints to plot
+     * @return XYSeriesCollection which contains the Mean-variance and Loess series
+     */
+    private XYSeriesCollection getMeanVariance( MeanVarianceRelation mvr ) {
+
+        final ByteArrayConverter bac = new ByteArrayConverter();
+
+        XYSeriesCollection dataset = new XYSeriesCollection();
+
+        if ( mvr == null ) {
+            return dataset;
+        }
+
+        double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
+        double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] loessX = bac.byteArrayToDoubles( mvr.getLowessX() );
+        double[] loessY = bac.byteArrayToDoubles( mvr.getLowessY() );
+        if ( means == null || variances == null || loessX == null || loessY == null ) {
+            return dataset;
+        }
+
+        XYSeries series = new XYSeries( "Mean-variance" );
+        for ( int i = 0; i < means.length; i++ ) {
+            series.add( means[i], variances[i] );
+        }
+
+        // loess fit trend line
+        XYSeries loessSeries = new XYSeries( "Loess" );
+        for ( int i = 0; i < loessX.length; i++ ) {
+            loessSeries.add( loessX[i], loessY[i] );
+        }
+
+        dataset.addSeries( series );
+        dataset.addSeries( loessSeries );
+
+        return dataset;
+    }
+
+    /**
      * @param ee
      * @return
      */
@@ -1138,6 +1186,121 @@ public class ExpressionExperimentQCController extends BaseController {
         g.setFont( new Font( font.getName(), font.getStyle(), 8 ) );
         g.drawString( "N/A", 9, placeholderSize );
         ImageIO.write( buffer, "png", os );
+    }
+
+    /**
+     * @param id of experiment
+     * @param size Multiplier on the cell size. 1 or null for standard small size.
+     * @param text if true, output a tabbed file instead of a png
+     * @param os response output stream
+     * @return ModelAndView object if text is true, otherwise null
+     * @throws Exception
+     */
+    @RequestMapping("/expressionExperiment/visualizeMeanVariance.html")
+    public ModelAndView visualizeMeanVariance( Long id, Double size, Boolean text, OutputStream os ) throws Exception {
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        MeanVarianceRelation mvr = meanVarianceService.findOrCreate( id );
+
+        if ( mvr == null ) {
+            return null;
+        }
+
+        if ( text != null && text && mvr != null ) {
+            final ByteArrayConverter bac = new ByteArrayConverter();
+
+            double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
+            double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+
+            DoubleMatrix2D matrix = new DenseDoubleMatrix2D( means.length, 2 );
+            matrix.viewColumn( 0 ).assign( means );
+            matrix.viewColumn( 1 ).assign( variances );
+
+            String matrixString = new Formatter( "%1.2G" ).toTitleString( matrix, null, new String[] { "mean",
+                    "variance" }, null, null, null, null );
+            ModelAndView mav = new ModelAndView( new TextView() );
+            mav.addObject( TextView.TEXT_PARAM, matrixString );
+
+            return mav;
+        }
+
+        writeMeanVariance( os, mvr, size );
+
+        return null;
+    }
+
+    /**
+     * @param os response output stream
+     * @param mvr MeanVarianceRelation object to plot
+     * @param size
+     * @return true if mvr data points were plotted
+     */
+    private boolean writeMeanVariance( OutputStream os, MeanVarianceRelation mvr, Double size ) throws Exception {
+        // if number of datapoints > THRESHOLD then alpha = TRANSLUCENT, else alpha = OPAQUE
+        final int THRESHOLD = 1000;
+        final int TRANSLUCENT = 50;
+        final int OPAQUE = 255;
+
+        // Set maximum plot range to Y_MAX - YSCALE * OFFSET to cut down on excess white space
+        final double OFFSET_FACTOR = 0.05f;
+        final double Y_SCALE = 10f;
+
+        // set the final image size to be the minimum of MAX_IMAGE_SIZE_PX or size
+        final int MAX_IMAGE_SIZE_PX = 5;
+
+        if ( mvr == null ) {
+            return false;
+        }
+
+        // get data points
+        XYSeriesCollection collection = getMeanVariance( mvr );
+
+        if ( collection.getSeries().size() == 0 ) {
+            return false;
+        }
+
+        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        JFreeChart chart = ChartFactory.createScatterPlot( "", "Mean", "Variance", collection,
+                PlotOrientation.VERTICAL, false, false, false );
+
+        // adjust colors and shapes
+        XYLineAndShapeRenderer renderer = ( XYLineAndShapeRenderer ) chart.getXYPlot().getRenderer();
+        renderer.setBasePaint( Color.white );
+        int alpha = collection.getSeries( 0 ).getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
+        renderer.setSeriesPaint( 0, new Color( 0, 0, 0, alpha ) );
+        renderer.setSeriesPaint( 1, Color.red );
+        renderer.setSeriesStroke( 1, new BasicStroke( 4 ) );
+        renderer.setSeriesShape( 0, new Ellipse2D.Double( 4, 4, 4, 4 ) );
+        renderer.setSeriesShapesFilled( 0, false );
+        renderer.setSeriesLinesVisible( 0, false );
+        renderer.setSeriesLinesVisible( 1, true );
+        renderer.setSeriesShapesVisible( 1, false );
+        chart.getXYPlot().setRangeGridlinesVisible( false );
+        chart.getXYPlot().setDomainGridlinesVisible( false );
+
+        // adjust the chart domain and ranges
+        double yRange = collection.getSeries( 0 ).getMaxY() - collection.getSeries( 0 ).getMinY();
+        double offset = ( yRange ) * OFFSET_FACTOR;
+        double newYMin = collection.getSeries( 0 ).getMinY() - offset;
+        double newYMax = collection.getSeries( 0 ).getMaxY() - Y_SCALE * offset; // cut off excess space at the top
+        double newXMin = collection.getSeries( 0 ).getMinX() - offset;
+        double newXMax = collection.getSeries( 0 ).getMaxX() + offset;
+        ValueAxis yAxis = new NumberAxis( "Variance" );
+        yAxis.setRange( newYMin, newYMax );
+        ValueAxis xAxis = new NumberAxis( "Mean" );
+        xAxis.setRange( newXMin, newXMax );
+        chart.getXYPlot().setRangeAxis( yAxis );
+        chart.getXYPlot().setDomainAxis( xAxis );
+
+        int finalSize = ( int ) Math
+                .min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX, size * DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
+
+        return true;
     }
 
     /**

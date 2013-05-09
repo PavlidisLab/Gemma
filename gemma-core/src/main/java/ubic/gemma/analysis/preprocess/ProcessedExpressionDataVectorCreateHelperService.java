@@ -16,6 +16,7 @@ package ubic.gemma.analysis.preprocess;
 
 import java.util.Collection;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -41,6 +42,14 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
      *         vectors may be thawed in the process)
      */
     public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> processedVectors );
+
+    /**
+     * @param ee
+     * @param processedVectors
+     * @return intensities See {@link ExpressionDataMatrixBuilder#getIntensity()}
+     */
+    public ExpressionDataDoubleMatrix computeIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors );
 
     /**

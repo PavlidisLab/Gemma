@@ -51,6 +51,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -299,6 +300,9 @@ public class ExpressionExperimentController {
 
     @Autowired
     private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
+    @Autowired
+    private MeanVarianceService meanVarianceService;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -718,6 +722,7 @@ public class ExpressionExperimentController {
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
+        qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee.getId() ) );
         return qc.getQChtml();
     }
 

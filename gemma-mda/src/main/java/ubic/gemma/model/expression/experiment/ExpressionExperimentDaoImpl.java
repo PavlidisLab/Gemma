@@ -1735,6 +1735,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
         }
         ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
+        Hibernate.initialize( result.getMeanVarianceRelation() );
         Hibernate.initialize( result.getQuantitationTypes() );
         Hibernate.initialize( result.getCharacteristics() );
         Hibernate.initialize( result.getRawDataFile() );
@@ -1775,6 +1776,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         thawReferences( result );
+        thawMeanVariance( result );
 
         if ( vectorsAlso ) {
             /*
@@ -2061,4 +2063,16 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
     }
 
+    /**
+     * @param expressionExperiment
+     */
+    private void thawMeanVariance( final ExpressionExperiment expressionExperiment ) {
+        if ( expressionExperiment.getMeanVarianceRelation() != null ) {
+            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
+            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getMeans() );
+            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getVariances() );
+            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getLowessX() );
+            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getLowessY() );
+        }
+    }
 }

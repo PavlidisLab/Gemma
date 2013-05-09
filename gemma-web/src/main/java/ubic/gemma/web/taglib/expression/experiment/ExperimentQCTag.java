@@ -40,6 +40,8 @@ public class ExperimentQCTag extends TagSupport {
 
     private boolean hasPCA = false;
 
+    private boolean hasMeanVariance = false;
+
     private String eeManagerId = "";
 
     public void setEeManagerId( String eeManagerId ) {
@@ -83,6 +85,13 @@ public class ExperimentQCTag extends TagSupport {
      */
     public void setHasPCA( boolean value ) {
         this.hasPCA = value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setHasMeanVariance( boolean value ) {
+        this.hasMeanVariance = value;
     }
 
     public void setHasNodeDegreeDist( boolean value ) {
@@ -140,7 +149,7 @@ public class ExperimentQCTag extends TagSupport {
                 + "<th valign=\"top\" align=\"center\"><strong>PCA+Factors</strong></th>"
                 // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th>"
-                + "</tr>" );
+                + "<th valign=\"top\" align=\"center\"><strong>Mean-Variance</strong</th>" + "</tr>" );
 
         buf.append( "<tr>" );
 
@@ -235,6 +244,39 @@ public class ExperimentQCTag extends TagSupport {
         if ( hasCorrDist ) {
             buf.append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"/Gemma/expressionExperiment/visualizeProbeCorrDist.html?id="
                     + this.eeid + "\" /></td>" );
+        } else {
+            buf.append( placeHolder );
+        }
+
+        if ( hasMeanVariance ) {
+            /*
+             * popupImage is defined in ExpressinExperimentDetails.js
+             */
+            int scaleLarge = 3;
+            int width = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + 50;
+            int height = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + 50;
+            String bigImageUrl = "visualizeMeanVariance.html?id=" + this.eeid + "&size=" + scaleLarge;
+            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
+                    + "onClick=\"popupImage('"
+                    + bigImageUrl
+                    + "',"
+                    + width
+                    + ","
+                    + height
+                    + ")"
+                    + ";return 1\"; "
+                    + "title=\"Assay correlations (bright=higher); click for larger version\" >"
+                    + "<img src=\"/Gemma/expressionExperiment/visualizeMeanVariance.html?id="
+                    + this.eeid
+                    + "&size=1\" alt='Image unavailable' width='"
+                    + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX
+                    + "' height='"
+                    + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
+
+            buf.append( "<li><a title=\"Download a file containing the data means and variances \" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeMeanVariance.html?id="
+                    + this.eeid + "&text=1\">Get data</a></li>" );
+
+            buf.append( "</ul></td>" );
         } else {
             buf.append( placeHolder );
         }
