@@ -165,22 +165,32 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds3 );
 
         /*
-         * Delete the experimental design and reload. the new designs have been modified to have just one factor with
-         * two levels. (The data sets have nothing to do with each other, it's just a test)
+         * Delete the experimental design (which came with the GEO import) and reload. the new designs have been
+         * modified to have just one factor with two levels. (The data sets have nothing to do with each other, it's
+         * just a test)
          */
         for ( ExperimentalFactor ef : ds1.getExperimentalDesign().getExperimentalFactors() ) {
             experimentalFactorService.delete( ef );
+
         }
         for ( ExperimentalFactor ef : ds2.getExperimentalDesign().getExperimentalFactors() ) {
             experimentalFactorService.delete( ef );
+
         }
         for ( ExperimentalFactor ef : ds3.getExperimentalDesign().getExperimentalFactors() ) {
             experimentalFactorService.delete( ef );
         }
+        ds1.getExperimentalDesign().getExperimentalFactors().clear();
+        ds2.getExperimentalDesign().getExperimentalFactors().clear();
+        ds3.getExperimentalDesign().getExperimentalFactors().clear();
+
+        experimentService.update( ds1 );
+        experimentService.update( ds2 );
+        experimentService.update( ds3 );
 
         ds1 = experimentService.thawLite( experimentService.load( ds1.getId() ) );
         ds2 = experimentService.thawLite( experimentService.load( ds2.getId() ) );
-        ds3 = experimentService.thawLite( experimentService.load( ds3.getId() ) );
+        ds3 = experimentService.thawLite( experimentService.load( ds3.getId() ) ); // pain! fails sometimes.
 
         designImporter.importDesign( ds1,
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2018.design.txt" ) );
