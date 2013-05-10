@@ -47,7 +47,7 @@ public class TaskCompletionController {
      * @return
      */
     public Object checkResult( String taskId ) throws Exception {
-        SubmittedTask submittedTask = taskRunningService.getSubmittedTask(taskId);
+        SubmittedTask<?> submittedTask = taskRunningService.getSubmittedTask( taskId );
         if ( submittedTask == null ) return null;
 
         TaskResult result = submittedTask.getResult();
