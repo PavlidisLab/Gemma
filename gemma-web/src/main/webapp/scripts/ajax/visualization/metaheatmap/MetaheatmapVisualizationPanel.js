@@ -480,7 +480,14 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend(Ext.Panel, {
             }
 
             if (Gemma.Metaheatmap.Config.USE_GENE_COUNTS_FOR_ENRICHMENT) {
-               condition.ora = GemmaStatUtils.computeOraPvalue(condition.numberOfGenesTested, numGenesInSet, numGenesOverThresholdInSet, condition.numberOfGenesDiffExpressed);
+            	
+            	if (condition.numberOfGenesTested < numGenesInSet) {
+            		// this can happen if the data in the system is missing or corrupt. 
+            		condition.ora = null;	
+            	} else {
+               		condition.ora = GemmaStatUtils.computeOraPvalue(condition.numberOfGenesTested, numGenesInSet, numGenesOverThresholdInSet, condition.numberOfGenesDiffExpressed);
+            	}
+            	
                condition.numInSet = numGenesInSet;
                condition.numDiffExpressed = numGenesOverThresholdInSet;
             } else {
@@ -525,9 +532,11 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend(Ext.Panel, {
              * This is used as a sorting option, so we have to remove that if this is not computed 'correctly'. An
              * alternative would be to simply count the fraction of times it is significant.
              */
-            // gene.metaPvalue = GemmaStatUtils.computeMetaPvalue (pValues);
-            gene.metaPvalue = GemmaStatUtils.computeFractionFailure(pValues.length, unusedProbes + pValues.length);
-
+            gene.metaPvalue = GemmaStatUtils.computeMetaPvalue(pValues);
+            /*
+             * Use this method if we are not storing all the signiificant results.
+             */
+            // gene.metaPvalue = GemmaStatUtils.computeFractionFailure(pValues.length, unusedProbes + pValues.length);
             gene.metaPvalueCount = pValues.length;
             gene.percentProbesMissing = numProbesMissing / this.conditionTree.items.length;
             gene.metaPvalueBarChart = this.calculateBarChartValueBasedOnPvalue(gene.metaPvalue);

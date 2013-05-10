@@ -72,10 +72,26 @@ Gemma.Metaheatmap.Utils.formatPVal = function(p) {
    }
 };
 
-// for use in XTemplate
+// Format fold change
+Gemma.Metaheatmap.Utils.formatLogRatio = function(p) {
+   if (p === null) {
+      return '-';
+   }
+   if (isNaN(p)) {
+      return p;
+   }    
+   
+   return sprintf("%.2f", p);
+  
+};
+
+// for use in XTemplates
 Ext.util.Format.sciNotation = Gemma.Metaheatmap.Utils.formatPVal;
+Ext.util.Format.logRatioNotation = Gemma.Metaheatmap.Utils.formatLogRatio;
+
 
 /**
+ * 
  * Calculates percentage and formats with 1 decimal point
  * 
  * @param {Object}

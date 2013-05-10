@@ -279,7 +279,10 @@ GemmaStatUtils.dhyper = function(x, r, b, n) {
    var p, q, p1, p2, p3;
 
    if (r < 0 || b < 0 || n < 0 || n > r + b) {
-      throw "IllegalArgument";
+      throw {
+         name : "IllegalArgument",
+         message : "Values not valid for dhyper: " + r + " " + b + " " + n
+      };
    }
 
    if (x < 0) {

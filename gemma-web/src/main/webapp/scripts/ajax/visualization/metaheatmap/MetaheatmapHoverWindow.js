@@ -52,7 +52,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 					'<b>Number of probes</b>: {numberOfProbesDiffExpressed} / {numberOfProbes} <br>',				
 					'<b>q-value</b>: {correctedPValue:sciNotation}<br>',
 					'<b>p-value</b>: {pvalue:sciNotation}<br>',
-					'<b>log fold change</b>: {foldChange}',				
+					'<b>log fold change</b>: {foldChange:logRatioNotation}',				
 					'</tpl>', '</tpl></span>');				
 		} else {
 			return new Ext.XTemplate (
