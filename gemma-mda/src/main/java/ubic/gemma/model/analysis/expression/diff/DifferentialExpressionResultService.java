@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.analysis.expression.diff.ContrastsValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -148,11 +149,23 @@ public interface DifferentialExpressionResultService {
     public Collection<ExperimentalFactor> getExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
+    /**
+     * @param ids
+     * @return
+     */
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids );
 
+    /**
+     * @param analysisResultSetId
+     * @return
+     */
     public ExpressionAnalysisResultSet loadAnalysisResultSet( Long analysisResultSetId );
 
-    public Collection<DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids );
+    /**
+     * @param ids
+     * @return map of result to contrasts value object.
+     */
+    public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
 
     /**
      * @param analysisResultSetId

@@ -257,17 +257,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             Collection<? extends BioAssaySet> experiments ) {
         Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> result = new HashMap<BioAssaySet, Collection<DifferentialExpressionAnalysis>>();
 
-        /*
-         * In these queries, we used left joins for things that were added to the system 'recently' and might have been
-         * null, namely baselineGroup and hitListSizes. But this should no longer be the case.
-         */
-
         StopWatch timer = new StopWatch();
         timer.start();
         final String query = "select distinct a from DifferentialExpressionAnalysisImpl a inner join fetch a.resultSets res "
-                + "inner join fetch res.baselineGroup"
+                + " inner join fetch res.baselineGroup"
                 + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues "
-                + "inner join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
+                + " inner join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
 
         List<DifferentialExpressionAnalysis> r1 = this.getHibernateTemplate().findByNamedParam( query, "ees",
                 EntityUtils.getIds( experiments ) );
@@ -280,8 +275,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             count++;
         }
         if ( timer.getTime() > 1000 ) {
-            log.info( "Fetch " + count + " analyses for " + result.size() + " experiments: " + timer.getTime() + "ms" );
-            log.info( "Query was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), query ) );
+            log.info( "Fetch " + count + " analyses for " + result.size() + " experiments: " + timer.getTime()
+                    + "ms; Query was:\n" + NativeQueryUtils.toSql( this.getHibernateTemplate(), query ) );
         }
         timer.reset();
         timer.start();

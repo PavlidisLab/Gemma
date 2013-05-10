@@ -24,6 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
+
+import ubic.gemma.analysis.expression.diff.ContrastVO;
+import ubic.gemma.analysis.expression.diff.ContrastsValueObject;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
@@ -82,7 +85,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
      */
     @Override
     public TaskResult execute() {
-        log.info( "Call..." );
+
         DifferentialExpressionGenesConditionsValueObject searchResult = new DifferentialExpressionGenesConditionsValueObject();
 
         addGenesToSearchResultValueObject( searchResult );
@@ -91,7 +94,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
 
         fetchDifferentialExpressionResults( resultSets, getGeneIds( searchResult.getGenes() ), searchResult );
 
-        log.info( "Finished DiffExpSearchTask." );
+        log.info( "Finished DiffExpSearchTask: " + searchResult.getCellData().size() + " 'conditions' ..." );
 
         return new TaskResult( this.taskCommand, searchResult );
     }
@@ -195,8 +198,8 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
         watch.stop();
         if ( watch.getTotalTimeMillis() > 100 ) {
             // This does not include getting the actual diff ex results.
-            log.info( "Get information on conditions/analyses for " + i + " items: " + watch.getTotalTimeMillis()
-                    + "ms" );
+            log.info( "Get information on conditions/analyses for " + i + " factorValues: "
+                    + watch.getTotalTimeMillis() + "ms" );
         }
 
         return usedResultSets;
@@ -233,22 +236,21 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
      */
     private Collection<DiffExprGeneSearchResult> aggregateAcrossResultSets(
             Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults ) {
-        int i = 0;
+        // int i = 0;
         Collection<DiffExprGeneSearchResult> aggregatedResults = new HashSet<DiffExprGeneSearchResult>();
+
         for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
             Collection<DiffExprGeneSearchResult> values = resultSetEntry.getValue().values();
-            i += resultSetEntry.getValue().size();
+            // i += resultSetEntry.getValue().size();
 
-            for ( DiffExprGeneSearchResult v : values ) {
-                if ( aggregatedResults.contains( v ) ) {
-                    log.warn( "Already have : " + v );
-                }
-            }
+            // for ( DiffExprGeneSearchResult v : values ) {
+            // assert !aggregatedResults.contains( v );
+            // }
 
             aggregatedResults.addAll( values );
         }
 
-        assert i == aggregatedResults.size();
+        // assert i == aggregatedResults.size() : "Expected " + aggregatedResults.size() + " got " + i;
         return aggregatedResults;
     }
 
@@ -263,21 +265,20 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, List<Long> geneIds,
             DifferentialExpressionGenesConditionsValueObject searchResult ) {
 
-        StopWatch watch = new StopWatch( "Fill diff ex heatmap cells" );
-        watch.start( "DB query for diff ex results" );
+        StopWatch watch = new StopWatch( "Process differential expression search" );
+        watch.start( "Fetch diff ex results" );
 
-        // Main query for results.
+        // Main query for results; the main time sink.
         Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults = differentialExpressionResultService
                 .findDifferentialExpressionAnalysisResultIdsInResultSet( resultSetIdsToArrayDesignsUsed, geneIds );
         watch.stop();
 
         Map<Long, ExpressionAnalysisResultSet> resultSetMap = EntityUtils.getIdMap( resultSetIdsToArrayDesignsUsed
                 .keySet() );
-
         Collection<DiffExprGeneSearchResult> aggregatedResults = aggregateAcrossResultSets( resultSetToGeneResults );
-        watch.start( "Processing " + aggregatedResults.size() + " results from DB query" );
 
-        Map<Long, DifferentialExpressionAnalysisResult> detailedResults = getDetailsForContrasts( aggregatedResults );
+        watch.start( "Fetch details for contrasts for " + aggregatedResults.size() + " results" );
+        Map<Long, ContrastsValueObject> detailedResults = getDetailsForContrasts( aggregatedResults );
 
         processHits( searchResult, resultSetToGeneResults, resultSetMap, detailedResults );
 
@@ -294,7 +295,6 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
      */
     private void fetchDifferentialExpressionResults( List<ExpressionAnalysisResultSet> resultSets, List<Long> geneIds,
             DifferentialExpressionGenesConditionsValueObject searchResult ) {
-        log.info( "Filling heatmap cells..." );
 
         Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed = new HashMap<ExpressionAnalysisResultSet, Collection<Long>>();
 
@@ -450,8 +450,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
      * @param geneToProbeResult
      * @return
      */
-    private Map<Long, DifferentialExpressionAnalysisResult> getDetailsForContrasts(
-            Collection<DiffExprGeneSearchResult> diffExResults ) {
+    private Map<Long, ContrastsValueObject> getDetailsForContrasts( Collection<DiffExprGeneSearchResult> diffExResults ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -464,7 +463,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
             }
 
             /*
-             * FIXME this check will not be needed if we only store the 'good' results?
+             * this check will not be needed if we only store the 'good' results?
              */
             // Here I am trying to avoid fetching them when there is no hope that the results will be interesting.
             if ( r instanceof MissingResult || r instanceof NonRetainedResult
@@ -476,11 +475,10 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
             resultsWithContrasts.add( r.getResultId() );
         }
 
-        Map<Long, DifferentialExpressionAnalysisResult> detailedResults = new HashMap<Long, DifferentialExpressionAnalysisResult>();
+        Map<Long, ContrastsValueObject> detailedResults = new HashMap<Long, ContrastsValueObject>();
         if ( !resultsWithContrasts.isEmpty() ) {
             // uses a left join so it will have all the results.
-            detailedResults = EntityUtils.getIdMap( differentialExpressionResultService
-                    .loadEagerContrasts( resultsWithContrasts ) );
+            detailedResults = differentialExpressionResultService.loadContrastDetailsForResults( resultsWithContrasts );
         }
 
         timer.stop();
@@ -551,8 +549,7 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
      */
     private void processHits( DifferentialExpressionGenesConditionsValueObject searchResult,
             Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults,
-            Map<Long, ExpressionAnalysisResultSet> resultSetMap,
-            Map<Long, DifferentialExpressionAnalysisResult> detailedResults ) {
+            Map<Long, ExpressionAnalysisResultSet> resultSetMap, Map<Long, ContrastsValueObject> detailedResults ) {
 
         int i = 0;
 
@@ -579,8 +576,8 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
      * @param resultSet
      */
     private void processHitsForResultSet( DifferentialExpressionGenesConditionsValueObject searchResult,
-            Map<Long, DifferentialExpressionAnalysisResult> detailedResults,
-            Map<Long, DiffExprGeneSearchResult> geneToProbeResult, ExpressionAnalysisResultSet resultSet ) {
+            Map<Long, ContrastsValueObject> detailedResults, Map<Long, DiffExprGeneSearchResult> geneToProbeResult,
+            ExpressionAnalysisResultSet resultSet ) {
 
         // No database calls.
         if ( log.isDebugEnabled() ) log.debug( "Start processing hits for result sets." );
@@ -595,8 +592,8 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
 
                 if ( diffExprGeneSearchResult instanceof NonRetainedResult ) {
                     /*
-                     * FIXME mark the cell as non-significant, otherwise it will just be left as missing. Add values for
-                     * all the contrasts
+                     * mark the cell as non-significant, otherwise it will just be left as missing. Add values for all
+                     * the contrasts
                      */
                     searchResult.setAsNonSignficant( geneId, diffExprGeneSearchResult.getResultSetId() );
                     continue;
@@ -627,25 +624,30 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
                     continue;
                 }
 
-                DifferentialExpressionAnalysisResult deaResult = detailedResults.get( probeResultId );
+                ContrastsValueObject deaResult = detailedResults.get( probeResultId );
 
-                for ( ContrastResult cr : deaResult.getContrasts() ) {
-                    FactorValue factorValue = cr.getFactorValue();
+                for ( ContrastVO cr : deaResult.getContrasts() ) {
+                    Long factorValue = cr.getFactorValueId();
                     if ( factorValue == null ) {
                         if ( !warned ) {
-                            log.error( "Data Integrity: Null factor value for contrast with id=" + cr.getId()
-                                    + "(additional warnings may be suppressed, but additional results will be omitted)" );
+                            log.error( "Data Integrity error: Null factor value for contrast with id="
+                                    + cr.getId()
+                                    + " associated with diffexresult "
+                                    + deaResult.getResultId()
+                                    + " for resultset "
+                                    + resultSet.getId()
+                                    + ". (additional warnings may be suppressed but additional results will be omitted)" );
                             warned = true;
                         }
                         continue;
                     }
 
                     String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
-                            resultSet.getId(), factorValue.getId() );
+                            resultSet.getId(), factorValue );
 
                     if ( cr.getLogFoldChange() == null && !warned ) {
                         log.warn( "Fold change was null for contrast " + cr.getId() + " associated with diffexresult "
-                                + deaResult.getId() + " for resultset " + resultSet.getId()
+                                + deaResult.getResultId() + " for resultset " + resultSet.getId()
                                 + ". (additional warnings may be suppressed)" );
                         warned = true;
                     }

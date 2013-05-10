@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.analysis.expression.diff.ContrastsValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
@@ -130,9 +131,8 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids ) {
-        return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
-                .loadEagerContrasts( ids );
+    public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids ) {
+        return this.getDifferentialExpressionResultDao().loadContrastDetailsForResults( ids );
     }
 
     @Override

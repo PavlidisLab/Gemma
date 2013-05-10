@@ -17,8 +17,10 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.io.Serializable;
 
 /**
- * Value object for differential expression results. It can represent a 'dummy' (missing value) if the resultSetId and
- * the geneId are populated.
+ * Value object for differential expression result for one result - corresponds to the
+ * DifferentialExpressionAnalysisResults for one gene in one ResultSet (combined for multiple probes), but represents
+ * only the "selected" analysisResult. It can represent a 'dummy' (missing value) if the resultSetId and the geneId are
+ * populated.
  * 
  * @author anton, paul
  * @version $Id$
@@ -48,9 +50,7 @@ public class DiffExprGeneSearchResult implements Serializable {
         if ( getClass() != obj.getClass() ) return false;
         DiffExprGeneSearchResult other = ( DiffExprGeneSearchResult ) obj;
         if ( analysisResultId == null || other.analysisResultId == null ) return false;
-
         return analysisResultId.equals( other.analysisResultId );
-
     }
 
     public Double getCorrectedPvalue() {

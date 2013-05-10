@@ -33,6 +33,7 @@ import org.springframework.stereotype.Repository;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.BatchIterator;
+import ubic.gemma.analysis.expression.diff.ContrastsValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -57,7 +58,10 @@ import java.util.*;
 @Repository
 public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionResultDaoBase {
 
-    private static final Double CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX = 0.05;
+    /*
+     * Temporary. For mimicing the effect of storing only 'significant' results.
+     */
+    private static final Double CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX = 1.0;
     /*
      * This is a key query: get all results for a set of genes in a set of resultssets (basically, experiments)
      */
@@ -434,7 +438,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             return results;
         }
 
-        log.info( foundInCache.size() + "/" + resultSetIds.size() + " resultsSets were already cached" );
+        log.info( foundInCache.size() + "/" + resultSetIds.size()
+                + " resultsSets had at least some cached results; still need to query " + resultSetsNeeded );
 
         assert !resultSetsNeeded.isEmpty();
 
@@ -442,18 +447,20 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 .createSQLQuery( fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery );
 
         /*
-         * We have to batch _either_ genes _or_ resultsets, not both.
+         * These values have been tweaked to probe for performance issues.
          */
-        int resultSetBatchSize = 1;
-        int geneBatchSize = 1;
+        int resultSetBatchSize = 50;
+        int geneBatchSize = 50;
 
         if ( resultSetsNeeded.size() > geneIds.size() ) {
+            resultSetBatchSize = ( int ) Math.min( 500, resultSetsNeeded.size() );
             log.info( "Batching by result sets (" + resultSetsNeeded.size() + " resultSets); " + geneIds.size()
-                    + " genes." );
-            resultSetBatchSize = 100;
+                    + " genes; batch size=" + resultSetBatchSize );
+
         } else {
-            log.info( "Batching by genes (" + geneIds.size() + " genes); " + resultSetsNeeded.size() + " resultSets." );
-            geneBatchSize = 100;
+            geneBatchSize = ( int ) Math.min( 200, geneIds.size() );
+            log.info( "Batching by genes (" + geneIds.size() + " genes); " + resultSetsNeeded.size()
+                    + " resultSets; batch size=" + geneBatchSize );
         }
 
         final int numResultSetBatches = ( int ) Math.ceil( resultSetsNeeded.size() / resultSetBatchSize );
@@ -470,6 +477,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         int numResultSetBatchesDone = 0;
 
+        // Iterate over batches of resultSets
         for ( Collection<Long> resultSetIdBatch : new BatchIterator<Long>( resultSetsNeeded, resultSetBatchSize ) ) {
 
             if ( log.isDebugEnabled() )
@@ -484,17 +492,20 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                     resultSetIds, resultSetIdsToArrayDesignsUsed, resultSetIdBatch );
 
             queryObject.setParameterList( "rs_ids", resultSetIdBatch );
+
             int numGeneBatchesDone = 0;
             final int numGeneBatches = ( int ) Math.ceil( cs2GeneIdMap.size() / geneBatchSize );
 
             StopWatch innerQt = new StopWatch();
+
+            // iterate over batches of probes (genes)
             for ( Collection<Long> probeBatch : new BatchIterator<Long>( cs2GeneIdMap.keySet(), geneBatchSize ) ) {
 
                 if ( log.isDebugEnabled() )
                     log.debug( "Starting batch of probes: "
                             + StringUtils.abbreviate( StringUtils.join( probeBatch, "," ), 100 ) );
 
-                // would it help to sort the probeBatch
+                // would it help to sort the probeBatch/
                 List<Long> pbL = new Vector<Long>( probeBatch );
                 Collections.sort( pbL );
 
@@ -503,9 +514,10 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 innerQt.start();
                 List<?> queryResult = queryObject.list();
                 innerQt.stop();
+
                 if ( innerQt.getTime() > 1000 ) {
                     // show the actual query with params.
-                    log.info( "Query was slow: "
+                    log.info( "Query time: "
                             + innerQt.getTime()
                             + "ms:\n "
                             + queryObject.getQueryString().replace( ":probe_ids", StringUtils.join( probeBatch, "," ) )
@@ -513,58 +525,28 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 }
                 innerQt.reset();
 
-                // Get probe result with the best pValue, in the give result set.
+                /*
+                 * Each query tuple are the probe, result, resultsSet, qvalue, pvalue.
+                 */
                 for ( Object o : queryResult ) {
-                    Object[] row = ( Object[] ) o;
-                    Long probeId = ( ( BigInteger ) row[0] ).longValue();
-                    Long resultId = ( ( BigInteger ) row[1] ).longValue();
-                    Long resultSetId = ( ( BigInteger ) row[2] ).longValue();
-                    Double correctedPvalue = ( Double ) row[3];
-                    Double pvalue = ( Double ) row[4];
-
-                    if ( pvalue == null || correctedPvalue == null ) continue;
-
-                    if ( !resultsFromDb.containsKey( resultSetId ) ) {
-                        resultsFromDb.put( resultSetId, new HashMap<Long, DiffExprGeneSearchResult>() );
-                    }
-
-                    assert cs2GeneIdMap.containsKey( probeId );
-
-                    /*
-                     * This is a hack to mimic the effect of storing only 'good' results. FIXME this can be deleted if
-                     * we store only 'good' results.
-                     */
-                    if ( correctedPvalue > CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
-                        continue;
-                    }
-
-                    for ( Long geneId : cs2GeneIdMap.get( probeId ) ) {
-                        /*
-                         * FIXME We might want to skip probes that have more than one gene.
-                         */
-                        processDiffExResultHit( resultsFromDb.get( resultSetId ), resultSetId, geneId, resultId,
-                                correctedPvalue, pvalue );
-                    }
-
-                    if ( log.isDebugEnabled() )
-                        log.debug( "resultset=" + resultSetId + " probe=" + probeId + " qval="
-                                + String.format( "%.2g", correctedPvalue ) );
-                    numResults++;
+                    numResults += processResultTuple( o, resultsFromDb, cs2GeneIdMap );
                 }
 
                 if ( timer.getTime() > 5000 && log.isInfoEnabled() ) {
-                    log.info( "Fetched DiffEx " + numResults + " results so far. " + numResultSetBatchesDone + "/"
-                            + numResultSetBatches + " resultset batches completed. " + numGeneBatchesDone + "/"
-                            + numGeneBatches + " gene batches done." );
+                    log.info( "Batch time: " + timer.getTime() + "ms; Fetched DiffEx " + numResults
+                            + " results so far. " + numResultSetBatchesDone + "/" + numResultSetBatches
+                            + " resultset batches completed. " + numGeneBatchesDone + "/" + numGeneBatches
+                            + " gene batches done." );
                     timer.reset();
                     timer.start();
                 }
 
                 numGeneBatchesDone++;
 
-                timeForFillingNonSig += fillNonSignificant( pbL, resultSetIds, resultSetIdsToArrayDesignsUsed,
-                        resultsFromDb, resultSetIdBatch, cs2GeneIdMap, session );
-
+                if ( CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX < 1.0 ) {
+                    timeForFillingNonSig += fillNonSignificant( pbL, resultSetIds, resultSetIdsToArrayDesignsUsed,
+                            resultsFromDb, resultSetIdBatch, cs2GeneIdMap, session );
+                }
             }// over probes.
 
             numResultSetBatchesDone++;
@@ -575,7 +557,9 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             log.info( "Fetching DiffEx from DB took total of " + timer.getTime() + " ms : geneIds="
                     + StringUtils.abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
                     + StringUtils.abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
-            log.info( "Filling in non-significant values: " + timeForFillingNonSig + "ms in total" );
+            if ( timeForFillingNonSig > 100 ) {
+                log.info( "Filling in non-significant values: " + timeForFillingNonSig + "ms in total" );
+            }
         }
 
         // Add the DB results to the cached results.
@@ -591,6 +575,55 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         }
 
         return results;
+    }
+
+    /**
+     * @param resultRow
+     * @param resultsFromDb
+     * @param cs2GeneIdMap
+     * @param numResults
+     * @return how many results were added. Either 1 or 0.
+     */
+    private int processResultTuple( Object resultRow, Map<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb,
+            Map<Long, Collection<Long>> cs2GeneIdMap ) {
+        Object[] row = ( Object[] ) resultRow;
+        Long probeId = ( ( BigInteger ) row[0] ).longValue();
+        Long resultId = ( ( BigInteger ) row[1] ).longValue();
+        Long resultSetId = ( ( BigInteger ) row[2] ).longValue();
+        Double correctedPvalue = ( Double ) row[3];
+        Double pvalue = ( Double ) row[4];
+
+        if ( pvalue == null || correctedPvalue == null ) {
+            return 0;
+        }
+
+        if ( !resultsFromDb.containsKey( resultSetId ) ) {
+            resultsFromDb.put( resultSetId, new HashMap<Long, DiffExprGeneSearchResult>() );
+        }
+
+        assert cs2GeneIdMap.containsKey( probeId );
+
+        /*
+         * This is a hack to mimic the effect of storing only 'good' results. FIXME this can be deleted if we store only
+         * 'good' results.
+         */
+        if ( correctedPvalue > CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
+            return 0;
+        }
+
+        for ( Long geneId : cs2GeneIdMap.get( probeId ) ) {
+            /*
+             * FIXME We might want to skip probes that have more than one gene.
+             */
+            processDiffExResultHit( resultsFromDb.get( resultSetId ), resultSetId, geneId, resultId, correctedPvalue,
+                    pvalue );
+        }
+
+        if ( log.isDebugEnabled() )
+            log.debug( "resultset=" + resultSetId + " probe=" + probeId + " qval="
+                    + String.format( "%.2g", correctedPvalue ) );
+
+        return 1;
     }
 
     /*
@@ -833,24 +866,58 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      * )
      */
     @Override
-    public Collection<? extends DifferentialExpressionAnalysisResult> loadEagerContrasts( Collection<Long> ids ) {
-        final String queryString = "from DifferentialExpressionAnalysisResultImpl dea left join fetch dea.contrasts where dea.id in (:ids)";
+    public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids ) {
+        // this is too slow.
+        // final String queryString =
+        // "from DifferentialExpressionAnalysisResultImpl dea left join fetch dea.contrasts where dea.id in (:ids)";
 
-        Collection<? extends DifferentialExpressionAnalysisResult> probeResults = new HashSet<DifferentialExpressionAnalysisResult>();
+        final String queryString = "SELECT DISTINCT c.ID, c.LOG_FOLD_CHANGE, c.FACTOR_VALUE_FK, c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, c.PVALUE from CONTRAST_RESULT c"
+                + " WHERE c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK IN (:ids)  ";
+
+        Map<Long, ContrastsValueObject> probeResults = new HashMap<Long, ContrastsValueObject>();
 
         if ( ids.isEmpty() ) {
             return probeResults;
         }
 
-        int BATCH_SIZE = 1000; // previously: 500.
+        SQLQuery query = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
+
+        int BATCH_SIZE = 2000; // previously: 500, then 1000. New optimized query is plenty fast.
         StopWatch timer = new StopWatch();
         for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
             timer.reset();
             timer.start();
-            probeResults.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
+
+            query.setParameterList( "ids", batch );
+
+            List<?> batchR = query.list();
+
+            for ( Object o : batchR ) {
+                Object[] ol = ( Object[] ) o;
+
+                Long resultId = ( ( BigInteger ) ol[3] ).longValue();
+
+                if ( !probeResults.containsKey( resultId ) ) {
+                    probeResults.put( resultId, new ContrastsValueObject( resultId ) );
+                }
+
+                ContrastsValueObject cvo = probeResults.get( resultId );
+
+                Long contrastId = ( ( BigInteger ) ol[0] ).longValue();
+
+                Double logFoldChange = ol[1] == null ? null : ( Double ) ol[1];
+
+                Long factorValueId = ol[2] == null ? null : ( ( BigInteger ) ol[2] ).longValue();
+
+                Double pvalue = ol[4] == null ? null : ( Double ) ol[4];
+
+                cvo.addContrast( contrastId, factorValueId, logFoldChange, pvalue );
+
+            }
+
             if ( timer.getTime() > 1000 ) {
-                log.info( "Fetch " + batch.size() + "/" + ids.size() + " results with contrasts: " + timer.getTime()
-                        + "ms; query was\n " + NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
+                log.info( "Fetch " + batch.size() + " results with contrasts: " + timer.getTime() + "ms; query was\n "
+                        + queryString.replace( ":ids", StringUtils.join( batch, "," ) ) );
             }
         }
 
@@ -1035,6 +1102,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     }
 
     /**
+     * Get results that are already in the cache.
+     * 
      * @param resultSetIds
      * @param geneIds
      * @return
@@ -1044,8 +1113,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         Map<Long, Collection<Long>> foundInCache = new HashMap<Long, Collection<Long>>();
 
+        // for debugging ... disable cache.
         boolean useCache = true;
-
         if ( !useCache ) {
             log.warn( "Cache is disabled" );
             return foundInCache;
@@ -1053,6 +1122,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         StopWatch timer = new StopWatch();
         timer.start();
+        int totalFound = 0;
         for ( Long r : resultSetIds ) {
 
             Collection<DiffExprGeneSearchResult> cached = differentialExpressionResultCache.get( r, geneIds );
@@ -1068,12 +1138,13 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
                 results.get( r ).put( result.getGeneId(), result );
                 foundInCache.get( r ).add( result.getGeneId() );
+                totalFound++;
             }
 
         }
 
-        if ( timer.getTime() > 100 ) {
-            log.info( "Fill results from cache: " + timer.getTime() + "ms" );
+        if ( timer.getTime() > 100 && totalFound > 0 ) {
+            log.info( "Fill " + totalFound + " results from cache: " + timer.getTime() + "ms" );
         }
 
         return foundInCache;
@@ -1153,34 +1224,35 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     }
 
     /**
-     * @param results map of gene id to result.
+     * @param results map of gene id to result, which the result gets added to.
      * @param resultSetId
      * @param geneId
-     * @param probeAnalysisId
+     * @param resultId the specific DiffernetialExpressionAnalysisResult, corresponds to an entry for one probe in the
+     *        resultset
      * @param correctedPvalue
      * @param uncorrectedPvalue
      */
     private void processDiffExResultHit( Map<Long, DiffExprGeneSearchResult> results, Long resultSetId, Long geneId,
-            Long probeAnalysisId, Double correctedPvalue, Double uncorrectedPvalue ) {
+            Long resultId, Double correctedPvalue, Double uncorrectedPvalue ) {
 
         assert correctedPvalue != null;
         DiffExprGeneSearchResult r = results.get( geneId );
 
         if ( r == null ) { // first encounter
             r = new DiffExprGeneSearchResult( resultSetId, geneId );
-            r.setResultId( probeAnalysisId );
+            r.setResultId( resultId );
             r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
 
-            // FIXME we may want to make this always true.
-            if ( correctedPvalue < CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
+            if ( correctedPvalue <= CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
+                // This check is only useful if we are only storing 'significant' results.
                 r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
             }
             r.setCorrectedPvalue( correctedPvalue );
             r.setPvalue( uncorrectedPvalue );
             results.put( geneId, r );
         } else if ( r.getCorrectedPvalue() == null || r.getCorrectedPvalue() > correctedPvalue ) {
-            // replace
-            r.setResultId( probeAnalysisId.longValue() ); // note this changes the hashcode of r.
+            // replace with the better value FIXME we might consider this too anticonservative.
+            r.setResultId( resultId.longValue() ); // note this changes the hashcode of r.
             r.setCorrectedPvalue( correctedPvalue );
             r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
             r.setPvalue( uncorrectedPvalue );
