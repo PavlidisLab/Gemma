@@ -178,7 +178,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
       _handleFail : function(error) {
          this.fireEvent("visualizationLoaded");
-         console.log(error);
+       //  console.log(error);
          Ext.DomHelper.overwrite(this.applyToParam, {
                html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, there was an error performing your search: ' + error
             });

@@ -293,7 +293,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 	},
 	updateRenderingTargets: function(){
 		var i;
-		console.log(this.tips);
+	//	console.log(this.tips);
 		for (i = 0; i < this.tips.length; i++) {
 			var tip = this.tips[i];
 			tip.realTarget.on('render', function(){
