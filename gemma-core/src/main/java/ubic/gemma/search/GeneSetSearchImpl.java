@@ -129,7 +129,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( goTerm == null ) {
             return null;
         }
-        //if taxon is null, this returns a geneset with genes from different taxons
+        // if taxon is null, this returns a geneset with genes from different taxons
         return goTermToGeneSet( goTerm, taxon );
     }
 
@@ -150,7 +150,8 @@ public class GeneSetSearchImpl implements GeneSetSearch {
      * java.lang.Integer)
      */
     @Override
-    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed, Integer maxGeneSetSize ) {
+    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed,
+            Integer maxGeneSetSize ) {
         Collection<? extends OntologyResource> matches = this.geneOntologyService.findTerm( StringUtils
                 .strip( goTermName ) );
 
@@ -160,16 +161,16 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
         for ( OntologyResource t : matches ) {
             GeneSet converted = goTermToGeneSet( t, taxon, maxGeneSetSize );
-            //converted will be null if its size is more than maxGeneSetSize
+            // converted will be null if its size is more than maxGeneSetSize
             if ( converted != null ) {
-            	results.add( converted );
+                results.add( converted );
 
-            	if ( maxGoTermsProcessed != null ) {
-            		termsProcessed++;
-            		if ( termsProcessed > maxGoTermsProcessed ) {
-            			return results;
-            		}
-            	}
+                if ( maxGoTermsProcessed != null ) {
+                    termsProcessed++;
+                    if ( termsProcessed > maxGoTermsProcessed ) {
+                        return results;
+                    }
+                }
             }
         }
 
@@ -190,22 +191,24 @@ public class GeneSetSearchImpl implements GeneSetSearch {
                 .searchOntologyForPhenotypes( StringUtils.strip( phenotypeQuery ), null );
 
         Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
-        
+
         StopWatch timer = new StopWatch();
         timer.start();
-        log.info(" Converting CharacteristicValueObjects collection(size:"+phenotypes.size()+") into GeneSets for  phenotype query "+ phenotypeQuery);
-        int convertedCount=0;
+        log.debug( " Converting CharacteristicValueObjects collection(size:" + phenotypes.size()
+                + ") into GeneSets for  phenotype query " + phenotypeQuery );
+        int convertedCount = 0;
         for ( CharacteristicValueObject cvo : phenotypes ) {
             GeneSetValueObject converted = phenotypeAssociationToGeneSet( cvo, taxon );
-            if ( converted != null ){            	
-            	convertedCount++;
-            	results.add( converted );
+            if ( converted != null ) {
+                convertedCount++;
+                results.add( converted );
             }
-        } 
-        log.info("added "+convertedCount+" results");
+        }
+        log.info( "added " + convertedCount + " results" );
 
-        if (timer.getTime()>1000){
-        	log.info("done Converting CharacteristicValueObjects into GeneSets for  phenotype query "+ phenotypeQuery+" this took "+timer.getTime()+" ms");        	
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Converted CharacteristicValueObjects collection(size:" + phenotypes.size()
+                    + ") into GeneSets for  phenotype query " + phenotypeQuery + " in " + timer.getTime() + "ms" );
         }
         return results;
 
@@ -231,11 +234,11 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return geneSetService.findByName( StringUtils.strip( name ), taxon );
     }
 
-    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon){
-    	return goTermToGeneSet( term, taxon, null); 
-    	
+    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon ) {
+        return goTermToGeneSet( term, taxon, null );
+
     }
-    
+
     /**
      * Convert a GO term to a 'GeneSet', including genes from all child terms.
      */
@@ -257,14 +260,14 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             /*
              * This is a slow step. We might want to defer it. Getting a count would be faster
              */
-            if (taxon!= null){
-            	genes.addAll( this.gene2GoService.findByGOTerm( goId, taxon ) );
-            } else{
-            	genes.addAll(this.gene2GoService.findByGOTerm( goId) );
+            if ( taxon != null ) {
+                genes.addAll( this.gene2GoService.findByGOTerm( goId, taxon ) );
+            } else {
+                genes.addAll( this.gene2GoService.findByGOTerm( goId ) );
             }
-            
-            if (maxGeneSetSize!=null && genes.size()>maxGeneSetSize){
-            	return null;            	
+
+            if ( maxGeneSetSize != null && genes.size() > maxGeneSetSize ) {
+                return null;
             }
         }
 
@@ -301,9 +304,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         transientGeneSet.setName( uri2phenoID( term ) );
         transientGeneSet.setDescription( term.getValue() );
         transientGeneSet.setGeneIds( geneIds );
-        if (!gvos.isEmpty()){
-        	transientGeneSet.setTaxonId(gvos.iterator().next().getTaxonId());
-        	transientGeneSet.setTaxonName(gvos.iterator().next().getTaxonCommonName());
+        if ( !gvos.isEmpty() ) {
+            transientGeneSet.setTaxonId( gvos.iterator().next().getTaxonId() );
+            transientGeneSet.setTaxonName( gvos.iterator().next().getTaxonCommonName() );
         }
 
         return transientGeneSet;
