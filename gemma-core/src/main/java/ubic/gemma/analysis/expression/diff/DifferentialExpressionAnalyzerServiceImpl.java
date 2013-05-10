@@ -786,7 +786,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         int i = trimAboveThreshold( results, workingThreshold );
 
         /*
-         * We want to have a minimum number so we always have something to look at. FIXME should there be a maximum?
+         * We want to have a minimum number so we always have something to look at.
          */
         if ( i < MINIMUM_NUMBER_OF_HITS_TO_SAVE && results.size() > MINIMUM_NUMBER_OF_HITS_TO_SAVE ) {
             List<DifferentialExpressionAnalysisResult> rl = new ArrayList<DifferentialExpressionAnalysisResult>(
@@ -808,6 +808,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         log.info( "Retained " + i + " results meeting qvalue of " + workingThreshold );
+
+        /*
+         * If we set a maximum value, it has to be some fraction of the total genes, at which point the results should
+         * be discarded as too non-specific. We can't throw an exception, as there might be other factors in the same
+         * analysis that are okay.
+         */
 
     }
 
