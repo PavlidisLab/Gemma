@@ -46,7 +46,8 @@ public class AclEntryAfterInvocationQuietProvider extends
         try {
             return super.decide( authentication, object, config, returnedObject );
         } catch ( AccessDeniedException e ) {
-            log.warn( e + ": returning null" );
+            // This is expected when user is anonymous, etc.
+            if ( log.isDebugEnabled() ) log.debug( e + ": returning null" );
             return null;
         }
     }
