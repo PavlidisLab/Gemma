@@ -40,7 +40,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
@@ -72,9 +71,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         ProcessedExpressionDataVectorCreateHelperService {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateHelperServiceImpl.class );
-
-    @Autowired
-    private AuditEventService auditEventService;
 
     @Autowired
     private ExpressionExperimentService eeService = null;
@@ -201,6 +197,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
      * @param processedVectors
      * @return ExpressionDataDoubleMatrix
      */
+    @Override
     public ExpressionDataDoubleMatrix computeIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
