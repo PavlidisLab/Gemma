@@ -440,7 +440,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
         return "rs:" + resultSetId + "fv:" + factorValueId;
     }
 
-    /*
+    /**
      * Map of Condition IDs to map of Genes to the Cell holding the information for the results for that Gene x
      * Condition combination.
      */
@@ -542,14 +542,16 @@ public class DifferentialExpressionGenesConditionsValueObject {
     }
 
     /**
-     * @return
+     * @return Map of Condition IDs to map of Genes to the Cell holding the information for the results for that Gene x
+     *         Condition combination.
      */
     public Map<String, Map<Long, Cell>> getCellData() {
         return cellData;
     }
 
     /**
-     * Mark data as available, but not significant (so details will be missing)
+     * Mark data as available, but not significant (so details will be missing). This is only used if we are not storing
+     * all the results. See bug 3365 for discussion.
      * 
      * @param geneId
      * @param resultSetId
