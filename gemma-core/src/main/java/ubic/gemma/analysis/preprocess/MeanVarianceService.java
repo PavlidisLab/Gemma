@@ -14,7 +14,10 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Responsible for returning the coordinates of the experiment's Mean-Variance relationship.
@@ -30,7 +33,8 @@ public interface MeanVarianceService {
      * @param eeId
      * @return MeanVarianceRelation
      */
-    public abstract MeanVarianceRelation findOrCreate( Long eeId );
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    public abstract MeanVarianceRelation findOrCreate( ExpressionExperiment ee );
 
     /**
      * Retrieve (and if necessary compute) the mean-variance relationship for the experiment
@@ -39,11 +43,12 @@ public interface MeanVarianceService {
      * @param forceRecompute
      * @return MeanVarianceRelation
      */
-    public abstract MeanVarianceRelation create( Long eeId, boolean forceRecompute );
+    @Secured({ "GROUP_USER" })
+    public abstract MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute );
 
     /**
      * @return true if the specified experiment already has a MeanVarianceRelation computed
      */
-    public abstract boolean hasMeanVariance( Long eeId );
+    public abstract boolean hasMeanVariance( ExpressionExperiment ee );
 
 }

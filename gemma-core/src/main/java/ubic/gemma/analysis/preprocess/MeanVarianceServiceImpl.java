@@ -19,7 +19,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.MeanVarianceEstimator;
@@ -27,7 +27,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
@@ -38,11 +37,17 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
  * @author ptan
  * @version $Id$
  */
-@Service
+@Component
 public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     private static ByteArrayConverter bac = new ByteArrayConverter();
     private static Log log = LogFactory.getLog( MeanVarianceServiceImpl.class );
+
+    @Autowired
+    private MeanVarianceServiceHelper meanVarianceServiceHelper;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * @param matrix on which mean variance relation is computed with
@@ -69,32 +74,15 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         return mvr;
     }
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateHelperService helperService;
-
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.preprocess.MeanVarianceService#create(Long, boolean)
+     * @see ubic.gemma.analysis.preprocess.MeanVarianceService#create(ExpressionExperiment, boolean)
      */
     @Override
-    public MeanVarianceRelation create( Long eeId, boolean forceRecompute ) {
+    public MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute ) {
 
         log.info( "Starting Mean-variance computation" );
-
-        if ( eeId == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + eeId );
-            return null;
-        }
 
         MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
 
@@ -108,48 +96,35 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
                 throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
             }
 
-            Collection<ProcessedExpressionDataVector> processedVectors = expressionExperimentService
-                    .getProcessedDataVectors( ee );
-            ExpressionDataDoubleMatrix intensities = helperService.computeIntensities( ee, processedVectors );
+            ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
 
             mvr = getMeanVariance( intensities );
             ee.setMeanVarianceRelation( mvr );
-            expressionExperimentService.update( ee );
         }
 
         log.info( "Mean-variance computation is complete" );
 
         return mvr;
+
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.preprocess.MeanVarianceService#findOrCreate(Long)
+     * @see ubic.gemma.analysis.preprocess.MeanVarianceService#findOrCreate(ExpressionExperiment)
      */
     @Override
-    public MeanVarianceRelation findOrCreate( Long eeId ) {
-        return create( eeId, false );
+    public MeanVarianceRelation findOrCreate( ExpressionExperiment ee ) {
+        return create( ee, false );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.preprocess.MeanVarianceService#hasMeanVariance(Long)
+     * @see ubic.gemma.analysis.preprocess.MeanVarianceService#hasMeanVariance(ExpressionExperiment)
      */
     @Override
-    public boolean hasMeanVariance( Long eeId ) {
-        if ( eeId == null ) {
-            log.warn( "No id!" );
-            return false;
-        }
-
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + eeId );
-            return false;
-        }
-
+    public boolean hasMeanVariance( ExpressionExperiment ee ) {
         return ee.getMeanVarianceRelation() != null;
     }
 }

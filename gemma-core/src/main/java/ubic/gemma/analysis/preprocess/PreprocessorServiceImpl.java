@@ -119,7 +119,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             ee = expressionExperimentService.thawLite( ee );
 
             processForSampleCorrelation( ee );
-            processForMeanVarianceRelation( ee.getId() );
+            processForMeanVarianceRelation( ee );
 
             processForPca( ee );
 
@@ -187,8 +187,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * 
      * @param eeId
      */
-    private void processForMeanVarianceRelation( Long eeId ) {
-        meanVarianceService.findOrCreate( eeId );
+    private void processForMeanVarianceRelation( ExpressionExperiment ee ) {
+        meanVarianceService.findOrCreate( ee );
     }
 
     /**
@@ -217,7 +217,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 removeInvalidatedData( ee );
                 processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
                 processForSampleCorrelation( ee );
-                processForMeanVarianceRelation( ee.getId() );
+                processForMeanVarianceRelation( ee );
                 processForPca( ee );
                 // analyzerService.deleteAnalyses( ee ); ??
             } catch ( Exception e ) {

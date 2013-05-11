@@ -115,7 +115,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         des = aas.iterator().next();
         assertEquals( TechnologyType.TWOCOLOR, des.getTechnologyType() );
 
-        MeanVarianceRelation mvr = meanVarianceService.create( ee.getId(), true );
+        MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
         // convert byte[] to array[]
         // warning: order may have changed
@@ -168,19 +168,16 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Collection<ArrayDesign> aas = eeService.getArrayDesignsUsed( ee );
         assertEquals( 1, aas.size() );
         ArrayDesign des = aas.iterator().next();
-        log.info( "des Before=" + des.getTechnologyType() );
         des.setTechnologyType( TechnologyType.ONECOLOR );
         arrayDesignService.update( des );
-        log.info( "tech type=" + des.getTechnologyType() );
 
         // check that ArrayDesign is the right TechnologyType
         aas = eeService.getArrayDesignsUsed( ee );
         assertEquals( 1, aas.size() );
         des = aas.iterator().next();
-        log.info( "des After=" + des.getTechnologyType() );
         assertEquals( TechnologyType.ONECOLOR, des.getTechnologyType() );
 
-        MeanVarianceRelation mvr = meanVarianceService.create( ee.getId(), true );
+        MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
         // convert byte[] to array[]
         // warning: order may have changed
@@ -267,7 +264,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         assertNotNull( updatedee.getId() );
 
-        MeanVarianceRelation mvr = meanVarianceService.create( updatedee.getId(), true );
+        MeanVarianceRelation mvr = meanVarianceService.create( updatedee, true );
 
         // convert byte[] to array[]
         // warning: order may have changed

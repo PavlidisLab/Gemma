@@ -198,7 +198,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
      * @return ExpressionDataDoubleMatrix
      */
     @Override
-    public ExpressionDataDoubleMatrix computeIntensities( ExpressionExperiment ee,
+    public ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
@@ -264,7 +264,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
 
-        ExpressionDataDoubleMatrix intensities = computeIntensities( ee, processedVectors );
+        ExpressionDataDoubleMatrix intensities = loadIntensities( ee, processedVectors );
 
         Collection<ProcessedExpressionDataVector> updatedVectors = computeRanks( processedVectors, intensities );
         if ( updatedVectors == null ) {

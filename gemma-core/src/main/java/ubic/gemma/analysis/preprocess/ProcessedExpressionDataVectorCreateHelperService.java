@@ -49,7 +49,7 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
      * @param processedVectors
      * @return intensities See {@link ExpressionDataMatrixBuilder#getIntensity()}
      */
-    public ExpressionDataDoubleMatrix computeIntensities( ExpressionExperiment ee,
+    public ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors );
 
     /**

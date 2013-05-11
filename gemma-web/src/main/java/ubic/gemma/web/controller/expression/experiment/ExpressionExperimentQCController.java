@@ -1206,7 +1206,13 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        MeanVarianceRelation mvr = meanVarianceService.findOrCreate( id );
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            log.warn( "Could not load experiment with id " + id );
+            return null;
+        }
+        
+        MeanVarianceRelation mvr = meanVarianceService.findOrCreate( ee );
 
         if ( mvr == null ) {
             return null;
