@@ -20,6 +20,7 @@
 package ubic.gemma.web.remote;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,19 +37,20 @@ import ubic.gemma.testing.BaseSpringWebTest;
 public class AuditControllerTest extends BaseSpringWebTest {
 
     @Autowired
-    AuditController auditController;
+    private AuditController auditController;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Test
     public void testAddUpdateEvent() {
         ExpressionExperiment e = this.getTestPersistentCompleteExpressionExperiment( false );
         auditController.addAuditEvent( new EntityDelegator( e ), "CommentedEvent", "foo", "bar" );
 
-        assertEquals( CommentedEventImpl.class,
-                expressionExperimentService.thawLite( expressionExperimentService.load( e.getId() ) ).getAuditTrail()
-                        .getLast().getEventType().getClass() );
+        e = expressionExperimentService.load( e.getId() );
+        assertNotNull( e );
+        assertEquals( CommentedEventImpl.class, expressionExperimentService.thawLite( e ).getAuditTrail().getLast()
+                .getEventType().getClass() );
 
     }
 

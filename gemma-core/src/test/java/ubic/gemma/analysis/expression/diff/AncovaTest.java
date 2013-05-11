@@ -62,11 +62,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
     @Test
     public void testAncovaTwoway() throws Exception {
 
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
-
         configureMocks();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -138,10 +133,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      */
     @Test
     public void testAncovaCovariate() throws Exception {
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
 
         configureMocks();
 
@@ -240,11 +231,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      */
     @Test
     public void testAncovaTriLevel() throws Exception {
-
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
 
         configureMocks();
 
@@ -370,11 +356,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
     @Test
     public void testAncovaWithInteraction() throws Exception {
 
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
-
         configureMocks();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -460,6 +441,70 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         }
         assertTrue( foundInteractions );
         assertTrue( foundContrast );
+    }
+
+    /**
+     * With a continuous covariate only
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testAncovaContinuousCovariate() throws Exception {
+
+        configureMocks();
+
+        /*
+         * Add a continuous factor
+         */
+        ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
+        experimentalFactorC.setName( "confabulatiliationity" );
+        experimentalFactorC.setId( 5399424551L );
+        experimentalFactorC.setType( FactorType.CONTINUOUS );
+        for ( int i = 1; i <= 8; i++ ) {
+
+            FactorValue factorValueC = FactorValue.Factory.newInstance();
+            factorValueC.setId( 2000L + i );
+
+            factorValueC.setMeasurement( Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i,
+                    PrimitiveType.DOUBLE ) );
+
+            factorValueC.setExperimentalFactor( experimentalFactorC );
+
+            assert !biomaterials.get( i - 1 ).getFactorValues().contains( factorValueC );
+            super.biomaterials.get( i - 1 ).getFactorValues().add( factorValueC );
+
+            experimentalFactorC.getFactorValues().add( factorValueC );
+        }
+
+        expressionExperiment.getExperimentalDesign().getExperimentalFactors().clear(); // leave off the others.
+
+        expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+        config.setQvalueThreshold( null );
+
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+
+        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
+
+        assertNotNull( expressionAnalysis );
+
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+
+        assertEquals( 1, resultSets.size() );
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+
+            Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactors();
+
+            assertEquals( 1, factors.size() );
+
+            assertEquals( 100, resultSet.getResults().size() );
+            for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+                assertNotNull( r.getCorrectedPvalue() );
+            }
+        }
     }
 
     /*
