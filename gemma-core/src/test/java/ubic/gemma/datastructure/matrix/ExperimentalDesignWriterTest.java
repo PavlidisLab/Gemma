@@ -25,6 +25,7 @@ import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.Collection;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +42,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
+    private ExpressionExperiment ee = null;
+
     @Autowired
     private ExpressionExperimentService eeService = null;
 
     @Autowired
     private GeoService geoService;
-
-    ExpressionExperiment ee = null;
 
     private String shortName = "GSE1611";
 
@@ -67,6 +68,13 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         }
         ee = eeService.thaw( ee );
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if ( ee != null ) {
+            this.eeService.delete( ee );
+        }
     }
 
     /**
