@@ -45,6 +45,7 @@ public class AuditControllerTest extends BaseSpringWebTest {
     @Test
     public void testAddUpdateEvent() {
         ExpressionExperiment e = this.getTestPersistentCompleteExpressionExperiment( false );
+
         auditController.addAuditEvent( new EntityDelegator( e ), "CommentedEvent", "foo", "bar" );
 
         e = expressionExperimentService.load( e.getId() );
