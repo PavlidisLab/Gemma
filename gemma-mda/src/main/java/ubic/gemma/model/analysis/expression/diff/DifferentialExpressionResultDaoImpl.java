@@ -33,7 +33,6 @@ import org.springframework.stereotype.Repository;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.analysis.expression.diff.ContrastsValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;

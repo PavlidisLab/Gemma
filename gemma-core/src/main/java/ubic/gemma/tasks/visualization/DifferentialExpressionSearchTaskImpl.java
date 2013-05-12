@@ -25,8 +25,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
-import ubic.gemma.analysis.expression.diff.ContrastVO;
-import ubic.gemma.analysis.expression.diff.ContrastsValueObject;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;

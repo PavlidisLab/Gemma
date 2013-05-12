@@ -26,6 +26,9 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringWebTest;
@@ -50,8 +53,15 @@ public class AuditControllerTest extends BaseSpringWebTest {
 
         e = expressionExperimentService.load( e.getId() );
         assertNotNull( e );
-        assertEquals( CommentedEventImpl.class, expressionExperimentService.thawLite( e ).getAuditTrail().getLast()
-                .getEventType().getClass() );
+        e = expressionExperimentService.thawLite( e );
+        assertNotNull( e );
+        AuditTrail auditTrail = e.getAuditTrail();
+        assertNotNull( auditTrail );
+        AuditEvent lastEvent = auditTrail.getLast();
+        assertNotNull( lastEvent );
+        AuditEventType eventType = lastEvent.getEventType();
+        assertNotNull( eventType );
+        assertEquals( CommentedEventImpl.class, eventType.getClass() );
 
     }
 
