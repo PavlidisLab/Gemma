@@ -438,7 +438,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         }
 
         log.info( foundInCache.size() + "/" + resultSetIds.size()
-                + " resultsSets had at least some cached results; still need to query " + resultSetsNeeded );
+                + " resultsSets had at least some cached results; still need to query " + resultSetsNeeded.size() );
 
         assert !resultSetsNeeded.isEmpty();
 
@@ -514,7 +514,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 List<?> queryResult = queryObject.list();
                 innerQt.stop();
 
-                if ( innerQt.getTime() > 1000 ) {
+                if ( innerQt.getTime() > 2000 ) {
                     // show the actual query with params.
                     log.info( "Query time: "
                             + innerQt.getTime()
@@ -914,7 +914,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
             }
 
-            if ( timer.getTime() > 1000 ) {
+            if ( timer.getTime() > 2000 ) {
                 log.info( "Fetch " + batch.size() + " results with contrasts: " + timer.getTime() + "ms; query was\n "
                         + queryString.replace( ":ids", StringUtils.join( batch, "," ) ) );
             }
