@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -54,4 +55,18 @@ public class MeanVarianceServiceHelperImpl implements MeanVarianceServiceHelper 
 
         return helperService.loadIntensities( ee, processedVectors );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.MeanVarianceServiceHelper#createMeanVariance(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation)
+     */
+    @Override
+    public void createMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
+        ee.setMeanVarianceRelation( mvr );
+        expressionExperimentService.update( ee );
+    }
+
 }

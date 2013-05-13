@@ -1822,7 +1822,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         thawReferences( result );
-
+        thawMeanVariance( result );
+        
         if ( vectorsAlso ) {
             /*
              * Optional because this could be slow.

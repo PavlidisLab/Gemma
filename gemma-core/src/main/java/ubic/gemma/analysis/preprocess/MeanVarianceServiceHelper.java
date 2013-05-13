@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.preprocess;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -28,9 +29,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface MeanVarianceServiceHelper {
 
     /**
-     * 
      * @param ee
      * @return ExpressionDataDoubleMatrix of expression intensities
      */
     public abstract ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee );
+
+    /**
+     * @param ee
+     * @param mvr
+     */
+    public abstract void createMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr );
 }

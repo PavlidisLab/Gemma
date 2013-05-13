@@ -82,24 +82,27 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     @Override
     public MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute ) {
 
-        log.info( "Starting Mean-variance computation" );
+        log.info( "Starting mean-variance computation" );
 
-        MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
+        ExpressionExperiment updatedEe = expressionExperimentService.thawLiter( ee );
+        MeanVarianceRelation mvr = updatedEe.getMeanVarianceRelation();
 
-        if ( forceRecompute || mvr == null || mvr.getMeans().length == 0 ) {
+        if ( forceRecompute || mvr == null ) {
 
-            Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
+            log.info( " Recomputing mean-variance " );
+
+            Collection<QuantitationType> quantitationTypes = expressionExperimentService
+                    .getQuantitationTypes( updatedEe );
             Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
                     .getUsefulQuantitationTypes( quantitationTypes );
 
             if ( usefulQuantitationTypes.isEmpty() ) {
-                throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
+                throw new IllegalStateException( "No useful quantitation types for " + updatedEe.getShortName() );
             }
 
-            ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
-
+            ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( updatedEe );
             mvr = getMeanVariance( intensities );
-            ee.setMeanVarianceRelation( mvr );
+            meanVarianceServiceHelper.createMeanVariance( updatedEe, mvr );
         }
 
         log.info( "Mean-variance computation is complete" );
