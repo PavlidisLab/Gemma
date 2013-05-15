@@ -1211,7 +1211,7 @@ public class ExpressionExperimentQCController extends BaseController {
             log.warn( "Could not load experiment with id " + id );
             return null;
         }
-        
+
         MeanVarianceRelation mvr = meanVarianceService.findOrCreate( ee );
 
         if ( mvr == null ) {
@@ -1239,6 +1239,21 @@ public class ExpressionExperimentQCController extends BaseController {
         writeMeanVariance( os, mvr, size );
 
         return null;
+    }
+
+    /**
+     * Overrides XYLineAndShapeRenderer such that lines are drawn on top of points.
+     */
+    private class XYRegressionRenderer extends XYLineAndShapeRenderer {
+        private static final long serialVersionUID = 1L;
+
+        protected boolean isLinePass( int pass ) {
+            return pass == 1;
+        }
+
+        protected boolean isItemPass( int pass ) {
+            return pass == 0;
+        }
     }
 
     /**
@@ -1276,7 +1291,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 PlotOrientation.VERTICAL, false, false, false );
 
         // adjust colors and shapes
-        XYLineAndShapeRenderer renderer = ( XYLineAndShapeRenderer ) chart.getXYPlot().getRenderer();
+        XYRegressionRenderer renderer = new XYRegressionRenderer();
         renderer.setBasePaint( Color.white );
         int alpha = collection.getSeries( 0 ).getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
         renderer.setSeriesPaint( 0, new Color( 0, 0, 0, alpha ) );
@@ -1287,8 +1302,11 @@ public class ExpressionExperimentQCController extends BaseController {
         renderer.setSeriesLinesVisible( 0, false );
         renderer.setSeriesLinesVisible( 1, true );
         renderer.setSeriesShapesVisible( 1, false );
-        chart.getXYPlot().setRangeGridlinesVisible( false );
-        chart.getXYPlot().setDomainGridlinesVisible( false );
+
+        XYPlot plot = chart.getXYPlot();
+        plot.setRenderer( renderer );
+        plot.setRangeGridlinesVisible( false );
+        plot.setDomainGridlinesVisible( false );
 
         // adjust the chart domain and ranges
         double yRange = collection.getSeries( 0 ).getMaxY() - collection.getSeries( 0 ).getMinY();
