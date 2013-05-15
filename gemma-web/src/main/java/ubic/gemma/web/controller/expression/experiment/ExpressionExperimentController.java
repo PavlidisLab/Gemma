@@ -722,7 +722,7 @@ public class ExpressionExperimentController {
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
-        qc.setHasMeanVariance( true ); // compute mean-variance for older data as well
+        qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
         return qc.getQChtml();
     }
 
