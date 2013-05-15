@@ -56,7 +56,6 @@ Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCom
     };
 
     this.isTrimmedOnBackend = (searchResultsCytoscape.nonQueryGeneTrimmedValue > 0);
-    this.isTrimmedOnFrontEnd = false;
 
     /*
      Extra trimming will be done on the front end to the
@@ -90,7 +89,6 @@ Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCom
                 graph: fullGraph});
         }
     } else {
-        this.isTrimmedOnFrontEnd = true;
         graph = getTrimmedGraphData(maxEdgesLimit);
         this.graphSizeOptions.push({
             label: graph.trimStringency + ' (' + graph.size + " edges)",

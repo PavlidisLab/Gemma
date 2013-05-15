@@ -12,6 +12,7 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
     cytoscapeResultsUpToDate: false,
     coexSearchTimeout: 420000,
     stringency: null,
+    coexpressionPairs: [],
 
     initComponent: function () {
         this.searchParameters.stringency =
@@ -31,6 +32,10 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
     },
 
     getCoexpressionPairs: function () {
+        return this.coexpressionPairs;
+    },
+
+    getKnownGeneResults: function () {
         return this.searchResults.knownGeneResults;
     },
 
@@ -178,6 +183,11 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
                     Ext.getBody().unmask();
                     task.on('task-completed', function(results) {
                         me.searchResults = results;
+                        var combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(
+                            me.getKnownGeneResults(),
+                            me.getQueryGenesOnlyResults());
+                        me.coexpressionPairs = combinedData;
+
                         me.cytoscapeResultsUpToDate = false;
                         me.fireEvent('aftersearch');
                         me.fireEvent('search-results-ready', results);
@@ -196,42 +206,4 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend( Ext.util.Observable, {
             }
         );
     }
-
-/*    searchForCytoscapeData: function () {
-        var geneIdsSubset = Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery( this );
-
-        // Construct searchcommand
-        // to grab coexpression info for found genes
-        var coexpressionSearchCommand = {
-            geneIds : geneIdsSubset,
-            eeIds : this.searchCommandUsed.eeIds,
-            stringency : this.stringency,
-            forceProbeLevelSearch : false,
-            useMyDatasets : false,
-            queryGenesOnly : true,
-            taxonId : this.searchCommandUsed.taxonId,
-            eeSetName : null,
-            eeSetId : null
-        };
-
-        if (geneIdsSubset.length < 2) {
-            // There is a bug where if you can get a gene back in results but if you search for it by itself there are no results(PPP2R1A human)
-            this.cytoscapeSearchResults.knownGeneResults = [];
-            this.fireEvent('complete-search-results-ready', this.cytoscapeSearchResults, coexpressionSearchCommand);
-            return;
-        }
-
-        ExtCoexpressionSearchController.doSearchQuick2Complete (
-            coexpressionSearchCommand, this.searchCommandUsed.geneIds, {
-                callback: function (results) {
-                    this.cytoscapeSearchResults = results;
-                    this.cytoscapeResultsUpToDate = true;
-                    this.fireEvent('complete-search-results-ready', results, coexpressionSearchCommand);
-                }.createDelegate(this),
-                errorHandler: function (result) {
-                    this.fireEvent('search-error', result);
-                }.createDelegate(this),
-                timeout: this.coexSearchTimeout
-            });
-    }*/
 });

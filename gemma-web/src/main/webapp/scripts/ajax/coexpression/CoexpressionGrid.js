@@ -265,13 +265,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                 coexpressionGrid.hideBottomToolbar();
             }
 
-            var combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(
-                coexpressionGrid.observableSearchResults.getCoexpressionPairs(),
-                coexpressionGrid.observableSearchResults.getQueryGenesOnlyResults());
-
             var numQueryGenes = coexpressionGrid.observableSearchResults.getQueryGeneIds().length;
             coexpressionGrid.decideQueryColumn(numQueryGenes);
-            coexpressionGrid.loadData(combinedData, null);
+            coexpressionGrid.loadData(coexpressionGrid.observableSearchResults.getCoexpressionPairs(), null);
             coexpressionGrid.applyFilters();
         });
 
