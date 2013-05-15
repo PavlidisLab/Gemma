@@ -273,8 +273,8 @@ public class ExperimentQCTag extends TagSupport {
                     + "' height='"
                     + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
 
-            buf.append( "<li><a title=\"Download a file containing the data means and variances \" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeMeanVariance.html?id="
-                    + this.eeid + "&text=1\">Get data</a></li>" );
+            //buf.append( "<li><a title=\"Download a file containing the data means and variances \" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeMeanVariance.html?id="
+            //        + this.eeid + "&text=1\">Get data</a></li>" );
 
             buf.append( "</ul></td>" );
         } else {
