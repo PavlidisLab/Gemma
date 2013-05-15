@@ -196,8 +196,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 var geneTBar = new Gemma.VisualizationWidgetGeneSelectionToolbar({
                             eeId : eeId,
                             visPanel : viz,
-                            taxonId : experimentDetails.parentTaxonId,
-                            showRefresh : (isAdmin || this.editable)
+                            taxonId : experimentDetails.parentTaxonId
+                        //    showRefresh : (isAdmin || this.editable)
                         });
                 geneTBar.on('refreshVisualisation', function() {
                             viz.loadFromParam({

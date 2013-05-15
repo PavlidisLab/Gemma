@@ -556,10 +556,10 @@ ExpressionExperimentController.updateBasics = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateBasics', p0,
 			callback);
 };
-ExpressionExperimentController.clearFromCaches = function(p0, callback ) {
-    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
-            'clearFromCaches', p0, callback);
-};
+//ExpressionExperimentController.clearFromCaches = function(p0, callback ) {
+//    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
+//            'clearFromCaches', p0, callback);
+//};
 // ExpressionExperimentController.updateBioMaterialMapping = function(callback) {
 // dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 // 'updateBioMaterialMapping', callback);

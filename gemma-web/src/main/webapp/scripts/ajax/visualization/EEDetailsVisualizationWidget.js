@@ -231,31 +231,31 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 			border: false,
 			bodyStyle: 'background-color:transparent; color:grey; padding-left:5px'
 		});
-		if(this.showRefresh){
-			this.refreshButton = {
-				xtype : "button",
-				text: "Refresh",
-				icon: '/Gemma/images/icons/arrow_refresh_small.png',
-				tooltip: "Refresh the caches for this experiment",
-				handler:function(){
-					if(this.eeId && this.eeId > 0){
-						Ext.getBody().mask('Refreshing ...');
-						var callBackFunc = function( msg ){
-							Ext.getBody().unmask();
-							if( msg == null || msg == "" ){
-								this.fireEvent('refreshVisualisation');
-							}else{
-								Ext.Msg.alert( "Refresh failed: " + msg );
-							}
-						};
-						ExperimentalDesignController.clearDesignCaches( this.eeId, callBackFunc.createDelegate(this) );
-					}else{
-						Ext.Msg.alert('Missing experiment parameter.');
-					}
-				},
-				scope: this
-			};
-		}
+//		if(this.showRefresh){
+//			this.refreshButton = {
+//				xtype : "button",
+//				text: "Refresh",
+//				icon: '/Gemma/images/icons/arrow_refresh_small.png',
+//				tooltip: "Refresh the caches for this experiment",
+//				handler:function(){
+//					if(this.eeId && this.eeId > 0){
+//						Ext.getBody().mask('Refreshing ...');
+//						var callBackFunc = function( msg ){
+//							Ext.getBody().unmask();
+//							if( msg == null || msg == "" ){
+//								this.fireEvent('refreshVisualisation');
+//							}else{
+//								Ext.Msg.alert( "Refresh failed: " + msg );
+//							}
+//						};
+//						ExperimentalDesignController.clearDesignCaches( this.eeId, callBackFunc.createDelegate(this) );
+//					}else{
+//						Ext.Msg.alert('Missing experiment parameter.');
+//					}
+//				},
+//				scope: this
+//			};
+//		}
 		
 	},
 	afterRender: function(c, l){
@@ -265,10 +265,10 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 		this.add(this.clearBtn, this.vizBtn);
 		this.addButton(this.extraButtons);
 		this.add(this.tbarText);
-		if(this.showRefresh){
-			this.addFill();
-			this.add(this.refreshButton);
-		}
+//		if(this.showRefresh){
+//			this.addFill();
+//			this.add(this.refreshButton);
+//		}
 		
 	},	
 	launchGeneSelectionEditor : function() {
