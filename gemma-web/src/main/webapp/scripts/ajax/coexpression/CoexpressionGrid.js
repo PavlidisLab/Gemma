@@ -258,6 +258,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.observableSearchResults.on("search-results-ready", function (results) {
             var displayStringency = coexpressionGrid.observableDisplaySettings.getStringency();
+
+            // Lower stringency until results are visible.
+            displayStringency = Gemma.CoexValueObjectUtil.getHighestResultStringencyUpToInitialDisplayStringency(
+                coexpressionGrid.observableSearchResults.getCoexpressionPairs(),
+                displayStringency);
+
+            coexpressionGrid.observableDisplaySettings.setStringency(displayStringency);
+
             if (displayStringency > Gemma.MIN_STRINGENCY) {
                 var bbarText = coexpressionGrid.getBottomToolbar().getComponent('bbarStatus');
                 bbarText.setText("Display Stringency set to " + displayStringency + " based on number of experiments chosen.");

@@ -390,25 +390,25 @@ Gemma.CoexValueObjectUtil = {
                 value.test(knowngenes[i].queryGene.officialName)) {
                 genesMatchingSearch.push(knowngenes[i]);
             }
-        } // end for (<kglength)
+        }
         return genesMatchingSearch;
     },
 
-    getHighestResultStringencyUpToInitialDisplayStringency: function (knowngenes, initialDisplayStringency) {
-        var highestResultStringency = 2;
-      var kglength = knowngenes.length;
+    getHighestResultStringencyUpToInitialDisplayStringency: function (coexPairs, initialDisplayStringency) {
+      var highestResultStringency = 2;
+      var coexPairsLength = coexPairs.length;
         var i;
-        for (i = 0; i < kglength; i++) {
-            if (knowngenes[i].posSupp > highestResultStringency) {
-                highestResultStringency = knowngenes[i].posSupp;
+        for (i = 0; i < coexPairsLength; i++) {
+            if (coexPairs[i].posSupp > highestResultStringency) {
+                highestResultStringency = coexPairs[i].posSupp;
             }
-            if (knowngenes[i].negSupp > highestResultStringency) {
-                highestResultStringency = knowngenes[i].negSupp;
+            if (coexPairs[i].negSupp > highestResultStringency) {
+                highestResultStringency = coexPairs[i].negSupp;
             }
             if (highestResultStringency >= initialDisplayStringency) {
                 return initialDisplayStringency;
             }
-        } // end for (<kglength)
+        }
         return highestResultStringency;
     }
 };
