@@ -207,9 +207,9 @@ public class DifferentialExpressionAnalysisUtil {
         }
 
         for ( BioAssay assay : assays ) {
-            BioMaterial  material  = assay.getSampleUsed();
-            
-            biomaterials.add ( material  );
+            BioMaterial material = assay.getSampleUsed();
+
+            biomaterials.add( material );
 
         }
 
@@ -401,6 +401,8 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Returns biomaterials with 'filtered' factor values. That is, each biomaterial will only contain those factor
      * values equivalent to a factor value from one of the input experimental factors.
+     * <p>
+     * FIXME I don't like the way this code modifies the factorvalues associated with the biomaterial.
      * 
      * @param factors
      * @param biomaterials
@@ -414,11 +416,13 @@ public class DifferentialExpressionAnalysisUtil {
         }
 
         Collection<BioMaterial> biomaterialsWithGivenFactorValues = new HashSet<BioMaterial>();
+        int numHaveAny = 0;
         for ( BioMaterial b : biomaterials ) {
             Collection<FactorValue> biomaterialFactorValues = b.getFactorValues();
             Collection<FactorValue> factorValuesToConsider = new HashSet<FactorValue>();
             factorValuesToConsider.addAll( biomaterialFactorValues );
             for ( FactorValue biomaterialFactorValue : biomaterialFactorValues ) {
+                numHaveAny++;
                 if ( !allFactorValuesFromGivenFactors.contains( biomaterialFactorValue ) ) {
                     factorValuesToConsider.remove( biomaterialFactorValue );
                 }
@@ -427,16 +431,18 @@ public class DifferentialExpressionAnalysisUtil {
             biomaterialsWithGivenFactorValues.add( b );
         }
 
+        if ( numHaveAny == 0 ) {
+            throw new IllegalStateException( "No biomaterials had any factor values" );
+        }
+
         return biomaterialsWithGivenFactorValues;
     }
 
     /**
-     * Returns a collection of all the different types of biomaterials across all bioassays in the experiment. If there
-     * is more than one biomaterial per bioassay, a {@link RuntimeException} is thrown.
+     * Returns a collection of all the different types of biomaterials across all bioassays in the experiment.
      * 
      * @param expressionExperiment
      * @return
-     * @throws Exception
      */
     private static List<BioMaterial> getBioMaterials( BioAssaySet ee ) {
 
@@ -444,9 +450,8 @@ public class DifferentialExpressionAnalysisUtil {
 
         /* look for 1 bioassay/matrix column and 1 biomaterial/bioassay */
         for ( BioAssay assay : ( Collection<BioAssay> ) ee.getBioAssays() ) {
-            BioMaterial  material  = assay.getSampleUsed();
-            
-            biomaterials.add ( material  );
+            BioMaterial material = assay.getSampleUsed();
+            biomaterials.add( material );
         }
 
         return biomaterials;
