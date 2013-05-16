@@ -291,7 +291,9 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     },
     
     
-    getDownloadStore : function() {       
+    getDownloadStore : function() {
+    	var subsetDetails = document.URL.substr(document.URL.indexOf("?") + 1);
+        var param = Ext.urlDecode(subsetDetails);
         var pageStore = null;
         if(this.downloadAsTextTaxonId){
         	pageStore = new Gemma.ExperimentPagingStoreTaxon({
@@ -321,7 +323,24 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                 }
             });
         	
-        }else{
+        }else if(param.id){
+            
+                var idSubset = param.id.split(',');
+                
+                pageStore = new Gemma.ExperimentPagingStoreSelectedIds({
+                    autoLoad : {
+                        params : {
+                            start : 0,
+                            limit : 0
+                        }
+                    },
+                    baseParams : {
+                        ids : idSubset
+                    }
+                });
+        	
+        }        
+        else{
         	pageStore = new Gemma.ExperimentPagingStore({
                 autoLoad : {
                     params : {
