@@ -1578,6 +1578,9 @@ public class ExpressionExperimentController {
         Collection<ExpressionExperiment> eesToKeep = null;
         List<ExpressionExperimentValueObject> eeVOsToKeep = null;
 
+        /*
+         * TODO This could be sped up by passing value objects to the auditEventService.
+         */
         switch ( filter ) {
             case 1: // eligible for diff and don't have it.
                 eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
@@ -1752,9 +1755,8 @@ public class ExpressionExperimentController {
 
         if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
 
-        assert eeValObjectCol.size() <= Math.abs( limit );
+        return eeValObjectCol.subList( 0, Math.min( limit, eeValObjectCol.size() - 1 ) );
 
-        return eeValObjectCol;
     }
 
     /**
