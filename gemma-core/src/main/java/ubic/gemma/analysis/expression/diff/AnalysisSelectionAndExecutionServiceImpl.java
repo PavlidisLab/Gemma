@@ -35,6 +35,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -117,6 +118,15 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         }
 
         assert !efsToUse.isEmpty();
+
+        /*
+         * If any of the factors are continuous, just use a generic glm.
+         */
+        for ( ExperimentalFactor ef : efsToUse ) {
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+                return AnalysisType.GENERICLM;
+            }
+        }
 
         if ( efsToUse.size() == 1 ) {
 
