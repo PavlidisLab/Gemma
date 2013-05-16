@@ -270,8 +270,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setQvalueThreshold( this.qvalueThreshold );
 
                 /*
-                 * FIXME I am pretty sure this is the right thing to do here, to get iterations included by default.
-                 * It's actually only complicated if there is a subset factor.
+                 * Iteractions included by default. It's actually only complicated if there is a subset factor.
                  */
                 if ( type == null && factors.size() == 2 ) {
                     config.getInteractionsToInclude().add( factors );
@@ -319,8 +318,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     assert !factorsToUse.isEmpty();
                     DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
                     config.setFactorsToInclude( factorsToUse );
-                    // FIXME: possibly include the interaction term.
                     config.setQvalueThreshold( this.qvalueThreshold );
+
+                    if ( factorsToUse.size() == 2 ) {
+                        // include intearactions by default
+                        config.addInteractionToInclude( factorsToUse );
+                    }
+
                     results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
                 }
 
