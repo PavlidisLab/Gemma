@@ -157,6 +157,11 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.forceAnalysis = forceAnalysis;
     }
 
+    /**
+     * Sets preference for interactions to be included.
+     * 
+     * @param includeInteractions
+     */
     public void setIncludeInteractions( boolean includeInteractions ) {
         this.includeInteractions = includeInteractions;
     }
