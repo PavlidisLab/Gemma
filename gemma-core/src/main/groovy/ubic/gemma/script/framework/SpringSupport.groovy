@@ -54,7 +54,7 @@ class SpringSupport {
         } else {
             def success = manAuthentication.validateRequest( userName, password )
             if ( !success ) {
-                throw( "Not authenticated. Make sure you entered a valid username (got '" + userName + "') and password" )
+                throw new Exception( "Not authenticated. Make sure you entered a valid username (got '" + userName + "') and password" )
             } else {
                 println( "Logged in as " + userName )
             }
