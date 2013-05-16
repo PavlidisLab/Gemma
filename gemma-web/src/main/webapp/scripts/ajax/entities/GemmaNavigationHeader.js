@@ -103,11 +103,15 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
                                                 scope : this,
                                                 flex : 0
                                             }]
-                                }, {
+                                },
+/*
+                                {
                                     text : 'Search Analyses',
                                     href : "/Gemma/analysesResultsSearch.html",
                                     tooltip : "Search for differential and coexpression patterns"
-                                }, '-', {
+                                }, '-',
+*/
+                                {
                                     text : 'Browse Datasets',
                                     href : "/Gemma/expressionExperiment/showAllExpressionExperiments.html",
                                     tooltip : "View the list of Gemma's expression data sets"
