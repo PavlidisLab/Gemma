@@ -41,31 +41,26 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 public class ExperimentalDesignUtils {
-    public static final String BATCH_FACTOR_NAME_PREFIX = ExperimentalFactorService.BATCH_FACTOR_NAME_PREFIX;
+    public static final String BATCH_FACTOR_CATEGORY_NAME = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME;
 
     public static final String BATCH_FACTOR_CATEGORY_URI = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_URI;
 
-    public static final String BATCH_FACTOR_CATEGORY_NAME = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME;
-
     public static final String BATCH_FACTOR_NAME = ExperimentalFactorService.BATCH_FACTOR_NAME;
+
+    public static final String BATCH_FACTOR_NAME_PREFIX = ExperimentalFactorService.BATCH_FACTOR_NAME_PREFIX;
     public static final String FACTOR_VALUE_RNAME_PREFIX = ExperimentalFactorService.FACTOR_VALUE_RNAME_PREFIX;
 
     /**
-     * Sort factors in a consistent way.
-     * 
      * @param factors
-     * @return
+     * @return batch factor, if present, or else null
      */
-    public static List<ExperimentalFactor> sortFactors( Collection<ExperimentalFactor> factors ) {
-        List<ExperimentalFactor> facs = new ArrayList<ExperimentalFactor>();
-        facs.addAll( factors );
-        Collections.sort( facs, new Comparator<ExperimentalFactor>() {
-            @Override
-            public int compare( ExperimentalFactor o1, ExperimentalFactor o2 ) {
-                return o1.getId().compareTo( o2.getId() );
+    public static ExperimentalFactor batchFactor( Collection<ExperimentalFactor> factors ) {
+        for ( ExperimentalFactor f : factors ) {
+            if ( isBatch( f ) ) {
+                return f;
             }
-        } );
-        return facs;
+        }
+        return null;
     }
 
     /**
@@ -112,6 +107,20 @@ public class ExperimentalDesignUtils {
 
         designMatrix.setRowNames( rowNames );
         return designMatrix;
+    }
+
+    /**
+     * @param factors
+     * @return a new collection (same order as the input)
+     */
+    public static Collection<ExperimentalFactor> factorsWithoutBatch( Collection<ExperimentalFactor> factors ) {
+        Collection<ExperimentalFactor> result = new ArrayList<ExperimentalFactor>();
+        for ( ExperimentalFactor f : factors ) {
+            if ( !isBatch( f ) ) {
+                result.add( f );
+            }
+        }
+        return result;
     }
 
     /**
@@ -173,20 +182,6 @@ public class ExperimentalDesignUtils {
     }
 
     /**
-     * @param factors
-     * @return a new collection (same order as the input)
-     */
-    public static Collection<ExperimentalFactor> factorsWithoutBatch( Collection<ExperimentalFactor> factors ) {
-        Collection<ExperimentalFactor> result = new ArrayList<ExperimentalFactor>();
-        for ( ExperimentalFactor f : factors ) {
-            if ( !isBatch( f ) ) {
-                result.add( f );
-            }
-        }
-        return result;
-    }
-
-    /**
      * @param ef
      * @return true if this factor appears to be a "batch" factor.
      */
@@ -232,6 +227,26 @@ public class ExperimentalDesignUtils {
     }
 
     /**
+     * @param fv
+     * @return
+     */
+    public static String prettyString( FactorValue fv ) {
+
+        if ( fv.getMeasurement() != null ) {
+            return fv.getMeasurement().getValue();
+        } else if ( fv.getCharacteristics().isEmpty() ) {
+            return fv.getValue();
+        }
+        StringBuilder buf = new StringBuilder();
+        for ( Characteristic c : fv.getCharacteristics() ) {
+            buf.append( c.getValue() );
+            if ( fv.getCharacteristics().size() > 1 ) buf.append( " | " );
+        }
+        return buf.toString();
+
+    }
+
+    /**
      * @param factors
      * @param samplesUsed
      * @param baselines
@@ -269,23 +284,21 @@ public class ExperimentalDesignUtils {
     }
 
     /**
-     * @param fv
+     * Sort factors in a consistent way.
+     * 
+     * @param factors
      * @return
      */
-    public static String prettyString( FactorValue fv ) {
-
-        if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
-        } else if ( fv.getCharacteristics().isEmpty() ) {
-            return fv.getValue();
-        }
-        StringBuilder buf = new StringBuilder();
-        for ( Characteristic c : fv.getCharacteristics() ) {
-            buf.append( c.getValue() );
-            if ( fv.getCharacteristics().size() > 1 ) buf.append( " | " );
-        }
-        return buf.toString();
-
+    public static List<ExperimentalFactor> sortFactors( Collection<ExperimentalFactor> factors ) {
+        List<ExperimentalFactor> facs = new ArrayList<ExperimentalFactor>();
+        facs.addAll( factors );
+        Collections.sort( facs, new Comparator<ExperimentalFactor>() {
+            @Override
+            public int compare( ExperimentalFactor o1, ExperimentalFactor o2 ) {
+                return o1.getId().compareTo( o2.getId() );
+            }
+        } );
+        return facs;
     }
 
     /**
