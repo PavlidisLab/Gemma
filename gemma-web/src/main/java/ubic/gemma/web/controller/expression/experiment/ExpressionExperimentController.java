@@ -1755,7 +1755,7 @@ public class ExpressionExperimentController {
 
         if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
 
-        return eeValObjectCol.subList( 0, Math.min( limit, eeValObjectCol.size() - 1 ) );
+        return eeValObjectCol.subList( 0, Math.min( limit, eeValObjectCol.size()  ) );
 
     }
 
