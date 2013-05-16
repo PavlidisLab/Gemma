@@ -500,8 +500,8 @@
 			<dwr:include method="cancelJob" />
 			<dwr:include method="addEmailAlert" />
 			<dwr:include method="getSubmittedTasks" />
-            <dwr:include method="getSubmittedTask" />
-        </dwr:remote>
+			<dwr:include method="getSubmittedTask" />
+		</dwr:remote>
 	</bean>
 
 	<bean id="annotationController" class="ubic.gemma.web.controller.expression.experiment.AnnotationController">
@@ -715,7 +715,6 @@
 			<dwr:converter id="scaleTypeConverter" class="ubic.gemma.web.remote.ScaleTypeConverter" />
 			<dwr:converter id="goEvidenceCodeConverter" class="ubic.gemma.web.remote.GOEvidenceCodeConverter" />
 			<dwr:converter id="doublePointConverter" class="ubic.gemma.web.remote.DoublePointConverter" />
-			<dwr:converter id="diffAnalysisTypeConverter" class="ubic.gemma.web.remote.DiffAnalysisTypeConverter" />
 		</dwr:init>
 
 

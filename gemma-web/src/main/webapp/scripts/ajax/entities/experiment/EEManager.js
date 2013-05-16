@@ -896,6 +896,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
          var cb = function(analysisInfo) {
             if (analysisInfo.type) {
                var customizable = false;
+              // console.log(analysisInfo.type);
                var analysisType = '';
                if (analysisInfo.type === 'TWIA') {
                   analysisType = 'Two-way ANOVA with interactions';

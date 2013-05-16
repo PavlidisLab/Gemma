@@ -94,9 +94,10 @@ public class DifferentialExpressionAnalysisController {
             if ( factorsWithoutBatch.size() < 2 ) {
                 throw new IllegalStateException( "This data set does not seem suitable for analysis." );
             }
+            result.setType( AnalysisType.GENERICLM.toString() );
+        } else {
+            result.setType( analyzer.toString() );
         }
-
-        result.setType( analyzer );
         return result;
     }
 
@@ -186,6 +187,7 @@ public class DifferentialExpressionAnalysisController {
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
                 .getExperimentalFactors() ) );
+        cmd.setIncludeInteractions( true ); // if possible
 
         return taskRunningService.submitRemoteTask( cmd );
     }
