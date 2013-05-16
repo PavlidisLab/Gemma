@@ -25,14 +25,13 @@ Ext.namespace('Gemma');
 Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCommand, queryGeneIds) {
     var maxStringency = cytoscapeCoexCommand.eeIds.length;
 
-    function getTrimmedGraphData (graphSizeLimit) {
+    function getTrimmedGraphData (graphSizeLimit, minStringency) {
         var coexpressionPairs = searchResultsCytoscape.knownGeneResults;
-        var resultsStringency = cytoscapeCoexCommand.stringency;
 
         return Gemma.CoexValueObjectUtil.trimGraphUpToRequestedSize(
             coexpressionPairs,
             queryGeneIds,
-            resultsStringency,
+            minStringency,
             maxStringency,
             graphSizeLimit);
     }
@@ -55,7 +54,14 @@ Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCom
         return this.graphSizeOptions[this.graphSizeOptions.length-1].graph;
     };
 
-    this.isTrimmedOnBackend = (searchResultsCytoscape.nonQueryGeneTrimmedValue > 0);
+    var startStringency;
+    if (searchResultsCytoscape.nonQueryGeneTrimmedValue > 0) {
+        this.isTrimmedOnBackend = true;
+        startStringency = searchResultsCytoscape.nonQueryGeneTrimmedValue + 1;
+    } else {
+        this.isTrimmedOnBackend = false;
+        startStringency = cytoscapeCoexCommand.stringency;
+    }
 
     /*
      Extra trimming will be done on the front end to the
@@ -89,7 +95,7 @@ Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCom
                 graph: fullGraph});
         }
     } else {
-        graph = getTrimmedGraphData(maxEdgesLimit);
+        graph = getTrimmedGraphData( maxEdgesLimit, startStringency );
         this.graphSizeOptions.push({
             label: graph.trimStringency + ' (' + graph.size + " edges)",
             graph: graph});
@@ -99,7 +105,7 @@ Gemma.CoexpressionGraphData = function (searchResultsCytoscape, cytoscapeCoexCom
     var ratio = 0.75;
     while (graph.trimStringency < maxStringency && graph.size > targetNumberOfEdges && ratio >= 0.5) {
         if (graph.size > ratio * maxEdgesLimit) {
-            graph = getTrimmedGraphData( ratio * maxEdgesLimit );
+            graph = getTrimmedGraphData( ratio * maxEdgesLimit, startStringency );
             this.graphSizeOptions.push({
                 label: graph.trimStringency + ' (' + graph.size + " edges)",
                 graph: graph});
