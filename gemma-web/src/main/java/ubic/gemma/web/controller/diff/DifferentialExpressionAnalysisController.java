@@ -83,7 +83,8 @@ public class DifferentialExpressionAnalysisController {
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 
-        for ( ExperimentalFactor factor : factorsWithoutBatch ) {
+        // we include all factors here, so that batch can be used for subsetting (up to client)
+        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
             result.getFactors().add( new ExperimentalFactorValueObject( factor ) );
         }
 

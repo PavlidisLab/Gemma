@@ -678,10 +678,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                }
 
                /*
-                * set up the subsets.
+                * set up the subset radios
                 */
                subsetRadios.push(new Ext.form.Radio({
-                     boxLabel : "<b>" + f.name + "</b> (" + f.description + ")",
+                     boxLabel : "<b>" + f.name + "</b> (" + Ext.util.Format.ellipsis(f.description, 50) + ")",
                      name : 'diff-ex-analyze-subset', // same
                      // name
                      // ->
@@ -834,11 +834,18 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                   }
 
                   /*
+                   * For now we don't allow analyzing batch as a factor (though it can be used for subsetting)
+                   */
+                  if (f.name === "batch") {
+                     continue;
+                  }
+
+                  /*
                    * Checkbox for one factor.
                    */
 
                   Ext.getCmp('diff-ex-analysis-customize-factors').add(new Ext.form.Checkbox({
-                        fieldLabel : "<b>" + f.name + "</b> (" + f.description + ")",
+                        fieldLabel : "<b>" + f.name + "</b> (" + Ext.util.Format.ellipsis(f.description) + ")",
                         // labelWidth : 375,
                         id : f.id + '-factor-checkbox',
                         tooltip : f.name,
@@ -896,7 +903,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
          var cb = function(analysisInfo) {
             if (analysisInfo.type) {
                var customizable = false;
-              // console.log(analysisInfo.type);
+               // console.log(analysisInfo.type);
                var analysisType = '';
                if (analysisInfo.type === 'TWIA') {
                   analysisType = 'Two-way ANOVA with interactions';
