@@ -50,15 +50,6 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
     private int numValues = 0;
     private String type = "categorical"; // continuous or categorical.
     private Collection<FactorValueValueObject> values;
-    private boolean isBatch = false; // if it is the batch fator
-
-    public boolean getIsBatch() {
-        return isBatch;
-    }
-
-    public void setIsBatch( boolean batch ) {
-        this.isBatch = batch;
-    }
 
     public ExperimentalFactorValueObject() {
     }
@@ -67,7 +58,6 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         this.setId( factor.getId() );
         this.setName( factor.getName() );
         this.setDescription( factor.getDescription() );
-        this.isBatch = ExperimentalDesignUtils.isBatch( factor );
 
         if ( factor.getCategory() != null ) this.setCategory( factor.getCategory().getCategory() );
 
