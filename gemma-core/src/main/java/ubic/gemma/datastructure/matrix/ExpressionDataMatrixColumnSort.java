@@ -115,6 +115,16 @@ public class ExpressionDataMatrixColumnSort {
      * @return
      */
     public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors ) {
+        return getBaselineLevels( null, factors );
+    }
+
+    /**
+     * @param samplesUsed
+     * @param factors
+     * @return
+     */
+    public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( List<BioMaterial> samplesUsed,
+            Collection<ExperimentalFactor> factors ) {
 
         Map<ExperimentalFactor, FactorValue> result = new HashMap<ExperimentalFactor, FactorValue>();
 
@@ -123,6 +133,29 @@ public class ExpressionDataMatrixColumnSort {
             assert !factor.getFactorValues().isEmpty();
 
             for ( FactorValue fv : factor.getFactorValues() ) {
+
+                /*
+                 * Check that this factor value is used by at least one of the given samples. Only matters if this is a
+                 * subset of the full data set.
+                 */
+                if ( samplesUsed != null ) {
+                    boolean used = false;
+                    for ( BioMaterial bm : samplesUsed ) {
+                        for ( FactorValue bfv : bm.getFactorValues() ) {
+                            if ( fv.equals( bfv ) ) {
+                                used = true;
+                                break;
+                            }
+                        }
+                        if ( used ) break;
+
+                    }
+                    if ( !used ) {
+                        // this factorValue cannot be a candidate baseline for this subset.
+                        continue;
+                    }
+                }
+
                 if ( isBaselineCondition( fv ) ) {
                     if ( result.containsKey( factor ) ) {
                         log.warn( "A second potential baseline was found for " + factor + ": " + fv );
@@ -134,10 +167,31 @@ public class ExpressionDataMatrixColumnSort {
                 }
             }
 
-            if ( !result.containsKey( factor ) ) {
-                FactorValue fv = factor.getFactorValues().iterator().next();
-                log.info( "Falling back on choosing baseline arbitrarily: " + fv );
-                result.put( factor, fv );
+            if ( !result.containsKey( factor ) ) { // fallback
+                FactorValue arbitraryBaselineFV = null;
+
+                if ( samplesUsed != null ) {
+                    // make sure we choose a fv that is actually used (see above for non-arbitrary case)
+                    for ( FactorValue fv : factor.getFactorValues() ) {
+                        for ( BioMaterial bm : samplesUsed ) {
+                            for ( FactorValue bfv : bm.getFactorValues() ) {
+                                if ( fv.equals( bfv ) ) {
+                                    arbitraryBaselineFV = fv;
+                                    break;
+                                }
+                            }
+                            if ( arbitraryBaselineFV != null ) break;
+                        }
+                        if ( arbitraryBaselineFV != null ) break;
+                    }
+
+                } else {
+                    arbitraryBaselineFV = factor.getFactorValues().iterator().next();
+                }
+
+                assert arbitraryBaselineFV != null;
+                log.info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
+                result.put( factor, arbitraryBaselineFV );
             }
         }
 

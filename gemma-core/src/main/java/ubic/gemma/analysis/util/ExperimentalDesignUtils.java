@@ -130,8 +130,8 @@ public class ExperimentalDesignUtils {
      */
     public static Map<ExperimentalFactor, FactorValue> getBaselineConditions( List<BioMaterial> samplesUsed,
             List<ExperimentalFactor> factors ) {
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
-                .getBaselineLevels( factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort.getBaselineLevels(
+                samplesUsed, factors );
 
         /*
          * For factors that don't have an obvious baseline, use the first factorvalue.
@@ -150,6 +150,7 @@ public class ExperimentalDesignUtils {
                 }
             }
         }
+
         return baselineConditions;
     }
 

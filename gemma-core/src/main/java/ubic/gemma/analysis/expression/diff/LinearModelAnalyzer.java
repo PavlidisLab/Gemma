@@ -145,8 +145,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             CompositeSequence probe = r.getProbe();
             Collection<Gene> genesForProbe = probeToGeneMap.get( probe );
-
-            int numGenes = countNumberOfGenesNotSeenAlready( genesForProbe, seenGenes );
+            int numGenes = 0;
+            if ( genesForProbe != null ) {
+                numGenes = countNumberOfGenesNotSeenAlready( genesForProbe, seenGenes );
+            }
 
             if ( numGenes == 0 ) {
                 // This is okay; it might mean we already counted it as differentially expressed.
@@ -457,7 +459,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                  * Run analysis on the subset.
                  */
                 DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, subsetConfig,
-                        subsets.get( subsetFactorValue ), bioMaterials, factors, subsetFactorValue );
+                        subsets.get( subsetFactorValue ), bioMaterials, new ArrayList<ExperimentalFactor>(
+                                subsetFactors ), subsetFactorValue );
 
                 if ( analysis == null ) {
                     log.warn( "No analysis results were obtained for subset: " + subsetFactorValue );
@@ -530,6 +533,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         // slice.
         ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( samplesInSubset, dmatrix );
+
+        Collection<ExperimentalFactor> subsetFactors = fixFactorsForSubset( dmatrix, subset,
+                config.getFactorsToInclude() );
+
+        if ( subsetFactors.isEmpty() ) {
+            log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
+            return null;
+        }
 
         DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config );
 
@@ -1047,6 +1058,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * Remove all configurations that have to do with factors that aren't in the selected factors.
      * 
+     * @param samplesInSubset
      * @param factors the factors that will be included
      * @param config
      * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
@@ -1056,6 +1068,28 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             DifferentialExpressionAnalysisConfig config ) {
 
         DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig();
+        //
+        // /*
+        // * Drop factors that are constant in the subset.
+        // */
+        // Map<ExperimentalFactor, Collection<FactorValue>> ef2FvsUsedInSubset = new HashMap<>();
+        // for ( BioMaterial bm : samplesInSubset ) {
+        // for ( FactorValue fv : bm.getFactorValues() ) {
+        // ExperimentalFactor ef = fv.getExperimentalFactor();
+        // if ( !ef2FvsUsedInSubset.containsKey( ef ) ) {
+        // ef2FvsUsedInSubset.put( ef, new HashSet<FactorValue>() );
+        // }
+        // ef2FvsUsedInSubset.get( ef ).add( fv );
+        // }
+        // }
+        //
+        // Collection<ExperimentalFactor> efsToUse = new HashSet<>();
+        // for ( ExperimentalFactor ef : factors ) {
+        // Collection<FactorValue> fvsUsed = ef2FvsUsedInSubset.get( ef );
+        // if ( fvsUsed.size() > 1 ) {
+        // efsToUse.add( ef );
+        // }
+        // }
 
         newConfig.setBaseLineFactorValues( null );
 
@@ -1117,6 +1151,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 if ( levels.size() > 1 ) {
                     result.add( f );
+                } else {
+                    log.info( "Dropping " + f + " from subset" );
                 }
 
             }
@@ -1144,7 +1180,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
         }
 
-        assert !result.isEmpty();
+        // testing environment, etc.
+        if ( result.isEmpty() ) {
+            return new HashMap<>();
+        }
+
         return compositeSequenceService.getGenes( result.keySet() );
 
     }
@@ -1438,6 +1478,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
             String factorName = ExperimentalDesignUtils.nameForR( ef );
             String baselineFactorValue = ExperimentalDesignUtils.nameForR( baselineConditions.get( ef ), true );
+
+            /*
+             * If this is a subset, it is possible the baseline chosen is not eligible for the subset.
+             */
+            log.info( ef );
+
             assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) : baselineConditions.get( ef )
                     + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );
