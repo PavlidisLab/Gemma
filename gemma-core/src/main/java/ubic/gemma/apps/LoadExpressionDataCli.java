@@ -18,6 +18,12 @@
  */
 package ubic.gemma.apps;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collection;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
@@ -25,10 +31,6 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
@@ -36,15 +38,8 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.AbstractCLIContextCLI;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
 
 /**
  * Simple command line to load expression experiments, either singly or in batches defined on the command line or in a
