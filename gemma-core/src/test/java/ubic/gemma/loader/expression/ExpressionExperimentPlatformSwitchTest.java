@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -37,6 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTest {
+
     @Autowired
     private GeoService geoService;
 
@@ -57,6 +59,7 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
         // GSE36025
         //
         // GPL9250
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         Collection<?> results = geoService.fetchAndLoad( "GSE36025", false, false, false, false );
         ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
         results = geoService.fetchAndLoad( "GPL13112", true, false, false, false );
