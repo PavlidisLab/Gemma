@@ -33,6 +33,7 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -121,7 +122,10 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             oldAd = arrayDesignService.thaw( oldAd );
 
-            if ( oldAd.getCompositeSequences().size() == 0 ) {
+            if ( oldAd.getCompositeSequences().size() == 0 && !oldAd.getTechnologyType().equals( TechnologyType.NONE ) ) {
+                /*
+                 * Bug 3451 - this is okay if it is a RNA-seq experiment etc. prior to data upload.
+                 */
                 throw new IllegalStateException( oldAd + " has no elements" );
             }
 
