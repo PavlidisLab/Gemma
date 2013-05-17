@@ -1247,10 +1247,12 @@ public class ExpressionExperimentQCController extends BaseController {
     private class XYRegressionRenderer extends XYLineAndShapeRenderer {
         private static final long serialVersionUID = 1L;
 
+        @Override
         protected boolean isLinePass( int pass ) {
             return pass == 1;
         }
 
+        @Override
         protected boolean isItemPass( int pass ) {
             return pass == 0;
         }
