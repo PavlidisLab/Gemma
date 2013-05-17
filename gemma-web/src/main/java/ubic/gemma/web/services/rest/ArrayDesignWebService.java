@@ -47,7 +47,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
 /**
- * RESTful services
+ * RESTful services. Used by ErmineJ
  * 
  * @author paul
  * @version $Id$
