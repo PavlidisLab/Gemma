@@ -130,4 +130,13 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     public boolean hasMeanVariance( ExpressionExperiment ee ) {
         return ee.getMeanVarianceRelation() != null;
     }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.analysis.preprocess.MeanVarianceService#find(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    public MeanVarianceRelation find( ExpressionExperiment ee ) {
+        ExpressionExperiment updatedEe = expressionExperimentService.thawLiter( ee );
+        return updatedEe.getMeanVarianceRelation();
+    }
 }

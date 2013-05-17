@@ -1212,7 +1212,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        MeanVarianceRelation mvr = meanVarianceService.findOrCreate( ee );
+        MeanVarianceRelation mvr = meanVarianceService.find( ee );
 
         if ( mvr == null ) {
             return null;
