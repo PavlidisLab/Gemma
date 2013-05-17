@@ -410,6 +410,10 @@ public class DifferentialExpressionAnalysisUtil {
      */
     private static Collection<BioMaterial> filterFactorValuesFromBiomaterials( Collection<ExperimentalFactor> factors,
             Collection<BioMaterial> biomaterials ) {
+
+        assert !biomaterials.isEmpty();
+        assert !factors.isEmpty();
+
         Collection<FactorValue> allFactorValuesFromGivenFactors = new HashSet<FactorValue>();
         for ( ExperimentalFactor ef : factors ) {
             allFactorValuesFromGivenFactors.addAll( ef.getFactorValues() );

@@ -150,6 +150,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
      */
     @Test
     public void test() throws Exception {
+        ee = expressionExperimentService.thawLite( ee );
 
         AnalysisType aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(),
                 null, true );
