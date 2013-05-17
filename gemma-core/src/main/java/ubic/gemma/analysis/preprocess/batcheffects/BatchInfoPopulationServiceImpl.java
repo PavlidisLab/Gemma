@@ -47,6 +47,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * Retrieve batch information from the data source, if possible, and populate it into experiments.
@@ -223,6 +224,21 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * @return true if it needs processing
      */
     private boolean needToRun( ExpressionExperiment ee ) {
+
+        ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee.getId() );
+
+        assert eevo != null;
+
+        if ( StringUtils.isBlank( eevo.getAccession() ) ) {
+            log.info( ee
+                    + " lacks an external accession to use for fetching, will not attempt to fetch raw data files." );
+            return false;
+        }
+
+        if ( eevo.getTechnologyType().equals( "NONE" ) ) {
+            log.info( ee + " has technology type 'NONE', will not attempt to fetch raw data files" );
+            return false;
+        }
 
         AuditEvent e = auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( e == null ) return true;
