@@ -171,8 +171,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * Figure out if it is two-channel
          */
         boolean isTwoChannel = false;
-        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment,
-                this.getSessionFactory().getCurrentSession() );
+        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this
+                .getSessionFactory().getCurrentSession() );
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             TechnologyType technologyType = ad.getTechnologyType();
 
@@ -1008,7 +1008,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         if ( needToSearch.size() != 0 ) {
 
             Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed(
-                    EntityUtils.getIds( getExperiments( ees ) ), this.getSessionFactory().getCurrentSession() ).keySet();
+                    EntityUtils.getIds( getExperiments( ees ) ), this.getSessionFactory().getCurrentSession() )
+                    .keySet();
             Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneIdMap( genesToSearch,
                     EntityUtils.getIds( arrays ), this.getSessionFactory().getCurrentSession() );
 
@@ -1025,7 +1026,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
              * Fill in the map, because we want to track information on the specificity of the probes used in the data
              * vectors.
              */
-            cs2gene = CommonQueries.getCs2GeneMapForProbes( cs2gene.keySet(), this.getSessionFactory().getCurrentSession() );
+            cs2gene = CommonQueries.getCs2GeneMapForProbes( cs2gene.keySet(), this.getSessionFactory()
+                    .getCurrentSession() );
 
             Map<ProcessedExpressionDataVector, Collection<Long>> processedDataVectors = getProcessedVectors(
                     EntityUtils.getIds( needToSearch ), cs2gene );
@@ -1206,6 +1208,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         bad.setId( null ); // because it isn't a real bioassaydimension
         bad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
         bad.setDescription( "Subset slice" );
+        bad.setIsSubset( true );
 
         Collection<Long> subsetBioAssayIds = EntityUtils.getIds( ee.getBioAssays() );
 

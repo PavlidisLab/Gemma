@@ -166,7 +166,8 @@ public interface ExpressionDataMatrix<T> {
 
     /**
      * @param index
-     * @return BioMaterial FIXME technically this can still be a collection. See bug 629
+     * @return BioMaterial. Note that if this represents a subsetted data set, the BioMaterial may be a lightweight
+     *         'fake'.
      */
     public BioMaterial getBioMaterialForColumn( int index );
 
@@ -186,7 +187,8 @@ public interface ExpressionDataMatrix<T> {
     /**
      * Produce a BioAssayDimension representing the matrix columns for a specific row. The designelement argument is
      * needed because a matrix can combine data from multiple array designs, each of which will generate its own
-     * bioassaydimension.
+     * bioassaydimension. Note that if this represents a subsetted data set, the return value may be a lightweight
+     * 'fake'.
      * 
      * @param designElement
      * @return

@@ -340,6 +340,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
         this.data = expandedData;
         this.setBioAssayDimension( new BioAssayDimensionValueObject() );
+        this.getBioAssayDimension().setIsSubset( true ); // not exactly, but have to make clear it's not real.
         this.getBioAssayDimension().setBioAssays( expandedBioAssays );
         this.getBioAssayDimension().setId( null );
         this.getBioAssayDimension().setName(

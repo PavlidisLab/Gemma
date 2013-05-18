@@ -63,6 +63,7 @@ public class BioAssayValueObject implements Serializable {
         this.description = bioAssay.getDescription();
 
         ArrayDesign ad = bioAssay.getArrayDesignUsed();
+        assert ad != null;
         this.arrayDesign = new ArrayDesignValueObject();
         arrayDesign.setId( ad.getId() );
         arrayDesign.setShortName( ad.getShortName() );

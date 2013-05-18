@@ -130,7 +130,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
          */
 
         if ( bds.size() > 1 ) {
-            log.debug( "More than oneo bioassaydimension for visualization, only using the first one" );
+            log.debug( "More than one bioassaydimension for visualization, only using the first one" );
         }
 
         BioAssayDimensionValueObject bd = new BioAssayDimensionValueObject( bds.iterator().next() ); // THAW?
@@ -152,6 +152,11 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         return result;
     }
 
+    /**
+     * @param experiment
+     * @param bd
+     * @return map of bioassays to map of factors to doubles that represent the position in the layout.
+     */
     private LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
             ExpressionExperiment experiment, BioAssayDimensionValueObject bd ) {
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> result = new LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>();
@@ -163,7 +168,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
 
-        Map<FactorValue, Double> fvV = new HashMap<FactorValue, Double>();
+        Map<Long, Double> fvV = new HashMap<Long, Double>();
 
         assert experiment != null;
         assert experiment.getExperimentalDesign() != null;
@@ -187,17 +192,23 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             return result;
         }
 
+        assert !experiment.getExperimentalDesign().getExperimentalFactors().isEmpty();
         for ( ExperimentalFactor ef : experiment.getExperimentalDesign().getExperimentalFactors() ) {
-            Double i = 0.0;
+            // Double i = 0.0;
+            assert !ef.getFactorValues().isEmpty();
             for ( FactorValue fv : ef.getFactorValues() ) {
-                i = i + 1.0;
+                // i = i + 1.0;
                 // fvV.put( fv, i ); // just for now, a placeholder value.
                 if ( fv.getId() == null ) {
                     log.warn( "FactorValue has null id, this shouldn't happen!" + fv.toString() );
                 }
-                fvV.put( fv, new Double( fv.getId() ) ); // try using the factorValue id
+                assert fv.getId() != null;
+                fvV.put( fv.getId(), new Double( fv.getId() ) ); // try using the factorValue id
             }
         }
+
+        assert !fvV.isEmpty();
+        assert !bms.isEmpty();
         for ( BioMaterial bm : bms ) {
             int j = mat.getColumnIndex( bm );
 
@@ -209,19 +220,22 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 BioAssayValueObject bavo = new BioAssayValueObject( ba );
                 result.put( bavo, new LinkedHashMap<ExperimentalFactor, Double>( fvs.size() ) );
                 for ( FactorValue fv : fvs ) {
+                    assert fv.getId() != null;
+                    assert fvV.containsKey( fv.getId() );
                     ExperimentalFactor ef = fv.getExperimentalFactor();
 
-                    Double value;
+                    Double value = null;
                     if ( fv.getMeasurement() != null ) {
                         try {
                             value = Double.parseDouble( fv.getMeasurement().getValue() );
                         } catch ( NumberFormatException e ) {
-                            value = fvV.get( fv );
+                            value = fvV.get( fv.getId() ); // not good.
                         }
                     } else {
-                        value = fvV.get( fv );
+                        value = fvV.get( fv.getId() );
                     }
                     assert result.containsKey( bavo );
+                    assert value != null;
                     result.get( bavo ).put( ef, value );
 
                 }
@@ -568,9 +582,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             if ( bioAssayDimension.getId() == null ) {
                 /*
-                 * Happens if vectors are associated with a temporary bioassaydimension -- subsets, and it will always
-                 * be thawed already. See ProcessedExpressionDataVectorDaoImpl.sliceSubSet. We should do this a better
-                 * way, like allowing the BAD to have a reference to the original source and a "isSubset" flag.
+                 * Should not happen any more.
                  */
             } else {
                 if ( cachedThawedBioAssayDimensions.containsKey( bioAssayDimension.getId() ) ) {
@@ -600,6 +612,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 // plotExperimentalDesign( ee ); // debugging/testing
             }
 
+            assert bioAssayDimension != null;
             LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> experimentalDesignLayout = getExperimentalDesignLayout(
                     actualee, bioAssayDimension );
 

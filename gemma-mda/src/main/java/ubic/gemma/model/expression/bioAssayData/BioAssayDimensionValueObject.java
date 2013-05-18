@@ -15,10 +15,20 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 /**
  * @author Paul
@@ -38,6 +48,9 @@ public class BioAssayDimensionValueObject {
 
     private String name;
 
+    /**
+     * Do not use this constructor unless this represents a subset of a persistent BioAssayDimension.
+     */
     public BioAssayDimensionValueObject() {
     }
 
@@ -63,9 +76,82 @@ public class BioAssayDimensionValueObject {
         return description;
     }
 
+    /**
+     * @return the represented BioAssayDimension. If this represents the dimension for an ExpressionExperimentSubSet,
+     *         then the return will be a "fake" entity that has minimal information stored. This is a kludge to avoid
+     *         having to make the DataMatrix code use valueobjects.
+     */
     public BioAssayDimension getEntity() {
-        if ( this.bioAssayDimension == null ) throw new IllegalStateException( "Entity was not set" );
+        if ( this.bioAssayDimension == null ) {
+            if ( !isSubset ) throw new IllegalStateException( "Entity was not set, not allowed unless isSubset=true" );
+
+            /*
+             * Begin hack.
+             */
+            return makeDummyBioAssayDimension();
+        }
+
         return this.bioAssayDimension;
+    }
+
+    /**
+     * @return
+     */
+    private BioAssayDimension makeDummyBioAssayDimension() {
+        assert this.id == null;
+
+        BioAssayDimension fakebd = BioAssayDimension.Factory.newInstance( "Placeholder representing: " + name,
+                description, new ArrayList<BioAssay>() );
+
+        Map<Long, ExperimentalFactor> fakeefs = new HashMap<>();
+        for ( BioAssayValueObject bav : this.bioAssays ) {
+            BioAssay ba = BioAssay.Factory.newInstance();
+            ba.setId( bav.getId() );
+            ba.setName( bav.getName() );
+            ba.setDescription( "Fake placeholder" );
+
+            BioMaterial sampleUsed = BioMaterial.Factory.newInstance();
+            BioMaterialValueObject bmvo = bav.getSample();
+            assert bmvo != null;
+            sampleUsed.setId( bmvo.getId() );
+            sampleUsed.setName( bmvo.getName() );
+            sampleUsed.setDescription( "Fake placeholder" );
+            for ( FactorValueValueObject fvvo : bmvo.getFactorValueObjects() ) {
+                FactorValue fv = FactorValue.Factory.newInstance();
+                assert fvvo.getId() != null;
+                fv.setId( fvvo.getId() );
+                assert fvvo.getValue() != null;
+                fv.setValue( fvvo.getValue() );
+                Long efid = fvvo.getFactorId();
+
+                ExperimentalFactor ef = null;
+                if ( fakeefs.containsKey( efid ) ) {
+                    ef = fakeefs.get( efid );
+                } else {
+                    ef = ExperimentalFactor.Factory.newInstance();
+                    ef.setId( efid );
+                    ef.setName( fvvo.getCategory() );
+                    ef.setType( fvvo.isMeasurement() ? FactorType.CONTINUOUS : FactorType.CATEGORICAL );
+                    fakeefs.put( efid, ef );
+                }
+                ef.getFactorValues().add( fv );
+                fv.setExperimentalFactor( ef );
+                sampleUsed.getFactorValues().add( fv );
+            }
+            ba.setSampleUsed( sampleUsed );
+
+            ArrayDesign ad = ArrayDesign.Factory.newInstance();
+            ArrayDesignValueObject advo = bav.getArrayDesign();
+            assert advo != null;
+            ad.setId( advo.getId() );
+            ad.setShortName( advo.getShortName() );
+            ad.setDescription( "Fake placeholder" );
+            ba.setArrayDesignUsed( ad );
+
+            fakebd.getBioAssays().add( ba );
+        }
+
+        return fakebd;
     }
 
     public Long getId() {

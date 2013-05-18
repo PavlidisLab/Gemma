@@ -413,7 +413,9 @@ public class DEDVController {
      */
     public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long resultSetId, Double givenThreshold ) {
 
-        if ( resultSetId == null ) return null;
+        if ( resultSetId == null ) {
+            throw new IllegalArgumentException( "ResultsetId cannot be null" );
+        }
 
         double threshold = DEFAULT_THRESHOLD;
 
