@@ -104,6 +104,21 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             q.setParameter( "rsid", rs.getId() );
             contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table delete.
 
+            // will happen by cascade.
+            // // delete HIT_LISTS
+            // String nativeDeleteHLQuery = "DELETE h from HIT_LIST_SIZE h"
+            // + " where h.RESULT_SET_FK = :rsid  ";
+            // q = session.createSQLQuery( nativeDeleteHLQuery );
+            // q.setParameter( "rsid", rs.getId() );
+            // resultsDone += q.executeUpdate();
+            //
+            // // delete P_VALUE_DISTRIBUTION
+            // String nativeDeletePVDQuery = "DELETE p from ANALYSIS_RESULT_SET ars, PVALUE_DISTRIBUTION p"
+            // + " where ars.ID=:rsid AND ars.PVALUE_DISTRIBUTION_FK = p.ID";
+            // q = session.createSQLQuery( nativeDeletePVDQuery );
+            // q.setParameter( "rsid", rs.getId() );
+            // resultsDone += q.executeUpdate();
+
             // Delete AnalysisResults
             String nativeDeleteARQuery = "DELETE d from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
                     + " where d.RESULT_SET_FK = :rsid  ";
@@ -699,11 +714,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                     continue;
                 }
 
+                String expFactorId = experimentalFactorId.toString();
                 if ( !avo.getFactorValuesUsed().containsKey( experimentalFactorId ) ) {
-                    avo.getFactorValuesUsed().put( experimentalFactorId, new HashSet<FactorValueValueObject>() );
+                    avo.getFactorValuesUsed().put( expFactorId,
+                            new HashSet<FactorValueValueObject>() );
                 }
 
-                avo.getFactorValuesUsed().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
+                avo.getFactorValuesUsed().get( expFactorId ).add( new FactorValueValueObject( fv ) );
 
             }
 
