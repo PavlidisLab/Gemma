@@ -17,7 +17,7 @@ Gemma.CoexpressionDownloadWindow = Ext.extend(Ext.Window, {
 
     makeHeaderRow: function () {
         var row = [];
-        row.push("Query Gene", "Query Gene NCBI Id", "Coexpressed Gene", "Coexpressed Gene NCBI Id", "Specificity", "Positive Support", "Negative Support");
+        row.push("Query Gene", "Query Gene NCBI Id", "Coexpressed Gene", "Coexpressed Gene NCBI Id", "Specificity", "Positive Support", "Negative Support", "Datasets tested");
 
         return row.join('\t') + "\n";
     },
@@ -38,7 +38,7 @@ Gemma.CoexpressionDownloadWindow = Ext.extend(Ext.Window, {
             coexresult.foundGeneNodeDegree > coexresult.queryGeneNodeDegree ?
                 this.decimalPlaceRounder(coexresult.foundGeneNodeDegree) :
                 this.decimalPlaceRounder(coexresult.queryGeneNodeDegree),
-            coexresult.posSupp, coexresult.negSupp);
+            coexresult.posSupp, coexresult.negSupp, coexresult.numTestedIn);
 
         return row.join('\t') + "\n";
     },
@@ -61,7 +61,6 @@ Gemma.CoexpressionDownloadWindow = Ext.extend(Ext.Window, {
         for (i = 0; i < kglength; i++) {
             text += this.makeResultsRow(data[i]);
         }
-
 
         this.textAreaPanel.setValue(text);
         this.show();
