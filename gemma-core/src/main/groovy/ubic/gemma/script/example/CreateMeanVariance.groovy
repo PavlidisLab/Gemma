@@ -1,6 +1,7 @@
 #!/usr/bin/groovy
 package ubic.gemma.script.example
 import ubic.gemma.script.framework.SpringSupport
+import groovy.time.*
 
 /* Parse arguments */
 def cli = new CliBuilder(usage: 'groovy CreateMeanVariance [options] -u *** -p *** -e ***')
@@ -42,10 +43,14 @@ for (id in eeIds) {
         continue
     }
     
-    println "Processing mean-variance for experiment " + ee.getShortName() + ' ...'
+    print "Processing mean-variance for experiment " + ee.getShortName() + ' ...'
     
     try {
+		def timeStart = new Date()	
         mvs.create(ee, forceRecompute)
+		def timeStop = new Date()
+		TimeDuration duration = TimeCategory.minus(timeStop, timeStart)
+		println 'It took ' + duration
         pass++
     } catch(e) {
         System.err.println('ERROR: Error computing mean-variance')
