@@ -14,8 +14,6 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +23,6 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.MeanVarianceEstimator;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import cern.colt.matrix.DoubleMatrix2D;
@@ -55,6 +52,11 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
      */
     public static MeanVarianceRelation getMeanVariance( ExpressionDataDoubleMatrix matrix ) {
 
+        if ( matrix == null ) {
+            log.warn( "Experiment matrix is null" );
+            return null;
+        }
+
         DoubleMatrix2D mat = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
         for ( int row = 0; row < mat.rows(); row++ ) {
             mat.viewRow( row ).assign( matrix.getRawRow( row ) );
@@ -82,6 +84,11 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     @Override
     public MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute ) {
 
+        if ( ee == null ) {
+            log.warn( "Experiment is null" );
+            return null;
+        }
+
         log.info( "Starting mean-variance computation" );
 
         ExpressionExperiment updatedEe = expressionExperimentService.thawLiter( ee );
@@ -91,16 +98,10 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
             log.info( " Recomputing mean-variance " );
 
-            Collection<QuantitationType> quantitationTypes = expressionExperimentService
-                    .getQuantitationTypes( updatedEe );
-            Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
-                    .getUsefulQuantitationTypes( quantitationTypes );
-
-            if ( usefulQuantitationTypes.isEmpty() ) {
-                throw new IllegalStateException( "No useful quantitation types for " + updatedEe.getShortName() );
-            }
-
             ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( updatedEe );
+            if ( intensities == null ) {
+                throw new IllegalStateException( "Could not locate intensity matrix for " + updatedEe.getShortName() );
+            }
             mvr = getMeanVariance( intensities );
             meanVarianceServiceHelper.createMeanVariance( updatedEe, mvr );
         }
@@ -131,8 +132,12 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         return ee.getMeanVarianceRelation() != null;
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.analysis.preprocess.MeanVarianceService#find(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.MeanVarianceService#find(ubic.gemma.model.expression.experiment.ExpressionExperiment
+     * )
      */
     @Override
     public MeanVarianceRelation find( ExpressionExperiment ee ) {
