@@ -21,6 +21,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -76,10 +78,6 @@ public class ArrayDesignWebService {
             }
         }
 
-        /*
-         * FIXME add the 'generic' ones (taxa-generic 'arrays')
-         */
-
         return new JsonReaderResponse<ArrayDesignValueObject>( new ArrayList<ArrayDesignValueObject>( vos ) );
     }
 
@@ -88,9 +86,19 @@ public class ArrayDesignWebService {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public int fetchAnnotations( @PathParam("shortName") String shortName, @Context HttpServletResponse servletResponse ) {
 
+        /*
+         * the short name might be mangled.
+         */
+        try {
+            shortName = URLDecoder.decode( shortName, "UTF-8" );
+        } catch ( UnsupportedEncodingException e ) {
+            ResponseBuilder builder = Response.status( Status.BAD_REQUEST ); // not really, but...
+            builder.type( MediaType.TEXT_PLAIN );
+            throw new WebApplicationException( builder.build() );
+        }
+
         ArrayDesign arrayDesign = arrayDesignService.findByShortName( shortName );
         if ( arrayDesign == null ) {
-            // FIXME. Maybe they want the generic one for the taxon.
             ResponseBuilder builder = Response.status( Status.BAD_REQUEST );
             builder.type( MediaType.TEXT_PLAIN );
             throw new WebApplicationException( builder.build() );
