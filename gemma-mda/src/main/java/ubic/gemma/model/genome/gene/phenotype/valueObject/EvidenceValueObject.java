@@ -370,6 +370,27 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         comparison = this.evidenceCode.compareTo( evidenceValueObject.evidenceCode );
         if ( comparison != 0 ) return comparison;
 
+        comparison = this.evidenceCode.compareTo( evidenceValueObject.evidenceCode );
+        if ( comparison != 0 ) return comparison;
+
+        comparison = compareEvidenceSource( evidenceValueObject );
+        if ( comparison != 0 ) return comparison;
+
+        return 0;
+    }
+
+    public int compareEvidenceSource( EvidenceValueObject evidenceValueObject ) {
+
+        if ( this.evidenceSource != null && evidenceValueObject.getEvidenceSource() != null ) {
+
+            if ( !this.evidenceSource.equals( evidenceValueObject.getEvidenceSource() ) ) {
+                return -1;
+            }
+        } else if ( this.evidenceSource == null && evidenceValueObject.getEvidenceSource() != null ) {
+            return -1;
+        } else if ( this.evidenceSource != null && evidenceValueObject.getEvidenceSource() == null ) {
+            return -1;
+        }
         return 0;
     }
 
