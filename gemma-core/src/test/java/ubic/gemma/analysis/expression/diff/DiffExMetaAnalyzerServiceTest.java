@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,6 +141,11 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         loadSet( "GSE6344" );
 
         addGenes();
+    }
+
+    @After
+    public void teardown() throws Exception {
+        cleanup();
     }
 
     /**
@@ -389,18 +395,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     }
 
     /**
-     * @param ee
-     * @return
-     */
-    private DifferentialExpressionAnalysisConfig getConfig( ExpressionExperiment ee ) {
-        DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
-        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config1.setFactorsToInclude( factors );
-        config1.setQvalueThreshold( 0.05 ); // realistic
-        return config1;
-    }
-
-    /**
      * Add gene annotations. Requires removing old sequence associations.
      * 
      * @throws Exception
@@ -468,6 +462,18 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         ExpressionExperiment set = experimentService.findByShortName( shortName );
         if ( set != null ) experimentService.delete( set );
 
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private DifferentialExpressionAnalysisConfig getConfig( ExpressionExperiment ee ) {
+        DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        config1.setFactorsToInclude( factors );
+        config1.setQvalueThreshold( 0.05 ); // realistic
+        return config1;
     }
 
     /**
