@@ -21,10 +21,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
@@ -38,6 +37,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -58,9 +59,65 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 @Path("/arraydesign")
 public class ArrayDesignWebService {
 
+    private static Log log = LogFactory.getLog( ArrayDesignWebService.class );
+
     @Autowired
     private ArrayDesignService arrayDesignService = null;
 
+    /**
+     * Fetch the platform annotation file for the indicated shortName. GO annotations are the "no parents" ones.
+     * 
+     * @param shortName
+     * @param servletResponse
+     * @return
+     * @deprecated because of problems with some shortNames (e.g., those containing '/'; see ermineJ bug 3480
+     */
+    @Deprecated
+    @GET
+    @Path("/fetchAnnotations/{shortName}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public String fetchAnnotations( @PathParam("shortName") final String shortName,
+            @Context HttpServletResponse servletResponse ) {
+
+        log.info( "Fetching annotation file for: " + shortName );
+
+        ArrayDesign arrayDesign = arrayDesignService.findByShortName( shortName );
+        if ( arrayDesign == null ) {
+            log.error( "No array design with shortName=" + shortName + " found" );
+            ResponseBuilder builder = Response.status( Status.NOT_FOUND );
+            builder.type( MediaType.TEXT_PLAIN );
+            throw new WebApplicationException( builder.build() );
+        }
+        return fetchAnnotations( arrayDesign, servletResponse );
+
+    }
+
+    /**
+     * Fetch the platform annotation file for the indicated id. GO annotations are the "no parents" ones.
+     * 
+     * @param shortName
+     * @param servletResponse
+     * @return
+     */
+    @GET
+    @Path("/fetchAnnotationsById/{id}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public String fetchAnnotationsById( @PathParam("id") final Long id, @Context HttpServletResponse servletResponse ) {
+        ArrayDesign arrayDesign = arrayDesignService.load( id );
+        if ( arrayDesign == null ) {
+            log.error( "No array design with id=" + id + " found" );
+            ResponseBuilder builder = Response.status( Status.NOT_FOUND );
+            builder.type( MediaType.TEXT_PLAIN );
+            throw new WebApplicationException( builder.build() );
+        }
+        return fetchAnnotations( arrayDesign, servletResponse );
+    }
+
+    /**
+     * Fetch a list of all the available platforms, limited to those which have annotation files available.
+     * 
+     * @return JSON representing a collection of ArrayDesignValueObjects.
+     */
     @GET
     @Path("/listAll")
     @Produces(MediaType.APPLICATION_JSON)
@@ -81,35 +138,21 @@ public class ArrayDesignWebService {
         return new JsonReaderResponse<ArrayDesignValueObject>( new ArrayList<ArrayDesignValueObject>( vos ) );
     }
 
-    @GET
-    @Path("/fetchAnnotations/{shortName}")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public int fetchAnnotations( @PathParam("shortName") String shortName, @Context HttpServletResponse servletResponse ) {
+    /**
+     * @param arrayDesign
+     * @param servletResponse
+     * @return
+     */
+    private String fetchAnnotations( ArrayDesign arrayDesign, HttpServletResponse servletResponse ) {
 
-        /*
-         * the short name might be mangled.
-         */
-        try {
-            shortName = URLDecoder.decode( shortName, "UTF-8" );
-        } catch ( UnsupportedEncodingException e ) {
-            ResponseBuilder builder = Response.status( Status.BAD_REQUEST ); // not really, but...
-            builder.type( MediaType.TEXT_PLAIN );
-            throw new WebApplicationException( builder.build() );
-        }
-
-        ArrayDesign arrayDesign = arrayDesignService.findByShortName( shortName );
-        if ( arrayDesign == null ) {
-            ResponseBuilder builder = Response.status( Status.BAD_REQUEST );
-            builder.type( MediaType.TEXT_PLAIN );
-            throw new WebApplicationException( builder.build() );
-        }
-        String fileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( arrayDesign.getShortName() );
+        String fileBaseName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" );
         String fileName = fileBaseName + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
 
         File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
 
         if ( !f.canRead() ) {
+            log.error( "No annotation file for arraydesign " + arrayDesign.getShortName() + " found in " + fileName );
             ResponseBuilder builder = Response.status( Status.NOT_FOUND );
             builder.type( MediaType.TEXT_PLAIN );
             throw new WebApplicationException( builder.build() );
@@ -125,7 +168,6 @@ public class ArrayDesignWebService {
         }
 
         try {
-
             byte[] buf = new byte[1024];
             int len;
             OutputStream os = servletResponse.getOutputStream();
@@ -140,8 +182,7 @@ public class ArrayDesignWebService {
             throw new WebApplicationException( builder.build() );
         }
 
-        return 1;
-
+        return arrayDesign.getShortName();
     }
 
 }
