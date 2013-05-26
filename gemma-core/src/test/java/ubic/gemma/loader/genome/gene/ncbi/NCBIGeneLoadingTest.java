@@ -32,6 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -44,10 +46,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
-    @Autowired
-    GeneService geneService;
+    private Gene g = null;
 
-    Gene g = null;
+    @Autowired
+    private GeneCoexpressionAnalysisService g2gAnalysisService;
+
+    @Autowired
+    private GeneService geneService;
 
     @Before
     public void setup() {
@@ -56,23 +61,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
     @After
     public void teardown() {
-        if ( g != null ) {
-            try {
-                g = geneService.load( g.getId() );
-                geneService.remove( g );
-            } catch ( Exception e ) {
-
-            }
-        }
-        try {
-            Collection<Gene> allGenes = geneService.loadAll();
-            for ( Gene gene : allGenes ) {
-                geneService.remove( gene );
-            }
-        } catch ( Exception e ) {
-
-        }
-
+        clean();
     }
 
     /**
@@ -164,6 +153,10 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     }
 
     private void clean() {
+        for ( GeneCoexpressionAnalysis a : g2gAnalysisService.loadAll() ) {
+            g2gAnalysisService.delete( a );
+        }
+
         if ( g != null ) {
             try {
                 g = geneService.load( g.getId() );
