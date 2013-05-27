@@ -2,13 +2,13 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.7</version>
+		<version>1.8-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-util</artifactId>
 	<name>Gemma Util</name>
-	<version>1.7</version>
+	<version>1.8-SNAPSHOT</version>
 	<description>Utility classes for Gemma.</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
