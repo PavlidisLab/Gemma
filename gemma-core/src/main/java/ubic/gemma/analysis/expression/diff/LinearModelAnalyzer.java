@@ -1072,7 +1072,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         // /*
         // * Drop factors that are constant in the subset.
         // */
-        // Map<ExperimentalFactor, Collection<FactorValue>> ef2FvsUsedInSubset = new HashMap<>();
+        // Map<ExperimentalFactor, Collection<FactorValue>> ef2FvsUsedInSubset = new HashMap<ExperimentalFactor,
+        // Collection<FactorValue>> ();
         // for ( BioMaterial bm : samplesInSubset ) {
         // for ( FactorValue fv : bm.getFactorValues() ) {
         // ExperimentalFactor ef = fv.getExperimentalFactor();
@@ -1083,7 +1084,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         // }
         // }
         //
-        // Collection<ExperimentalFactor> efsToUse = new HashSet<>();
+        // Collection<ExperimentalFactor> efsToUse = new HashSet<ExperimentalFactor>();
         // for ( ExperimentalFactor ef : factors ) {
         // Collection<FactorValue> fvsUsed = ef2FvsUsedInSubset.get( ef );
         // if ( fvsUsed.size() > 1 ) {
@@ -1182,7 +1183,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         // testing environment, etc.
         if ( result.isEmpty() ) {
-            return new HashMap<>();
+            return new HashMap<CompositeSequence, Collection<Gene>>();
         }
 
         return compositeSequenceService.getGenes( result.keySet() );

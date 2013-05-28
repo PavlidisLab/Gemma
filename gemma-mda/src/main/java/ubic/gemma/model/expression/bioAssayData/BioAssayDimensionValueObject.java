@@ -103,7 +103,7 @@ public class BioAssayDimensionValueObject {
         BioAssayDimension fakebd = BioAssayDimension.Factory.newInstance( "Placeholder representing: " + name,
                 description, new ArrayList<BioAssay>() );
 
-        Map<Long, ExperimentalFactor> fakeefs = new HashMap<>();
+        Map<Long, ExperimentalFactor> fakeefs = new HashMap<Long, ExperimentalFactor>();
         for ( BioAssayValueObject bav : this.bioAssays ) {
             BioAssay ba = BioAssay.Factory.newInstance();
             ba.setId( bav.getId() );
