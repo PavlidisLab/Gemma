@@ -2,13 +2,13 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.7</version>
+		<version>1.8-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-core</artifactId>
 	<name>Gemma Core</name>
-	<version>1.7</version>
+	<version>1.8-SNAPSHOT</version>
 	<description>Module containing core gemma functionality.</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
