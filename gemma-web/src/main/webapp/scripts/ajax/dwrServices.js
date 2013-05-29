@@ -1239,6 +1239,7 @@ PhenotypeController.findBibliographicReference = function(p0, p1, callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findBibliographicReference', p0, p1, callback);
 };
 PhenotypeController.processPhenotypeAssociationForm = function(p0, callback) {
+	googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/processPhenotypeAssociationForm");
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'processPhenotypeAssociationForm', p0, callback);
 };
 PhenotypeController.validatePhenotypeAssociationForm = function(p0, callback) {
