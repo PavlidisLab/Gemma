@@ -405,7 +405,7 @@
 				<version>2.8.1</version>
 				<configuration>
 					<!-- UseSplitVerifier is so Cobertura works with Java 7 -->
-					<argLine>-Xmx1500M -ea -Djava.awt.headless=true -XX:MaxPermSize=512m -XX:UseSplitVerifier</argLine>
+					<argLine>-Xmx1500M -ea -Djava.awt.headless=true -XX:MaxPermSize=512m -XX:-UseSplitVerifier</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
