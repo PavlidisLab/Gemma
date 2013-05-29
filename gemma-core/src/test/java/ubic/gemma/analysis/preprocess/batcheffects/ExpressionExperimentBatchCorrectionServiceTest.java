@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,19 +47,29 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
-    ExpressionExperimentBatchCorrectionService correctionService;
+    private ExpressionExperimentBatchCorrectionService correctionService;
+
+    @Autowired
+    private ExperimentalDesignImporter experimentalDesignImporter;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    protected GeoService geoService;
+    private GeoService geoService;
 
     @Autowired
-    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
-    @Autowired
-    ExperimentalDesignImporter experimentalDesignImporter;
+    @Before
+    public void setup() {
+        cleanup();
+    }
+
+    @After
+    public void teardown() {
+        cleanup();
+    }
 
     @Test
     public void testComBatOnEE() throws Exception {
@@ -81,6 +93,13 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
 
         ExpressionDataDoubleMatrix comBat = correctionService.comBat( newee );
         assertNotNull( comBat );
+    }
+
+    private void cleanup() {
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( "GSE18162" );
+        if ( ee != null ) {
+            expressionExperimentService.delete( ee );
+        }
     }
 
 }

@@ -56,19 +56,19 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     static private final String GOTERM_QUERY = "GO:0000310";
 
     @Autowired
-    GeneSetService geneSetService;
+    private GeneSetService geneSetService;
 
     @Autowired
-    GeneOntologyService geneOntologyService;
+    private GeneOntologyService geneOntologyService;
 
     @Autowired
-    GeneSetSearch geneSetSearch;
+    private GeneSetSearch geneSetSearch;
 
     @Autowired
-    Gene2GOAssociationService gene2GoService;
+    private Gene2GOAssociationService gene2GoService;
 
     @Autowired
-    SessionFactory sessionFactory;
+    private SessionFactory sessionFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -84,8 +84,15 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     }
 
     @After
-    public void tearDown()  {
-
+    public void tearDown() {
+        Collection<GeneSet> ags = geneSetService.loadAll();
+        for ( GeneSet gs : ags ) {
+            try {
+                geneSetService.remove( gs );
+            } catch ( Exception e ) {
+                // ignore
+            }
+        }
         gene2GoService.removeAll();
     }
 
