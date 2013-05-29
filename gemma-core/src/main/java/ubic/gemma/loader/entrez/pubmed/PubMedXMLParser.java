@@ -59,7 +59,7 @@ import ubic.gemma.model.expression.biomaterial.Compound;
 /**
  * Simple class to parse XML in the format defined by {@link http
  * ://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}. The resulting BibliographicReference object is
- * associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase and MESH.
+ * associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase and MeSH.
  * 
  * @author pavlidis
  * @version $Id$
