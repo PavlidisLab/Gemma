@@ -32,12 +32,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -53,6 +55,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
     @Autowired
     private GeneService geneService;
+    @Autowired
+    private GeneSetService geneSetService;
 
     @Before
     public void setup() {
@@ -165,13 +169,26 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
                 // ignore
             }
         }
-        try {
-            Collection<Gene> allGenes = geneService.loadAll();
-            for ( Gene gene : allGenes ) {
-                geneService.remove( gene );
+
+        Collection<GeneSet> allgs = geneSetService.loadAll();
+
+        for ( GeneSet geneSet : allgs ) {
+            try {
+                geneSetService.remove( geneSet );
+
+            } catch ( Exception e ) {
+                // ignore
             }
-        } catch ( Exception e ) {
-            // ignore
         }
+
+        Collection<Gene> allGenes = geneService.loadAll();
+        for ( Gene gene : allGenes ) {
+            try {
+                geneService.remove( gene );
+            } catch ( Exception e ) {
+                // ignore
+            }
+        }
+
     }
 }
