@@ -43,7 +43,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -55,19 +54,16 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     private static final String DEFAULT_TAXON = "Mus musculus";
 
-    ArrayDesign ad;
+    private ArrayDesign ad;
 
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
     @Autowired
-    AuditTrailService auditTrailService;
+    private AuditTrailService auditTrailService;
 
     @Autowired
-    BioSequenceService bioSequenceService;
-
-    @Autowired
-    CompositeSequenceService compositeSequenceService;
+    private CompositeSequenceService compositeSequenceService;
 
     /*
      * @see TestCase#setUp()
@@ -191,6 +187,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ArrayDesign.Factory.newInstance();
         String name = RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign";
         ad.setName( name );
+        ad.setShortName( name );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         String gplToFind = getGpl();
@@ -218,6 +215,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         assignExternalReference( ad, getGpl() );
         String name = RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign";
         ad.setName( name );
+        ad.setShortName( name );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
