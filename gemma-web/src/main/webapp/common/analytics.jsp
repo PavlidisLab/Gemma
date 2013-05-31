@@ -19,5 +19,14 @@
          var s = document.getElementsByTagName('script')[0];
          s.parentNode.insertBefore(ga, s);
       })();
+
+      if ( typeof googleAnalyticsTrackPageviewIfConfigured === 'undefined' ) {
+         var googleAnalyticsTrackPageviewIfConfigured = googleAnalyticsTrackPageviewIfConfigured || function(pageURL) {
+            if ( typeof _gaq !== 'undefined' ) {
+               _gaq.push([ '_setAccount', '${appConfig["ga.tracker"]}' ]);
+               _gaq.push([ '_trackPageview', pageURL ]);
+            }
+         };
+      }
    </script>
 </c:if>
