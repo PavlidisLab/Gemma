@@ -188,6 +188,10 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         return bms;
     }
 
+    /**
+     * @param bmvo
+     * @return
+     */
     private BioMaterial update( BioMaterialValueObject bmvo ) {
         BioMaterial bm = load( bmvo.getId() );
 
@@ -215,7 +219,8 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
                 // continuous, the value send is the actual value, not an id. This will only make sense if the value is
                 // a measurement.
                 boolean found = false;
-                // find the right factor value.
+
+                // find the right factor value to update.
                 for ( FactorValue fv : bm.getFactorValues() ) {
                     if ( fv.getExperimentalFactor().getId().equals( factorId ) ) {
                         if ( fv.getMeasurement() == null ) {
@@ -241,8 +246,10 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
                     /*
                      * Have to load the factor, create a factor value.
                      */
-
                     ExperimentalFactor ef = experimentalFactorDao.load( factorId );
+
+                    // note that this type of factorvalues are not reused for continuous ones.
+                    log.info( "Adding factor value for " + ef + ": " + factorValueString + " to " + bm );
 
                     FactorValue fv = FactorValue.Factory.newInstance();
                     fv.setExperimentalFactor( ef );
@@ -260,9 +267,8 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
                     fv.setMeasurement( m );
 
                     fv = factorValueDao.create( fv );
-
+                    updatedFactorValues.add( fv );
                     ef.getFactorValues().add( fv );
-
                     experimentalFactorDao.update( ef );
 
                 }
