@@ -30,3 +30,11 @@
       }
    </script>
 </c:if>
+
+<c:if test='${ appConfig["ga.tracker"] == null}'>
+    <script type="text/javascript">
+        if ( typeof googleAnalyticsTrackPageviewIfConfigured === 'undefined' ) {
+            var googleAnalyticsTrackPageviewIfConfigured = function(pageURL) {/* no op, for sandbox and development */};
+        }
+    </script>
+</c:if>
