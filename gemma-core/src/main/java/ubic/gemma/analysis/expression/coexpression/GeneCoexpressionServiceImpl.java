@@ -749,16 +749,18 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             HashMap<Gene, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
             // for queryGene get the interactions
-            Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this
-                    .getGene2GeneProteinAssociationForQueryGene( queryGene );
+            // FIXME not used yet
+            // Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this
+            // .getGene2GeneProteinAssociationForQueryGene( queryGene );
 
-            Map<Long, TfGeneAssociation> regulatedBy = this.getTfGeneAssociationsforTargetGene( queryGene );
-            Map<Long, TfGeneAssociation> regulates = this.getTfGeneAssociationsforTf( queryGene );
+            // FIXME not used yet
+            // Map<Long, TfGeneAssociation> regulatedBy = this.getTfGeneAssociationsforTargetGene( queryGene );
+            // Map<Long, TfGeneAssociation> regulates = this.getTfGeneAssociationsforTf( queryGene );
 
             if ( timer.getTime() > 100 ) {
                 log.info( "Postprocess " + queryGene.getOfficialSymbol() + " Phase I: " + timer.getTime() + "ms" );
             }
-            timer.stop();
+
             timer.reset();
             timer.start();
 
@@ -788,20 +790,15 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                 CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
 
-                /*
-                 * This Thaw is a big time sink and _should not_ be necessary.
-                 */
-                // foundGene = geneService.thawLite( foundGene ); // db hit
-
                 cvo.setQueryGene( queryGeneValueObject );
                 cvo.setFoundGene( new GeneValueObject( foundGene ) );
 
                 if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase I:" + timer2.getTime() + "ms" );
-                timer2.stop();
                 timer2.reset();
                 timer2.start();
 
-                populateInteractions( proteinInteractionMap, regulatedBy, regulates, foundGene, cvo );
+                // FIXME Temporarily disabled - we are not using this.
+                // populateInteractions( proteinInteractionMap, regulatedBy, regulates, foundGene, cvo );
 
                 Collection<Long> testingDatasets = Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g,
                         positionToIDMap );
@@ -822,6 +819,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 Collection<Long> specificDatasets = Gene2GenePopulationServiceImpl.getSpecificExperimentIds( g2g,
                         positionToIDMap );
 
+                if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase II:" + timer2.getTime() + "ms" );
+                timer2.reset();
+                timer2.start();
+
                 /*
                  * Specific probe EEids contains 1 even if the data set wasn't supporting.
                  */
@@ -837,9 +838,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 assert numTestingDatasets >= numSupportingDatasets;
                 assert numTestingDatasets <= eevos.size();
 
-                cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
-                        relevantEEIdList ) );
-
                 /*
                  * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
                  * full set of data sets that were used in the original analysis.
@@ -847,6 +845,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 if ( numSupportingDatasets < stringency ) {
                     continue;
                 }
+
+                // FIXME temporarily disabled, we are not using this
+                // cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
+                // relevantEEIdList ) );
 
                 allTestedDataSets.addAll( testingDatasets );
 
@@ -887,25 +889,24 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 allSupportingDatasets.addAll( supportingDatasets );
                 allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
+                if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase III:" + timer2.getTime() + "ms" );
+                timer2.reset();
+                timer2.start();
+
             }
 
             Collection<Long> geneIds = new ArrayList<Long>();
 
             for ( Gene g : allUsedGenes ) {
-
                 geneIds.add( g.getId() );
-
             }
-
-            populateNodeDegree( ecvos, geneIds, allTestedDataSets );
 
             if ( timer.getTime() > 1000 ) {
                 log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
                         + timer.getTime() + "ms" );
             }
-            timer.stop();
-            timer.reset();
-            timer.start();
+
+            populateNodeDegree( ecvos, geneIds, allTestedDataSets );
 
             // This is only necessary for debugging purposes. Helps us keep
             // track of duplicate genes found above.
@@ -934,9 +935,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
              * FIXME I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another
              * field to the value object...
              */
-            for ( ExpressionExperimentValueObject eevo : eevos ) {
-                eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
-            }
+            // FIXME this isn't needed, it is?
+            // for ( ExpressionExperimentValueObject eevo : eevos ) {
+            // eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
+            // }
 
             Collections.sort( ecvos );
             getGoOverlap( ecvos, queryGene );
@@ -1449,10 +1451,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         result.setDatasets( eevos );
         result.setKnownGeneDatasets( new ArrayList<CoexpressionDatasetValueObject>() );
         result.setKnownGeneResults( new ArrayList<CoexpressionValueObjectExt>() );
-        result.setPredictedGeneDatasets( new ArrayList<CoexpressionDatasetValueObject>() );
-        result.setPredictedGeneResults( new ArrayList<CoexpressionValueObjectExt>() );
-        result.setProbeAlignedRegionDatasets( new ArrayList<CoexpressionDatasetValueObject>() );
-        result.setProbeAlignedRegionResults( new ArrayList<CoexpressionValueObjectExt>() );
         result.setSummary( new HashMap<String, CoexpressionSummaryValueObject>() );
         return result;
     }
@@ -1485,6 +1483,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @param foundGene
      * @param cvo
      */
+    @SuppressWarnings("unused")
     private void populateInteractions( Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap,
             Map<Long, TfGeneAssociation> regulatedBy, Map<Long, TfGeneAssociation> regulates, Gene foundGene,
             CoexpressionValueObjectExt cvo ) {

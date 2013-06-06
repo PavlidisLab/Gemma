@@ -41,11 +41,6 @@ public class CoexpressionMetaValueObject {
 
     private boolean knownGenesOnly;
 
-    private Collection<CoexpressionDatasetValueObject> predictedGeneDatasets;
-
-    private Collection<CoexpressionValueObjectExt> predictedGeneResults;
-    private Collection<CoexpressionDatasetValueObject> probeAlignedRegionDatasets;
-    private Collection<CoexpressionValueObjectExt> probeAlignedRegionResults;
     private Collection<GeneValueObject> queryGenes;
     private Map<String, CoexpressionSummaryValueObject> summary;
 
@@ -63,22 +58,6 @@ public class CoexpressionMetaValueObject {
 
     public Collection<CoexpressionValueObjectExt> getKnownGeneResults() {
         return knownGeneResults;
-    }
-
-    public Collection<CoexpressionDatasetValueObject> getPredictedGeneDatasets() {
-        return predictedGeneDatasets;
-    }
-
-    public Collection<CoexpressionValueObjectExt> getPredictedGeneResults() {
-        return predictedGeneResults;
-    }
-
-    public Collection<CoexpressionDatasetValueObject> getProbeAlignedRegionDatasets() {
-        return probeAlignedRegionDatasets;
-    }
-
-    public Collection<CoexpressionValueObjectExt> getProbeAlignedRegionResults() {
-        return probeAlignedRegionResults;
     }
 
     public Collection<GeneValueObject> getQueryGenes() {
@@ -113,22 +92,6 @@ public class CoexpressionMetaValueObject {
         this.knownGenesOnly = knownGenesOnly;
     }
 
-    public void setPredictedGeneDatasets( Collection<CoexpressionDatasetValueObject> predictedGeneDatasets ) {
-        this.predictedGeneDatasets = predictedGeneDatasets;
-    }
-
-    public void setPredictedGeneResults( Collection<CoexpressionValueObjectExt> predictedGeneResults ) {
-        this.predictedGeneResults = predictedGeneResults;
-    }
-
-    public void setProbeAlignedRegionDatasets( Collection<CoexpressionDatasetValueObject> probeAlignedRegionDatasets ) {
-        this.probeAlignedRegionDatasets = probeAlignedRegionDatasets;
-    }
-
-    public void setProbeAlignedRegionResults( Collection<CoexpressionValueObjectExt> probeAlignedRegionResults ) {
-        this.probeAlignedRegionResults = probeAlignedRegionResults;
-    }
-
     public void setQueryGenes( Collection<GeneValueObject> queryGenes ) {
         this.queryGenes = queryGenes;
     }
@@ -155,20 +118,20 @@ public class CoexpressionMetaValueObject {
         return queryGenesOnlyResults;
     }
 
-	public int getMaxEdges() {
-		return maxEdges;
-	}
+    public int getMaxEdges() {
+        return maxEdges;
+    }
 
-	public void setMaxEdges(int maxEdges) {
-		this.maxEdges = maxEdges;
-	}
+    public void setMaxEdges( int maxEdges ) {
+        this.maxEdges = maxEdges;
+    }
 
-	public int getNonQueryGeneTrimmedValue() {
-		return nonQueryGeneTrimmedValue;
-	}
+    public int getNonQueryGeneTrimmedValue() {
+        return nonQueryGeneTrimmedValue;
+    }
 
-	public void setNonQueryGeneTrimmedValue(int nonQueryGeneTrimmedValue) {
-		this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
-	}
+    public void setNonQueryGeneTrimmedValue( int nonQueryGeneTrimmedValue ) {
+        this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
+    }
 
 }
