@@ -1875,7 +1875,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.association.coexpression.MouseGeneCoExpressionImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.association.coexpression.MouseGeneCoExpressionImpl" 
 		maxElementsInMemory="100000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1884,8 +1884,8 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="100000" eternal="true" overflowToDisk="false">
+	<cache name="ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl" 
+		maxElementsInMemory="2000000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
 				<timeoutBehavior type="noop" />
@@ -1893,8 +1893,8 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.association.coexpression.RatGeneCoExpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="100000" eternal="true" overflowToDisk="false">
+	<cache name="ubic.gemma.model.association.coexpression.RatGeneCoExpressionImpl"  
+		maxElementsInMemory="2000000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
 				<timeoutBehavior type="noop" />
@@ -1902,8 +1902,8 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.association.coexpression.OtherGeneCoExpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="100000" eternal="true" overflowToDisk="false">
+	<cache name="ubic.gemma.model.association.coexpression.OtherGeneCoExpressionImpl" 
+		maxElementsInMemory="2000000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
 				<timeoutBehavior type="noop" />

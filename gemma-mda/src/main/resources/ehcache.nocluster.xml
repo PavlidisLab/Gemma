@@ -636,16 +636,16 @@
 	<cache name="ubic.gemma.model.association.coexpression.OtherProbeCoExpressionImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.association.coexpression.MouseGeneCoExpressionImpl" maxElementsInMemory="100000"
+	<cache name="ubic.gemma.model.association.coexpression.MouseGeneCoExpressionImpl" maxElementsInMemory="2000000"
 		eternal="true" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl" maxElementsInMemory="100000"
+	<cache name="ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl" maxElementsInMemory="2000000"
 		eternal="true" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.association.coexpression.RatGeneCoExpressionImpl" maxElementsInMemory="100000"
+	<cache name="ubic.gemma.model.association.coexpression.RatGeneCoExpressionImpl" maxElementsInMemory="2000000"
 		eternal="true" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.association.coexpression.OtherGeneCoExpressionImpl" maxElementsInMemory="100000"
+	<cache name="ubic.gemma.model.association.coexpression.OtherGeneCoExpressionImpl" maxElementsInMemory="2000000"
 		eternal="true" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.association.GeneHomologyImpl" maxElementsInMemory="10000" eternal="false"
