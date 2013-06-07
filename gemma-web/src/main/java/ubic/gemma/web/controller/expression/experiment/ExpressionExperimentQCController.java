@@ -1289,7 +1289,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
-        JFreeChart chart = ChartFactory.createScatterPlot( "", "Mean", "Variance", collection,
+        JFreeChart chart = ChartFactory.createScatterPlot( "", "log2(mean)", "log2(variance)", collection,
                 PlotOrientation.VERTICAL, false, false, false );
 
         // adjust colors and shapes
