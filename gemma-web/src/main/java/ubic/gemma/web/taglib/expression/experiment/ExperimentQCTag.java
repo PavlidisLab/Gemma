@@ -265,7 +265,7 @@ public class ExperimentQCTag extends TagSupport {
                     + height
                     + ")"
                     + ";return 1\"; "
-                    + "title=\"Assay correlations (bright=higher); click for larger version\" >"
+                    + "title=\"Mean-variance relationhips; click for larger version\" >"
                     + "<img src=\"/Gemma/expressionExperiment/visualizeMeanVariance.html?id="
                     + this.eeid
                     + "&size=1\" alt='Image unavailable' width='"
