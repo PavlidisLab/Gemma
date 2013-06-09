@@ -430,6 +430,35 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
+     * See bug 3328 - we don't want to use IMAGE clone IDs
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testConvertGSE4229IMAGE() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse4229Short/GSE4229.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE4229" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        @SuppressWarnings("unchecked")
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        ExpressionExperiment ee = ees.iterator().next();
+        ArrayDesign platform = ee.getBioAssays().iterator().next().getArrayDesignUsed();
+
+        BioSequence seq = platform.getCompositeSequences().iterator().next().getBiologicalCharacteristic();
+        assertNotNull( seq.getSequenceDatabaseEntry() );
+        String acc = seq.getSequenceDatabaseEntry().getAccession();
+        assertEquals( "Genbank", seq.getSequenceDatabaseEntry().getExternalDatabase().getName() );
+        assertTrue( !acc.startsWith( "IMAGE" ) );
+    }
+
+    /**
      * Gets no 'preferred' quantitation type. - it should find one.
      * 
      * @throws Exception
@@ -822,8 +851,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         gc.setElementLimitForStrictness( 500 );
         Object result = this.gc.convert( platform );
         assertNotNull( result );
-        ArrayDesign ad = ( ArrayDesign ) result;
-        // FIXME currently we reject probes.
+        // ArrayDesign ad = ( ArrayDesign ) result;
+        // FIXME currently we reject probes, so this count is different.
         // assertEquals( 168, ad.getCompositeSequences().size() );
     }
 
@@ -913,6 +942,11 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     }
 
+    /**
+     * We should not longer use IMAGE:XXXXX as the sequence name.
+     * 
+     * @throws Exception
+     */
     @Test
     public void testImageClones() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -927,12 +961,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( ad );
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             BioSequence bs = cs.getBiologicalCharacteristic();
-            if ( bs != null && bs.getName().startsWith( "IMAGE" ) ) {
-                return;
-            }
-
+            assertTrue( "Got: " + bs.getName(), !bs.getName().startsWith( "IMAGE" )
+                    || bs.getSequenceDatabaseEntry() == null );
         }
-        fail( "No IMAGE clones!" );
     }
 
     /**

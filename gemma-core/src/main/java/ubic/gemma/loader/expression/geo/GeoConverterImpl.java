@@ -1310,6 +1310,8 @@ public class GeoConverterImpl implements GeoConverter {
             descIter = descriptions.iterator();
         }
 
+        // http://www.ncbi.nlm.nih.gov/RefSeq/key.html#accessions : "RefSeq accession numbers can be
+        // distinguished from GenBank accessions by their prefix distinct format of [2 characters|underbar]"
         Pattern refSeqAccessionPattern = Pattern.compile( "^[A-Z]{2}_" );
 
         boolean strictSelection = false;
@@ -1400,41 +1402,34 @@ public class GeoConverterImpl implements GeoConverter {
             BioSequence bs = createMinimalBioSequence( probeTaxon );
 
             boolean isRefseq = false;
+
             // ExternalDB will be null if it's IMAGE (this is really pretty messy, sorry)
-            if ( externalAccession != null && externalDb != null && externalDb.getName().equals( "Genbank" )
-                    && StringUtils.isNotBlank( externalAccession ) ) {
-                // http://www.ncbi.nlm.nih.gov/RefSeq/key.html#accessions : "RefSeq accession numbers can be
-                // distinguished from GenBank accessions by their prefix distinct format of [2 characters|underbar]"
+            if ( StringUtils.isNotBlank( externalAccession ) && isGenbank( externalDb ) ) {
                 Matcher refSeqAccessionMatcher = refSeqAccessionPattern.matcher( externalAccession );
                 isRefseq = refSeqAccessionMatcher.matches();
-            }
-
-            boolean isImage = false;
-            if ( cloneIdentifier != null ) {
+                bs.setName( externalAccession );
+            } else if ( StringUtils.isNotBlank( cloneIdentifier ) ) {
                 bs.setName( cloneIdentifier );
-                isImage = cloneIdentifier.startsWith( "IMAGE" );
+            } else {
+                bs.setName( id );
             }
 
             /*
-             * If we are given a sequence, we don't need the genbank identifier, which is probably not correct anyway.
+             * If we are given a sequence (as in, AGTC), we don't need the genbank identifier, which is probably not
+             * correct anyway.
              */
             if ( sequences != null && StringUtils.isNotBlank( sequences.get( i ) ) ) {
                 bs.setSequence( sequences.get( i ) );
                 bs.setIsApproximateLength( false );
                 bs.setLength( new Long( bs.getSequence().length() ) );
                 bs.setType( SequenceType.DNA );
-                // bs.setName( platform.getGeoAccession() + "_" + id );
                 bs.setName( id );
                 bs.setDescription( "Sequence from platform "
                         + platform.getGeoAccession()
                         + " provided by manufacturer. "
                         + ( externalAccession != null ? "Used in leiu of " + externalAccession
                                 : "No external accession provided" ) );
-            } else if ( externalAccession != null && !isRefseq && !isImage && externalDb != null ) {
-                /*
-                 * We don't use this if we have an IMAGE clone because the accession might be wrong (e.g., for a
-                 * Refseq). During persisting the IMAGE clone will be replaced with the 'real' thing.
-                 */
+            } else if ( externalAccession != null && !isRefseq && externalDb != null ) {
 
                 /*
                  * We also don't store them if they are refseq ids, because refseq ids are generally not the actual
@@ -1487,6 +1482,14 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         log.info( arrayDesign.getCompositeSequences().size() + " elements on the platform" );
+    }
+
+    /**
+     * @param externalDb
+     * @return
+     */
+    private boolean isGenbank( ExternalDatabase externalDb ) {
+        return externalDb != null && externalDb.getName().equalsIgnoreCase( "Genbank" );
     }
 
     /**
@@ -2415,7 +2418,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     private DatabaseEntry createDatabaseEntry( ExternalDatabase externalDb, String externalRef, BioSequence bs ) {
         DatabaseEntry dbe;
-        if ( externalDb.getName().equalsIgnoreCase( "genbank" ) ) {
+        if ( isGenbank( externalDb ) ) {
             // deal with accessions in the form XXXXX.N
             dbe = ExternalDatabaseUtils.getGenbankAccession( externalRef );
             dbe.setExternalDatabase( externalDb ); // make sure it matches the one used here.
@@ -2541,15 +2544,6 @@ public class GeoConverterImpl implements GeoConverter {
                 result.setName( organism + " ORFs" );
                 log.warn( "External database is " + result );
             }
-
-            // } else if ( likelyExternalDatabaseIdentifier.equals( "CLONE_ID" ) ) {
-            // String sample = platform.getColumnData( "CLONE_ID" ).iterator().next();
-            // if ( sample.startsWith( "IMAGE" ) ) {
-            // result.setType( DatabaseType.SEQUENCE );
-            // result.setName( "IMAGE" );
-            // } else {
-            // throw new IllegalStateException( "No external database was identified, but had CLONE_ID" );
-            // }
         }
         if ( result == null || result.getName() == null ) {
             throw new IllegalStateException( "No external database was identified" );
