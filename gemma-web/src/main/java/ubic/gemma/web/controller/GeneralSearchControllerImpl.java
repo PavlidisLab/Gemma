@@ -329,16 +329,16 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ),
                     settings );
 
-            if ( !SecurityServiceImpl.isUserAdmin() ) {
-                auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
-            }
+            //if ( !SecurityServiceImpl.isUserAdmin() ) {
+            //    auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
+            //}
 
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
             vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
 
-            if ( !SecurityServiceImpl.isUserAdmin() ) {
-                auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
-            }
+            //if ( !SecurityServiceImpl.isUserAdmin() ) {
+             //   auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
+            //}
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
             Collection<CompositeSequenceValueObject> css = new ArrayList<CompositeSequenceValueObject>();
             for ( SearchResult sr : results ) {
@@ -382,12 +382,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         if ( vos == null || vos.isEmpty() ) {
-            //bug 3475: if there are search results but they are all removed because they are troubled, then results has ExpressionExperimentImpls in
-            //it causing front end errors, if vos is empty make sure to get rid of all search results
-            for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
-                SearchResult sr = it.next();                
-                it.remove();                
-            }
+            
             return;
         }
 
