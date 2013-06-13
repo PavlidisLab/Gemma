@@ -66,7 +66,8 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      */
     @Override
     public List<Characteristic> browse( Integer start, Integer limit ) {
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( "from CharacteristicImpl where value not like 'GO_%'" );
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "from CharacteristicImpl where value not like 'GO_%'" );
         query.setMaxResults( limit );
         query.setFirstResult( start );
         return query.list();
@@ -80,9 +81,12 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      */
     @Override
     public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        Query query = this.getSessionFactory().getCurrentSession().createQuery(
-                "from CharacteristicImpl where value not like 'GO_%' order by " + orderField + " "
-                        + ( descending ? "desc" : "" ) );
+        Query query = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "from CharacteristicImpl where value not like 'GO_%' order by " + orderField + " "
+                                + ( descending ? "desc" : "" ) );
         query.setMaxResults( limit );
         query.setFirstResult( start );
         return query.list();
@@ -258,6 +262,21 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         } finally {
             if ( timer.getTime() > 100 ) {
                 log.info( "Characteristic search for " + search + ": " + timer.getTime() + "ms" );
+            }
+        }
+    }
+
+    @Override
+    public Collection<? extends Characteristic> findByCategory( String query ) {
+        final String queryString = "select distinct char from CharacteristicImpl as char where char.category like :search";
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        try {
+            return getHibernateTemplate().findByNamedParam( queryString, "search", query + "%" );
+        } finally {
+            if ( timer.getTime() > 100 ) {
+                log.info( "Characteristic search for category: " + query + ": " + timer.getTime() + "ms" );
             }
         }
     }

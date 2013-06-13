@@ -145,4 +145,9 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
         return this.getCharacteristicDao().findByValue( classes, string );
     }
 
+    @Override
+    public Collection<? extends Characteristic> findByCategory( String query ) {
+        return this.getCharacteristicDao().findByCategory( query );
+    }
+
 }

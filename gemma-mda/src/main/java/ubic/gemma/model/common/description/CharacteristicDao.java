@@ -109,4 +109,10 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
      */
     public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
+    /**
+     * @param valuePrefix
+     * @return
+     */
+    public Collection<? extends Characteristic> findByCategory( String query );
+
 }

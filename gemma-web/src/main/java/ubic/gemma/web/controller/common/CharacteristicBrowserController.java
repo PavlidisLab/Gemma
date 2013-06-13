@@ -83,7 +83,7 @@ public class CharacteristicBrowserController {
      * @return
      */
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix ) {
-        return findCharacteristicsCustom( valuePrefix, true, true, true, true, true, true );
+        return findCharacteristicsCustom( valuePrefix, true, true, true, true, true, true, false );
     }
 
     /**
@@ -93,16 +93,23 @@ public class CharacteristicBrowserController {
      * @param searchBMs
      * @param searchFVs
      * @param searchFFVs Search factor values that lack characteristics -- that is, search the factorValue.value.
+     * @param searchCategories Should the Category be searched, not just the Value?
      * @return
      */
     public Collection<AnnotationValueObject> findCharacteristicsCustom( String valuePrefix, boolean searchNos,
-            boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchPAs, boolean searchFVVs ) {
+            boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchPAs, boolean searchFVVs,
+            boolean searchCategories ) {
 
         List<AnnotationValueObject> results = new ArrayList<AnnotationValueObject>();
         if ( StringUtils.isBlank( valuePrefix ) ) {
             return results;
         }
         Collection<Characteristic> chars = characteristicService.findByValue( valuePrefix );
+
+        if ( searchCategories ) {
+            chars.addAll( characteristicService.findByCategory( valuePrefix ) );
+        }
+
         Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
         for ( Object o : chars ) {
             Characteristic c = ( Characteristic ) o;
@@ -151,6 +158,7 @@ public class CharacteristicBrowserController {
 
                 results.add( avo );
             }
+
         }
 
         log.info( "Characteristic search for: '" + valuePrefix + "*': " + results.size() + " results, returning up to "
@@ -299,13 +307,16 @@ public class CharacteristicBrowserController {
             avo.setParentOfParentName( String.format( "Experimental Design for: %s", ee.getName() ) );
             avo.setParentOfParentLink( AnchorTagUtil.getExperimentalDesignLink( fv.getExperimentalFactor()
                     .getExperimentalDesign().getId(), avo.getParentName() )
-                    + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil.getExpressionExperimentLink( ee.getId(), ee.getName() ) );
+                    + "&nbsp;&laquo;&nbsp;"
+                    + AnchorTagUtil.getExpressionExperimentLink( ee.getId(),
+                            String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ), ee.getShortName() ) ) );
         } else if ( parent instanceof ExperimentalFactor ) {
             ExperimentalFactor ef = ( ExperimentalFactor ) parent;
             avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(),
                     "Exp. Factor: " + ef.getName() ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
-            avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
+            avo.setParentOfParentName( String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ),
+                    ee.getShortName() ) );
             avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(),
                     avo.getParentOfParentName() ) );
         } else if ( parent instanceof PhenotypeAssociation ) {

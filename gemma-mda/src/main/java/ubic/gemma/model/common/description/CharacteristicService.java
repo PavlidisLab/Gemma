@@ -142,4 +142,10 @@ public interface CharacteristicService {
      */
     public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
+    /**
+     * @param queryPrefix
+     * @return
+     */
+    public Collection<? extends Characteristic> findByCategory( String queryPrefix );
+
 }
