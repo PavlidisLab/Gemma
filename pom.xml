@@ -502,7 +502,7 @@
 				<artifactId>cobertura-maven-plugin</artifactId>
 				<version>2.5.2</version>
 				<configuration>
-					<aggregate>false</aggregate>
+					<aggregate>true</aggregate>
 					<outputDirectory>${cobertura.outputDirectory}/${project.artifactId}</outputDirectory>
 				</configuration>
 			</plugin>

@@ -147,11 +147,6 @@
 			<attribute name="javadoc_location" value="http://ressim.berlios.de/doc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/springmodules/spring-modules-javaspaces/0.9/spring-modules-javaspaces-0.9.jar" sourcepath="/M2_REPO/org/springmodules/spring-modules-javaspaces/0.9/spring-modules-javaspaces-0.9-sources.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="https://springmodules.dev.java.net/source/browse/*checkout*/springmodules/www/docs/javadocs/0.9"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/net/jini/jini-core/2.1/jini-core-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/jini/jini-ext/2.1/jini-ext-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javaspaces/JSpaces/0.8/JSpaces-0.8.jar"/>
