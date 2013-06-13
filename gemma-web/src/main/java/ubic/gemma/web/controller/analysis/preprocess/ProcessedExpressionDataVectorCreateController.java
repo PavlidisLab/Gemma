@@ -23,7 +23,6 @@ import org.springframework.stereotype.Controller;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
 
