@@ -352,6 +352,9 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
         } else if ( parent instanceof BioMaterial ) {
             BioMaterial bm = ( BioMaterial ) parent;
             bm.getCharacteristics().remove( c );
+            if ( c.equals( bm.getMaterialType() ) ) {
+                bm.setMaterialType( null );
+            }
             bioMaterialService.update( bm );
         } else if ( parent instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) parent;
@@ -359,5 +362,4 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
             factorValueService.update( fv );
         }
     }
-
 }
