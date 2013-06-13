@@ -312,8 +312,8 @@ public class CharacteristicBrowserController {
                             String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ), ee.getShortName() ) ) );
         } else if ( parent instanceof ExperimentalFactor ) {
             ExperimentalFactor ef = ( ExperimentalFactor ) parent;
-            avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(),
-                    "Exp. Factor: " + ef.getName() ) );
+            avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(), "Exp Fac: "
+                    + ef.getName() + " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")" ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
             avo.setParentOfParentName( String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ),
                     ee.getShortName() ) );
