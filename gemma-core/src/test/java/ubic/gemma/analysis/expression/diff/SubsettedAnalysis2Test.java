@@ -77,11 +77,11 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
         ExperimentalFactor genotype = null;
         ExperimentalFactor phenotype = null;
         for ( ExperimentalFactor ef : factors ) {
-            if ( ef.getCategory().getValue().equals( "GeneticModification" ) ) {
+            if ( ef.getCategory().getValue().equals( "genotype" ) ) {
                 genotype = ef;
-            } else if ( ef.getCategory().getValue().equals( "StrainOrLine" ) ) {
+            } else if ( ef.getCategory().getValue().equals( "strain" ) ) {
                 strainOrLine = ef;
-            } else if ( ef.getCategory().getValue().equals( "Phenotype" ) ) {
+            } else if ( ef.getCategory().getValue().equals( "phenotype" ) ) {
                 phenotype = ef;
             }
         }

@@ -4,8 +4,8 @@
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=2976
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
-#$SamplingTimePoint : Category=SamplingTimePoint Type=Categorical
-#$Phenotype : Category=Phenotype Type=Categorical
+#$SamplingTimePoint : Category=timepoint Type=Categorical
+#$Phenotype : Category=phenotype Type=Categorical
 Bioassay	ExternalID	SamplingTimePoint	Phenotype
 GSE19420_Biomat_2___BioAssayImplId=117536Name=NW30_NGT	GSM482960	N/A	normoglycemic_|_reference_subject_role_|
 GSE19420_Biomat_1___BioAssayImplId=117535Name=ON04_NGT	GSM482961	N/A	normoglycemic_|_reference_subject_role_|

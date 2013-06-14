@@ -8,7 +8,7 @@
 #$batch : Category=block Type=Categorical
 #$strain : Category=strain Type=Categorical
 #$genotype : Category=genotype Type=Categorical
-Bioassay	ExternalID	phenotype	block	strain	genotype
+Bioassay	ExternalID	phenotype	batch	strain	genotype
 GSE12991_Biomat_9___BioAssayImplId=223736Name=wt_206_GFP_neg1,biologicalreplicate1	GSM325511	no_miR_124_or_miR_206_transcription	Batch_01_18/05/07	Line_2	wild_type
 GSE12991_Biomat_16___BioAssayImplId=223737Name=wt_206_GFP_pos1,biologicalreplicate1	GSM325510	miR_206_transcription	Batch_01_18/05/07	Line_2	wild_type
 GSE12991_Biomat_1___BioAssayImplId=223728Name=wt_124_GFP_neg2,biologicalreplicate2	GSM325519	no_miR_124_or_miR_206_transcription	Batch_01_18/05/07	Line_1	wild_type
