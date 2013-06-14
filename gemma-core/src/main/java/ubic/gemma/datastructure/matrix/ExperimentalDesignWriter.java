@@ -144,7 +144,7 @@ public class ExperimentalDesignWriter {
             buf.append( ExperimentalDesignImporterImpl.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
             buf.append( ef.getName() + " :" );
             if ( ef.getCategory() != null ) {
-                buf.append( " Category=" + ef.getCategory().getValue() );
+                buf.append( " Category=" + ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
             }
             buf.append( " Type=" );
 

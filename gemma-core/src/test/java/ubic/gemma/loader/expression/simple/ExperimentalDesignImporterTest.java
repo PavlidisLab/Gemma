@@ -48,7 +48,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.ontology.OntologyService; 
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -65,7 +65,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Autowired
     OntologyService os;
 
-    ExperimentalFactorOntologyService mos;
+    ExperimentalFactorOntologyService efos;
 
     @Autowired
     ExpressionExperimentService eeService;
@@ -89,17 +89,17 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Before
     public void setup() throws Exception {
 
-        this.mos = os.getExperimentalFactorOntologyService();
+        this.efos = os.getExperimentalFactorOntologyService();
 
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/experimentalDesignTestData.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-        if ( !mos.isOntologyLoaded() ) {
-            mos.startInitializationThread( true );
-            while ( !mos.isOntologyLoaded() ) {
+        if ( !efos.isOntologyLoaded() ) {
+            efos.startInitializationThread( true );
+            while ( !efos.isOntologyLoaded() ) {
                 Thread.sleep( 5000 );
-                log.info( "Waiting for mgedontology to load" );
+                log.info( "Waiting for ontology to load" );
             }
         }
 

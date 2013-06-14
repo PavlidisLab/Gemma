@@ -608,7 +608,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         OntologyTerm t = null;
         for ( OntologyTerm to : terms ) {
-            if ( to.getTerm().equals( category ) ) {
+            if ( to.getTerm().equals( category ) || to.getTerm().equals( category.replaceAll( "_", " " ) ) ) {
                 t = to;
                 break;
             }

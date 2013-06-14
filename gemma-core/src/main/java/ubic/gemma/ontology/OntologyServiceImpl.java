@@ -498,7 +498,7 @@ public class OntologyServiceImpl implements OntologyService {
                 String line;
                 while ( ( line = reader.readLine() ) != null ) {
                     if ( line.startsWith( "#" ) ) continue;
-                    String[] f = StringUtils.split( line );
+                    String[] f = StringUtils.split( line, '\t' );
                     OntologyTerm t = getTerm( f[0] );
                     if ( t == null ) {
                         log.warn( "No term found: " + line );
