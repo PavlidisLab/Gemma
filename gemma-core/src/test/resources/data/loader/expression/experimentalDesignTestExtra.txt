@@ -1,7 +1,7 @@
-#$ Age : Category=Age Type=Continuous				
-#$ Profile : Category=DiseaseState Type=Categorical				
-#$ PMI (h) : Category=EnvironmentalHistory Type=Continuous				
-#$ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical
+#$ Age : Category=age Type=Continuous				
+#$ Profile : Category=disease Type=Categorical				
+#$ PMI (h) : Category=environmental_history Type=Continuous				
+#$ Lifetime Alcohol : Category=environmental_history Type=Categorical
 ID	Age	Profile	PMI (h)	Lifetime Alcohol
 A-1	30	Bipolar	48	Moderate present
 A-2	30	Bipolar	60	Heavy in present

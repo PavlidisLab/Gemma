@@ -1,20 +1,20 @@
-#$ Age : Category=Age Type=Continuous
-#$ Sex : Category=Sex Type=Categorical
-#$ Race : Category=Phenotype Type=Categorical
-#$ Profile : Category=DiseaseState Type=Categorical
-#$ DSM IV Codes : Category=DiseaseState Type=Categorical
-#$ Axis I Primary Diagnosis : Category=DiseaseState Type=Categorical 
-#$ PMI (h) : Category=Preservation Type=Continuous
-#$ Brain PH : Category=EnvironmentalHistory Type=Continuous
-#$ Left Brain : Category=Preservation Type=Categorical
-#$ Suicide Status : Category=EnvironmentalHistory Type=Categorical
-#$ Psychotic Feature : Category=DiseaseState Type=Categorical
-#$ Rate of Death : Category=Phenotype Type=Categorical
-#$ Exacerbation : Category=Phenotype Type=Categorical
-#$ Smoking at Time of Death : Category=EnvironmentalHistory Type=Categorical
-#$ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical
-#$ Lifetime Drugs : Category=EnvironmentalHistory Type=Categorical
-#$ Lifetime Anti-psychotics : Category=EnvironmentalHistory Type=Continuous																	
+#$ Age : Category=age Type=Continuous
+#$ Sex : Category=sex Type=Categorical
+#$ Race : Category=phenotype Type=Categorical
+#$ Profile : Category=disease Type=Categorical
+#$ DSM IV Codes : Category=disease Type=Categorical
+#$ Axis I Primary Diagnosis : Category=disease Type=Categorical 
+#$ PMI (h) : Category=preservation Type=Continuous
+#$ Brain PH : Category=environmental_history Type=Continuous
+#$ Left Brain : Category=preservation Type=Categorical
+#$ Suicide Status : Category=environmental_history Type=Categorical
+#$ Psychotic Feature : Category=disease Type=Categorical
+#$ Rate of Death : Category=phenotype Type=Categorical
+#$ Exacerbation : Category=phenotype Type=Categorical
+#$ Smoking at Time of Death : Category=environmental_history Type=Categorical
+#$ Lifetime Alcohol : Category=environmental_history Type=Categorical
+#$ Lifetime Drugs : Category=environmental_history Type=Categorical
+#$ Lifetime Anti-psychotics : Category=environmental_history Type=Continuous																	
 ID	Age	Sex	Race	Profile	DSM IV Codes	Axis I Primary Diagnosis	PMI (h)	Brain PH	Left Brain	Suicide Status	Psychotic Feature	Rate of Death	Exacerbation	Smoking at Time of Death	Lifetime Alcohol	Lifetime Drugs	Lifetime Anti-psychotics
 example_A-1	30	M	White	Bipolar	296.54	BPI	48	6.39	Frozen	Yes	Yes	Sudden	Definite	Yes	Moderate in present	Moderate in present	9000
 example_A-2	30	M	White	Bipolar	296.89	BPII	60	6.7	Frozen	Yes	No	Possible anoxia	Definite		Heavy in present	Heavy in present	0

@@ -26,10 +26,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -40,7 +38,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.ontology.OntologyService;
 
 /**
  * @author paul
@@ -52,32 +49,15 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
     protected GeoService geoService;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    ExperimentalDesignImporter experimentalDesignImporter;
+    private ExperimentalDesignImporter experimentalDesignImporter;
 
-    @Autowired
-    ExperimentalDesignService experimentalDesignService;
-
-    @Autowired
-    ExperimentalFactorService experimentalFactorService;
-
-    @Autowired
-    OntologyService os;
-
-    ExpressionExperiment ee;
+    private ExpressionExperiment ee;
 
     @Before
     public void setUp() throws Exception {
-        ExperimentalFactorOntologyService categoryService = os.getExperimentalFactorOntologyService();
-        if ( !categoryService.isOntologyLoaded() ) {
-            categoryService.startInitializationThread( true );
-            while ( !categoryService.isOntologyLoaded() ) {
-                Thread.sleep( 5000 );
-                log.info( "Waiting for Ontology to load" );
-            }
-        }
 
         String path = FileTools.resourceToPath( "/data/loader/expression/geo/gse18162Short" );
         try {

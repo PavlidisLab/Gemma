@@ -489,7 +489,7 @@ public class OntologyServiceImpl implements OntologyService {
         if ( categoryterms == null ) {
             URL termUrl = OntologyServiceImpl.class.getResource( "/ubic/gemma/ontology/EFO.factor.categories.txt" );
 
-            // FIXME perhaps use this. But would want to update it periodically.
+            // FIXME perhaps use this. But would want to update it periodically. e.g. cache that expires.
             // Collection<String> usedUris = characteristicService.getUsedCategories();
 
             categoryterms = new HashSet<OntologyTerm>();

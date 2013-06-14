@@ -107,7 +107,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
         String in = new String( b );
 
         assertTrue( in.contains( "PoolTs1Cje_P0_hyb1" ) );
-        assertTrue( in.contains( "#$strain : Category=StrainOrLine Type=Categorical" ) );
+        assertTrue( in.contains( "#$strain : Category=strain Type=Categorical" ) );
 
     }
 }

@@ -76,7 +76,6 @@ public class FilterConfig implements Serializable {
      * If true, MINIMUM_SAMPLE is ignored.
      */
     private boolean ignoreMinimumSampleThreshold = false;
-    private boolean knownGenesOnly = false;
     private boolean logTransform = false;
     private double lowDistinctValueCut = DEFAULT_DISTINCTVALUE_FRACTION;
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
@@ -85,6 +84,21 @@ public class FilterConfig implements Serializable {
     private boolean lowVarianceCutIsSet = true;
     private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
     private boolean minPresentFractionIsSet = true;
+    private boolean requireSequences = true;
+
+    public boolean isRequireSequences() {
+        return requireSequences;
+    }
+
+    /**
+     * Set to true if rows lacking associated BioSequences for the element should be removed.
+     * 
+     * @param requireSequences
+     */
+    public void setRequireSequences( boolean requireSequences ) {
+        this.requireSequences = requireSequences;
+    }
+
     private int startingRows = 0;
 
     private boolean lowDistinctValueIsSet = false;;
@@ -167,10 +181,6 @@ public class FilterConfig implements Serializable {
         return ignoreMinimumSampleThreshold;
     }
 
-    public boolean isKnownGenesOnly() {
-        return knownGenesOnly;
-    }
-
     /**
      * @return the logTransform
      */
@@ -191,7 +201,7 @@ public class FilterConfig implements Serializable {
     }
 
     public void setAfterDistinctValueCut( int afterDistinctValueCut ) {
-        this.afterDistinctValueCut = afterDistinctValueCut; 
+        this.afterDistinctValueCut = afterDistinctValueCut;
     }
 
     /**
@@ -239,10 +249,6 @@ public class FilterConfig implements Serializable {
 
     public void setIgnoreMinimumSampleThreshold( boolean ignoreMinimumSampleThreshold ) {
         this.ignoreMinimumSampleThreshold = ignoreMinimumSampleThreshold;
-    }
-
-    public void setKnownGenesOnly( boolean knownGenesOnly ) {
-        this.knownGenesOnly = knownGenesOnly;
     }
 
     /**

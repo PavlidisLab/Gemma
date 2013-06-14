@@ -97,6 +97,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) {
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
+        assert !dataVectors.isEmpty();
         this.processedExpressionDataVectorService.thaw( dataVectors );
         ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
         return eeDoubleMatrix;

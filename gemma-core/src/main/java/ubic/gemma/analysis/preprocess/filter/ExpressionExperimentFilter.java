@@ -192,7 +192,14 @@ public class ExpressionExperimentFilter {
 
         int startingRows = eeDoubleMatrix.rows();
         config.setStartingRows( startingRows );
-        filteredMatrix = noSequencesFilter( eeDoubleMatrix );
+
+        if ( config.isRequireSequences() ) {
+            filteredMatrix = noSequencesFilter( eeDoubleMatrix );
+            if ( filteredMatrix.rows() == 0 ) {
+                throw new IllegalStateException( "No rows left after removing elements without sequences" );
+            }
+        }
+
         int afterSequenceRemovalRows = filteredMatrix.rows();
 
         // boolean twoColor = isTwoColor();
