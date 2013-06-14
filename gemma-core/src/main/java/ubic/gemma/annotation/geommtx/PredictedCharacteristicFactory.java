@@ -23,14 +23,6 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 public interface PredictedCharacteristicFactory {
 
     /**
-     * Infer the category
-     * 
-     * @param URI
-     * @return
-     */
-    public abstract String getCategory( String URI );
-
-    /**
      * @param URI
      * @return
      */

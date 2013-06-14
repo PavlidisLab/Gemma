@@ -90,7 +90,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -378,12 +377,12 @@ public class GeoConverterImpl implements GeoConverter {
         ExperimentalFactor experimentalFactor = ExperimentalFactor.Factory.newInstance();
         experimentalFactor.setName( geoSubSet.getType().toString() );
         VocabCharacteristic term = convertVariableType( geoSubSet.getType() );
+        assert term != null;
         term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
         term.setValue( term.getCategory() );
-
         term.setValueUri( term.getCategoryUri() );
-
         experimentalFactor.setCategory( term );
+
         experimentalFactor.setType( FactorType.CATEGORICAL );
         experimentalFactor.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
 
@@ -800,6 +799,9 @@ public class GeoConverterImpl implements GeoConverter {
 
                 try {
                     VocabCharacteristic gemmaChar = convertVariableType( GeoVariable.convertStringToType( category ) );
+                    if ( gemmaChar == null ) {
+                        continue;
+                    }
                     gemmaChar.setDescription( defaultDescription );
                     gemmaChar.setValue( value );
                     gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
@@ -829,7 +831,8 @@ public class GeoConverterImpl implements GeoConverter {
             sourceChar.setDescription( "GEO Sample source" );
             String characteristic = trimString( channel.getSourceName() );
             sourceChar.setCategory( "BioSource" );
-            sourceChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#BioSource" );
+            sourceChar
+                    .setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000635" /* organism part; used to be 'biosource' */);
             sourceChar.setValue( characteristic );
             sourceChar.setEvidenceCode( GOEvidenceCode.IIA );
             bioMaterial.getCharacteristics().add( sourceChar );
@@ -869,7 +872,7 @@ public class GeoConverterImpl implements GeoConverter {
             VocabCharacteristic labelChar = VocabCharacteristic.Factory.newInstance();
             labelChar.setDescription( "GEO Sample label" );
             labelChar.setCategory( "LabelCompound" );
-            labelChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#LabelCompound" );
+            labelChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000562" /* labeling; used to be LabelCompound */);
             labelChar.setValue( characteristic );
             labelChar.setEvidenceCode( GOEvidenceCode.IIA );
             bioMaterial.getCharacteristics().add( labelChar );
@@ -1628,30 +1631,29 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
+     * Note that this is apparently never actually used?
+     * 
      * @param repType
      * @return
      */
     private VocabCharacteristic convertReplicatationType( ReplicationType repType ) {
         VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
-        result.setCategory( "ReplicateDescriptionType" );
-        result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#ReplicateDescriptionType" );
+        result.setCategory( "replicate" );
+        result.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000683" /* replicate */);
         result.setEvidenceCode( GOEvidenceCode.IIA );
         ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
         mged.setName( "MGED Ontology" );
         mged.setType( DatabaseType.ONTOLOGY );
 
         if ( repType.equals( ReplicationType.biologicalReplicate ) ) {
-            result.setValue( "biological_replicate" );
-            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#biological_replicate" );
+            result.setValue( "biological replicate" );
+            result.setValueUri( "http://www.ebi.ac.uk/efo/EFO_0002091" /* biological replicate */);
         } else if ( repType.equals( ReplicationType.technicalReplicateExtract ) ) {
-            result.setValue( "technical_replicate" );
-            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#technical_replicate" );
+            result.setValue( "technical replicate" );
+            result.setValueUri( "http://www.ebi.ac.uk/efo/EFO_0002090" /* technical replicate */);
         } else if ( repType.equals( ReplicationType.technicalReplicateLabeledExtract ) ) {
-            result.setValue( "technical_replicate" );
-            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#technical_replicate" ); // MGED doesn't have
-            // a
-            // term to distinguish
-            // these.
+            result.setValue( "technical replicate" );
+            result.setValueUri( "http://www.ebi.ac.uk/efo/EFO_0002090" /* technical replicate */);
         } else {
             throw new IllegalStateException( "Unhandled replication type: " + repType );
         }
@@ -2173,11 +2175,14 @@ public class GeoConverterImpl implements GeoConverter {
         // By definition each subset defines a new factor value.
         FactorValue factorValue = FactorValue.Factory.newInstance();
         Characteristic term = convertVariableType( geoSubSet.getType() );
-        term.setValue( geoSubSet.getDescription() );
-        term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
-        factorValue.getCharacteristics().add( term );
+        if ( term != null ) {
+            term.setValue( geoSubSet.getDescription() );
+            term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
+            factorValue.getCharacteristics().add( term );
+        }
+
         factorValue.setExperimentalFactor( experimentalFactor );
-        factorValue.setValue( term.getValue() );
+        factorValue.setValue( geoSubSet.getDescription() );
 
         /* Check that there isn't already a factor value for this in the factor */
 
@@ -2199,6 +2204,10 @@ public class GeoConverterImpl implements GeoConverter {
     private FactorValue convertTypeToFactorValue( VariableType type, String value ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
         Characteristic term = convertVariableType( type );
+        if ( term == null ) {
+            factorValue.setValue( value );
+            return factorValue;
+        }
         term.setValue( value ); // TODO map onto an ontology.
         factorValue.setValue( term.getValue() );
         factorValue.getCharacteristics().add( term );
@@ -2218,7 +2227,9 @@ public class GeoConverterImpl implements GeoConverter {
         result.setType( FactorType.CATEGORICAL );
         result.setDescription( variable.getDescription() );
         Characteristic term = convertVariableType( variable.getType() );
-        result.setCategory( term );
+
+        result.setCategory( term ); // could be null
+
         return result;
     }
 
@@ -2246,65 +2257,90 @@ public class GeoConverterImpl implements GeoConverter {
      * Convert a variable
      * 
      * @param variable
-     * @return a VocabCharacteristic with the category URI and category filled in.
+     * @return a VocabCharacteristic with the category URI and category filled in. Will be null in the case of "Other"
+     *         or "Organism"
+     * @throw IllegalStateException if it's a variable type we don't know how to handle.
      */
     private VocabCharacteristic convertVariableType( VariableType varType ) {
 
-        String mgedTerm = null;
+        String term = null;
+        String uri = null;
         if ( varType.equals( VariableType.age ) ) {
-            mgedTerm = "Age";
+            term = "age";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000246";
         } else if ( varType.equals( VariableType.agent ) ) {
-            mgedTerm = "Compound"; // THERE IS no such term as 'Agent' in MGED.
+            uri = "http://purl.obolibrary.org/obo/CHEBI_23367";
+            term = "molecular entity";
         } else if ( varType.equals( VariableType.cellLine ) ) {
-            mgedTerm = "CellLine";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000322";
+            term = "CellLine";
         } else if ( varType.equals( VariableType.cellType ) ) {
-            mgedTerm = "CellType";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000324";
+            term = "CellType";
         } else if ( varType.equals( VariableType.developmentStage ) ) {
-            mgedTerm = "DevelopmentalStage";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000399";
+            term = "developmental stage";
         } else if ( varType.equals( VariableType.diseaseState ) ) {
-            mgedTerm = "DiseaseState";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000408";
+            term = "disease";
         } else if ( varType.equals( VariableType.dose ) ) {
-            mgedTerm = "Dose";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000428";
+            term = "dose";
         } else if ( varType.equals( VariableType.gender ) ) {
-            mgedTerm = "Sex";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000695";
+            term = "sex";
         } else if ( varType.equals( VariableType.genotypeOrVariation ) ) {
-            mgedTerm = "IndividualGeneticCharacteristics";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000513";
+            term = "genotype";
         } else if ( varType.equals( VariableType.growthProtocol ) ) {
-            mgedTerm = "GrowthCondition";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000523";
+            term = "grwoth condition";
         } else if ( varType.equals( VariableType.individual ) ) {
-            mgedTerm = "Individual";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000542";
+            term = "individual";
         } else if ( varType.equals( VariableType.infection ) ) {
-            mgedTerm = "Phenotype";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000651";
+            term = "phenotype";
         } else if ( varType.equals( VariableType.isolate ) ) {
-            mgedTerm = "Age";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000246";
+            term = "age";
         } else if ( varType.equals( VariableType.metabolism ) ) {
-            mgedTerm = "Metabolism";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000651";
+            term = "phenotype";
         } else if ( varType.equals( VariableType.other ) ) {
-            mgedTerm = "Other";
+            return null;
         } else if ( varType.equals( VariableType.protocol ) ) {
-            mgedTerm = "Protocol";
+            uri = "http://purl.obolibrary.org/obo/OBI_0000272";
+            term = "protocol";
         } else if ( varType.equals( VariableType.shock ) ) {
-            mgedTerm = "EnvironmentalStress";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000470";
+            term = "environmental stress";
         } else if ( varType.equals( VariableType.species ) ) {
-            mgedTerm = "Organism";
+            return null;
         } else if ( varType.equals( VariableType.specimen ) ) {
-            mgedTerm = "BioSample";
+            uri = "http://purl.obolibrary.org/obo/OBI_0100051";
+            term = "specimen";
         } else if ( varType.equals( VariableType.strain ) ) {
-            mgedTerm = "StrainOrLine";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0005135";
+            term = "strain";
         } else if ( varType.equals( VariableType.stress ) ) {
-            mgedTerm = "EnvironmentalStress";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000470";
+            term = "environmental stress";
         } else if ( varType.equals( VariableType.temperature ) ) {
-            mgedTerm = "Temperature";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0001702";
+            term = "Temperature";
         } else if ( varType.equals( VariableType.time ) ) {
-            mgedTerm = "Time";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000724";
+            term = "timepoint";
         } else if ( varType.equals( VariableType.tissue ) ) {
-            mgedTerm = "OrganismPart";
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000635";
+            term = "organism part";
         } else {
             throw new IllegalStateException();
         }
 
-        log.debug( "Category term: " + mgedTerm + " " );
-        return setCategory( mgedTerm );
+        log.debug( "Category term: " + term + " " );
+        return setCategory( term, uri );
 
     }
 
@@ -3103,10 +3139,10 @@ public class GeoConverterImpl implements GeoConverter {
      * @param mgedTerm
      * @return
      */
-    private VocabCharacteristic setCategory( String mgedTerm ) {
+    private VocabCharacteristic setCategory( String term, String uri ) {
         VocabCharacteristic categoryTerm = VocabCharacteristic.Factory.newInstance();
-        categoryTerm.setCategory( mgedTerm );
-        categoryTerm.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#" + mgedTerm );
+        categoryTerm.setCategory( term );
+        categoryTerm.setCategoryUri( uri );
         categoryTerm.setEvidenceCode( GOEvidenceCode.IIA );
         return categoryTerm;
     }

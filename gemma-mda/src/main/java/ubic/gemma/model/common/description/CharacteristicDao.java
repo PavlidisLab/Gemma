@@ -115,4 +115,9 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
      */
     public Collection<? extends Characteristic> findByCategory( String query );
 
+    /**
+     * @return URIs of categories that are used.
+     */
+    public Collection<String> getUsedCategories();
+
 }

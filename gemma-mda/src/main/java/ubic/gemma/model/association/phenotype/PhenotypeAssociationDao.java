@@ -52,8 +52,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find all PhenotypeAssociation for a specific NCBI id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
 
-    /** find MGED category terms currently used in the database by evidence */
-    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms();
+    /** find category terms currently used in the database by evidence */
+    public Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
 
     /** find all evidences from a specific external database */
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );

@@ -155,9 +155,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return geneQueryCriteria.list();
     }
 
-    /** find MGED category terms currently used in the database by evidence */
+    /** find category terms currently used in the database by evidence */
     @Override
-    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms() {
+    public Collection<CharacteristicValueObject> findEvidenceCategoryTerms() {
 
         Collection<CharacteristicValueObject> mgedCategory = new TreeSet<CharacteristicValueObject>();
 

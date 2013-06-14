@@ -163,8 +163,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /** find mged category term that were used in the database, used to annotated Experiments */
     @Override
-    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms() {
-        return this.phenotypeAssociationDao.findEvidenceMgedCategoryTerms();
+    public Collection<CharacteristicValueObject> findEvidenceCategoryTerms() {
+        return this.phenotypeAssociationDao.findEvidenceCategoryTerms();
     }
 
     /** find all evidences from a specific external database */

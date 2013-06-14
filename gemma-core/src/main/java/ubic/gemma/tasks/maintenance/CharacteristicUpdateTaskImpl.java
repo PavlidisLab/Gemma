@@ -327,7 +327,6 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
                 }
                 cFromDatabase.setEvidenceCode( cFromClient.getEvidenceCode() ); // let them change it.
             }
-
             characteristicService.update( cFromDatabase );
         }
         timer.stop();
@@ -352,9 +351,6 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
         } else if ( parent instanceof BioMaterial ) {
             BioMaterial bm = ( BioMaterial ) parent;
             bm.getCharacteristics().remove( c );
-            if ( c.equals( bm.getMaterialType() ) ) {
-                bm.setMaterialType( null );
-            }
             bioMaterialService.update( bm );
         } else if ( parent instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) parent;

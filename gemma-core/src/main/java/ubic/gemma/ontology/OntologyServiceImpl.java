@@ -18,7 +18,11 @@
  */
 package ubic.gemma.ontology;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,7 +71,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 
@@ -169,6 +172,9 @@ public class OntologyServiceImpl implements OntologyService {
         }
     }
 
+    /**
+     * used to indicate a term is already used in the system.
+     */
     static final String USED = " -USED- ";
 
     private static Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
@@ -219,7 +225,6 @@ public class OntologyServiceImpl implements OntologyService {
     private HumanDevelopmentOntologyService humanDevelopmentOntologyService;
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
-    private MgedOntologyService mgedOntologyService;
     private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
     private NIFSTDOntologyService nifstdOntologyService;
     private ObiService obiService;
@@ -241,7 +246,6 @@ public class OntologyServiceImpl implements OntologyService {
         this.cellTypeOntologyService = new CellTypeOntologyService();
         this.mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
         this.mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
-        this.mgedOntologyService = new MgedOntologyService();
         this.humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
         this.experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
         this.obiService = new ObiService();
@@ -251,7 +255,6 @@ public class OntologyServiceImpl implements OntologyService {
         this.ontologyServices.add( this.chebiOntologyService );
         this.ontologyServices.add( this.fmaOntologyService );
         this.ontologyServices.add( this.diseaseOntologyService );
-        this.ontologyServices.add( this.mgedOntologyService );
         this.ontologyServices.add( this.mouseDevelopmentOntologyService );
         this.ontologyServices.add( this.humanDevelopmentOntologyService );
         this.ontologyServices.add( this.cellTypeOntologyService );
@@ -293,16 +296,6 @@ public class OntologyServiceImpl implements OntologyService {
         Collection<OntologyResource> results;
         Collection<Characteristic> searchResults = new HashSet<Characteristic>();
 
-        // Add the matching individuals
-        Collection<Characteristic> individualResults = new HashSet<Characteristic>();
-        if ( StringUtils.isNotBlank( categoryUri ) && !categoryUri.equals( "{}" ) ) {
-            results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri.trim() ) );
-            if ( results.size() > 0 ) individualResults.addAll( filter( results, queryString ) );
-        }
-        if ( log.isDebugEnabled() )
-            log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
-                    + watch.getTime() + " ms" );
-
         Collection<String> foundValues = new HashSet<String>();
 
         Collection<Characteristic> previouslyUsedInSystem = new HashSet<Characteristic>();
@@ -340,8 +333,8 @@ public class OntologyServiceImpl implements OntologyService {
         }
 
         // Sort the individual results.
-        Collection<Characteristic> sortedResults = sort( individualResults, previouslyUsedInSystem, searchResults,
-                queryString, foundValues );
+        Collection<Characteristic> sortedResults = sort( previouslyUsedInSystem, searchResults, queryString,
+                foundValues );
 
         if ( watch.getTime() > 1000 ) {
             log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
@@ -474,6 +467,58 @@ public class OntologyServiceImpl implements OntologyService {
         return results;
     }
 
+    private static Collection<OntologyTerm> categoryterms;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.OntologyService#getCategoryTerms()
+     */
+    @Override
+    public Collection<OntologyTerm> getCategoryTerms() {
+
+        if ( !experimentalFactorOntologyService.isOntologyLoaded() ) {
+            log.warn( "EFO is not loaded" );
+            return new HashSet<>();
+        }
+
+        /*
+         * Requires EFO, OBI and SO
+         */
+
+        if ( categoryterms == null ) {
+            URL termUrl = OntologyServiceImpl.class.getResource( "/ubic/gemma/ontology/EFO.factor.categories.txt" );
+
+            // FIXME perhaps use this. But would want to update it periodically.
+            // Collection<String> usedUris = characteristicService.getUsedCategories();
+
+            categoryterms = new HashSet<OntologyTerm>();
+            try {
+                BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) );
+                String line;
+                while ( ( line = reader.readLine() ) != null ) {
+                    if ( line.startsWith( "#" ) ) continue;
+                    String[] f = StringUtils.split( line );
+                    OntologyTerm t = getTerm( f[0] );
+                    if ( t == null ) {
+                        log.warn( "No term found: " + line );
+                        continue;
+                    }
+
+                    categoryterms.add( t );
+                }
+                reader.close();
+
+            } catch ( IOException ioe ) {
+                log.error( "Error reading from term list '" + termUrl + "'; returning general term list", ioe );
+            }
+
+            categoryterms = Collections.unmodifiableCollection( categoryterms );
+        }
+        return categoryterms;
+
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -568,16 +613,6 @@ public class OntologyServiceImpl implements OntologyService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.ontology.OntologyService#getMgedOntologyService()
-     */
-    @Override
-    public MgedOntologyService getMgedOntologyService() {
-        return mgedOntologyService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.OntologyService#getNifstfOntologyService()
      */
     @Override
@@ -650,48 +685,6 @@ public class OntologyServiceImpl implements OntologyService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.ontology.OntologyService#removeBioMaterialStatement(java.util.Collection, java.util.Collection)
-     */
-    @Override
-    public void removeBioMaterialStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
-
-        log.debug( "Vocab Characteristic: " + characterIds );
-        log.debug( "biomaterial ID List: " + bmIdList );
-
-        Collection<BioMaterial> bms = bioMaterialService.loadMultiple( bmIdList );
-
-        for ( BioMaterial bm : bms ) {
-
-            Collection<Characteristic> current = bm.getCharacteristics();
-            if ( current == null ) continue;
-
-            Collection<Characteristic> found = new HashSet<Characteristic>();
-
-            for ( Characteristic characteristic : current ) {
-                if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
-
-            }
-            if ( found.size() == 0 ) continue;
-
-            current.removeAll( found );
-
-            for ( Characteristic characteristic : found ) {
-                log.info( "Removing characteristic from " + bm + " : " + characteristic );
-            }
-
-            bm.setCharacteristics( current );
-            bioMaterialService.update( bm );
-
-        }
-
-        for ( Long id : characterIds ) {
-            characteristicService.delete( id );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.OntologyService#removeBioMaterialStatement(java.lang.Long,
      * ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
@@ -732,27 +725,6 @@ public class OntologyServiceImpl implements OntologyService {
 
         bm.setCharacteristics( current );
         bioMaterialService.update( bm );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.ontology.OntologyService#saveBioMaterialStatement(ubic.gemma.model.common.description.Characteristic,
-     * java.util.Collection)
-     */
-    @Override
-    public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
-
-        log.debug( "Vocab Characteristic: " + vc );
-        log.debug( "Biomaterial ID List: " + bioMaterialIdList );
-
-        Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
-
-        for ( BioMaterial bioM : biomaterials ) {
-            saveBioMaterialStatement( vc, bioM );
-        }
 
     }
 
@@ -1026,16 +998,14 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * @param individualResults
      * @param alreadyUsedResults
      * @param searchResults
      * @param searchTerm
      * @param foundValues
      * @return
      */
-    private Collection<Characteristic> sort( Collection<Characteristic> individualResults,
-            Collection<Characteristic> alreadyUsedResults, Collection<Characteristic> searchResults, String searchTerm,
-            Collection<String> foundValues ) {
+    private Collection<Characteristic> sort( Collection<Characteristic> alreadyUsedResults,
+            Collection<Characteristic> searchResults, String searchTerm, Collection<String> foundValues ) {
 
         /*
          * Organize the list into 3 parts. Want to get the exact match showing up on top But close matching
@@ -1048,21 +1018,6 @@ public class OntologyServiceImpl implements OntologyService {
         List<Characteristic> sortedResultsBottom = new ArrayList<Characteristic>();
 
         for ( Characteristic characteristic : alreadyUsedResults ) {
-            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) ) {
-                sortedResultsExact.add( characteristic );
-            } else if ( characteristic.getValue().startsWith( searchTerm ) ) {
-                sortedResultsStartsWith.add( characteristic );
-            } else {
-                sortedResultsBottom.add( characteristic );
-            }
-        }
-
-        for ( Characteristic characteristic : individualResults ) {
-            String key = foundValueKey( characteristic );
-            if ( foundValues.contains( key ) ) continue;
-
-            foundValues.add( key );
-
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) ) {
                 sortedResultsExact.add( characteristic );
             } else if ( characteristic.getValue().startsWith( searchTerm ) ) {

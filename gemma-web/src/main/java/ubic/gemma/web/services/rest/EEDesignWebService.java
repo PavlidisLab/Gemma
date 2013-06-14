@@ -36,6 +36,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -175,7 +176,7 @@ public class EEDesignWebService {
             BioMaterial bioMaterial = bioAssay.getSampleUsed();
 
             for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
-                if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
+                if ( factorValue.getExperimentalFactor().getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {
                     // skip batch
                 } else {
                     annotations
@@ -212,7 +213,7 @@ public class EEDesignWebService {
             BioMaterial bioMaterial = bioAssay.getSampleUsed();
 
             for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
-                if ( factorValue.getExperimentalFactor().getName().equals( "batch" ) ) {
+                if ( factorValue.getExperimentalFactor().getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {
                     // skip batch
                 } else {
                     annotations

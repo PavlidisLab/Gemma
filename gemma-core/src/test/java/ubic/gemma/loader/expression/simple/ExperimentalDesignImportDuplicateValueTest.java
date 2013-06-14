@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -43,7 +44,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -57,7 +57,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
     @Autowired
     private OntologyService os;
 
-    private MgedOntologyService mos;
+    private ExperimentalFactorOntologyService mos;
 
     private ExpressionExperiment ee;
 
@@ -77,7 +77,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-        mos = os.getMgedOntologyService();
+        mos = os.getExperimentalFactorOntologyService();
         if ( !mos.isOntologyLoaded() ) {
             mos.startInitializationThread( true );
             while ( !mos.isOntologyLoaded() ) {

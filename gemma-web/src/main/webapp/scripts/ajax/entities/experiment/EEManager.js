@@ -266,7 +266,6 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                         }],
                      editable : canEdit,
                      showParent : false,
-                     mgedTermKey : "experiment",
                      taxonId : taxonId,
                      entId : id
                   })]
@@ -836,7 +835,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                   /*
                    * For now we don't allow analyzing batch as a factor (though it can be used for subsetting)
                    */
-                  if (f.name === "batch") {
+                  if (f.name === "batch") { // ExperimentalFactorService.BATCH_FACTOR_NAME
                      continue;
                   }
 

@@ -108,7 +108,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				this.nameField = new Ext.form.TextField({});
 				var nameEditor = new Ext.grid.GridEditor(this.nameField);
 
-				this.categoryCombo = new Gemma.MGEDCombo({
+				this.categoryCombo = new Gemma.CategoryCombo({
 							lazyRender : true,
 							termKey : "factor"
 						});
@@ -308,8 +308,8 @@ Gemma.ExperimentalFactorAddWindow = Ext.extend(Ext.Window, {
 				bodyStyle : "padding:10px",
 				monitorValid : true,
 				id : 'factor-create-form',
-				items : [new Gemma.MGEDCombo({
-									id : 'factor-mged-combo',
+				items : [new Gemma.CategoryCombo({
+									id : 'factor-category-combo',
 									emptyText : "Select a category",
 									fieldLabel : "Category",
 									allowBlank : false,
@@ -365,7 +365,7 @@ Gemma.ExperimentalFactorAddWindow = Ext.extend(Ext.Window, {
 	},
 
 	getExperimentalFactorValueObject : function() {
-		var category = Ext.getCmp('factor-mged-combo').getTerm();
+		var category = Ext.getCmp('factor-category-combo').getTerm();
 		var description = Ext.getCmp('factor-description-field').getValue();
 		return {
 			name : category.term,

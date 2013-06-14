@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
@@ -54,7 +55,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 
 /**
@@ -68,7 +68,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
     @Autowired
     OntologyService os;
 
-    MgedOntologyService mos;
+    ExperimentalFactorOntologyService mos;
 
     @Autowired
     ExpressionExperimentService eeService;
@@ -139,7 +139,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-        mos = os.getMgedOntologyService();
+        mos = os.getExperimentalFactorOntologyService();
         mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             Thread.sleep( 1000 );

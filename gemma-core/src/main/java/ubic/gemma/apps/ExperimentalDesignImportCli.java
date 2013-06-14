@@ -20,10 +20,11 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
 import java.io.*;
@@ -90,7 +91,8 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         Exception e = processCommandLine( "experimentalDesignImport", args );
         if ( e != null ) return e;
 
-        MgedOntologyService mos = this.getBean( MgedOntologyService.class );
+        // FIXME need to load other ontologies.
+        ExperimentalFactorOntologyService mos = this.getBean( ExperimentalFactorOntologyService.class );
         mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             try {

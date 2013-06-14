@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -56,7 +57,6 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
  * See interface for docs.
@@ -88,7 +88,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     @Autowired
     ExpressionExperimentService expressionExperimentService;
 
-    private MgedOntologyService mgedOntologyService;
+    private ExperimentalFactorOntologyService mgedOntologyService;
 
     /*
      * (non-Javadoc)
@@ -111,7 +111,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      */
     @Override
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
-        this.mgedOntologyService = this.ontologyService.getMgedOntologyService();
+        this.mgedOntologyService = this.ontologyService.getExperimentalFactorOntologyService();
 
         log.debug( "Parsing input file" );
         boolean readHeader = false;
@@ -205,7 +205,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         log.info( "Addding experimental factors to experimental design: " + experimentalDesign.getId() );
 
-        Collection<OntologyTerm> terms = mgedOntologyService.getMgedTermsByKey( "factor" );
+        Collection<OntologyTerm> terms = ontologyService.getCategoryTerms();
         if ( experimentalDesign.getExperimentalFactors() == null ) {
             experimentalDesign.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
         }
@@ -229,7 +229,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             ExperimentalFactor experimentalFactorFromFile = ExperimentalFactor.Factory.newInstance();
             experimentalFactorFromFile.setExperimentalDesign( experimentalDesign );
-            VocabCharacteristic vc = mgedLookup( categoryValue, terms );
+            VocabCharacteristic vc = termForCategoryLookup( categoryValue, terms );
 
             // e.g. Category=EnvironmentalHistory
             String categoryTypeValue = categoryAndTypeFields[1];
@@ -599,12 +599,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     }
 
     /**
-     * Does an mged lookup
+     * Does a lookup for the Ontology term to match the category.
      * 
      * @param category
      * @return
      */
-    private VocabCharacteristic mgedLookup( String category, Collection<OntologyTerm> terms ) {
+    private VocabCharacteristic termForCategoryLookup( String category, Collection<OntologyTerm> terms ) {
 
         OntologyTerm t = null;
         for ( OntologyTerm to : terms ) {
@@ -615,7 +615,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         }
 
         if ( t == null ) {
-            throw new IllegalArgumentException( "No MGED term matches '" + category + "'" );
+            throw new IllegalArgumentException( "No term matches '" + category + "'" );
         }
 
         VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();

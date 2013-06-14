@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -47,8 +48,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.ontology.providers.MgedOntologyService;
+import ubic.gemma.ontology.OntologyService; 
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -65,7 +65,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Autowired
     OntologyService os;
 
-    MgedOntologyService mos;
+    ExperimentalFactorOntologyService mos;
 
     @Autowired
     ExpressionExperimentService eeService;
@@ -89,7 +89,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Before
     public void setup() throws Exception {
 
-        this.mos = os.getMgedOntologyService();
+        this.mos = os.getExperimentalFactorOntologyService();
 
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/experimentalDesignTestData.txt" );

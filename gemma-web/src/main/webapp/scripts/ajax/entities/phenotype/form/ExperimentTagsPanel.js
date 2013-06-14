@@ -105,7 +105,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 
 		var visiblityHandler = function(isVisible) {
 			if (isVisible && Gemma.PhenotypeAssociationForm.ExperimentTagCategories == null) {
-				PhenotypeController.findExperimentMgedCategory(function(characteristicValueObjects) {
+				PhenotypeController.findExperimentCategory(function(characteristicValueObjects) {
 					Gemma.PhenotypeAssociationForm.ExperimentTagCategories = [];
 					for (var i = 0; i < characteristicValueObjects.length; i++) {
 						Gemma.PhenotypeAssociationForm.ExperimentTagCategories.push({

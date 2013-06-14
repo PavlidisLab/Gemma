@@ -30,9 +30,9 @@ public interface ExperimentalFactorService {
 
     public static final String BATCH_FACTOR_NAME_PREFIX = "Batch_";
 
-    public static final String BATCH_FACTOR_CATEGORY_URI = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ComplexAction";
+    public static final String BATCH_FACTOR_CATEGORY_URI = "http://www.ebi.ac.uk/efo/EFO_0005067"; // block aka batch
 
-    public static final String BATCH_FACTOR_CATEGORY_NAME = "ComplexAction";
+    public static final String BATCH_FACTOR_CATEGORY_NAME = "block";
 
     public static final String BATCH_FACTOR_NAME = "batch";
     public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";

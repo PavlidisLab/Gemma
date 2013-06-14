@@ -44,47 +44,46 @@ public class OntologyServiceTest extends BaseSpringContextTest {
      */
     @Test
     public final void testFindExactMatch() throws Exception {
-        // if ( !os.getMgedOntologyService().isOntologyLoaded() ) {
-        // os.getMgedOntologyService().startInitializationThread( true );
-        // int c = 0;
-        // while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
-        // Thread.sleep( 10000 );
-        // log.info( "Waiting for Ontology to load" );
-        // if ( ++c > 10 ) {
-        // fail( "Ontology load timeout" );
-        // }
-        // }
-        // }
-        // Collection<Characteristic> name = os.findExactTerm( "male",
-        // "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex", null );
-        // for ( Characteristic characteristic : name ) {
-        // log.info( characteristic );
-        // }
-        // assertTrue( name.size() > 0 );
+        if ( !os.getExperimentalFactorOntologyService().isOntologyLoaded() ) {
+            os.getExperimentalFactorOntologyService().startInitializationThread( true );
+            int c = 0;
+            while ( !os.getExperimentalFactorOntologyService().isOntologyLoaded() ) {
+                Thread.sleep( 10000 );
+                log.info( "Waiting for Ontology to load" );
+                if ( ++c > 10 ) {
+                    fail( "Ontology load timeout" );
+                }
+            }
+        }
+        Collection<Characteristic> name = os.findExactTerm( "male", "http://www.ebi.ac.uk/efo/EFO_0001266", null );
+        for ( Characteristic characteristic : name ) {
+            log.info( characteristic );
+        }
+        assertTrue( name.size() > 0 );
     }
 
     @Test
     public void testObsolete() throws Exception {
-        // os.getDiseaseOntologyService().startInitializationThread( true );
-        // int c = 0;
-        //
-        // while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
-        // Thread.sleep( 10000 );
-        // log.info( "Waiting for DiseaseOntology to load" );
-        // if ( ++c > 20 ) {
-        // fail( "Ontology load timeout" );
-        // }
-        // }
-        //
-        // OntologyTerm t1 = os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050001" );
-        // assertNotNull( t1 );
-        //
-        // // Actinomadura madurae infectious disease
-        // assertTrue( os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050001" ) );
-        //
-        // // inflammatory diarrhea, not obsolete as of May 2012.
-        // assertNotNull( os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
-        // assertTrue( !os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
+        os.getDiseaseOntologyService().startInitializationThread( true );
+        int c = 0;
+
+        while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
+            Thread.sleep( 10000 );
+            log.info( "Waiting for DiseaseOntology to load" );
+            if ( ++c > 20 ) {
+                fail( "Ontology load timeout" );
+            }
+        }
+
+        OntologyTerm t1 = os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050001" );
+        assertNotNull( t1 );
+
+        // Actinomadura madurae infectious disease
+        assertTrue( os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050001" ) );
+
+        // inflammatory diarrhea, not obsolete as of May 2012.
+        assertNotNull( os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
+        assertTrue( !os.isObsolete( "http://purl.obolibrary.org/obo/DOID_0050132" ) );
 
     }
 }

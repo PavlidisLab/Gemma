@@ -4,8 +4,8 @@
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=5665
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
-#$Treatment : Category=Treatment Type=Categorical
-Bioassay	ExternalID	Treatment
+#$treatment : Category=treatment Type=Categorical
+Bioassay	ExternalID	treatment
 GSE35930_Biomat_6___BioAssayImplId=200642Name=Flieson0.1mg/mlnicotine,biologicalrep1	GSM877572	Nicotine
 GSE35930_Biomat_8___BioAssayImplId=200641Name=Flieson0.1mg/mlnicotine,biologicalrep2	GSM877573	Nicotine
 GSE35930_Biomat_10___BioAssayImplId=200640Name=Flieson0.1mg/mlnicotine,biologicalrep3	GSM877574	Nicotine

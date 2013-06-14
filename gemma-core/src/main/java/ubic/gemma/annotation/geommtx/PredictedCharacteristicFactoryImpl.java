@@ -32,7 +32,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -137,10 +136,9 @@ public class PredictedCharacteristicFactoryImpl implements InitializingBean, Pre
      * 
      * @see ubic.gemma.annotation.geommtx.PredictedCharacteristicFactory#getCategory(java.lang.String)
      */
-    @Override
-    public String getCategory( String URI ) {
+    private void getCategory( VocabCharacteristic c, String URI ) {
         String category = null;
-
+        String categoryUri = null;
         if ( URI.contains( "/owl/FMA#" ) ) {
             OntologyTerm term = ontologyService.getTerm( URI );
 
@@ -150,24 +148,32 @@ public class PredictedCharacteristicFactoryImpl implements InitializingBean, Pre
             // test if its a Biological macromolecule in FMA
             if ( parents.contains( fmaMolecule ) ) {
                 log.info( "URI is biological macromolecule in FMA" );
-                category = "Compound";
+                category = "molecular entity";
+                categoryUri = "http://purl.obolibrary.org/obo/CHEBI_23367";
             } else {
-                category = "OrganismPart";
+                category = "organism part";
+                categoryUri = "http://www.ebi.ac.uk/efo/EFO_0000635";
             }
         } else if ( URI.contains( "BIRNLex-Anatomy" ) ) {
-            category = "OrganismPart";
+            category = "organism part";
+            categoryUri = "http://www.ebi.ac.uk/efo/EFO_0000635";
         } else if ( URI.contains( "NIF-GrossAnatomy" ) ) {
-            category = "OrganismPart";
+            category = "organism part";
+            categoryUri = "http://www.ebi.ac.uk/efo/EFO_0000635";
         } else if ( URI.contains( "/owl/DOID#" ) ) {
-            category = "DiseaseState";
+            category = "disease";
+            categoryUri = "http://www.ebi.ac.uk/efo/EFO_0000408";
         } else if ( URI.contains( "NIF-Dysfunction.owl" ) ) {
-            category = "DiseaseState";
+            category = "disease";
+            categoryUri = "http://www.ebi.ac.uk/efo/EFO_0000408";
         } else if ( URI.contains( "NIF-Function.owl" ) ) {
-            category = "Phenotype";
+            category = "phenotype";
+            categoryUri = "http://www.ebi.ac.uk/efo/EFO_0000651";
         } else {
             log.warn( "Could not (or did not) infer category for : " + URI );
         }
-        return category;
+        c.setCategory( category );
+        c.setCategoryUri( categoryUri );
     }
 
     /*
@@ -183,10 +189,7 @@ public class PredictedCharacteristicFactoryImpl implements InitializingBean, Pre
         c.setValueUri( URI );
         c.setValue( labels.get( URI ) );
 
-        String category = getCategory( URI );
-
-        c.setCategory( category );
-        c.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#" + category );
+        getCategory( c, URI );
 
         c.setEvidenceCode( GOEvidenceCode.IEA );
 

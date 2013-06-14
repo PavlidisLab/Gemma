@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
@@ -40,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
  * @author paul
@@ -70,12 +70,11 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        MgedOntologyService mgedOntologyService = os.getMgedOntologyService();
-        if ( !mgedOntologyService.isOntologyLoaded() ) {
-            log.warn( "Need to load MGED!!!" );
-            mgedOntologyService.startInitializationThread( true );
-            while ( !mgedOntologyService.isOntologyLoaded() ) {
-                Thread.sleep( 1000 );
+        ExperimentalFactorOntologyService categoryService = os.getExperimentalFactorOntologyService();
+        if ( !categoryService.isOntologyLoaded() ) {
+            categoryService.startInitializationThread( true );
+            while ( !categoryService.isOntologyLoaded() ) {
+                Thread.sleep( 5000 );
                 log.info( "Waiting for Ontology to load" );
             }
         }
@@ -128,7 +127,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
         assertEquals( 2, baselineLevels.size() ); // the batch DOES get a baseline. IF we change that then we change
                                                   // this test.
         for ( ExperimentalFactor ef : baselineLevels.keySet() ) {
-            if ( ef.getName().equals( "batch" ) ) continue;
+            if ( ef.getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) continue;
             FactorValue fv = baselineLevels.get( ef );
             assertEquals( "Control_group", fv.getValue() );
         }

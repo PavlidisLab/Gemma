@@ -3,9 +3,9 @@
 # name=Effects of moderate ethanol consumption during pregnancy on placental gene expression
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=2668
 # If you use this file for your research, please cite the Gemma web site: http://chibi.ubc.ca/Gemma
-#$Treatment : Category=Treatment Type=Categorical
-#$batch : Category=ComplexAction Type=Categorical
-Bioassay	Treatment	batch
+#$treatment : Category=treatment Type=Categorical
+#$batch : Category=block Type=Categorical
+Bioassay	treatment	batch
 GSM453977	Control_group	Batch_2_4/19/07
 GSM453976	Control_group	Batch_1_3/14/07
 GSM453979	ethanol	Batch_1_3/14/07

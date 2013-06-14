@@ -1,16 +1,16 @@
 #$ Age : Category=Age Type=Continuous
 #$ Sex : Category=Sex Type=Categorical
-#$ Race : Category=HistoryFactor Type=Categorical
+#$ Race : Category=Phenotype Type=Categorical
 #$ Profile : Category=DiseaseState Type=Categorical
 #$ DSM IV Codes : Category=DiseaseState Type=Categorical
 #$ Axis I Primary Diagnosis : Category=DiseaseState Type=Categorical 
 #$ PMI (h) : Category=Preservation Type=Continuous
-#$ Brain PH : Category=Biometrics Type=Continuous
+#$ Brain PH : Category=EnvironmentalHistory Type=Continuous
 #$ Left Brain : Category=Preservation Type=Categorical
 #$ Suicide Status : Category=EnvironmentalHistory Type=Categorical
 #$ Psychotic Feature : Category=DiseaseState Type=Categorical
-#$ Rate of Death : Category=HistoryFactor Type=Categorical
-#$ Exacerbation : Category=HistoryFactor Type=Categorical
+#$ Rate of Death : Category=Phenotype Type=Categorical
+#$ Exacerbation : Category=Phenotype Type=Categorical
 #$ Smoking at Time of Death : Category=EnvironmentalHistory Type=Categorical
 #$ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical
 #$ Lifetime Drugs : Category=EnvironmentalHistory Type=Categorical

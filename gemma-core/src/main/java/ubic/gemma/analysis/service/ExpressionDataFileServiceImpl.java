@@ -305,6 +305,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 String formattedPvalue = pValue == null ? "" : String.format( DECIMAL_FORMAT, pValue );
                 String formattedFoldChange = foldChange == null ? "" : String.format( DECIMAL_FORMAT, foldChange );
                 String contrastData = "\t" + formattedFoldChange + "\t" + formattedPvalue;
+                if ( contrast.getFactorValue() == null ) {
+                    /*
+                     * 
+                     */
+                }
                 factorValueIdToData.put( contrast.getFactorValue().getId(), contrastData );
             }
 
@@ -699,7 +704,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
 
             log.info( "Creating new experimental design file: " + f.getName() );
-            return writeDesignMatrix( f, ee, true ); 
+            return writeDesignMatrix( f, ee, true );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

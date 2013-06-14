@@ -10,6 +10,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -21,8 +22,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.ontology.providers.MgedOntologyService;
+import ubic.gemma.ontology.OntologyService; 
 
 public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTest {
 
@@ -38,7 +38,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
     @Autowired
     OntologyService ontologyService;
 
-    MgedOntologyService mos;
+    ExperimentalFactorOntologyService mos;
 
     @Autowired
     SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
@@ -90,7 +90,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
                 "/data/loader/expression/flatfileload/gill2006hormone.head.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-        mos = ontologyService.getMgedOntologyService();
+        mos = ontologyService.getExperimentalFactorOntologyService();
         if ( !mos.isOntologyLoaded() ) mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             Thread.sleep( 1000 );

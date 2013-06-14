@@ -164,11 +164,11 @@ public interface PhenotypeAssociationManagerService {
     public abstract ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence );
 
     /**
-     * Find mged category term that were used in the database, used to annotated Experiments
+     * Find category term that were used in the database, used to annotated Experiments
      * 
      * @return Collection<CharacteristicValueObject> the terms found
      */
-    public abstract Collection<CharacteristicValueObject> findExperimentMgedCategory();
+    public abstract Collection<CharacteristicValueObject> findExperimentCategory();
 
     /**
      * for a given search string look in the database and Ontology for matches

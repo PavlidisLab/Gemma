@@ -4,7 +4,7 @@ Ext.namespace("Gemma");
  * 
  * @class Gemma.EvidenceCodeCombo
  * @extends Ext.form.ComboBox
- * @author paul (based on MGEDCombo)
+ * @author paul (based on CategoryCombo)
  * @version $Id$
  */
 Gemma.EvidenceCodeCombo = Ext.extend(Ext.form.ComboBox, {

@@ -29,6 +29,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -93,7 +94,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         newee = eeService.thawLite( newee );
 
         for ( ExperimentalFactor ef : newee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( ef.getName().equals( "batch" ) ) {
+            if ( ef.getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {
                 for ( FactorValue fv : ef.getFactorValues() ) {
                     assertNotNull( fv.getValue() );
                     assertTrue( fv.getValue().startsWith( "Batch_0" ) ); // Batch_01, Batch_02 etc.

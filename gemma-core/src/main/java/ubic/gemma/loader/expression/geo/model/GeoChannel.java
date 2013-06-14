@@ -23,7 +23,6 @@ import java.util.HashSet;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
  * Represents data for one channel on a microarray in GEO. Corresponds (roughly) to a BioMaterial in Gemma.
@@ -174,34 +173,34 @@ public class GeoChannel {
     public Characteristic getMoleculeAsCharacteristic() {
 
         VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
-        result.setDescription( "MaterialType" );
-        result.setCategory( "MaterialType" );
-        result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#MaterialType" );
+        result.setDescription( "Material Type" );
+        result.setCategory( "molecular entity" );
+        result.setCategoryUri( "http://purl.obolibrary.org/obo/CHEBI_23367" );
 
         switch ( this.molecule ) {
             case cytoplasmicRNA:
-                result.setValue( "cytoplasmic_RNA" );
-                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#cytoplasmic_RNA" );
+                result.setValue( "cytoplasmic RNA extract" );
+                result.setValueUri( "http://purl.obolibrary.org/obo/OBI_0000876" );
                 break;
             case polyARNA:
-                result.setValue( "polyA_RNA" );
-                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#polyA_RNA" );
+                result.setValue( "polyA RNA" );
+                result.setValueUri( "http://purl.obolibrary.org/obo/OBI_0000869" );
                 break;
             case genomicDNA:
-                result.setValue( "genomic_DNA" );
-                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#genomic_DNA" );
+                result.setValue( "genomic DNA" );
+                result.setValueUri( "http://purl.org/obo/owl/SO#SO_0000991" );
                 break;
             case totalRNA:
-                result.setValue( "total_RNA" );
-                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#total_RNA" );
+                result.setValue( "total RNA" );
+                result.setValueUri( "http://www.ebi.ac.uk/efo/EFO_0004964" );
                 break;
             case nuclearRNA:
-                result.setValue( "nuclear_RNA" );
-                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#nuclear_RNA" );
+                result.setValue( "nuclear RNA extract" );
+                result.setValueUri( "http://purl.obolibrary.org/obo/OBI_0000862" );
                 break;
             case protein:
                 result.setValue( "protein" );
-                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#protein" );
+                result.setValueUri( "http://purl.obolibrary.org/obo/CHEBI_36080" );
                 break;
             case other:
                 result.setValue( "Other material type" );

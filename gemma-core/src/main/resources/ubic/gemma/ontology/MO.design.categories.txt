@@ -1,9 +1,0 @@
-# Lists MGED Ontology terms to be displayed for high-level annotation of experimental designs.
-# $Id$
-# Author: Paul
-ReplicateDescription
-MethodologicalDesign
-PerturbationalDesign
-TechnologicalDesign
-EpidemiologicalDesign
-BiologicalProperty

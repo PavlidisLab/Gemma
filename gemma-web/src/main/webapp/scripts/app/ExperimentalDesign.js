@@ -93,7 +93,7 @@ Ext.onReady(function() {
 			var editable = Ext.get('currentUserCanEdit').getValue() === 'true';
 
 			/*
-			 * TODO: load up the MGED terms, experimental design and factor values ahead of time. We end up doing it
+			 * TODO: load up the Category terms, experimental design and factor values ahead of time. We end up doing it
 			 * about 4 times each. Create the panel in the callback.
 			 */
 

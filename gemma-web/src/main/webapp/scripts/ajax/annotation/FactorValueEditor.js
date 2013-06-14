@@ -111,7 +111,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			classDelegatingFor : "ExperimentalFactor"
 		};
 
-		this.categoryCombo = new Gemma.MGEDCombo({
+		this.categoryCombo = new Gemma.CategoryCombo({
 					lazyRender : true,
 					termKey : "factorvalue"
 				});
@@ -606,16 +606,16 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 
 				this.factorValueCombo.on("select", function(combo, record, index) {
 							this.factorValue.id = record.get("id");
-							this.mgedCombo.enable();
+							this.categoryCombo.enable();
 						}.createDelegate(this));
 
-				this.mgedCombo = new Gemma.MGEDCombo({
+				this.categoryCombo = new Gemma.CategoryCombo({
 							disabled : true,
 							emptyText : "Select a category",
 							termKey : "factorvalue"
 						});
 
-				this.mgedCombo.on("select", function(combo, record, index) {
+				this.categoryCombo.on("select", function(combo, record, index) {
 							this.charCombo.setCategory(record.get("term"), record.get("uri"));
 							this.charCombo.enable();
 							this.createButton.enable();
@@ -637,7 +637,7 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 								} else {
 									this.createButton.disable();
 									// removed in response to bug 1016
-									// mgedCombo.reset();
+									// categoryCombo.reset();
 									this.charCombo.reset();
 									this.fireEvent("create", this.factorValue, c);
 								}
@@ -668,7 +668,7 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 				this.add(this.factorValueCombo);
 				this.addSpacer();
 				this.addText(" with category:");
-				this.add(this.mgedCombo);
+				this.add(this.categoryCombo);
 				this.addSpacer();
 				this.addText(" and value:");
 				this.add(this.charCombo);
@@ -683,7 +683,7 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 				this.experimentalFactor.id = efId;
 				this.factorValueCombo.setExperimentalFactor(efId, function() {
 							this.factorValueCombo.enable();
-							this.mgedCombo.enable();
+							this.categoryCombo.enable();
 							this.charCombo.enable();
 						}.createDelegate(this));
 			}

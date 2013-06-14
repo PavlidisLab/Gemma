@@ -358,7 +358,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
          /*
           * This is needed to make the annotator initialize properly.
           */
-         new Gemma.MGEDCombo({});
+         new Gemma.CategoryCombo({});
 
          var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'' + e.id + '-eemanager\').tagger(' + e.id + ',' + e.taxonId + ',' + this.editable + ','
             + (e.validatedAnnotations !== null) + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';

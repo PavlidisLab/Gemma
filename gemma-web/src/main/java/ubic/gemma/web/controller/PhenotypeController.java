@@ -159,8 +159,8 @@ public class PhenotypeController extends BaseController {
      * 
      * @return Collection<CharacteristicValueObject>
      */
-    public Collection<CharacteristicValueObject> findExperimentMgedCategory() {
-        return this.phenotypeAssociationManagerService.findExperimentMgedCategory();
+    public Collection<CharacteristicValueObject> findExperimentCategory() {
+        return this.phenotypeAssociationManagerService.findExperimentCategory();
     }
 
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,

@@ -45,6 +45,7 @@ import com.hp.hpl.jena.query.larq.IndexLARQ;
  */
 public class OntologyIndexerTest {
 
+    // note we don't use mged any more, but this is just a test of indexing.
     private static final String ONTNAME_FOR_TESTS = "mgedtest";
     private static Log log = LogFactory.getLog( OntologyIndexerTest.class.getName() );
 

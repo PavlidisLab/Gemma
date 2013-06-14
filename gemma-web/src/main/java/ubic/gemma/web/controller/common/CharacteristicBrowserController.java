@@ -321,9 +321,8 @@ public class CharacteristicBrowserController {
                     avo.getParentOfParentName() ) );
         } else if ( parent instanceof PhenotypeAssociation ) {
             PhenotypeAssociation pa = ( PhenotypeAssociation ) parent;
-            avo.setParentLink( "PhenotypeAssociation" );
+            avo.setParentLink( "PhenotypeAssoc: " + pa.getGene().getOfficialSymbol() );
             avo.setParentDescription( pa.getId().toString() );
-
         }
     }
 

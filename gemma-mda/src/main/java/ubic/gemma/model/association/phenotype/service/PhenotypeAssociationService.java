@@ -122,8 +122,8 @@ public interface PhenotypeAssociationService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
 
-    /** find mged category term that were used in the database, used to annotated Experiments */
-    public Collection<CharacteristicValueObject> findEvidenceMgedCategoryTerms();
+    /** find category term that were used in the database, used to annotated Experiments */
+    public Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
 
     /** find all evidences from a specific external database */
     @Secured({ "GROUP_ADMIN" })

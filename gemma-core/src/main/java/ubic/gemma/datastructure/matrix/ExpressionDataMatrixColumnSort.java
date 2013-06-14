@@ -77,6 +77,8 @@ public class ExpressionDataMatrixColumnSort {
         controlGroupTerms.add( "control_group" );
         controlGroupTerms.add( "wild_type" );
         controlGroupTerms.add( "wild type" );
+        controlGroupTerms.add( "wild type genotype" );
+        controlGroupTerms.add( "initial time point" );
         controlGroupTerms.add( "reference_substance_role" );
         controlGroupTerms.add( "reference_subject_role" );
         controlGroupTerms.add( "baseline_participant_role" );
@@ -105,6 +107,10 @@ public class ExpressionDataMatrixColumnSort {
 
         controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000143".toLowerCase() );// - baseline participant
                                                                                             // role
+
+        controlGroupTerms.add( "http://www.ebi.ac.uk/efo/EFO_0005168".toLowerCase() ); // wild type genotype
+
+        controlGroupTerms.add( "http://www.ebi.ac.uk/efo/EFO_0004425".toLowerCase() ); // initial time point
     }
 
     /**

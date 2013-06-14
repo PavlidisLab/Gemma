@@ -37,7 +37,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
  * @author Paul
@@ -98,6 +97,11 @@ public interface OntologyService extends InitializingBean {
     public abstract BirnLexOntologyService getBirnLexOntologyService();
 
     /**
+     * @return terms which are allowed for use in the Category of a Characteristic
+     */
+    public abstract Collection<OntologyTerm> getCategoryTerms();
+
+    /**
      * @return the chebiOntologyService
      */
     public abstract ChebiOntologyService getChebiOntologyService();
@@ -128,11 +132,6 @@ public interface OntologyService extends InitializingBean {
     public abstract MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService();
 
     /**
-     * @return the mgedOntologyService
-     */
-    public abstract MgedOntologyService getMgedOntologyService();
-
-    /**
      * @return the NIFSTDOntologyService
      */
     public abstract NIFSTDOntologyService getNifstfOntologyService();
@@ -161,14 +160,6 @@ public interface OntologyService extends InitializingBean {
     public abstract void reinitializeAllOntologies();
 
     /**
-     * Will persist the give vocab characteristic to each biomaterial id supplied in the list.
-     * 
-     * @param vc
-     * @param bmIdList
-     */
-    public abstract void removeBioMaterialStatement( Collection<Long> characterIds, Collection<Long> bmIdList );
-
-    /**
      * @param characterId characteristic id
      * @param bm
      */
@@ -181,14 +172,6 @@ public interface OntologyService extends InitializingBean {
      * @param bm
      */
     public abstract void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
-
-    /**
-     * Will persist the give vocab characteristic to each biomaterial id supplied in the list.
-     * 
-     * @param vc
-     * @param bioMaterialIdList
-     */
-    public abstract void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList );
 
     /**
      * Will persist the give vocab characteristic to the expression experiment.

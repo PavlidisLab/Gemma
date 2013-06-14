@@ -36,6 +36,7 @@ import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
+import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 import ubic.gemma.util.EntityUtils;
@@ -50,9 +51,9 @@ import ubic.gemma.util.NativeQueryUtils;
 @Repository
 public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.CharacteristicDaoBase {
 
-    private static Log log = LogFactory.getLog( CharacteristicDaoImpl.class );
-
     private static final int BATCH_SIZE = 1000;
+
+    private static Log log = LogFactory.getLog( CharacteristicDaoImpl.class );
 
     @Autowired
     public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
@@ -102,6 +103,21 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         return ( ( Long ) getHibernateTemplate()
                 .find( "select count(*) from CharacteristicImpl where value not like 'GO_%'" ).iterator().next() )
                 .intValue();
+    }
+
+    @Override
+    public Collection<? extends Characteristic> findByCategory( String query ) {
+        final String queryString = "select distinct char from CharacteristicImpl as char where char.category like :search";
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        try {
+            return getHibernateTemplate().findByNamedParam( queryString, "search", query + "%" );
+        } finally {
+            if ( timer.getTime() > 100 ) {
+                log.info( "Characteristic search for category: " + query + ": " + timer.getTime() + "ms" );
+            }
+        }
     }
 
     /*
@@ -192,6 +208,24 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.common.description.CharacteristicDao#getUsedCategories()
+     */
+    @Override
+    public Collection<String> getUsedCategories() {
+        final String queryString = "select distinct categoryUri from CharacteristicImpl where categoryUri is not null";
+        List<?> res = this.getHibernateTemplate().find( queryString );
+        Collection<String> result = new HashSet<>();
+
+        for ( Object o : res ) {
+            result.add( ( String ) o );
+        }
+
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @Override
@@ -262,21 +296,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         } finally {
             if ( timer.getTime() > 100 ) {
                 log.info( "Characteristic search for " + search + ": " + timer.getTime() + "ms" );
-            }
-        }
-    }
-
-    @Override
-    public Collection<? extends Characteristic> findByCategory( String query ) {
-        final String queryString = "select distinct char from CharacteristicImpl as char where char.category like :search";
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        try {
-            return getHibernateTemplate().findByNamedParam( queryString, "search", query + "%" );
-        } finally {
-            if ( timer.getTime() > 100 ) {
-                log.info( "Characteristic search for category: " + query + ": " + timer.getTime() + "ms" );
             }
         }
     }
@@ -362,6 +381,8 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
             field = "phenotypes";
         } else if ( parentClass.isAssignableFrom( TreatmentImpl.class ) ) {
             field = "action";
+        } else if ( parentClass.isAssignableFrom( BioMaterialImpl.class ) ) {
+            field = "characteristics";
         }
         return field;
     }

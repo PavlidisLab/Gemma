@@ -373,7 +373,6 @@
 		<dwr:remote javascript="PhenotypeController">
 			<dwr:include method="findEvidenceByFilters" />
 			<dwr:include method="findCandidateGenes" />
-			<dwr:include method="findExperimentMgedCategory" />
 			<dwr:include method="calculateExternalDatabasesStatistics" />
 			<dwr:include method="findExperimentOntologyValue" />
 			<dwr:include method="findEvidenceOwners" />
@@ -391,14 +390,6 @@
 	<bean id="generalSearchController" class="ubic.gemma.web.controller.GeneralSearchControllerImpl">
 		<dwr:remote javascript="SearchService">
 			<dwr:include method="ajaxSearch" />
-		</dwr:remote>
-	</bean>
-
-	<bean id="mgedOntologyServiceDWR" class="ubic.gemma.ontology.providers.MgedOntologyService" factory-bean="ontologyService"
-		factory-method="getMgedOntologyService">
-		<dwr:remote javascript="MgedOntologyService">
-			<dwr:include method="getUsefulMgedTerms" />
-			<dwr:include method="getMgedTermsByKey" />
 		</dwr:remote>
 	</bean>
 
@@ -640,6 +631,12 @@
 			<dwr:include method="getDEDVForVisualizationByProbe" />
 			<dwr:include method="getDEDVForDiffExVisualizationByThreshold" />
 			<dwr:include method="getDEDVForDiffExVisualizationByExperiment" />
+		</dwr:remote>
+	</bean>
+	 
+	<bean id="ontologyService" class="ubic.gemma.ontology.OntologyServiceImpl">
+		<dwr:remote javascript="OntologyService">
+			<dwr:include method="getCategoryTerms" />
 		</dwr:remote>
 	</bean>
 

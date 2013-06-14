@@ -224,8 +224,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
                             throws org.hibernate.HibernateException {
                         session.evict( bioMaterial );
                         BioMaterial newMaterial = BioMaterial.Factory.newInstance();
-                        newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" );
-                        newMaterial.setMaterialType( bioMaterial.getMaterialType() );
+                        newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" ); 
                         newMaterial.setCharacteristics( bioMaterial.getCharacteristics() );
                         newMaterial.setSourceTaxon( bioMaterial.getSourceTaxon() );
 

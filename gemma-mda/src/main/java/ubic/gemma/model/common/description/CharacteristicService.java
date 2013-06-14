@@ -40,6 +40,11 @@ public interface CharacteristicService {
     public List<Characteristic> browse( Integer start, Integer limit );
 
     /**
+     * @return
+     */
+    public Collection<String> getUsedCategories();
+
+    /**
      * Browse through the characteristics, excluding GO annotations.
      * 
      * @param start How far into the list to start

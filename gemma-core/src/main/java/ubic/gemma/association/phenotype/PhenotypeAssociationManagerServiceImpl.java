@@ -801,8 +801,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> the terms found
      */
     @Override
-    public Collection<CharacteristicValueObject> findExperimentMgedCategory() {
-        return this.associationService.findEvidenceMgedCategoryTerms();
+    public Collection<CharacteristicValueObject> findExperimentCategory() {
+        return this.associationService.findEvidenceCategoryTerms();
     }
 
     /**

@@ -180,8 +180,8 @@ CharacteristicBrowserController._path = '/Gemma/dwr';
 CharacteristicBrowserController.findCharacteristics = function(p0, callback) {
    dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController', 'findCharacteristics', p0, callback);
 };
-CharacteristicBrowserController.findCharacteristicsCustom = function(p0, p1, p2, p3, p4, p5, p6, callback) {
-   dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController', 'findCharacteristicsCustom', p0, p1, p2, p3, p4, p5, p6, callback);
+CharacteristicBrowserController.findCharacteristicsCustom = function(p0, p1, p2, p3, p4, p5, p6, p7, callback) {
+   dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController', 'findCharacteristicsCustom', p0, p1, p2, p3, p4, p5, p6, p7, callback);
 };
 CharacteristicBrowserController.removeCharacteristics = function(p0, callback) {
    dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController', 'removeCharacteristics', p0, callback);
@@ -456,15 +456,15 @@ ExpressionExperimentController.getDesignMatrixRows = function(p0, callback) {
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getDesignMatrixRows', p0, callback);
 };
 ExpressionExperimentController.loadExpressionExperimentDetails = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadExpressionExperimentDetails");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadExpressionExperimentDetails?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadExpressionExperimentDetails', p0, callback);
 };
 ExpressionExperimentController.loadQuantitationTypes = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadQuantitationTypes");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadQuantitationTypes?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadQuantitationTypes', p0, callback);
 };
 ExpressionExperimentController.loadExpressionExperiments = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadExpressionExperiments");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadExpressionExperiments?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadExpressionExperiments', p0, callback);
 };
 ExpressionExperimentController.loadStatusSummaries = function(p0, p1, p2, p3, p4, callback) {
@@ -472,7 +472,7 @@ ExpressionExperimentController.loadStatusSummaries = function(p0, p1, p2, p3, p4
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadStatusSummaries', p0, p1, p2, p3, p4, callback);
 };
 ExpressionExperimentController.removePrimaryPublication = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/removePrimaryPublication");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/removePrimaryPublication?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'removePrimaryPublication', p0, callback);
 };
 ExpressionExperimentController.updateAllReports = function(callback) {
@@ -492,22 +492,22 @@ ExpressionExperimentController.updateBasics = function(p0, callback) {
 // 'updateBioMaterialMapping', callback);
 // }
 ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/unmatchAllBioAssays");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/unmatchAllBioAssays?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'unmatchAllBioAssays', p0, callback);
 };
 ExpressionExperimentController.canCurrentUserEditExperiment = function(p0, callback) {
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'canCurrentUserEditExperiment', p0, callback);
 };
 ExpressionExperimentController.browse = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browse");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browse?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browse', p0, callback);
 };
 ExpressionExperimentController.browseSpecificIds = function(p0, p1, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browseSpecificIds");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browseSpecificIds?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseSpecificIds', p0, p1, callback);
 };
 ExpressionExperimentController.browseByTaxon = function(p0, p1, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browseByTaxon");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/browseByTaxon?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseByTaxon', p0, p1, callback);
 };
 ExpressionExperimentController.loadCountsForDataSummaryTable = function(callback) {
@@ -523,15 +523,15 @@ if (typeof ExpressionExperimentDataFetchController === 'undefined') {
 }
 ExpressionExperimentDataFetchController._path = '/Gemma/dwr';
 ExpressionExperimentDataFetchController.getDataFile = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getDataFile");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getDataFile?" + p0);
    dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController', 'getDataFile', p0, callback);
 };
 ExpressionExperimentDataFetchController.getDiffExpressionDataFile = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getDiffExpressionDataFile");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getDiffExpressionDataFile?" + p0);
    dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController', 'getDiffExpressionDataFile', p0, callback);
 };
 ExpressionExperimentDataFetchController.getCoExpressionDataFile = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getCoExpressionDataFile");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getCoExpressionDataFile?" + p0);
    dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController', 'getCoExpressionDataFile', p0, callback);
 };
 // ====================================================================================
@@ -549,23 +549,23 @@ if (typeof ExpressionExperimentSetController === 'undefined') {
 }
 ExpressionExperimentSetController._path = '/Gemma/dwr';
 ExpressionExperimentSetController.remove = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/remove");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/remove?" + p0);
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'remove', p0, callback);
 };
 ExpressionExperimentSetController.create = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/create");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/create?" + p0);
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'create', p0, callback);
 };
 ExpressionExperimentSetController.update = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/update");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/update?" + p0);
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'update', p0, callback);
 };
 ExpressionExperimentSetController.updateNameDesc = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/updateNameDesc");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/updateNameDesc?" + p0);
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateNameDesc', p0, callback);
 };
 ExpressionExperimentSetController.updateMembers = function(p0, p1, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/updateMembers");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/updateMembers?" + p0);
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateMembers', p0, p1, callback);
 };
 ExpressionExperimentSetController.loadAll = function(callback) {
@@ -573,11 +573,11 @@ ExpressionExperimentSetController.loadAll = function(callback) {
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAll', callback);
 };
 ExpressionExperimentSetController.load = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/load");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/load?" + p0);
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'load', p0, callback);
 };
 ExpressionExperimentSetController.loadByName = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/loadByName");
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentSetController/loadByName?" + p0);
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadByName', p0, callback);
 };
 ExpressionExperimentSetController.removeUserAndSessionGroups = function(p0, callback) {
@@ -957,35 +957,14 @@ LinkAnalysisController.run = function(p0, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/LinkAnalysisController/run");
    dwr.engine._execute(LinkAnalysisController._path, 'LinkAnalysisController', 'run', p0, callback);
 };
-
-// ====================================================================================
-if (typeof MgedOntologyService === 'undefined') {
-   var MgedOntologyService = {};
+//
+// // ====================================================================================
+if (typeof OntologyService === 'undefined') {
+   var OntologyService = {};
 }
-MgedOntologyService._path = '/Gemma/dwr';
-MgedOntologyService.getMgedTermsByKey = function(p0, callback) {
-   dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'getMgedTermsByKey', p0, callback);
-};
-MgedOntologyService.getBioMaterialTreeNodeTerms = function(callback) {
-   dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'getBioMaterialTreeNodeTerms', callback);
-};
-MgedOntologyService.getBioMaterialTerms = function(callback) {
-   dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'getBioMaterialTerms', callback);
-};
-MgedOntologyService.getUsefulMgedTerms = function(callback) {
-   dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'getUsefulMgedTerms', callback);
-};
-MgedOntologyService.loadNewOntology = function(p0, p1, callback) {
-   dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'loadNewOntology', p0, p1, callback);
-};
-MgedOntologyService.getTerm = function(p0, callback) {
-   dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'getTerm', p0, callback);
-};
-MgedOntologyService.getTermIndividuals = function(p0, callback) {
-   dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'getTermIndividuals', p0, callback);
-};
-MgedOntologyService.isOntologyLoaded = function(callback) {
-   dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'isOntologyLoaded', callback);
+OntologyService._path = '/Gemma/dwr';
+OntologyService.getCategoryTerms = function(callback) {
+   dwr.engine._execute(OntologyService._path, 'OntologyService', 'getCategoryTerms', callback);
 };
 // ====================================================================================
 if (typeof ProcessedExpressionDataVectorCreateController === 'undefined') {
@@ -1101,8 +1080,8 @@ PhenotypeController.findCandidateGenes = function(p0, p1, p2, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/findCandidateGenes");
    dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findCandidateGenes', p0, p1, p2, callback);
 };
-PhenotypeController.findExperimentMgedCategory = function(callback) {
-   dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentMgedCategory', callback);
+PhenotypeController.findExperimentCategory = function(callback) {
+   dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentCategory', callback);
 };
 PhenotypeController.calculateExternalDatabasesStatistics = function(callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/calculateExternalDatabasesStatistics");
