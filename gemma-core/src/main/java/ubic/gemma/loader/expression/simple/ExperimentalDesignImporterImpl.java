@@ -88,7 +88,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     @Autowired
     ExpressionExperimentService expressionExperimentService;
 
-    private ExperimentalFactorOntologyService mgedOntologyService;
+    private ExperimentalFactorOntologyService efoService;
 
     /*
      * (non-Javadoc)
@@ -111,15 +111,15 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      */
     @Override
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
-        this.mgedOntologyService = this.ontologyService.getExperimentalFactorOntologyService();
+        this.efoService = this.ontologyService.getExperimentalFactorOntologyService();
 
         log.debug( "Parsing input file" );
         boolean readHeader = false;
 
         BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
         String line = null;
-        if ( mgedOntologyService == null ) {
-            throw new IllegalStateException( "Please set the MGED OntologyService, thanks." );
+        if ( efoService == null ) {
+            throw new IllegalStateException( "Please set the ExperimentalFactor OntologyService, thanks." );
         }
 
         ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
@@ -179,7 +179,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     }
 
     /**
-     * This method reads the file line e.g. $Run time : Category=EnvironmentalHistory Type=categorical and creates
+     * This method reads the file line e.g. $Run time : Category=environmental_history Type=categorical and creates
      * experimental factors from it and adds them to the experimental design.
      * 
      * @param experimentalDesign Experimental design for this expression experiment
@@ -192,7 +192,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             List<String> experimentalFactorFileLines, String[] headerFields, List<String> factorValueLines ) {
 
         int maxWait = 0;
-        while ( !mgedOntologyService.isOntologyLoaded() ) {
+        while ( !efoService.isOntologyLoaded() ) {
             try {
                 Thread.sleep( 1000 );
                 if ( maxWait++ > 100 ) {
@@ -203,7 +203,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             }
         }
 
-        log.info( "Addding experimental factors to experimental design: " + experimentalDesign.getId() );
+        log.info( "Adding experimental factors to experimental design: " + experimentalDesign.getId() );
 
         Collection<OntologyTerm> terms = ontologyService.getCategoryTerms();
         if ( experimentalDesign.getExperimentalFactors() == null ) {

@@ -44,6 +44,7 @@ import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.providers.BirnLexOntologyService;
 import ubic.basecode.ontology.providers.CellTypeOntologyService;
@@ -479,11 +480,10 @@ public class OntologyServiceImpl implements OntologyService {
 
         if ( !experimentalFactorOntologyService.isOntologyLoaded() ) {
             log.warn( "EFO is not loaded" );
-            return new HashSet<>();
         }
 
         /*
-         * Requires EFO, OBI and SO
+         * Requires EFO, OBI and SO. If one of them isn't loaded, the terms are filled in with placeholders.
          */
 
         if ( categoryterms == null ) {
@@ -497,12 +497,17 @@ public class OntologyServiceImpl implements OntologyService {
                 BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) );
                 String line;
                 while ( ( line = reader.readLine() ) != null ) {
-                    if ( line.startsWith( "#" ) ) continue;
+                    if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) ) continue;
                     String[] f = StringUtils.split( line, '\t' );
+                    if ( f.length < 2 ) {
+                        continue;
+                    }
                     OntologyTerm t = getTerm( f[0] );
                     if ( t == null ) {
-                        log.warn( "No term found: " + line );
-                        continue;
+                        // this is not great. We might want to let it expire and redo it later if the ontology becomes
+                        // available. Inference will not be available.
+                        log.info( "Ontology needed is not loaded? Using light-weight placeholder for " + f[0] );
+                        t = new OntologyTermSimple( f[0], f[1] );
                     }
 
                     categoryterms.add( t );

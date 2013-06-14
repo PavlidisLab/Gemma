@@ -49,7 +49,7 @@ public class LocalDatasetFetcher extends DatasetFetcher {
      */
     @Override
     public Collection<LocalFile> fetch( String accession ) {
-        log.info( "Seeking GSE  file for " + accession );
+        log.info( "Seeking GSE file for " + accession );
 
         assert localPath != null;
 
