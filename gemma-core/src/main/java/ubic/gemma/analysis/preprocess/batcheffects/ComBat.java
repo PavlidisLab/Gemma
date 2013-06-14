@@ -72,7 +72,7 @@ import cern.jet.random.engine.MersenneTwister;
  */
 public class ComBat<R, C> {
 
-    private static final String BATCH_COLUMN_NAME = "block";
+    private static final String BATCH_COLUMN_NAME = "batch";
 
     private static Log log = LogFactory.getLog( ComBat.class );
 
