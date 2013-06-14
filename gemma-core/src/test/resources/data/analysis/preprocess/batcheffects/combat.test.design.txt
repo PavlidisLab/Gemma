@@ -1,4 +1,4 @@
-label	Blood flow stress	Age	block
+label	Blood flow stress	Age	batch
 GSE13712_Biomat_10	fv_19996_base	fv_34753_base	fv_64006_base
 GSE13712_Biomat_7	fv_19996_base	fv_34753_base	fv_64006_base
 GSE13712_Biomat_9	fv_19996_base	fv_34753_base	fv_64007
