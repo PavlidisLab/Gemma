@@ -30,7 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -43,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -53,11 +51,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContextTest {
-
-    @Autowired
-    private OntologyService os;
-
-    private ExperimentalFactorOntologyService mos;
 
     private ExpressionExperiment ee;
 
@@ -76,15 +69,6 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
                 "/data/loader/expression/expdesign.import.testfull.data.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-
-        mos = os.getExperimentalFactorOntologyService();
-        if ( !mos.isOntologyLoaded() ) {
-            mos.startInitializationThread( true );
-            while ( !mos.isOntologyLoaded() ) {
-                Thread.sleep( 5000 );
-                log.info( "Waiting for mgedontology to load" );
-            }
-        }
 
         Taxon human = taxonService.findByCommonName( "human" );
 
