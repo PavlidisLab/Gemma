@@ -4,9 +4,9 @@
 #$ Profile : Category=disease Type=Categorical
 #$ DSM IV Codes : Category=disease Type=Categorical
 #$ Axis I Primary Diagnosis : Category=disease Type=Categorical 
-#$ PMI (h) : Category=preservation Type=Continuous
+#$ PMI (h) : Category=clinical_history Type=Continuous
 #$ Brain PH : Category=environmental_history Type=Continuous
-#$ Left Brain : Category=preservation Type=Categorical
+#$ Left Brain : Category=organism_part Type=Categorical
 #$ Suicide Status : Category=environmental_history Type=Categorical
 #$ Psychotic Feature : Category=disease Type=Categorical
 #$ Rate of Death : Category=phenotype Type=Categorical
