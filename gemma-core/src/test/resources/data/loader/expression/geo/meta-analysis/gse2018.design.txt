@@ -4,7 +4,7 @@
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=22
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
-#$diseaseState : Category=DiseaseState Type=Categorical
+#$diseaseState : Category=disease Type=Categorical
 Bioassay	ExternalID	diseaseState
 GSE2018_Biomat_3___BioAssayImplId=618Name=BAL_31_A0B1	GSM36441	control
 GSE2018_Biomat_4___BioAssayImplId=619Name=BAL_3_A1B0	GSM36440	control

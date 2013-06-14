@@ -5,7 +5,7 @@
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=24
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
-#$diseaseState : Category=DiseaseState Type=Categorical
+#$diseaseState : Category=disease Type=Categorical
 Bioassay	ExternalID	diseaseState
 GSE6344_Biomat_13___BioAssayImplId=676Name=Stage2,PT#9,Normal(HG.U133B).BioAssayImplId=656Name=Stage2,PT#9,Normal(HG.U133A)	GSM146810/GSM146790	normal
 GSE6344_Biomat_20___BioAssayImplId=669Name=Stage2,PT#12,Tumor(HG.U133B).BioAssayImplId=649Name=Stage2,PT#12,Tumor(HG.U133A)	GSM146817/GSM146797	stage_I_cRCC

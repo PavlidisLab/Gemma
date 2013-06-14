@@ -3,9 +3,9 @@
 # name=Propionic Acid Induces Autistic-like Gene Expression Profiles, Inhibits Neurite Outgrowth, and Promotes Neurodegeneration in Cells from Non-Autistic Individuals
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=3413
 # If you use this file for your research, please cite the Gemma web site: http://chibi.ubc.ca/Gemma
-#$DiseaseState : Category=DiseaseState Type=Categorical
-#$Treatment : Category=Treatment Type=Categorical
-#$PooledTreatment : Category=Treatment Type=Categorical
+#$DiseaseState : Category=disease Type=Categorical
+#$Treatment : Category=treatment Type=Categorical
+#$PooledTreatment : Category=treatment Type=Categorical
 Bioassay	ExternalID	DiseaseState	Treatment	PooledTreatment
 ASDLCL_HI0777_Propanol.treated	GSM796497	Autistic_Disorder	propanol	drug
 ASDLCL_HI4360_PBS.treated	GSM796496	Autistic_Disorder	phosphate_buffered_saline_solution	drug
