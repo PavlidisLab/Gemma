@@ -277,7 +277,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         try {
             preprocessorService.process( experiment );
         } catch ( PreprocessingException e ) {
-            log.error( "Error during postprocessing", e );
+            log.error( "Error during postprocessing: " + e.getMessage(), e.getCause() != null ? e.getCause() : e );
         }
 
         return experiment;
