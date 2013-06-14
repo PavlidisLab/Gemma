@@ -115,6 +115,7 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
         FilterConfig fconfig = new FilterConfig();
         fconfig.setIgnoreMinimumRowsThreshold( true );
         fconfig.setIgnoreMinimumSampleThreshold( true );
+        // fconfig.setRequireSequences( false ); // not sure if this is the best thing to do.
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, fconfig,
                 processedVectors );
 
