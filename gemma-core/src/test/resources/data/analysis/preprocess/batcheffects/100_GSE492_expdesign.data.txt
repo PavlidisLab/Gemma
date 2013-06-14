@@ -1,4 +1,4 @@
-Bioassay	OrganismPart	Treatment	batch
+Bioassay	OrganismPart	Treatment	block
 GSE492_bioMaterial_1.GSM6681___PHG.LCM.1aAv2.s2	Ciliary_muscle	latanoprost	Batch_01_1/17/02
 GSE492_bioMaterial_10.GSM7622___PHG.CtrCM.1bAv2.s2	Ciliary_muscle	Control_group_|_untreated_|	Batch_02_2/1/02
 GSE492_bioMaterial_11.GSM7623___PHG.CtrTM.1aAv2.s2	trabecular_meshwork	Control_group_|_untreated_|	Batch_01_1/17/02
