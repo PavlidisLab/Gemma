@@ -5,7 +5,7 @@
 # If you use this file for your research, please cite the Gemma web site: http://chibi.ubc.ca/Gemma
 #$treatment : Category=treatment Type=Categorical
 #$batch : Category=block Type=Categorical
-Bioassay	treatment	batch
+Bioassay	treatment	block
 GSM453977	Control_group	Batch_2_4/19/07
 GSM453976	Control_group	Batch_1_3/14/07
 GSM453979	ethanol	Batch_1_3/14/07
