@@ -47,7 +47,6 @@ public class ExternalCacheProvider implements CacheProvider {
     @Autowired
     private CacheManager cacheManager = null;
 
-    @SuppressWarnings("deprecation")
     @Override
     public Cache buildCache( String name, Properties properties ) throws CacheException {
         try {
@@ -68,13 +67,11 @@ public class ExternalCacheProvider implements CacheProvider {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public boolean isMinimalPutsEnabledByDefault() {
         return false;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public long nextTimestamp() {
         return Timestamper.next();
@@ -90,7 +87,6 @@ public class ExternalCacheProvider implements CacheProvider {
         this.cacheManager = cacheManager;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void start( Properties properties ) throws CacheException {
         // ignored, CacheManager lifecycle handled by the IoC container
