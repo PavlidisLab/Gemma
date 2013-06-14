@@ -4,8 +4,8 @@
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=1151
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
-#$SamplingTimePoint : Category=SamplingTimePoint Type=Continuous
-Bioassay	ExternalID	SamplingTimePoint
+#$timepoint : Category=timepoint Type=Continuous
+Bioassay	ExternalID	timepoint
 GSE13949_Biomat_13___BioAssayImplId=44668Name=U2OSDex51sthour	GSM351123	51
 GSE13949_Biomat_12___BioAssayImplId=44667Name=U2OSDex52ndhour	GSM351124	52
 GSE13949_Biomat_23___BioAssayImplId=44670Name=U2OSDex49thhour	GSM351121	49

@@ -7,8 +7,8 @@
 # http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=3413
 # If you use this file for your research, please cite the Gemma web site:
 # http://chibi.ubc.ca/Gemma
-#$DiseaseState : Category=DiseaseState Type=Categorical
-Bioasssay	ExternalID	DiseaseState
+#$disease : Category=disease Type=Categorical
+Bioasssay	ExternalID	disease
 GSM718707__GSE29006	GSM718707	N
 GSM718708__GSE29006	GSM718708	N
 GSM718709__GSE29006	GSM718709	Y

@@ -4,11 +4,11 @@
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=6283
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
-#$Phenotype : Category=Phenotype Type=Categorical
-#$batch : Category=ComplexAction Type=Categorical
-#$StrainOrLine : Category=StrainOrLine Type=Categorical
-#$GeneticModification : Category=GeneticModification Type=Categorical
-Bioassay	ExternalID	Phenotype	batch	StrainOrLine	GeneticModification
+#$phenotype : Category=phenotype Type=Categorical
+#$batch : Category=block Type=Categorical
+#$strain : Category=strain Type=Categorical
+#$genotype : Category=genotype Type=Categorical
+Bioassay	ExternalID	phenotype	block	strain	genotype
 GSE12991_Biomat_9___BioAssayImplId=223736Name=wt_206_GFP_neg1,biologicalreplicate1	GSM325511	no_miR_124_or_miR_206_transcription	Batch_01_18/05/07	Line_2	wild_type
 GSE12991_Biomat_16___BioAssayImplId=223737Name=wt_206_GFP_pos1,biologicalreplicate1	GSM325510	miR_206_transcription	Batch_01_18/05/07	Line_2	wild_type
 GSE12991_Biomat_1___BioAssayImplId=223728Name=wt_124_GFP_neg2,biologicalreplicate2	GSM325519	no_miR_124_or_miR_206_transcription	Batch_01_18/05/07	Line_1	wild_type
