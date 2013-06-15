@@ -390,7 +390,7 @@ public class SearchServiceImpl implements SearchService {
 
         return searchResults;
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -436,7 +436,8 @@ public class SearchServiceImpl implements SearchService {
      * @see ubic.gemma.search.SearchService#search(ubic.gemma.search.SearchSettings, boolean)
      */
     @Override
-    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) {
+    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects,
+            boolean webSpeedSearch ) {
 
         if ( StringUtils.isBlank( settings.getTermUri() ) && !settings.getQuery().startsWith( "http://" ) ) {
             return generalSearch( settings, fillObjects, webSpeedSearch );
@@ -574,8 +575,8 @@ public class SearchServiceImpl implements SearchService {
             if ( query.length() < MINIMUM_EE_QUERY_LENGTH ) return eeIds;
 
             // Initial list
-            List<SearchResult> results = this.search( SearchSettingsImpl.expressionExperimentSearch( query ), false, false )
-                    .get( ExpressionExperiment.class );
+            List<SearchResult> results = this.search( SearchSettingsImpl.expressionExperimentSearch( query ), false,
+                    false ).get( ExpressionExperiment.class );
             for ( SearchResult result : results ) {
                 eeIds.add( result.getId() );
             }
@@ -1680,16 +1681,14 @@ public class SearchServiceImpl implements SearchService {
             results.addAll( databaseExpressionExperimentSearch( settings ) );
         }
 
+        if ( settings.getUseIndices() ) {
+            results.addAll( compassExpressionSearch( settings ) );
+        }
+
         if ( results.size() == 0 ) {
             /*
-             * User didn't put in an exact id, so they get a slower more thorough search.
+             * Try a more thorough search. This is slower; calls to ontologySearchAnnotatedObject take a long time
              */
-
-            if ( settings.getUseIndices() ) {
-                results.addAll( compassExpressionSearch( settings ) );
-            }
-
-            // a submethod of this one (ontologySearchAnnotatedObject) takes a long time
             if ( settings.getUseCharacteristics() ) {
                 results.addAll( characteristicExpressionExperimentSearch( settings ) );
             }
@@ -1910,11 +1909,11 @@ public class SearchServiceImpl implements SearchService {
         String searchString = settings.getQuery();
 
         Collection<SearchResult> geneDbList = databaseGeneSearch( settings );
-        
-        if (returnOnDbHit && geneDbList.size()>0){
-        	return geneDbList;
+
+        if ( returnOnDbHit && geneDbList.size() > 0 ) {
+            return geneDbList;
         }
-        
+
         Set<SearchResult> combinedGeneList = new HashSet<SearchResult>();
         combinedGeneList.addAll( geneDbList );
 
@@ -2290,11 +2289,12 @@ public class SearchServiceImpl implements SearchService {
      *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
      *        false can be an optimization if all you need is the id. Note: filtering by taxon will not be done unless
      *        objects are filled
-     * @param webSpeedSearch if true, this call is probably coming from a web app combo box and results will be limited to
-     * 		  improve speed
+     * @param webSpeedSearch if true, this call is probably coming from a web app combo box and results will be limited
+     *        to improve speed
      * @return
      */
-    protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) {
+    protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects,
+            boolean webSpeedSearch ) {
         String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );
 
         if ( settings.getTaxon() == null ) {
