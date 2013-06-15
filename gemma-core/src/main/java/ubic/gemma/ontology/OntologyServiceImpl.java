@@ -1000,6 +1000,7 @@ public class OntologyServiceImpl implements OntologyService {
             Collection<Characteristic> searchResults ) {
         if ( categoryUri == null ) return;
 
+        // genotype, genetic modification, molecular entity.
         if ( categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000510" )
                 || categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000513" )
                 || categoryUri.equals( "http://purl.org/obo/owl/CHEBI#CHEBI_23367" ) ) {
