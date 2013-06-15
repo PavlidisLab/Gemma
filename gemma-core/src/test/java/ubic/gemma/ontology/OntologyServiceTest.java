@@ -50,7 +50,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
             while ( !os.getExperimentalFactorOntologyService().isOntologyLoaded() ) {
                 Thread.sleep( 10000 );
                 log.info( "Waiting for Ontology to load" );
-                if ( ++c > 10 ) {
+                if ( ++c > 20 ) {
                     fail( "Ontology load timeout" );
                 }
             }
