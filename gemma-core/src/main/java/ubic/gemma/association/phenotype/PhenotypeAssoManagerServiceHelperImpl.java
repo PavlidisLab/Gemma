@@ -239,7 +239,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             for ( CharacteristicValueObject updatedCharacteristic : experimentalVO.getExperimentCharacteristics() ) {
 
                 // updated
-                if ( updatedCharacteristic.getId() != 0 ) {
+                if ( updatedCharacteristic.getId() != null ) { // this was != 0.
                     updatedCharacteristicsMap.put( updatedCharacteristic.getId(), updatedCharacteristic );
                 }
                 // new one

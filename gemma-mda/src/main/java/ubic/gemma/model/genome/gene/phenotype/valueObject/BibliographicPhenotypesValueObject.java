@@ -88,6 +88,7 @@ public class BibliographicPhenotypesValueObject {
         Collection<Long> allPhenotypesID = new HashSet<Long>();
 
         for ( CharacteristicValueObject phenotype : this.phenotypesValues ) {
+            if (phenotype.getId() == null) continue;
             allPhenotypesID.add( phenotype.getId() );
         }
         return allPhenotypesID;

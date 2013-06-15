@@ -28,7 +28,8 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
-    private Long id = 0L; // needs to be able to be null
+    private Long id = null; // MUST be initialized with null or have equality problems in javascript.
+
     /** id used by url on the client side */
     protected String urlId = "";
 
@@ -36,11 +37,11 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String categoryUri = "";
 
     private String value = "";
-    protected String valueUri = "";
+    private String valueUri = "";
 
-    /** number of occurence in all genes */
-    protected long publicGeneCount = 0L;
-    protected long privateGeneCount = 0L;
+    /** number of occurrences in all genes */
+    private long publicGeneCount = 0L;
+    private long privateGeneCount = 0L;
 
     /** what Ontology uses this term */
     private String ontologyUsed = null;
@@ -73,7 +74,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             characteristicValueObjects.add( characteristicValueObject );
 
             if ( characteristic.getDescription() != null && characteristic.getDescription().indexOf( " -USED- " ) != -1 ) {
-
                 characteristicValueObject.setAlreadyPresentInDatabase( true );
             }
         }

@@ -181,22 +181,22 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
                 allGenes.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
 
-                if ( phenotypesGenesAssociations.get( this.valueUri ) != null ) {
-                    phenotypesGenesAssociations.get( this.valueUri ).addAll(
+                if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
+                    phenotypesGenesAssociations.get( getValueUri() ).addAll(
                             phenotypesGenesAssociations.get( tc.getValueUri() ) );
                 } else {
                     HashSet<Integer> genesNBCI = new HashSet<Integer>();
                     genesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
-                    phenotypesGenesAssociations.put( this.valueUri, genesNBCI );
+                    phenotypesGenesAssociations.put( getValueUri(), genesNBCI );
                 }
             }
         }
 
-        if ( phenotypesGenesAssociations.get( this.valueUri ) != null ) {
-            allGenes.addAll( phenotypesGenesAssociations.get( this.valueUri ) );
+        if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
+            allGenes.addAll( phenotypesGenesAssociations.get( getValueUri() ) );
         }
 
-        this.publicGeneCount = allGenes.size();
+        this.setPrivateGeneCount( allGenes.size() );
     }
 
     /** counts each private occurrence of genes for a phenotype */
@@ -211,21 +211,21 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
                 allGenes.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
 
-                if ( phenotypesGenesAssociations.get( this.valueUri ) != null ) {
-                    phenotypesGenesAssociations.get( this.valueUri ).addAll(
+                if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
+                    phenotypesGenesAssociations.get( getValueUri() ).addAll(
                             phenotypesGenesAssociations.get( tc.getValueUri() ) );
                 } else {
                     HashSet<Integer> genesNBCI = new HashSet<Integer>();
                     genesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
-                    phenotypesGenesAssociations.put( this.valueUri, genesNBCI );
+                    phenotypesGenesAssociations.put( getValueUri(), genesNBCI );
                 }
             }
         }
 
-        if ( phenotypesGenesAssociations.get( this.valueUri ) != null ) {
-            allGenes.addAll( phenotypesGenesAssociations.get( this.valueUri ) );
+        if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
+            allGenes.addAll( phenotypesGenesAssociations.get( getValueUri() ) );
         }
-        this.privateGeneCount = allGenes.size();
+        this.setPrivateGeneCount( allGenes.size() );
     }
 
 }

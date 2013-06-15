@@ -1476,7 +1476,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( CharacteristicValueObject updatedPhenotype : updatedPhenotypes ) {
 
             // updated
-            if ( updatedPhenotype.getId() != 0 ) {
+            if ( updatedPhenotype.getId() != null ) {
                 updatedPhenotypesMap.put( updatedPhenotype.getId(), updatedPhenotype );
             }
             // new one
