@@ -1000,10 +1000,9 @@ public class OntologyServiceImpl implements OntologyService {
             Collection<Characteristic> searchResults ) {
         if ( categoryUri == null ) return;
 
-        if ( categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#GeneticModification" )
-                || categoryUri
-                        .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#IndividualGeneticCharacteristics" )
-                || categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Genotype" ) ) {
+        if ( categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000510" )
+                || categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000513" )
+                || categoryUri.equals( "http://purl.org/obo/owl/CHEBI#CHEBI_23367" ) ) {
 
             /*
              * Kick into a special search for genes. The user will have to deal with choosing one from the right taxon.
