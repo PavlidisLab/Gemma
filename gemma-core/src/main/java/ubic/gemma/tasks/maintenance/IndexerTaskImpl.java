@@ -30,6 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.MailEngine;
 
@@ -48,32 +50,68 @@ public class IndexerTaskImpl implements IndexerTask {
     private static final String PATH_PROPERTY = "compass.engine.connection";
     private static final String PATH_SUFFIX = "/index/";
 
-    @Autowired @Qualifier("arrayGps") private SingleCompassGps arrayGps;
-    @Autowired @Qualifier("bibliographicGps") private SingleCompassGps bibliographicGps;
-    @Autowired @Qualifier("biosequenceGps") private SingleCompassGps biosequenceGps;
-    @Autowired @Qualifier("experimentSetGps") private SingleCompassGps experimentSetGps;
-    @Autowired @Qualifier("expressionGps") private SingleCompassGps expressionGps;
-    @Autowired @Qualifier("geneGps") private SingleCompassGps geneGps;
-    @Autowired @Qualifier("geneSetGps") private SingleCompassGps geneSetGps;
-    @Autowired @Qualifier("probeGps") private SingleCompassGps probeGps;
+    @Autowired
+    @Qualifier("arrayGps")
+    private SingleCompassGps arrayGps;
+    @Autowired
+    @Qualifier("bibliographicGps")
+    private SingleCompassGps bibliographicGps;
+    @Autowired
+    @Qualifier("biosequenceGps")
+    private SingleCompassGps biosequenceGps;
+    @Autowired
+    @Qualifier("experimentSetGps")
+    private SingleCompassGps experimentSetGps;
+    @Autowired
+    @Qualifier("expressionGps")
+    private SingleCompassGps expressionGps;
+    @Autowired
+    @Qualifier("geneGps")
+    private SingleCompassGps geneGps;
+    @Autowired
+    @Qualifier("geneSetGps")
+    private SingleCompassGps geneSetGps;
+    @Autowired
+    @Qualifier("probeGps")
+    private SingleCompassGps probeGps;
 
-    @Autowired @Qualifier("compassArray") private InternalCompass compassArray;
-    @Autowired @Qualifier("compassBibliographic") private InternalCompass compassBibliographic;
-    @Autowired @Qualifier("compassBiosequence") private InternalCompass compassBiosequence;
-    @Autowired @Qualifier("compassExperimentSet") private InternalCompass compassExperimentSet;
-    @Autowired @Qualifier("compassExpression") private InternalCompass compassExpression;
-    @Autowired @Qualifier("compassGene") private InternalCompass compassGene;
-    @Autowired @Qualifier("compassGeneSet") private InternalCompass compassGeneSet;
-    @Autowired @Qualifier("compassProbe") private InternalCompass compassProbe;
+    @Autowired
+    @Qualifier("compassArray")
+    private InternalCompass compassArray;
+    @Autowired
+    @Qualifier("compassBibliographic")
+    private InternalCompass compassBibliographic;
+    @Autowired
+    @Qualifier("compassBiosequence")
+    private InternalCompass compassBiosequence;
+    @Autowired
+    @Qualifier("compassExperimentSet")
+    private InternalCompass compassExperimentSet;
+    @Autowired
+    @Qualifier("compassExpression")
+    private InternalCompass compassExpression;
+    @Autowired
+    @Qualifier("compassGene")
+    private InternalCompass compassGene;
+    @Autowired
+    @Qualifier("compassGeneSet")
+    private InternalCompass compassGeneSet;
+    @Autowired
+    @Qualifier("compassProbe")
+    private InternalCompass compassProbe;
+
+    @Autowired
+    private OntologyService ontologyService;
 
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
-    @Autowired private MailEngine mailEngine;
+    @Autowired
+    private MailEngine mailEngine;
 
     private IndexerTaskCommand command;
 
     @Override
-    public void setCommand(IndexerTaskCommand command) {
+    public void setCommand( IndexerTaskCommand command ) {
         this.command = command;
     }
 
@@ -136,6 +174,11 @@ public class IndexerTaskImpl implements IndexerTask {
             else
                 result.setPathToExperimentSetIndex( null );
         }
+
+        if ( command.isIndexOntologies() ) {
+            ontologyService.reindexAllOntologies();
+        }
+
         log.info( "Indexing Finished. Returning result to space. Result is: " + result );
         return result;
 
@@ -268,27 +311,27 @@ public class IndexerTaskImpl implements IndexerTask {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        log.info( "Rebuilding " + whatIndexingMsg + ". First attempt.");
+        log.info( "Rebuilding " + whatIndexingMsg + ". First attempt." );
 
         Boolean success = CompassUtils.rebuildCompassIndex( device );
-        
+
         // First attempt failed. Wait a bit then re-try.
         // See bug#2031. There are intermittent indexing failures. The cause is unknown at the moment.
-        if (!success) {
-            log.warn( "Failed to index " + whatIndexingMsg + ". Trying it again...");
+        if ( !success ) {
+            log.warn( "Failed to index " + whatIndexingMsg + ". Trying it again..." );
             try {
                 Thread.sleep( 120000 ); // sleep for 2 minutes.
             } catch ( InterruptedException e ) {
                 log.warn( "Job to index" + whatIndexingMsg + " was interrupted." );
                 return false;
             }
-            
+
             timer.reset();
             timer.start();
-            log.info( "Rebuilding " + whatIndexingMsg + ". Second attempt.");
+            log.info( "Rebuilding " + whatIndexingMsg + ". Second attempt." );
             success = CompassUtils.rebuildCompassIndex( device );
         }
-                
+
         // If failed for the second time send an email to administrator.
         if ( !success ) {
             mailEngine.sendAdminMessage( "Failed to index " + whatIndexingMsg, "Failed to index " + whatIndexingMsg

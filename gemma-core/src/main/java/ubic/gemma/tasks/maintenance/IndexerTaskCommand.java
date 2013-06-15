@@ -48,16 +48,18 @@ public class IndexerTaskCommand extends TaskCommand {
 
     private boolean indexGeneSet = true;
 
-    private boolean indexProbe;
+    private boolean indexOntologies;
 
-    @Override
-    public Class getTaskClass() {
-        return IndexerTask.class;
-    }
+    private boolean indexProbe;
 
     public IndexerTaskCommand() {
         super();
         this.setMaxRuntime( INDEXER_MAX_RUNTIME );
+    }
+
+    @Override
+    public Class getTaskClass() {
+        return IndexerTask.class;
     }
 
     public boolean isCompassOn() {
@@ -98,6 +100,10 @@ public class IndexerTaskCommand extends TaskCommand {
         return indexGeneSet;
     }
 
+    public boolean isIndexOntologies() {
+        return indexOntologies;
+    }
+
     public boolean isIndexProbe() {
         return indexProbe;
     }
@@ -116,6 +122,7 @@ public class IndexerTaskCommand extends TaskCommand {
         setIndexEE( all );
         setIndexGene( false );
         setIndexProbe( false );
+        setIndexOntologies( true );
         this.setIndexExperimentSet( all );
         this.setIndexGeneSet( all );
     }
@@ -156,6 +163,10 @@ public class IndexerTaskCommand extends TaskCommand {
      */
     public void setIndexGeneSet( boolean indexGeneSet ) {
         this.indexGeneSet = indexGeneSet;
+    }
+
+    public void setIndexOntologies( boolean indexOntologies ) {
+        this.indexOntologies = indexOntologies;
     }
 
     public void setIndexOntology( boolean indexBioSequence ) {

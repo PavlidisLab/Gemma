@@ -58,6 +58,7 @@ import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MouseDevelopmentOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
+import ubic.basecode.ontology.providers.SequenceOntologyService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -218,6 +219,8 @@ public class OntologyServiceImpl implements OntologyService {
 
     private ChebiOntologyService chebiOntologyService;
 
+    private SequenceOntologyService sequenceOntologyService;
+
     private DiseaseOntologyService diseaseOntologyService;
     @Autowired
     private ExpressionExperimentService eeService;
@@ -249,6 +252,7 @@ public class OntologyServiceImpl implements OntologyService {
         this.mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
         this.humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
         this.experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
+        this.sequenceOntologyService = new SequenceOntologyService();
         this.obiService = new ObiService();
 
         this.ontologyServices.add( this.birnLexOntologyService );
@@ -263,6 +267,7 @@ public class OntologyServiceImpl implements OntologyService {
         this.ontologyServices.add( this.humanPhenotypeOntologyService );
         this.ontologyServices.add( this.obiService );
         this.ontologyServices.add( this.experimentalFactorOntologyService );
+        this.ontologyServices.add( this.sequenceOntologyService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             serv.startInitializationThread( false );
@@ -328,8 +333,11 @@ public class OntologyServiceImpl implements OntologyService {
         searchForGenes( queryString, categoryUri, taxon, searchResults );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
+            if ( !serv.isOntologyLoaded() ) continue;
             results = serv.findResources( queryString );
-            if ( log.isDebugEnabled() ) log.debug( "found " + results.size() + " in " + watch.getTime() + " ms" );
+            if ( log.isDebugEnabled() )
+                log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
+                        + watch.getTime() + " ms" );
             searchResults.addAll( filter( results, queryString ) );
         }
 
@@ -690,6 +698,18 @@ public class OntologyServiceImpl implements OntologyService {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.ontology.OntologyService#reindexAllOntologies()
+     */
+    @Override
+    public void reindexAllOntologies() {
+        for ( AbstractOntologyService serv : this.ontologyServices ) {
+            if ( serv.isOntologyLoaded() ) serv.index( true );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#removeBioMaterialStatement(java.lang.Long,
      * ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
@@ -862,6 +882,9 @@ public class OntologyServiceImpl implements OntologyService {
                     vc.setValue( indi.getLabel() );
                     vc.setValueUri( indi.getUri() );
                     vc.setDescription( "Individual" );
+                } else {
+                    log.warn( "What is it?" + res );
+                    continue;
                 }
 
                 filtered.add( vc );

@@ -53,7 +53,8 @@ function index(event) {
 		indexGene : geneCheckBox.getValue(),
 		indexBioSequence : bsCheckBox.getValue(),
 		indexExperimentSet : eeSetCheckBox.getValue(),
-		indexGeneSet : geneSetCheckBox.getValue()
+		indexGeneSet : geneSetCheckBox.getValue(),
+		indexOntologies : ontologyCheckBox.getValue()
 	};
 
 	callParams.push(commandObj);
@@ -84,7 +85,7 @@ var indexForm = function() {
 			});
 
 	geneCheckBox = new Ext.form.Checkbox({
-				boxLabel : ' Index genes',
+				boxLabel : 'Index genes',
 				labelSeparator : '',
 				name : 'gene'
 			});
@@ -138,6 +139,13 @@ var indexForm = function() {
 				name : 'geneSet'
 			});
 	simple.add(geneSetCheckBox);
+	
+	ontologyCheckBox = new Ext.form.Checkbox({
+				labelSeparator : '',
+				boxLabel : 'Index ontologies',
+				name : 'ontologies'
+			});
+	simple.add(ontologyCheckBox);
 
 	simple.add(new Ext.Button({
 				text : "index",

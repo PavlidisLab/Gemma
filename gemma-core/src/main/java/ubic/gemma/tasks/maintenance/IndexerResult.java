@@ -129,7 +129,8 @@ public class IndexerResult extends TaskResult {
     public String toString() {
 
         return "Probe path: " + pathToProbeIndex + " Gene path: " + pathToGeneIndex + " EE path: "
-                + pathToExpressionIndex + " AD path " + pathToArrayIndex;
+                + pathToExpressionIndex + " AD path " + pathToArrayIndex + " GS path=" + pathToGeneSetIndex
+                + " ES path=" + pathToExperimentSetIndex;
     }
 
 }

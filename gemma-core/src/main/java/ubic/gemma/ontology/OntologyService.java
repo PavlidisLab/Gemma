@@ -154,6 +154,11 @@ public interface OntologyService extends InitializingBean {
     public abstract boolean isObsolete( String uri );
 
     /**
+     * Recreate the search indices, for ontologies that are loaded.
+     */
+    public abstract void reindexAllOntologies();
+
+    /**
      * Reinitialize all the ontologies "from scratch". This is necessary if indices are old etc. This should be
      * admin-only.
      */
