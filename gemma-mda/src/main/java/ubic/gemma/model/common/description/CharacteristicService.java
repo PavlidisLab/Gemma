@@ -92,6 +92,10 @@ public interface CharacteristicService {
      */
     public Collection<? extends Object> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
 
+    /*
+     * FIXME add findByUri(Class<?>...) and use in SearchService.
+     */
+
     /**
      * <p>
      * given a collection of strings that represent URI's will find all the characteristics that are used in the system

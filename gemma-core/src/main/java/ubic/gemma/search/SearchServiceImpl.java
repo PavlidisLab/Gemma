@@ -52,6 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.util.BatchIterator;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -166,7 +167,7 @@ public class SearchServiceImpl implements SearchService {
     /**
      * If fewer than this number of experiments are returned from the a search of experiment characteristics, then
      * search for experiments indirectly as well (ex: by finding bioMatierials tagged with the characteristicsand
-     * getting the experiments associated with them ).
+     * getting the experiments associated with them ). See also MAX_CHARACTERISTIC_SEARCH_RESULTS.
      */
     private static final int SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS = 100;
 
@@ -187,6 +188,7 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     private CharacteristicService characteristicService;
 
+    // direct children of terms.
     private Cache childTermCache;
 
     @Autowired
@@ -423,6 +425,8 @@ public class SearchServiceImpl implements SearchService {
         List<Object> resultObjects = new ArrayList<Object>();
 
         List<SearchResult> searchResultObjects = searchResults.get( resultClass );
+        if ( searchResultObjects == null ) return resultObjects;
+
         for ( SearchResult sr : searchResultObjects ) {
             resultObjects.add( sr.getResultObject() );
         }
@@ -619,10 +623,11 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
-     * @param characteristicUris
-     * @param term
+     * Returns children one step down.
+     * 
+     * @param term starting point
      */
-    private void addChildTerms( Collection<String> characteristicUris, OntologyTerm term ) {
+    private Collection<OntologyTerm> getDirectChildTerms( OntologyTerm term ) {
         String uri = term.getUri();
         /*
          * getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
@@ -637,7 +642,7 @@ public class SearchServiceImpl implements SearchService {
         // log.debug("Getting children of " + term);
         if ( cachedChildren == null ) {
             try {
-                children = term.getChildren( false );
+                children = term.getChildren( true );
                 childTermCache.put( new Element( uri, children ) );
             } catch ( com.hp.hpl.jena.ontology.ConversionException ce ) {
                 log.warn( "getting children for term: " + term
@@ -647,12 +652,7 @@ public class SearchServiceImpl implements SearchService {
             children = ( Collection<OntologyTerm> ) cachedChildren.getValue();
         }
 
-        if ( children != null ) { // will happen if there's a com.hp.hpl.jena.ontology.ConversionException
-            for ( OntologyTerm child : children ) {
-                characteristicUris.add( child.getUri() );
-            }
-        }
-
+        return children;
     }
 
     /**
@@ -750,7 +750,9 @@ public class SearchServiceImpl implements SearchService {
 
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
-        Collection<Class<?>> classToSearch = new ArrayList<Class<?>>( 1 );
+        Collection<Class<?>> classToSearch = new ArrayList<Class<?>>( 1 ); // this is a collection because of the API
+                                                                           // for characteristicService; could add
+                                                                           // findByUri(Class<?>...)
         Queue<Class<?>> orderedClassesToSearch = new LinkedList<Class<?>>();
         orderedClassesToSearch.add( ExpressionExperiment.class );
         orderedClassesToSearch.add( FactorValue.class );
@@ -763,7 +765,7 @@ public class SearchServiceImpl implements SearchService {
                 && !orderedClassesToSearch.isEmpty() ) {
             classToSearch.clear();
             classToSearch.add( orderedClassesToSearch.poll() );
-            Collection<SearchResult> classResults = ontologySearchAnnotatedObject( classToSearch, settings );
+            Collection<SearchResult> classResults = characteristicSearchWithChildren( classToSearch, settings );
             characterSearchResults.addAll( classResults );
 
             String msg = "Found " + classResults.size() + " " + classToSearch.iterator().next().getSimpleName()
@@ -843,7 +845,8 @@ public class SearchServiceImpl implements SearchService {
 
     /**
      * Search for the query in ontologies, including items that are associated with children of matching query terms.
-     * That is, 'brain' should return entities tagged as 'hippocampus'.
+     * That is, 'brain' should return entities tagged as 'hippocampus'. This method will return results only up to
+     * MAX_CHARACTERISTIC_SEARCH_RESULTS.
      * 
      * @param classes Classes of characteristic-bound entities. For example, to get matching characteristics of
      *        ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
@@ -853,7 +856,7 @@ public class SearchServiceImpl implements SearchService {
      */
     private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class<?>> classes,
             SearchSettings settings ) {
-
+        StopWatch timer = startTiming();
         String query = settings.getQuery();
 
         Set<String> rawTerms = extractTerms( query );
@@ -861,17 +864,33 @@ public class SearchServiceImpl implements SearchService {
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
         Map<SearchResult, String> matchMap = new HashMap<SearchResult, String>();
 
+        log.info( "Starting characteristic search: " + settings );
         for ( String rawTerm : rawTerms ) {
             if ( StringUtils.isBlank( rawTerm ) ) {
                 continue;
             }
-            log.info( "Ontology search term:" + rawTerm );
             allResults.addAll( characteristicSearchWord( classes, matchMap, rawTerm ) );
+
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Characteristic search for '" + rawTerm + "': " + allResults.size() + " hits; "
+                        + timer.getTime() + "ms" );
+                timer.reset();
+                timer.start();
+            }
+
+            if ( allResults.size() >= MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
+                break;
+            }
         }
 
         return postProcessCharacteristicResults( query, allResults, matchMap );
 
     }
+
+    /**
+     * The maximum number of characteristics to search while walking down a ontology graph.
+     */
+    private static int MAX_CHARACTERISTIC_SEARCH_RESULTS = 500;
 
     /**
      * @param classes
@@ -881,85 +900,113 @@ public class SearchServiceImpl implements SearchService {
      */
     private Collection<SearchResult> characteristicSearchWord( Collection<Class<?>> classes,
             Map<SearchResult, String> matches, String query ) {
-
+        log.info( "Starting search for " + query );
         StopWatch watch = startTiming();
-        Collection<String> characteristicUris = new HashSet<String>();
+
+        Collection<Characteristic> cs = new HashSet<Characteristic>();
 
         Collection<OntologyIndividual> individuals = ontologyService.findIndividuals( query );
+
+        for ( Collection<OntologyIndividual> individualbatch : BatchIterator.batches( individuals, 10 ) ) {
+            Collection<String> uris = new HashSet<String>();
+            for ( OntologyIndividual individual : individualbatch ) {
+                uris.add( individual.getUri() );
+            }
+            Collection<SearchResult> dbhits = dbHitsToSearchResult( characteristicService.findByUri( classes, uris ) );
+            for ( SearchResult crs : dbhits ) {
+                cs.add( ( Characteristic ) crs.getResultObject() );
+            }
+            if ( cs.size() >= MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
+                break;
+            }
+
+        }
+
         if ( individuals.size() > 0 && watch.getTime() > 1000 ) {
             log.info( "Found " + individuals.size() + " individuals matching '" + query + "' in " + watch.getTime()
                     + "ms" );
         }
-        watch.reset();
-        watch.start();
 
-        for ( OntologyIndividual term : individuals ) {
-            if ( ( term != null ) && ( term.getUri() != null ) ) characteristicUris.add( term.getUri() );
-        }
-
-        Collection<OntologyTerm> matchingTerms = ontologyService.findTerms( query );
-
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Found " + matchingTerms.size() + " ontology classes matching '" + query + "' in "
-                    + watch.getTime() + "ms" );
-        }
-
-        watch.reset();
-        Collection<SearchResult> results = new HashSet<SearchResult>();
-        Collection<Characteristic> cs = new HashSet<Characteristic>();
-        if ( !matchingTerms.isEmpty() ) {
-            watch.start();
-
-            for ( OntologyTerm term : matchingTerms ) {
-                String uri = term.getUri();
-                if ( uri == null || uri.isEmpty() ) continue;
-                characteristicUris.add( uri );
-                addChildTerms( characteristicUris, term );
-            }
-
-            // int cacheHits = childTermCache.getStatistics().getCacheHits();
-            // if ( log.isDebugEnabled() ) log.debug( cacheHits + " cache hits for ontology children" );
-
-            if ( watch.getTime() > 1000 ) {
-                log.info( "Found " + characteristicUris.size() + " possible matches + child terms in "
-                        + watch.getTime() + "ms" );
-            }
-
-            /*
-             * Find occurrences of these terms in our system. This is fast, so long as there aren't too many.
-             */
-            Collection<SearchResult> matchingCharacteristics = dbHitsToSearchResult( characteristicService.findByUri(
-                    classes, characteristicUris ) );
-
-            for ( SearchResult crs : matchingCharacteristics ) {
-                cs.add( ( Characteristic ) crs.getResultObject() );
-            }
-        }
-        watch.reset();
-        watch.start();
         /*
          * Add characteristics that have values matching the query; this pulls in items not associated with ontology
          * terms (free text). We do this here so we can apply the query logic to the matches.
          */
-        String dbQueryString = query.replaceAll( "\\*", "" );
-        Collection<Characteristic> valueMatches = characteristicService.findByValue( classes, dbQueryString );
+        if ( cs.size() < MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
+            String dbQueryString = query.replaceAll( "\\*", "" ); // note I changed the order of search operations so
+                                                                  // this
+                                                                  // might not be wanted.
+            Collection<Characteristic> valueMatches = characteristicService.findByValue( classes, dbQueryString );
 
-        if ( valueMatches != null && !valueMatches.isEmpty() ) cs.addAll( valueMatches );
+            if ( valueMatches != null && !valueMatches.isEmpty() ) {
+                cs.addAll( valueMatches );
+
+                if ( watch.getTime() > 1000 ) {
+                    log.info( "Found " + valueMatches.size() + " characteristics matching value '" + query + "' in "
+                            + watch.getTime() + "ms" );
+                }
+                watch.reset();
+                watch.start();
+            }
+        }
+
+        if ( cs.size() < MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
+
+            /*
+             * Identify initial set of matches to the query.
+             */
+            Collection<OntologyTerm> matchingTerms = ontologyService.findTerms( query );
+
+            if ( watch.getTime() > 1000 ) {
+                log.info( "Found " + matchingTerms.size() + " ontology classes matching '" + query + "' in "
+                        + watch.getTime() + "ms" );
+            }
+
+            /*
+             * Search for child terms.
+             */
+
+            if ( !matchingTerms.isEmpty() ) {
+
+                for ( OntologyTerm term : matchingTerms ) {
+                    /*
+                     * In this loop, each term is a match directly to our query, and we do a depth-first fetch of the
+                     * children.
+                     */
+                    String uri = term.getUri();
+                    if ( StringUtils.isBlank( uri ) ) continue;
+
+                    getCharactersticsAnnotatedToChildren( classes, term, cs );
+
+                    if ( cs.size() >= MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
+                        break;
+                    }
+                }
+
+                if ( watch.getTime() > 1000 ) {
+                    log.info( "Found " + cs.size() + " characteristics so far via including child terms in "
+                            + watch.getTime() + "ms" );
+                }
+                watch.reset();
+                watch.start();
+
+            }
+        }
 
         /*
          * Retrieve the owner objects
          */
+
+        watch.reset();
+        watch.start();
         Collection<SearchResult> matchingEntities = getAnnotatedEntities( classes, cs );
-        results.addAll( matchingEntities );
 
         if ( watch.getTime() > 1000 ) {
-            log.info( "Slow search: found " + matchingEntities.size() + " matches to characteristics for '" + query
-                    + "' from " + characteristicUris.size() + " URIS in " + watch.getTime() + "ms" );
+            log.info( "Retrieved " + matchingEntities.size() + " entities via characteristics for '" + query + "' in "
+                    + watch.getTime() + "ms" );
         }
 
-        watch.stop();
-
-        for ( SearchResult searchR : results ) {
+        // this is used for complex queries - see doCharacteristicSearchWithLogic
+        for ( SearchResult searchR : matchingEntities ) {
             if ( !matches.containsKey( searchR ) ) {
                 matches.put( searchR, query );
             } else {
@@ -967,7 +1014,48 @@ public class SearchServiceImpl implements SearchService {
             }
         }
 
-        return results;
+        log.info( "End search for " + query );
+
+        return matchingEntities;
+    }
+
+    /**
+     * Recursively
+     * 
+     * @param classes
+     * @param term
+     * @param results
+     */
+    private void getCharactersticsAnnotatedToChildren( Collection<Class<?>> classes, OntologyTerm term,
+            Collection<Characteristic> results ) {
+
+        Collection<OntologyTerm> children = getDirectChildTerms( term );
+
+        /*
+         * Find occurrences of these terms in our system. This is fast, so long as there aren't too many.
+         */
+        if ( !children.isEmpty() ) {
+            Collection<String> uris = new ArrayList<String>();
+            for ( OntologyTerm ontologyTerm : children ) {
+                if ( ontologyTerm.getUri() == null ) continue;
+                uris.add( ontologyTerm.getUri() );
+            }
+
+            Collection<SearchResult> dbhits = dbHitsToSearchResult( characteristicService.findByUri( classes, uris ) );
+
+            for ( SearchResult crs : dbhits ) {
+                results.add( ( Characteristic ) crs.getResultObject() );
+            }
+        }
+
+        if ( results.size() >= MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
+            return;
+        }
+
+        for ( OntologyTerm child : children ) {
+            getCharactersticsAnnotatedToChildren( classes, child, results );
+        }
+
     }
 
     /**
@@ -1488,6 +1576,7 @@ public class SearchServiceImpl implements SearchService {
      */
     private List<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities,
             SearchResult compassHitDerivedFrom, String matchText ) {
+        StopWatch timer = startTiming();
         List<SearchResult> results = new ArrayList<SearchResult>();
         for ( Object e : entities ) {
             if ( e == null ) {
@@ -1496,6 +1585,9 @@ public class SearchServiceImpl implements SearchService {
             }
             SearchResult esr = dbHitToSearchResult( compassHitDerivedFrom, e, matchText );
             results.add( esr );
+        }
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Unpack " + results.size() + " search resultsS: " + timer.getTime() + "ms" );
         }
         return results;
     }
@@ -1611,7 +1703,7 @@ public class SearchServiceImpl implements SearchService {
             TopDocs topDocs = hc.topDocs();
 
             int hitcount = topDocs.totalHits;
-            log.info( "Hits: " + hitcount );
+            if ( hitcount > 0 ) log.info( "Hits for " + parsedQuery + ": " + hitcount );
 
             /*
              * If we got hits, it means that some of our results match... so we have to retrieve the objects.
@@ -1631,6 +1723,7 @@ public class SearchServiceImpl implements SearchService {
                         results.add( searchResult );
                     }
                 }
+
             }
 
         } catch ( CorruptIndexException e ) {
@@ -1668,6 +1761,9 @@ public class SearchServiceImpl implements SearchService {
 
     /**
      * A general search for expression experiments. This search does both an database search and a compass search.
+     * <p>
+     * A problem with this is that we cap the number of results that can be returned. This could be a limitation for
+     * applications like building data set groups. Thus MAX_CHARACTERISTIC_SEARCH_RESULTS should not be too low.
      * 
      * @param settings
      * @return {@link Collection}
@@ -1675,23 +1771,40 @@ public class SearchServiceImpl implements SearchService {
     private Collection<SearchResult> expressionExperimentSearch( final SearchSettings settings ) {
         StopWatch watch = startTiming();
 
+        log.info( "Starting search for " + settings );
+
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
         if ( settings.getUseDatabase() ) {
             results.addAll( databaseExpressionExperimentSearch( settings ) );
+            if ( watch.getTime() > 1000 )
+                log.info( "Expression Experiment database search for '" + settings + "' took " + watch.getTime()
+                        + " ms, " + results.size() + " hits." );
+            watch.reset();
+            watch.start();
         }
 
-        if ( settings.getUseIndices() ) {
+        if ( settings.getUseIndices() && results.size() < MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
             results.addAll( compassExpressionSearch( settings ) );
+            if ( watch.getTime() > 1000 )
+                log.info( "Expression Experiment index search for '" + settings + "' took " + watch.getTime() + " ms, "
+                        + results.size() + " hits." );
+            watch.reset();
+            watch.start();
         }
 
-        if ( results.size() == 0 ) {
+        if ( results.size() < MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
             /*
              * Try a more thorough search. This is slower; calls to ontologySearchAnnotatedObject take a long time
              */
             if ( settings.getUseCharacteristics() ) {
                 results.addAll( characteristicExpressionExperimentSearch( settings ) );
             }
+            if ( watch.getTime() > 1000 )
+                log.info( "Expression Experiment ontology search for '" + settings + "' took " + watch.getTime()
+                        + " ms, " + results.size() + " hits." );
+            watch.reset();
+            watch.start();
         }
 
         /*
@@ -1708,6 +1821,11 @@ public class SearchServiceImpl implements SearchService {
                         results.addAll( dbHitsToSearchResult( expressionExperiments ) );
                 }
             }
+            if ( watch.getTime() > 1000 )
+                log.info( "Expression Experiment platform search for '" + settings + "' took " + watch.getTime()
+                        + " ms, " + results.size() + " hits." );
+            watch.reset();
+            watch.start();
         }
 
         if ( results.size() == 0 ) {
@@ -1729,6 +1847,11 @@ public class SearchServiceImpl implements SearchService {
                 for ( Entry<BibliographicReference, Collection<ExpressionExperiment>> e : relatedExperiments.entrySet() ) {
                     results.addAll( dbHitsToSearchResult( e.getValue() ) );
                 }
+                if ( watch.getTime() > 1000 )
+                    log.info( "Expression Experiment publication search for '" + settings + "' took " + watch.getTime()
+                            + " ms, " + results.size() + " hits." );
+                watch.reset();
+                watch.start();
             }
         }
 
@@ -2180,33 +2303,6 @@ public class SearchServiceImpl implements SearchService {
             throw new RuntimeException( "Cannot parse query: " + e.getMessage() );
         }
         return parsedQuery;
-    }
-
-    /**
-     * Attempts to find an exact match for the search term in the characteristic table (by value and value URI). If the
-     * search term is found then uses that URI to find the parents and returns them as SearchResults.
-     * 
-     * @param classes
-     * @param searchString
-     * @return
-     */
-    private Collection<SearchResult> ontologySearchAnnotatedObject( Collection<Class<?>> classes,
-            SearchSettings settings ) {
-
-        /*
-         * Direct search.
-         */
-        Collection<SearchResult> results = new HashSet<SearchResult>();
-
-        /*
-         * Include children in ontologies, if any. This can be slow if there are a lot of children.
-         */
-        Collection<SearchResult> childResults = characteristicSearchWithChildren( classes, settings );
-
-        results.addAll( childResults );
-
-        return results;
-
     }
 
     /**

@@ -86,6 +86,8 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -105,6 +107,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.SecurityService;
@@ -567,7 +570,10 @@ public class ExpressionExperimentController {
      */
     public Collection<Long> find( String query, Long taxonId ) {
         log.info( "Search: " + query + " taxon=" + taxonId );
-        return searchService.searchExpressionExperiments( query, taxonId );
+        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
+        return EntityUtils.getIds( searchService.search( settings ).get( ExpressionExperiment.class ) );
+
+        // return searchService.searchExpressionExperiments( query, taxonId );
     }
 
     /**
@@ -1755,7 +1761,7 @@ public class ExpressionExperimentController {
 
         if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
 
-        return eeValObjectCol.subList( 0, Math.min( limit, eeValObjectCol.size()  ) );
+        return eeValObjectCol.subList( 0, Math.min( limit, eeValObjectCol.size() ) );
 
     }
 
