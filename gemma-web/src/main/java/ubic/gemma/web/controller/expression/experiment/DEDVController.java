@@ -232,7 +232,7 @@ public class DEDVController {
 
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
-        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts );
+        // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts );
         watch.stop();
         Long time = watch.getTime();
 
@@ -296,8 +296,8 @@ public class DEDVController {
                     + " ms (times <100ms not reported)." );
         }
 
-        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required? yes, see
-                                                                                               // GSE11859
+        // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required? yes, see
+        // GSE11859
 
         time = watch.getTime();
         if ( time > 100 ) {
@@ -377,8 +377,8 @@ public class DEDVController {
                     + " ms (times <100ms not reported)." );
         }
 
-        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required? yes, see
-                                                                                               // GSE11859
+        // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required? yes, see
+        // GSE11859
 
         time = watch.getTime();
         watch.reset();
@@ -429,7 +429,7 @@ public class DEDVController {
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
                 .sortVectorDataByDesign( dedvs );
 
-        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts );
+        // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts );
 
         return makeVisCollection( dedvs, null, null, layouts );
 
@@ -510,7 +510,7 @@ public class DEDVController {
             log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs" + " in "
                     + time + " ms (times <100ms not reported)." );
         }
-        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required?
+        // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required?
 
         watch.stop();
         time = watch.getTime();
