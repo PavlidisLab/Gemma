@@ -254,7 +254,8 @@ public class DEDVController {
     }
 
     /**
-     * AJAX exposed method - for ProbeLevelDiffExGrid, VisualizationDifferentialWindow, DifferentialExpressionAnalysesSummaryTree
+     * AJAX exposed method - for ProbeLevelDiffExGrid, VisualizationDifferentialWindow,
+     * DifferentialExpressionAnalysesSummaryTree
      * 
      * @param eeIds FIXME accommodate ExpressionExperimentSubSets. Currently we pass in the "source experiment" so we
      *        don't get the slice.
@@ -319,7 +320,8 @@ public class DEDVController {
     }
 
     /**
-     * AJAX exposed method Batch factor value analyses are filtered out; for ProbeLevelDiffExGrid:VisualizationDifferentialWindow.
+     * AJAX exposed method Batch factor value analyses are filtered out; for
+     * ProbeLevelDiffExGrid:VisualizationDifferentialWindow.
      * 
      * @param eeId
      * @param geneId
@@ -455,11 +457,11 @@ public class DEDVController {
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         Collection<DoubleVectorValueObject> values = topLoadedVectors.values();
-        
-        if (values.isEmpty()) {
+
+        if ( values.isEmpty() ) {
             return null;
         }
-        
+
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( values );
         return makeVisCollection( values, null, null, layouts );
     }
@@ -1272,22 +1274,22 @@ public class DEDVController {
     }
 
     /**
-     * @param dedv
+     * @param dedv exemplar to use for forming the heading
      * @return
      */
     private String makeHeader( DoubleVectorValueObject dedv ) {
 
-        if ( dedv.isReorganized() ) {
-            /*
-             * FIXME we should output the names in the 'right' order.
-             */
-            return "Gene Symbol\tGene Name\tProbe\n";
-        }
+        String firstThreeColumnHeadings = "GeneSymbol\tGeneName\tElement\t";
 
         StringBuilder buf = new StringBuilder();
         ExpressionExperimentValueObject ee = dedv.getExpressionExperiment();
         buf.append( "# " + ee.getShortName() + " : " + ee.getName() + "\n" );
 
+        if ( dedv.isReorganized() ) {
+            // this should be okay.
+        }
+
+        buf.append( firstThreeColumnHeadings );
         for ( BioAssayValueObject ba : dedv.getBioAssays() ) {
             buf.append( ba.getName() + "\t" );
         }
