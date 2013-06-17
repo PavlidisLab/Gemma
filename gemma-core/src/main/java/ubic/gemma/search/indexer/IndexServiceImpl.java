@@ -41,20 +41,45 @@ import java.util.concurrent.ExecutionException;
 @Component
 public class IndexServiceImpl implements IndexService {
 
-    @Autowired private TaskRunningService taskRunningService;
+    @Autowired
+    private TaskRunningService taskRunningService;
 
-    @Autowired @Qualifier("compassArray") private Compass compassArray;
-    @Autowired @Qualifier("compassBibliographic") private Compass compassBibliographic;
-    @Autowired @Qualifier("compassBiosequence") private Compass compassBiosequence;
-    @Autowired @Qualifier("compassExperimentSet") private Compass compassExperimentSet;
-    @Autowired @Qualifier("compassExpression") private Compass compassExpression;
-    @Autowired @Qualifier("compassGene") private Compass compassGene;
-    @Autowired @Qualifier("compassGeneSet") private Compass compassGeneSet;
-    @Autowired @Qualifier("compassProbe") private Compass compassProbe;
+    @Autowired
+    @Qualifier("compassArray")
+    private Compass compassArray;
+
+    @Autowired
+    @Qualifier("compassBibliographic")
+    private Compass compassBibliographic;
+
+    @Autowired
+    @Qualifier("compassBiosequence")
+    private Compass compassBiosequence;
+
+    @Autowired
+    @Qualifier("compassExperimentSet")
+    private Compass compassExperimentSet;
+
+    @Autowired
+    @Qualifier("compassExpression")
+    private Compass compassExpression;
+
+    @Autowired
+    @Qualifier("compassGene")
+    private Compass compassGene;
+
+    @Autowired
+    @Qualifier("compassGeneSet")
+    private Compass compassGeneSet;
+
+    @Autowired
+    @Qualifier("compassProbe")
+    private Compass compassProbe;
 
     /**
-     * Job that loads in a javaspace.
-     *
+     * Job that loads in a javaspace. NOTE do not set this up to run on a worker. The search index directory may not be
+     * accessible.
+     * 
      * @author Paul
      * @version $Id$
      */
@@ -72,10 +97,10 @@ public class IndexServiceImpl implements IndexService {
             SubmittedTask<IndexerResult> indexingTask = taskRunningService.getSubmittedTask( taskId );
             try {
                 result = indexingTask.getResult();
-            } catch (ExecutionException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            } catch (InterruptedException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            } catch ( ExecutionException e ) {
+                e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
+            } catch ( InterruptedException e ) {
+                e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
             }
             if ( indexingTask.isRunningRemotely() && result != null ) {
                 loadExternalIndices( command, result );
@@ -85,14 +110,12 @@ public class IndexServiceImpl implements IndexService {
         }
     }
 
-
     private void loadExternalIndices( IndexerTaskCommand indexerTaskCommand, IndexerResult remoteIndexTaskResult ) {
-            /*
-             * When the rebuild is done in another JVM, in the client the index must be 'swapped' to refer to the new
-             * one.
-             *
-             * Put in multiple try catch blocks so that if one swapping fails they all don't fail :)
-             */
+        /*
+         * When the rebuild is done in another JVM, in the client the index must be 'swapped' to refer to the new one.
+         * 
+         * Put in multiple try catch blocks so that if one swapping fails they all don't fail :)
+         */
         try {
             if ( indexerTaskCommand.isIndexGene() && remoteIndexTaskResult.getPathToGeneIndex() != null )
                 CompassUtils.swapCompassIndex( compassGene, remoteIndexTaskResult.getPathToGeneIndex() );
@@ -117,7 +140,8 @@ public class IndexServiceImpl implements IndexService {
 
         try {
             if ( indexerTaskCommand.isIndexBibRef() && remoteIndexTaskResult.getPathToBibliographicIndex() != null )
-                CompassUtils.swapCompassIndex( compassBibliographic, remoteIndexTaskResult.getPathToBibliographicIndex() );
+                CompassUtils.swapCompassIndex( compassBibliographic,
+                        remoteIndexTaskResult.getPathToBibliographicIndex() );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -143,8 +167,10 @@ public class IndexServiceImpl implements IndexService {
         }
 
         try {
-            if ( indexerTaskCommand.isIndexExperimentSet() && remoteIndexTaskResult.getPathToExperimentSetIndex() != null )
-                CompassUtils.swapCompassIndex( compassExperimentSet, remoteIndexTaskResult.getPathToExperimentSetIndex() );
+            if ( indexerTaskCommand.isIndexExperimentSet()
+                    && remoteIndexTaskResult.getPathToExperimentSetIndex() != null )
+                CompassUtils.swapCompassIndex( compassExperimentSet,
+                        remoteIndexTaskResult.getPathToExperimentSetIndex() );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

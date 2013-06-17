@@ -24,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 
@@ -100,7 +101,7 @@ public interface BibliographicReferenceController {
      * @param query
      * @return
      */
-    public abstract JsonReaderResponse<BibliographicReferenceValueObject> search( String query );
+    public abstract JsonReaderResponse<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
 
     /**
      * @param request

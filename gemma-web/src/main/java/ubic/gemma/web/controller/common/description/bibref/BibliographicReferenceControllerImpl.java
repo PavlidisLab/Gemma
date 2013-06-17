@@ -43,6 +43,7 @@ import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationServic
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
+import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
@@ -242,8 +243,8 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
      * .ListBatchCommand)
      */
     @Override
-    public JsonReaderResponse<BibliographicReferenceValueObject> search( String query ) {
-        List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( query );
+    public JsonReaderResponse<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
+        List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( settings );
 
         JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
                 vos, vos.size() );

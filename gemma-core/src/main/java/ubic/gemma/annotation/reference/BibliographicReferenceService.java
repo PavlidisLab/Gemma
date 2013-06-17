@@ -28,6 +28,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -70,7 +71,7 @@ public interface BibliographicReferenceService {
      * @return
      */
     public BibliographicReference findByExternalId( DatabaseEntry accession );
-    
+
     /**
      * <p>
      * Get a reference by the unqualified external id.
@@ -121,10 +122,12 @@ public interface BibliographicReferenceService {
 
     /**
      * adds related experiments and phenotype associations
+     * 
      * @param ids
      * @return
      */
-    public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects( java.util.Collection<Long> ids );
+    public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects(
+            java.util.Collection<Long> ids );
 
     /**
      * 
@@ -148,6 +151,18 @@ public interface BibliographicReferenceService {
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records );
 
+    /**
+     * @param query
+     * @return
+     */
     public List<BibliographicReferenceValueObject> search( String query );
+
+    /**
+     * Allows limiting searches to phenotypes and/or experiments.
+     * 
+     * @param settings
+     * @return
+     */
+    public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
 
 }

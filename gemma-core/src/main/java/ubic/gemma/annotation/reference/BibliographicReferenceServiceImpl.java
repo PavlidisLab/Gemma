@@ -27,7 +27,9 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
+import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.search.SearchService;
 
@@ -47,6 +49,155 @@ public class BibliographicReferenceServiceImpl extends
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
     @Autowired
     private SearchService searchService;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
+     * java.lang.Integer)
+     */
+    @Override
+    public List<BibliographicReference> browse( Integer start, Integer limit ) {
+        return this.getBibliographicReferenceDao().browse( start, limit );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
+     * java.lang.Integer, java.lang.String, boolean)
+     */
+    @Override
+    public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+        return this.getBibliographicReferenceDao().browse( start, limit, orderField, descending );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#count()
+     */
+    @Override
+    public Integer count() {
+        return this.getBibliographicReferenceDao().count();
+    }
+
+    /**
+     * 
+     */
+    @Override
+    public BibliographicReference findByExternalId( DatabaseEntry accession ) {
+        return this.getBibliographicReferenceDao().findByExternalId( accession );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
+     */
+    @Override
+    public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibRef ) {
+        Collection<BibliographicReference> records = new ArrayList<BibliographicReference>();
+        records.add( bibRef );
+        Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.getBibliographicReferenceDao()
+                .getRelatedExperiments( records );
+        if ( map.containsKey( bibRef ) ) {
+            return map.get( bibRef );
+        }
+        return new ArrayList<ExpressionExperiment>();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
+     */
+    @Override
+    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+            Collection<BibliographicReference> records ) {
+        return this.getBibliographicReferenceDao().getRelatedExperiments( records );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#search(ubic.gemma.model.common.search.
+     * SearchSettingsValueObject)
+     */
+    @Override
+    public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
+        SearchSettings ss = SearchSettingsImpl.bibliographicReferenceSearch( settings.getQuery() );
+
+        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search( ss,
+                BibliographicReference.class );
+
+        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
+
+        // only return associations with the selected entity types.
+        for ( BibliographicReference entity : resultEntities ) {
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
+            if ( settings.getSearchPhenotypes() ) {
+                this.populateBibliographicPhenotypes( vo );
+                if ( !vo.getBibliographicPhenotypes().isEmpty() ) {
+                    results.add( vo );
+                }
+            }
+            if ( settings.getSearchExperiments() ) {
+                this.populateRelatedExperiments( entity, vo );
+                if ( !vo.getExperiments().isEmpty() ) {
+                    results.add( vo );
+                }
+            }
+        }
+
+        return results;
+    }
+
+    /*
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#search(java.lang.String)
+     */
+    @Override
+    public List<BibliographicReferenceValueObject> search( String query ) {
+        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search(
+                SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
+        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
+        for ( BibliographicReference entity : resultEntities ) {
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
+            this.populateBibliographicPhenotypes( vo );
+            this.populateRelatedExperiments( entity, vo );
+            results.add( vo );
+        }
+
+        return results;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.model.common.description.BibliographicReferenceService#thaw(ubic.gemma.model.common.description.
+     * BibliographicReference)
+     */
+    @Override
+    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
+        return this.getBibliographicReferenceDao().thaw( bibliographicReference );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * 
+     * /* (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
+        return this.getBibliographicReferenceDao().thaw( bibliographicReferences );
+    }
 
     /*
      * (non-Javadoc)
@@ -170,122 +321,6 @@ public class BibliographicReferenceServiceImpl extends
     @Override
     protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference ) {
         getBibliographicReferenceDao().update( BibliographicReference );
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public BibliographicReference findByExternalId( DatabaseEntry accession ) {
-        return this.getBibliographicReferenceDao().findByExternalId( accession );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.common.description.BibliographicReferenceService#thaw(ubic.gemma.model.common.description.
-     * BibliographicReference)
-     */
-    @Override
-    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
-        return this.getBibliographicReferenceDao().thaw( bibliographicReference );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * 
-     * /* (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#thaw(java.util.Collection)
-     */
-    @Override
-    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
-        return this.getBibliographicReferenceDao().thaw( bibliographicReferences );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
-     * java.lang.Integer)
-     */
-    @Override
-    public List<BibliographicReference> browse( Integer start, Integer limit ) {
-        return this.getBibliographicReferenceDao().browse( start, limit );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
-     * java.lang.Integer, java.lang.String, boolean)
-     */
-    @Override
-    public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        return this.getBibliographicReferenceDao().browse( start, limit, orderField, descending );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#count()
-     */
-    @Override
-    public Integer count() {
-        return this.getBibliographicReferenceDao().count();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
-     */
-    @Override
-    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
-            Collection<BibliographicReference> records ) {
-        return this.getBibliographicReferenceDao().getRelatedExperiments( records );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
-     */
-    @Override
-    public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibRef ) {
-        Collection<BibliographicReference> records = new ArrayList<BibliographicReference>();
-        records.add( bibRef );
-        Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.getBibliographicReferenceDao()
-                .getRelatedExperiments( records );
-        if ( map.containsKey( bibRef ) ) {
-            return map.get( bibRef );
-        }
-        return new ArrayList<ExpressionExperiment>();
-    }
-
-    /*
-     * FIXME shouldn't this be in the SearchService directly? (non-Javadoc)
-     * 
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#search(java.lang.String)
-     */
-    @Override
-    public List<BibliographicReferenceValueObject> search( String query ) {
-        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search(
-                SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
-        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
-        for ( BibliographicReference entity : resultEntities ) {
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
-            this.populateBibliographicPhenotypes( vo );
-            this.populateRelatedExperiments( entity, vo );
-            results.add( vo );
-        }
-
-        return results;
-
     }
 
 }

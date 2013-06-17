@@ -36,6 +36,8 @@ import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.MailEngine;
 
 /**
+ * NOTE do not set this up to run on a remote worker. The search index directory may not be accessible.
+ * 
  * @author klc
  * @version $Id$
  */
@@ -53,24 +55,30 @@ public class IndexerTaskImpl implements IndexerTask {
     @Autowired
     @Qualifier("arrayGps")
     private SingleCompassGps arrayGps;
+
     @Autowired
     @Qualifier("bibliographicGps")
     private SingleCompassGps bibliographicGps;
+
     @Autowired
     @Qualifier("biosequenceGps")
     private SingleCompassGps biosequenceGps;
+
     @Autowired
     @Qualifier("experimentSetGps")
     private SingleCompassGps experimentSetGps;
+
     @Autowired
     @Qualifier("expressionGps")
     private SingleCompassGps expressionGps;
+
     @Autowired
     @Qualifier("geneGps")
     private SingleCompassGps geneGps;
     @Autowired
     @Qualifier("geneSetGps")
     private SingleCompassGps geneSetGps;
+
     @Autowired
     @Qualifier("probeGps")
     private SingleCompassGps probeGps;
@@ -78,24 +86,31 @@ public class IndexerTaskImpl implements IndexerTask {
     @Autowired
     @Qualifier("compassArray")
     private InternalCompass compassArray;
+
     @Autowired
     @Qualifier("compassBibliographic")
     private InternalCompass compassBibliographic;
+
     @Autowired
     @Qualifier("compassBiosequence")
     private InternalCompass compassBiosequence;
+
     @Autowired
     @Qualifier("compassExperimentSet")
     private InternalCompass compassExperimentSet;
+
     @Autowired
     @Qualifier("compassExpression")
     private InternalCompass compassExpression;
+
     @Autowired
     @Qualifier("compassGene")
     private InternalCompass compassGene;
+
     @Autowired
     @Qualifier("compassGeneSet")
     private InternalCompass compassGeneSet;
+
     @Autowired
     @Qualifier("compassProbe")
     private InternalCompass compassProbe;
@@ -303,10 +318,19 @@ public class IndexerTaskImpl implements IndexerTask {
         this.probeGps = probeGps;
     }
 
+    /**
+     * @param compass
+     * @return
+     */
     private String getIndexPath( InternalCompass compass ) {
         return compass.getSettings().getSetting( PATH_PROPERTY ).replaceFirst( FILE, "" ) + PATH_SUFFIX;
     }
 
+    /**
+     * @param device
+     * @param whatIndexingMsg
+     * @return
+     */
     private Boolean rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {
 
         StopWatch timer = new StopWatch();
