@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ubic.gemma.job.SubmittedTask;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.tasks.maintenance.IndexerResult;
@@ -96,7 +97,14 @@ public class IndexServiceImpl implements IndexService {
             String taskId = taskRunningService.submitRemoteTask( command );
             SubmittedTask<IndexerResult> indexingTask = taskRunningService.getSubmittedTask( taskId );
             try {
-                result = indexingTask.getResult();
+                TaskResult f = indexingTask.getResult();
+                if ( f instanceof IndexerResult ) {
+                    return ( IndexerResult ) f;
+                } else {
+                    // probably there was an error.
+                    IndexerResult ir = new IndexerResult( command );
+                    ir.setException( f.getException() );
+                }
             } catch ( ExecutionException e ) {
                 e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
             } catch ( InterruptedException e ) {

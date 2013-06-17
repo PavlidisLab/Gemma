@@ -703,7 +703,16 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public void reindexAllOntologies() {
         for ( AbstractOntologyService serv : this.ontologyServices ) {
-            if ( serv.isOntologyLoaded() ) serv.index( true );
+            if ( serv.isOntologyLoaded() ) {
+                log.info( "Reindexing: " + serv );
+                try {
+                    serv.index( true );
+                } catch ( Exception e ) {
+                    log.error( "Failed to index " + serv + ": " + e.getMessage(), e );
+                }
+            } else {
+                if ( serv.isEnabled() ) log.info( "Not available for reindexing: " + serv );
+            }
         }
     }
 

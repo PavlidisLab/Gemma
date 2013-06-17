@@ -29,6 +29,7 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.EntityUtils;
@@ -88,7 +89,8 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
 
         BusinessKey.checkKey( bibliographicReference );
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BibliographicReference.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession()
+                .createCriteria( BibliographicReference.class );
 
         /*
          * This syntax allows you to look at an association.
@@ -158,15 +160,19 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
             Collection<BibliographicReference> records ) {
         final String query = "select distinct e, b from ExpressionExperimentImpl "
                 + "e join e.primaryPublication b left join fetch b.pubAccession where b in (:recs)";
+
         Map<BibliographicReference, Collection<ExpressionExperiment>> result = new HashMap<BibliographicReference, Collection<ExpressionExperiment>>();
-        List<Object[]> os = this.getHibernateTemplate().findByNamedParam( query, "recs", records );
-        for ( Object[] o : os ) {
-            ExpressionExperiment e = ( ExpressionExperiment ) o[0];
-            BibliographicReference b = ( BibliographicReference ) o[1];
-            if ( !result.containsKey( b ) ) {
-                result.put( b, new HashSet<ExpressionExperiment>() );
+
+        for ( Collection<BibliographicReference> batch : BatchIterator.batches( records, 200 ) ) {
+            List<Object[]> os = this.getHibernateTemplate().findByNamedParam( query, "recs", batch );
+            for ( Object[] o : os ) {
+                ExpressionExperiment e = ( ExpressionExperiment ) o[0];
+                BibliographicReference b = ( BibliographicReference ) o[1];
+                if ( !result.containsKey( b ) ) {
+                    result.put( b, new HashSet<ExpressionExperiment>() );
+                }
+                result.get( b ).add( e );
             }
-            result.get( b ).add( e );
         }
         return result;
     }
