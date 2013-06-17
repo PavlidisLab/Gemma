@@ -196,7 +196,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             allGenes.addAll( phenotypesGenesAssociations.get( getValueUri() ) );
         }
 
-        this.setPrivateGeneCount( allGenes.size() );
+        this.setPublicGeneCount( allGenes.size() );
     }
 
     /** counts each private occurrence of genes for a phenotype */
