@@ -569,11 +569,8 @@ public class ExpressionExperimentController {
      * @return EE ids that match
      */
     public Collection<Long> find( String query, Long taxonId ) {
-        log.info( "Search: " + query + " taxon=" + taxonId );
-        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
-        return EntityUtils.getIds( searchService.search( settings ).get( ExpressionExperiment.class ) );
-
-        // return searchService.searchExpressionExperiments( query, taxonId );
+        log.info( "Search: query='" + query + "' taxon=" + taxonId );
+        return searchService.searchExpressionExperiments( query, taxonId );
     }
 
     /**
