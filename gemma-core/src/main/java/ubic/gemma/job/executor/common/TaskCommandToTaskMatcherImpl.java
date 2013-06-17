@@ -25,24 +25,25 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.tasks.Task;
 
 /**
- * author: anton
- * date: 08/02/13
+ * @author anton date: 08/02/13
+ * @vesrion $Id$
  */
 @Component
 public class TaskCommandToTaskMatcherImpl implements TaskCommandToTaskMatcher {
 
-    @Autowired ApplicationContext applicationContext;
+    @Autowired
+    ApplicationContext applicationContext;
 
     @Override
     public Task match( TaskCommand taskCommand ) {
         Class taskClass = taskCommand.getTaskClass();
-        if (taskClass == null) throw new IllegalArgumentException( "Task is not set for "
-                + taskCommand.getClass().getSimpleName() );
+        if ( taskClass == null )
+            throw new IllegalArgumentException( "Task is not set for " + taskCommand.getClass().getSimpleName() );
 
         // TODO: Try using @Configurable and new operator in the future.
-        Task task = (Task) applicationContext.getBean( taskClass );
-        if (task == null) throw new IllegalArgumentException( "Task bean is not found for "
-                + taskClass.getSimpleName() );
+        Task task = ( Task ) applicationContext.getBean( taskClass );
+        if ( task == null )
+            throw new IllegalArgumentException( "Task bean is not found for " + taskClass.getSimpleName() );
 
         task.setCommand( taskCommand );
         return task;
