@@ -974,7 +974,12 @@ public class SearchServiceImpl implements SearchService {
                     String uri = term.getUri();
                     if ( StringUtils.isBlank( uri ) ) continue;
 
+                    int sizeBefore = cs.size();
                     getCharactersticsAnnotatedToChildren( classes, term, cs );
+
+                    if ( log.isDebugEnabled() && cs.size() > sizeBefore ) {
+                        log.debug( ( cs.size() - sizeBefore ) + " characteristics matching children term of " + term );
+                    }
 
                     if ( cs.size() >= MAX_CHARACTERISTIC_SEARCH_RESULTS ) {
                         break;
@@ -982,8 +987,8 @@ public class SearchServiceImpl implements SearchService {
                 }
 
                 if ( watch.getTime() > 1000 ) {
-                    log.info( "Found " + cs.size() + " characteristics so far via including child terms in "
-                            + watch.getTime() + "ms" );
+                    log.info( "Found " + cs.size() + " characteristics via including child terms in " + watch.getTime()
+                            + "ms" );
                 }
                 watch.reset();
                 watch.start();
@@ -1694,6 +1699,9 @@ public class SearchServiceImpl implements SearchService {
         Collection<SearchResult> results = new HashSet<SearchResult>();
         try {
 
+            /*
+             * Make an in-memory index.
+             */
             Map<String, Collection<SearchResult>> invertedMatches = new HashMap<String, Collection<SearchResult>>();
             Directory idx = indexCharacteristicHits( matches, invertedMatches );
             IndexSearcher searcher = new IndexSearcher( idx );
@@ -1709,9 +1717,7 @@ public class SearchServiceImpl implements SearchService {
              * If we got hits, it means that some of our results match... so we have to retrieve the objects.
              */
 
-            for ( int i = 0; i < hitcount; i++ ) {
-
-                ScoreDoc scoreDoc = topDocs.scoreDocs[i];
+            for ( ScoreDoc scoreDoc : topDocs.scoreDocs ) {
 
                 Document doc = searcher.doc( scoreDoc.doc );
 
@@ -1720,6 +1726,7 @@ public class SearchServiceImpl implements SearchService {
                 if ( resultsMatching != null ) {
                     log.debug( "All matches to '" + match + "': " + resultsMatching.size() );
                     for ( SearchResult searchResult : resultsMatching ) {
+                        // log.info( searchResult.getResultObject() );
                         results.add( searchResult );
                     }
                 }
@@ -2260,6 +2267,7 @@ public class SearchServiceImpl implements SearchService {
          * make in in-memory index. See http://javatechniques.com/blog/lucene-in-memory-text-search-engine (somewhat out
          * of date); maybe there is an easier way
          */
+        StopWatch w = startTiming();
         RAMDirectory idx = new RAMDirectory();
         IndexWriter writer = new IndexWriter( idx, this.analyzer, true, MaxFieldLength.LIMITED );
 
@@ -2273,6 +2281,10 @@ public class SearchServiceImpl implements SearchService {
         }
 
         writer.close();
+
+        if ( w.getTime() > 1000 ) {
+            log.info( "Indexing characteristic hits: " + w.getTime() + "ms" );
+        }
 
         return idx;
     }
