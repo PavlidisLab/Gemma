@@ -30,12 +30,10 @@ Gemma.BibliographicReference.Browser = Ext.extend(Ext.Panel, {
             }, this);
 
          grid.on('runPubmedSearch', function() {
-               console.log("SSSS");
                details.clear();
             }, this);
 
          grid.on('runKeywordSearch', function() {
-               console.log("SSSSAA");
                details.clear();
             }, this);
 

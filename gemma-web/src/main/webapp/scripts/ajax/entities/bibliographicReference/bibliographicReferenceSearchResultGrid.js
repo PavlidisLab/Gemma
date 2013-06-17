@@ -133,6 +133,7 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel({
 Gemma.BibliographicReference.SearchResultGrid = Ext.extend(Ext.grid.GridPanel, {
       loadMask : true,
       autoScroll : true,
+      name : "BibRefSearchResultGrid",
       layout : 'fit',
       view : new Ext.ux.InitialTextGridView({
             initialText : 'Use search boxes above to find papers.',
@@ -224,7 +225,7 @@ Gemma.BibliographicReference.SearchResultGrid = Ext.extend(Ext.grid.GridPanel, {
                   this.fireEvent('keywordSearchCleared');
                },
                onTrigger2Click : function(event) {
-                  var txtValue = this.getValue(); 
+                  var txtValue = this.getValue();
                   this.fireEvent('runKeywordSearch', txtValue);
                },
                listeners : {
@@ -397,6 +398,9 @@ Gemma.BibliographicReference.SearchResultGrid = Ext.extend(Ext.grid.GridPanel, {
             });
 
          Gemma.BibliographicReference.SearchResultGrid.superclass.initComponent.call(this);
+
+         this.relayEvents(searchInGridFieldKeyword, ['runKeywordSearch']);
+         this.relayEvents(searchInGridFieldPubmed, ['runPubmedSearch']);
 
       }// eo initC
    });

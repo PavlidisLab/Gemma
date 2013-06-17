@@ -25,10 +25,10 @@ Gemma.BibliographicReference.DetailsPanel = Ext.extend(Ext.Panel, {
       },
 
       clear : function() {
-         console.log("clear");
          this.citation.hide();
          this.detailsFieldset.hide();
          this.annotationsFieldset.hide();
+         this.tagsFieldset.hide();
       },
 
       initComponent : function() {
