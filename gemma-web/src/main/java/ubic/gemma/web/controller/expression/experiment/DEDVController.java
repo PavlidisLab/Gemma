@@ -254,7 +254,7 @@ public class DEDVController {
     }
 
     /**
-     * AJAX exposed method
+     * AJAX exposed method - for ProbeLevelDiffExGrid, VisualizationDifferentialWindow, DifferentialExpressionAnalysesSummaryTree
      * 
      * @param eeIds FIXME accommodate ExpressionExperimentSubSets. Currently we pass in the "source experiment" so we
      *        don't get the slice.
@@ -319,7 +319,7 @@ public class DEDVController {
     }
 
     /**
-     * AJAX exposed method Batch factor value analyses are filtered out
+     * AJAX exposed method Batch factor value analyses are filtered out; for ProbeLevelDiffExGrid:VisualizationDifferentialWindow.
      * 
      * @param eeId
      * @param geneId
@@ -455,6 +455,11 @@ public class DEDVController {
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         Collection<DoubleVectorValueObject> values = topLoadedVectors.values();
+        
+        if (values.isEmpty()) {
+            return null;
+        }
+        
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( values );
         return makeVisCollection( values, null, null, layouts );
     }

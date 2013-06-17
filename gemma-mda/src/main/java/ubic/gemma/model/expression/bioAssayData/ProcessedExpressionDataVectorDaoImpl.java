@@ -333,6 +333,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             }
         }
 
+        log.info( cs2gene.size() + " probes associated with a gene; " + noGeneProbes.size() + " not" );
+
         /*
          * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
          */
@@ -345,6 +347,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<Long> genesToSearch = new HashSet<Long>();
         checkCache( ees, genes, results, needToSearch, genesToSearch );
 
+        log.info( results.size() + " vectors fetched from cache" );
+
         Map<ProcessedExpressionDataVector, Collection<Long>> rawResults = new HashMap<ProcessedExpressionDataVector, Collection<Long>>();
 
         /*
@@ -356,12 +360,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             rawResults.putAll( getProcessedVectors( EntityUtils.getIds( eesForNoGeneProbes ), noGeneProbes ) );
         }
 
+        log.info( rawResults.size() + " vectros retried so far, for noGeneProbes" );
+
         /*
          * Non-cached items.
          */
         if ( !needToSearch.isEmpty() ) {
             rawResults.putAll( getProcessedVectors( EntityUtils.getIds( needToSearch ), cs2gene ) );
         }
+
+        log.info( rawResults.size() + " vectors retrieved so far, after fetching non-cached." );
 
         /*
          * Deal with possibility of 'gaps' and unpack the vectors.
@@ -379,9 +387,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                  * boolean) and bug 1704.
                  */
                 BioAssayDimension longestBad = checkRagged( bioAssayDimensions );
-                if ( longestBad != null ) {
-                    newResults.addAll( unpack( rawResults, longestBad ) );
-                }
+                assert longestBad != null;
+                newResults.addAll( unpack( rawResults, longestBad ) );
+
             }
 
             cacheResults( newResults );
@@ -832,8 +840,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 longestBad = bad;
             }
         }
-        if ( ragged ) return longestBad;
-        return null;
+        return longestBad;
     }
 
     /**

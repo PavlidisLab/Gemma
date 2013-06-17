@@ -51,16 +51,18 @@ public interface ExperimentalDesignVisualizationService {
     public abstract Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedvs );
 
-    /**
-     * Sorts the layouts passed in by factor with factors ordered by their number of values, from fewest values to most.
-     * The LinkedHashMap<BioAssay, {value}> and LinkedHashMap<ExperimentalFactor, Double>> portions of each layout are
-     * both sorted.
-     * 
-     * @param layouts
-     * @return sorted layouts
-     */
-    public abstract Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
-            Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts );
+    // /**
+    // * Sorts the layouts passed in by factor with factors ordered by their number of values, from fewest values to
+    // most.
+    // * The LinkedHashMap<BioAssay, {value}> and LinkedHashMap<ExperimentalFactor, Double>> portions of each layout are
+    // * both sorted.
+    // *
+    // * @param layouts
+    // * @return sorted layouts
+    // */
+    // public abstract Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>
+    // sortLayoutSamplesByFactor(
+    // Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts );
 
     /**
      * removed the cached layouts and cached BioAssayDimensions for this experiment (could be a subset?)

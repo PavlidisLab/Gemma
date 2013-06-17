@@ -245,92 +245,96 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#sortLayoutSamplesByFactor(java.util.Map)
-     */
-    @Override
-    public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
-            final Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
-
-        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortedLayouts = new HashMap<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>();
-        StopWatch timer = new StopWatch();
-        timer.start();
-        for ( Long bioAssaySet : layouts.keySet() ) {
-
-            final LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts
-                    .get( bioAssaySet );
-
-            if ( layout == null || layout.size() == 0 ) {
-                log.warn( "Null or empty layout for ee: " + bioAssaySet ); // does this happen?
-                continue;
-            }
-            LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>();
-
-            Collection<ExperimentalFactor> filteredFactors = extractFactors( layout, false );
-
-            if ( filteredFactors.isEmpty() ) {
-                if ( sortedLayouts.containsKey( bioAssaySet ) ) {
-                    log.warn( "sortedLayouts already contained ee with ID = " + bioAssaySet
-                            + ". Value was map with # keys = " + sortedLayouts.get( bioAssaySet ).keySet().size() );
-                }
-                sortedLayouts.put( bioAssaySet, sortedLayout );
-                continue; // batch was the only factor.
-            }
-
-            List<BioMaterialValueObject> bmList = new ArrayList<BioMaterialValueObject>();
-            Map<BioMaterialValueObject, BioAssayValueObject> BMtoBA = new HashMap<BioMaterialValueObject, BioAssayValueObject>();
-
-            for ( BioAssayValueObject ba : layout.keySet() ) {
-                BioMaterialValueObject bm = ba.getSample();
-                BMtoBA.put( bm, ba );
-                bmList.add( bm );
-
-            }
-
-            // sort factors within layout by number of values
-            LinkedList<ExperimentalFactor> sortedFactors = ( LinkedList<ExperimentalFactor> ) ExpressionDataMatrixColumnSort
-                    .orderFactorsByExperimentalDesignVO( bmList, filteredFactors );
-
-            // this isn't necessary, because we can have factors get dropped if we are looking at a subset.
-            // assert sortedFactors.size() == filteredFactors.size();
-
-            List<BioMaterialValueObject> sortedBMList = ExpressionDataMatrixColumnSort
-                    .orderBiomaterialsBySortedFactorsVO( bmList, sortedFactors );
-
-            assert sortedBMList.size() == bmList.size();
-
-            // sort layout entries according to sorted ba list
-            // List<BioAssayValueObject> sortedBAList = new ArrayList<BioAssayValueObject>();
-            for ( BioMaterialValueObject bm : sortedBMList ) {
-                BioAssayValueObject ba = BMtoBA.get( bm );
-                assert ba != null;
-
-                // sortedBAList.add( bavo );
-
-                // sort factor-value pairs for each biomaterial
-                LinkedHashMap<ExperimentalFactor, Double> facs = layout.get( ba );
-
-                LinkedHashMap<ExperimentalFactor, Double> sortedFacs = new LinkedHashMap<ExperimentalFactor, Double>();
-                for ( ExperimentalFactor fac : sortedFactors ) {
-                    sortedFacs.put( fac, facs.get( fac ) );
-                }
-
-                // assert facs.size() == sortedFacs.size() : "Expected " + facs.size() + " factors, got "
-                // + sortedFacs.size();
-                sortedLayout.put( ba, sortedFacs );
-            }
-            sortedLayouts.put( bioAssaySet, sortedLayout );
-
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Sorting layout samples by factor: " + timer.getTime() + "ms" );
-        }
-
-        return sortedLayouts;
-    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#sortLayoutSamplesByFactor(java.util.Map)
+    // */
+    // @Override
+    // public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>
+    // sortLayoutSamplesByFactor(
+    // final Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
+    //
+    // Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortedLayouts = new
+    // HashMap<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>();
+    // StopWatch timer = new StopWatch();
+    // timer.start();
+    // for ( Long bioAssaySet : layouts.keySet() ) {
+    //
+    // final LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts
+    // .get( bioAssaySet );
+    //
+    // if ( layout == null || layout.size() == 0 ) {
+    // log.warn( "Null or empty layout for ee: " + bioAssaySet ); // does this happen?
+    // continue;
+    // }
+    // LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new
+    // LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>();
+    //
+    // Collection<ExperimentalFactor> filteredFactors = extractFactors( layout, false );
+    //
+    // if ( filteredFactors.isEmpty() ) {
+    // if ( sortedLayouts.containsKey( bioAssaySet ) ) {
+    // log.warn( "sortedLayouts already contained ee with ID = " + bioAssaySet
+    // + ". Value was map with # keys = " + sortedLayouts.get( bioAssaySet ).keySet().size() );
+    // }
+    // sortedLayouts.put( bioAssaySet, sortedLayout );
+    // continue; // batch was the only factor.
+    // }
+    //
+    // List<BioMaterialValueObject> bmList = new ArrayList<BioMaterialValueObject>();
+    // Map<BioMaterialValueObject, BioAssayValueObject> BMtoBA = new HashMap<BioMaterialValueObject,
+    // BioAssayValueObject>();
+    //
+    // for ( BioAssayValueObject ba : layout.keySet() ) {
+    // BioMaterialValueObject bm = ba.getSample();
+    // BMtoBA.put( bm, ba );
+    // bmList.add( bm );
+    //
+    // }
+    //
+    // // sort factors within layout by number of values
+    // LinkedList<ExperimentalFactor> sortedFactors = ( LinkedList<ExperimentalFactor> ) ExpressionDataMatrixColumnSort
+    // .orderFactorsByExperimentalDesignVO( bmList, filteredFactors );
+    //
+    // // this isn't necessary, because we can have factors get dropped if we are looking at a subset.
+    // // assert sortedFactors.size() == filteredFactors.size();
+    //
+    // List<BioMaterialValueObject> sortedBMList = ExpressionDataMatrixColumnSort
+    // .orderBiomaterialsBySortedFactorsVO( bmList, sortedFactors );
+    //
+    // assert sortedBMList.size() == bmList.size();
+    //
+    // // sort layout entries according to sorted ba list
+    // // List<BioAssayValueObject> sortedBAList = new ArrayList<BioAssayValueObject>();
+    // for ( BioMaterialValueObject bm : sortedBMList ) {
+    // BioAssayValueObject ba = BMtoBA.get( bm );
+    // assert ba != null;
+    //
+    // // sortedBAList.add( bavo );
+    //
+    // // sort factor-value pairs for each biomaterial
+    // LinkedHashMap<ExperimentalFactor, Double> facs = layout.get( ba );
+    //
+    // LinkedHashMap<ExperimentalFactor, Double> sortedFacs = new LinkedHashMap<ExperimentalFactor, Double>();
+    // for ( ExperimentalFactor fac : sortedFactors ) {
+    // sortedFacs.put( fac, facs.get( fac ) );
+    // }
+    //
+    // // assert facs.size() == sortedFacs.size() : "Expected " + facs.size() + " factors, got "
+    // // + sortedFacs.size();
+    // sortedLayout.put( ba, sortedFacs );
+    // }
+    // sortedLayouts.put( bioAssaySet, sortedLayout );
+    //
+    // }
+    //
+    // if ( timer.getTime() > 1000 ) {
+    // log.info( "Sorting layout samples by factor: " + timer.getTime() + "ms" );
+    // }
+    //
+    // return sortedLayouts;
+    // }
 
     /*
      * (non-Javadoc)
