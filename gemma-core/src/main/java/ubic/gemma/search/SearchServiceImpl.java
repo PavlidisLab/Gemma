@@ -536,7 +536,6 @@ public class SearchServiceImpl implements SearchService {
             /*
              * Maybe the ontology isn't loaded. Look anyway.
              */
-
             Map<Characteristic, Object> parentMap = characteristicService.getParents( classesToSearch,
                     characteristicService.findByUri( classesToSearch, uriString ) );
             matchingResults = filterCharacteristicOwnersByClass( classesToSearch, parentMap );
@@ -1041,10 +1040,11 @@ public class SearchServiceImpl implements SearchService {
                 uris.add( ontologyTerm.getUri() );
             }
 
-            Collection<SearchResult> dbhits = dbHitsToSearchResult( characteristicService.findByUri( classes, uris ) );
-
-            for ( SearchResult crs : dbhits ) {
-                results.add( ( Characteristic ) crs.getResultObject() );
+            if ( !uris.isEmpty() ) {
+                Collection<SearchResult> dbhits = dbHitsToSearchResult( characteristicService.findByUri( classes, uris ) );
+                for ( SearchResult crs : dbhits ) {
+                    results.add( ( Characteristic ) crs.getResultObject() );
+                }
             }
         }
 
