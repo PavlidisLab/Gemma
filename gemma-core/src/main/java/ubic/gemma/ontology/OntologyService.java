@@ -57,6 +57,12 @@ public interface OntologyService extends InitializingBean {
      */
     public abstract Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri, Taxon taxon );
 
+    /**
+     * @param givenQueryString
+     * @param categoryUri
+     * @param taxon
+     * @return
+     */
     public Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri,
             Taxon taxon );
 

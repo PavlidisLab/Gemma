@@ -124,6 +124,12 @@ public class OntologyServiceImpl implements OntologyService {
         }
     }
 
+    /**
+     * Sorts Characteristics in our preferred ordering:
+     * <ol>
+     * <li>
+     * </ol>
+     */
     private class CharacteristicComparator implements Comparator<Characteristic> {
 
         /*
@@ -152,7 +158,8 @@ public class OntologyServiceImpl implements OntologyService {
                 }
             }
 
-            // we don't use the actual text, because we've already declared these matches.
+            // we don't use the actual text, because we've already declared these matches, so we just put shorter ones
+            // first.
             return o1.getValue().length() < o2.getValue().length() ? -1 : 1;
         }
 
@@ -315,17 +322,17 @@ public class OntologyServiceImpl implements OntologyService {
          */
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
-                if ( !foundValues.contains( foundValueKey( characteristic ) ) ) {
-                    /*
-                     * Want to flag in the web interface that these are already used by Gemma Didn't want to make a
-                     * characteristic value object just to hold a boolean flag for used....
-                     */
-                    characteristic.setDescription( USED + characteristic.getDescription() );
-                    previouslyUsedInSystem.add( characteristic );
-                    foundValues.add( foundValueKey( characteristic ) );
-                }
+                if ( foundValues.contains( foundValueKey( characteristic ) ) ) continue;
+                /*
+                 * Want to flag in the web interface that these are already used by Gemma Didn't want to make a
+                 * characteristic value object just to hold a boolean flag for "used" ...
+                 */
+                characteristic.setDescription( USED + characteristic.getDescription() );
+                previouslyUsedInSystem.add( characteristic );
+                foundValues.add( foundValueKey( characteristic ) );
             }
         }
+
         if ( log.isDebugEnabled() || watch.getTime() > 100 )
             log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                     + " in " + watch.getTime() + " ms" );
@@ -333,8 +340,9 @@ public class OntologyServiceImpl implements OntologyService {
         searchForGenes( queryString, categoryUri, taxon, searchResults );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
-            if ( !serv.isOntologyLoaded() ) continue;
+            if ( !serv.isEnabled() || !serv.isOntologyLoaded() ) continue;
             results = serv.findResources( queryString );
+            if ( results.isEmpty() ) continue;
             if ( log.isDebugEnabled() )
                 log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
                         + watch.getTime() + " ms" );
@@ -892,7 +900,7 @@ public class OntologyServiceImpl implements OntologyService {
                     vc.setValueUri( indi.getUri() );
                     vc.setDescription( "Individual" );
                 } else {
-                    log.warn( "What is it?" + res );
+                    log.warn( "What is it? " + res );
                     continue;
                 }
 
@@ -1035,9 +1043,9 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * @param alreadyUsedResults
+     * @param alreadyUsedResults items already in the system
      * @param searchResults
-     * @param searchTerm
+     * @param searchTerm the query
      * @param foundValues
      * @return
      */

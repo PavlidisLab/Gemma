@@ -14,8 +14,10 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -59,7 +61,12 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
             Collection<Characteristic> characteristics ) {
 
-        Collection<CharacteristicValueObject> characteristicValueObjects = new HashSet<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> characteristicValueObjects;
+
+        if ( characteristics instanceof List )
+            characteristicValueObjects = new ArrayList<CharacteristicValueObject>();
+        else
+            characteristicValueObjects = new HashSet<>();
 
         for ( Characteristic characteristic : characteristics ) {
 
