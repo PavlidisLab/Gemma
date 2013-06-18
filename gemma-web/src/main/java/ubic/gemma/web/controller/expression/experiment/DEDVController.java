@@ -1358,6 +1358,8 @@ public class DEDVController {
         if ( dedvs == null || dedvs.isEmpty() ) return new VisualizationValueObject[1];
 
         for ( DoubleVectorValueObject dvvo : dedvs ) {
+            // FIXME: we can probably use this information, and do away with carrying so much Layout information around?
+            // assert dvvo.isReorganized() && dvvo.getBioAssayDimension().isReordered(); // not always true!!
             ExpressionExperimentValueObject ee = dvvo.getExpressionExperiment();
             if ( !vvoMap.containsKey( ee.getId() ) ) {
                 vvoMap.put( ee.getId(), new ArrayList<DoubleVectorValueObject>() );
