@@ -581,6 +581,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
          this.panelConfigParam = panelConfigParam;
          Gemma.VisualizationWithThumbsWindow.superclass.constructor.apply(this, arguments);
       },
+
       initComponent : function() {
 
          if (this.title) {
@@ -589,9 +590,11 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
          Gemma.VisualizationWithThumbsWindow.superclass.initComponent.apply(this, arguments);
          this.panelConfigParam.vizWindow = this;
-         this.vizPanel = new Gemma.VisualizationWithThumbsPanel(this.panelConfigParam)
+         this.vizPanel = new Gemma.VisualizationWithThumbsPanel(this.panelConfigParam);
+         this.relayEvents(this.vizPanel, ['loadFailed', 'loadSucceeded']);
          this.add(this.vizPanel);
       },
+
       show : function(config) {
          Gemma.VisualizationWithThumbsWindow.superclass.show.call(this);
 
@@ -667,16 +670,17 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
             // it finished loading
             if (!success || records.length === 0) {
                // this really should be a listener in the container?
-               Ext.Msg.alert("No data", "Data could not be displayed", function() {
-                     this.destroy();
-                     if (this.vizPanel) {
-                        this.vizPanel.destroy();
-                     }
-                     if (this.vizWindow) {
-                        this.vizWindow.destroy();
-                     }
-                  }, this);
                this.fireEvent('loadFailed');
+               Ext.Msg.alert("No data", "Data could not be displayed", function() {
+                     // if (this.vizPanel) {
+                     // this.vizPanel.destroy();
+                     // }
+                     // if (this.vizWindow) {
+                     // this.vizWindow.destroy();
+                     // }
+                     // this.destroy();
+                  }, this);
+
                return;
             }
 
@@ -1161,7 +1165,6 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 
          this.dv.store.load({
                params : params,
-
                callback : this.loadcallback.createDelegate(this),
                scope : this
             });

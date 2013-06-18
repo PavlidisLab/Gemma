@@ -392,11 +392,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
             }
 
-            cacheResults( newResults );
+            if ( !newResults.isEmpty() ) {
+                cacheResults( newResults );
 
-            newResults = sliceSubsets( ees, newResults );
+                newResults = sliceSubsets( ees, newResults );
 
-            results.addAll( newResults );
+                results.addAll( newResults );
+            }
         }
 
         return results;
@@ -762,12 +764,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * Break up by gene and EE to cache collections of vectors for EE-gene combos.
          */
         Map<Long, Map<Long, Collection<DoubleVectorValueObject>>> mapForCache = makeCacheMap( newResults );
-
+        int i = 0;
         for ( Long eeid : mapForCache.keySet() ) {
             for ( Long g : mapForCache.get( eeid ).keySet() ) {
+                i++;
                 this.processedDataVectorCache.addToCache( eeid, g, mapForCache.get( eeid ).get( g ) );
             }
         }
+        log.info( "Cached " + i + ", input " + newResults.size() );
     }
 
     /**
@@ -826,13 +830,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         int s = -1;
         int longest = -1;
         BioAssayDimension longestBad = null;
-        boolean ragged = false;
         for ( BioAssayDimension bad : bioAssayDimensions ) {
             Collection<BioAssay> assays = bad.getBioAssays();
             if ( s < 0 ) {
                 s = assays.size();
-            } else if ( s != assays.size() ) {
-                ragged = true;
             }
 
             if ( assays.size() > longest ) {
@@ -1009,103 +1010,98 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
         Collection<Long> genesToSearch = new HashSet<Long>();
         checkCache( ees, genes, results, needToSearch, genesToSearch );
-        log.info( "Using " + results.size() + " DoubleVectorValueObject(s) from cache; need to search for vectors for "
-                + genes.size() + " genes from " + needToSearch.size() + " experiments" );
+        log.info( "Using " + results.size() + " DoubleVectorValueObject(s) from cache" );
 
-        if ( needToSearch.size() != 0 ) {
+        if ( needToSearch.size() == 0 ) {
+            return results;
+        }
 
-            Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed(
-                    EntityUtils.getIds( getExperiments( ees ) ), this.getSessionFactory().getCurrentSession() )
-                    .keySet();
-            Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneIdMap( genesToSearch,
-                    EntityUtils.getIds( arrays ), this.getSessionFactory().getCurrentSession() );
+        /*
+         * Get items not in the cache.
+         */
+        log.info( "Searching for vectors for " + genes.size() + " genes from " + needToSearch.size()
+                + " experiments not in cache" );
 
-            if ( cs2gene.size() == 0 ) {
-                if ( results.isEmpty() ) {
-                    log.warn( "No composite sequences found for genes" );
-                    return new HashSet<DoubleVectorValueObject>();
-                }
-                return results;
+        Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed(
+                EntityUtils.getIds( getExperiments( ees ) ), this.getSessionFactory().getCurrentSession() ).keySet();
+        assert !arrays.isEmpty();
+        Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneIdMap( genesToSearch,
+                EntityUtils.getIds( arrays ), this.getSessionFactory().getCurrentSession() );
 
+        if ( cs2gene.size() == 0 ) {
+            if ( results.isEmpty() ) {
+                log.warn( "No composite sequences found for genes" );
+                return new HashSet<DoubleVectorValueObject>();
+            }
+            return results;
+        }
+
+        /*
+         * Fill in the map, because we want to track information on the specificity of the probes used in the data
+         * vectors.
+         */
+        cs2gene = CommonQueries.getCs2GeneMapForProbes( cs2gene.keySet(), this.getSessionFactory().getCurrentSession() );
+
+        Map<ProcessedExpressionDataVector, Collection<Long>> processedDataVectors = getProcessedVectors(
+                EntityUtils.getIds( needToSearch ), cs2gene );
+
+        Map<BioAssaySet, Collection<BioAssayDimension>> bioAssayDimensions = this.getBioAssayDimensions( needToSearch );
+
+        Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
+
+        /*
+         * This loop is to ensure that we don't get misaligned vectors for experiments that use more than one array
+         * design. See bug 1704. This isn't that common, so we try to break out as soon as possible.
+         */
+        for ( BioAssaySet bas : needToSearch ) {
+
+            Collection<BioAssayDimension> dims = bioAssayDimensions.get( bas );
+
+            if ( dims == null || dims.isEmpty() ) {
+                log.warn( "BioAssayDimensions were null/empty unexpectedly." );
+                continue;
             }
 
             /*
-             * Fill in the map, because we want to track information on the specificity of the probes used in the data
-             * vectors.
+             * Get the vectors for just this experiment. This is made more efficient by removing things from the map
+             * each time through.
              */
-            cs2gene = CommonQueries.getCs2GeneMapForProbes( cs2gene.keySet(), this.getSessionFactory()
-                    .getCurrentSession() );
-
-            Map<ProcessedExpressionDataVector, Collection<Long>> processedDataVectors = getProcessedVectors(
-                    EntityUtils.getIds( needToSearch ), cs2gene );
-
-            Map<BioAssaySet, Collection<BioAssayDimension>> bioAssayDimensions = this
-                    .getBioAssayDimensions( needToSearch );
-
-            Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
+            Map<ProcessedExpressionDataVector, Collection<Long>> vecsForBas = new HashMap<ProcessedExpressionDataVector, Collection<Long>>();
+            if ( needToSearch.size() == 1 ) {
+                vecsForBas = processedDataVectors;
+            } else {
+                // isolate the vectors for the current experiment.
+                for ( Iterator<ProcessedExpressionDataVector> it = processedDataVectors.keySet().iterator(); it
+                        .hasNext(); ) {
+                    ProcessedExpressionDataVector v = it.next();
+                    if ( v.getExpressionExperiment().equals( bas ) ) {
+                        vecsForBas.put( v, processedDataVectors.get( v ) );
+                        it.remove(); // since we're done with it.
+                    }
+                }
+            }
 
             /*
-             * This loop is to ensure that we don't get misaligned vectors for experiments that use more than one array
-             * design. See bug 1704. This isn't that common, so we try to break out as soon as possible.
+             * Now see if anything is 'ragged' (fewer bioassays per biomaterial than in some other vector)
              */
-            for ( BioAssaySet bas : needToSearch ) {
-
-                Collection<BioAssayDimension> dims = bioAssayDimensions.get( bas );
-
-                if ( dims == null || dims.isEmpty() ) {
-                    log.warn( "BioAssayDimensions were null/empty unexpectedly." );
-                    continue;
-                }
-
-                if ( dims.size() == 1 ) {
-                    if ( needToSearch.size() == 1 ) {
-                        // simple case.
-                        newResults.addAll( unpack( processedDataVectors ) );
-                        cacheResults( newResults );
-                        return newResults;
-                    }
-                } // might have more than one dim, but might just be one
-
-                /*
-                 * Get the vectors for just this experiment. This is made more efficient by removing things from the map
-                 * each time through.
-                 */
-                Map<ProcessedExpressionDataVector, Collection<Long>> vecsForBas = new HashMap<ProcessedExpressionDataVector, Collection<Long>>();
-                if ( needToSearch.size() == 1 ) {
-                    vecsForBas = processedDataVectors;
-                } else {
-                    // isolate the vectors for the current experiment.
-                    for ( Iterator<ProcessedExpressionDataVector> it = processedDataVectors.keySet().iterator(); it
-                            .hasNext(); ) {
-                        ProcessedExpressionDataVector v = it.next();
-                        if ( v.getExpressionExperiment().equals( bas ) ) {
-                            vecsForBas.put( v, processedDataVectors.get( v ) );
-                            it.remove(); // since we're done with it.
-                        }
-                    }
-                }
-
-                /*
-                 * Now see if anything is 'ragged' (fewer bioassays per biomaterial than in some other vector)
-                 */
-                if ( dims.size() == 1 ) {
+            if ( dims.size() == 1 ) {
+                newResults.addAll( unpack( vecsForBas ) );
+            } else {
+                BioAssayDimension longestBad = checkRagged( dims );
+                if ( longestBad == null ) {
                     newResults.addAll( unpack( vecsForBas ) );
                 } else {
-                    BioAssayDimension longestBad = checkRagged( dims );
-                    if ( longestBad == null ) {
-                        newResults.addAll( unpack( vecsForBas ) );
-                    } else {
-                        newResults.addAll( unpack( vecsForBas, longestBad ) );
-                    }
+                    newResults.addAll( unpack( vecsForBas, longestBad ) );
                 }
             }
+        }
 
-            /*
-             * Finally....
-             */
+        /*
+         * Finally....
+         */
 
+        if ( !newResults.isEmpty() ) {
             cacheResults( newResults );
-
             newResults = sliceSubsets( ees, newResults );
             results.addAll( newResults );
         }

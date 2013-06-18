@@ -434,7 +434,6 @@ public class DEDVController {
         // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts );
 
         return makeVisCollection( dedvs, null, null, layouts );
-
     }
 
     /**
