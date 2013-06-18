@@ -31,13 +31,16 @@ Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							columns : [{
 										header : "ID",
 										dataIndex : "termUri",
+										sortable: true,
 										renderer : this.golink
 									}, {
 										header : "Term",
+										sortable: true,
 										dataIndex : "termName"
 									}, {
 										header : "Evidence Code",
 										dataIndex : "evidenceCode",
+										sortable: true,
 										renderer: function( value, metaData, record, rowIndex, colIndex, store ){
 											return Gemma.EvidenceCodeInfo[record.get('evidenceCode')].name;
 										}
