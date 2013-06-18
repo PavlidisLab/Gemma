@@ -38,7 +38,7 @@ public class BioAssayDimensionValueObject {
 
     private BioAssayDimension bioAssayDimension = null;
 
-    private List<BioAssayValueObject> bioAssays;
+    private List<BioAssayValueObject> bioAssays = new ArrayList<>();
 
     private String description;
 
@@ -47,6 +47,24 @@ public class BioAssayDimensionValueObject {
     private boolean isSubset = false;
 
     private String name;
+
+    private boolean isReordered = false;
+
+    public boolean isReordered() {
+        return isReordered;
+    }
+
+    /**
+     * @param newOrdering
+     */
+    public void reorder( List<BioAssayValueObject> newOrdering ) {
+        synchronized ( this.bioAssays ) {
+            assert newOrdering.size() == bioAssays.size();
+            this.bioAssays.clear();
+            this.bioAssays.addAll( newOrdering );
+            this.isReordered = true;
+        }
+    }
 
     /**
      * Do not use this constructor unless this represents a subset of a persistent BioAssayDimension.
@@ -184,6 +202,18 @@ public class BioAssayDimensionValueObject {
 
     public void setName( String name ) {
         this.name = name;
+    }
+
+    public BioAssayDimensionValueObject deepCopy() {
+        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject();
+        result.bioAssays.addAll( this.getBioAssays() );
+        result.bioAssayDimension = this.bioAssayDimension;
+        result.id = this.id;
+        result.isSubset = this.isSubset;
+        result.isReordered = this.isReordered;
+        result.name = this.name;
+        result.description = this.description;
+        return result;
     }
 
 }

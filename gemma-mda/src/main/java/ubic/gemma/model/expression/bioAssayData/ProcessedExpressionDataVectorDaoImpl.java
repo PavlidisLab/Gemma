@@ -360,7 +360,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             rawResults.putAll( getProcessedVectors( EntityUtils.getIds( eesForNoGeneProbes ), noGeneProbes ) );
         }
 
-        log.info( rawResults.size() + " vectros retried so far, for noGeneProbes" );
+        log.info( rawResults.size() + " vectors retrieved so far, for noGeneProbes" );
 
         /*
          * Non-cached items.

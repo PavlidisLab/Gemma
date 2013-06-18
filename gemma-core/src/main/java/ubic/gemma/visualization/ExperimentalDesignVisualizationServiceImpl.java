@@ -26,9 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,7 +43,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.graphics.ColorMap;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
-import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.EmptyExpressionMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
@@ -56,7 +53,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -82,7 +78,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     private Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> cachedLayouts = new ConcurrentHashMap<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>();
 
     /**
-     * Cache. TODO: use ehcache so we can manage this.
+     * This are NON-REORDERED. Cache. TODO: use ehcache so we can manage this.
      */
     private Map<Long, BioAssayDimensionValueObject> cachedThawedBioAssayDimensions = new ConcurrentHashMap<Long, BioAssayDimensionValueObject>();
 
@@ -383,7 +379,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             if ( bad == null || vec.isReorganized() ) {
                 /*
                  * We've already done this vector, probably - from the cache. If the experimental design changed in the
-                 * meantime ... bad
+                 * meantime ... bad things will happen.
                  */
                 continue;
             }
@@ -407,8 +403,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 continue;
             }
 
-            Collection<BioAssayValueObject> oldOrdering = cachedThawedBioAssayDimensions.get( bad.getId() )
-                    .getBioAssays();
+            BioAssayDimensionValueObject cachedUnorderedBioAssayDimension = cachedThawedBioAssayDimensions.get( bad
+                    .getId() );
+            assert !cachedUnorderedBioAssayDimension.isReordered();
+            Collection<BioAssayValueObject> oldOrdering = cachedUnorderedBioAssayDimension.getBioAssays();
             assert oldOrdering instanceof List<?>;
             int j = 0;
             for ( BioAssayValueObject ba : oldOrdering ) {
@@ -423,9 +421,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 data[targetIndex] = dol[j++];
 
             }
-            /*
-             * Invalidate the bioassaydimension, it's in the wrong order compared to the bioasays.
-             */
+
+            // Reorder the bioassaydimension used for the vector.
+            assert layout instanceof LinkedHashMap;
+            vec.getBioAssayDimension().reorder( new ArrayList<>( layout.keySet() ) ); // keySet() keeps the order.
             vec.setReorganized( true );
 
         }
@@ -485,6 +484,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         }
     }
 
+    /**
+     * @param ee
+     */
     private void clearCachedBioAssayDimensions( BioAssaySet ee ) {
 
         if ( ee instanceof ExpressionExperimentSubSet ) {
@@ -500,38 +502,39 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     }
 
+    /**
+     * @param eeId
+     */
     private void clearCachedBioAssayDimensions( Long eeId ) {
-
         this.clearCachedBioAssayDimensions( expressionExperimentService.load( eeId ) );
-
     }
 
     private void clearCachedLayouts( Long eeId ) {
         this.cachedLayouts.remove( eeId );
     }
 
-    /**
-     * @param layout
-     * @param skipBatchFactors don't return the 'batch' factor if there is one.
-     * @return
-     */
-    private Collection<ExperimentalFactor> extractFactors(
-            LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout,
-            boolean skipBatchFactors ) {
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-        for ( BioAssayValueObject bioAssay : layout.keySet() ) {
-            if ( layout.get( bioAssay ) != null && layout.get( bioAssay ).keySet() != null ) {
-                for ( ExperimentalFactor ef : layout.get( bioAssay ).keySet() ) {
-                    factors.add( ef );
-                    if ( skipBatchFactors && ExperimentalDesignUtils.isBatch( ef ) ) {
-                        layout.get( bioAssay ).remove( ef );
-                        break;
-                    }
-                }
-            }
-        }
-        return factors;
-    }
+    // /**
+    // * @param layout
+    // * @param skipBatchFactors don't return the 'batch' factor if there is one.
+    // * @return
+    // */
+    // private Collection<ExperimentalFactor> extractFactors(
+    // LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout,
+    // boolean skipBatchFactors ) {
+    // Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+    // for ( BioAssayValueObject bioAssay : layout.keySet() ) {
+    // if ( layout.get( bioAssay ) != null && layout.get( bioAssay ).keySet() != null ) {
+    // for ( ExperimentalFactor ef : layout.get( bioAssay ).keySet() ) {
+    // factors.add( ef );
+    // if ( skipBatchFactors && ExperimentalDesignUtils.isBatch( ef ) ) {
+    // layout.get( bioAssay ).remove( ef );
+    // break;
+    // }
+    // }
+    // }
+    // }
+    // return factors;
+    // }
 
     /**
      * Get the order that bioassays need to be in for the 'real' data.
@@ -588,6 +591,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 /*
                  * Should not happen any more.
                  */
+                throw new IllegalStateException( "Bioassaydimension has a null ID" );
+            } else if ( bioAssayDimension.isReordered() ) {
+                throw new IllegalStateException( "Bioassaydimension was already reordered" );
             } else {
                 if ( cachedThawedBioAssayDimensions.containsKey( bioAssayDimension.getId() ) ) {
                     log.debug( "Already got" );
@@ -595,8 +601,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 } else {
                     // log.debug( "Thawing" );
                     // bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
-                    cachedThawedBioAssayDimensions.put( bioAssayDimension.getId(), bioAssayDimension );
+                    cachedThawedBioAssayDimensions.put( bioAssayDimension.getId(), bioAssayDimension.deepCopy() );
                 }
+                assert !bioAssayDimension.isReordered();
                 vec.setBioAssayDimension( bioAssayDimension );
             }
 

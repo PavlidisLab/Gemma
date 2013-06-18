@@ -897,6 +897,10 @@ public class DEDVController {
 
     }
 
+    /**
+     * @param eeLayouts
+     * @return
+     */
     private LinkedHashSet<String> getFactorNames(
             LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> eeLayouts ) {
         LinkedHashSet<String> factorNames = new LinkedHashSet<String>(); // need uniqueness & order
@@ -1279,21 +1283,20 @@ public class DEDVController {
      */
     private String makeHeader( DoubleVectorValueObject dedv ) {
 
-        String firstThreeColumnHeadings = "GeneSymbol\tGeneName\tElement\t";
+        String firstThreeColumnHeadings = "GeneSymbol\tGeneName\tElement";
 
         StringBuilder buf = new StringBuilder();
         ExpressionExperimentValueObject ee = dedv.getExpressionExperiment();
         buf.append( "# " + ee.getShortName() + " : " + ee.getName() + "\n" );
 
         if ( dedv.isReorganized() ) {
-            // this should be okay.
+            // log.warn( "Vector is reorganized" );
         }
 
         buf.append( firstThreeColumnHeadings );
         for ( BioAssayValueObject ba : dedv.getBioAssays() ) {
-            buf.append( ba.getName() + "\t" );
+            buf.append( "\t" + ba.getName() );
         }
-        buf.deleteCharAt( buf.length() - 1 );
 
         buf.append( "\n" );
 

@@ -174,7 +174,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             session.evict( ee );
         }
 
-        if ( timer.getTime() > 100 ) {
+        if ( timer.getTime() > 200 ) {
             log.info( "Thaw phase 2, " + ees.size() + " vector-associated expression experiments in " + timer.getTime()
                     + "ms " );
         }
