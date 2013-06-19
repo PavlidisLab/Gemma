@@ -186,6 +186,12 @@ public class OntologyServiceImpl implements OntologyService {
      */
     static final String USED = " -USED- ";
 
+    /**
+     * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
+     * find "enough stuff".
+     */
+    private static final int MAX_TERMS_TO_FETCH = 200;
+
     private static Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
 
     /**
@@ -240,7 +246,7 @@ public class OntologyServiceImpl implements OntologyService {
     private NIFSTDOntologyService nifstdOntologyService;
     private ObiService obiService;
 
-    private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
+    private Collection<AbstractOntologyService> ontologyServices = new ArrayList<AbstractOntologyService>();
 
     @Autowired
     private SearchService searchService;
@@ -262,19 +268,20 @@ public class OntologyServiceImpl implements OntologyService {
         this.sequenceOntologyService = new SequenceOntologyService();
         this.obiService = new ObiService();
 
-        this.ontologyServices.add( this.birnLexOntologyService );
+        // We search in this order...
+        this.ontologyServices.add( this.experimentalFactorOntologyService );
+        this.ontologyServices.add( this.obiService );
         this.ontologyServices.add( this.nifstdOntologyService );
-        this.ontologyServices.add( this.chebiOntologyService );
         this.ontologyServices.add( this.fmaOntologyService );
         this.ontologyServices.add( this.diseaseOntologyService );
-        this.ontologyServices.add( this.mouseDevelopmentOntologyService );
-        this.ontologyServices.add( this.humanDevelopmentOntologyService );
         this.ontologyServices.add( this.cellTypeOntologyService );
+        this.ontologyServices.add( this.chebiOntologyService );
         this.ontologyServices.add( this.mammalianPhenotypeOntologyService );
         this.ontologyServices.add( this.humanPhenotypeOntologyService );
-        this.ontologyServices.add( this.obiService );
-        this.ontologyServices.add( this.experimentalFactorOntologyService );
+        this.ontologyServices.add( this.mouseDevelopmentOntologyService );
+        this.ontologyServices.add( this.humanDevelopmentOntologyService );
         this.ontologyServices.add( this.sequenceOntologyService );
+        this.ontologyServices.add( this.birnLexOntologyService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             serv.startInitializationThread( false );
@@ -306,7 +313,7 @@ public class OntologyServiceImpl implements OntologyService {
             log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
         }
 
-        Collection<OntologyResource> results;
+        Collection<? extends OntologyResource> results;
         Collection<Characteristic> searchResults = new HashSet<Characteristic>();
 
         Collection<String> foundValues = new HashSet<String>();
@@ -317,15 +324,14 @@ public class OntologyServiceImpl implements OntologyService {
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
         /*
-         * remove duplicates, don't want to redefine == operator for Characteristics for this use consider if the value
-         * = then its a duplicate.
+         * remove duplicates
          */
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
                 if ( foundValues.contains( foundValueKey( characteristic ) ) ) continue;
                 /*
-                 * Want to flag in the web interface that these are already used by Gemma Didn't want to make a
-                 * characteristic value object just to hold a boolean flag for "used" ...
+                 * Want to flag in the web interface that these are already used by Gemma; value object will turn this
+                 * into a proper flag.
                  */
                 characteristic.setDescription( USED + characteristic.getDescription() );
                 previouslyUsedInSystem.add( characteristic );
@@ -333,7 +339,7 @@ public class OntologyServiceImpl implements OntologyService {
             }
         }
 
-        if ( log.isDebugEnabled() || watch.getTime() > 100 )
+        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
             log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                     + " in " + watch.getTime() + " ms" );
 
@@ -342,11 +348,16 @@ public class OntologyServiceImpl implements OntologyService {
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             if ( !serv.isEnabled() || !serv.isOntologyLoaded() ) continue;
             results = serv.findResources( queryString );
+
             if ( results.isEmpty() ) continue;
             if ( log.isDebugEnabled() )
                 log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
                         + watch.getTime() + " ms" );
             searchResults.addAll( filter( results, queryString ) );
+
+            if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
+                break;
+            }
         }
 
         // Sort the individual results.
@@ -877,7 +888,8 @@ public class OntologyServiceImpl implements OntologyService {
      * @param filterTerm
      * @return
      */
-    private Collection<VocabCharacteristic> filter( final Collection<OntologyResource> terms, final String filter ) {
+    private Collection<VocabCharacteristic> filter( final Collection<? extends OntologyResource> terms,
+            final String filter ) {
 
         Collection<VocabCharacteristic> filtered = new HashSet<VocabCharacteristic>();
 
@@ -1008,10 +1020,12 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
+     * Look for genes, but only for certain categoriUris (genotype, etc.)
+     * 
      * @param queryString
-     * @param categoryUri
-     * @param taxon okay if null
-     * @param searchResults
+     * @param categoryUri if null, this method doesn't do anything.
+     * @param taxon okay if null, but then all matches returned.
+     * @param searchResults added to this
      */
     private void searchForGenes( String queryString, String categoryUri, Taxon taxon,
             Collection<Characteristic> searchResults ) {
@@ -1022,9 +1036,6 @@ public class OntologyServiceImpl implements OntologyService {
                 || categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000513" )
                 || categoryUri.equals( "http://purl.org/obo/owl/CHEBI#CHEBI_23367" ) ) {
 
-            /*
-             * Kick into a special search for genes. The user will have to deal with choosing one from the right taxon.
-             */
             SearchSettings ss = SearchSettings.Factory.newInstance();
             ss.setQuery( queryString );
             ss.noSearches();
