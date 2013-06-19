@@ -149,6 +149,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel, {
       },
 
       clearFilter : function() {
+         this.setFiltersToDefault();
          this.getStore().clearFilter();
       },
 
@@ -785,7 +786,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
          this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.showPublic]);
       },
 
-      filterBySearch : function(record) { 
+      filterBySearch : function(record) {
          this.ids = record.memberIds;
          // if user selected an experiment instead of an experiment group, member
          // ids will be null
@@ -916,7 +917,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar, {
             this.limit = this.limitCombo.defaultValue;
             this.limitCombo.setValue(this.limit);
 
-            this.filteryType = this.filterCombo.defaultValue;
+            this.filterType = this.filterCombo.defaultValue;
             this.filterCombo.setValue(this.filterCombo.defaultValue);
 
             this.searchCombo.clearValue();
