@@ -39,6 +39,7 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
 
@@ -155,23 +156,12 @@ public class ExpressionExperimentSetController extends BaseController {
      * @return
      */
     public Collection<Long> getExperimentIdsInSet( Long id ) {
-        Collection<ExpressionExperimentValueObject> sets = this.getExperimentsInSet( id );
-        Collection<Long> eeids = new HashSet<Long>();
-        for ( ExpressionExperimentValueObject ee : sets ) {
-            eeids.add( ee.getId() );
+        ExpressionExperimentSetValueObject vo = expressionExperimentSetService.loadValueObject( id );
+        if ( vo == null ) {
+            throw new IllegalArgumentException( "No such set with id=" + id );
         }
-        return eeids;
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentSetService
-                .getExperimentValueObjectsInSet( id );
-        // expressionExperimentReportService.getReportInformation( result );
-        return result;
+        // note that this is a bit inefficient....
+        return EntityUtils.getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
     }
 
     /**

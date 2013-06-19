@@ -10,18 +10,18 @@
  * @extends Ext.Button
  */
 Gemma.InlineHelpIcon = Ext.extend(Ext.Button, {
-	
-	icon:"/Gemma/images/icons/question_blue.png",
-	padding:'3px',
-	cls:'transparent-btn',
-	initComponent: function(){
-	
-		Gemma.InlineHelpIcon.superclass.initComponent.call(this);
-		
-		Ext.apply(this,{
-			tooltip: this.tooltipText
-		});
-	}
-});
 
-Ext.reg('Gemma.InlineHelpIcon',Gemma.InlineHelpIcon);
+      icon : "/Gemma/images/icons/question_blue.png",
+      padding : '3px',
+      cls : 'transparent-btn',
+      initComponent : function() {
+
+         Gemma.InlineHelpIcon.superclass.initComponent.call(this);
+
+         Ext.apply(this, {
+               tooltip : this.tooltipText
+            });
+      }
+   });
+
+Ext.reg('Gemma.InlineHelpIcon', Gemma.InlineHelpIcon);

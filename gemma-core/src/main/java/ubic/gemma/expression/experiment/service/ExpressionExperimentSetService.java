@@ -171,7 +171,7 @@ public interface ExpressionExperimentSetService {
             ubic.gemma.model.common.auditAndSecurity.User user );
 
     /**
-     * Get a value object for the id param
+     * Get a value object for the id param. The experimentIds are not filled in.
      * 
      * @param id
      * @return null if id doesn't match an experiment set
@@ -179,6 +179,12 @@ public interface ExpressionExperimentSetService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     public ExpressionExperimentSetValueObject loadValueObject( Long id );
 
+    /**
+     * Get value objects for the given ids. The experimentIds are not filled in.
+     * 
+     * @param eeSetIds
+     * @return
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds );
 

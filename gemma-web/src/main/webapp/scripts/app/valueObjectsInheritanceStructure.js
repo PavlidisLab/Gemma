@@ -1,5 +1,11 @@
-// Set up inheritance structures for value objects
-// see http://directwebremoting.org/dwr/documentation/server/configuration/dwrxml/converters/bean.html#interfacesAndAbstractClasses
+/**
+ * 
+ * Set up inheritance structures for value objects see
+ * http://directwebremoting.org/dwr/documentation/server/configuration/dwrxml/converters/bean.html#interfacesAndAbstractClasses
+ * 
+ * @version $Id$
+ * 
+ */
 
 SessionBoundExpressionExperimentSetValueObject.prototype = new ExpressionExperimentSetValueObject();
 SessionBoundExpressionExperimentSetValueObject.prototype.constructor = SessionBoundExpressionExperimentSetValueObject;

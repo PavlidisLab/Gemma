@@ -5,6 +5,8 @@ Ext.namespace('Gemma');
  * 
  * Define selectedExpressionExperimentValueObject in config or with setSelectedExpressionExperimentValueObject(eesvo) to
  * display an experiment group. Use loadExperimentSet(eesvo) to display an experiment group after initialisation.
+ * 
+ * @version $Id$
  */
 Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
@@ -34,7 +36,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
    hideOkCancel : false,
    showSeparateSaveAs : false, // show a 'save as' button in addition to a save button
    enableSaveOnlyAfterModification : false, // if save button is show, leave it disabled until an experiment is added
-                                             // or removed
+   // or removed
    /**
     * Set the expressionExperimentSetValueObject. (does not display the eesvo, use loadExperimentSet(eesvo) to do that)
     * 
@@ -78,12 +80,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
       // update this.selectedGeneSetValueObject
       this.setSelectedExpressionExperimentValueObject(eesvo);
       // update genes in grid
-      
-      ExpressionExperimentSetController.getExperimentIdsInSet(eesvo.id, { callback : function(expIds) {          
-    	  	this.loadExperiments(expIds, callback, args);
-		}.createDelegate(this) });
-      
-      
+
+      ExpressionExperimentSetController.getExperimentIdsInSet(eesvo.id, {
+            callback : function(expIds) {
+               this.loadExperiments(expIds, callback, args);
+            }.createDelegate(this)
+         });
 
    },
    // used as 'interface' with geneMembersGrid

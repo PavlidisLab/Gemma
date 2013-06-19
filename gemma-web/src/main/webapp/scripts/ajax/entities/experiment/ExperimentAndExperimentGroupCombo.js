@@ -213,6 +213,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
             // this is set to true when query returns
             this.displayingComboValueToQueryMatch = false;
          });
+
       this.getStore().on('load', function(store, records, options) {
             var query = (options.params) ? options.params[0] : null;
             // if the query for which the store is returning is not the same as the last query made with the combo
@@ -295,25 +296,41 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
       return this.getExpressionExperimentGroup();
    },
 
-   setExpressionExperimentGroup : function(combo, expressionExperimentGroup, index) {
-      // this.reset();
-      this.selectedExpressionExperimentGroup = expressionExperimentGroup.data;
+   /**
+    * Handler for select event.
+    * 
+    * @param {}
+    *           combo
+    * @param {}
+    *           record
+    * @param {}
+    *           index
+    * @see http://docs.sencha.com/extjs/3.4.0/#!/api/Ext.form.ComboBox
+    */
+   setExpressionExperimentGroup : function(combo, record, index) {
 
-      // we don't need to grab the ids if the selected group is a session group(they are already there)
-      if (expressionExperimentGroup.data.resultValueObject instanceof SessionBoundExpressionExperimentSetValueObject
-         || expressionExperimentGroup.data.resultValueObject instanceof ExpressionExperimentValueObject) {
+      // we don't need to grab the ids if the selected group is a session group (they are already there) or a single
+      // experiment
+      if (record.get('resultValueObject') instanceof SessionBoundExpressionExperimentSetValueObject || record.get('resultValueObject') instanceof ExpressionExperimentValueObject) {
+         console.log(record.get('resultValueObject'));
          this.lastQuery = null;
+         this.selectedExpressionExperimentGroup = record.data;
          this.fireEvent("recordSelected", this.selectedExpressionExperimentGroup, combo, index);
       } else {
-         ExpressionExperimentSetController.getExperimentIdsInSet(expressionExperimentGroup.data.resultValueObject.id, {
+         ExpressionExperimentSetController.getExperimentIdsInSet(record.data.resultValueObject.id, {
                callback : function(expIds) {
 
-                  // why do we require that this is set in two places? The answer has been lost to the sands of time
-                  expressionExperimentGroup.data.memberIds = expIds;
-                  expressionExperimentGroup.data.resultValueObject.expressionExperimentIds = expIds;
-                  this.lastQuery = null;
-                  this.fireEvent("recordSelected", this.selectedExpressionExperimentGroup, combo, index);
+                  if (!expIds || expIds.length === 0) {
+                     Ext.Msg.alert('No elements', 'No members were returned');
+                     return;
+                  }
 
+                  // why do we require that this is set in two places? The answer has been lost to the sands of time
+                  record.set('memberIds', expIds)
+                  record.get('resultValueObject').expressionExperimentIds = expIds;
+                  this.lastQuery = null;
+                  this.selectedExpressionExperimentGroup = record.data;
+                  this.fireEvent("recordSelected", this.selectedExpressionExperimentGroup, combo, index);
                   if (this.urlInitiatedQuery) {
                      this.urlInitiatedQuery = false;
                      this.fireEvent("experimentGroupUrlSelectionComplete");

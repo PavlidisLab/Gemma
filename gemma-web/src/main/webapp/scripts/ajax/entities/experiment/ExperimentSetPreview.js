@@ -162,14 +162,16 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
          withinSetExperimentCombo.setTaxonId(this.taxonId);
          withinSetExperimentCombo.on('select', function(combo, record, index) {
 
-               if (record.data.resultValueObject instanceof SessionBoundExpressionExperimentSetValueObject) {
-                  this.mergeAndCreateSessionSet(combo, record, record.data.resultValueObject.expressionExperimentIds);
-               } else if (record.data.resultValueObject instanceof ExpressionExperimentValueObject) {
+               var rvo = record.get('resultValueObject');
+
+               if (rvo instanceof SessionBoundExpressionExperimentSetValueObject) {
+                  this.mergeAndCreateSessionSet(combo, record, rvo.expressionExperimentIds);
+               } else if (rvo instanceof ExpressionExperimentValueObject) {
                   var singleId = [];
                   singleId.push(record.data.resultValueObject.id);
                   this.mergeAndCreateSessionSet(combo, record, singleId);
                } else {
-                  ExpressionExperimentSetController.getExperimentIdsInSet(record.data.resultValueObject.id, {
+                  ExpressionExperimentSetController.getExperimentIdsInSet(rvo.id, {
                         callback : function(expIds) {
                            this.mergeAndCreateSessionSet(combo, record, expIds);
                         }.createDelegate(this)

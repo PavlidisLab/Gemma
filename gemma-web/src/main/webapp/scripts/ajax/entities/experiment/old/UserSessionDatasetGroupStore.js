@@ -26,7 +26,7 @@ Gemma.UserSessionDatasetGroupStore = function(config) {
          name : "numExperiments",
          type : "int"
       }, {
-         name : "expressionExperimentIds"
+         name : "memberIds"
       }, {
          name : "taxonId",
          type : "int"

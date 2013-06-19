@@ -598,9 +598,6 @@ ExpressionExperimentSetController.loadAllUserAndSessionGroups = function(callbac
 ExpressionExperimentSetController.loadAllSessionGroups = function(callback) {
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAllSessionGroups', callback);
 };
-ExpressionExperimentSetController.getExperimentsInSet = function(p0, callback) {
-   dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'getExperimentsInSet', p0, callback);
-};
 ExpressionExperimentSetController.getExperimentsInSetBySessionId = function(p0, callback) {
    dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'getExperimentsInSetBySessionId', p0, callback);
 };

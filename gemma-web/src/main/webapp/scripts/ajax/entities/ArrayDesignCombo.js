@@ -8,130 +8,130 @@ Ext.namespace("Gemma");
  */
 Gemma.ArrayDesignCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
-	displayField : 'name',
-	valueField : 'id',
-	editable : true,
-	loadingText : "Loading ...",
-	listWidth : 550,
-	forceSelection : true,
-	typeAhead : true,
-	triggerAction : 'all',
-	emptyText : 'Select a platform',
+   displayField : 'name',
+   valueField : 'id',
+   editable : true,
+   loadingText : "Loading ...",
+   listWidth : 550,
+   forceSelection : true,
+   typeAhead : true,
+   triggerAction : 'all',
+   emptyText : 'Select a platform',
 
-	stateId : 'Gemma.ArrayDesign',
+   stateId : 'Gemma.ArrayDesign',
 
-	record : Ext.data.Record.create([{
-				name : "id",
-				type : "int"
-			}, {
-				name : "name",
-				type : "string"
-			}, {
-				name : "description",
-				type : "string"
-			}, {
-				name : "taxon"
-			}, {
-				name : "shortName",
-				type : "string"
-			}, {
-				name : "troubled",
-				type : "boolean"
-			}]),
+   record : Ext.data.Record.create([{
+         name : "id",
+         type : "int"
+      }, {
+         name : "name",
+         type : "string"
+      }, {
+         name : "description",
+         type : "string"
+      }, {
+         name : "taxon"
+      }, {
+         name : "shortName",
+         type : "string"
+      }, {
+         name : "troubled",
+         type : "boolean"
+      }]),
 
-	initComponent : function() {
+   initComponent : function() {
 
-		var templ = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item"><tpl if="troubled"><img src="/Gemma/images/icons/stop.png" /></tpl>{shortName} - {name}</div></tpl>');
+      var templ = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item"><tpl if="troubled"><img src="/Gemma/images/icons/stop.png" /></tpl>{shortName} - {name}</div></tpl>');
 
-		Ext.apply(this, {
-					store : new Ext.data.Store({
-								sortInfo : {
-									field : 'name',
-									direction : 'ASC'
-								},
-								proxy : new Ext.data.DWRProxy(ArrayDesignController.getArrayDesigns),
-								reader : new Ext.data.ListRangeReader({
-											id : "id"
-										}, this.record),
-								remoteSort : false
-							}),
-					tpl : templ
-				});
+      Ext.apply(this, {
+            store : new Ext.data.Store({
+                  sortInfo : {
+                     field : 'name',
+                     direction : 'ASC'
+                  },
+                  proxy : new Ext.data.DWRProxy(ArrayDesignController.getArrayDesigns),
+                  reader : new Ext.data.ListRangeReader({
+                        id : "id"
+                     }, this.record),
+                  remoteSort : false
+               }),
+            tpl : templ
+         });
 
-		Gemma.ArrayDesignCombo.superclass.initComponent.call(this);
+      Gemma.ArrayDesignCombo.superclass.initComponent.call(this);
 
-		this.store.on('load', function() {
-					this.taxonChanged(this.taxon);
-				}, this);
+      this.store.on('load', function() {
+            this.taxonChanged(this.taxon);
+         }, this);
 
-		this.store.load({
-					params : [[], false, true],
-					scope : this,
-					add : false
-				});
+      this.store.load({
+            params : [[], false, true],
+            scope : this,
+            add : false
+         });
 
-		this.doQuery();
+      this.doQuery();
 
-		this.addEvents('arrayDesignchanged');
-	},
+      this.addEvents('arrayDesignchanged');
+   },
 
-	setValue : function(v) {
-		var changed = false;
-		if (this.getValue() !== v) {
-			changed = true;
-		}
+   setValue : function(v) {
+      var changed = false;
+      if (this.getValue() !== v) {
+         changed = true;
+      }
 
-		// if setting to a filtered value, reset the filter.
-		if (changed && this.store.isFiltered()) {
-			this.store.clearFilter();
-		}
+      // if setting to a filtered value, reset the filter.
+      if (changed && this.store.isFiltered()) {
+         this.store.clearFilter();
+      }
 
-		Gemma.ArrayDesignCombo.superclass.setValue.call(this, v);
+      Gemma.ArrayDesignCombo.superclass.setValue.call(this, v);
 
-		if (changed) {
-			this.fireEvent('arrayDesignchanged', this.getArrayDesign());
-		}
-	},
+      if (changed) {
+         this.fireEvent('arrayDesignchanged', this.getArrayDesign());
+      }
+   },
 
-	getArrayDesign : function() {
-		var ArrayDesign = this.store.getById(this.getValue());
-		return ArrayDesign;
-	},
+   getArrayDesign : function() {
+      var ArrayDesign = this.store.getById(this.getValue());
+      return ArrayDesign;
+   },
 
-	taxonChanged : function(taxon) {
+   taxonChanged : function(taxon) {
 
-		if (taxon === undefined) {
-			return;
-		}
+      if (taxon === undefined) {
+         return;
+      }
 
-		this.taxon = taxon;
-		if (this.getArrayDesign() && this.getArrayDesign().taxon && this.getArrayDesign().taxon.id !== taxon.id) {
-			this.reset();
-		}
-		this.applyFilter(taxon);
-	},
+      this.taxon = taxon;
+      if (this.getArrayDesign() && this.getArrayDesign().taxon && this.getArrayDesign().taxon.id !== taxon.id) {
+         this.reset();
+      }
+      this.applyFilter(taxon);
+   },
 
-	applyFilter : function(taxon) {
+   applyFilter : function(taxon) {
 
-		if (taxon === undefined) {
-			return;
-		}
+      if (taxon === undefined) {
+         return;
+      }
 
-		this.store.filterBy(function(record, id) {
-					if (!record.data.taxon || record.data.taxon.indexOf(taxon.commonName) === -1) {
-						return false;
-					} else {
-						return true;
-					}
-				});
-	},
+      this.store.filterBy(function(record, id) {
+            if (!record.data.taxon || record.data.taxon.indexOf(taxon.commonName) === -1) {
+               return false;
+            } else {
+               return true;
+            }
+         });
+   },
 
-	clearCustom : function() {
-		var rec = this.store.getById(-1);
-		if (rec) {
-			this.store.remove(rec);
-		}
-	}
+   clearCustom : function() {
+      var rec = this.store.getById(-1);
+      if (rec) {
+         this.store.remove(rec);
+      }
+   }
 
 });
 
