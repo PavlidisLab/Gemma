@@ -31,6 +31,7 @@ import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
+import ubic.basecode.ontology.providers.SequenceOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -151,6 +152,11 @@ public interface OntologyService extends InitializingBean {
      * @return the OntologyResource for the specified URI
      */
     public abstract OntologyResource getResource( String uri );
+
+    /**
+     * @return
+     */
+    public abstract SequenceOntologyService getSequenceOntologyService();
 
     /**
      * @return the OntologyTerm for the specified URI.

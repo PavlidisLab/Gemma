@@ -186,13 +186,15 @@ public class OntologyServiceImpl implements OntologyService {
      */
     static final String USED = " -USED- ";
 
+    private static Collection<OntologyTerm> categoryterms;
+
+    private static Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
+
     /**
      * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
      * find "enough stuff".
      */
     private static final int MAX_TERMS_TO_FETCH = 200;
-
-    private static Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
 
     /**
      * List the ontologies that are available in the jena database.
@@ -232,8 +234,6 @@ public class OntologyServiceImpl implements OntologyService {
 
     private ChebiOntologyService chebiOntologyService;
 
-    private SequenceOntologyService sequenceOntologyService;
-
     private DiseaseOntologyService diseaseOntologyService;
     @Autowired
     private ExpressionExperimentService eeService;
@@ -250,6 +250,8 @@ public class OntologyServiceImpl implements OntologyService {
 
     @Autowired
     private SearchService searchService;
+
+    private SequenceOntologyService sequenceOntologyService;
 
     @Override
     public void afterPropertiesSet() {
@@ -495,7 +497,41 @@ public class OntologyServiceImpl implements OntologyService {
         return results;
     }
 
-    private static Collection<OntologyTerm> categoryterms;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.OntologyService#findTerms(java.lang.String)
+     */
+    @Override
+    public Collection<OntologyTerm> findTerms( String search ) {
+
+        String query = OntologySearch.stripInvalidCharacters( search );
+
+        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+
+        if ( StringUtils.isBlank( query ) ) {
+            return results;
+        }
+
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            if ( ontology.isOntologyLoaded() ) {
+                Collection<OntologyTerm> found = ontology.findTerm( query );
+                if ( found != null ) results.addAll( found );
+            }
+        }
+
+        return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.OntologyService#getBirnLexOntologyService()
+     */
+    @Override
+    public BirnLexOntologyService getBirnLexOntologyService() {
+        return birnLexOntologyService;
+    }
 
     /*
      * (non-Javadoc)
@@ -549,42 +585,6 @@ public class OntologyServiceImpl implements OntologyService {
         }
         return categoryterms;
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.OntologyService#findTerms(java.lang.String)
-     */
-    @Override
-    public Collection<OntologyTerm> findTerms( String search ) {
-
-        String query = OntologySearch.stripInvalidCharacters( search );
-
-        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
-
-        if ( StringUtils.isBlank( query ) ) {
-            return results;
-        }
-
-        for ( AbstractOntologyService ontology : ontologyServices ) {
-            if ( ontology.isOntologyLoaded() ) {
-                Collection<OntologyTerm> found = ontology.findTerm( query );
-                if ( found != null ) results.addAll( found );
-            }
-        }
-
-        return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.OntologyService#getBirnLexOntologyService()
-     */
-    @Override
-    public BirnLexOntologyService getBirnLexOntologyService() {
-        return birnLexOntologyService;
     }
 
     /*
@@ -676,6 +676,11 @@ public class OntologyServiceImpl implements OntologyService {
         return null;
     }
 
+    @Override
+    public SequenceOntologyService getSequenceOntologyService() {
+        return this.sequenceOntologyService;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -705,18 +710,6 @@ public class OntologyServiceImpl implements OntologyService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.ontology.OntologyService#reinitializeAllOntologies()
-     */
-    @Override
-    public void reinitializeAllOntologies() {
-        for ( AbstractOntologyService serv : this.ontologyServices ) {
-            serv.startInitializationThread( true );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.OntologyService#reindexAllOntologies()
      */
     @Override
@@ -732,6 +725,18 @@ public class OntologyServiceImpl implements OntologyService {
             } else {
                 if ( serv.isEnabled() ) log.info( "Not available for reindexing: " + serv );
             }
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.OntologyService#reinitializeAllOntologies()
+     */
+    @Override
+    public void reinitializeAllOntologies() {
+        for ( AbstractOntologyService serv : this.ontologyServices ) {
+            serv.startInitializationThread( true );
         }
     }
 

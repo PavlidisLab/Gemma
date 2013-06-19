@@ -44,10 +44,10 @@ public class OntologyServiceTest extends BaseSpringContextTest {
      */
     @Test
     public final void testFindExactMatch() throws Exception {
-        if ( !os.getExperimentalFactorOntologyService().isOntologyLoaded() ) {
-            os.getExperimentalFactorOntologyService().startInitializationThread( true );
+        if ( !os.getSequenceOntologyService().isOntologyLoaded() ) {
+            os.getSequenceOntologyService().startInitializationThread( true );
             int c = 0;
-            while ( !os.getExperimentalFactorOntologyService().isOntologyLoaded() ) {
+            while ( !os.getSequenceOntologyService().isOntologyLoaded() ) {
                 Thread.sleep( 10000 );
                 log.info( "Waiting for Ontology to load" );
                 if ( ++c > 20 ) {
@@ -55,8 +55,8 @@ public class OntologyServiceTest extends BaseSpringContextTest {
                 }
             }
         }
-        os.getExperimentalFactorOntologyService().index( true );
-        Collection<Characteristic> name = os.findExactTerm( "male", null, null );
+        os.getSequenceOntologyService().index( true );
+        Collection<Characteristic> name = os.findExactTerm( "RNA", null, null );
         for ( Characteristic characteristic : name ) {
             log.info( characteristic );
         }
