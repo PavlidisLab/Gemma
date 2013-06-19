@@ -76,7 +76,7 @@ Gemma.ExpressionExperimentSetPage = Ext.extend(Ext.TabPanel, {
             });
       },
 
-      isAdmin : Ext.get("hasAdmin") !== null && Ext.get("hasAdmin").getValue() == 'true',
+      isAdmin : Ext.get("hasAdmin") !== null && Ext.get("hasAdmin").getValue() === 'true',
 
       eeSetCb : function(experimentSetVO) {
 

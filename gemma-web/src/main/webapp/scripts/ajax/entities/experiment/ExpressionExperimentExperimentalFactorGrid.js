@@ -85,8 +85,8 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(Ext.grid.PropertyG
                source[d.expressionExperiment.name] = d.experimentalFactors[0].name;
 
                s.loadData(myData);
-            };
-         };
+            }
+         }
 
          Ext.apply(this, {
                source : source,

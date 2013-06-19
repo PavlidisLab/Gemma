@@ -9,33 +9,33 @@ Ext.namespace("Gemma");
  */
 Gemma.EvidenceCodeCombo = Ext.extend(Ext.form.ComboBox, {
 
-			editable : true,
-			mode : 'local',
-			selectOnFocus : true,
-			triggerAction : 'all',
-			forceSelection : true,
-			displayField : 'code',
+      editable : true,
+      mode : 'local',
+      selectOnFocus : true,
+      triggerAction : 'all',
+      forceSelection : true,
+      displayField : 'code',
 
-			getCode : function() {
-				return this.selectedCode;
-			},
+      getCode : function() {
+         return this.selectedCode;
+      },
 
-			initComponent : function() {
+      initComponent : function() {
 
-				this.store = new Ext.data.Store({
-							proxy : new Ext.data.MemoryProxy([["IEA"], ["IC"]]),
-							reader : new Ext.data.ArrayReader({}, [{
-												name : "code"
-											}])
-						});
+         this.store = new Ext.data.Store({
+               proxy : new Ext.data.MemoryProxy([["IEA"], ["IC"]]),
+               reader : new Ext.data.ArrayReader({}, [{
+                        name : "code"
+                     }])
+            });
 
-				Gemma.EvidenceCodeCombo.superclass.initComponent.call(this);
+         Gemma.EvidenceCodeCombo.superclass.initComponent.call(this);
 
-				this.store.load();
+         this.store.load();
 
-				this.on("select", function(combo, record, index) {
-							this.selectedCode = record.data;
-						});
+         this.on("select", function(combo, record, index) {
+               this.selectedCode = record.data;
+            });
 
-			}
-		});
+      }
+   });

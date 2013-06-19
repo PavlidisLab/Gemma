@@ -15,7 +15,7 @@ Gemma.CategoryCombo = Ext.extend(Ext.form.ComboBox, {
       triggerAction : 'all',
       typeAhead : true,
       forceSelection : true,
-      displayField : 'term', 
+      displayField : 'term',
 
       record : Ext.data.Record.create([{
             name : "uri"

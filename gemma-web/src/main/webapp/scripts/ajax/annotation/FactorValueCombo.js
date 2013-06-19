@@ -7,85 +7,84 @@ Ext.namespace('Gemma');
  * @extends Ext.form.ComboBox
  */
 
-
 Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 
-			displayField : "factorValue",
-			valueField : "id",
-			editable : false,
-			mode : "local",
-			triggerAction : "all",
-			listWidth : 200,
+      displayField : "factorValue",
+      valueField : "id",
+      editable : false,
+      mode : "local",
+      triggerAction : "all",
+      listWidth : 200,
 
-			record : Gemma.FactorValueRecord,
+      record : Gemma.FactorValueRecord,
 
-			initComponent : function() {
+      initComponent : function() {
 
-				/*
-				 * Option to pass in data directly from JSON (JsonReader, not ArrayReader)
-				 */
-				if (this.data) {
+         /*
+          * Option to pass in data directly from JSON (JsonReader, not ArrayReader)
+          */
+         if (this.data) {
 
-					this.store = new Ext.data.Store({
-								proxy : new Ext.data.MemoryProxy(this.data),
-								reader : new Ext.data.JsonReader({}, this.record)
-							});
-				} else {
-					this.store = new Ext.data.Store({
-								proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getFactorValues),
-								reader : new Ext.data.ListRangeReader({
-											id : "id"
-										}, this.record),
-								remoteSort : false,
-								sortInfo : {
-									field : "id"
-								}
-							});
-				}
+            this.store = new Ext.data.Store({
+                  proxy : new Ext.data.MemoryProxy(this.data),
+                  reader : new Ext.data.JsonReader({}, this.record)
+               });
+         } else {
+            this.store = new Ext.data.Store({
+                  proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getFactorValues),
+                  reader : new Ext.data.ListRangeReader({
+                        id : "id"
+                     }, this.record),
+                  remoteSort : false,
+                  sortInfo : {
+                     field : "id"
+                  }
+               });
+         }
 
-				Gemma.FactorValueCombo.superclass.initComponent.call(this);
+         Gemma.FactorValueCombo.superclass.initComponent.call(this);
 
-				// this.store.on("load", function() {
-				// console.log(this.store);
-				// }.createDelegate(this));
+         // this.store.on("load", function() {
+         // console.log(this.store);
+         // }.createDelegate(this));
 
-				if (this.efId) {
-					this.store.load({
-								params : [{
-											id : this.efId,
-											classDelegatingFor : "ExperimentalFactor"
-										}]
-							});
-				} else {
-					this.store.load();
-				}
+         if (this.efId) {
+            this.store.load({
+                  params : [{
+                        id : this.efId,
+                        classDelegatingFor : "ExperimentalFactor"
+                     }]
+               });
+         } else {
+            this.store.load();
+         }
 
-				this.on("select", function(combo, record, index) {
-							this.selectedValue = record.data;
-						});
+         this.on("select", function(combo, record, index) {
+               this.selectedValue = record.data;
+            });
 
-			},
+      },
 
-			setExperimentalFactor : function(efId, callback) {
+      setExperimentalFactor : function(efId, callback) {
 
-				if (efId == null) {
-					this.store.removeAll();
-					return;
-				}
+         if (efId == null) {
+            this.store.removeAll();
+            return;
+         }
 
-				var options = {
-					params : [{
-								id : efId,
-								classDelegatingFor : "ExperimentalFactor"
-							}]
-				};
-				if (callback) {
-					options.callback = callback;
-				}
-				this.store.load(options);
-			},
+         var options = {
+            params : [{
+                  id : efId,
+                  classDelegatingFor : "ExperimentalFactor"
+               }]
+         };
+         if (callback) {
+            options.callback = callback;
+         }
+         this.store.load(options);
+      },
 
-			getFactorValue : function() {
-				return this.selectedValue;
-			}
-		});
+      getFactorValue : function() {
+         return this.selectedValue;
+      }
+   });

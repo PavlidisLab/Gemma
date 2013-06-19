@@ -17,322 +17,298 @@ Ext.namespace('Gemma');
 
 Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
 
-    collapsible: false,
-    editable: false,
-    style: "margin-bottom: 1em;",
-    height: 300,
-    autoScroll: true,
-    stateful: false,
+      collapsible : false,
+      editable : false,
+      style : "margin-bottom: 1em;",
+      height : 300,
+      autoScroll : true,
+      stateful : false,
 
-    viewConfig: {
-        forceFit: true,
-        emptyText: 'No coexpressed genes to display'
-    },
+      viewConfig : {
+         forceFit : true,
+         emptyText : 'No coexpressed genes to display'
+      },
 
-    initComponent: function () {
-        this.ds = new Ext.data.Store({
-            proxy: new Ext.data.MemoryProxy([]),
-            reader: new Ext.data.ListRangeReader({id: "id"}, Gemma.CoexpressionGridRecordConstructor),
-            sortInfo: {
-                field: 'posSupp',
-                direction: 'DESC'
-            }
-        });
+      initComponent : function() {
+         this.ds = new Ext.data.Store({
+               proxy : new Ext.data.MemoryProxy([]),
+               reader : new Ext.data.ListRangeReader({
+                     id : "id"
+                  }, Gemma.CoexpressionGridRecordConstructor),
+               sortInfo : {
+                  field : 'posSupp',
+                  direction : 'DESC'
+               }
+            });
 
-        Ext.apply(this, {
-            columns: [
-                {
-                    id: 'visualize',
-                    header: "Visualize",
-                    dataIndex: "visualize",
-                    renderer: this.visStyler,
-                    tooltip: "Link for visualizing raw data",
-                    sortable: false,
-                    width: 35
-                },
-                {
-                    id: 'found',
-                    header: "Coexpressed Gene",
-                    dataIndex: "foundGene",
-                    renderer: this.foundGeneStyler.createDelegate(this),
-                    tooltip: "Coexpressed Gene",
-                    sortable: true
-                },
-                {
-                    id: 'support',
-                    header: "Support",
-                    dataIndex: "supportKey",
-                    width: 70,
-                    renderer: this.supportStyler.createDelegate(this),
-                    tooltip: Gemma.HelpText.WidgetDefaults.CoexpressionGrid.supportColumnTT,
-                    sortable: true
-                },
-                {
-                    id: 'gene2GeneProteinAssociationStringUrl',
-                    header: "PPI",
-                    dataIndex: "gene2GeneProteinAssociationStringUrl",
-                    width: 30,
-                    renderer: this.proteinLinkStyler.createDelegate(this),
-                    tooltip: "Evidence for interactions from external sources",
-                    sortable: true,
-                    hidden: true
-                },
-                {
-                    id: 'nodeDegree',
-                    header: "Specificity",
-                    dataIndex: "foundGeneNodeDegree",
-                    width: 60,
-                    renderer: this.nodeDegreeStyler.createDelegate(this),
-                    tooltip: "Specificity",
-                    sortable: true
-                }
-            ]
-        });
+         Ext.apply(this, {
+               columns : [{
+                     id : 'visualize',
+                     header : "Visualize",
+                     dataIndex : "visualize",
+                     renderer : this.visStyler,
+                     tooltip : "Link for visualizing raw data",
+                     sortable : false,
+                     width : 35
+                  }, {
+                     id : 'found',
+                     header : "Coexpressed Gene",
+                     dataIndex : "foundGene",
+                     renderer : this.foundGeneStyler.createDelegate(this),
+                     tooltip : "Coexpressed Gene",
+                     sortable : true
+                  }, {
+                     id : 'support',
+                     header : "Support",
+                     dataIndex : "supportKey",
+                     width : 70,
+                     renderer : this.supportStyler.createDelegate(this),
+                     tooltip : Gemma.HelpText.WidgetDefaults.CoexpressionGrid.supportColumnTT,
+                     sortable : true
+                  }, {
+                     id : 'gene2GeneProteinAssociationStringUrl',
+                     header : "PPI",
+                     dataIndex : "gene2GeneProteinAssociationStringUrl",
+                     width : 30,
+                     renderer : this.proteinLinkStyler.createDelegate(this),
+                     tooltip : "Evidence for interactions from external sources",
+                     sortable : true,
+                     hidden : true
+                  }, {
+                     id : 'nodeDegree',
+                     header : "Specificity",
+                     dataIndex : "foundGeneNodeDegree",
+                     width : 60,
+                     renderer : this.nodeDegreeStyler.createDelegate(this),
+                     tooltip : "Specificity",
+                     sortable : true
+                  }]
+            });
 
-        Gemma.CoexpressionGridLight.superclass.initComponent.call(this);
+         Gemma.CoexpressionGridLight.superclass.initComponent.call(this);
 
-        this.on("cellclick", this.rowClickHandler, this);
-    },
+         this.on("cellclick", this.rowClickHandler, this);
+      },
 
-    /**
-     *
-     * @param isCannedAnalysis
-     * @param numQueryGenes
-     * @param data
-     * @param datasets
-     */
-    loadData: function (isCannedAnalysis, numQueryGenes, data, datasets) {
-        this.getStore().proxy.data = data;
-        this.getStore().reload({
-            resetPage: true
-        });
+      /**
+       * 
+       * @param isCannedAnalysis
+       * @param numQueryGenes
+       * @param data
+       * @param datasets
+       */
+      loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
+         this.getStore().proxy.data = data;
+         this.getStore().reload({
+               resetPage : true
+            });
 
-        if (this.loadMask) {
+         if (this.loadMask) {
             this.loadMask.hide();
-        }
-    },
+         }
+      },
 
-    /**
-     * Load the data if there is no data returned an errorState message is set on the result to indicate what the exact
-     * problem was.
-     * @param result
-     */
-    loadDataCb: function (result) {
-        if (result.errorState) {
-            this.handleError( result.errorState );
-        } else {
-            this.loadData( result.isCannedAnalysis,
-                result.queryGenes.length,
-                result.knownGeneResults,
-                result.knownGeneDatasets );
-        }
-    },
+      /**
+       * Load the data if there is no data returned an errorState message is set on the result to indicate what the
+       * exact problem was.
+       * 
+       * @param result
+       */
+      loadDataCb : function(result) {
+         if (result.errorState) {
+            this.handleError(result.errorState);
+         } else {
+            this.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults, result.knownGeneDatasets);
+         }
+      },
 
-    doSearch: function (csc) {
-        this.loadMask = new Ext.LoadMask( this.getEl(), {msg: "Loading ..."});
-        this.loadMask.show();
-        var errorHandler = this.handleError.createDelegate(this);
-        ExtCoexpressionSearchController.doSearch( csc, {
-            callback: this.loadDataCb.createDelegate(this),
-            errorHandler: errorHandler
-        });
-    },
+      doSearch : function(csc) {
+         this.loadMask = new Ext.LoadMask(this.getEl(), {
+               msg : "Loading ..."
+            });
+         this.loadMask.show();
+         var errorHandler = this.handleError.createDelegate(this);
+         ExtCoexpressionSearchController.doSearch(csc, {
+               callback : this.loadDataCb.createDelegate(this),
+               errorHandler : errorHandler
+            });
+      },
 
-    /**
-     * Checks if store contains any results if not print message indicating that there are non. Stop loader. Called when
-     * an error thrown of after data load processing
-     */
-    handleError: function (errorMessage) {
-        if (Ext.get('coexpression-msg')) {
+      /**
+       * Checks if store contains any results if not print message indicating that there are non. Stop loader. Called
+       * when an error thrown of after data load processing
+       */
+      handleError : function(errorMessage) {
+         if (Ext.get('coexpression-msg')) {
             Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
-            Ext.DomHelper.overwrite("coexpression-msg", [
-                {
-                    tag: 'img',
-                    src: '/Gemma/images/icons/information.png'
-                },
-                {
-                    tag: 'span',
-                    html: "&nbsp;&nbsp;" + errorMessage
-                }
-            ]);
-        } else {
+            Ext.DomHelper.overwrite("coexpression-msg", [{
+                     tag : 'img',
+                     src : '/Gemma/images/icons/information.png'
+                  }, {
+                     tag : 'span',
+                     html : "&nbsp;&nbsp;" + errorMessage
+                  }]);
+         } else {
             Ext.Msg.alert("Warning", errorMessage);
-            this.getView().refresh(); //show empty text
-        }
-        this.loadMask.hide();
-    },
+            this.getView().refresh(); // show empty text
+         }
+         this.loadMask.hide();
+      },
 
-    clearError: function () {
-        Ext.DomHelper.overwrite("coexpression-messages", "");
-    },
+      clearError : function() {
+         Ext.DomHelper.overwrite("coexpression-messages", "");
+      },
 
-    filter: function () {
-        var text = Ext.getCmp(this.id + '-search-in-grid').getValue();
-        var value;
+      filter : function() {
+         var text = Ext.getCmp(this.id + '-search-in-grid').getValue();
+         var value;
 
-        if (text && text.length > 1) {
+         if (text && text.length > 1) {
             value = new RegExp(Ext.escapeRe(text), 'i');
-        }
+         }
 
-        return function (row) {
+         return function(row) {
             var foundGene = row.get("foundGene");
             var queryGene = row.get("queryGene");
 
             if (!value) {
-                return true;
+               return true;
             } else {
-                if (value.test(foundGene.officialSymbol) ||
-                    value.test(queryGene.officialSymbol) ||
-                    value.test(foundGene.officialName) ||
-                    value.test(queryGene.officialName)) {
-                    return true;
-                }
+               if (value.test(foundGene.officialSymbol) || value.test(queryGene.officialSymbol) || value.test(foundGene.officialName) || value.test(queryGene.officialName)) {
+                  return true;
+               }
             }
             return false;
-        };
-    },
+         };
+      },
 
-    // link for protein interactions
-    proteinLinkStyler: function (value, metadata, record, row, col, ds) {
-        var data = record.data;
-        var result = "";
+      // link for protein interactions
+      proteinLinkStyler : function(value, metadata, record, row, col, ds) {
+         var data = record.data;
+         var result = "";
 
-        if (data['gene2GeneProteinAssociationStringUrl']) {
-            result = String
-                .format(
-                    '<span>' +
-                        '<a href="{0}"  target="_blank" class="external">' +
-                        '<img src="/Gemma/images/logo/string_logo.gif" ' +
-                        'ext:qtip="Click to view the protein protein interaction obtained from {1} ' +
-                        'evidence with a combined association score of {2} from STRING" />' +
-                        '</a>' +
-                        '</span>',
-                    data['gene2GeneProteinAssociationStringUrl'],
-                    data['gene2GeneProteinInteractionEvidence'],
-                    data['gene2GeneProteinInteractionConfidenceScore']);
-        }
-        if (data['queryRegulatesFound']) {
-            result = result + " " + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png"' +
-                ' ext:qtip="Query may regulate the coexpressed gene, according to Pazar" />' + '</span>';
-        } else if (data['foundRegulatesQuery']) {
-            result = result + " " + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png"' +
-                ' ext:qtip="The query may be regulated by the coexpressed gene, according to Pazar" />' + '</span>';
-        }
-        return result;
-    },
+         if (data['gene2GeneProteinAssociationStringUrl']) {
+            result = String.format('<span>' + '<a href="{0}"  target="_blank" class="external">' + '<img src="/Gemma/images/logo/string_logo.gif" '
+                  + 'ext:qtip="Click to view the protein protein interaction obtained from {1} ' + 'evidence with a combined association score of {2} from STRING" />' + '</a>'
+                  + '</span>', data['gene2GeneProteinAssociationStringUrl'], data['gene2GeneProteinInteractionEvidence'], data['gene2GeneProteinInteractionConfidenceScore']);
+         }
+         if (data['queryRegulatesFound']) {
+            result = result + " " + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png"'
+               + ' ext:qtip="Query may regulate the coexpressed gene, according to Pazar" />' + '</span>';
+         } else if (data['foundRegulatesQuery']) {
+            result = result + " " + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png"'
+               + ' ext:qtip="The query may be regulated by the coexpressed gene, according to Pazar" />' + '</span>';
+         }
+         return result;
+      },
 
-    /**
-     *
-     * @param value
-     * @param metadata
-     * @param {Ext.data.Record} record
-     * @param row
-     * @param col
-     * @param ds
-     * @return {*}
-     */
-    nodeDegreeStyler: function (value, metadata, record, row, col, ds) {
-        var data = record.data;
-        // display the 'worst' (highest) node degree
-        var displayedNodeDegree;
+      /**
+       * 
+       * @param value
+       * @param metadata
+       * @param {Ext.data.Record}
+       *           record
+       * @param row
+       * @param col
+       * @param ds
+       * @return {*}
+       */
+      nodeDegreeStyler : function(value, metadata, record, row, col, ds) {
+         var data = record.data;
+         // display the 'worst' (highest) node degree
+         var displayedNodeDegree;
 
-        if (data['foundGeneNodeDegree'] === null) {
+         if (data['foundGeneNodeDegree'] === null) {
             return 0;
-        } else if (data['queryGeneNodeDegree'] > data['foundGeneNodeDegree']) {
+         } else if (data['queryGeneNodeDegree'] > data['foundGeneNodeDegree']) {
             displayedNodeDegree = data['queryGeneNodeDegree'];
-        } else {
+         } else {
             displayedNodeDegree = data['foundGeneNodeDegree'];
-        }
-        return Gemma.CytoscapePanelUtil.nodeDegreeBinMapper( displayedNodeDegree );
-    },
+         }
+         return Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(displayedNodeDegree);
+      },
 
-    /**
-     *
-     */
-    supportStyler: function (value, metadata, record, row, col, ds) {
-        var data = record.data;
-        if (data['posSupp'] || data['negSupp']) {
+      /**
+       * 
+       */
+      supportStyler : function(value, metadata, record, row, col, ds) {
+         var data = record.data;
+         if (data['posSupp'] || data['negSupp']) {
             var style = "";
             if (data['posSupp']) {
-                style = style +
-                    String.format("<span class='positiveLink'>{0}{1}</span> ",
-                        data['posSupp'],
-                        this.getSpecificLinkString(data['posSupp'], data['nonSpecPosSupp']));
+               style = style + String.format("<span class='positiveLink'>{0}{1}</span> ", data['posSupp'], this.getSpecificLinkString(data['posSupp'], data['nonSpecPosSupp']));
             }
             if (data['negSupp']) {
-                style = style +
-                    String.format("<span class='negativeLink'>{0}{1}</span> ",
-                        data['negSupp'], this.getSpecificLinkString(data['negSupp'], data['nonSpecNegSupp']));
+               style = style + String.format("<span class='negativeLink'>{0}{1}</span> ", data['negSupp'], this.getSpecificLinkString(data['negSupp'], data['nonSpecNegSupp']));
             }
 
             if (data['numTestedIn']) {
-                style = style + String.format("/ {0}", data['numTestedIn']);
+               style = style + String.format("/ {0}", data['numTestedIn']);
             }
             return style;
-        } else {
+         } else {
             return "-";
-        }
-    },
+         }
+      },
 
-    /**
-     * For displaying Gene ontology similarity
-     */
-    goStyler: function (value, metadata, record, row, col, ds) {
-        var data = record.data;
-        if (data['goSim'] || data['maxGoSim']) {
+      /**
+       * For displaying Gene ontology similarity
+       */
+      goStyler : function(value, metadata, record, row, col, ds) {
+         var data = record.data;
+         if (data['goSim'] || data['maxGoSim']) {
             return String.format("{0}/{1}", data['goSim'], data['maxGoSim']);
-        } else {
+         } else {
             return "-";
-        }
-    },
+         }
+      },
 
-    getSpecificLinkString: function (total, nonSpecific) {
-        return nonSpecific ? String.format("<span class='specificLink'> ({0})</span>", total - nonSpecific) : "";
-    },
+      getSpecificLinkString : function(total, nonSpecific) {
+         return nonSpecific ? String.format("<span class='specificLink'> ({0})</span>", total - nonSpecific) : "";
+      },
 
-    /**
-     * Display the target (found) genes.
-     */
-    foundGeneStyler: function (value, metadata, record, row, col, ds) {
-        var gene = record.data.foundGene;
+      /**
+       * Display the target (found) genes.
+       */
+      foundGeneStyler : function(value, metadata, record, row, col, ds) {
+         var gene = record.data.foundGene;
 
-        if (gene.officialName === null) {
+         if (gene.officialName === null) {
             gene.officialName = "";
-        }
+         }
 
-        if (gene.taxonId !== null) {
+         if (gene.taxonId !== null) {
             gene.taxonId = gene.taxonId;
             gene.taxonName = gene.taxonCommonName;
-        } else {
+         } else {
             gene.taxonId = -1;
             gene.taxonName = "?";
-        }
-        return this.foundGeneTemplateNoGemma.apply(gene);
-    },
+         }
+         return this.foundGeneTemplateNoGemma.apply(gene);
+      },
 
-    /**
-     * FIXME this should use the same analysis as the last query. Here we always use 'All'.
-     */
-    foundGeneTemplate: new Ext.Template(
-        "<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=All {taxonName}'>"+
-            " <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>",
-        " &nbsp; ", "<a target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
+      /**
+       * FIXME this should use the same analysis as the last query. Here we always use 'All'.
+       */
+      foundGeneTemplate : new Ext.Template("<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=All {taxonName}'>"
+            + " <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>", " &nbsp; ",
+         "<a target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
 
-    foundGeneTemplateNoGemma: new Ext.Template("<a style='font-weight:{fontWeight};' " +
-        "target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
+      foundGeneTemplateNoGemma : new Ext.Template("<a style='font-weight:{fontWeight};' "
+         + "target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
 
-    visStyler: function (value, metadata, record, row, col, ds) {
-        return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
-    },
+      visStyler : function(value, metadata, record, row, col, ds) {
+         return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+      },
 
-    /**
-     *
-     * @param grid
-     * @param rowIndex
-     * @param columnIndex
-     */
-    rowClickHandler: function (grid, rowIndex, columnIndex) {
-        if (this.getSelectionModel().hasSelection()) {
+      /**
+       * 
+       * @param grid
+       * @param rowIndex
+       * @param columnIndex
+       */
+      rowClickHandler : function(grid, rowIndex, columnIndex) {
+         if (this.getSelectionModel().hasSelection()) {
 
             var record = this.getStore().getAt(rowIndex);
             var fieldName = this.getColumnModel().getDataIndex(columnIndex);
@@ -340,28 +316,27 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
             var foundGene = record.get("foundGene");
 
             if (fieldName === 'visualize') {
-                var activeExperiments = record.data['supportingExperiments'];
+               var activeExperiments = record.data['supportingExperiments'];
 
-                var coexpressionVisualizationWindow = new Gemma.CoexpressionVisualizationWindow({
-                    cascadeOnFirstShow: true,
-                    admin: false,
-                    experiments: activeExperiments,
-                    queryGene: queryGene,
-                    foundGene: foundGene,
-                    downloadLink: String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1},{2}",
-                        activeExperiments.join(','), queryGene.id, foundGene.id),
-                    title: "Coexpression for:  " + queryGene.name + " + " + foundGene.name
-                });
+               var coexpressionVisualizationWindow = new Gemma.CoexpressionVisualizationWindow({
+                     cascadeOnFirstShow : true,
+                     admin : false,
+                     experiments : activeExperiments,
+                     queryGene : queryGene,
+                     foundGene : foundGene,
+                     downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments.join(','), queryGene.id, foundGene.id),
+                     title : "Coexpression for:  " + queryGene.name + " + " + foundGene.name
+                  });
 
-                var params = [];
-                params.push(activeExperiments);
-                params.push(queryGene.id);
-                params.push(foundGene.id);
+               var params = [];
+               params.push(activeExperiments);
+               params.push(queryGene.id);
+               params.push(foundGene.id);
 
-                coexpressionVisualizationWindow.show({
-                    params: params
-                });
+               coexpressionVisualizationWindow.show({
+                     params : params
+                  });
             }
-        }
-    }
-});
+         }
+      }
+   });

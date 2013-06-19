@@ -5,17 +5,6 @@ Ext.onReady(function() {
 
       var topTbar = new Ext.Toolbar([]);
 
-      var pageSize = 25;
-
-      // var store = new Gemma.CharacteristicStore({
-      // autoSave : false,
-      // autoLoad : {
-      // params : {
-      // start : 0,
-      // limit : pageSize
-      // }
-      // }
-      // });
       var browsergrid = new Gemma.AnnotationGrid({
 
             viewConfig : {
@@ -25,6 +14,11 @@ Ext.onReady(function() {
                // "Item"]})'
             },
 
+            // FIXME check which config we need!
+            viewConfig : {
+               showDetails : true
+            },
+
             readMethod : CharacteristicBrowserController.findCharacteristicsCustom,
             renderTo : "characteristicBrowser",
             readParams : [],
@@ -32,9 +26,7 @@ Ext.onReady(function() {
             tbar : new Ext.Toolbar([]),
             useDefaultToolbar : false,
             showParent : true,
-            viewConfig : {
-               showDetails : true
-            },
+
             width : 1200,
             height : 500,
             noInitialLoad : true

@@ -1308,7 +1308,7 @@ Gemma.sortByImportance = function(a, b) {
 
 };
 
-var FactorValueLegend = function() {
+var FactorValueLegend = (function() {
 
    // column labels
    var PER_CONDITION_LABEL_HEIGHT = 10;
@@ -1474,7 +1474,7 @@ var FactorValueLegend = function() {
          return legend;
       }
    };
-}();
+}());
 
 /*
  * Handy test data.

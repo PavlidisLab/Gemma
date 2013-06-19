@@ -20,65 +20,65 @@ Ext.namespace('Gemma');
  */
 Gemma.GeneProductGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
-			deferLoadToRender: false,
+      deferLoadToRender : false,
 
-			record : Ext.data.Record.create([{
-						name : "id"
-					}, {
-						name : "name"
-					}, {
-						name : "description"
-					}, {
-						name : "accessions"
-					}, {
-						name : "type",
-						convert : function(d) {
-							return d.value;
-						}.createDelegate()
-					}]),
+      record : Ext.data.Record.create([{
+            name : "id"
+         }, {
+            name : "name"
+         }, {
+            name : "description"
+         }, {
+            name : "accessions"
+         }, {
+            name : "type",
+            convert : function(d) {
+               return d.value;
+            }.createDelegate()
+         }]),
 
-			initComponent : function() {
-				Ext.apply(this, {
-							columns : [{
-										header : "Name",
-										dataIndex : "name"
-									}, {
-										header : "Type",
-										dataIndex : "type"
-									}, {
-										header : "Description",
-										dataIndex : "description"
-									}, {
-						dataIndex : "accessions",
-						header : "accessions"
-					}],
+      initComponent : function() {
+         Ext.apply(this, {
+               columns : [{
+                     header : "Name",
+                     dataIndex : "name"
+                  }, {
+                     header : "Type",
+                     dataIndex : "type"
+                  }, {
+                     header : "Description",
+                     dataIndex : "description"
+                  }, {
+                     dataIndex : "accessions",
+                     header : "accessions"
+                  }],
 
-							store : new Ext.data.Store({
-										proxy : new Ext.data.DWRProxy(GeneController.getProducts),
-										reader : new Ext.data.ListRangeReader({
-													id : "id"
-												}, this.record),
-										remoteSort : false
-									})
-						});
+               store : new Ext.data.Store({
+                     proxy : new Ext.data.DWRProxy(GeneController.getProducts),
+                     reader : new Ext.data.ListRangeReader({
+                           id : "id"
+                        }, this.record),
+                     remoteSort : false
+                  })
+            });
 
-				Gemma.GeneProductGrid.superclass.initComponent.call(this);
+         Gemma.GeneProductGrid.superclass.initComponent.call(this);
 
-				this.getStore().setDefaultSort('type', 'name');
-				
-				if (!this.deferLoadToRender) {
-					this.getStore().load({
-						params: [this.geneid]
-					});
-				} else {
-					this.on('render',function(){
-						this.getStore().load({
-							params: [this.geneid]
-						});
-					});
-				}
-				
-			}
+         this.getStore().setDefaultSort('type', 'name');
 
-		});
-Ext.reg('geneproductgrid',Gemma.GeneProductGrid);
+         if (!this.deferLoadToRender) {
+            this.getStore().load({
+                  params : [this.geneid]
+               });
+         } else {
+            this.on('render', function() {
+                  this.getStore().load({
+                        params : [this.geneid]
+                     });
+               });
+         }
+
+      }
+
+   });
+Ext.reg('geneproductgrid', Gemma.GeneProductGrid);

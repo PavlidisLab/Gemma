@@ -10,7 +10,6 @@
  * @authors Luke, Paul, klc
  * 
  * @version $Id$
- * @deprecated not used
  */
 
 Gemma.GeneSessionSaveForm = Ext.extend(Ext.Panel, {
@@ -67,7 +66,7 @@ Gemma.GeneSessionSaveForm = Ext.extend(Ext.Panel, {
                name : "isShared",
                type : 'boolean'
             }, {
-               name : "writeableByUser",
+               name : "userCanWrite",
                type : 'boolean'
             }, {
                name : "session",

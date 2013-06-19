@@ -68,7 +68,7 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
                      reader : new Ext.data.ListRangeReader({
                            id : "id"
                         }, this.record),
-                     remoteSort : true 
+                     remoteSort : true
                   })
             });
 

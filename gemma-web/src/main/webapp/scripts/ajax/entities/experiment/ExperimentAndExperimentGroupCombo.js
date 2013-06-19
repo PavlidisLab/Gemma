@@ -104,7 +104,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
       if (this.store.getCount() > 0 || this.listEmptyText) {
          this.expand();
          this.restrictHeight();
-         if (this.lastQuery == this.allQuery) {
+         if (this.lastQuery === this.allQuery) {
             if (this.editable) {
                // this.el.dom.select();
             }
@@ -116,7 +116,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
             if (this.autoSelect !== false) {
                this.selectNext();
             }
-            if (this.typeAhead && this.lastKey != Ext.EventObject.BACKSPACE && this.lastKey != Ext.EventObject.DELETE) {
+            if (this.typeAhead && this.lastKey !== Ext.EventObject.BACKSPACE && this.lastKey !== Ext.EventObject.DELETE) {
                this.taTask.delay(this.typeAheadDelay);
             }
          }

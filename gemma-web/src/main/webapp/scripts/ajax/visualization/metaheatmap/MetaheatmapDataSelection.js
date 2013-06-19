@@ -178,7 +178,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
       _handleFail : function(error) {
          this.fireEvent("visualizationLoaded");
-       //  console.log(error);
+         // console.log(error);
          Ext.DomHelper.overwrite(this.applyToParam, {
                html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, there was an error performing your search: ' + error
             });
@@ -192,7 +192,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
       doVisualization : function() {
 
          if (typeof this.param === 'undefined') { // if not loading text from search interface (ex: when using a
-                                                   // bookmarked link)
+            // bookmarked link)
             var waitMsg = Ext.Msg.wait("", "Loading your visualization...");
          }
 
@@ -202,8 +202,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
          if (!this.taxonId || this.taxonId === null) {
             // DO SOMETHING!!
          }
-         this.geneGroupValueObjects = this.geneGroupValueObjects;
-         this.experimentGroupValueObjects = this.experimentGroupValueObjects;
+         this.geneGroupValueObjects = this.geneGroupValueObjects; // FIXME noop
+         this.experimentGroupValueObjects = this.experimentGroupValueObjects; // FIXME noop
 
          if (this.initexperimentGroupValueObjects) {
             this.experimentGroupValueObjects = this.experimentGroupValueObjects.concat(this.initExperimentGroupResultValueObjects);

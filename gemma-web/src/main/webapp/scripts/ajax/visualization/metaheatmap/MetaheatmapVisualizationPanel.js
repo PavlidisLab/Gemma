@@ -480,14 +480,14 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend(Ext.Panel, {
             }
 
             if (Gemma.Metaheatmap.Config.USE_GENE_COUNTS_FOR_ENRICHMENT) {
-            	
-            	if (condition.numberOfGenesTested < numGenesInSet) {
-            		// this can happen if the data in the system is missing or corrupt. 
-            		condition.ora = null;	
-            	} else {
-               		condition.ora = GemmaStatUtils.computeOraPvalue(condition.numberOfGenesTested, numGenesInSet, numGenesOverThresholdInSet, condition.numberOfGenesDiffExpressed);
-            	}
-            	
+
+               if (condition.numberOfGenesTested < numGenesInSet) {
+                  // this can happen if the data in the system is missing or corrupt.
+                  condition.ora = null;
+               } else {
+                  condition.ora = GemmaStatUtils.computeOraPvalue(condition.numberOfGenesTested, numGenesInSet, numGenesOverThresholdInSet, condition.numberOfGenesDiffExpressed);
+               }
+
                condition.numInSet = numGenesInSet;
                condition.numDiffExpressed = numGenesOverThresholdInSet;
             } else {
@@ -507,7 +507,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend(Ext.Panel, {
             gene = this.geneTree.items[j];
             var pValues = [];
             var alreadySeenFactor = [];
-            numProbesMissing = 0;
+            var numProbesMissing = 0;
             var unusedProbes = 0;
             for (i = 0; i < this.conditionTree.items.length; i++) {
                condition = this.conditionTree.items[i];

@@ -623,4 +623,4 @@ function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails) {
    visDiffWindow.show({
          params : [diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
       });
-};
+}

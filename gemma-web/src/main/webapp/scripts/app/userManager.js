@@ -141,7 +141,7 @@ Ext.onReady(function() {
 															}
 														}
 													});
-										};
+										}
 									}
 								},
 
@@ -173,7 +173,7 @@ Ext.onReady(function() {
 															}
 														}
 													});
-										};
+										}
 									}
 								}
 
