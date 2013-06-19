@@ -79,6 +79,7 @@ Gemma.GeoBrowseGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	 * @param s
 	 */
 	search : function(s) {
+		this.start = 0;
 		this.searchString = String(s);
 		this.store.load({
 			params : [ this.start, this.count, this.searchString ]
