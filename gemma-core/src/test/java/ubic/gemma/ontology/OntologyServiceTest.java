@@ -44,7 +44,17 @@ public class OntologyServiceTest extends BaseSpringContextTest {
      */
     @Test
     public final void testFindExactMatch() throws Exception {
-
+        if ( !os.getExperimentalFactorOntologyService().isOntologyLoaded() ) {
+            os.getExperimentalFactorOntologyService().startInitializationThread( true );
+            int c = 0;
+            while ( !os.getExperimentalFactorOntologyService().isOntologyLoaded() ) {
+                Thread.sleep( 10000 );
+                log.info( "Waiting for Ontology to load" );
+                if ( ++c > 20 ) {
+                    fail( "Ontology load timeout" );
+                }
+            }
+        }
         Collection<Characteristic> name = os.findExactTerm( "male", "http://www.ebi.ac.uk/efo/EFO_0001266", null );
         for ( Characteristic characteristic : name ) {
             log.info( characteristic );
