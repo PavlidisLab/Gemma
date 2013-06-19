@@ -55,7 +55,8 @@ public class OntologyServiceTest extends BaseSpringContextTest {
                 }
             }
         }
-        Collection<Characteristic> name = os.findExactTerm( "male", "http://www.ebi.ac.uk/efo/EFO_0001266", null );
+        os.getExperimentalFactorOntologyService().index( true );
+        Collection<Characteristic> name = os.findExactTerm( "male", null, null );
         for ( Characteristic characteristic : name ) {
             log.info( characteristic );
         }

@@ -236,15 +236,6 @@ public class OntologyIndexerTest {
         assertEquals( 1, name.size() );
         index.close();
     }
-
-    @Test
-    public final void testPersistanceFail() {
-        OntologyIndexer.eraseIndex( ONTNAME_FOR_TESTS );
-        try {
-            OntologyIndexer.getSubjectIndex( ONTNAME_FOR_TESTS );
-            fail( "Should have gotten an exception" );
-        } catch ( Exception e ) {
-        }
-    }
+ 
 
 }
