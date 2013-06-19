@@ -62,12 +62,13 @@ Ext.reg('geneallenbrainatlasimages', Gemma.GeneAllenBrainAtlasImages);
 
 Gemma.geneLinkOutPopUp = function(abaImageUrl) {
 
-   if (abaImageUrl == null)
+   if (abaImageUrl === null) {
       return;
+   }
 
    var abaWindowId = "geneDetailsAbaWindow";
    var win = Ext.getCmp(abaWindowId);
-   if (win != null) {
+   if (win !== null) {
       win.close();
    }
 
