@@ -49,3 +49,6 @@ http://www.ebi.ac.uk/efo/EFO_0005067	block
 http://www.ebi.ac.uk/efo/EFO_0005135	strain
 http://www.ebi.ac.uk/efo/EFO_0000683	replicate
 http://www.ebi.ac.uk/efo/EFO_0002755	diet
+http://purl.obolibrary.org/obo/GO_0008150	biological process
+http://purl.obolibrary.org/obo/GO_0007610	behavior
+http://www.ebi.ac.uk/efo/EFO_0000688	sampling site
