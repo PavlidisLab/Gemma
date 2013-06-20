@@ -1394,6 +1394,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 }
             }
 
+            assert contrast.getFactorValue() != null;
+
             if ( isInteraction ) {
                 log.debug( "Interaction term" );
                 assert secondTerm != null;
