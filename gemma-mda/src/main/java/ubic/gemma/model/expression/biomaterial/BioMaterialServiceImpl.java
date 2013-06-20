@@ -276,8 +276,8 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
             }
         }
 
-        // <= because we might have just added one.
-        assert bm.getFactorValues().size() <= updatedFactorValues.size();
+        // this is not valid, because it's possible that we are removing a factor value.
+     //   assert bm.getFactorValues().size() <= updatedFactorValues.size();
 
         bm.getFactorValues().clear();
         bm.getFactorValues().addAll( updatedFactorValues );

@@ -61,6 +61,7 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.AnchorTagUtil;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -516,6 +517,42 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         BioMaterial bm = biomaterials.iterator().next();
         ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
         if ( ee == null ) throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
+
+        ee = expressionExperimentService.thawLite( ee );
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+
+                /*
+                 * Check for unused factorValues
+                 */
+                Collection<FactorValue> usedFactorValues = new HashSet<FactorValue>();
+                for ( BioAssay ba : ee.getBioAssays() ) {
+                    BioMaterial biomat = ba.getSampleUsed();
+                    for ( FactorValue fv : biomat.getFactorValues() ) {
+                        if ( fv.getExperimentalFactor().equals( ef ) ) {
+                            usedFactorValues.add( fv );
+                        }
+                    }
+                }
+                Collection<FactorValue> toDelete = new HashSet<FactorValue>();
+                for ( FactorValue fv : ef.getFactorValues() ) {
+                    if ( !usedFactorValues.contains( fv ) ) {
+                        /*
+                         * delete it.
+                         */
+                        toDelete.add( fv );
+
+                    }
+                }
+
+                if ( !toDelete.isEmpty() ) {
+                    log.info( "Deleting " + toDelete + " unused factorvalues for " + ef );
+                    factorValueDeletion.deleteFactorValues( EntityUtils.getIds( toDelete ) );
+                }
+
+            }
+        }
+
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
