@@ -38,7 +38,7 @@ public class BioAssayDimensionValueObject {
 
     private BioAssayDimension bioAssayDimension = null;
 
-    private List<BioAssayValueObject> bioAssays = new ArrayList<>();
+    private List<BioAssayValueObject> bioAssays = new ArrayList<BioAssayValueObject>();
 
     private String description;
 

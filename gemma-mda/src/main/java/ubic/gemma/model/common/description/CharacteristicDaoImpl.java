@@ -214,7 +214,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     public Collection<String> getUsedCategories() {
         final String queryString = "select distinct categoryUri from CharacteristicImpl where categoryUri is not null";
         List<?> res = this.getHibernateTemplate().find( queryString );
-        Collection<String> result = new HashSet<>();
+        Collection<String> result = new HashSet<String>();
 
         for ( Object o : res ) {
             result.add( ( String ) o );

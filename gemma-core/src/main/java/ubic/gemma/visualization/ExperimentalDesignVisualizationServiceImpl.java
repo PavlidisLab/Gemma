@@ -424,7 +424,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             // Reorder the bioassaydimension used for the vector.
             assert layout instanceof LinkedHashMap;
-            vec.getBioAssayDimension().reorder( new ArrayList<>( layout.keySet() ) ); // keySet() keeps the order.
+            vec.getBioAssayDimension().reorder( new ArrayList<BioAssayValueObject>( layout.keySet() ) ); // keySet() keeps the order.
             vec.setReorganized( true );
 
         }
