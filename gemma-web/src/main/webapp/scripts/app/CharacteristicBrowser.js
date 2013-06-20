@@ -9,14 +9,6 @@ Ext.onReady(function() {
 
             viewConfig : {
                forceFit : true
-               // custom grouping text template to display the number of items per group
-               // groupTextTpl : '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Items" :
-               // "Item"]})'
-            },
-
-            // FIXME check which config we need!
-            viewConfig : {
-               showDetails : true
             },
 
             readMethod : CharacteristicBrowserController.findCharacteristicsCustom,
@@ -215,12 +207,6 @@ Ext.onReady(function() {
          saveButton.enable();
       };
 
-      var toggleDetails = function(btn, e) {
-         var view = browsergrid.getView();
-         view.showDetails = btn.pressed;
-         view.refresh();
-      };
-
       var pasteButton = new Ext.Toolbar.Button({
             text : "paste",
             tooltip : "Paste copied values onto the selected characteristics; both Class and Term will be updated.",
@@ -233,14 +219,6 @@ Ext.onReady(function() {
             tooltip : "Paste copied Class values onto the selected characteristics. Term will be left alone.",
             disabled : true,
             handler : pasteCategoryHandler
-         });
-
-      var toggleDetailsButton = new Ext.Toolbar.Button({
-            text : "Details",
-            enableToggle : true,
-            tooltip : "Show/hide more information",
-            disabled : false,
-            handler : toggleDetails
          });
 
       browsergrid.on("keypress", function(e) {
@@ -271,7 +249,6 @@ Ext.onReady(function() {
       toolbar.addSeparator();
       toolbar.addField(pasteCategoryButton);
       toolbar.addFill();
-      toolbar.add(toggleDetailsButton);
 
       /*
        * Second toolbar.

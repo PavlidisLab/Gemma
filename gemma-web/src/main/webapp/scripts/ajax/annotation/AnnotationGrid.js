@@ -237,6 +237,13 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
          return Gemma.GemmaGridPanel.formatTermWithStyle(value, record.data.termUri);
       },
 
+      termUriStyler : function(value, metadata, record, row, col, ds) {
+         if (record.get('termUri')) {
+            return String.format("<a target='_blank' href='{0}'>{0}</a>", record.get('termUri'));
+         }
+         return '';
+      },
+
       /**
        * 
        */
@@ -251,6 +258,12 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
                      header : "Term",
                      dataIndex : "termName",
                      renderer : this.termStyler.createDelegate(this),
+                     sortable : true
+                  }, {
+                     header : "Term URI",
+                     dataIndex : "termUri",
+                     hidden : true,
+                     renderer : this.termUriStyler.createDelegate(this),
                      sortable : true
                   }, {
                      header : "Annotation belongs to:",
