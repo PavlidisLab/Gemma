@@ -146,7 +146,14 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         Collection<Gene> knownGenes = geneService.loadAll( taxon );
         log.info( "Taxon has " + knownGenes.size() + " genes" );
 
-        // Map<Gene, CompositeSequence> existingGeneMap = getExistingGeneMap( arrayDesign );
+        // this would be good for cases where the identifier we are using has changed.
+        Map<Gene, CompositeSequence> existingGeneMap = new HashMap<Gene, CompositeSequence>();
+
+        if ( !useNCBIIds && !useEnsemblIds ) {
+            // only using this for symbol changes.
+            existingGeneMap = getExistingGeneMap( arrayDesign );
+        }
+
         Map<String, CompositeSequence> existingSymbolmap = getExistingProbeNameMap( arrayDesign );
 
         int count = 0;
@@ -187,8 +194,20 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     csForGene = existingSymbolmap.get( gene.getEnsemblId() );
                 }
             } else {
+
+                /*
+                 * detect when the symbol has changed
+                 */
                 if ( existingSymbolmap.containsKey( gene.getOfficialSymbol() ) ) {
                     csForGene = existingSymbolmap.get( gene.getOfficialSymbol() );
+                } else if ( existingGeneMap.containsKey( gene ) ) {
+
+                    csForGene = existingGeneMap.get( gene );
+
+                    log.debug( "Gene symbol has changed for: " + gene + "? Current element has name="
+                            + csForGene.getName() );
+
+                    csForGene.setName( gene.getOfficialSymbol() );
                 }
             }
 
@@ -403,4 +422,30 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         return existingElements;
     }
 
+    /**
+     * @param arrayDesign
+     * @return
+     */
+    private Map<Gene, CompositeSequence> getExistingGeneMap( ArrayDesign arrayDesign ) {
+
+        Map<Gene, CompositeSequence> existingElements = new HashMap<Gene, CompositeSequence>();
+
+        if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
+
+        log.info( "Loading genes for existing platform ..." );
+        Map<CompositeSequence, Collection<Gene>> genemap = compositeSequenceService.getGenes( arrayDesign
+                .getCompositeSequences() );
+
+        log.info( "Platform has genes already for " + genemap.size() + "/" + arrayDesign.getCompositeSequences().size()
+                + " elements." );
+
+        for ( CompositeSequence cs : genemap.keySet() ) {
+            Collection<Gene> genes = genemap.get( cs );
+            assert genes.size() == 1;
+            Gene g = genes.iterator().next();
+            existingElements.put( g, cs );
+        }
+
+        return existingElements;
+    }
 }
