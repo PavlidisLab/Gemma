@@ -820,8 +820,6 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                      }]
                });
 
-            deasw.doLayout();
-
             /*
              * Create the checkboxes for user choice of factors. We assume there is more than one.
              */
@@ -846,7 +844,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                   Ext.getCmp('diff-ex-analysis-customize-factors').add(new Ext.form.Checkbox({
                         fieldLabel : "<b>" + f.name + "</b> (" + Ext.util.Format.ellipsis(f.description) + ")",
                         // labelWidth : 375,
-                        id : f.id + '-factor-checkbox',
+                        id : String.format("{0}-factor-checkbox", f.id),
                         tooltip : f.name,
                         checked : false,
                         listeners : {
@@ -854,6 +852,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                         }
                      }));
                }
+
             }
 
             deasw.doLayout();
@@ -864,10 +863,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
             var factorsToUseIds = [];
             for (var i = 0; i < factors.length; i++) {
                var f = factors[i];
-               if (!f.name) {
+               if (!f.name || f.name === 'batch') {
                   continue;
                }
-               var checked = Ext.getCmp(f.id + '-factor-checkbox').getValue();
+               var chkbox = Ext.getCmp(String.format("{0}-factor-checkbox", f.id));
+               var checked = chkbox.getValue();
                if (checked) {
                   factorsToUseIds.push(f.id);
                }
