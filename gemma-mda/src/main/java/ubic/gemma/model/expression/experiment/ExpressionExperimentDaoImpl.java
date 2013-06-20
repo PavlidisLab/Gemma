@@ -1823,7 +1823,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         thawReferences( result );
         thawMeanVariance( result );
-        
+
         if ( vectorsAlso ) {
             /*
              * Optional because this could be slow.
@@ -1936,6 +1936,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setShortName( ( String ) res[10] );
             v.setDateCreated( ( ( Date ) res[11] ) );
             v.setTroubled( ( ( Boolean ) res[17] ) );
+            v.setParentTaxonId( ( Long ) res[21] );
 
             if ( ( ( Boolean ) res[17] ) ) {
                 if ( ( ( Boolean ) res[18] ) ) {
@@ -1985,10 +1986,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + " s.troubled, " // 17
                 + " s.validated, " // 18
                 + " count(distinct SU), " // 19
-                + " ee.numberOfDataVectors " // 20
+                + " ee.numberOfDataVectors, " // 20
+                + " ptax.id " // 21
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
                 + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
+                + " left join taxon.parentTaxon as ptax "
                 + " inner join ee.experimentalDesign as EDES join ee.status as s ";
 
         if ( idRestrictionClause != null ) {
