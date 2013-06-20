@@ -73,6 +73,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -247,83 +248,114 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      */
     public String analysisResultSetWithContrastsToString( ExpressionAnalysisResultSet resultSet,
             Map<Long, String[]> geneAnnotations ) {
-        Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
         StringBuilder buf = new StringBuilder();
 
         ExperimentalFactor ef = resultSet.getExperimentalFactors().iterator().next();
 
-        Long baselineId = resultSet.getBaselineGroup().getId();
-        List<Long> factorValueIdOrder = new ArrayList<Long>();
-        for ( FactorValue factorValue : ef.getFactorValues() ) {
-            if ( factorValue.getId() == baselineId ) continue;
-            factorValueIdOrder.add( factorValue.getId() );
+        // This is a bit risky, we're only looking at the first one. But this is how we do it for the header.
+        boolean hasNCBIIDs = !geneAnnotations.isEmpty() && geneAnnotations.values().iterator().next().length > 4;
 
-            // Generate column headers.
-            buf.append( "\tFoldChage (" + getFactorValueString( factorValue ) + ")" );
-            buf.append( "\tPValue (" + getFactorValueString( factorValue ) + ")" );
-        }
+        if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
-        buf.append( '\n' );
+            buf.append( "\tCoefficient (" + ef.getName() + ")\tPValue (" + ef.getName() + ")\n" );
 
-        // if ( resultSet.getId() != null ) {
-        // // we might be doing this before persisting, so don't thaw in that case.
-        // differentialExpressionResultService.thaw( resultSet.getResults() );
-        // }
+            for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
+                StringBuilder rowBuffer = new StringBuilder();
 
-        // Generate probe details
-        for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
-            StringBuilder rowBuffer = new StringBuilder();
-
-            CompositeSequence cs = dear.getProbe();
-
-            // Make a hashmap so we can organize the data by probe with factors as columns
-            // Need to cache the information until we have it organized in the correct format to write
-            Long csid = cs.getId();
-            if ( probe2String.containsKey( csid ) ) {
-                rowBuffer = probe2String.get( csid );
-            } else {// no entry for probe yet
-                rowBuffer.append( cs.getName() );
-                if ( geneAnnotations.containsKey( csid ) ) {
-                    String[] annotationStrings = geneAnnotations.get( csid );
-                    rowBuffer.append( "\t" + annotationStrings[1] + "\t" + annotationStrings[2] );
-
-                    // leaving out Gemma ID, which is annotationStrings[3]
-                    if ( annotationStrings.length > 4 ) {
-                        // ncbi id.
-                        rowBuffer.append( "\t" + annotationStrings[4] );
-                    }
+                if ( geneAnnotations.isEmpty() ) {
+                    rowBuffer.append( dear.getProbe().getName() );
+                } else {
+                    addGeneAnnotationsToLine( rowBuffer, dear, hasNCBIIDs, geneAnnotations );
                 }
 
-                probe2String.put( csid, rowBuffer );
-            }
+                assert dear.getContrasts().size() == 1;
 
-            Map<Long, String> factorValueIdToData = new HashMap<Long, String>();
-            // I don't think we can expect them in the same order.
-            for ( ContrastResult contrast : dear.getContrasts() ) {
-                Double foldChange = contrast.getLogFoldChange();
+                ContrastResult contrast = dear.getContrasts().iterator().next();
+
+                Double coef = contrast.getCoefficient();
                 Double pValue = contrast.getPvalue();
                 String formattedPvalue = pValue == null ? "" : String.format( DECIMAL_FORMAT, pValue );
-                String formattedFoldChange = foldChange == null ? "" : String.format( DECIMAL_FORMAT, foldChange );
-                String contrastData = "\t" + formattedFoldChange + "\t" + formattedPvalue;
-                if ( contrast.getFactorValue() == null ) {
-                    /*
-                     * 
-                     */
+                String formattedcoef = coef == null ? "" : String.format( DECIMAL_FORMAT, coef );
+                String contrastData = "\t" + formattedcoef + "\t" + formattedPvalue;
+
+                rowBuffer.append( contrastData );
+
+                buf.append( rowBuffer.toString() + '\n' );
+            }
+
+        } else {
+
+            Long baselineId = resultSet.getBaselineGroup().getId();
+            List<Long> factorValueIdOrder = new ArrayList<Long>();
+            for ( FactorValue factorValue : ef.getFactorValues() ) {
+                if ( factorValue.getId() == baselineId ) continue;
+                factorValueIdOrder.add( factorValue.getId() );
+                // Generate column headers.
+                buf.append( "\tFoldChage (" + getFactorValueString( factorValue ) + ")" );
+                buf.append( "\tPValue (" + getFactorValueString( factorValue ) + ")" );
+            }
+
+            buf.append( '\n' );
+
+            // Generate probe details
+            for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
+                StringBuilder rowBuffer = new StringBuilder();
+
+                addGeneAnnotationsToLine( rowBuffer, dear, hasNCBIIDs, geneAnnotations );
+
+                Map<Long, String> factorValueIdToData = new HashMap<Long, String>();
+                // I don't think we can expect them in the same order.
+                for ( ContrastResult contrast : dear.getContrasts() ) {
+                    Double foldChange = contrast.getLogFoldChange();
+                    Double pValue = contrast.getPvalue();
+                    String formattedPvalue = pValue == null ? "" : String.format( DECIMAL_FORMAT, pValue );
+                    String formattedFoldChange = foldChange == null ? "" : String.format( DECIMAL_FORMAT, foldChange );
+                    String contrastData = "\t" + formattedFoldChange + "\t" + formattedPvalue;
+                    assert contrast.getFactorValue() != null;
+                    factorValueIdToData.put( contrast.getFactorValue().getId(), contrastData );
                 }
-                factorValueIdToData.put( contrast.getFactorValue().getId(), contrastData );
-            }
 
-            // Get them in the right order.
-            for ( Long factorValueId : factorValueIdOrder ) {
-                String s = factorValueIdToData.get( factorValueId );
-                if ( s == null ) s = "";
-                rowBuffer.append( s );
-            }
+                // Get them in the right order.
+                for ( Long factorValueId : factorValueIdOrder ) {
+                    String s = factorValueIdToData.get( factorValueId );
+                    if ( s == null ) s = "";
+                    rowBuffer.append( s );
+                }
 
-            buf.append( rowBuffer.toString() + '\n' );
+                buf.append( rowBuffer.toString() + '\n' );
 
-        } // ears.getResults loop
+            } // resultSet.getResults() loop
+        }
         return buf.toString();
+    }
+
+    /**
+     * @param rowBuffer
+     * @param dear
+     * @param hasNCBIIDs Whether the annotations have the NCBI gene ids. This is based on just peeking at one, so it
+     *        might be wrong! But the format will be okay.
+     * @param geneAnnotations
+     */
+    private void addGeneAnnotationsToLine( StringBuilder rowBuffer, DifferentialExpressionAnalysisResult dear,
+            boolean hasNCBIIDs, Map<Long, String[]> geneAnnotations ) {
+        CompositeSequence cs = dear.getProbe();
+        Long csid = cs.getId();
+        rowBuffer.append( cs.getName() );
+        if ( geneAnnotations.containsKey( csid ) ) {
+            String[] annotationStrings = geneAnnotations.get( csid );
+            rowBuffer.append( "\t" + annotationStrings[1] + "\t" + annotationStrings[2] );
+
+            // leaving out Gemma ID, which is annotationStrings[3]
+            if ( hasNCBIIDs ) {
+                // ncbi id.
+                rowBuffer.append( "\t" + annotationStrings[4] );
+            }
+        } else {
+            rowBuffer.append( "\t\t" );
+            if ( hasNCBIIDs ) {
+                rowBuffer.append( "\t" );
+            }
+        }
     }
 
     @Override
