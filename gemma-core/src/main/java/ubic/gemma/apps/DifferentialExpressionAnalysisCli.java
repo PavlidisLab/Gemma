@@ -129,15 +129,18 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
         super.addForceOption( null );
 
-        Option factors = OptionBuilder.hasArg()
-                .withDescription( "ID numbers or names of the factor(s) to use, comma-delimited" ).create( "factors" );
+        Option factors = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
+                .create( "factors" );
 
         super.addOption( factors );
 
         Option subsetFactor = OptionBuilder
                 .hasArg()
                 .withDescription(
-                        "ID number or name of the factor to use for subsetting the analysis; must also use with -factors" )
+                        "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
                 .create( "subset" );
         super.addOption( subsetFactor );
 
@@ -451,9 +454,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     continue;
                 }
 
-                if ( subsetFactorName.equals( experimentalFactor.getName() ) ) {
+                if ( subsetFactorName.equals( experimentalFactor.getName().replaceAll( " ", "_" ) ) ) {
                     subsetFactor = experimentalFactor;
-                } else if ( fvo.getCategory() != null && subsetFactorName.equals( fvo.getCategory() ) ) {
+                } else if ( fvo.getCategory() != null
+                        && subsetFactorName.equals( fvo.getCategory().replaceAll( " ", "_" ) ) ) {
                     subsetFactor = experimentalFactor;
                 }
             }
@@ -499,9 +503,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     continue;
                 }
 
-                if ( factorNames.contains( experimentalFactor.getName() ) ) {
+                if ( factorNames.contains( experimentalFactor.getName().replaceAll( " ", "_" ) ) ) {
                     factors.add( experimentalFactor );
-                } else if ( fvo.getCategory() != null && factorNames.contains( fvo.getCategory() ) ) {
+                } else if ( fvo.getCategory() != null
+                        && factorNames.contains( fvo.getCategory().replaceAll( " ", "_" ) ) ) {
                     factors.add( experimentalFactor );
                 }
             }
