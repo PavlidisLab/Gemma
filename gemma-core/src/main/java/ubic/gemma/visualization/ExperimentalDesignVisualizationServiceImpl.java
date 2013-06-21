@@ -424,7 +424,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             // Reorder the bioassaydimension used for the vector.
             assert layout instanceof LinkedHashMap;
-            vec.getBioAssayDimension().reorder( new ArrayList<BioAssayValueObject>( layout.keySet() ) ); // keySet() keeps the order.
+            vec.getBioAssayDimension().reorder( new ArrayList<BioAssayValueObject>( layout.keySet() ) ); // keySet()
+                                                                                                         // keeps the
+                                                                                                         // order.
             vec.setReorganized( true );
 
         }
@@ -588,10 +590,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             }
 
             if ( bioAssayDimension.getId() == null ) {
-                /*
-                 * Should not happen any more.
-                 */
-                throw new IllegalStateException( "Bioassaydimension has a null ID" );
+
+                if ( bioAssayDimension.getIsSubset() ) {
+                    // We can't use the cache. This is a limitation we might want to fix.
+                    vec.setBioAssayDimension( bioAssayDimension.deepCopy() );
+                } else {
+                    throw new IllegalStateException( "Bioassaydimension has a null ID" );
+                }
             } else if ( bioAssayDimension.isReordered() ) {
                 throw new IllegalStateException( "Bioassaydimension was already reordered" );
             } else {
@@ -599,8 +604,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                     log.debug( "Already got" );
                     bioAssayDimension = cachedThawedBioAssayDimensions.get( bioAssayDimension.getId() );
                 } else {
-                    // log.debug( "Thawing" );
-                    // bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
                     cachedThawedBioAssayDimensions.put( bioAssayDimension.getId(), bioAssayDimension.deepCopy() );
                 }
                 assert !bioAssayDimension.isReordered();

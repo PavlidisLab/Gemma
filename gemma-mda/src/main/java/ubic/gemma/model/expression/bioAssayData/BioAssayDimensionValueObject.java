@@ -48,6 +48,21 @@ public class BioAssayDimensionValueObject {
 
     private String name;
 
+    private Long sourceId = null;
+
+    /**
+     * If this is a subset, what was the original bioAssayDimension id.
+     * 
+     * @return
+     */
+    public Long getSourceId() {
+        return sourceId;
+    }
+
+    public void setSourceId( Long sourceId ) {
+        this.sourceId = sourceId;
+    }
+
     private boolean isReordered = false;
 
     public boolean isReordered() {
