@@ -1143,7 +1143,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Map<CompositeSequence, DoubleVectorValueObject> unpackedData = unpack( preferredData );
 
         if ( missingValueData.size() == 0 ) {
-            log.info( "There is no seprate missing data information, simply using the data as is" );
+            log.info( "There is no separate missing data information, simply using the data as is" );
             for ( DoubleVectorValueObject rv : unpackedData.values() ) {
                 rv.setMasked( true );
             }
