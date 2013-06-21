@@ -34,7 +34,7 @@ import com.j_spaces.obf.an;
  */
 public interface GeneOntologyService extends InitializingBean {
 
-    public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
+    public static final String BASE_GO_URI = "http://purl.obolibrary.org/obo/";
 
     /**
      * <p>
