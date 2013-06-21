@@ -66,7 +66,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         if ( characteristics instanceof List )
             characteristicValueObjects = new ArrayList<CharacteristicValueObject>();
         else
-            characteristicValueObjects = new HashSet<>();
+            characteristicValueObjects = new HashSet<CharacteristicValueObject>();
 
         for ( Characteristic characteristic : characteristics ) {
 
