@@ -119,7 +119,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     public static String asRegularGoId( String uri ) {
-        return uri.replaceAll( ".*?#", "" ).replace( "_", ":" );
+        return uri.replaceAll( ".*?/", "" ).replace( "_", ":" );
     }
 
     /**
