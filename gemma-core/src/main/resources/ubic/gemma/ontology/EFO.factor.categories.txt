@@ -11,7 +11,7 @@ http://purl.obolibrary.org/obo/UO_0000005	temperature unit
 http://purl.obolibrary.org/obo/UO_0000006	substance unit
 http://purl.obolibrary.org/obo/UO_0000051	concentration unit
 http://purl.obolibrary.org/obo/UO_0000127	radiation unit
-http://purl.org/obo/owl/CHEBI_33284	nutrients
+http://purl.obolibrary.org/obo/CHEBI_33284	nutrients
 http://purl.org/obo/owl/SO#SO_0001023	allele
 http://purl.org/obo/owl/SO#SO_0001024	haplotype
 http://www.ebi.ac.uk/efo/EFO_0000246	age
