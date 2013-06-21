@@ -128,10 +128,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
              */
             Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
                     .findByInvestigation( ee );
-            log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
-            Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
-            for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-                results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+
+            if ( !oldAnalyses.isEmpty() ) {
+                log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
+                Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+                for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
+                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+                }
             }
 
             // Alternatively, delete all the old analyses.
