@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -211,6 +212,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR )
                 && !arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) ) {
 
+            log.info( "Computing intensities for two-color data from underlying data" );
+
             /*
              * Get vectors needed to compute intensities.
              */
@@ -229,6 +232,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
                 throw new IllegalStateException( "No vectors for useful quantitation types for " + ee.getShortName() );
             }
 
+            log.info( "Vectors loaded ..." );
+
             // designElementDataVectorService.thaw( vectors ); // should be in a transaction, don't need to do.
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();
@@ -246,9 +251,12 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
                         + ", rank computation skipped (needed for two-color data)" );
                 return intensities;
             }
+
+            log.info( "Masking ..." );
             this.maskMissingValues( intensities, missingValues );
 
         } else {
+            log.info( "Computing intensities directly from processed data" );
             intensities = new ExpressionDataDoubleMatrix( processedVectors );
         }
 
@@ -264,7 +272,11 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         ExpressionDataDoubleMatrix intensities = loadIntensities( ee, processedVectors );
+
+        log.info( "Load intensities: " + timer.getTime() + "ms" );
 
         Collection<ProcessedExpressionDataVector> updatedVectors = computeRanks( processedVectors, intensities );
         if ( updatedVectors == null ) {
@@ -272,9 +284,9 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
             return processedVectors;
         }
 
-        log.info( "Updating ranks data for " + updatedVectors.size() + " vectors" );
+        log.info( "Updating ranks data for " + updatedVectors.size() + " vectors ..." );
         this.processedDataService.update( updatedVectors );
-
+        log.info( "Done" );
         return updatedVectors;
     }
 
