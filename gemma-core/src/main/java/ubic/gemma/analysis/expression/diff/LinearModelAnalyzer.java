@@ -779,7 +779,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, List<DifferentialExpressionAnalysisResult>>();
         Map<String, List<Double>> pvaluesForQvalue = new HashMap<String, List<Double>>();
         for ( String factorName : label2Factors.keySet() ) {
-            if ( properDesignMatrix.getDroppedFactors().contains( factorName ) ) {
+            if ( !properDesignMatrix.getLevelsForFactors().containsKey( factorName ) ) {
                 continue;
             }
             resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
@@ -787,7 +787,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
         addinteraction: for ( String[] fs : interactionFactorLists ) {
             for ( String f : fs ) {
-                if ( properDesignMatrix.getDroppedFactors().contains( f ) ) {
+                if ( !properDesignMatrix.getLevelsForFactors().containsKey( f ) ) {
                     continue addinteraction;
                 }
             }
