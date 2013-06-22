@@ -73,6 +73,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 
@@ -223,6 +224,9 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Autowired
+    private GeneOntologyService geneOntologyService;
+
+    @Autowired
     private BioMaterialService bioMaterialService;
 
     private BirnLexOntologyService birnLexOntologyService;
@@ -360,6 +364,10 @@ public class OntologyServiceImpl implements OntologyService {
             if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
                 break;
             }
+        }
+
+        if ( searchResults.size() < MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
+            searchResults.addAll( filter( geneOntologyService.findTerm( queryString ), queryString ) );
         }
 
         // Sort the individual results.
@@ -519,6 +527,8 @@ public class OntologyServiceImpl implements OntologyService {
                 if ( found != null ) results.addAll( found );
             }
         }
+
+        if ( geneOntologyService.isReady() ) results.addAll( geneOntologyService.findTerm( search ) );
 
         return results;
     }
@@ -692,6 +702,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyTerm term = ontology.getTerm( uri );
             if ( term != null ) return term;
         }
+        // TODO: doesn't include GO.
         return null;
     }
 
