@@ -50,7 +50,7 @@ import ubic.gemma.util.NativeQueryUtils;
  */
 @Repository
 public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementDataVector> extends
-        ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase<T> {
+        DesignElementDataVectorDaoBase<T> {
 
     private static Log log = LogFactory.getLog( DesignElementDataVectorDaoImpl.class.getName() );
 

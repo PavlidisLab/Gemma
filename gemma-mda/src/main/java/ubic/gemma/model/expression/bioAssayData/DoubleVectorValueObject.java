@@ -177,6 +177,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
         this.sourceVectorId = vec.getId(); // so we can track this!
         this.sliced = true;
+
         this.data = new double[bad.getBioAssays().size()];
 
         Collection<Double> values = new ArrayList<Double>();
@@ -297,7 +298,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      */
     private void addGaps( BioAssayDimension dimToMatch ) {
 
-        List<BioAssayValueObject> dimToMatchBioAssays = new BioAssayDimensionValueObject( dimToMatch ).getBioAssays();
+        BioAssayDimensionValueObject sourceBioAssayDimension = new BioAssayDimensionValueObject( dimToMatch );
+        List<BioAssayValueObject> dimToMatchBioAssays = sourceBioAssayDimension.getBioAssays();
 
         double[] expandedData = new double[dimToMatch.getBioAssays().size()];
         BioAssayDimension expandedDim = BioAssayDimension.Factory.newInstance();
@@ -339,9 +341,11 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             i++;
         }
 
+        assert dimToMatchBioAssays.size() == expandedBioAssays.size();
+
         this.data = expandedData;
         this.setBioAssayDimension( new BioAssayDimensionValueObject() );
-        this.getBioAssayDimension().setSourceId( dimToMatch.getId() );
+        this.getBioAssayDimension().setSourceBioAssayDimension( sourceBioAssayDimension );
         this.getBioAssayDimension().setIsSubset( true ); // not exactly, but have to make clear it's not real.
         this.getBioAssayDimension().setBioAssays( expandedBioAssays );
         this.getBioAssayDimension().setId( null );

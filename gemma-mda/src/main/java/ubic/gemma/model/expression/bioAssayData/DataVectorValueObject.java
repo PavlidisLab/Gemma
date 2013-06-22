@@ -82,6 +82,12 @@ public abstract class DataVectorValueObject implements Serializable {
         return true;
     }
 
+    /**
+     * Represents the order of the bioassays for this. It might not be a real (persistent) BioAssayDimension: it might
+     * be a subset, or a "padded" one. 
+     * 
+     * @return
+     */
     public BioAssayDimensionValueObject getBioAssayDimension() {
         return this.bioAssayDimension;
     }

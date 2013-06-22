@@ -44,42 +44,16 @@ public class BioAssayDimensionValueObject {
 
     private Long id;
 
+    private boolean isReordered = false;
+
     private boolean isSubset = false;
 
     private String name;
 
-    private Long sourceId = null;
-
     /**
-     * If this is a subset, what was the original bioAssayDimension id.
-     * 
-     * @return
+     * If this is a subset, or a padded, BioAssayDimensionValueObject, the sourceBioAssayDimension is the original.
      */
-    public Long getSourceId() {
-        return sourceId;
-    }
-
-    public void setSourceId( Long sourceId ) {
-        this.sourceId = sourceId;
-    }
-
-    private boolean isReordered = false;
-
-    public boolean isReordered() {
-        return isReordered;
-    }
-
-    /**
-     * @param newOrdering
-     */
-    public void reorder( List<BioAssayValueObject> newOrdering ) {
-        synchronized ( this.bioAssays ) {
-            assert newOrdering.size() == bioAssays.size();
-            this.bioAssays.clear();
-            this.bioAssays.addAll( newOrdering );
-            this.isReordered = true;
-        }
-    }
+    private BioAssayDimensionValueObject sourceBioAssayDimension;
 
     /**
      * Do not use this constructor unless this represents a subset of a persistent BioAssayDimension.
@@ -99,6 +73,19 @@ public class BioAssayDimensionValueObject {
         for ( BioAssay bv : entity.getBioAssays() ) {
             bioAssays.add( new BioAssayValueObject( bv ) );
         }
+    }
+
+    public BioAssayDimensionValueObject deepCopy() {
+        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject();
+        result.bioAssays.addAll( this.getBioAssays() );
+        result.bioAssayDimension = this.bioAssayDimension;
+        result.sourceBioAssayDimension = this.sourceBioAssayDimension;
+        result.id = this.id;
+        result.isSubset = this.isSubset;
+        result.isReordered = this.isReordered;
+        result.name = this.name;
+        result.description = this.description;
+        return result;
     }
 
     public List<BioAssayValueObject> getBioAssays() {
@@ -125,6 +112,76 @@ public class BioAssayDimensionValueObject {
         }
 
         return this.bioAssayDimension;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public boolean getIsSubset() {
+        return isSubset;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Represents the original source. If this is reordered or a subset, the return value will <em>not</em> be.
+     * 
+     * @return
+     */
+    public BioAssayDimensionValueObject getSourceBioAssayDimension() {
+        return sourceBioAssayDimension;
+    }
+
+    public boolean isReordered() {
+        return isReordered;
+    }
+
+    /**
+     * @param newOrdering
+     */
+    public void reorder( List<BioAssayValueObject> newOrdering ) {
+        synchronized ( this.bioAssays ) {
+
+            // make sure we have a backup. (might not be very important)
+            if ( this.sourceBioAssayDimension == null && !this.isReordered && !this.isSubset ) {
+                this.sourceBioAssayDimension = this.deepCopy();
+            }
+
+            assert newOrdering.size() == bioAssays.size();
+            assert newOrdering.containsAll( bioAssays );
+
+            this.bioAssays.clear();
+            this.bioAssays.addAll( newOrdering );
+            this.isReordered = true;
+
+        }
+    }
+
+    public void setBioAssays( List<BioAssayValueObject> bioAssays ) {
+        this.bioAssays = bioAssays;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setIsSubset( boolean isSubset ) {
+        this.isSubset = isSubset;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public void setSourceBioAssayDimension( BioAssayDimensionValueObject source ) {
+        this.sourceBioAssayDimension = source;
     }
 
     /**
@@ -185,50 +242,6 @@ public class BioAssayDimensionValueObject {
         }
 
         return fakebd;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public boolean getIsSubset() {
-        return isSubset;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setBioAssays( List<BioAssayValueObject> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setIsSubset( boolean isSubset ) {
-        this.isSubset = isSubset;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public BioAssayDimensionValueObject deepCopy() {
-        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject();
-        result.bioAssays.addAll( this.getBioAssays() );
-        result.bioAssayDimension = this.bioAssayDimension;
-        result.id = this.id;
-        result.isSubset = this.isSubset;
-        result.isReordered = this.isReordered;
-        result.name = this.name;
-        result.description = this.description;
-        return result;
     }
 
 }

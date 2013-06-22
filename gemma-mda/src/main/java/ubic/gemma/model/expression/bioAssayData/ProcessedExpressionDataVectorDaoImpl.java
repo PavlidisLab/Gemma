@@ -1211,7 +1211,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         bad.setId( null ); // because it isn't a real bioassaydimension
         bad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
         bad.setDescription( "Subset slice" );
-        bad.setSourceId( exemplar.getBioAssayDimension().getId() );
+        bad.setSourceBioAssayDimension( exemplar.getBioAssayDimension() );
+
         bad.setIsSubset( true );
 
         Collection<Long> subsetBioAssayIds = EntityUtils.getIds( ee.getBioAssays() );

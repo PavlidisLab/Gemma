@@ -137,6 +137,7 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
         if ( entities == null ) {
             throw new IllegalArgumentException( "DesignElementDataVector.update - 'entities' can not be null" );
         }
+
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     @Override

@@ -212,6 +212,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         } else {
             assert ee instanceof ExpressionExperimentSubSet;
             this.isSubset = true;
+            this.sourceExperiment = ((ExpressionExperimentSubSet)ee).getSourceExperiment().getId();
         }
 
         this.name = ee.getName();

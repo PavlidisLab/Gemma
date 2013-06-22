@@ -20,26 +20,13 @@ import java.util.Map;
 
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author Paul
  * @version $Id$
  */
 public interface ExperimentalDesignVisualizationService {
-
-    /**
-     * For an experiment, spit out (this is only used for testing)
-     * 
-     * @param e, experiment; should be lightly thawed.
-     * @return Map of bioassays to factors to values for plotting. If there are no Factors, a dummy value is returned.
-     * @deprecated as it is not used anywhere at the moment except a test.
-     */
-    @Deprecated
-    public abstract LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
-            ExpressionExperiment e );
 
     /**
      * Put data vectors in the order you'd want to display the experimental design. This causes the "isReorganized" flag
@@ -70,15 +57,6 @@ public interface ExperimentalDesignVisualizationService {
      * @param eeId
      */
     public void clearCaches( Long eeId );
-
-    /**
-     * removed the cached layouts and cached BioAssayDimensions for this experiment
-     * 
-     * @param ee
-     * @deprecated not used
-     */
-    @Deprecated
-    public void clearCaches( BioAssaySet ee );
 
     /**
      * removed all cached layouts and cached BioAssayDimensions
