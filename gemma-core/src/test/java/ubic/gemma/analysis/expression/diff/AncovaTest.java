@@ -486,6 +486,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
 
+        assertTrue( !expressionAnalyses.isEmpty() );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
         assertNotNull( expressionAnalysis );
