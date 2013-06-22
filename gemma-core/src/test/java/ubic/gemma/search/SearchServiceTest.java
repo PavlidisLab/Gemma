@@ -59,9 +59,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class SearchServiceTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/";
 
-    private static final String SPINAL_CORD = "http://purl.org/obo/owl/FMA#FMA_7647";
+    private static final String SPINAL_CORD = "http://purl.obolibrary.org/obo/FMA_7647";
 
-    private static final String BRAIN_CAVITY = "http://purl.org/obo/owl/FMA#FMA_242395";
+    private static final String BRAIN_CAVITY = "http://purl.obolibrary.org/obo/FMA_242395";
 
     // private static final String PREFRONTAL_CORTEX_URI = "http://purl.org/obo/owl/FMA#FMA_224850";
     @Autowired
@@ -292,8 +292,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @Test
     public void testURIChildSearch() {
         SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.setQuery( "http://purl.org/obo/owl/FMA#FMA_83153" ); // OrganComponent of Neuraxis; superclass of
-                                                                      // 'spinal cord'.
+        settings.setQuery( "http://purl.obolibrary.org/obo/FMA_83153" ); // OrganComponent of Neuraxis; superclass of
+                                                                         // 'spinal cord'.
         settings.setSearchExperiments( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );

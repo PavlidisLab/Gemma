@@ -28,7 +28,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</rdfs:label>
   </owl:Ontology>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_62955">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_62955">
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
         <rdfs:label xml:lang="en">Organismal continuant entity
@@ -43,7 +43,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <rdfs:label xml:lang="en">Anatomical entity</rdfs:label>
   </owl:Class>
   <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#ObsoleteClass" />
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7154">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_7154">
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
         <rdfs:label xml:lang="en">Cardinal body part, which
@@ -53,11 +53,11 @@ xml:base="http://purl.org/obo/owl/fma_lite">
         only one head.</rdfs:label>
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_7153" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_7153" />
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67812" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67812" />
         </owl:someValuesFrom>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
@@ -67,7 +67,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67811" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67811" />
         </owl:someValuesFrom>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
@@ -77,7 +77,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_20394" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_20394" />
         </owl:someValuesFrom>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
@@ -93,7 +93,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     </oboInOwl:hasExactSynonym>
     <rdfs:label xml:lang="en">Head</rdfs:label>
   </owl:Class>
-   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7153">
+   <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_7153">
     <rdfs:label xml:lang="en">Cardinal body part</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -106,24 +106,24 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67135"/>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242787">
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_242789" />
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_242787">
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_242789" />
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
         </owl:onProperty>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242675" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_242675" />
         </owl:someValuesFrom>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_50801" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_50801" />
         </owl:someValuesFrom>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
@@ -136,12 +136,12 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     brain</rdfs:label>
   </owl:Class>
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242789">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_242789">
     <rdfs:label xml:lang="en">Region of ventricluar system of neuraxis</rdfs:label>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_86103"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_86103"/>
   </owl:Class>
-   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_86103">
+   <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_86103">
     <rdfs:label xml:lang="en">Region of organ component</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -154,11 +154,11 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_82472"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_82472"/>
   </owl:Class>
   
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_82472">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_82472">
     <rdfs:label xml:lang="en">Cardinal organ part</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -166,12 +166,12 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67135"/>
   </owl:Class>
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67135">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67135">
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67165" />
+      <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67165" />
     </rdfs:subClassOf>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
@@ -195,10 +195,10 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_14065">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_14065">
     <rdfs:label xml:lang="en">Organ component</rdfs:label>
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_82472" />
+      <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_82472" />
     </rdfs:subClassOf>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
@@ -212,7 +212,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_20394">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_20394">
     <rdfs:label xml:lang="en">Human body</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -224,14 +224,14 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_256133" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_256133" />
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_75007">
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_12237" />
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_75007">
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_12237" />
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242675" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_242675" />
         </owl:someValuesFrom>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
@@ -254,7 +254,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     </oboInOwl:hasExactSynonym>
   </owl:Class>
   
-   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_12237">
+   <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_12237">
     <rdfs:label xml:lang="en">Organ cavity</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -267,14 +267,14 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67552"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67552"/>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_256133">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_256133">
     <rdfs:label xml:lang="en">Body of vertebrate</rdfs:label>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_256135"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_256135"/>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_256135">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_256135">
     <rdfs:label xml:lang="en">Body</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -282,17 +282,17 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67135"/>
   </owl:Class>
   
   <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#DbXref">
 
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_9642" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_9642" />
     <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing" />
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242681">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_242681">
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_9337" />
+      <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_9337" />
     </rdfs:subClassOf>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
@@ -300,7 +300,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     neuraxis</rdfs:label>
   </owl:Class>
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_9642">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_9642">
     <rdfs:label xml:lang="en">Portion of neural tissue</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -323,9 +323,9 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_9637"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_9637"/>
   </owl:Class>
-   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_9637">
+   <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_9637">
     <rdfs:label xml:lang="en">Portion of tissue</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -338,10 +338,10 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67135"/>
   </owl:Class>
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67135">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67135">
     <rdfs:label xml:lang="en">Anatomical structure</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -354,10 +354,10 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67165"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67165"/>
   </owl:Class>
   
-   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55671">
+   <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_55671">
     <rdfs:label xml:lang="en">Cavitated organ</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -365,9 +365,9 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67498"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67498"/>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55672">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_55672">
     <rdfs:label xml:lang="en">Organ with organ cavity</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -375,9 +375,9 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_55671"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_55671"/>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55673">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_55673">
     <rdfs:label xml:lang="en">Organ with cavitated organ parts</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -385,10 +385,10 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_55671"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_55671"/>
   </owl:Class>
   
-   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67498">
+   <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67498">
     <rdfs:label xml:lang="en">Organ</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -396,19 +396,19 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67135"/>
   </owl:Class>
   
   
   
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242675">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_242675">
     <rdfs:label xml:lang="en">Ventricular system of
     neuraxis</rdfs:label>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_83153" />
+      <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_83153" />
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
@@ -416,12 +416,12 @@ xml:base="http://purl.org/obo/owl/fma_lite">
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
         </owl:onProperty>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55675" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_55675" />
         </owl:someValuesFrom>
       </owl:Restriction>
     </rdfs:subClassOf>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_61775">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_61775">
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
         <rdfs:label xml:lang="en">Anatomical entity which has three
@@ -433,11 +433,11 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_62955" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_62955" />
     <rdfs:label xml:lang="en">Physical anatomical
     entity</rdfs:label>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_82472">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_82472">
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
     <oboInOwl:hasDefinition>
@@ -453,23 +453,23 @@ xml:base="http://purl.org/obo/owl/fma_lite">
         head of pancreas.</rdfs:label>
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67135" />
     <rdfs:label xml:lang="en">Cardinal organ part</rdfs:label>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55675">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_55675">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
         </owl:onProperty>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67811" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67811" />
         </owl:someValuesFrom>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_20394" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_20394" />
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
         </owl:onProperty>
@@ -478,7 +478,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67812" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67812" />
         </owl:someValuesFrom>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
@@ -488,7 +488,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7157" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_7157" />
         </owl:someValuesFrom>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
@@ -517,12 +517,12 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55672" />
+      <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_55672" />
     </rdfs:subClassOf>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67552">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67552">
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_5897" />
+      <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_5897" />
     </rdfs:subClassOf>
     <rdfs:label xml:lang="en">Anatomical cavity</rdfs:label>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
@@ -539,15 +539,15 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67812">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67812">
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
     <rdfs:label xml:lang="en">Female human body</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_20394" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_20394" />
   </owl:Class>
   <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#Subset" />
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55672">
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_55671" />
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_55672">
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_55671" />
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
     <rdfs:label xml:lang="en">Organ with organ cavity</rdfs:label>
@@ -560,16 +560,16 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242005">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_242005">
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_9642" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_9642" />
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_70954" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_70954" />
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -577,7 +577,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_7647" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_7647" />
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:label xml:lang="en">Neural tissue of spinal
@@ -592,7 +592,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     </oboInOwl:hasDefinition>
   </owl:Class>
   
-   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_70954">
+   <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_70954">
     <rdfs:label xml:lang="en">Neural tissue of neuraxis</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -600,25 +600,25 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_9642"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_9642"/>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of"/>
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_55675"/>
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_55675"/>
       </owl:Restriction>
     </rdfs:subClassOf>
   </owl:Class>
   
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_50801">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_50801">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_55675" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_55675" />
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -626,7 +626,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_7154" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_7154" />
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -634,11 +634,11 @@ xml:base="http://purl.org/obo/owl/fma_lite">
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_54545" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_54545" />
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_83153" />
+      <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_83153" />
     </rdfs:subClassOf>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
@@ -653,7 +653,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     </oboInOwl:hasDefinition>
   </owl:Class>
   
-   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_54545">
+   <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_54545">
     <rdfs:label xml:lang="en">Head proper</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -661,17 +661,17 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_24218"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_24218"/>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of"/>
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_7154"/>
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_7154"/>
       </owl:Restriction>
     </rdfs:subClassOf>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_24218">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_24218">
     <rdfs:label xml:lang="en">Subdivision of head</rdfs:label>
     <oboInOwl:hasExactSynonym>
       <oboInOwl:Synonym>
@@ -689,9 +689,9 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67504"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67504"/>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67504">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67504">
     <rdfs:label xml:lang="en">Subdivision of cardinal body part</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -704,7 +704,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Synonym>
     </oboInOwl:hasExactSynonym>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67135"/>
   </owl:Class>
   
   
@@ -723,12 +723,12 @@ xml:base="http://purl.org/obo/owl/fma_lite">
   
   
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67165">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67165">
     <rdfs:label xml:lang="en">Material anatomical
     entity</rdfs:label>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_61775" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_61775" />
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
         <rdfs:label xml:lang="en">Physical anatomical entity which
@@ -738,11 +738,11 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242395">
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_242681" />
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_242395">
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_242681" />
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_75007" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_75007" />
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
         </owl:onProperty>
@@ -753,7 +753,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_242787" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_242787" />
       </owl:Restriction>
     </rdfs:subClassOf>
     <oboInOwl:hasExactSynonym>
@@ -768,7 +768,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
   </owl:Class>
   <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#SynonymType" />
   <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#Definition" />
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_83153">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_83153">
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
         <rdfs:label xml:lang="en">Organ component which is part of
@@ -779,21 +779,21 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     neuraxis</rdfs:label>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_14065" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_14065" />
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7647">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_7647">
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
     <rdfs:label xml:lang="en">Spinal cord</rdfs:label>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_55675" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_55675" />
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_83153" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_83153" />
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
         <rdfs:label xml:lang="en">Organ component of neuraxis that
@@ -803,12 +803,12 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_5897">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_5897">
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
     <rdfs:label xml:lang="en">Anatomical space</rdfs:label>
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67112" />
+      <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67112" />
     </rdfs:subClassOf>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -821,7 +821,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67112">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67112">
     <oboInOwl:hasExactSynonym>
       <oboInOwl:Synonym>
         <rdfs:label xml:lang="en">Immaterial physical anatomical
@@ -832,7 +832,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     entity</rdfs:label>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_61775" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_61775" />
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
         <rdfs:label xml:lang="en">Physical anatomical entity which
@@ -844,15 +844,15 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     </oboInOwl:hasDefinition>
   </owl:Class>
   <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#Synonym" />
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7157">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_7157">
     <rdfs:label xml:lang="en">Nervous system</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_7149" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_7149" />
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#systemic_part_of" />
         </owl:onProperty>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_67812" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_67812" />
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -861,13 +861,13 @@ xml:base="http://purl.org/obo/owl/fma_lite">
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#systemic_part_of" />
         </owl:onProperty>
         <owl:someValuesFrom>
-          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67811" />
+          <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67811" />
         </owl:someValuesFrom>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_20394" />
+        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/FMA_20394" />
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#systemic_part_of" />
         </owl:onProperty>
@@ -876,7 +876,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_9337">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_9337">
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
         <rdfs:label xml:lang="en">Anatomical cavity, which is
@@ -889,19 +889,19 @@ xml:base="http://purl.org/obo/owl/fma_lite">
         bladder.</rdfs:label>
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67552" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67552" />
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
     <rdfs:label xml:lang="en">Organ cavity subdivision</rdfs:label>
   </owl:Class>
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67811">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_67811">
     <rdfs:label xml:lang="en">Male human body</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_20394" />
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_20394" />
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
   </owl:Class>
   
-  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7149">
+  <owl:Class rdf:about="http://purl.obolibrary.org/obo/FMA_7149">
     <rdfs:label xml:lang="en">Organ system</rdfs:label>
     <oboInOwl:hasDefinition>
       <oboInOwl:Definition>
@@ -909,7 +909,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
       </oboInOwl:Definition>
     </oboInOwl:hasDefinition>
     <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
-    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/FMA_67135"/>
   </owl:Class>
   
   <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of">
@@ -917,14 +917,14 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
     <rdfs:subPropertyOf>
-      <rdf:Property rdf:about="http://purl.org/obo/owl/obo#part_of" />
+      <rdf:Property rdf:about="http://purl.obolibrary.org/obo/BFO_0000050" />
     </rdfs:subPropertyOf>
     <rdfs:label xml:lang="en">regional_part_of</rdfs:label>
   </owl:ObjectProperty>
   <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of">
 
     <rdfs:label xml:lang="en">constitutional_part_of</rdfs:label>
-    <rdfs:subPropertyOf rdf:resource="http://purl.org/obo/owl/obo#part_of" />
+    <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000050" />
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
   </owl:ObjectProperty>
@@ -951,7 +951,7 @@ xml:base="http://purl.org/obo/owl/fma_lite">
     <rdfs:label xml:lang="en">systemic_part_of</rdfs:label>
     <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
     fma</oboInOwl:hasOBONamespace>
-    <rdfs:subPropertyOf rdf:resource="http://purl.org/obo/owl/obo#part_of" />
+    <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000050" />
   </owl:ObjectProperty>
   <owl:ObjectProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#ObsoleteProperty" />
   <owl:TransitiveProperty rdf:about="http://purl.org/obo/owl/OBO_REL#part_of">
