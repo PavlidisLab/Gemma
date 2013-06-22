@@ -188,7 +188,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gene2GoService.create( g2Go2 );
 
         GeneSet gset = this.geneSetSearch.findByGoId( GOTERM_QUERY, g3.getTaxon() );
-        assertTrue( gset.getMembers().size() == 2 );
+        assertEquals( 2, gset.getMembers().size() );
     }
 
     /**

@@ -76,9 +76,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     private static final String ALL_ROOT = BASE_GO_URI + "ALL";
 
-    private final static String BP_URL = "http://www.berkeleybop.org/ontologies/obo-all/biological_process/biological_process.owl";
-
-    private final static String CC_URL = "http://www.berkeleybop.org/ontologies/obo-all/cellular_component/cellular_component.owl";
+    private final static String GO_URL = "http://purl.obolibrary.org/obo/go.owl";
 
     private static boolean enabled = true;
 
@@ -88,9 +86,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     private static Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
 
-    private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";
-
-    private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#part_of";
+    private static final String PART_OF_URI = "http://purl.obolibrary.org/obo/BFO_0000050";
     private static final AtomicBoolean ready = new AtomicBoolean( false );
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
@@ -963,17 +959,20 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
                 loadTime.start();
                 //
                 try {
-                    loadTermsInNameSpace( MF_URL );
-                    log.info( "Gene Ontology Molecular Function loaded, total of " + uri2Term.size() + " items in "
-                            + loadTime.getTime() / 1000 + "s" );
+                    loadTermsInNameSpace( GO_URL );
 
-                    loadTermsInNameSpace( BP_URL );
-                    log.info( "Gene Ontology Biological Process loaded, total of " + uri2Term.size() + " items in "
-                            + loadTime.getTime() / 1000 + "s" );
-
-                    loadTermsInNameSpace( CC_URL );
-                    log.info( "Gene Ontology Cellular Component loaded, total of " + uri2Term.size() + " items in "
-                            + loadTime.getTime() / 1000 + "s" );
+                    log.info( "Gene Ontology loaded, total of " + uri2Term.size() + " items in " + loadTime.getTime()
+                            / 1000 + "s" );
+                    // log.info( "Gene Ontology Molecular Function loaded, total of " + uri2Term.size() + " items in "
+                    // + loadTime.getTime() / 1000 + "s" );
+                    //
+                    // loadTermsInNameSpace( BP_URL );
+                    // log.info( "Gene Ontology Biological Process loaded, total of " + uri2Term.size() + " items in "
+                    // + loadTime.getTime() / 1000 + "s" );
+                    //
+                    // loadTermsInNameSpace( CC_URL );
+                    // log.info( "Gene Ontology Cellular Component loaded, total of " + uri2Term.size() + " items in "
+                    // + loadTime.getTime() / 1000 + "s" );
 
                     ready.set( true );
                     running.set( false );

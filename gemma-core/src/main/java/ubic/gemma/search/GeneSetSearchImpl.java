@@ -313,11 +313,11 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     private String uri2phenoID( CharacteristicValueObject t ) {
-        return t.getValueUri().replaceFirst( ".*#", "" );
+        return t.getValueUri().replaceFirst( ".*/", "" );
     }
 
     private String uri2goid( OntologyResource t ) {
-        return t.getUri().replaceFirst( ".*/GO#", "" );
+        return t.getUri().replaceFirst( ".*/", "" );
     }
 
     /*
