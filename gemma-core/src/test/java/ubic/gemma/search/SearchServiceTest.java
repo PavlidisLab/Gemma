@@ -254,9 +254,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
         settings.noSearches();
         settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
         settings.setSearchExperiments( true );
-        settings.setUseDatabase( false );
         settings.setUseCharacteristics( true );
+        settings.setUseDatabase( false );
         settings.setUseIndices( false );
+
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
