@@ -96,8 +96,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     private UserQuery theFutureUserQuery;
 
-    private boolean setup = false;
-
     private String geneNcbiId;
 
     /**
@@ -108,13 +106,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );
         assert is != null;
-        //
-        // try {
-        // ontologyService.getFmaOntologyService().closeIndex(); // could this interfere with other tests? Only if they
-        // // use FMA.
-        // } catch ( Exception e ) {
-        // // no-op.
-        // }
+
         ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
 
         ee = this.getTestPersistentBasicExpressionExperiment();
