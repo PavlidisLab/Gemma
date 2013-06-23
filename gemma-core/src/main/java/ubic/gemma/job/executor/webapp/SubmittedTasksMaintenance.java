@@ -39,7 +39,7 @@ public class SubmittedTasksMaintenance {
         // Assumes collection implementing weakly consistent iterator with remove support.
         Collection<SubmittedTask> tasks = taskRunningService.getSubmittedTasks();
 
-        log.info( "Doing submitted tasks maintenance: " + tasks.size() + " tasks in process." );
+        log.info( "Doing submitted tasks maintenance: " + tasks.size() + " tasks monitored." );
 
         for ( SubmittedTask task : tasks ) {
             switch ( task.getStatus() ) {
