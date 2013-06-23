@@ -352,7 +352,7 @@ public class OntologyServiceImpl implements OntologyService {
         searchForGenes( queryString, categoryUri, taxon, searchResults );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
-            if ( !serv.isEnabled() || !serv.isOntologyLoaded() ) continue;
+            if ( !serv.isOntologyLoaded() ) continue;
             results = serv.findResources( queryString );
 
             if ( results.isEmpty() ) continue;

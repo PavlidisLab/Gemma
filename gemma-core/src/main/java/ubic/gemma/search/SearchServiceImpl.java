@@ -2587,50 +2587,51 @@ public class SearchServiceImpl implements SearchService {
             searchResults = ontologyUriSearch( settings );
         }
 
-        if ( searchResults != null ) {
-            for ( Class<?> clazz : searchResults.keySet() ) {
+        if ( searchResults == null ) {
+            return finalResults;
+        }
 
-                List<SearchResult> results = searchResults.get( clazz );
+        for ( Class<?> clazz : searchResults.keySet() ) {
 
-                List<SearchResult> updatedResults = new ArrayList<SearchResult>();
+            List<SearchResult> results = searchResults.get( clazz );
 
-                if ( results.size() == 0 ) continue;
+            List<SearchResult> updatedResults = new ArrayList<SearchResult>();
 
-                log.info( "Search for newly createdQuery with settings: " + settings + "; result: " + results.size()
-                        + " " + clazz.getSimpleName() + "s" );
+            if ( results.size() == 0 ) continue;
 
-                for ( SearchResult sr : results ) {
+            log.info( "Search for newly createdQuery with settings: " + settings + "; result: " + results.size() + " "
+                    + clazz.getSimpleName() + "s" );
 
-                    // Are SearchResults always auditable? maybe put in some error handling in case they are not or
-                    // enforce searchSettings object to be of a certain form
-                    Auditable auditableResult = ( Auditable ) sr.getResultObject();
+            for ( SearchResult sr : results ) {
 
-                    // this list is ordered by date (not descending)
-                    List<AuditEvent> eventList = auditTrailService.getEvents( auditableResult );
+                // Are SearchResults always auditable? maybe put in some error handling in case they are not or
+                // enforce searchSettings object to be of a certain form
+                Auditable auditableResult = ( Auditable ) sr.getResultObject();
 
-                    if ( eventList == null || eventList.isEmpty() ) continue;
+                // this list is ordered by date (not descending)
+                List<AuditEvent> eventList = auditTrailService.getEvents( auditableResult );
 
-                    for ( AuditEvent ae : eventList ) {
+                if ( eventList == null || eventList.isEmpty() ) continue;
 
-                        // assuming there is only one create event
-                        if ( ae.getAction() == AuditAction.CREATE && ae.getDate().after( query.getLastUsed() ) ) {
-                            updatedResults.add( sr );
-                            break;
-                        }
+                for ( AuditEvent ae : eventList ) {
 
+                    // assuming there is only one create event
+                    if ( ae.getAction() == AuditAction.CREATE && ae.getDate().after( query.getLastUsed() ) ) {
+                        updatedResults.add( sr );
+                        break;
                     }
 
                 }
 
-                if ( !updatedResults.isEmpty() ) {
-                    finalResults.put( clazz, updatedResults );
-                }
-
             }
+
+            if ( !updatedResults.isEmpty() ) {
+                finalResults.put( clazz, updatedResults );
+            }
+
         }
 
         return finalResults;
 
     }
-
 }
