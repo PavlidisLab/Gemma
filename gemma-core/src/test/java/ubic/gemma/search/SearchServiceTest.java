@@ -19,6 +19,7 @@
 
 package ubic.gemma.search;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -95,7 +96,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     private UserQuery theFutureUserQuery;
 
-    boolean setup = false;
+    private boolean setup = false;
 
     private String geneNcbiId;
 
@@ -107,13 +108,13 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );
         assert is != null;
-
-        try {
-            ontologyService.getFmaOntologyService().closeIndex(); // could this interfere with other tests? Only if they
-            // use FMA.
-        } catch ( Exception e ) {
-            // no-op.
-        }
+        //
+        // try {
+        // ontologyService.getFmaOntologyService().closeIndex(); // could this interfere with other tests? Only if they
+        // // use FMA.
+        // } catch ( Exception e ) {
+        // // no-op.
+        // }
         ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
 
         ee = this.getTestPersistentBasicExpressionExperiment();
@@ -169,6 +170,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
         settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
         settings.setSearchExperiments( true );
         settings.setUseCharacteristics( true );
+        settings.setUseIndices( false );
+        settings.setUseDatabase( false );
 
         thePastUserQuery.setSearchSettings( settings );
         thePastUserQuery.setUrl( "someUrl" );
@@ -251,7 +254,9 @@ public class SearchServiceTest extends BaseSpringContextTest {
         settings.noSearches();
         settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
         settings.setSearchExperiments( true );
+        settings.setUseDatabase( false );
         settings.setUseCharacteristics( true );
+        settings.setUseIndices( false );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
@@ -314,6 +319,9 @@ public class SearchServiceTest extends BaseSpringContextTest {
         SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.setQuery( SPINAL_CORD );
         settings.setSearchExperiments( true );
+        settings.setUseDatabase( false );
+        settings.setUseIndices( false );
+        settings.setUseCharacteristics( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
@@ -330,6 +338,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         // test out the dao a bit
         UserQuery userQuery = userQueryService.load( thePastUserQuery.getId() );
+
+        assertNotNull( userQuery );
 
         Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
         assertTrue( !found.isEmpty() );

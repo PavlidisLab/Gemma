@@ -2575,12 +2575,11 @@ public class SearchServiceImpl implements SearchService {
 
         Map<Class<?>, List<SearchResult>> searchResults;
         Map<Class<?>, List<SearchResult>> finalResults = new HashMap<Class<?>, List<SearchResult>>();
-        ;
 
         SearchSettings settings = query.getSearchSettings();
 
         if ( StringUtils.isBlank( settings.getTermUri() ) && !settings.getQuery().startsWith( "http://" ) ) {
-            // fill objects=ture, speedySearch=false
+            // fill objects=true, speedySearch=false
             searchResults = generalSearch( settings, true, false );
         } else {
             // we only attempt an ontology search if the uri looks remotely like a url.
