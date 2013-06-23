@@ -97,7 +97,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/RoSuDA/Rserve/0.6-0/Rserve-0.6-0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/springmodules/spring-modules-validation/0.9/spring-modules-validation-0.9.jar" sourcepath="/JAR_SRC/spring-modules-0.9/sources/spring-modules-validation-src.zip"/>
 	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.3/commons-codec-1.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-dbcp/commons-dbcp/1.4/commons-dbcp-1.4.jar" sourcepath="/M2_REPO/commons-dbcp/commons-dbcp/1.4/commons-dbcp-1.4-sources.jar">
 		<attributes>
