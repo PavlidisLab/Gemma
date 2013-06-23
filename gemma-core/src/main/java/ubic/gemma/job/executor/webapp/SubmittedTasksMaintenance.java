@@ -12,16 +12,16 @@ import java.util.Collection;
 import java.util.Date;
 
 /**
- * TODO: finish!
- * Remove entries that's been executing or waiting for their results to be picked up for too long.
- *  monitor finished tasks that have not been retrieved.
+ * TODO: finish! Remove entries that's been executing or waiting for their results to be picked up for too long. monitor
+ * finished tasks that have not been retrieved.
  */
 @Component
 public class SubmittedTasksMaintenance {
 
     private static Log log = LogFactory.getLog( SubmittedTasksMaintenance.class );
 
-    @Autowired private TaskRunningService taskRunningService;
+    @Autowired
+    private TaskRunningService taskRunningService;
 
     private static final int MAX_QUEUE_MINUTES = 60;
 
@@ -33,23 +33,23 @@ public class SubmittedTasksMaintenance {
     /**
      * Check if a task has been running or queued for too long, and cancel it if necessary. Email alert will always be
      * sent in that case.
-     *
      */
-    @Scheduled(fixedDelay = 120000 )
+    @Scheduled(fixedDelay = 120000)
     public void doSubmittedTasksMaintenance() {
-        log.info( "Doing submitted tasks maintenance." );
         // Assumes collection implementing weakly consistent iterator with remove support.
         Collection<SubmittedTask> tasks = taskRunningService.getSubmittedTasks();
 
-        for (SubmittedTask task : tasks) {
-            switch (task.getStatus()) {
+        log.info( "Doing submitted tasks maintenance: " + tasks.size() + " tasks in process." );
+
+        for ( SubmittedTask task : tasks ) {
+            switch ( task.getStatus() ) {
                 case QUEUED:
                     Date submissionTime = task.getSubmissionTime();
                     Integer maxQueueWait = task.getTaskCommand().getMaxQueueMinutes();
                     assert submissionTime != null;
                     assert maxQueueWait != null;
 
-                    if (submissionTime.before( DateUtils.addMinutes( new Date(), -maxQueueWait ) )) {
+                    if ( submissionTime.before( DateUtils.addMinutes( new Date(), -maxQueueWait ) ) ) {
                         log.warn( "Submitted task " + task.getTaskCommand().getClass().getSimpleName()
                                 + " has been queued for too long (max=" + maxQueueWait
                                 + "minutes), attempting to cancel: " + task.getTaskId() );
@@ -65,9 +65,9 @@ public class SubmittedTasksMaintenance {
                     int maxRunTime = task.getTaskCommand().getMaxRuntime();
                     assert startTime != null;
 
-                    if (startTime.before( DateUtils.addMinutes( new Date(), -maxRunTime ) )) {
-                        log.warn( "Running task is taking too long, attempting to cancel: " + task.getTaskId()
-                                + " " + task.getTaskCommand().getClass().getSimpleName() );
+                    if ( startTime.before( DateUtils.addMinutes( new Date(), -maxRunTime ) ) ) {
+                        log.warn( "Running task is taking too long, attempting to cancel: " + task.getTaskId() + " "
+                                + task.getTaskCommand().getClass().getSimpleName() );
 
                         task.addEmailAlert();
 
@@ -79,12 +79,10 @@ public class SubmittedTasksMaintenance {
                     break;
                 case FAILED:
                 case COMPLETED:
-                    if (task.getFinishTime().before(
-                            DateUtils.addMinutes( new Date(),
-                                    -MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES ) )) {
+                    if ( task.getFinishTime().before(
+                            DateUtils.addMinutes( new Date(), -MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES ) ) ) {
                         log.debug( task.getStatus().name() + " task result not retrieved, timing out: "
-                                + task.getTaskId() + " "
-                                + task.getTaskCommand().getClass().getSimpleName() );
+                                + task.getTaskId() + " " + task.getTaskCommand().getClass().getSimpleName() );
                         tasks.remove( task );
                     }
                     break;
