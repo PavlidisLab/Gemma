@@ -6,6 +6,7 @@
     <short-name>Gemma</short-name>
 	 
   
+    <!-- used -->    
     <tag>
         <name>exception</name>
         <tag-class>ubic.gemma.web.taglib.common.auditAndSecurity.ExceptionTag
@@ -21,7 +22,25 @@
             <rtexprvalue>true</rtexprvalue>
         </attribute>
     </tag>
+    
+    <!-- used -->
+    <tag>
+        <name>assayView</name>
+        <tag-class>ubic.gemma.web.taglib.expression.experiment.AssayViewTag
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>expressionExperiment</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>edit</name>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
   
+    <!-- used --> 
     <tag>
         <name>arrayDesignGrouping</name>
         <tag-class>ubic.gemma.web.taglib.arrayDesign.ArrayDesignGroupingTag
@@ -36,7 +55,8 @@
             <rtexprvalue>true</rtexprvalue>
         </attribute>
     </tag>
-	 
+    
+    <!-- used -->
     <tag>
         <name>help</name>
         <tag-class>ubic.gemma.web.taglib.HelpTag</tag-class>
@@ -48,6 +68,23 @@
         </attribute>
     </tag> 
  
+     
+	
+    <!-- used -->
+    <tag>
+        <name>citation</name>
+        <tag-class>ubic.gemma.web.taglib.common.description.ShortBibliographicReferenceTag
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>citation</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+	
+	
+    <!-- used -->    
     <tag>
         <name>constants</name>
         <tag-class>ubic.gemma.web.taglib.ConstantsTag</tag-class>
@@ -66,6 +103,8 @@
             <rtexprvalue>false</rtexprvalue>
         </attribute>
     </tag>
+    
+    <!-- used -->   
     <tag>
         <name>expressionQC</name>
         <tag-class>ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag

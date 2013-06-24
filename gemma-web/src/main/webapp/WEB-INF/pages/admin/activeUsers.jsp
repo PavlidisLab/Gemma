@@ -1,17 +1,14 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="activeUsers.title" />
-	</title>
+<title><fmt:message key="activeUsers.title" /></title>
 
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/jobmonitoring.js' />
+<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/app/jobmonitoring.js' />
 
 </head>
 
-<h2>
-	Tasks
-</h2>
+<h2>Tasks</h2>
 <div id="submittedTasks"></div>
 
 
@@ -21,11 +18,10 @@
 <h2>
 	<fmt:message key="activeUsers.heading" />
 </h2>
-	<security:authorize access="hasRole('GROUP_ADMIN')">
-		<span class="right"><fmt:message
-					key="mainMenu.activeUsers" /> :&nbsp;<c:out value="${applicationScope.activeUsers}" /><br>
-					Signed in:&nbsp;<span id="auth-user-count">?</span></span>
-		<script type="text/javascript">
+<security:authorize access="hasRole('GROUP_ADMIN')">
+	<span class="right"><fmt:message key="mainMenu.activeUsers" /> :&nbsp;<c:out
+			value="${applicationScope.activeUsers}" /><br> Signed in:&nbsp;<span id="auth-user-count">?</span></span>
+	<script type="text/javascript">
 			Ext.onReady(function() {
 				SecurityController.getAuthenticatedUserCount( function(count) {
 					if(Ext.get('auth-user-count')){
@@ -34,20 +30,18 @@
 					} );
 				 });
 			</script>
-	</security:authorize>
-					<br>
-<p>
-	FIXME table of authenticated users should go here.
-</p>
+</security:authorize>
+<br>
+<p>FIXME table of authenticated users should go here.</p>
 
 <h2>System Stats</h2>
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+<security:authorize access="hasRole('GROUP_ADMIN')">
 		Gemma version ${appConfig['version']}&nbsp;<br>
-		<script type="text/javascript">
+	<script type="text/javascript">
 	document.writeln("Page Loaded: " + document.lastModified);
 </script>
-		<Gemma:lastModified refFile="/WEB-INF/gemma-servlet.xml"></Gemma:lastModified>
-	</security:authorize>
+
+</security:authorize>
 <%-- Security fields used in Java script calls to hide or display information on pages: MOVED TO default.jsp --%>
 
 <c:if test='${ appConfig["ga.tracker"] != null}'>
