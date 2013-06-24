@@ -29,14 +29,15 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 public class ArrayDesignHtmlUtil {
 
     /**
-     * Generate a pretty HTML table with the array design stats summary.
+     * Generate a pretty HTML table with the array design stats summary, used for AJAX version.
      * 
      * @param object
      * @return
      */
     public static String getSummaryHtml( ArrayDesignValueObject object ) {
-        return "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
-                + "<tr><td>Elements</td><td align=\"right\" >"
+        return "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td><tr>  "
+                + "<td colspan='2' <strong style='font-size:smaller'>Sequence analysis details</strong></td> "
+                + " </tr></tr>" + "<tr><td>Elements</td><td align=\"right\" >"
                 + object.getDesignElementCount()
                 + "</td></tr>"
                 + "<tr><td title=\"Number of elements with sequences\">"
@@ -51,7 +52,7 @@ public class ArrayDesignHtmlUtil {
                 + object.getNumProbeAlignments()
                 + "</td></tr>"
                 + "<tr><td title=\"Number of elements mapped to genes\">"
-                + "Mapped to known genes"
+                + "Mapped to genes"
                 + "</td><td align=\"right\" >"
                 + object.getNumProbesToGenes()
                 + "</td></tr>"

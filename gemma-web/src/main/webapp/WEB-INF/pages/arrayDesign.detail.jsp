@@ -56,50 +56,48 @@
 
 <!--  Summary of array design associations -->
 
+<c:if test="${(not empty summary)}">
 
-<table class='datasummaryarea'>
+	<div id="arraySummary_${arrayDesign.id}">
+		<table class='datasummary'>
+			<tr>
+				<td colspan="2" <strong style="font-size:smaller">Sequence analysis details</strong></td>
 
-	<c:if test="${(not empty summary)}">
-		<caption>Sequence analysis details</caption>
-		<div id="arraySummary_${arrayDesign.id}">
-			<table class='datasummary'>
-				<tr>
-					<td colspan="2" align="center"></td>
-				</tr>
-				<tr>
-					<td>Elements</td>
-					<td align="right">${numCompositeSequences}</td>
-				</tr>
-				<tr>
-					<td>With seq.</td>
-					<td align="right">${summary.numProbeSequences}</td>
-				</tr>
-				<tr>
-					<td>With align</td>
-					<td align="right">${summary.numProbeAlignments}</td>
-				</tr>
-				<tr>
-					<td>Mapped to genes</td>
-					<td align="right">${summary.numProbesToGenes}</td>
-				</tr>
-				<tr>
-					<td>Unique genes</td>
-					<td align="right">${summary.numGenes}</td>
-				</tr>
-				<tr>
-					<td colspan="2" align='center' class='small'>(as of ${summary.dateCached})</td>
-				</tr>
-			</table>
-		</div>
+			</tr>
 
-	</c:if>
-	<tr>
-		<td colspan="2"><security:authorize access="hasRole('GROUP_ADMIN')">
-				<input type="button" value="Refresh report" onClick="updateArrayDesignReport(${arrayDesign.id })" />
-			</security:authorize></td>
-	</tr>
+			<tr>
+				<td>Elements</td>
+				<td align="right">${numCompositeSequences}</td>
+			</tr>
+			<tr>
+				<td>With seq.</td>
+				<td align="right">${summary.numProbeSequences}</td>
+			</tr>
+			<tr>
+				<td>With align</td>
+				<td align="right">${summary.numProbeAlignments}</td>
+			</tr>
+			<tr>
+				<td>Mapped to genes</td>
+				<td align="right">${summary.numProbesToGenes}</td>
+			</tr>
+			<tr>
+				<td>Unique genes</td>
+				<td align="right">${summary.numGenes}</td>
+			</tr>
+			<tr>
+				<td colspan="2" align='center' class='small'>(as of ${summary.dateCached})</td>
+			</tr>
+			<tr>
+				<td colspan="2"><security:authorize access="hasRole('GROUP_ADMIN')">
+						<input type="button" value="Refresh report" onClick="updateArrayDesignReport(${arrayDesign.id })" />
+					</security:authorize></td>
+			</tr>
+		</table>
+	</div>
 
-</table>
+</c:if>
+
 
 
 
