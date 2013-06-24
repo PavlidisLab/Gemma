@@ -61,51 +61,37 @@
 
 	<c:if test="${(not empty summary)}">
 		<caption>Sequence analysis details</caption>
-		<tr>
-			<td>
+		<div id="arraySummary_${arrayDesign.id}">
+			<table class='datasummary'>
+				<tr>
+					<td colspan="2" align="center"></td>
+				</tr>
+				<tr>
+					<td>Elements</td>
+					<td align="right">${numCompositeSequences}</td>
+				</tr>
+				<tr>
+					<td>With seq.</td>
+					<td align="right">${summary.numProbeSequences}</td>
+				</tr>
+				<tr>
+					<td>With align</td>
+					<td align="right">${summary.numProbeAlignments}</td>
+				</tr>
+				<tr>
+					<td>Mapped to genes</td>
+					<td align="right">${summary.numProbesToGenes}</td>
+				</tr>
+				<tr>
+					<td>Unique genes</td>
+					<td align="right">${summary.numGenes}</td>
+				</tr>
+				<tr>
+					<td colspan="2" align='center' class='small'>(as of ${summary.dateCached})</td>
+				</tr>
+			</table>
+		</div>
 
-				<div id="arraySummary_${arrayDesign.id}">
-					<table class='datasummary'>
-						<tr>
-							<td colspan="2" align="center"></td>
-						</tr>
-						<tr>
-							<td>Elements</td>
-							<td align="right">${numCompositeSequences}</td>
-						</tr>
-						<tr>
-							<td>With seq.</td>
-							<td align="right">${summary.numProbeSequences}</td>
-						</tr>
-						<tr>
-							<td>With align</td>
-							<td align="right">${summary.numProbeAlignments}</td>
-						</tr>
-						<tr>
-							<td>Mapped to genes</td>
-							<td align="right">${summary.numProbesToGenes}</td>
-						</tr>
-						<tr>
-							<td>Unique genes</td>
-							<td align="right">${summary.numGenes}</td>
-						</tr>
-						<tr>
-							<td colspan="2" align='center' class='small'>(as of ${summary.dateCached})</td>
-						</tr>
-					</table>
-				</div>
-
-			</td>
-		</tr>
-		<tr>
-			<script>
-		var text = '<Gemma:help helpFile="sequenceAnalysisHelp.html"/>';
-		function doit(event) {showWideHelpTip(event,text); }
-		</script>
-			<td colspan="2"><a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img
-					src="/Gemma/images/help.png" />
-			</a></td>
-		</tr>
 	</c:if>
 	<tr>
 		<td colspan="2"><security:authorize access="hasRole('GROUP_ADMIN')">

@@ -4,7 +4,50 @@
     <description>Custom tag library for Gemma</description>
     <tlib-version>1.0</tlib-version>
     <short-name>Gemma</short-name>
-     
+	 
+  
+    <tag>
+        <name>exception</name>
+        <tag-class>ubic.gemma.web.taglib.common.auditAndSecurity.ExceptionTag
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>exception</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>showStackTrace</name>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+  
+    <tag>
+        <name>arrayDesignGrouping</name>
+        <tag-class>ubic.gemma.web.taglib.arrayDesign.ArrayDesignGroupingTag
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>subsumer</name>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>subsumees</name>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+	 
+    <tag>
+        <name>help</name>
+        <tag-class>ubic.gemma.web.taglib.HelpTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>helpFile</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag> 
+ 
     <tag>
         <name>constants</name>
         <tag-class>ubic.gemma.web.taglib.ConstantsTag</tag-class>
@@ -40,7 +83,11 @@
             <name>eeManagerId</name>
             <required>true</required>
             <rtexprvalue>true</rtexprvalue>
-        </attribute> 
+        </attribute>
+        <attribute>
+            <name>size</name>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
         <attribute>
             <description>default=false</description>
             <name>hasCorrMat</name>
@@ -56,14 +103,10 @@
             <name>hasPCA</name>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
+		
         <attribute>
             <description>default=false</description>
             <name>hasNodeDegreeDist</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>default=false</description>
-            <name>hasMeanVariance</name>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
         <attribute>
@@ -72,5 +115,20 @@
             <rtexprvalue>true</rtexprvalue>
         </attribute>
     </tag>
-  
+    <tag>
+        <name>databaseEntry</name>
+        <tag-class>ubic.gemma.web.taglib.DatabaseEntryTag
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>databaseEntry</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>databaseEntryValueObject</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag> 
 </taglib>
