@@ -68,7 +68,6 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             Collection<Gene> genes = geneService.loadAll( testTaxon );
             if ( !genes.isEmpty() ) geneService.remove( genes );
         }
-        goService.shutDown();
     }
 
     /**
