@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -146,11 +147,12 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return uri2Term.get( toUri( goId ) );
     }
 
-    /*
-     * @param goURI e.g. GO:0001312 @return null if not found
+    /**
+     * @param uri
+     * @return null if not found
      */
     public static OntologyTerm getTermForURI( String uri ) {
-        if ( uri2Term == null ) return null;
+        if ( uri2Term == null || !uri2Term.containsKey( uri ) ) return null;
         return uri2Term.get( uri );
     }
 
@@ -365,8 +367,12 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
          */
         Collection<OntologyTerm> matches = new HashSet<OntologyTerm>();
         for ( OntologyResource r : rawMatches ) {
-            if ( r.getUri() == null ) continue;
+            if ( StringUtils.isBlank( r.getUri() ) ) continue;
             OntologyTerm termForURI = GeneOntologyServiceImpl.getTermForURI( r.getUri() );
+            if ( termForURI == null ) {
+                log.warn( "No term for : " + r );
+                continue;
+            }
             matches.add( termForURI );
         }
         return matches;
