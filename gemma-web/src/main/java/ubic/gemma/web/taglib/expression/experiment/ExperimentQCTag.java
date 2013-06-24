@@ -31,11 +31,11 @@ public class ExperimentQCTag extends TagSupport {
 
     private static final int NUM_PCS_TO_DISPLAY = 3;
     private static final long serialVersionUID = -466958848014180520L;
-    Long eeid;
-    Size size = Size.small;
+    private Long eeid;
 
     private boolean hasCorrMat = false;
 
+    @SuppressWarnings("unused")
     private boolean hasCorrDist = false;
 
     private boolean hasPCA = false;
@@ -58,7 +58,7 @@ public class ExperimentQCTag extends TagSupport {
     }
 
     /**
-     * The id of the EE to display QC info required="true" rtexprvalue="true"
+     * The id of the EE to display QC info
      * 
      * @param id
      */
@@ -107,18 +107,6 @@ public class ExperimentQCTag extends TagSupport {
         this.numFactors = value;
     }
 
-    /**
-     * Size of the image {small, large} required="false" rtexprvalue="true"
-     * 
-     * @param size
-     */
-    public void setSize( String size ) {
-        Size s = Size.valueOf( size.toLowerCase() );
-        if ( s == null ) {
-            this.size = Size.small;
-        }
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -148,7 +136,7 @@ public class ExperimentQCTag extends TagSupport {
                 + "<th valign=\"top\" align=\"center\"><strong>PCA Scree</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>PCA+Factors</strong></th>"
                 // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
-                + "<th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th>"
+                // + + "<th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Mean-Variance</strong</th>" + "</tr>" );
 
         buf.append( "<tr>" );
@@ -240,14 +228,11 @@ public class ExperimentQCTag extends TagSupport {
         // } else {
         // buf.append( placeHolder );
         // }
-
-        if ( hasCorrDist ) {
-            buf.append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"/Gemma/expressionExperiment/visualizeProbeCorrDist.html?id="
-                    + this.eeid + "\" /></td>" );
-        } else {
-            buf.append( placeHolder );
-        }
-
+        /*
+         * if ( hasCorrDist ) { buf.append(
+         * " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"/Gemma/expressionExperiment/visualizeProbeCorrDist.html?id="
+         * + this.eeid + "\" /></td>" ); } else { buf.append( placeHolder ); }
+         */
         if ( hasMeanVariance ) {
             /*
              * popupImage is defined in ExpressinExperimentDetails.js
@@ -265,7 +250,7 @@ public class ExperimentQCTag extends TagSupport {
                     + height
                     + ")"
                     + ";return 1\"; "
-                    + "title=\"Mean-variance relationhips; click for larger version\" >"
+                    + "title=\"Mean-variance relationhip; click for larger version\" >"
                     + "<img src=\"/Gemma/expressionExperiment/visualizeMeanVariance.html?id="
                     + this.eeid
                     + "&size=1\" alt='Image unavailable' width='"
@@ -273,8 +258,9 @@ public class ExperimentQCTag extends TagSupport {
                     + "' height='"
                     + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
 
-            //buf.append( "<li><a title=\"Download a file containing the data means and variances \" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeMeanVariance.html?id="
-            //        + this.eeid + "&text=1\">Get data</a></li>" );
+            // buf.append(
+            // "<li><a title=\"Download a file containing the data means and variances \" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeMeanVariance.html?id="
+            // + this.eeid + "&text=1\">Get data</a></li>" );
 
             buf.append( "</ul></td>" );
         } else {

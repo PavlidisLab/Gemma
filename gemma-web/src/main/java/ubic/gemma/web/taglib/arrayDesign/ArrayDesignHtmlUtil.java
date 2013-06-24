@@ -21,6 +21,8 @@ package ubic.gemma.web.taglib.arrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 /**
+ * Yes, this is used by the ArrayDesignController, but should be phased out.
+ * 
  * @author pavlidis
  * @version $Id$
  */

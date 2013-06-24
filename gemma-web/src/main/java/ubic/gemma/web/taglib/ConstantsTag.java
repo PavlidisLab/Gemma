@@ -41,15 +41,7 @@ import ubic.gemma.Constants;
  * It is designed to be used as follows:
  * 
  * <pre>
- * 
- * 
- * 
- * 
- *        &lt;tag:constants /&gt;
- * 
- * 
- * 
- * 
+ * &lt;tag:constants /&gt;
  * </pre>
  * 
  * </p>
@@ -60,10 +52,9 @@ import ubic.gemma.Constants;
  * <a href="BaseAction.java.html"><i>View Source</i></a>
  * </p>
  * 
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
- * @pavlidis
+ * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>, originally.
+ * @author pavlidis modified
  * @version $Id$
- * @jsp.tag name="constants" body-content="empty" tei-class="ubic.gemma.web.taglib.ConstantsTei"
  */
 public class ConstantsTag extends TagSupport {
     /**

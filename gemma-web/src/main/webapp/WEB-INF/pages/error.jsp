@@ -12,23 +12,20 @@
 
 <%@ include file="/common/messages.jsp"%>
 
-<input type="hidden" id="reloadOnLogin" value="true"/>
+<input type="hidden" id="reloadOnLogin" value="true" />
 
 <c:choose>
 	<c:when test="${not empty param.exception}">
-		<p>
-			${param.exception.message}
-		</p>
+		<p>${param.exception.message}</p>
 
-		<p>
-			Possible next steps: 
-			<ul>
+		<p>Possible next steps:
+		<ul>
 			<li>Try what you were doing again</li>
 			<li>Log in</li>
 			<li>Go to the <a href='/Gemma/'>home page</a></li>
 			<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-			</ul>
-			
+		</ul>
+
 		</p>
 
 		<security:authorize access="hasRole('GROUP_ADMIN')">
@@ -37,20 +34,17 @@
 	</c:when>
 	<c:when test="${not empty requestScope['javax.servlet.error.exception']}">
 
-		<p>
-			${requestScope['javax.servlet.error.exception'].message}
-		</p>
+		<p>${requestScope['javax.servlet.error.exception'].message}</p>
 
-		<p>
-			Possible next steps: 
-			<ul>
+		<p>Possible next steps:
+		<ul>
 			<li>- Try what you were doing again</li>
 			<li>- Log in</li>
 			<li>- Go to the <a href='/Gemma/'>home page</a></li>
-			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-			</ul>
+			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.
+			</li>
+		</ul>
 		</p>
-
 
 		<security:authorize access="hasRole('GROUP_ADMIN')">
 			<Gemma:exception exception="${requestScope['javax.servlet.error.exception']}" />
@@ -58,18 +52,16 @@
 	</c:when>
 
 	<c:when test="${not empty requestScope['exception']}">
-		<p>
-			${requestScope['exception'].message}
-		</p>
+		<p>${requestScope['exception'].message}</p>
 
-		<p>
-			Possible next steps: 
-			<ul>
+		<p>Possible next steps:
+		<ul>
 			<li>- Try what you were doing again</li>
 			<li>- Log in</li>
 			<li>- Go to the <a href='/Gemma/'>home page</a></li>
-			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-			</ul>	
+			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.
+			</li>
+		</ul>
 		</p>
 
 
@@ -82,14 +74,14 @@
 			<fmt:message key="errorPage.info.missing" />
 		</p>
 
-		<p>
-			Possible next steps: 
-			<ul>
+		<p>Possible next steps:
+		<ul>
 			<li>- Try what you were doing again</li>
 			<li>- Log in</li>
 			<li>- Go to the <a href='/Gemma/'>home page</a></li>
-			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-			</ul>
+			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.
+			</li>
+		</ul>
 		</p>
 	</c:otherwise>
 
