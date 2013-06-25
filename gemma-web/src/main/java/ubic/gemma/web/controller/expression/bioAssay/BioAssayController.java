@@ -35,7 +35,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -61,8 +60,6 @@ public class BioAssayController {
     private BioAssayService bioAssayService;
     @Autowired
     private ExpressionExperimentService eeService;
-    @Autowired
-    private AuditEventService auditEventService;
 
     /**
      * AJAX
@@ -80,7 +77,7 @@ public class BioAssayController {
      * @param id
      * @return
      */
-    public String unmarkOutlier( Collection<Long> ids ) { 
+    public String unmarkOutlier( Collection<Long> ids ) {
         return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
@@ -130,31 +127,10 @@ public class BioAssayController {
         ee = eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
 
-        // Map<Auditable, AuditEvent> outlierEvents = auditEventService.getLastEvent( ee.getBioAssays(),
-        // SampleRemovalEvent.class );
-        /*
-         * Allow for the possibility that it isn't an outlier any more.
-         */
-        // AuditEvent reversion = auditEventService.getLastEvent( ee, SampleRemovalReversionEvent.class );
-
         for ( BioAssay assay : ee.getBioAssays() ) {
 
             BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
-            //
-            // /*
-            // * This check is temporary until isOutlier is populated properly.
-            // */
-            // if ( !bioAssayValueObject.isOutlier() ) {
-            // // it's not filled in, possibly.
-            // AuditEvent outlierEvent = outlierEvents.get( assay );
-            //
-            // if ( outlierEvent != null ) {
-            // // re-running processed data overwrites the status.
-            // boolean isStillAnOutlier = reversion == null
-            // || ( reversion.getDate().before( outlierEvent.getDate() ) );
-            // bioAssayValueObject.setOutlier( isStillAnOutlier );
-            // }
-            // }
+
             result.add( bioAssayValueObject );
         }
 

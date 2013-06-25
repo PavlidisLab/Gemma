@@ -122,11 +122,7 @@
          <name>eeManagerId</name>
          <required>true</required>
          <rtexprvalue>true</rtexprvalue>
-      </attribute>
-      <attribute>
-         <name>size</name>
-         <rtexprvalue>true</rtexprvalue>
-      </attribute>
+      </attribute> 
       <attribute>
          <description>default=false</description>
          <name>hasCorrMat</name>

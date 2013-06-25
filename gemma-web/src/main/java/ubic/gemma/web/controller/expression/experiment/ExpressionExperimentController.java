@@ -1559,9 +1559,8 @@ public class ExpressionExperimentController {
         mav.addObject( "hasCorrMat", sampleCoexpressionMatrixService.hasMatrix( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
-        mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) ); // this is not
-        // fully
-        // implemented
+        mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) );
+        mav.addObject( "hasMeanVariance", meanVarianceService.hasMeanVariance( expressionExperiment ) );
         mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );
     }
 
