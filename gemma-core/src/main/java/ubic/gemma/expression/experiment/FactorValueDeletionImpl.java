@@ -45,7 +45,6 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -61,9 +60,6 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
  */
 @Service
 public class FactorValueDeletionImpl implements FactorValueDeletion {
-
-    @Autowired
-    private BioMaterialService bioMaterialService = null;
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
@@ -99,19 +95,14 @@ public class FactorValueDeletionImpl implements FactorValueDeletion {
             }
 
             /*
-             * Determine if there are any biomaterials that use the factor value in question.
+             * Delete any diff ex analyses that use this factor.
              */
-            if ( !bioMaterialService.findByFactorValue( fv ).isEmpty() ) {
-                /*
-                 * If so, check to see if there are any diff results that use this factor. FIXME This might have to run
-                 * in a background thread
-                 */
-                ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
-                Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                        .findByFactor( ef );
-                for ( DifferentialExpressionAnalysis a : analyses ) {
-                    differentialExpressionAnalysisService.delete( a );
-                }
+            ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
+            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
+                    .findByFactor( ef );
+            // Warning: slow.
+            for ( DifferentialExpressionAnalysis a : analyses ) {
+                differentialExpressionAnalysisService.delete( a );
             }
 
             fvsToDelete.add( fv );
