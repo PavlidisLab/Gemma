@@ -388,7 +388,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
      */
     @Override
     public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
+        // FIXME I'm not sure why this keeps getting called with empty fields.
+        if ( e == null || e.getId() == null ) return new HashSet<FactorValueValueObject>();
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
 
         Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
@@ -546,7 +547,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 }
 
                 if ( !toDelete.isEmpty() ) {
-                    log.info( "Deleting " + toDelete + " unused factorvalues for " + ef );
+                    log.info( "Deleting " + toDelete.size() + " unused factorvalues for " + ef );
                     factorValueDeletion.deleteFactorValues( EntityUtils.getIds( toDelete ) );
                 }
 
