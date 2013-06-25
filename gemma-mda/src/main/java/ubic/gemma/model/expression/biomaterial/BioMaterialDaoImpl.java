@@ -19,7 +19,6 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -31,7 +30,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.BusinessKey;
@@ -144,28 +142,6 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#removeFactor(java.util.Collection,
-     * ubic.gemma.model.expression.experiment.ExperimentalFactor)
-     */
-    @Override
-    public void removeFactor( Collection<BioMaterial> bioMaterials, ExperimentalFactor experimentalFactor ) {
-        for ( BioMaterial bm : bioMaterials ) {
-            boolean removed = false;
-            for ( Iterator<FactorValue> fIt = bm.getFactorValues().iterator(); fIt.hasNext(); ) {
-                if ( fIt.next().getExperimentalFactor().equals( experimentalFactor ) ) {
-                    fIt.remove();
-                    removed = true;
-                }
-            }
-            if ( removed ) {
-                this.update( bm );
-            }
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialDao#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
@@ -224,7 +200,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
                             throws org.hibernate.HibernateException {
                         session.evict( bioMaterial );
                         BioMaterial newMaterial = BioMaterial.Factory.newInstance();
-                        newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" ); 
+                        newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" );
                         newMaterial.setCharacteristics( bioMaterial.getCharacteristics() );
                         newMaterial.setSourceTaxon( bioMaterial.getSourceTaxon() );
 
