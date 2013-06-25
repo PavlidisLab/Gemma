@@ -767,13 +767,16 @@ public class SearchServiceImpl implements SearchService {
             Collection<SearchResult> classResults = characteristicSearchWithChildren( classToSearch, settings );
             characterSearchResults.addAll( classResults );
 
-            String msg = "Found " + classResults.size() + " " + classToSearch.iterator().next().getSimpleName()
-                    + " results from characteristic search.";
-            if ( characterSearchResults.size() >= SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS ) {
-                msg += " Total found > " + SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS
-                        + ", will not search for more entities.";
+            if ( !classResults.isEmpty() ) {
+                String msg = "Found " + classResults.size() + " " + classToSearch.iterator().next().getSimpleName()
+                        + " results from characteristic search.";
+                if ( characterSearchResults.size() >= SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS ) {
+                    msg += " Total found > " + SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS
+                            + ", will not search for more entities.";
+                }
+                log.info( msg );
             }
-            log.info( msg );
+
         }
 
         StopWatch watch = new StopWatch();
@@ -899,7 +902,7 @@ public class SearchServiceImpl implements SearchService {
      */
     private Collection<SearchResult> characteristicSearchWord( Collection<Class<?>> classes,
             Map<SearchResult, String> matches, String query ) {
-        log.info( "Starting search for " + query );
+        if ( log.isDebugEnabled() ) log.debug( "Starting search for " + query );
         StopWatch watch = startTiming();
 
         Collection<Characteristic> cs = new HashSet<Characteristic>();
@@ -1018,7 +1021,7 @@ public class SearchServiceImpl implements SearchService {
             }
         }
 
-        log.info( "End search for " + query );
+        if ( log.isDebugEnabled() ) log.debug( "End search for " + query );
 
         return matchingEntities;
     }
