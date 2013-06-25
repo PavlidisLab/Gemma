@@ -178,12 +178,20 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         this.getBioMaterialDao().update( bioMaterial );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#updateBioMaterials(java.util.Collection)
+     */
     @Override
     public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioMaterialValueObject bioMaterialValueObject : valueObjects ) {
-            bms.add( this.update( bioMaterialValueObject ) );
+            BioMaterial updatedBm = this.update( bioMaterialValueObject );
+            // the map FactorIdToFactorValueId contains values for all factors, including empty ones.
+            assert bioMaterialValueObject.getFactorIdToFactorValueId().size() >= updatedBm.getFactorValues().size();
+            bms.add( updatedBm );
         }
         return bms;
     }
@@ -277,11 +285,13 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         }
 
         // this is not valid, because it's possible that we are removing a factor value.
-     //   assert bm.getFactorValues().size() <= updatedFactorValues.size();
+        // assert bm.getFactorValues().size() <= updatedFactorValues.size();
 
         bm.getFactorValues().clear();
         bm.getFactorValues().addAll( updatedFactorValues );
+        assert !bm.getFactorValues().isEmpty();
         update( bm );
+        assert !bm.getFactorValues().isEmpty();
         return bm;
     }
 }

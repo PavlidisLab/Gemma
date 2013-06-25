@@ -114,25 +114,30 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         if ( factorValue == null ) return;
 
         Collection<BioMaterial> bms = this.getHibernateTemplate().findByNamedParam(
-                "select distinct bm from BioMaterialImpl as bm inner join bm.factorValues fv where fv = :fv", "fv",
+                "select distinct bm from BioMaterialImpl as bm join bm.factorValues fv where fv = :fv", "fv",
                 factorValue );
 
+        // this _always_ returns nothing.
+
+        log.info( "Disassociating " + factorValue + " from " + bms.size() + " biomaterials" );
         for ( BioMaterial bioMaterial : bms ) {
-            bioMaterial.getFactorValues().remove( factorValue );
-            this.getHibernateTemplate().update( bioMaterial );
+            if ( bioMaterial.getFactorValues().remove( factorValue ) ) {
+                this.getSessionFactory().getCurrentSession().update( bioMaterial );
+            } else {
+                log.warn( "unexpectedly the factor value was not actually associated with " + bioMaterial );
+            }
         }
 
         List<?> efs = this.getHibernateTemplate().findByNamedParam(
-                "select ef from ExperimentalFactorImpl ef inner join ef.factorValues fv where fv = :fv", "fv",
-                factorValue );
+                "select ef from ExperimentalFactorImpl ef join ef.factorValues fv where fv = :fv", "fv", factorValue );
 
         ExperimentalFactor ef = ( ExperimentalFactor ) efs.iterator().next();
         ef.getFactorValues().remove( factorValue );
-        this.getHibernateTemplate().update( ef );
+        // this.getHibernateTemplate().update( ef );
 
         // we have to do this to avoid the 'already in session' error. Annoying.
-        this.getHibernateTemplate().flush();
-        this.getHibernateTemplate().clear();
+        // this.getHibernateTemplate().flush();
+        // / this.getHibernateTemplate().clear();
 
         // finally delete it.
         this.getHibernateTemplate().delete( factorValue );
@@ -159,6 +164,11 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
+     */
     @Override
     public void remove( Long id ) {
         this.remove( this.load( id ) );
