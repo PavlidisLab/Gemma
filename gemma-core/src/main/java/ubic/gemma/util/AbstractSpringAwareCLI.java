@@ -79,7 +79,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * @param e Adds an exception to a cache. this is usefull in the scenairo where we don't want the CLI to bomb on the
+     * @param e Adds an exception to a cache. this is useful in the scenario where we don't want the CLI to bomb on the
      *        exception but continue with its processing. Granted if the exception is fatal then the CLI should
      *        terminate regardless.
      */
