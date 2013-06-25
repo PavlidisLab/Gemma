@@ -44,10 +44,6 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 
          Gemma.FactorValueCombo.superclass.initComponent.call(this);
 
-         // this.store.on("load", function() {
-         // console.log(this.store);
-         // }.createDelegate(this));
-
          if (this.efId) {
             this.store.load({
                   params : [{
