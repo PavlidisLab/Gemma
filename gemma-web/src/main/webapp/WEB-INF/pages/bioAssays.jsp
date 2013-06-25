@@ -5,29 +5,22 @@
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 
 <script type="text/javascript">
-	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+   Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-	Ext.onReady(function() {
+   Ext.onReady(function() {
 
-		Ext.QuickTips.init();
-		Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+      Ext.QuickTips.init();
+      Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-		var manager = new Gemma.EEManager({
-			editable : true,
-			id : "eemanager"
-		});
+      var manager = new Gemma.EEManager({ editable : true, id : "eemanager" });
 
-		manager.on('done', function() {
-			window.location.reload(true);
-		});
+      manager.on('done', function() {
+         window.location.reload(true);
+      });
 
-		new Gemma.BioAssayGrid({
-			editable : true,
-			renderTo : 'bioAssayTable',
-			eeId : Ext.get("eeId").getValue()
-		});
+      new Gemma.BioAssayGrid({ editable : true, renderTo : 'bioAssayTable', eeId : Ext.get("eeId").getValue() });
 
-	});
+   });
 </script>
 
 </head>
@@ -41,7 +34,7 @@
 </p>
 
 <Gemma:expressionQC ee="${expressionExperiment.id}" hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
-	hasPCA="${hasPCA}" numFactors="${numFactors}" size="small" hasCorrDist="false"
+	hasPCA="${hasPCA}" numFactors="${numFactors}" hasMeanVariance="${hasMeanVariance }" hasCorrDist="false"
 	eeManagerId="eemanager" />
 
 <div style="padding: 20px; margin: 10px;" id="bioAssayTable" />
