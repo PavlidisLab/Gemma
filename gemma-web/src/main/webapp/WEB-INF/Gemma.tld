@@ -1,173 +1,177 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <taglib version="2.0" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-jsptaglibrary_2_0.xsd">
-    <description>Custom tag library for Gemma</description>
-    <tlib-version>1.0</tlib-version>
-    <short-name>Gemma</short-name>
+   xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-jsptaglibrary_2_0.xsd">
+   <description>Custom tag library for Gemma</description>
+   <tlib-version>1.0</tlib-version>
+   <short-name>Gemma</short-name>
 	 
   
-    <!-- used -->    
-    <tag>
-        <name>exception</name>
-        <tag-class>ubic.gemma.web.taglib.common.auditAndSecurity.ExceptionTag
-        </tag-class>
-        <body-content>empty</body-content>
-        <attribute>
-            <name>exception</name>
-            <required>true</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>showStackTrace</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag>
+   <!-- used -->    
+   <tag>
+      <name>exception</name>
+      <tag-class>ubic.gemma.web.taglib.common.auditAndSecurity.ExceptionTag
+      </tag-class>
+      <body-content>empty</body-content>
+      <attribute>
+         <name>exception</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <name>showStackTrace</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+   </tag>
     
-    <!-- used -->
-    <tag>
-        <name>assayView</name>
-        <tag-class>ubic.gemma.web.taglib.expression.experiment.AssayViewTag
-        </tag-class>
-        <body-content>empty</body-content>
-        <attribute>
-            <name>expressionExperiment</name>
-            <required>true</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>edit</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag>
+   <!-- used -->
+   <tag>
+      <name>assayView</name>
+      <tag-class>ubic.gemma.web.taglib.expression.experiment.AssayViewTag
+      </tag-class>
+      <body-content>empty</body-content>
+      <attribute>
+         <name>expressionExperiment</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <name>edit</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+   </tag>
   
-    <!-- used --> 
-    <tag>
-        <name>arrayDesignGrouping</name>
-        <tag-class>ubic.gemma.web.taglib.arrayDesign.ArrayDesignGroupingTag
-        </tag-class>
-        <body-content>empty</body-content>
-        <attribute>
-            <name>subsumer</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>subsumees</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag>
+   <!-- used --> 
+   <tag>
+      <name>arrayDesignGrouping</name>
+      <tag-class>ubic.gemma.web.taglib.arrayDesign.ArrayDesignGroupingTag
+      </tag-class>
+      <body-content>empty</body-content>
+      <attribute>
+         <name>subsumer</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <name>subsumees</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+   </tag>
     
-    <!-- used -->
-    <tag>
-        <name>help</name>
-        <tag-class>ubic.gemma.web.taglib.HelpTag</tag-class>
-        <body-content>empty</body-content>
-        <attribute>
-            <name>helpFile</name>
-            <required>true</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag> 
+   <!-- used -->
+   <tag>
+      <name>help</name>
+      <tag-class>ubic.gemma.web.taglib.HelpTag</tag-class>
+      <body-content>empty</body-content>
+      <attribute>
+         <name>helpFile</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+   </tag> 
  
      
 	
-    <!-- used -->
-    <tag>
-        <name>citation</name>
-        <tag-class>ubic.gemma.web.taglib.common.description.ShortBibliographicReferenceTag
-        </tag-class>
-        <body-content>empty</body-content>
-        <attribute>
-            <name>citation</name>
-            <required>true</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag>
+   <!-- used -->
+   <tag>
+      <name>citation</name>
+      <tag-class>ubic.gemma.web.taglib.common.description.ShortBibliographicReferenceTag
+      </tag-class>
+      <body-content>empty</body-content>
+      <attribute>
+         <name>citation</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+   </tag>
 	
 	
-    <!-- used -->    
-    <tag>
-        <name>constants</name>
-        <tag-class>ubic.gemma.web.taglib.ConstantsTag</tag-class>
-        <tei-class>ubic.gemma.web.taglib.ConstantsTei</tei-class>
-        <body-content>empty</body-content>
-        <attribute>
-            <name>className</name>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>scope</name>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>var</name>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-    </tag>
+   <!-- used -->    
+   <tag>
+      <name>constants</name>
+      <tag-class>ubic.gemma.web.taglib.ConstantsTag</tag-class>
+      <tei-class>ubic.gemma.web.taglib.ConstantsTei</tei-class>
+      <body-content>empty</body-content>
+      <attribute>
+         <name>className</name>
+         <rtexprvalue>false</rtexprvalue>
+      </attribute>
+      <attribute>
+         <name>scope</name>
+         <rtexprvalue>false</rtexprvalue>
+      </attribute>
+      <attribute>
+         <name>var</name>
+         <rtexprvalue>false</rtexprvalue>
+      </attribute>
+   </tag>
     
-    <!-- used -->   
-    <tag>
-        <name>expressionQC</name>
-        <tag-class>ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag
-        </tag-class>
-        <body-content>empty</body-content>
-        <description>Display QC information for the experiment</description>
-        <attribute>
-            <description>ID of the experiment</description>
-            <name>ee</name>
-            <required>true</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>DOM ID of the EE Manager</description>
-            <name>eeManagerId</name>
-            <required>true</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>size</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>default=false</description>
-            <name>hasCorrMat</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>default=false</description>
-            <name>hasCorrDist</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>default=false</description>
-            <name>hasPCA</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-		
-        <attribute>
-            <description>default=false</description>
-            <name>hasNodeDegreeDist</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>default=3</description>
-            <name>numFactors</name>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag>
-    <tag>
-        <name>databaseEntry</name>
-        <tag-class>ubic.gemma.web.taglib.DatabaseEntryTag
-        </tag-class>
-        <body-content>empty</body-content>
-        <attribute>
-            <name>databaseEntry</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>databaseEntryValueObject</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag> 
+   <!-- used -->   
+   <tag>
+      <name>expressionQC</name>
+      <tag-class>ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag
+      </tag-class>
+      <body-content>empty</body-content>
+      <description>Display QC information for the experiment</description>
+      <attribute>
+         <description>ID of the experiment</description>
+         <name>ee</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>DOM ID of the EE Manager</description>
+         <name>eeManagerId</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <name>size</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=false</description>
+         <name>hasCorrMat</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=false</description>
+         <name>hasCorrDist</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=false</description>
+         <name>hasMeanVariance</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=false</description>
+         <name>hasPCA</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=false</description>
+         <name>hasNodeDegreeDist</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=3</description>
+         <name>numFactors</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+   </tag>
+   <tag>
+      <name>databaseEntry</name>
+      <tag-class>ubic.gemma.web.taglib.DatabaseEntryTag
+      </tag-class>
+      <body-content>empty</body-content>
+      <attribute>
+         <name>databaseEntry</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <name>databaseEntryValueObject</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+   </tag> 
 </taglib>
