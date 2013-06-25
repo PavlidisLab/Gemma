@@ -73,7 +73,7 @@
    <!-- used -->
    <tag>
       <name>citation</name>
-      <tag-class>ubic.gemma.web.taglib.common.description.ShortBibliographicReferenceTag
+      <tag-class>ubic.gemma.web.taglib.ShortBibliographicReferenceTag
       </tag-class>
       <body-content>empty</body-content>
       <attribute>
