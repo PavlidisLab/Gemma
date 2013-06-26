@@ -119,7 +119,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
         log.info( "Disassociating " + factorValue + " from " + bms.size() + " biomaterials" );
         for ( BioMaterial bioMaterial : bms ) {
-            log.info( "Processing " + bms ); // temporary, debugging.
+            log.info( "Processing " + bioMaterial ); // temporary, debugging.
             if ( bioMaterial.getFactorValues().remove( factorValue ) ) {
                 this.getSessionFactory().getCurrentSession().update( bioMaterial );
             } else {
