@@ -105,6 +105,7 @@ public class FactorValueDeletionImpl implements FactorValueDeletion {
                 differentialExpressionAnalysisService.delete( a );
             }
 
+            ef.getFactorValues().remove( fv ); // this gets done by the factorValueService as well, but can't hurt.
             fvsToDelete.add( fv );
 
         }

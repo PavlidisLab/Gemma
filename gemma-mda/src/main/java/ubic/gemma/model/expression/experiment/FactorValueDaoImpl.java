@@ -117,14 +117,13 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
                 "select distinct bm from BioMaterialImpl as bm join bm.factorValues fv where fv = :fv", "fv",
                 factorValue );
 
-        // this _always_ returns nothing.
-
         log.info( "Disassociating " + factorValue + " from " + bms.size() + " biomaterials" );
         for ( BioMaterial bioMaterial : bms ) {
+            log.info( "Processing " + bms ); // temporary, debugging.
             if ( bioMaterial.getFactorValues().remove( factorValue ) ) {
                 this.getSessionFactory().getCurrentSession().update( bioMaterial );
             } else {
-                log.warn( "unexpectedly the factor value was not actually associated with " + bioMaterial );
+                log.warn( "Unexpectedly the factor value was not actually associated with " + bioMaterial );
             }
         }
 
@@ -135,11 +134,6 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         ef.getFactorValues().remove( factorValue );
         this.getHibernateTemplate().update( ef );
 
-        // we have to do this to avoid the 'already in session' error. Annoying.
-        // this.getHibernateTemplate().flush();
-        // / this.getHibernateTemplate().clear();
-
-        // finally delete it.
         this.getHibernateTemplate().delete( factorValue );
 
     }
