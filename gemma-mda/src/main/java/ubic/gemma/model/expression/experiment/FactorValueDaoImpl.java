@@ -134,6 +134,10 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         ef.getFactorValues().remove( factorValue );
         this.getHibernateTemplate().update( ef );
 
+        // will get the dreaded 'already in session' error if we don't do this.
+        this.getHibernateTemplate().flush();
+        this.getHibernateTemplate().clear();
+
         this.getHibernateTemplate().delete( factorValue );
 
     }
