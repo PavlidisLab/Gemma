@@ -113,7 +113,7 @@
 			<attribute name="javadoc_location" value="http://junit.sourceforge.net/javadoc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.5/dwr-2.0.5.jar" sourcepath="/M2_REPO/org/directwebremoting/dwr/2.0.10/dwr-2.0.10-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.10/dwr-2.0.10.jar" sourcepath="/M2_REPO/org/directwebremoting/dwr/2.0.10/dwr-2.0.10-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xalan/xalan/2.7.0/xalan-2.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.1/commons-io-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jetty/org.mortbay.jetty/5.1.12/org.mortbay.jetty-5.1.12.jar"/>
@@ -148,7 +148,6 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/net/jini/jini-core/2.1/jini-core-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/jini/jini-ext/2.1/jini-ext-2.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/javaspaces/JSpaces/0.8/JSpaces-0.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javaspaces/JSpaces-dl/0.8/JSpaces-dl-0.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4.jar" sourcepath="/M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/json-lib/json-lib/2.4/json-lib-2.4-jdk15.jar"/>
