@@ -313,9 +313,17 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         helperService.addResults( persistentAnalysis, resultSets );
 
         // final transaction: audit.
-        auditTrailService.addUpdateEvent( expressionExperiment,
-                DifferentialExpressionAnalysisEvent.Factory.newInstance(), persistentAnalysis.getDescription()
-                        + "; analysis id=" + persistentAnalysis.getId() );
+        try {
+            auditTrailService.addUpdateEvent( expressionExperiment,
+                    DifferentialExpressionAnalysisEvent.Factory.newInstance(), persistentAnalysis.getDescription()
+                            + "; analysis id=" + persistentAnalysis.getId() );
+        } catch ( Exception e ) {
+            log.error( "Error while trying to add audit event: " + e.getMessage(), e );
+            log.error( "Continuing ..." );
+            /*
+             * We shouldn't fail completely due to this.
+             */
+        }
 
         if ( timer.getTime() > 5000 ) {
             log.info( "Save results: " + timer.getTime() + "ms" );
@@ -388,9 +396,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
             return diffExpressionAnalyses;
         } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( expressionExperiment,
-                    FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
-                    ExceptionUtils.getFullStackTrace( e ) );
+            log.error( "Error during differential expression analysis: " + e.getMessage(), e );
+            try {
+                auditTrailService.addUpdateEvent( expressionExperiment,
+                        FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
+                        ExceptionUtils.getFullStackTrace( e ) );
+            } catch ( Exception e2 ) {
+                log.error( "Could not attach failure audit event" );
+            }
             throw new RuntimeException( e );
         }
     }
