@@ -142,12 +142,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
 
+    @Autowired
     private PhenotypeAssoOntologyHelper ontologyHelper = null;
+
     private PubMedXMLFetcher pubMedXmlFetcher = null;
 
     @Override
     public void afterPropertiesSet() {
-        this.ontologyHelper = new PhenotypeAssoOntologyHelper( this.ontologyService );
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
     }
 
@@ -350,7 +351,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the genes found
      */
     @Override
-    public Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, Taxon taxon ) {
+    public Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypesValuesUri, Taxon taxon ) {
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
             throw new IllegalArgumentException( "No phenotypes values uri provided" );
@@ -957,19 +958,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,
+     * For a given search string find all Ontology terms related, and then count their gene occurrence by taxon,
      * including ontology children terms
      * 
      * @param searchQuery the query search that was type by the user
-     * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurence
+     * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurrence
      */
     @Override
     public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) {
 
-        // final results from the search query
-        Collection<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> results = new TreeSet<CharacteristicValueObject>();
 
-        // prepare the searchQuery to correctly query the Ontology
         String newSearchQuery = prepareOntologyQuery( searchQuery );
 
         // search the Ontology with the search query
@@ -982,13 +981,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // gene counts for all phenotypes used
             for ( int i = 0; i < PhenotypeAssociationConstants.TAXA_IN_USE.length; i++ ) {
-                phenotypes.addAll( this.findPhenotypeCount( ontologyTermsFound,
+                results.addAll( this.findPhenotypeCount( ontologyTermsFound,
                         this.taxonService.findByCommonName( PhenotypeAssociationConstants.TAXA_IN_USE[i] ),
                         phenotypesFoundAndChildren ) );
             }
         }
 
-        return phenotypes;
+        return results;
     }
 
     /** For a given Ontology Term, count the occurence of the term + children in the database */
@@ -1233,7 +1232,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** Map query phenotypes given to the set of possible children phenotypes in the database */
-    private HashMap<String, Set<String>> findChildrenForEachPhenotype( Set<String> phenotypesValuesUri ) {
+    private HashMap<String, Set<String>> findChildrenForEachPhenotype( Collection<String> phenotypesValuesUri ) {
 
         // root corresponds to one value found in phenotypesValuesUri
         // root ---> root+children phenotypes
@@ -1345,19 +1344,27 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** Change a searchQuery to make it search in the Ontology using * and AND */
-    private String prepareOntologyQuery( String searchQuery ) {
-        if ( searchQuery.startsWith( "\\\"" ) && searchQuery.endsWith( "\\\"" ) ) {
-            return searchQuery;
-        }
+    /**
+     * Change a searchQuery to make it search in the Ontology using * and AND (?)
+     * 
+     * @param query
+     * @return fixed-up query. Undocumented special case. Add a wildcard to it.
+     */
+    private String prepareOntologyQuery( String query ) {
+        // what was the purpose of this? It breaks queries like "parkinson's disease" (with quotes)
+        // if ( query.startsWith( "\\\"" ) && query.endsWith( "\\\"" ) ) {
+        // return query;
+        // }
 
-        String newSearchQuery = searchQuery;
+        String newSearchQuery = query;
 
         // special case when we have character '-' replace it with a blank
-        if ( searchQuery.length() > 2 ) {
-
-            String part1 = searchQuery.substring( 0, 2 );
-            String part2 = searchQuery.substring( 2, searchQuery.length() ).replaceAll( "-", " " );
+        if ( query.length() > 2 ) {
+            /*
+             * FIXME: I don't really know what this is trying to do. What are the first 2 characters?
+             */
+            String part1 = query.substring( 0, 2 );
+            String part2 = query.substring( 2, query.length() ).replaceAll( "-", " " );
             newSearchQuery = part1 + part2;
         }
 
@@ -1797,7 +1804,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return phenotypeAssociationsFiltered;
     }
 
-    /** find Homologue Evidence for a gene */
+    /**
+     * find Homologue-linked Evidence for a gene
+     * 
+     * @param geneId Gemma's identifier
+     * @param evidenceFilter
+     * @return
+     */
     private Collection<EvidenceValueObject> findHomologueEvidence( Long geneId, EvidenceFilter evidenceFilter ) {
 
         // Get the Gene object for finding homologues' evidence.

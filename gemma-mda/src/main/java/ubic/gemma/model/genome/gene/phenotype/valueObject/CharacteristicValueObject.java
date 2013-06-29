@@ -30,34 +30,6 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
-    private Long id = null; // MUST be initialized with null or have equality problems in javascript.
-
-    /** id used by url on the client side */
-    protected String urlId = "";
-
-    private String category = "";
-    private String categoryUri = "";
-
-    private String value = "";
-    private String valueUri = "";
-
-    /** number of occurrences in all genes */
-    private long publicGeneCount = 0L;
-    private long privateGeneCount = 0L;
-
-    /** what Ontology uses this term */
-    private String ontologyUsed = null;
-
-    private boolean alreadyPresentOnGene = false;
-    private boolean alreadyPresentInDatabase = false;
-
-    /** child term from a root */
-    private boolean child = false;
-    /** root of a query */
-    private boolean root = false;
-
-    private String taxon = "";
-
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
             Collection<Characteristic> characteristics ) {
 
@@ -87,8 +59,42 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return characteristicValueObjects;
     }
 
+    /** id used by url on the client side */
+    protected String urlId = "";
+
+    private boolean alreadyPresentInDatabase = false;
+    private boolean alreadyPresentOnGene = false;
+
+    private String category = "";
+    private String categoryUri = "";
+
+    /** child term from a root */
+    private boolean child = false;
+    private Long id = null; // MUST be initialized with null or have equality problems in javascript.
+
+    /** what Ontology uses this term */
+    private String ontologyUsed = null;
+
+    private long privateGeneCount = 0L;
+    /** number of occurrences in all genes */
+    private long publicGeneCount = 0L;
+
+    /** root of a query */
+    private boolean root = false;
+    private String taxon = "";
+
+    private String value = "";
+
+    private String valueUri = "";
+
     public CharacteristicValueObject() {
         super();
+    }
+
+    public CharacteristicValueObject( Characteristic characteristic ) {
+        this.category = characteristic.getCategory();
+        this.value = characteristic.getValue();
+        this.id = characteristic.getId();
     }
 
     public CharacteristicValueObject( String valueUri ) {
@@ -125,134 +131,20 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         }
     }
 
-    public CharacteristicValueObject( Characteristic characteristic ) {
-        this.category = characteristic.getCategory();
-        this.value = characteristic.getValue();
-        this.id = characteristic.getId();
-    }
-
-    public long getPublicGeneCount() {
-        return this.publicGeneCount;
-    }
-
-    public void setPublicGeneCount( long publicGeneCount ) {
-        this.publicGeneCount = publicGeneCount;
-    }
-
-    public long getPrivateGeneCount() {
-        return this.privateGeneCount;
-    }
-
-    public void setPrivateGeneCount( long privateGeneCount ) {
-        this.privateGeneCount = privateGeneCount;
-    }
-
-    public String getCategoryUri() {
-        return this.categoryUri;
-    }
-
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
-    }
-
-    public String getValueUri() {
-        return this.valueUri;
-    }
-
-    public void setValueUri( String valueUri ) {
-        this.valueUri = valueUri;
-    }
-
-    public String getCategory() {
-        return this.category;
-    }
-
-    public void setCategory( String category ) {
-        this.category = category;
-    }
-
-    public String getValue() {
-        return this.value;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    public boolean isChild() {
-        return this.child;
-    }
-
-    public void setChild( boolean child ) {
-        this.child = child;
-    }
-
-    public boolean isRoot() {
-        return this.root;
-    }
-
-    public void setRoot( boolean root ) {
-        this.root = root;
-    }
-
-    public String getOntologyUsed() {
-        return this.ontologyUsed;
-    }
-
-    public void setOntologyUsed( String ontologyUsed ) {
-        this.ontologyUsed = ontologyUsed;
-    }
-
-    public boolean isAlreadyPresentOnGene() {
-        return this.alreadyPresentOnGene;
-    }
-
-    public void setAlreadyPresentOnGene( boolean alreadyPresentOnGene ) {
-        this.alreadyPresentOnGene = alreadyPresentOnGene;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public String getUrlId() {
-        return this.urlId;
-    }
-
-    public void setUrlId( String urlId ) {
-        this.urlId = urlId;
-    }
-
-    public boolean isAlreadyPresentInDatabase() {
-        return this.alreadyPresentInDatabase;
-    }
-
-    public void setAlreadyPresentInDatabase( boolean alreadyPresentInDatabase ) {
-        this.alreadyPresentInDatabase = alreadyPresentInDatabase;
-    }
-
-    public String getTaxon() {
-        return this.taxon;
-    }
-
-    public void setTaxon( String taxon ) {
-        this.taxon = taxon;
-    }
-
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        if ( this.valueUri != null ) {
-            result = prime * result + this.valueUri.hashCode();
+    public int compareTo( CharacteristicValueObject o ) {
+
+        if ( this.category != null && o.category != null && !this.category.equalsIgnoreCase( o.category ) ) {
+            return ( this.category.compareToIgnoreCase( o.category ) );
+        } else if ( this.taxon != null && o.taxon != null && !this.taxon.equalsIgnoreCase( o.taxon ) ) {
+            return this.taxon.compareToIgnoreCase( o.taxon );
+        } else if ( !this.value.equalsIgnoreCase( o.value ) ) {
+            return this.value.compareToIgnoreCase( o.value );
+        } else if ( this.valueUri != null ) {
+            return this.valueUri.compareToIgnoreCase( o.valueUri );
         } else {
-            result = prime * result + this.value.hashCode();
+            return -1;
         }
-        return result;
     }
 
     @Override
@@ -273,20 +165,133 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return true;
     }
 
-    @Override
-    public int compareTo( CharacteristicValueObject o ) {
+    public String getCategory() {
+        return this.category;
+    }
 
-        if ( this.category != null && o.category != null && !this.category.equalsIgnoreCase( o.category ) ) {
-            return ( this.category.compareToIgnoreCase( o.category ) );
-        } else if ( this.taxon != null && o.taxon != null && !this.taxon.equalsIgnoreCase( o.taxon ) ) {
-            return this.taxon.compareToIgnoreCase( o.taxon );
-        } else if ( !this.value.equalsIgnoreCase( o.value ) ) {
-            return this.value.compareToIgnoreCase( o.value );
-        } else if ( this.valueUri != null ) {
-            return this.valueUri.compareToIgnoreCase( o.valueUri );
+    public String getCategoryUri() {
+        return this.categoryUri;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public String getOntologyUsed() {
+        return this.ontologyUsed;
+    }
+
+    public long getPrivateGeneCount() {
+        return this.privateGeneCount;
+    }
+
+    public long getPublicGeneCount() {
+        return this.publicGeneCount;
+    }
+
+    public String getTaxon() {
+        return this.taxon;
+    }
+
+    public String getUrlId() {
+        return this.urlId;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+
+    public String getValueUri() {
+        return this.valueUri;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        if ( this.valueUri != null ) {
+            result = prime * result + this.valueUri.hashCode();
         } else {
-            return -1;
+            result = prime * result + this.value.hashCode();
         }
+        return result;
+    }
+
+    public boolean isAlreadyPresentInDatabase() {
+        return this.alreadyPresentInDatabase;
+    }
+
+    public boolean isAlreadyPresentOnGene() {
+        return this.alreadyPresentOnGene;
+    }
+
+    public boolean isChild() {
+        return this.child;
+    }
+
+    public boolean isRoot() {
+        return this.root;
+    }
+
+    public void setAlreadyPresentInDatabase( boolean alreadyPresentInDatabase ) {
+        this.alreadyPresentInDatabase = alreadyPresentInDatabase;
+    }
+
+    public void setAlreadyPresentOnGene( boolean alreadyPresentOnGene ) {
+        this.alreadyPresentOnGene = alreadyPresentOnGene;
+    }
+
+    public void setCategory( String category ) {
+        this.category = category;
+    }
+
+    public void setCategoryUri( String categoryUri ) {
+        this.categoryUri = categoryUri;
+    }
+
+    public void setChild( boolean child ) {
+        this.child = child;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setOntologyUsed( String ontologyUsed ) {
+        this.ontologyUsed = ontologyUsed;
+    }
+
+    public void setPrivateGeneCount( long privateGeneCount ) {
+        this.privateGeneCount = privateGeneCount;
+    }
+
+    public void setPublicGeneCount( long publicGeneCount ) {
+        this.publicGeneCount = publicGeneCount;
+    }
+
+    public void setRoot( boolean root ) {
+        this.root = root;
+    }
+
+    public void setTaxon( String taxon ) {
+        this.taxon = taxon;
+    }
+
+    public void setUrlId( String urlId ) {
+        this.urlId = urlId;
+    }
+
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
+    public void setValueUri( String valueUri ) {
+        this.valueUri = valueUri;
+    }
+
+    @Override
+    public String toString() {
+        return "Category= " + category + " Value=" + value + " (" + valueUri + ")";
     }
 
 }

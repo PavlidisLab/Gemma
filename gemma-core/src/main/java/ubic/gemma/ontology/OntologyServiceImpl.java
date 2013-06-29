@@ -229,52 +229,35 @@ public class OntologyServiceImpl implements OntologyService {
     @Autowired
     private BioMaterialService bioMaterialService;
 
-    private BirnLexOntologyService birnLexOntologyService;
-
-    private CellTypeOntologyService cellTypeOntologyService;
+    private BirnLexOntologyService birnLexOntologyService = new BirnLexOntologyService();
+    private NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
+    private ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
+    private FMAOntologyService fmaOntologyService = new FMAOntologyService();
+    private DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
+    private HumanDevelopmentOntologyService humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
+    private CellTypeOntologyService cellTypeOntologyService = new CellTypeOntologyService();
+    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
+    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
+    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
+    private ExperimentalFactorOntologyService experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
+    private SequenceOntologyService sequenceOntologyService = new SequenceOntologyService();
+    private ObiService obiService = new ObiService();
 
     @Autowired
     private CharacteristicService characteristicService;
 
-    private ChebiOntologyService chebiOntologyService;
-
-    private DiseaseOntologyService diseaseOntologyService;
     @Autowired
     private ExpressionExperimentService eeService;
-    private ExperimentalFactorOntologyService experimentalFactorOntologyService;
-    private FMAOntologyService fmaOntologyService;
-    private HumanDevelopmentOntologyService humanDevelopmentOntologyService;
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService;
-    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
-    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
-    private NIFSTDOntologyService nifstdOntologyService;
-    private ObiService obiService;
 
     private Collection<AbstractOntologyService> ontologyServices = new ArrayList<AbstractOntologyService>();
 
     @Autowired
     private SearchService searchService;
 
-    private SequenceOntologyService sequenceOntologyService;
-
     @Override
     public void afterPropertiesSet() {
 
-        this.birnLexOntologyService = new BirnLexOntologyService();
-        this.nifstdOntologyService = new NIFSTDOntologyService();
-        this.chebiOntologyService = new ChebiOntologyService();
-        this.fmaOntologyService = new FMAOntologyService();
-        this.diseaseOntologyService = new DiseaseOntologyService();
-        this.humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
-        this.cellTypeOntologyService = new CellTypeOntologyService();
-        this.mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
-        this.mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
-        this.experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
-        this.sequenceOntologyService = new SequenceOntologyService();
-        this.obiService = new ObiService();
-
-        // We search in this order...
+        // We search in this order.
         this.ontologyServices.add( this.experimentalFactorOntologyService );
         this.ontologyServices.add( this.obiService );
         this.ontologyServices.add( this.nifstdOntologyService );
@@ -287,7 +270,6 @@ public class OntologyServiceImpl implements OntologyService {
         this.ontologyServices.add( this.mouseDevelopmentOntologyService );
         this.ontologyServices.add( this.humanDevelopmentOntologyService );
         this.ontologyServices.add( this.sequenceOntologyService );
-        this.ontologyServices.add( this.birnLexOntologyService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             serv.startInitializationThread( false );

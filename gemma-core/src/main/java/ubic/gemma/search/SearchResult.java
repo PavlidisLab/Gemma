@@ -59,13 +59,13 @@ public class SearchResult implements Comparable<SearchResult> {
 
     boolean indexSearch;
 
-    Class<?> resultClass;
+    private Class<?> resultClass;
 
-    Long objectId;
+    private Long objectId;
 
-    String highlightedText;
+    private String highlightedText;
 
-    Double score;
+    private Double score = 0.0;
 
     private Object resultObject;
 

@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeAssoOntologyHelper;
+import ubic.gemma.association.phenotype.PhenotypeAssoOntologyHelperImpl;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
@@ -189,8 +190,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         // we only mock 1 method of the class in this case, the other methods of the object behave normally
         PhenotypeAssoOntologyHelper phenotypeAssoOntologyHelperMocked = EasyMock.createMock(
-                PhenotypeAssoOntologyHelper.class,
-                new Method[] { PhenotypeAssoOntologyHelper.class.getMethod( "findOntologyTermByUri", String.class ) } );
+                PhenotypeAssoOntologyHelperImpl.class,
+                new Method[] { PhenotypeAssoOntologyHelperImpl.class.getMethod( "findOntologyTermByUri", String.class ) } );
 
         org.easymock.EasyMock.expect( phenotypeAssoOntologyHelperMocked.findOntologyTermByUri( "testUri" ) )
                 .andReturn( mockedOntoloyTerm ).anyTimes();

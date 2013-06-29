@@ -93,7 +93,7 @@ public interface PhenotypeAssociationManagerService {
      * @param taxon the name of the taxon (optinal)
      * @return A collection of the genes found
      */
-    public abstract Collection<GeneValueObject> findCandidateGenes( Set<String> phenotypesValuesUri, Taxon taxon );
+    public abstract Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypesValuesUri, Taxon taxon );
 
     /**
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes

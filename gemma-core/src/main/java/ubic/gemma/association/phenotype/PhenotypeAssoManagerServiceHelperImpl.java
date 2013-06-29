@@ -24,9 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
@@ -61,12 +60,15 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
-import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.Persister;
 
-/** This helper class is responsible to convert all types of EvidenceValueObjects to their corresponding entity */
-@Service
-public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManagerServiceHelper, InitializingBean {
+/**
+ * @author nicolas
+ * @version $Id$
+ * @see PhenotypeAssoManagerServiceHelper
+ */
+@Component
+public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManagerServiceHelper {
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
@@ -75,96 +77,30 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     private CharacteristicService characteristicService;
 
     @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
-
-    @Autowired
-    private Persister persisterHelper;
+    private DatabaseEntryDao databaseEntryDao;
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
     @Autowired
-    private OntologyService ontologyService;
-
-    @Autowired
-    private DatabaseEntryDao databaseEntryDao;
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
 
     @Autowired
     private GeneService geneService;
 
     @Autowired
-    private QuantitationTypeService quantitationTypeService;
+    private PhenotypeAssoOntologyHelper ontologyHelper;
 
     @Autowired
-    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+    private Persister persisterHelper;
+
+    @Autowired
+    private PhenotypeAssociationService phenotypeAssociationService;
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
-    private PhenotypeAssoOntologyHelper ontologyHelper = null;
-
-    @Override
-    public void afterPropertiesSet() {
-        this.ontologyHelper = new PhenotypeAssoOntologyHelper( this.ontologyService );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#valueObject2Entity(ubic.gemma.model.genome
-     * .gene.phenotype.valueObject.EvidenceValueObject)
-     */
-    @Override
-    public PhenotypeAssociation valueObject2Entity( EvidenceValueObject evidence ) {
-
-        if ( evidence instanceof LiteratureEvidenceValueObject ) {
-            return conversion2LiteratureEvidence( ( LiteratureEvidenceValueObject ) evidence );
-        } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
-            return conversion2ExperimentalEvidence( ( ExperimentalEvidenceValueObject ) evidence );
-        } else if ( evidence instanceof GenericEvidenceValueObject ) {
-            return conversion2GenericEvidence( ( GenericEvidenceValueObject ) evidence );
-        } else if ( evidence instanceof DiffExpressionEvidenceValueObject ) {
-            return conversion2DifferentialExpressionEvidence( ( DiffExpressionEvidenceValueObject ) evidence );
-        }
-
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populatePhenotypeAssociation(ubic.gemma.model
-     * .association.phenotype.PhenotypeAssociation,
-     * ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
-     */
-    @Override
-    public void populatePhenotypeAssociation( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
-        populatePheAssoWithoutPhenotypes( phe, evidenceValueObject );
-        populatePheAssoPhenotypes( phe, evidenceValueObject );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populatePheAssoWithoutPhenotypes(ubic.gemma
-     * .model.association.phenotype.PhenotypeAssociation,
-     * ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
-     */
-    @Override
-    public void populatePheAssoWithoutPhenotypes( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
-        phe.setDescription( evidenceValueObject.getDescription() );
-        phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
-        phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
-        phe.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
-
-        if ( evidenceValueObject.getEvidenceSource() != null ) {
-            populateEvidenceSource( phe, evidenceValueObject );
-        }
-
-        setScoreInformation( evidenceValueObject, phe );
-    }
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     /*
      * (non-Javadoc)
@@ -311,37 +247,63 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     }
 
-    /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populatePheAssoWithoutPhenotypes(ubic.gemma
+     * .model.association.phenotype.PhenotypeAssociation,
+     * ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
      */
-    private PhenotypeAssociation conversion2GenericEvidence( GenericEvidenceValueObject evidenceValueObject ) {
+    @Override
+    public void populatePheAssoWithoutPhenotypes( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+        phe.setDescription( evidenceValueObject.getDescription() );
+        phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
+        phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
+        phe.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
 
-        // create the entity to populate
-        GenericEvidence genericEvidence = GenericEvidence.Factory.newInstance();
+        if ( evidenceValueObject.getEvidenceSource() != null ) {
+            populateEvidenceSource( phe, evidenceValueObject );
+        }
 
-        // populate common field to evidence
-        populatePhenotypeAssociation( genericEvidence, evidenceValueObject );
-
-        return genericEvidence;
+        setScoreInformation( evidenceValueObject, phe );
     }
 
-    /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#populatePhenotypeAssociation(ubic.gemma.model
+     * .association.phenotype.PhenotypeAssociation,
+     * ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject)
      */
-    private PhenotypeAssociation conversion2LiteratureEvidence( LiteratureEvidenceValueObject evidenceValueObject ) {
+    @Override
+    public void populatePhenotypeAssociation( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+        populatePheAssoWithoutPhenotypes( phe, evidenceValueObject );
+        populatePheAssoPhenotypes( phe, evidenceValueObject );
+    }
 
-        // create the entity to populate
-        LiteratureEvidence literatureEvidence = LiteratureEvidence.Factory.newInstance();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.association.phenotype.PhenotypeAssoManagerServiceHelper#valueObject2Entity(ubic.gemma.model.genome
+     * .gene.phenotype.valueObject.EvidenceValueObject)
+     */
+    @Override
+    public PhenotypeAssociation valueObject2Entity( EvidenceValueObject evidence ) {
 
-        // populate common field to evidence
-        populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );
+        if ( evidence instanceof LiteratureEvidenceValueObject ) {
+            return conversion2LiteratureEvidence( ( LiteratureEvidenceValueObject ) evidence );
+        } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
+            return conversion2ExperimentalEvidence( ( ExperimentalEvidenceValueObject ) evidence );
+        } else if ( evidence instanceof GenericEvidenceValueObject ) {
+            return conversion2GenericEvidence( ( GenericEvidenceValueObject ) evidence );
+        } else if ( evidence instanceof DiffExpressionEvidenceValueObject ) {
+            return conversion2DifferentialExpressionEvidence( ( DiffExpressionEvidenceValueObject ) evidence );
+        }
 
-        // populate specific fields for this evidence
-        String pubmedId = evidenceValueObject.getCitationValueObject().getPubmedAccession();
-        literatureEvidence.setCitation( findOrCreateBibliographicReference( pubmedId ) );
-        return literatureEvidence;
+        return null;
     }
 
     /**
@@ -483,21 +445,72 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     }
 
     /**
-     * Populate the phenotypes for an PhenotypeAssociation using an EvidenceValueObject
-     * 
-     * @param phe The phenotype association (parent class of an evidence) we are interested in populating
-     * @param evidenceValueObject the value object representing a phenotype
+     * @param evidenceValueObject the evidence we want to convert
+     * @return PhenotypeAssociation the entity created from the ValueObject
      */
-    private void populatePheAssoPhenotypes( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
-        // here lets add the phenotypes
-        Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
+    private PhenotypeAssociation conversion2GenericEvidence( GenericEvidenceValueObject evidenceValueObject ) {
 
-        for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
-            Characteristic c = this.ontologyHelper.valueUri2Characteristic( phenotype.getValueUri() );
-            if ( c != null ) myPhenotypes.add( c );
+        // create the entity to populate
+        GenericEvidence genericEvidence = GenericEvidence.Factory.newInstance();
+
+        // populate common field to evidence
+        populatePhenotypeAssociation( genericEvidence, evidenceValueObject );
+
+        return genericEvidence;
+    }
+
+    /**
+     * @param evidenceValueObject the evidence we want to convert
+     * @return PhenotypeAssociation the entity created from the ValueObject
+     */
+    private PhenotypeAssociation conversion2LiteratureEvidence( LiteratureEvidenceValueObject evidenceValueObject ) {
+
+        // create the entity to populate
+        LiteratureEvidence literatureEvidence = LiteratureEvidence.Factory.newInstance();
+
+        // populate common field to evidence
+        populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );
+
+        // populate specific fields for this evidence
+        String pubmedId = evidenceValueObject.getCitationValueObject().getPubmedAccession();
+        literatureEvidence.setCitation( findOrCreateBibliographicReference( pubmedId ) );
+        return literatureEvidence;
+    }
+
+    /** calls findOrCreateBibliographicReference for a Collection */
+    private Collection<BibliographicReference> findOrCreateBibliographicReference( Collection<String> pubMedIds ) {
+
+        Collection<BibliographicReference> bibliographicReferences = new HashSet<BibliographicReference>();
+
+        if ( pubMedIds != null && !pubMedIds.isEmpty() ) {
+            for ( String pubmedId : pubMedIds ) {
+                bibliographicReferences.add( findOrCreateBibliographicReference( pubmedId ) );
+            }
+        }
+        return bibliographicReferences;
+    }
+
+    /**
+     * Creates a BibliographicReference if it doesn't exist in the database
+     * 
+     * @param pubMedId the pubmedID of the reference
+     * @param BibliographicReference the BibliogrphicReference
+     */
+    private BibliographicReference findOrCreateBibliographicReference( String pubMedId ) {
+
+        // check if already in the database
+        BibliographicReference bibRef = this.bibliographicReferenceService.findByExternalId( pubMedId );
+
+        if ( bibRef == null ) {
+            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+
+            if ( bibRef == null ) {
+                throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
+            }
+            bibRef = ( BibliographicReference ) this.persisterHelper.persist( bibRef );
         }
 
-        phe.getPhenotypes().addAll( myPhenotypes );
+        return bibRef;
     }
 
     /**
@@ -524,54 +537,28 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         phe.setEvidenceSource( databaseEntry );
     }
 
-    /** calls findOrCreateBibliographicReference for a Collection */
-    private Collection<BibliographicReference> findOrCreateBibliographicReference( Collection<String> pubMedIds ) {
+    /**
+     * Populate the phenotypes for an PhenotypeAssociation using an EvidenceValueObject
+     * 
+     * @param phe The phenotype association (parent class of an evidence) we are interested in populating
+     * @param evidenceValueObject the value object representing a phenotype
+     */
+    private void populatePheAssoPhenotypes( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+        // here lets add the phenotypes
+        Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
 
-        Collection<BibliographicReference> bibliographicReferences = new HashSet<BibliographicReference>();
-
-        if ( pubMedIds != null && !pubMedIds.isEmpty() ) {
-
-            for ( String pubmedId : pubMedIds ) {
-
-                bibliographicReferences.add( findOrCreateBibliographicReference( pubmedId ) );
-            }
+        for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
+            Characteristic c = this.ontologyHelper.valueUri2Characteristic( phenotype.getValueUri() );
+            if ( c != null ) myPhenotypes.add( c );
         }
-        return bibliographicReferences;
+
+        phe.getPhenotypes().addAll( myPhenotypes );
     }
 
     /**
-     * Creates a BibliographicReference if it doesn't exist in the database
-     * 
-     * @param pubMedId the pubmedID of the reference
-     * @param BibliographicReference the BibliogrphicReference
+     * @param evidenceValueObject
+     * @param phenotypeAssociation
      */
-    private BibliographicReference findOrCreateBibliographicReference( String pubMedId ) {
-
-        // check if already in the database
-        BibliographicReference bibRef = this.bibliographicReferenceService.findByExternalId( pubMedId );
-
-        if ( bibRef == null ) {
-
-            // creates a new BibliographicReference
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-
-            // the pudmedId doesn't exists
-            if ( bibRef == null ) {
-                throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
-            }
-
-            // this will create or find the BibliographicReference
-            this.persisterHelper.persist( bibRef );
-        }
-
-        return bibRef;
-    }
-
-    @Override
-    public void setOntologyHelper( PhenotypeAssoOntologyHelper ontologyHelper ) {
-        this.ontologyHelper = ontologyHelper;
-    }
-
     private void setScoreInformation( EvidenceValueObject evidenceValueObject, PhenotypeAssociation phenotypeAssociation ) {
         if ( evidenceValueObject.getScoreValueObject() != null ) {
 

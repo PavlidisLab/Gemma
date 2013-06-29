@@ -85,6 +85,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
@@ -1748,6 +1749,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
+     * Find phenotypes.
+     * 
      * @param settings
      * @return
      */
@@ -2053,11 +2056,51 @@ public class SearchServiceImpl implements SearchService {
         Collection<SearchResult> geneCompassList = compassGeneSearch( settings );
         combinedGeneList.addAll( geneCompassList );
 
-        if ( combinedGeneList.size() == 0 ) {
+        if ( combinedGeneList.isEmpty() ) {
             Collection<SearchResult> geneCsList = databaseCompositeSequenceSearch( settings );
             for ( SearchResult res : geneCsList ) {
                 if ( res.getResultClass().isAssignableFrom( Gene.class ) ) combinedGeneList.add( res );
             }
+        }
+
+        /*
+         * Possibly search for genes linked via a phenotpe, but only if we don't have anything here.
+         * 
+         * 
+         * FIXME possibly always do if results are small.
+         */
+        if ( combinedGeneList.isEmpty() ) {
+            Collection<CharacteristicValueObject> phenotypeTermHits = this.phenotypeAssociationManagerService
+                    .searchInDatabaseForPhenotype( settings.getQuery() );
+
+            for ( CharacteristicValueObject phenotype : phenotypeTermHits ) {
+                Set<String> phenotypeUris = new HashSet<String>();
+                phenotypeUris.add( phenotype.getValueUri() );
+                Collection<GeneValueObject> phenotypeGenes = phenotypeAssociationManagerService.findCandidateGenes(
+                        phenotypeUris, settings.getTaxon() );
+
+                if ( !phenotypeGenes.isEmpty() ) {
+                    log.info( phenotypeGenes.size() + " genes associated with " + phenotype + " (via query='"
+                            + settings.getQuery() + "')" );
+
+                    for ( GeneValueObject gvo : phenotypeGenes ) {
+                        Gene g = Gene.Factory.newInstance();
+                        g.setId( gvo.getId() );
+                        g.setTaxon( settings.getTaxon() );
+                        SearchResult sr = new SearchResult( g );
+                        sr.setHighlightedText( phenotype.getValue() + " (" + phenotype.getValueUri() + ")" );
+                        /*
+                         * TODO If we get evidence quality, use that in the score.
+                         */
+                        sr.setScore( 1.0 ); // maybe lower, if we do this search when combinedGeneList is nonempty.
+                        combinedGeneList.add( sr );
+                    }
+                    if ( combinedGeneList.size() > 100 /* some limit */) {
+                        break;
+                    }
+                }
+            }
+
         }
 
         // filterByTaxon( settings, combinedGeneList); // compass doesn't return filled gene objects, just ids, so do
