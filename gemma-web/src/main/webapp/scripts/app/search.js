@@ -168,7 +168,6 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel, {
                useCharacteristics : searchCharacteristics,
                useGo : searchGO,
                searchBibrefs : searchPapers,
-               // usePhenotypes : searchUsingPhenotypes,
                searchPhenotypes : searchPhenotypes
             }];
          return {
@@ -531,10 +530,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
                            boxLabel : "Search GO groups (genes)",
                            hideLabel : true,
                            checked : false
-                        } /*
-                            * , { id: 'search-usingPhenotypes-chkbx', name: "searchUsingPhenotypes", boxLabel: "Search
-                            * phenotype Associations (genes)", hideLabel: true, checked: false, disabled: false }
-                            */]
+                        }]
                   }]
             });
 
