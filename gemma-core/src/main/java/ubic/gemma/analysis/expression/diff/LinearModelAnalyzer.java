@@ -53,9 +53,9 @@ import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.MeanVarianceEstimator;
 import ubic.basecode.util.r.type.LinearModelSummary;
-import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.analysis.Direction;
@@ -332,8 +332,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
         LeastSquaresFit fit = null;
         if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
-            log.info( " Calculating residuals of weighted least squares regression on COUNT data " );
-            MeanVarianceEstimator mv = new MeanVarianceEstimator( properDesignMatrix, sNamedMatrix );
+            log.info( "Calculating residuals of weighted least squares regression on COUNT data" );
+            DoubleMatrix1D librarySize = MatrixStats.colSums( sNamedMatrix ); // note: data is not log transformed
+            MeanVarianceEstimator mv = new MeanVarianceEstimator( properDesignMatrix, sNamedMatrix, librarySize );
             fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix, mv.getWeights() );
         } else {
             fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
@@ -748,7 +749,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             modelFormula = buildModelFormula( config, label2Factors, interceptFactor, interactionFactorLists );
         }
 
-        dmatrix = filterAndLogTransform( quantitationType, dmatrix );
+        // calculate library size before log transformation
+        DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
+        dmatrix = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( quantitationType, dmatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
         if ( log.isDebugEnabled() ) outputForDebugging( dmatrix, designMatrix );
@@ -764,7 +767,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, sNamedMatrix, label2Factors,
                 modelFormula, properDesignMatrix, interceptFactor, interactionFactorLists, baselineConditions,
-                quantitationType );
+                quantitationType, librarySize );
 
         if ( rawResults.size() == 0 ) {
             log.error( "Got no results from the analysis" );
@@ -787,9 +790,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
         addinteraction: for ( String[] fs : interactionFactorLists ) {
             for ( String f : fs ) {
-//                if ( properDesignMatrix.getDroppedFactors().contains( f ) ) {
-//                    continue addinteraction;
-//                }
+                // if ( properDesignMatrix.getDroppedFactors().contains( f ) ) {
+                // continue addinteraction;
+                // }
             }
             String intF = StringUtils.join( fs, ":" );
             resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
@@ -959,100 +962,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         log.info( "Analysis processing phase done ..." );
 
         return expressionAnalysis;
-    }
-
-    /**
-     * Log transform if necessary, do any required filtering prior to analysis.
-     * 
-     * @param quantitationType
-     * @param dmatrix
-     */
-    private ExpressionDataDoubleMatrix filterAndLogTransform( QuantitationType quantitationType,
-            ExpressionDataDoubleMatrix dmatrix ) {
-
-        ScaleType scaleType = findScale( quantitationType, dmatrix.getMatrix() );
-
-        if ( scaleType.equals( ScaleType.LOG2 ) ) {
-            log.info( "Data is already on a log2 scale" );
-        } else if ( scaleType.equals( ScaleType.LN ) ) {
-            log.info( " **** Converting from ln to log2 **** " );
-            MatrixStats.convertToLog2( dmatrix.getMatrix(), Math.E );
-        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
-            log.info( " **** Converting from log10 to log2 **** " );
-            MatrixStats.convertToLog2( dmatrix.getMatrix(), 10 );
-        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
-            log.info( " **** LOG TRANSFORMING **** " );
-            MatrixStats.logTransform( dmatrix.getMatrix() );
-        } else if ( scaleType.equals( ScaleType.COUNT ) ) {
-            // note: counts per million log2 transform is already taken care of in MeanVarianceEstimator
-        } else {
-            throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
-        }
-
-        /*
-         * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
-         * really track this down).
-         * 
-         * Remove zero-variance rows, but also rows that have lots of equal values even if variance is non-zero. This
-         * happens when data is "clipped" (e.g., all values under 10 set to 10).
-         */
-        int r = dmatrix.rows();
-        dmatrix = ExpressionExperimentFilter.zeroVarianceFilter( dmatrix );
-        if ( dmatrix.rows() < r ) {
-            log.info( ( r - dmatrix.rows() ) + " rows removed due to low variance" );
-        }
-        r = dmatrix.rows();
-        /* FIXME refactor as constant. Idea is to skip this if the data set is really small, but this is totally ad hoc. */
-        if ( dmatrix.columns() > 4 ) {
-            dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, 0.5 );
-            if ( dmatrix.rows() < r ) {
-                log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
-            }
-        }
-
-        return dmatrix;
-
-    }
-
-    /**
-     * @param quantitationType
-     * @param namedMatrix
-     * @return
-     * @see ExpressionExperimentFilter for a related implementation.
-     */
-    private ScaleType findScale( QuantitationType quantitationType,
-            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
-
-        if ( quantitationType.getScale() != null ) {
-            if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
-                return ScaleType.LOG2;
-            } else if ( quantitationType.getScale().equals( ScaleType.LOG10 ) ) {
-                return ScaleType.LOG10;
-            } else if ( quantitationType.getScale().equals( ScaleType.LN ) ) {
-                return ScaleType.LN;
-            } else if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
-                return ScaleType.COUNT;
-            } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
-                throw new UnsupportedOperationException(
-                        "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, "
-                                + "and make sure the data is expressed in terms of log2 or un-logged data  ("
-                                + quantitationType + ")" );
-            }
-        }
-
-        for ( int i = 0; i < namedMatrix.rows(); i++ ) {
-            for ( int j = 0; j < namedMatrix.columns(); j++ ) {
-                double v = namedMatrix.get( i, j );
-                if ( v > 20 ) {
-                    log.debug( "Data has large values, doesn't look log transformed" );
-                    return ScaleType.LINEAR;
-                }
-            }
-        }
-
-        throw new UnsupportedOperationException( "Data look log tranformed, not sure about base (" + quantitationType
-                + ")" );
-
     }
 
     /**
@@ -1628,11 +1537,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             final DoubleMatrix<String, String> sNamedMatrix,
             final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
             DesignMatrix designMatrix, ExperimentalFactor interceptFactor, List<String[]> interactionFactorLists,
-            Map<ExperimentalFactor, FactorValue> baselineConditions, QuantitationType quantitationType ) {
+            Map<ExperimentalFactor, FactorValue> baselineConditions, QuantitationType quantitationType,
+            final DoubleMatrix1D librarySize ) {
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
 
-        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, quantitationType );
+        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, quantitationType, librarySize );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1690,7 +1600,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @return
      */
     private Future<?> runAnalysisFuture( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
-            final Map<String, LinearModelSummary> rawResults, final QuantitationType quantitationType ) {
+            final Map<String, LinearModelSummary> rawResults, final QuantitationType quantitationType,
+            final DoubleMatrix1D librarySize ) {
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<?> f = service.submit( new Runnable() {
@@ -1700,8 +1611,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 timer.start();
                 LeastSquaresFit fit = null;
                 if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
-                    log.info( " Performing weighted least squares regression on COUNT data " );
-                    MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, data );
+                    MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, data, librarySize );
+                    log.info( "Model weights from mean-variance model: " + timer.getTime() + "ms" );
+                    timer.reset();
+                    timer.start();
                     fit = new LeastSquaresFit( designMatrix, data, mv.getWeights() );
                 } else {
                     fit = new LeastSquaresFit( designMatrix, data );

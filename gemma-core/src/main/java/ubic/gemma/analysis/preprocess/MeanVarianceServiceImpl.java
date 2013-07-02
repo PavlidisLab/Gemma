@@ -14,6 +14,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +23,11 @@ import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.MeanVarianceEstimator;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import cern.colt.matrix.DoubleMatrix2D;
@@ -45,6 +50,9 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
 
     /**
      * @param matrix on which mean variance relation is computed with
@@ -96,13 +104,28 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
         if ( forceRecompute || mvr == null ) {
 
-            log.info( " Recomputing mean-variance " );
+            log.info( "Recomputing mean-variance" );
 
             ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( updatedEe );
             if ( intensities == null ) {
                 throw new IllegalStateException( "Could not locate intensity matrix for " + updatedEe.getShortName() );
             }
+
+            Collection<QuantitationType> qtList = expressionExperimentService.getPreferredQuantitationType( updatedEe );
+            QuantitationType qt = null;
+
+            if ( qtList.size() == 0 ) {
+                log.error( "Did not find any preferred quantitation type." );
+            } else if ( qtList.size() == 1 ) {
+                qt = qtList.iterator().next();
+            } else {
+                log.warn( "Found more than one preferred quantitation type. Only the first preferred quantitation type ("
+                        + qt + ") will be used." );
+            }
+
+            intensities = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( qt, intensities );
             mvr = getMeanVariance( intensities );
+
             meanVarianceServiceHelper.createMeanVariance( updatedEe, mvr );
         }
 

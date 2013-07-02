@@ -38,6 +38,12 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -65,8 +71,13 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     private ExpressionExperiment ee;
 
+    private QuantitationType qt;
+
     @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -99,6 +110,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         ee = ( ExpressionExperiment ) results.iterator().next();
 
+        qt = createOrUpdateQt( ee, ScaleType.LOG2 );
+
         // important bit, need to createProcessedVectors manually before using it
         ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
@@ -117,6 +130,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
+        assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
+
         // convert byte[] to array[]
         // warning: order may have changed
         double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
@@ -128,23 +143,51 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( lowessX );
         Arrays.sort( lowessY );
 
-        int expectedLength = 97;
+        int expectedLength = 86; // after filtering
         assertEquals( expectedLength, means.length );
         assertEquals( expectedLength, variances.length );
         assertEquals( expectedLength, lowessX.length );
         assertEquals( expectedLength, lowessY.length );
 
         int idx = 0;
-        assertEquals( 11.26844, means[idx], 0.0001 );
-        assertEquals( 0.001446, variances[idx], 0.0001 );
-        assertEquals( 11.2684, lowessX[idx], 0.0001 );
-        assertEquals( 0.02119, lowessY[idx], 0.0001 );
+        assertEquals( 2.6554, means[idx], 0.0001 );
+        assertEquals( 0.03067, variances[idx], 0.0001 );
+        assertEquals( 2.6554, lowessX[idx], 0.0001 );
+        assertEquals( 0.2821, lowessY[idx], 0.0001 );
 
         idx = expectedLength - 1;
-        assertEquals( 14.374, means[idx], 0.0001 );
-        assertEquals( 0.9971, variances[idx], 0.0001 );
-        assertEquals( 14.374, lowessX[idx], 0.0001 );
-        assertEquals( 0.446115, lowessY[idx], 0.0001 );
+        assertEquals( 15.2374, means[idx], 0.0001 );
+        assertEquals( 5.1480, variances[idx], 0.0001 );
+        assertEquals( 15.2374, lowessX[idx], 0.0001 );
+        assertEquals( 2.8846, lowessY[idx], 0.0001 );
+
+    }
+
+    private QuantitationType createOrUpdateQt( ExpressionExperiment ee, ScaleType scale ) throws Exception {
+
+        Collection<QuantitationType> qtList = eeService.getPreferredQuantitationType( ee );
+        if ( qtList.size() == 0 ) {
+            qt = QuantitationType.Factory.newInstance();
+            qt.setName( "testQt" );
+            qt.setScale( scale );
+            qt.setIsPreferred( true );
+            qt.setRepresentation( PrimitiveType.DOUBLE );
+            qt.setIsMaskedPreferred( false );
+            qt.setIsRatio( false );
+            qt.setIsNormalized( false );
+            qt.setIsBackground( false );
+            qt.setGeneralType( GeneralType.QUANTITATIVE );
+            qt.setType( StandardQuantitationType.AMOUNT );
+            quantitationTypeService.create( qt );
+        } else {
+            qt = qtList.iterator().next();
+            qt.setScale( scale );
+            quantitationTypeService.update( qt );
+        }
+
+        System.out.println( "ee.qt=" + qt );
+
+        return qt;
     }
 
     @Test
@@ -160,6 +203,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
 
         ee = ( ExpressionExperiment ) results.iterator().next();
+
+        qt = createOrUpdateQt( ee, ScaleType.LOG2 );
 
         // important bit, need to createProcessedVectors manually before using it
         ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
@@ -191,8 +236,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( lowessY );
 
         // check sizes
-        int expectedMeanVarianceLength = 97;
-        int expectedLowessLength = 31; // NAs removed
+        int expectedMeanVarianceLength = 75;
+        int expectedLowessLength = 75; // NAs removed
         assertEquals( expectedMeanVarianceLength, means.length );
         assertEquals( expectedMeanVarianceLength, variances.length );
         assertEquals( expectedLowessLength, lowessX.length );
@@ -200,16 +245,17 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // check results
         int idx = 0;
-        assertEquals( 5.74575, means[idx], 0.0001 );
-        assertEquals( 0.0, variances[idx], 0.0001 );
-        assertEquals( 5.74575, lowessX[idx], 0.0001 );
-        assertEquals( 0.0, lowessY[idx], 0.0001 );
+        assertEquals( -0.3484, means[idx], 0.0001 );
+        assertEquals( 0.001569, variances[idx], 0.0001 );
+        assertEquals( -0.3484, lowessX[idx], 0.0001 );
+        assertEquals( 0.0092484, lowessY[idx], 0.0001 );
 
         idx = expectedLowessLength - 1;
-        assertEquals( 15.33165, means[idx], 0.0001 );
-        assertEquals( 0.77093, variances[idx], 0.0001 );
-        assertEquals( 15.3372, lowessX[idx], 0.0001 );
-        assertEquals( 0.07358, lowessY[idx], 0.0001 );
+        assertEquals( 0.05115, means[idx], 0.0001 );
+        assertEquals( 0.12014, variances[idx], 0.0001 );
+        assertEquals( 0.05115, lowessX[idx], 0.0001 );
+        assertEquals( 0.03532, lowessY[idx], 0.0001 );
+
     }
 
     @Test
@@ -233,6 +279,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.thaw( ee );
+
+        qt = createOrUpdateQt( ee, ScaleType.COUNT );
 
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();

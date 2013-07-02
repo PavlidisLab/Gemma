@@ -21,11 +21,18 @@ package ubic.gemma.datastructure.matrix;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.MatrixStats;
+import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import cern.colt.matrix.DoubleMatrix1D;
 
 /**
- * Perform various compuations on ExpressionDataMatrices (usually in-place).
+ * Perform various computations on ExpressionDataMatrices (usually in-place).
  * 
  * @author pavlidis
  * @version $Id$
@@ -35,6 +42,102 @@ public class ExpressionDataDoubleMatrixUtil {
     private static final double LOGARITHM_BASE = 2.0;
 
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
+
+    /**
+     * Log transform if necessary, do any required filtering prior to analysis.
+     * 
+     * @param quantitationType
+     * @param dmatrix
+     */
+    public static ExpressionDataDoubleMatrix filterAndLogTransform( QuantitationType quantitationType,
+            ExpressionDataDoubleMatrix dmatrix ) {
+
+        ScaleType scaleType = findScale( quantitationType, dmatrix.getMatrix() );
+
+        if ( scaleType.equals( ScaleType.LOG2 ) ) {
+            log.info( "Data is already on a log2 scale" );
+        } else if ( scaleType.equals( ScaleType.LN ) ) {
+            log.info( " **** Converting from ln to log2 **** " );
+            MatrixStats.convertToLog2( dmatrix.getMatrix(), Math.E );
+        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
+            log.info( " **** Converting from log10 to log2 **** " );
+            MatrixStats.convertToLog2( dmatrix.getMatrix(), 10 );
+        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
+            log.info( " **** LOG TRANSFORMING **** " );
+            MatrixStats.logTransform( dmatrix.getMatrix() );
+        } else if ( scaleType.equals( ScaleType.COUNT ) ) {
+            log.info( " **** Converting from count to log2 counts per million **** " );
+            DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
+            MatrixStats.convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
+        } else {
+            throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
+        }
+
+        /*
+         * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
+         * really track this down).
+         * 
+         * Remove zero-variance rows, but also rows that have lots of equal values even if variance is non-zero. This
+         * happens when data is "clipped" (e.g., all values under 10 set to 10).
+         */
+        int r = dmatrix.rows();
+        dmatrix = ExpressionExperimentFilter.zeroVarianceFilter( dmatrix );
+        if ( dmatrix.rows() < r ) {
+            log.info( ( r - dmatrix.rows() ) + " rows removed due to low variance" );
+        }
+        r = dmatrix.rows();
+        /* FIXME refactor as constant. Idea is to skip this if the data set is really small, but this is totally ad hoc. */
+        if ( dmatrix.columns() > 4 ) {
+            dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, 0.5 );
+            if ( dmatrix.rows() < r ) {
+                log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
+            }
+        }
+
+        return dmatrix;
+
+    }
+
+    /**
+     * @param quantitationType
+     * @param namedMatrix
+     * @return
+     * @see ExpressionExperimentFilter for a related implementation.
+     */
+    public static ScaleType findScale( QuantitationType quantitationType,
+            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
+
+        if ( quantitationType.getScale() != null ) {
+            if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
+                return ScaleType.LOG2;
+            } else if ( quantitationType.getScale().equals( ScaleType.LOG10 ) ) {
+                return ScaleType.LOG10;
+            } else if ( quantitationType.getScale().equals( ScaleType.LN ) ) {
+                return ScaleType.LN;
+            } else if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
+                return ScaleType.COUNT;
+            } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
+                throw new UnsupportedOperationException(
+                        "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, "
+                                + "and make sure the data is expressed in terms of log2 or un-logged data  ("
+                                + quantitationType + ")" );
+            }
+        }
+
+        for ( int i = 0; i < namedMatrix.rows(); i++ ) {
+            for ( int j = 0; j < namedMatrix.columns(); j++ ) {
+                double v = namedMatrix.get( i, j );
+                if ( v > 20 ) {
+                    log.debug( "Data has large values, doesn't look log transformed" );
+                    return ScaleType.LINEAR;
+                }
+            }
+        }
+
+        throw new UnsupportedOperationException( "Data look log tranformed, not sure about base (" + quantitationType
+                + ")" );
+
+    }
 
     /**
      * Subtract two matrices. Ideally, they matrices are conformant, but if they are not (as some rows are sometimes

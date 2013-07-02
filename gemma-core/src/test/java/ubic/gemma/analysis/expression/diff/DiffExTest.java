@@ -242,10 +242,11 @@ public class DiffExTest extends AbstractGeoServiceTest {
         ExpressionAnalysisResultSet resultSet = results.getResultSets().iterator().next();
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
             if ( r.getProbe().getName().equals( "ENSG00000000938" ) ) {
-                // this is the top DE probe
+                // this is one of the top DE probe based on p-value
                 found = true;
                 // slightly smaller pvalue when using weighted least squares
-                assertEquals( 0.012989, r.getPvalue(), 0.00001 );
+                assertEquals( 0.007914245, r.getPvalue(), 0.00001 );
+                break;
             }
         }
         assertTrue( found );
