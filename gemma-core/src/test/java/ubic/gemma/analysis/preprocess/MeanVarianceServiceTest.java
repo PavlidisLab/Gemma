@@ -185,8 +185,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             quantitationTypeService.update( qt );
         }
 
-        System.out.println( "ee.qt=" + qt );
-
         return qt;
     }
 

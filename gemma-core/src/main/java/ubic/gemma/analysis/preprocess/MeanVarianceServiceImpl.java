@@ -56,9 +56,11 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     /**
      * @param matrix on which mean variance relation is computed with
+     * @param MeanVarianceRelation object, if null, a new object is created
      * @return MeanVarianceRelation object
      */
-    public static MeanVarianceRelation getMeanVariance( ExpressionDataDoubleMatrix matrix ) {
+    private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix,
+            MeanVarianceRelation mvr ) {
 
         if ( matrix == null ) {
             log.warn( "Experiment matrix is null" );
@@ -70,7 +72,9 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             mat.viewRow( row ).assign( matrix.getRawRow( row ) );
         }
         MeanVarianceEstimator mve = new MeanVarianceEstimator( mat );
-        MeanVarianceRelation mvr = MeanVarianceRelation.Factory.newInstance();
+        if ( mvr == null ) {
+            mvr = MeanVarianceRelation.Factory.newInstance();
+        }
 
         if ( mve.getMeanVariance() != null ) {
             mvr.setMeans( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 0 ).toArray() ) );
@@ -124,7 +128,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             }
 
             intensities = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( qt, intensities );
-            mvr = getMeanVariance( intensities );
+            mvr = calculateMeanVariance( intensities, mvr );
 
             meanVarianceServiceHelper.createMeanVariance( updatedEe, mvr );
         }
