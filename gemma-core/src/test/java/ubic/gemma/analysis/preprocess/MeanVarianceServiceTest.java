@@ -143,23 +143,23 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( lowessX );
         Arrays.sort( lowessY );
 
-        int expectedLength = 86; // after filtering
+        int expectedLength = 75; // after filtering
         assertEquals( expectedLength, means.length );
         assertEquals( expectedLength, variances.length );
         assertEquals( expectedLength, lowessX.length );
         assertEquals( expectedLength, lowessY.length );
 
         int idx = 0;
-        assertEquals( 2.6554, means[idx], 0.0001 );
-        assertEquals( 0.03067, variances[idx], 0.0001 );
-        assertEquals( 2.6554, lowessX[idx], 0.0001 );
-        assertEquals( 0.2821, lowessY[idx], 0.0001 );
+        assertEquals( -0.34836, means[idx], 0.0001 );
+        assertEquals( 0.001569, variances[idx], 0.0001 );
+        assertEquals( -0.34836, lowessX[idx], 0.0001 );
+        assertEquals( 0.00925, lowessY[idx], 0.0001 );
 
         idx = expectedLength - 1;
-        assertEquals( 15.2374, means[idx], 0.0001 );
-        assertEquals( 5.1480, variances[idx], 0.0001 );
-        assertEquals( 15.2374, lowessX[idx], 0.0001 );
-        assertEquals( 2.8846, lowessY[idx], 0.0001 );
+        assertEquals( 0.05115, means[idx], 0.0001 );
+        assertEquals( 0.12014, variances[idx], 0.0001 );
+        assertEquals( 0.05115, lowessX[idx], 0.0001 );
+        assertEquals( 0.03532, lowessY[idx], 0.0001 );
 
     }
 
