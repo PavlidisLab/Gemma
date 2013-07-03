@@ -37,12 +37,10 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
      * provided, ranks will not be computable.
      * 
      * @param ee
-     * @param processedVectors
      * @return The vectors after updating them, or just the original vectors if ranks could not be computed. (The
      *         vectors may be thawed in the process)
      */
-    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> processedVectors );
+    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee );
 
     /**
      * @param ee

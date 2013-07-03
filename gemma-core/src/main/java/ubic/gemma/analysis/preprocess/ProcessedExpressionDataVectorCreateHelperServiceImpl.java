@@ -265,13 +265,13 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
 
     /**
      * @param ee
-     * @param processedVectors
      * @return expression ranks based on computed intensities
      */
     @Override
-    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> processedVectors ) {
+    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee ) {
 
+        Collection<ProcessedExpressionDataVector> processedVectors = this.processedDataService
+                .getProcessedDataVectors( ee );
         StopWatch timer = new StopWatch();
         timer.start();
         ExpressionDataDoubleMatrix intensities = loadIntensities( ee, processedVectors );

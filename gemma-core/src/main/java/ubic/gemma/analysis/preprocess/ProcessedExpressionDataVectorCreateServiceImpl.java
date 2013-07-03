@@ -54,17 +54,16 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
      */
     @Override
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
-        // WARNING long transaction.
+        // WARNING long transactions.
         try {
 
             // should also delete any differential expression analyses.
 
             // second transaction
-            Collection<ProcessedExpressionDataVector> processedVectors = helperService
-                    .createProcessedExpressionData( ee );
+            helperService.createProcessedExpressionData( ee );
 
-            // third transaction.
-            return helperService.updateRanks( ee, processedVectors );
+            // third transaction. We load the vectors again because otherwise we have a long dirty check? See bug 3597
+            return helperService.updateRanks( ee );
 
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),
