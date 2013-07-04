@@ -1127,19 +1127,29 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     // find the ontology term using the valueURI
                     OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
 
-                    // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
-                    TreeCharacteristicValueObject treeCharacteristicValueObject = TreeCharacteristicValueObject
-                            .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree,
-                                    treesPhenotypes );
+                    // we don't show obsolete terms
+                    if ( ontologyTerm.isTermObsolete() ) {
 
-                    // set flag that this node represents a phenotype in the database
-                    treeCharacteristicValueObject.setDbPhenotype( true );
+                        log.error( "A valueUri found in the database is obsolete: " + valueUri );
 
-                    // add tree to the phenotypes found in ontology
-                    phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
+                    } else {
 
-                    treesPhenotypes.add( treeCharacteristicValueObject );
-                    if ( log.isDebugEnabled() ) log.debug( "Added: " + ontologyTerm );
+                        // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
+                        TreeCharacteristicValueObject treeCharacteristicValueObject = TreeCharacteristicValueObject
+                                .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree,
+                                        treesPhenotypes );
+
+                        // set flag that this node represents a phenotype in the database
+                        treeCharacteristicValueObject.setDbPhenotype( true );
+
+                        // add tree to the phenotypes found in ontology
+                        phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
+
+                        treesPhenotypes.add( treeCharacteristicValueObject );
+                        if ( log.isDebugEnabled() ) log.debug( "Added: " + ontologyTerm );
+
+                    }
+
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
                         log.error( "A valueUri found in the database was not found in the ontology; This can happen when a valueUri is updated in the ontology; valueUri: "
