@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -65,7 +66,6 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
-import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
  * Main entry point to editing and viewing experimental designs. Note: do not use parameterized collections as
