@@ -6,9 +6,8 @@ import java.util.TreeSet;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.client.fluent.Form;
+import org.apache.http.client.fluent.Request;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -30,51 +29,31 @@ public class AnnotatorClient {
 
             String apiKey = "68835db8-b142-4c7d-9509-3c843849ad67";
 
-            String contents = "";
+            // These are the setting PP used before, DO only
+            // method.addParameter("withDefaultStopWords","true"); // default is false
+            // method.addParameter("ontologiesToExpand", "1009");
+            // method.addParameter("ontologiesToKeepInResult", "1009");
+            // method.addParameter("isVirtualOntologyId", "true"); // default is false, true is recommended
+            // method.addParameter("levelMax", "10"); // expand to root, 10 is enough.
+            // method.addParameter("mappingTypes", "null"); //null, Automatic, Manual
+            // method.addParameter("textToAnnotate", text);
+            // method.addParameter("format", "tabDelimited"); //Options are 'text', 'xml', 'tabDelimited'
+            // method.addParameter("apikey", "7b14e900-1ba2-4e58-ac21-c5c4c74e7ece") // Paul's
 
-            HttpClient client = new HttpClient();
-            client.getParams().setParameter( HttpMethodParams.USER_AGENT, "Annotator Client Example - Annotator" );
-
-            PostMethod method = new PostMethod( annotatorUrl );
-
-            method.addParameter( "textToAnnotate", ecodedTerm );
-            method.addParameter( "ontologiesToKeepInResult", "1009,1125" );
-            method.addParameter( "withDefaultStopWords", "true" );
-            method.addParameter( "levelMax", "0" );
-            method.addParameter( "semanticTypes", "" );
-            method.addParameter( "mappingTypes", "" );
-            method.addParameter( "wholeWordOnly", "true" );
-            method.addParameter( "isVirtualOntologyId", "true" );
-
-            // Configure the form parameters
-            method.addParameter( "longestOnly", "false" );
-            // lets try to change that
-
-            method.addParameter( "filterNumber", "true" );
-
-            method.addParameter( "isTopWordsCaseSensitive", "false" );
-            method.addParameter( "mintermSize", "3" );
-            method.addParameter( "scored", "true" );
-            method.addParameter( "withSynonyms", "true" );
-            method.addParameter( "ontologiesToExpand", "" );
-
-            // method.addParameter( "format", "xml" );
-            method.addParameter( "apikey", apiKey );
+            // PostMethod method = new PostMethod( annotatorUrl );
+            Request request = Request.Post( annotatorUrl ).bodyForm(
+                    Form.form().add( "textToAnnotate", ecodedTerm ).add( "ontologiesToKeepInResult", "1009,1125" )
+                            .add( "withDefaultStopWords", "true" ).add( "levelMax", "0" ).add( "semanticTypes", "" )
+                            .add( "mappingTypes", "" ).add( "wholeWordOnly", "true" )
+                            .add( "isVirtualOntologyId", "true" ).add( "longestOnly", "false" )
+                            .add( "filterNumber", "true" ).add( "isTopWordsCaseSensitive", "false" )
+                            .add( "mintermSize", "3" ).add( "scored", "true" ).add( "withSynonyms", "true" )
+                            .add( "ontologiesToExpand", "" )
+                            // .config( "format", "xml" )
+                            .add( "apikey", apiKey ).build() );
 
             // Execute the POST method
-            int statusCode = client.executeMethod( method );
-
-            if ( statusCode != -1 ) {
-                try {
-                    contents = method.getResponseBodyAsString();
-                    // System.out.println( contents );
-
-                    method.releaseConnection();
-
-                } catch ( Exception e ) {
-                    e.printStackTrace();
-                }
-            }
+            String contents = request.execute().returnContent().asString();
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();

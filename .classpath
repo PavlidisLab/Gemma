@@ -354,5 +354,8 @@
 	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-sdb/1.3.6/jena-sdb-1.3.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/jms/jms-api/1.1-rev-1/jms-api-1.1-rev-1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-queryparser/3.6.2/lucene-queryparser-3.6.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpclient/4.2.5/httpclient-4.2.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpcore/4.2.4/httpcore-4.2.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/fluent-hc/4.2.5/fluent-hc-4.2.5.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

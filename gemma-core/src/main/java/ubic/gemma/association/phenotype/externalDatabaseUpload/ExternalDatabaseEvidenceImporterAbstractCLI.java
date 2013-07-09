@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2013 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.association.phenotype.externalDatabaseUpload;
 
 import java.io.File;
@@ -15,6 +29,12 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueOb
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
+/**
+ * TODO Document Me
+ * 
+ * @author Paul
+ * @version $Id$
+ */
 public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
 
     public static final String CURRENT_PATH = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/externalDatabaseUpload/Files/";
