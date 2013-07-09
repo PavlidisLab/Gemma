@@ -347,6 +347,9 @@ Ext.ux.maximgb.tg.AbstractTreeStore = Ext.extend(Ext.data.Store, {
     * @access public
     */
    applyTreeSort : function() {
+	  // make sure those are remade, was having problem with filter
+	  this.records = null;
+	  this.rootNodes = [];
       var i, len, temp, rec, records = [], roots = this.getRootNodes();
 
       // Sorting data
