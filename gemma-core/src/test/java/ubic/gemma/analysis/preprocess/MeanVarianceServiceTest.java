@@ -96,6 +96,65 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    final public void testServiceLinearNormalized() throws Exception {
+
+        ee = eeService.findByShortName( "GSE2982" );
+        if ( ee != null ) {
+            eeService.delete( ee ); // might work, but array designs might be in the way.
+        }
+
+        geoService
+                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse2982Short" ) ) );
+
+        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
+
+        ee = ( ExpressionExperiment ) results.iterator().next();
+
+        qt = createOrUpdateQt( ee, ScaleType.LINEAR );
+        qt.setIsNormalized( true );
+        quantitationTypeService.update( qt );
+
+        // important bit, need to createProcessedVectors manually before using it
+        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
+
+        assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
+
+        MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
+
+        // convert byte[] to array[]
+        // warning: order may have changed
+        double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
+        double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] lowessX = bac.byteArrayToDoubles( mvr.getLowessX() );
+        double[] lowessY = bac.byteArrayToDoubles( mvr.getLowessY() );
+        Arrays.sort( means );
+        Arrays.sort( variances );
+        Arrays.sort( lowessX );
+        Arrays.sort( lowessY );
+
+        int expectedLength = 97; // after filtering
+        System.out.println( "means.length=" + means.length );
+        assertEquals( expectedLength, means.length );
+        assertEquals( expectedLength, variances.length );
+        expectedLength = 95; // duplicate rows removed
+        assertEquals( expectedLength, lowessX.length );
+        assertEquals( expectedLength, lowessY.length );
+
+        int idx = 0;
+        assertEquals( -1.9858, means[idx], 0.0001 );
+        assertEquals( 0, variances[idx], 0.0001 );
+        assertEquals( -1.9858, lowessX[idx], 0.0001 );
+        assertEquals( 0.006861, lowessY[idx], 0.0001 );
+
+        idx = expectedLength - 1;
+        assertEquals( 0.02509, means[idx], 0.0001 );
+        assertEquals( 0.09943, variances[idx], 0.0001 );
+        assertEquals( 0.05115, lowessX[idx], 0.0001 );
+        assertEquals( 0.03033, lowessY[idx], 0.0001 );
+
+    }
+
+    @Test
     final public void testServiceCreateTwoColor() throws Exception {
 
         ee = eeService.findByShortName( "GSE2982" );
@@ -111,6 +170,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         ee = ( ExpressionExperiment ) results.iterator().next();
 
         qt = createOrUpdateQt( ee, ScaleType.LOG2 );
+        qt.setIsNormalized( false );
+        quantitationTypeService.update( qt );
 
         // important bit, need to createProcessedVectors manually before using it
         ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
@@ -203,6 +264,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         ee = ( ExpressionExperiment ) results.iterator().next();
 
         qt = createOrUpdateQt( ee, ScaleType.LOG2 );
+        qt.setIsNormalized( false );
+        quantitationTypeService.update( qt );
 
         // important bit, need to createProcessedVectors manually before using it
         ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );

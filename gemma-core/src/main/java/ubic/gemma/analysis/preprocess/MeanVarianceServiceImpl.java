@@ -59,8 +59,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
      * @param MeanVarianceRelation object, if null, a new object is created
      * @return MeanVarianceRelation object
      */
-    private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix,
-            MeanVarianceRelation mvr ) {
+    private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix, MeanVarianceRelation mvr ) {
 
         if ( matrix == null ) {
             log.warn( "Experiment matrix is null" );
@@ -127,7 +126,12 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
                         + qt + ") will be used." );
             }
 
-            intensities = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( qt, intensities );
+            try {
+                intensities = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( qt, intensities );
+            } catch ( UnknownLogScaleException e ) {
+                log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
+            }
+
             mvr = calculateMeanVariance( intensities, mvr );
 
             meanVarianceServiceHelper.createMeanVariance( updatedEe, mvr );

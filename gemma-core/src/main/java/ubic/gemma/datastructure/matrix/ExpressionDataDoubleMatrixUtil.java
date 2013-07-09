@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
+import ubic.gemma.analysis.preprocess.UnknownLogScaleException;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -70,7 +71,7 @@ public class ExpressionDataDoubleMatrixUtil {
             DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
             MatrixStats.convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
         } else {
-            throw new UnsupportedOperationException( "Can't figure out what scale the data are on" );
+            throw new UnknownLogScaleException( "Can't figure out what scale the data are on" );
         }
 
         /*
@@ -117,7 +118,7 @@ public class ExpressionDataDoubleMatrixUtil {
             } else if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
                 return ScaleType.COUNT;
             } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
-                throw new UnsupportedOperationException(
+                throw new UnknownLogScaleException(
                         "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, "
                                 + "and make sure the data is expressed in terms of log2 or un-logged data  ("
                                 + quantitationType + ")" );
@@ -134,7 +135,7 @@ public class ExpressionDataDoubleMatrixUtil {
             }
         }
 
-        throw new UnsupportedOperationException( "Data look log tranformed, not sure about base (" + quantitationType
+        throw new UnknownLogScaleException( "Data look log tranformed, not sure about base (" + quantitationType
                 + ")" );
 
     }
