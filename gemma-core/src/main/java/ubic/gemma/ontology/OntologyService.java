@@ -22,7 +22,6 @@ import org.springframework.beans.factory.InitializingBean;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.BirnLexOntologyService;
 import ubic.basecode.ontology.providers.ChebiOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
@@ -97,11 +96,6 @@ public interface OntologyService extends InitializingBean {
      * @return returns a collection of ontologyTerm's
      */
     public abstract Collection<OntologyTerm> findTerms( String search );
-
-    /**
-     * @return the birnLexOntologyService
-     */
-    public abstract BirnLexOntologyService getBirnLexOntologyService();
 
     /**
      * @return terms which are allowed for use in the Category of a Characteristic

@@ -45,7 +45,7 @@ public class ExpressionExperimentAnnotatorTest extends BaseSpringContextTest {
     OntologyService ontologyService;
 
     /*
-     * For this test to work, at least birnlex must be loaded, and MMTx must be available (it will be skipped if not)
+     * For this test to work, at least NIF must be loaded, and MMTx must be available (it will be skipped if not)
      */
     @Before
     public void setup() throws Exception {
@@ -55,9 +55,9 @@ public class ExpressionExperimentAnnotatorTest extends BaseSpringContextTest {
             return;
         }
 
-        ontologyService.getBirnLexOntologyService().startInitializationThread( true );
+        ontologyService.getNifstfOntologyService().startInitializationThread( true );
 
-        while ( !ontologyService.getBirnLexOntologyService().isOntologyLoaded() ) {
+        while ( !ontologyService.getNifstfOntologyService().isOntologyLoaded() ) {
             Thread.sleep( 5000 );
             log.info( ".... waiting for Birnlex..." );
         }

@@ -452,12 +452,12 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         int geneBatchSize = 50;
 
         if ( resultSetsNeeded.size() > geneIds.size() ) {
-            resultSetBatchSize = ( int ) Math.min( 500, resultSetsNeeded.size() );
+            resultSetBatchSize = Math.min( 500, resultSetsNeeded.size() );
             log.info( "Batching by result sets (" + resultSetsNeeded.size() + " resultSets); " + geneIds.size()
                     + " genes; batch size=" + resultSetBatchSize );
 
         } else {
-            geneBatchSize = ( int ) Math.min( 200, geneIds.size() );
+            geneBatchSize = Math.min( 200, geneIds.size() );
             log.info( "Batching by genes (" + geneIds.size() + " genes); " + resultSetsNeeded.size()
                     + " resultSets; batch size=" + geneBatchSize );
         }

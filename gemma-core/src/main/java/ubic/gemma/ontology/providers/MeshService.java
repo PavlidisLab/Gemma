@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jena.larq.IndexLARQ;
 
 import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.model.ObjectPropertyImpl;
@@ -36,7 +37,6 @@ import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
 import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.query.larq.IndexLARQ;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 

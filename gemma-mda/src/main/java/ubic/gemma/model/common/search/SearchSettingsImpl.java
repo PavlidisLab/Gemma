@@ -29,17 +29,6 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class SearchSettingsImpl extends SearchSettings {
 
-    @Override
-    public String toString() {
-        if ( !StringUtils.isBlank( this.getTermUri() ) ) {
-            return this.getTermUri();
-        }
-        return this.getQuery();
-    }
-
-    public SearchSettingsImpl() {
-    }
-
     /**
      * Convenience method to get pre-configured settings.
      * 
@@ -50,20 +39,6 @@ public class SearchSettingsImpl extends SearchSettings {
         SearchSettingsImpl s = new SearchSettingsImpl( query );
         s.noSearches();
         s.setSearchPlatforms( true );
-        return s;
-    }
-
-    /**
-     * Convenience method to get pre-configured settings.
-     * 
-     * @param query
-     * @return
-     */
-    public static SearchSettings geneSearch( String query, Taxon taxon ) {
-        SearchSettings s = new SearchSettingsImpl( query );
-        s.noSearches();
-        s.setSearchGenes( true );
-        s.setTaxon( taxon );
         return s;
     }
 
@@ -122,12 +97,35 @@ public class SearchSettingsImpl extends SearchSettings {
     }
 
     /**
+     * Convenience method to get pre-configured settings.
+     * 
+     * @param query
+     * @return
+     */
+    public static SearchSettings geneSearch( String query, Taxon taxon ) {
+        SearchSettings s = new SearchSettingsImpl( query );
+        s.noSearches();
+        s.setSearchGenes( true );
+        s.setTaxon( taxon );
+        return s;
+    }
+
+    private boolean doHighlighting = false;
+
+    public SearchSettingsImpl() {
+    }
+
+    /**
      * NOTE the query is trim()'ed, no need to do that later.
      * 
      * @param query
      */
     public SearchSettingsImpl( String query ) {
         this.setQuery( query.trim() );
+    }
+
+    public boolean getDoHighlighting() {
+        return this.doHighlighting;
     }
 
     /**
@@ -145,6 +143,23 @@ public class SearchSettingsImpl extends SearchSettings {
         this.setSearchProbes( false );
         this.setSearchGeneSets( false );
         this.setSearchExperimentSets( false );
+    }
+
+    /**
+     * Set to false to reduce overhead when highlighting isn't needed.
+     * 
+     * @param doHighlighting
+     */
+    public void setDoHighlighting( boolean doHighlighting ) {
+        this.doHighlighting = doHighlighting;
+    }
+
+    @Override
+    public String toString() {
+        if ( !StringUtils.isBlank( this.getTermUri() ) ) {
+            return this.getTermUri();
+        }
+        return this.getQuery();
     }
 
 }

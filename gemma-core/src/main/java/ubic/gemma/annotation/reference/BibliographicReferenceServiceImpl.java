@@ -295,9 +295,9 @@ public class BibliographicReferenceServiceImpl extends
     protected Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects( Collection<Long> ids ) {
         Collection<BibliographicReference> bibRefs = this.getBibliographicReferenceDao().load( ids );
         if ( bibRefs.isEmpty() ) {
-            return new ArrayList<BibliographicReferenceValueObject>();
+            return new ArrayList<>();
         }
-        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<Long, BibliographicReferenceValueObject>();
+        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<>();
 
         for ( BibliographicReference bibref : bibRefs ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );

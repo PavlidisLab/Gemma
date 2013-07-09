@@ -113,7 +113,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private CompositeSequenceService compositeSequenceService;
 
     /*
-     * (non-Javadoc)
+     * Show the search form with settings given. The actual search is done via an ajax call (non-Javadoc)
      * 
      * @see ubic.gemma.web.controller.GeneralSearchController#doSearch(javax.servlet.http.HttpServletRequest,
      * javax.servlet.http.HttpServletResponse, ubic.gemma.search.SearchSettings,
@@ -188,6 +188,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
         StopWatch watch = new StopWatch();
         watch.start();
+        ( ( SearchSettingsImpl ) settings ).setDoHighlighting( true );
         Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
         watch.stop();
 
@@ -382,14 +383,15 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         if ( vos == null || vos.isEmpty() ) {
-            
-          //bug 3475: if there are search results but they are all removed because they are troubled, then results has ExpressionExperimentImpls in
-            //it causing front end errors, if vos is empty make sure to get rid of all search results
+
+            // bug 3475: if there are search results but they are all removed because they are troubled, then results
+            // has ExpressionExperimentImpls in
+            // it causing front end errors, if vos is empty make sure to get rid of all search results
             for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
-                SearchResult sr = it.next();                
-                it.remove();                
+                it.next();
+                it.remove();
             }
-            
+
             return;
         }
 

@@ -91,7 +91,7 @@
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/ant/ant/1.6.5/ant-1.6.5.jar" sourcepath="/M2_REPO/ant/ant/1.6.5/ant-1.6.5-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/apache/ant/ant/1.7.0/ant-1.7.0.jar" sourcepath="/M2_REPO/ant/ant/1.6.5/ant-1.6.5-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.jajakarta.org/ant/ant-1.6.1/docs/ja/manual/api/"/>
 		</attributes>
@@ -126,7 +126,7 @@
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/jsp/jsp-api/2.1/jsp-api-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.6/antlr-2.7.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xerces/xercesImpl/2.8.1/xercesImpl-2.8.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/compass-project/compass/2.2.0/compass-2.2.0.jar" sourcepath="/M2_REPO/org/compass-project/compass/2.2.0/compass-2.2.0-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/chibi/ubc/compass-fork/compass-fork/1.0/compass-fork-1.0.jar" sourcepath="/M2_REPO/org/compass-project/compass/2.2.0/compass-2.2.0-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.compass-project.org/docs/2.2.0/api/"/>
 		</attributes>
@@ -148,7 +148,6 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/net/jini/jini-core/2.1/jini-core-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/jini/jini-ext/2.1/jini-ext-2.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/javaspaces/JSpaces-dl/0.8/JSpaces-dl-0.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4.jar" sourcepath="/M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/json-lib/json-lib/2.4/json-lib-2.4-jdk15.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-orm/3.0.5.RELEASE/spring-orm-3.0.5.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-orm/3.0.5.RELEASE/spring-orm-3.0.5.RELEASE-sources.jar">
@@ -177,33 +176,26 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/jawr/jawr/3.1.2/jawr-3.1.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-core/2.4.1/lucene-core-2.4.1.jar" sourcepath="/M2_REPO/org/apache/lucene/lucene-core/2.4.1/lucene-core-2.4.1-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-core/3.6.2/lucene-core-3.6.2.jar" sourcepath="/M2_REPO/org/apache/lucene/lucene-core/2.4.1/lucene-core-2.4.1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-analyzers/2.4.1/lucene-analyzers-2.4.1.jar">
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-analyzers/3.6.2/lucene-analyzers-3.6.2.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-highlighter/2.4.1/lucene-highlighter-2.4.1.jar">
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-highlighter/3.6.2/lucene-highlighter-3.6.2.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-snowball/2.4.1/lucene-snowball-2.4.1.jar">
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-snowball/3.0.3/lucene-snowball-3.0.3.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.6.4/jena-2.6.4.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/jena/2.6.3/jena-2.6.3-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.8.7/arq-2.8.7.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/arq/2.8.7/arq-2.8.7-sources.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="http://www.openjena.org/ARQ/javadoc/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/iri/0.8/iri-0.8.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/iri/0.8/iri-0.8-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-webmvc/3.0.5.RELEASE/spring-webmvc-3.0.5.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-webmvc/3.0.5.RELEASE/spring-webmvc-3.0.5.RELEASE-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring/docs/3.0.0.RC1/javadoc-api/"/>
@@ -350,11 +342,17 @@
 	<classpathentry kind="var" path="M2_REPO/org/apache/xbean/xbean-spring/3.11.1/xbean-spring-3.11.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/activemq/protobuf/activemq-protobuf/1.1/activemq-protobuf-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/geronimo/specs/geronimo-j2ee-management_1.1_spec/1.0.1/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-larq/1.0.0-incubating/jena-larq-1.0.0-incubating.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-arq/2.9.4/jena-arq-2.9.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-core/2.7.4/jena-core-2.7.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-iri/0.9.4/jena-iri-0.9.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/jena/jena-sdb/1.3.6/jena-sdb-1.3.6.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javax/jms/jms-api/1.1-rev-1/jms-api-1.1-rev-1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-queryparser/3.6.2/lucene-queryparser-3.6.2.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

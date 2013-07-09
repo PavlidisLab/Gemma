@@ -26,8 +26,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 
-import com.j_spaces.obf.an;
-
 /**
  * @author paul
  * @version $Id$

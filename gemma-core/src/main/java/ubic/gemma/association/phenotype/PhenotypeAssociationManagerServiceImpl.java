@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1365,6 +1366,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // if ( query.startsWith( "\\\"" ) && query.endsWith( "\\\"" ) ) {
         // return query;
         // }
+        String[] toks = StringUtils.split( query );
+        boolean multiterm = toks.length > 1;
 
         String newSearchQuery = query;
 
@@ -1378,7 +1381,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             newSearchQuery = part1 + part2;
         }
 
-        newSearchQuery = newSearchQuery + "*";
+        if ( !multiterm ) newSearchQuery = newSearchQuery + "*";
 
         return newSearchQuery;
     }

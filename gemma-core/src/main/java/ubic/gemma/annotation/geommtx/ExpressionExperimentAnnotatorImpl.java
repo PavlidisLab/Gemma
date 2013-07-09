@@ -43,9 +43,9 @@ import ubic.GEOMMTx.ProjectRDFModelTools;
 import ubic.GEOMMTx.Text2Owl;
 import ubic.GEOMMTx.Vocabulary;
 import ubic.GEOMMTx.filters.AbstractFilter;
-import ubic.GEOMMTx.filters.BIRNLexFMANullsFilter;
 import ubic.GEOMMTx.filters.CUIIRIFilter;
 import ubic.GEOMMTx.filters.CUISUIFilter;
+import ubic.GEOMMTx.filters.FMANullsFilter;
 import ubic.GEOMMTx.filters.UninformativeFilter;
 import ubic.gemma.annotation.geommtx.evaluation.CheckHighLevelSpreadSheetReader;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -291,8 +291,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
                 filters = new LinkedList<AbstractFilter>();
                 filters.add( new CUISUIFilter() );
                 filters.add( new CUIIRIFilter() );
-                BIRNLexFMANullsFilter birnFMANull = new BIRNLexFMANullsFilter( ontologyService.getFmaOntologyService(),
-                        ontologyService.getBirnLexOntologyService() );
+                FMANullsFilter birnFMANull = new FMANullsFilter( ontologyService.getFmaOntologyService() );
                 filters.add( birnFMANull );
                 filters.add( new UninformativeFilter() );
 

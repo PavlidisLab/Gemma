@@ -196,7 +196,12 @@ public class ExpressionExperimentFilter {
         if ( config.isRequireSequences() ) {
             filteredMatrix = noSequencesFilter( eeDoubleMatrix );
             if ( filteredMatrix.rows() == 0 ) {
-                throw new IllegalStateException( "No rows left after removing elements without sequences" );
+                // This can happen if the array design is not populated. To avoid problems with useless failures, just
+                // skip this step.
+
+                log.warn( "There were no sequences for the platform(s), but allowing filtering to go forward anyway despite config settings." );
+                filteredMatrix = eeDoubleMatrix;
+                // throw new IllegalStateException( "No rows left after removing elements without sequences" );
             }
         }
 

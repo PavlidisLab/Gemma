@@ -57,7 +57,8 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
 
         BusinessKey.checkValidKey( taxon );
 
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Taxon.class ).setReadOnly( true );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Taxon.class )
+                .setReadOnly( true );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         BusinessKey.addRestrictions( queryObject, taxon );
@@ -237,7 +238,7 @@ public class TaxonDaoImpl extends HibernateDaoSupport implements TaxonDao {
     @Override
     public Collection<Taxon> findTaxonUsedInEvidence() {
         String query = "select distinct taxon from GeneImpl as g join g.phenotypeAssociations as evidence join g.taxon as taxon";
-        Collection<Taxon> taxons = ( Collection<Taxon> ) ( this.getHibernateTemplate().find( query ) );
+        Collection<Taxon> taxons = this.getHibernateTemplate().find( query );
         return taxons;
     }
 

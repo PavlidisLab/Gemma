@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.genome.gene;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
@@ -113,9 +114,9 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
         assertTrue( !geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
-
+        assertNotNull( g );
         long count = geneService.getCompositeSequenceCountById( g.getId() );
-        assert ( count != 0 );
+        assertTrue( count != 0 );
     }
 
     @Test
@@ -127,9 +128,9 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
         assertTrue( !geneCollection.isEmpty() );
         Gene g = geneCollection.iterator().next();
-
+        assertNotNull( g );
         Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
-        assert ( compSequences.size() != 0 );
+        assertTrue( compSequences.size() != 0 );
     }
 
     // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
@@ -140,8 +141,9 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         GeneService geneService = this.getBean( GeneService.class );
 
         Taxon taxon = taxonService.findByCommonName( "human" );
+        assertNotNull( taxon );
         Collection<Gene> geneCollection = geneService.getGenesByTaxon( taxon );
-        assert ( !geneCollection.isEmpty() );
+        assertTrue( !geneCollection.isEmpty() );
 
     }
 }

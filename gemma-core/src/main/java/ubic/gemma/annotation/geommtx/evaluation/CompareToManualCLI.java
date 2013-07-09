@@ -28,7 +28,7 @@ import ubic.GEOMMTx.OntologyTools;
 import ubic.GEOMMTx.ProjectRDFModelTools;
 import ubic.GEOMMTx.evaluation.CheckHighLevelSpreadSheet;
 import ubic.GEOMMTx.evaluation.DescriptionExtractor;
-import ubic.GEOMMTx.filters.BIRNLexFMANullsFilter;
+import ubic.GEOMMTx.filters.FMANullsFilter;
 import ubic.GEOMMTx.filters.UninformativeFilter;
 import ubic.GEOMMTx.mappers.DiseaseOntologyMapper;
 import ubic.GEOMMTx.mappers.FMALiteMapper;
@@ -147,8 +147,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
         OntologyService os = this.getBean( OntologyService.class );
 
-        BIRNLexFMANullsFilter nullFilter = new BIRNLexFMANullsFilter( os.getFmaOntologyService(),
-                os.getBirnLexOntologyService() );
+        FMANullsFilter nullFilter = new FMANullsFilter( os.getFmaOntologyService() );
         UninformativeFilter unFilter = new UninformativeFilter();
 
         int bad = 0;

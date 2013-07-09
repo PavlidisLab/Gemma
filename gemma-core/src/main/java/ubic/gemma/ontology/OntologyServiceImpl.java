@@ -40,13 +40,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
-import ubic.basecode.ontology.providers.BirnLexOntologyService;
 import ubic.basecode.ontology.providers.CellTypeOntologyService;
 import ubic.basecode.ontology.providers.ChebiOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
@@ -64,7 +62,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -76,9 +73,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-
-import com.hp.hpl.jena.rdf.model.ModelMaker;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 /**
  * Has a static method for finding out which ontologies are loaded into the system and a general purpose find method
@@ -197,39 +191,12 @@ public class OntologyServiceImpl implements OntologyService {
      */
     private static final int MAX_TERMS_TO_FETCH = 200;
 
-    /**
-     * List the ontologies that are available in the jena database.
-     * 
-     * @return
-     */
-    public static Collection<ubic.gemma.ontology.Ontology> listAvailableOntologies() {
-
-        Collection<ubic.gemma.ontology.Ontology> ontologies = new HashSet<ubic.gemma.ontology.Ontology>();
-
-        ModelMaker maker = OntologyLoader.getRDBMaker();
-
-        try {
-            ExtendedIterator<String> iterator = maker.listModels();
-            while ( iterator.hasNext() ) {
-                String name = iterator.next();
-                ExternalDatabase database = OntologyUtils.ontologyAsExternalDatabase( name );
-                ubic.gemma.ontology.Ontology o = new ubic.gemma.ontology.Ontology( database );
-                ontologies.add( o );
-            }
-            return ontologies;
-        } finally {
-            maker.close();
-        }
-
-    }
-
     @Autowired
     private GeneOntologyService geneOntologyService;
 
     @Autowired
     private BioMaterialService bioMaterialService;
 
-    private BirnLexOntologyService birnLexOntologyService = new BirnLexOntologyService();
     private NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
     private ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
     private FMAOntologyService fmaOntologyService = new FMAOntologyService();
@@ -513,16 +480,6 @@ public class OntologyServiceImpl implements OntologyService {
         if ( geneOntologyService.isReady() ) results.addAll( geneOntologyService.findTerm( search ) );
 
         return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.OntologyService#getBirnLexOntologyService()
-     */
-    @Override
-    public BirnLexOntologyService getBirnLexOntologyService() {
-        return birnLexOntologyService;
     }
 
     /*

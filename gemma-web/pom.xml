@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
@@ -137,18 +138,14 @@
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
-			<artifactId>gemma-mda</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>gemma</groupId>
 			<artifactId>gemma-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>gemma</groupId>
-			<artifactId>gemma-util</artifactId>
-			<version>${project.version}</version>
+			<version>${project.version}</version>			<exclusions>
+				<exclusion>
+					<artifactId>jsp-api</artifactId>
+					<groupId>javax.servlet</groupId>
+				</exclusion>
+			</exclusions>
+
 		</dependency>
 		<dependency>
 			<groupId>commons-beanutils</groupId>
@@ -175,28 +172,7 @@
 			<artifactId>jaxen</artifactId>
 			<version>1.1</version>
 		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>jstl</artifactId>
-			<version>1.1.2</version>
-		</dependency>
-		<dependency>
-			<groupId>jstl</groupId>
-			<artifactId>standard</artifactId>
-			<version>1.1.2</version>
-		</dependency>
-		<dependency>
-			<groupId>struts-menu</groupId>
-			<artifactId>struts-menu</artifactId>
-			<version>2.4.3</version>
-			<scope>runtime</scope>
-			<exclusions>
-				<exclusion>
-					<artifactId>standard</artifactId>
-					<groupId>taglibs</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+
 		<dependency>
 			<groupId>commons-dbutils</groupId>
 			<artifactId>commons-dbutils</artifactId>
@@ -288,6 +264,30 @@
 			<artifactId>jsp-api</artifactId>
 			<version>2.1</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.1.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>taglibs</groupId>
+			<artifactId>standard</artifactId>
+			<version>1.1.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>struts-menu</groupId>
+			<artifactId>struts-menu</artifactId>
+			<version>2.4.3</version>
+			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>taglibs</groupId>
+					<artifactId>standard</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>jetty</groupId>

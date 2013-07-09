@@ -192,18 +192,19 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             List<String> experimentalFactorFileLines, String[] headerFields, List<String> factorValueLines ) {
 
         int maxWait = 0;
-        // assumes EFO is going to be available.
 
-        while ( !efoService.isOntologyLoaded() ) {
-            try {
-                Thread.sleep( 10000 );
-                if ( maxWait++ > 10 ) {
-                    log.error( "EFO is not loaded and gave up waiting" );
-                    break;
-                    // this is okay, we can get by using OntologyTermSimple.
+        if ( efoService.isEnabled() ) {
+            while ( !efoService.isOntologyLoaded() ) {
+                try {
+                    Thread.sleep( 10000 );
+                    if ( maxWait++ > 10 ) {
+                        log.error( "EFO is not loaded and gave up waiting" );
+                        break;
+                        // this is okay, we can get by using OntologyTermSimple.
+                    }
+                } catch ( InterruptedException e ) {
+                    e.printStackTrace();
                 }
-            } catch ( InterruptedException e ) {
-                e.printStackTrace();
             }
         }
 
