@@ -91,7 +91,7 @@
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/apache/ant/ant/1.7.0/ant-1.7.0.jar" sourcepath="/M2_REPO/ant/ant/1.6.5/ant-1.6.5-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/apache/ant/ant/1.7.1/ant-1.7.1.jar" sourcepath="/M2_REPO/ant/ant/1.6.5/ant-1.6.5-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.jajakarta.org/ant/ant-1.6.1/docs/ja/manual/api/"/>
 		</attributes>
@@ -126,7 +126,7 @@
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/jsp/jsp-api/2.1/jsp-api-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.6/antlr-2.7.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xerces/xercesImpl/2.8.1/xercesImpl-2.8.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/chibi/ubc/compass-fork/compass-fork/1.0/compass-fork-1.0.jar" sourcepath="/M2_REPO/org/compass-project/compass/2.2.0/compass-2.2.0-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/ubc/chibi/compass-fork/compass-fork/1.0/compass-fork-1.0.jar" sourcepath="/M2_REPO/org/compass-project/compass/2.2.0/compass-2.2.0-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.compass-project.org/docs/2.2.0/api/"/>
 		</attributes>
@@ -191,7 +191,7 @@
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-snowball/3.0.3/lucene-snowball-3.0.3.jar">
+	<classpathentry kind="var" path="M2_REPO/org/apache/lucene/lucene-snowball/2.4.1/lucene-snowball-2.4.1.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
