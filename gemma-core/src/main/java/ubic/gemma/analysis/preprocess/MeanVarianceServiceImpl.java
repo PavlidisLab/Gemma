@@ -118,23 +118,23 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             QuantitationType qt = null;
 
             if ( qtList.size() == 0 ) {
-                log.error( "Did not find any preferred quantitation type." );
-            } else if ( qtList.size() == 1 ) {
-                qt = qtList.iterator().next();
+                log.error( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
             } else {
+                qt = qtList.iterator().next();
                 log.warn( "Found more than one preferred quantitation type. Only the first preferred quantitation type ("
                         + qt + ") will be used." );
+
+                try {
+                    intensities = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( qt, intensities );
+                } catch ( UnknownLogScaleException e ) {
+                    log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
+                }
+
+                mvr = calculateMeanVariance( intensities, mvr );
+
+                meanVarianceServiceHelper.createMeanVariance( updatedEe, mvr );
+
             }
-
-            try {
-                intensities = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( qt, intensities );
-            } catch ( UnknownLogScaleException e ) {
-                log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
-            }
-
-            mvr = calculateMeanVariance( intensities, mvr );
-
-            meanVarianceServiceHelper.createMeanVariance( updatedEe, mvr );
         }
 
         log.info( "Mean-variance computation is complete" );
