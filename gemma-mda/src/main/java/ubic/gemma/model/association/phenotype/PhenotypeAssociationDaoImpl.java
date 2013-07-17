@@ -377,9 +377,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
             sqlQuery += ") ";
         }
-
-        System.out.println( sqlQuery );
-
+        
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
         return phenotypesGenesAssociations;

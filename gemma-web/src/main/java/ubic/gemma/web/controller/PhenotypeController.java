@@ -112,10 +112,6 @@ public class PhenotypeController extends BaseController {
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds ) {
 
-        if ( databaseIds != null ) {
-            System.out.println( databaseIds.size() );
-        }
-
         return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
                 showOnlyEditable, databaseIds ) );
     }
