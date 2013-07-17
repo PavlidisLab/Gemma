@@ -14,6 +14,9 @@
  */
 package ubic.gemma.model;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import ubic.gemma.model.common.description.ExternalDatabase;
 
 /**
@@ -23,6 +26,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 public class ExternalDatabaseValueObject {
 
     private String name;
+    private Long id;
 
     public String getName() {
         return name;
@@ -32,11 +36,31 @@ public class ExternalDatabaseValueObject {
         this.name = name;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public static ExternalDatabaseValueObject fromEntity( ExternalDatabase ed ) {
         if ( ed == null ) return null;
         ExternalDatabaseValueObject vo = new ExternalDatabaseValueObject();
         vo.setName( ed.getName() );
+        vo.setId( ed.getId() );
         return vo;
+    }
+
+    public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {
+        if ( eds == null ) return null;
+
+        Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = new HashSet<ExternalDatabaseValueObject>();
+        for ( ExternalDatabase ed : eds ) {
+            externalDatabaseValueObjects.add( fromEntity( ed ) );
+        }
+
+        return externalDatabaseValueObjects;
     }
 
     @Override

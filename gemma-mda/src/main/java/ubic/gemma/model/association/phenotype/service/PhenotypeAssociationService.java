@@ -27,6 +27,7 @@ import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
@@ -54,7 +55,8 @@ public interface PhenotypeAssociationService {
      * @param phenotypesValueUri The Ontology valueURI of the phenotype
      */
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable );
+            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
+            Collection<Long> externalDatabaseIds );
 
     /**
      * create a GenericExperiment
@@ -118,6 +120,11 @@ public interface PhenotypeAssociationService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
 
+    /** find all PhenotypeAssociation for a specific gene id and external Databases ids */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
+            Collection<Long> externalDatabaseIds );
+
     /** find all PhenotypeAssociation for a specific NCBI id */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
@@ -135,14 +142,15 @@ public interface PhenotypeAssociationService {
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable );
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** find private evidence id that the user can modifiable or own */
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups );
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable );
+            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable,
+            Collection<Long> externalDatabaseIds );
 
     /** return the list of the owners that have evidence in the system */
     public Collection<String> findEvidenceOwners();
@@ -165,5 +173,12 @@ public interface PhenotypeAssociationService {
 
     /** find all phenotypes in Neurocarta */
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
+
+    /**
+     * Gets all External Databases that are used with evidence
+     * 
+     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     */
+    public Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
 
 }

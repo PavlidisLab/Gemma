@@ -41,7 +41,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
                                  read : {
                                     dwrFunction : PhenotypeController.loadAllPhenotypesByTree,
                                     getDwrArgsFunction : function(request) {
-                                       return [request.params['taxonId'], request.params['showOnlyEditable']];
+                                       return [request.params['taxonId'], request.params['showOnlyEditable'],request.params['databaseIds']];
                                     }.createDelegate(this)
                                  }
                               }

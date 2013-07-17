@@ -33,6 +33,7 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidenceDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
@@ -72,9 +73,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find Genes link to a phenotype */
     @Override
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable ) {
+            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
+            Collection<Long> externalDatabaseIds ) {
         return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri, taxon, userName, groups,
-                isAdmin, showOnlyEditable );
+                isAdmin, showOnlyEditable, externalDatabaseIds );
     }
 
     /** find all phenotypes */
@@ -155,6 +157,13 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneId( geneId );
     }
 
+    /** find all PhenotypeAssociation for a specific gene id and external Databases ids */
+    @Override
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
+            Collection<Long> externalDatabaseIds ) {
+        return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneIdAndDatabases( geneId, externalDatabaseIds );
+    }
+
     /** find all PhenotypeAssociation for a specific NCBI id */
     @Override
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
@@ -182,9 +191,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable ) {
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
         return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxon, valuesUri, userName, groups,
-                showOnlyEditable );
+                showOnlyEditable, externalDatabaseIds );
     }
 
     /** find private evidence id that the user can modifiable or own */
@@ -196,9 +205,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable ) {
+            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable,
+            Collection<Long> externalDatabaseIds ) {
         return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, valuesUri, userName, groups,
-                showOnlyEditable );
+                showOnlyEditable, externalDatabaseIds );
     }
 
     /** return the list of the owners that have evidence in the system */
@@ -241,6 +251,16 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
         return this.phenotypeAssociationDao.loadAllNeurocartaPhenotypes();
+    }
+
+    /**
+     * Gets all External Databases that are used with evidence
+     * 
+     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     */
+    @Override
+    public Collection<ExternalDatabase> findExternalDatabasesWithEvidence() {
+        return this.phenotypeAssociationDao.findExternalDatabasesWithEvidence();
     }
 
 }

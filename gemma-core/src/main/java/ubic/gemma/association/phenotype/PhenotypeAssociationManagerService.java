@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.SortedSet;
 
+import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -259,4 +260,11 @@ public interface PhenotypeAssociationManagerService {
      */
     public abstract ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId );
+
+    /**
+     * Gets all External Databases that are used with evidence
+     * 
+     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     */
+    public abstract Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
 }

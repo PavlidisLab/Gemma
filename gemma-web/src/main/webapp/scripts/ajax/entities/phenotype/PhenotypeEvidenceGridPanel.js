@@ -326,7 +326,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                   read : {
                      dwrFunction : GeneController.loadGeneEvidence,
                      getDwrArgsFunction : function(request) {
-                        return [request.params['taxonId'], request.params['showOnlyEditable'], request.params["geneId"], request.params["phenotypeValueUris"]];
+                        return [request.params['taxonId'], request.params['showOnlyEditable'],request.params['databaseIds'], request.params["geneId"], request.params["phenotypeValueUris"]];
                      }
                   }
                }
@@ -731,6 +731,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                         params : {
                            taxonId : currentFilters.taxonId,
                            showOnlyEditable : currentFilters.showOnlyEditable,
+                           databaseIds : currentFilters.databaseIds,
                            geneId : currentGene.id,
                            phenotypeValueUris : phenotypeValueUris
                         }

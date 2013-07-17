@@ -69,16 +69,24 @@ import ubic.gemma.web.view.TextView;
 @RequestMapping(value = { "/gene", "/g" })
 public class GeneController extends BaseController {
 
-    @Autowired private AllenBrainAtlasService allenBrainAtlasService;
-    @Autowired private HomologeneService homologeneService;
-    @Autowired private GeneService geneService;
-    @Autowired private TaxonService taxonService;
-    @Autowired private GeneSetService geneSetService;
-    @Autowired private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    @Autowired private GeneCoreService geneCoreService;
+    @Autowired
+    private AllenBrainAtlasService allenBrainAtlasService;
+    @Autowired
+    private HomologeneService homologeneService;
+    @Autowired
+    private GeneService geneService;
+    @Autowired
+    private TaxonService taxonService;
+    @Autowired
+    private GeneSetService geneSetService;
+    @Autowired
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    @Autowired
+    private GeneCoreService geneCoreService;
 
     /**
      * For ajax
+     * 
      * @return
      */
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
@@ -87,6 +95,7 @@ public class GeneController extends BaseController {
 
     /**
      * For ajax.
+     * 
      * @return
      */
     public Collection<GeneProductValueObject> getProducts( Long geneId ) {
@@ -108,11 +117,11 @@ public class GeneController extends BaseController {
      * used to show gene info in the phenotype tab
      */
     public Collection<EvidenceValueObject> loadGeneEvidence( Long taxonId, boolean showOnlyEditable,
-            Long geneId, String[] phenotypeValueUris ) {
+            Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
         return phenotypeAssociationManagerService.findEvidenceByGeneId(
                 geneId,
                 phenotypeValueUris == null ? new HashSet<String>() : new HashSet<String>( Arrays
-                        .asList( phenotypeValueUris ) ), new EvidenceFilter( taxonId, showOnlyEditable ) );
+                        .asList( phenotypeValueUris ) ), new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
     }
 
     /**
@@ -134,53 +143,53 @@ public class GeneController extends BaseController {
         String idString = request.getParameter( "id" );
         String ncbiId = request.getParameter( "ncbiid" );
         String geneName = request.getParameter( "name" );
-        String taxonName = request.getParameter( "taxon" );        
-        String ensemblId = request.getParameter( "ensemblId" );        
+        String taxonName = request.getParameter( "taxon" );
+        String ensemblId = request.getParameter( "ensemblId" );
 
         GeneValueObject geneVO = null;
 
         try {
-        	if (StringUtils.isNotBlank( idString )) {
-        		Long id = Long.parseLong( idString );
-        		assert id != null;
-        		
-        		geneVO = geneService.loadValueObject( id );
-        		
-        		if ( geneVO == null ) {
-        			addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-        			return new ModelAndView( "index" );
-        		}
-        	} else if ( StringUtils.isNotBlank( ncbiId ) ) {
-        		
-        		geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
-        	
-        	} else if (StringUtils.isNotBlank( ensemblId )) {    
-        		Collection<Gene> foundGenes = (Collection<Gene>) geneService.findByEnsemblId(ensemblId);
-        	
-        		if (foundGenes.size() == 1) {
-        			Gene gene = foundGenes.iterator().next();
-        			if (gene != null) {
-        				geneVO = geneService.loadValueObject( gene.getId() );                        	
-        			}                    	
-        		}
-        	} else if (StringUtils.isNotBlank( geneName ) && StringUtils.isNotBlank( taxonName )) {
-        		Taxon taxon = taxonService.findByCommonName( taxonName );
-        		if (taxon != null) {
-        			Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
-        			if (gene != null) {
-        				geneVO = geneService.loadValueObject( gene.getId() );                        	
-        			}
-        		}
-        	}
+            if ( StringUtils.isNotBlank( idString ) ) {
+                Long id = Long.parseLong( idString );
+                assert id != null;
+
+                geneVO = geneService.loadValueObject( id );
+
+                if ( geneVO == null ) {
+                    addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+                    return new ModelAndView( "index" );
+                }
+            } else if ( StringUtils.isNotBlank( ncbiId ) ) {
+
+                geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
+
+            } else if ( StringUtils.isNotBlank( ensemblId ) ) {
+                Collection<Gene> foundGenes = ( Collection<Gene> ) geneService.findByEnsemblId( ensemblId );
+
+                if ( foundGenes.size() == 1 ) {
+                    Gene gene = foundGenes.iterator().next();
+                    if ( gene != null ) {
+                        geneVO = geneService.loadValueObject( gene.getId() );
+                    }
+                }
+            } else if ( StringUtils.isNotBlank( geneName ) && StringUtils.isNotBlank( taxonName ) ) {
+                Taxon taxon = taxonService.findByCommonName( taxonName );
+                if ( taxon != null ) {
+                    Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
+                    if ( gene != null ) {
+                        geneVO = geneService.loadValueObject( gene.getId() );
+                    }
+                }
+            }
 
         } catch ( NumberFormatException e ) {
-        	addMessage( request, "object.notfound", new Object[] { "Gene" } );
-        	return new ModelAndView( "index" );        	
+            addMessage( request, "object.notfound", new Object[] { "Gene" } );
+            return new ModelAndView( "index" );
         }
 
         if ( geneVO == null ) {
-        	addMessage( request, "object.notfound", new Object[] { "Gene"} );
-        	return new ModelAndView( "index" );
+            addMessage( request, "object.notfound", new Object[] { "Gene" } );
+            return new ModelAndView( "index" );
         }
 
         Long id = geneVO.getId();

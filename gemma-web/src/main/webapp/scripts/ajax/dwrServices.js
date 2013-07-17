@@ -683,9 +683,9 @@ GeneController.loadGeneDetails = function(p0, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadGeneDetails");
    dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneDetails', p0, callback);
 };
-GeneController.loadGeneEvidence = function(p0, p1, p2, p3, callback) {
+GeneController.loadGeneEvidence = function(p0, p1, p2, p3,p4, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadGeneEvidence");
-   dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneEvidence', p0, p1, p2, p3, callback);
+   dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneEvidence', p0, p1, p2, p3,p4, callback);
 };
 GeneController.loadAllenBrainImages = function(p0, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadAllenBrainImages");
@@ -1073,9 +1073,9 @@ PhenotypeController.findEvidenceByFilters = function(p0, p1, p2, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/findEvidenceByFilters");
    dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findEvidenceByFilters', p0, p1, p2, callback);
 };
-PhenotypeController.findCandidateGenes = function(p0, p1, p2, callback) {
+PhenotypeController.findCandidateGenes = function(p0, p1, p2,p3, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/findCandidateGenes");
-   dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findCandidateGenes', p0, p1, p2, callback);
+   dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findCandidateGenes', p0, p1, p2,p3, callback);
 };
 PhenotypeController.findExperimentCategory = function(callback) {
    dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExperimentCategory', callback);
@@ -1090,8 +1090,8 @@ PhenotypeController.findExperimentOntologyValue = function(p0, p1, p2, callback)
 PhenotypeController.findEvidenceOwners = function(callback) {
    dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findEvidenceOwners', callback);
 };
-PhenotypeController.loadAllPhenotypesByTree = function(p0, p1, callback) {
-   dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypesByTree', p0, p1, callback);
+PhenotypeController.loadAllPhenotypesByTree = function(p0, p1, p2, callback) {
+   dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypesByTree', p0, p1, p2, callback);
 };
 PhenotypeController.searchOntologyForPhenotypes = function(p0, p1, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/PhenotypeController/searchOntologyForPhenotypes");
@@ -1117,6 +1117,9 @@ PhenotypeController.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAna
 };
 PhenotypeController.removeAllEvidenceFromMetaAnalysis = function(p0, callback) {
    dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'removeAllEvidenceFromMetaAnalysis', p0, callback);
+};
+PhenotypeController.findExternalDatabaseName = function(callback) {
+	   dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findExternalDatabaseName', callback);
 };
 // =====================================================================================
 if (typeof JavascriptLogger === 'undefined') {

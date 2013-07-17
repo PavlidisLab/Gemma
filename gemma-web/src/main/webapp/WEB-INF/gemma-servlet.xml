@@ -383,6 +383,7 @@
 			<dwr:include method="removePhenotypeAssociation" />
 			<dwr:include method="makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis" />
 			<dwr:include method="removeAllEvidenceFromMetaAnalysis" />
+			<dwr:include method="findExternalDatabaseName" />
 		</dwr:remote>
 	</bean>
 
@@ -785,7 +786,6 @@
 			javascript="PhenotypeValueObject" />
 		<dwr:convert type="bean"
 			class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject" javascript="ExternalDatabaseStatisticsValueObject" />
-
 		<dwr:convert type="bean" class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Gene" />
 		<dwr:convert type="bean"

@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
@@ -34,7 +35,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable );
+            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
+            Collection<Long> externalDatabaseIds );
 
     /** load all valueURI of Phenotype in the database */
     public Set<String> loadAllPhenotypesUri();
@@ -48,6 +50,10 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
+
+    /** find all PhenotypeAssociation for a specific gene id and external Databases ids */
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
+            Collection<Long> externalDatabaseIds );
 
     /** find all PhenotypeAssociation for a specific NCBI id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
@@ -63,7 +69,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable );
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** finds all external databases statistics used in neurocarta */
     public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases();
@@ -73,7 +79,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable );
+            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable,
+            Collection<Long> externalDatabaseIds );
 
     /** find private evidence id that the user can modifiable or own */
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups );
@@ -93,5 +100,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all phenotypes in Neurocarta */
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
+
+    /** Gets all External Databases that are used with evidence */
+    public Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
 
 }

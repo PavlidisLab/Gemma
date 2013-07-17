@@ -33,6 +33,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerServiceImpl;
+import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -108,9 +109,15 @@ public class PhenotypeController extends BaseController {
         return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
     }
 
-    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable ) {
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable,
+            Collection<Long> databaseIds ) {
+
+        if ( databaseIds != null ) {
+            System.out.println( databaseIds.size() );
+        }
+
         return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
-                showOnlyEditable ) );
+                showOnlyEditable, databaseIds ) );
     }
 
     /**
@@ -119,9 +126,10 @@ public class PhenotypeController extends BaseController {
      * @param phenotypes
      * @return all genes that have given phenotypes
      */
-    public Collection<GeneValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable, String[] phenotypes ) {
+    public Collection<GeneValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable,
+            Collection<Long> databaseIds, String[] phenotypes ) {
         return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
-                showOnlyEditable ), new HashSet<String>( Arrays.asList( phenotypes ) ) );
+                showOnlyEditable, databaseIds ), new HashSet<String>( Arrays.asList( phenotypes ) ) );
     }
 
     /**
@@ -237,6 +245,10 @@ public class PhenotypeController extends BaseController {
 
     public Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics() {
         return this.phenotypeAssociationManagerService.loadNeurocartaStatistics();
+    }
+
+    public Collection<ExternalDatabaseValueObject> findExternalDatabaseName() {
+        return this.phenotypeAssociationManagerService.findExternalDatabasesWithEvidence();
     }
 
     public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(

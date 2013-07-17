@@ -122,7 +122,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
                               read : {
                                  dwrFunction : PhenotypeController.findCandidateGenes,
                                  getDwrArgsFunction : function(request) {
-                                    return [request.params['taxonId'], request.params['showOnlyEditable'], request.params["phenotypeValueUris"]];
+                                    return [request.params['taxonId'], request.params['showOnlyEditable'],request.params['databaseIds'], request.params["phenotypeValueUris"]];
 
                                  }
                               }
@@ -265,7 +265,8 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
                            params : {
                               taxonId : currentFilters.taxonId,
                               showOnlyEditable : currentFilters.showOnlyEditable,
-                              phenotypeValueUris : currentPhenotypeValueUris
+                              phenotypeValueUris : currentPhenotypeValueUris,
+                              databaseIds : currentFilters.databaseIds
                            }
                         });
                      this.getSelectionModel().clearSelections(false);
