@@ -16,12 +16,13 @@ package ubic.gemma.loader.association;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.TreeSet;
+import java.util.Collection;
+import java.util.HashSet;
 
 import org.junit.Test;
 
-import ubic.gemma.association.phenotype.externalDatabaseUpload.AnnotatorClient;
-import ubic.gemma.association.phenotype.externalDatabaseUpload.AnnotatorResponse;
+import ubic.basecode.ncboAnnotator.AnnotatorClient;
+import ubic.basecode.ncboAnnotator.AnnotatorResponse;
 
 /**
  * @author Paul
@@ -31,8 +32,12 @@ public class AnnotatorClientTest {
 
     @Test
     public void test() throws Exception {
-        AnnotatorClient client = new AnnotatorClient();
-        TreeSet<AnnotatorResponse> results = client.findTerm( "cancer" );
+
+        Collection<Long> ontologiesToUse = new HashSet<Long>();
+        ontologiesToUse.add( 1009l );
+        ontologiesToUse.add( 1125l );
+        AnnotatorClient client = new AnnotatorClient( ontologiesToUse );
+        Collection<AnnotatorResponse> results = client.findTerm( "cancer" );
         assertTrue( results.size() > 0 );
     }
 

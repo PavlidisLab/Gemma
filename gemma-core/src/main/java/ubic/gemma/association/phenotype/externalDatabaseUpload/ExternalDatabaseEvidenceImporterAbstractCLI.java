@@ -17,9 +17,9 @@ package ubic.gemma.association.phenotype.externalDatabaseUpload;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.TreeSet;
 
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
@@ -39,7 +39,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
     public static final String CURRENT_PATH = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/externalDatabaseUpload/Files/";
     // the annotator to search the NBCI web service
-    protected AnnotatorClient anoClient = new AnnotatorClient();
     protected DiseaseOntologyService diseaseOntologyService = null;
     protected HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
     protected OntologyService ontologyService = null;
@@ -72,7 +71,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
     // *********************************************************************************************
 
-    protected HashMap<String, HashSet<GenericEvidenceValueObject>> omimIDGeneToEvidence = new HashMap<String, HashSet<GenericEvidenceValueObject>>();
+    protected HashMap<String, ArrayList<GenericEvidenceValueObject>> omimIDGeneToEvidence = new HashMap<String, ArrayList<GenericEvidenceValueObject>>();
 
     protected synchronized void loadOntologyServices( String[] args ) throws Exception {
 

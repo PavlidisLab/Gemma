@@ -30,17 +30,13 @@ import java.util.HashSet;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import ubic.basecode.ncboAnnotator.AnnotatorClient;
+import ubic.basecode.ncboAnnotator.AnnotatorResponse;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 
-/**
- * TODO Document Me
- * 
- * @author nicolas
- * @version $Id$
- */
 public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     HashMap<String, String> phenotypeToOmimMapping = new HashMap<String, String>();
@@ -135,8 +131,10 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                         }
                         omimIdToPhenotypeMapping.put( omimId, h );
 
-                        phenotypeToOmimMapping.put( valueUri, omimId );
-
+                        // only add the mapping if not obsolete
+                        if ( !isObsoleteOrNotExist( valueUri ) ) {
+                            phenotypeToOmimMapping.put( valueUri, omimId );
+                        }
                     }
                 }
             }
@@ -202,7 +200,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
         HashSet<String> descriptionToIgnore = parseDescriptionToIgnore();
 
         // mapping from OMIM description to phenotype (manual mapping)
-        HashMap<String, Collection<String>> omimDescriptionToPhenotype = parseFileOmimDescriptionToPhenotype();
+        HashMap<String, Collection<String>> omimIdToPhenotype = parseFileOmimDescriptionToPhenotype();
         // mapping find using mim2gene file, Omim id ---> Gene NCBI
         HashMap<String, String> omimIdToGeneNCBI = parseFileOmimIdToGeneNCBI( mim2gene );
 
@@ -210,7 +208,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
         BufferedWriter outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
         BufferedWriter outMappinpFound = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
         BufferedWriter outNotFound = new BufferedWriter( new FileWriter( writeFolder + "/notFound.tsv" ) );
-        TreeSet<String> outMappinpFoundBuffer = new TreeSet<String>();
+        TreeSet<String> outMappingFoundBuffer = new TreeSet<String>();
         TreeSet<String> outNotFoundBuffer = new TreeSet<String>();
 
         String line = null;
@@ -218,6 +216,11 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
         BufferedReader br = new BufferedReader( new FileReader( morbidmap ) );
 
         int v = 0;
+
+        Collection<Long> ontologiesToUse = new HashSet<Long>();
+        ontologiesToUse.add( 1009l );
+        ontologiesToUse.add( 1125l );
+        AnnotatorClient anoClient = new AnnotatorClient( ontologiesToUse );
 
         // parse the last Omim file and decide what outfile file each result should be put
         while ( ( line = br.readLine() ) != null ) {
@@ -229,9 +232,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
             // if there is a database link
             if ( pos != -1 ) {
 
-                String phenotypeValue = "";
-                String phenotypeValueUri = "";
-                Collection<String> phenotypeValueUriCollection = new HashSet<String>();
+                Collection<String> phenotypesUri = new HashSet<String>();
                 // this is how we find the result
                 String conditionUsed = "";
 
@@ -241,14 +242,13 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                 // evidence code we will use
                 String evidenceCode = "TAS";
                 // database Link
-                String databaseLink = tokens[0].substring( pos + 1, tokens[0].length() ).trim().split( " " )[0];
+                String omimId = tokens[0].substring( pos + 1, tokens[0].length() ).trim().split( " " )[0];
 
                 String omimGeneId = tokens[2];
 
                 // search terms that will be used by the annotator
-                String searchTerm = description;
+                String searchTerm = removeSymbol( description );
                 String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm, wordsToExclude );
-
                 String ncbiGeneId = omimIdToGeneNCBI.get( omimGeneId );
 
                 // is the omimGeneId found in the other file
@@ -257,7 +257,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                     String geneSymbol = this.geneService.findByNCBIId( new Integer( ncbiGeneId ) ).getOfficialSymbol();
 
                     // if there is no databaselink we cannot do anything with this line (happens often)
-                    if ( !isInteger( databaseLink ) || Integer.parseInt( databaseLink ) < 100 ) {
+                    if ( !isInteger( omimId ) || Integer.parseInt( omimId ) < 100 ) {
                         continue;
                     }
 
@@ -269,27 +269,23 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                         conditionUsed = "Case 0: Ignored Descripton";
                     }
 
-                    // Case 1: lets use the Omim id to find the mapping phenotype
-                    if ( omimIdToPhenotypeMapping.get( databaseLink ) != null ) {
-                        phenotypeValueUriCollection = omimIdToPhenotypeMapping.get( databaseLink );
+                    // Case 1: lets use the Omim id to find the mapping phenotype, it cannot be obsolete
+                    if ( omimIdToPhenotypeMapping.get( omimId ) != null ) {
+                        phenotypesUri = omimIdToPhenotypeMapping.get( omimId );
                         conditionUsed = "Case 1: Found with OMIM ID";
                     }
 
                     // Case 2: use the static manual annotation file
-                    else if ( omimDescriptionToPhenotype.get( description ) != null ) {
-                        phenotypeValueUriCollection = omimDescriptionToPhenotype.get( description );
+                    else if ( omimIdToPhenotype.get( omimId ) != null ) {
+                        phenotypesUri = omimIdToPhenotype.get( omimId );
                         conditionUsed = "Case 2: Found with Description, Manual Mapping";
-                    }
-                    // Case 3: same as 2 but without specific keywords
-                    else if ( omimDescriptionToPhenotype.get( searchTermWithOutKeywords ) != null ) {
-                        phenotypeValueUriCollection = omimDescriptionToPhenotype.get( searchTermWithOutKeywords );
-                        conditionUsed = "Case 3: Found with Description, Manual Mapping (without keyword)";
                     }
 
                     // lets use the annotator to see if we find it there
                     else {
 
-                        Collection<AnnotatorResponse> ontologyTermsNormal = anoClient.findTerm( searchTerm );
+                        Collection<AnnotatorResponse> ontologyTermsNormal = removeNotExistAndObsolete( anoClient
+                                .findTerm( searchTerm ) );
                         Collection<AnnotatorResponse> ontologyTermsWithOutKeywords = new HashSet<AnnotatorResponse>();
 
                         AnnotatorResponse annotatorResponseFirstNormal = null;
@@ -306,60 +302,61 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                             if ( annotatorResponseFirstNormal.getOntologyUsed().equalsIgnoreCase( "DOID" ) ) {
 
                                 if ( annotatorResponseFirstNormal.isExactMatch() ) {
-                                    phenotypeValueUri = annotatorResponseFirstNormal.getValueUri();
+                                    phenotypesUri.add( annotatorResponseFirstNormal.getValueUri() );
                                     conditionUsed = "Case 4a: Found Exact With Disease Annotator";
 
                                 } else if ( annotatorResponseFirstNormal.isSynonym() ) {
-                                    phenotypeValueUri = annotatorResponseFirstNormal.getValueUri();
+                                    phenotypesUri.add( annotatorResponseFirstNormal.getValueUri() );
                                     conditionUsed = "Case 5a: Found Synonym With Disease Annotator Synonym";
                                 }
                             } else if ( annotatorResponseFirstNormal.getOntologyUsed().equalsIgnoreCase( "HP" ) ) {
 
                                 if ( annotatorResponseFirstNormal.isExactMatch() ) {
-                                    phenotypeValueUri = annotatorResponseFirstNormal.getValueUri();
+                                    phenotypesUri.add( annotatorResponseFirstNormal.getValueUri() );
                                     conditionUsed = "Case 6a: Found Exact With HP Annotator";
 
                                 } else if ( annotatorResponseFirstNormal.isSynonym() ) {
-                                    phenotypeValueUri = annotatorResponseFirstNormal.getValueUri();
+                                    phenotypesUri.add( annotatorResponseFirstNormal.getValueUri() );
                                     conditionUsed = "Case 7a: Found Synonym With HP Annotator Synonym";
                                 }
                             }
+                        }
 
-                            if ( conditionUsed.isEmpty() ) {
+                        if ( conditionUsed.isEmpty() ) {
 
-                                ontologyTermsWithOutKeywords = anoClient.findTerm( searchTermWithOutKeywords );
+                            ontologyTermsWithOutKeywords = removeNotExistAndObsolete( anoClient
+                                    .findTerm( searchTermWithOutKeywords ) );
 
-                                AnnotatorResponse annotatorResponsFirst = null;
+                            AnnotatorResponse annotatorResponsFirst = null;
 
-                                if ( !ontologyTermsWithOutKeywords.isEmpty() ) {
-                                    annotatorResponsFirst = ontologyTermsWithOutKeywords.iterator().next();
-                                }
+                            if ( !ontologyTermsWithOutKeywords.isEmpty() ) {
+                                annotatorResponsFirst = ontologyTermsWithOutKeywords.iterator().next();
+                            }
 
-                                if ( annotatorResponsFirst != null
-                                        && this.ontologyService.getTerm( annotatorResponsFirst.getValueUri() ) != null
-                                        && !this.ontologyService.getTerm( annotatorResponsFirst.getValueUri() )
-                                                .isTermObsolete() ) {
+                            if ( annotatorResponsFirst != null
+                                    && this.ontologyService.getTerm( annotatorResponsFirst.getValueUri() ) != null
+                                    && !this.ontologyService.getTerm( annotatorResponsFirst.getValueUri() )
+                                            .isTermObsolete() ) {
 
-                                    if ( annotatorResponsFirst.getOntologyUsed().equalsIgnoreCase( "DOID" ) ) {
+                                if ( annotatorResponsFirst.getOntologyUsed().equalsIgnoreCase( "DOID" ) ) {
 
-                                        if ( annotatorResponsFirst.isExactMatch() ) {
-                                            phenotypeValueUri = annotatorResponsFirst.getValueUri();
-                                            conditionUsed = "Case 4b: Found Exact With Disease Annotator";
+                                    if ( annotatorResponsFirst.isExactMatch() ) {
+                                        phenotypesUri.add( annotatorResponsFirst.getValueUri() );
+                                        conditionUsed = "Case 4b: Found Exact With Disease Annotator (keywords taken out)";
 
-                                        } else if ( annotatorResponsFirst.isSynonym() ) {
-                                            phenotypeValueUri = annotatorResponsFirst.getValueUri();
-                                            conditionUsed = "Case 5b: Found Synonym With Disease Annotator Synonym";
-                                        }
-                                    } else if ( annotatorResponsFirst.getOntologyUsed().equalsIgnoreCase( "HP" ) ) {
+                                    } else if ( annotatorResponsFirst.isSynonym() ) {
+                                        phenotypesUri.add( annotatorResponsFirst.getValueUri() );
+                                        conditionUsed = "Case 5b: Found Synonym With Disease Annotator Synonym (keywords taken out)";
+                                    }
+                                } else if ( annotatorResponsFirst.getOntologyUsed().equalsIgnoreCase( "HP" ) ) {
 
-                                        if ( annotatorResponsFirst.isExactMatch() ) {
-                                            phenotypeValueUri = annotatorResponsFirst.getValueUri();
-                                            conditionUsed = "Case 6b: Found Exact With HP Annotator";
+                                    if ( annotatorResponsFirst.isExactMatch() ) {
+                                        phenotypesUri.add( annotatorResponsFirst.getValueUri() );
+                                        conditionUsed = "Case 6b: Found Exact With HP Annotator (without keyword)";
 
-                                        } else if ( annotatorResponsFirst.isSynonym() ) {
-                                            phenotypeValueUri = annotatorResponsFirst.getValueUri();
-                                            conditionUsed = "Case 7b: Found Synonym With HP Annotator Synonym";
-                                        }
+                                    } else if ( annotatorResponsFirst.isSynonym() ) {
+                                        phenotypesUri.add( annotatorResponsFirst.getValueUri() );
+                                        conditionUsed = "Case 7b: Found Synonym With HP Annotator Synonym (keywords taken out)";
                                     }
                                 }
                             }
@@ -398,19 +395,13 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
                                 if ( mappingFoundNotExactValue2.isEmpty() ) {
                                     conditionUsed = "Case 10: Exclude Results\t";
-                                    phenotypeValue = resultsIgnored;
-
                                 } else {
 
-                                    for ( String mappingF : mappingFoundNotExactValue ) {
-                                        phenotypeValue = phenotypeValue + mappingF + "; ";
-                                        conditionUsed = "Case 8: Found Mappings, No Match Detected";
-                                    }
+                                    conditionUsed = "Case 8: Found Mappings, No Match Detected";
 
                                     for ( String mappingF : mappingFoundNotExactValueUri ) {
-                                        phenotypeValueUri = phenotypeValueUri + mappingF + "; ";
+                                        phenotypesUri.add( mappingF );
                                     }
-
                                 }
 
                             } else {
@@ -419,79 +410,35 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                         }
 
                     }
-                    if ( !phenotypeValueUri.isEmpty() && conditionUsed.indexOf( "Case 8:" ) == -1
-                            && conditionUsed.indexOf( "Case 10:" ) == -1 ) {
 
-                        OntologyTerm o = this.diseaseOntologyService.getTerm( phenotypeValueUri );
-                        if ( o == null ) {
-                            o = this.humanPhenotypeOntologyService.getTerm( phenotypeValueUri );
-                        }
-
-                        if ( o == null ) {
-
-                            String errorMessage = "valueUri not found in the Ontology:\t" + phenotypeValueUri + "\t"
-                                    + conditionUsed + "\t";
-
-                            outNotFoundBuffer.add( description + "\t" + "valueUri not found in the Ontology:"
-                                    + phenotypeValueUri + "\n" );
-
-                            System.err.println( errorMessage );
-
-                            errorMessages.add( errorMessage );
-
-                            continue;
-                        }
-
-                        if ( o.isTermObsolete() ) {
-
-                            String errorMessage = "term is obsolete:\t" + o.getLabel() + "\t" + o.getUri() + "\t"
-                                    + conditionUsed;
-
-                            outNotFoundBuffer.add( description + "\t" + "term is obsolete: " + o.getLabel() + " "
-                                    + o.getUri() + "\n" );
-
-                            System.err.println( errorMessage );
-                            errorMessages.add( errorMessage );
-                        }
-
-                        phenotypeValue = o.getLabel();
-                    }
-
-                    // a result was found
+                    // ingored
                     if ( conditionUsed.indexOf( "Case 0:" ) != -1 ) {
                         outNotFoundBuffer.add( description + "\t" + conditionUsed + "\n" );
-                    } else if ( conditionUsed.indexOf( "Case 1:" ) != -1 || conditionUsed.indexOf( "Case 2:" ) != -1
-                            || conditionUsed.indexOf( "Case 3:" ) != -1 ) {
+                    }
+
+                    // found
+                    else if ( conditionUsed.indexOf( "Case 1:" ) != -1 || conditionUsed.indexOf( "Case 2:" ) != -1 ) {
 
                         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
 
-                        for ( String valueUri : phenotypeValueUriCollection ) {
+                        for ( String valueUri : phenotypesUri ) {
 
-                            OntologyTerm o = this.diseaseOntologyService.getTerm( valueUri );
-                            if ( o == null ) {
-                                o = this.humanPhenotypeOntologyService.getTerm( valueUri );
+                            OntologyTerm ontologyTerm = this.diseaseOntologyService.getTerm( valueUri );
+                            if ( ontologyTerm == null ) {
+                                ontologyTerm = this.humanPhenotypeOntologyService.getTerm( valueUri );
                             }
 
-                            if ( o == null ) {
+                            // ontologyTerm can never be null or obsolete we checked before
 
-                                String errorMessage = "valueUri not found in the Ontology:\t" + valueUri + "\t"
-                                        + conditionUsed + "\t";
-
-                                System.err.println( errorMessage );
-
-                                errorMessages.add( errorMessage );
-
-                                continue;
-                            }
-
-                            CharacteristicValueObject c = new CharacteristicValueObject( o.getLabel(), valueUri );
+                            CharacteristicValueObject c = new CharacteristicValueObject( ontologyTerm.getLabel(),
+                                    valueUri );
                             phenotypes.add( c );
 
                         }
-                        if ( !phenotypeValueUriCollection.isEmpty() ) {
 
-                            EvidenceSourceValueObject evidenceSource = new EvidenceSourceValueObject( databaseLink,
-                                    null );
+                        if ( !phenotypes.isEmpty() ) {
+
+                            EvidenceSourceValueObject evidenceSource = new EvidenceSourceValueObject( omimId, null );
                             evidenceSource.setExternalUrl( conditionUsed );
 
                             GenericEvidenceValueObject e = new GenericEvidenceValueObject( new Integer( ncbiGeneId ),
@@ -499,9 +446,9 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
                             e.setGeneOfficialSymbol( geneSymbol );
 
-                            String key = databaseLink + ncbiGeneId;
+                            String key = omimId + ncbiGeneId;
 
-                            HashSet<GenericEvidenceValueObject> evidences = new HashSet<GenericEvidenceValueObject>();
+                            ArrayList<GenericEvidenceValueObject> evidences = new ArrayList<GenericEvidenceValueObject>();
 
                             if ( omimIDGeneToEvidence.get( key ) == null ) {
                                 evidences.add( e );
@@ -516,12 +463,31 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
                     else if ( conditionUsed.indexOf( "Case 4" ) != -1 || conditionUsed.indexOf( "Case 5" ) != -1
                             || conditionUsed.indexOf( "Case 6" ) != -1 || conditionUsed.indexOf( "Case 7" ) != -1
-                            || conditionUsed.indexOf( "Case 8:" ) != -1 ) {
+                            || conditionUsed.indexOf( "Case 8:" ) != -1 || conditionUsed.indexOf( "Case 3:" ) != -1 ) {
 
-                        String lineToWrite = description + "\t" + phenotypeValueUri + "\t" + phenotypeValue + "\t"
-                                + conditionUsed + "\t" + databaseLink + "\n";
+                        String phenotypeValueUri = "";
+                        String phenotypeValue = "";
 
-                        outMappinpFoundBuffer.add( lineToWrite );
+                        for ( String valueUri : phenotypesUri ) {
+                            OntologyTerm o = this.diseaseOntologyService.getTerm( valueUri );
+                            if ( o == null ) {
+                                o = this.humanPhenotypeOntologyService.getTerm( valueUri );
+                            }
+
+                            // ontologyTerm can never be null or obsolete we checked before
+
+                            phenotypeValueUri = phenotypeValueUri + o.getUri() + ";";
+                            phenotypeValue = phenotypeValue + o.getLabel() + ";";
+
+                        }
+
+                        if ( !phenotypeValueUri.isEmpty() ) {
+                            String lineToWrite = omimId + "\t" + phenotypeValueUri + "\t" + phenotypeValue + "\t"
+                                    + description + "\t" + conditionUsed + "\n";
+
+                            outMappingFoundBuffer.add( lineToWrite );
+                        }
+
                     }
 
                     else if ( conditionUsed.indexOf( "Case 10:" ) != -1 ) {
@@ -544,18 +510,19 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
             for ( String err : errorMessages ) {
 
-                System.out.println( err );
+                System.err.println( err );
             }
         }
 
-        for ( String lineMappinpFound : outMappinpFoundBuffer ) {
+        for ( String lineMappinpFound : outMappingFoundBuffer ) {
             outMappinpFound.write( lineMappinpFound );
         }
         for ( String lineNotFound : outNotFoundBuffer ) {
             outNotFound.write( lineNotFound );
         }
 
-        for ( HashSet<GenericEvidenceValueObject> evidences : omimIDGeneToEvidence.values() ) {
+        // case 0 and 1 at the end
+        for ( ArrayList<GenericEvidenceValueObject> evidences : omimIDGeneToEvidence.values() ) {
 
             String geneSymbol = "";
             String ncbiGeneId = "";
@@ -589,11 +556,11 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                 phenotypeValue = phenotypeValue + phe.getValue() + ";";
             }
             for ( String desc : descriptions ) {
-                description = description + desc + ";";
+                description = description + desc + "; ";
             }
 
             if ( !description.isEmpty() ) {
-                description = description.substring( 0, description.length() - 1 );
+                description = description.substring( 0, description.length() - 2 );
             }
 
             String evidenceLine = geneSymbol + "\t" + ncbiGeneId + "\t" + evidenceCode + "\t" + description + "\t"
@@ -784,7 +751,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
     private HashMap<String, Collection<String>> parseFileOmimDescriptionToPhenotype() throws IOException {
 
-        HashMap<String, Collection<String>> omimDescriptionToPhenotype = new HashMap<String, Collection<String>>();
+        HashMap<String, Collection<String>> omimIdToPhenotype = new HashMap<String, Collection<String>>();
 
         BufferedReader br = new BufferedReader( new FileReader( MANUAL_MAPPING_OMIM ) );
 
@@ -798,29 +765,27 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
             tokens = line.split( "\t" );
 
-            System.out.println( line );
-
-            String descriptionStaticFile = removeCha( tokens[0] );
+            String omimIdStaticFile = removeCha( tokens[0] );
             String valueUriStaticFile = removeCha( tokens[1] );
 
-            if ( this.ontologyService.getTerm( removeCha( tokens[1] ) ) == null ) {
-                System.err.println( "value uri found in the static file not found in the ontology:" );
-                System.err.println( descriptionStaticFile + "\t" + valueUriStaticFile );
+            if ( !isObsoleteOrNotExist( valueUriStaticFile ) ) {
 
-                System.exit( -1 );
-            }
+                if ( omimIdToPhenotype.get( omimIdStaticFile ) == null ) {
 
-            if ( omimDescriptionToPhenotype.get( descriptionStaticFile ) == null ) {
-
-                col.add( valueUriStaticFile );
+                    col.add( valueUriStaticFile );
+                } else {
+                    col = omimIdToPhenotype.get( omimIdStaticFile );
+                    col.add( valueUriStaticFile );
+                }
+                omimIdToPhenotype.put( omimIdStaticFile, col );
             } else {
-                col = omimDescriptionToPhenotype.get( descriptionStaticFile );
-                col.add( valueUriStaticFile );
+
+                errorMessages.add( "MANUAL MAPPING FILE TERM OBSOLETE OR NOT EXISTANT: " + line );
+
             }
-            omimDescriptionToPhenotype.put( descriptionStaticFile, col );
         }
 
-        return omimDescriptionToPhenotype;
+        return omimIdToPhenotype;
     }
 
     private HashMap<String, String> parseFileOmimIdToGeneNCBI( String mim2gene ) throws IOException {
@@ -853,6 +818,45 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
             }
             return 1;
         }
+    }
+
+    private String removeSymbol( String txt ) {
+
+        String newTxt = txt.replaceAll( "\\{", "" );
+        newTxt = newTxt.replaceAll( "\\}", "" );
+        newTxt = newTxt.replaceAll( "\\[", "" );
+        newTxt = newTxt.replaceAll( "\\]", "" );
+        newTxt = newTxt.replaceAll( "\\?", "" );
+
+        return newTxt;
+    }
+
+    private boolean isObsoleteOrNotExist( String valueUri ) {
+
+        OntologyTerm o = this.diseaseOntologyService.getTerm( valueUri );
+        if ( o == null ) {
+            o = this.humanPhenotypeOntologyService.getTerm( valueUri );
+        }
+
+        if ( o == null || o.isTermObsolete() ) {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private Collection<AnnotatorResponse> removeNotExistAndObsolete( Collection<AnnotatorResponse> annotatorResponses ) {
+
+        Collection<AnnotatorResponse> annotatorResponseWithNoObsolete = new TreeSet<AnnotatorResponse>();
+
+        for ( AnnotatorResponse annotatorResponse : annotatorResponses ) {
+
+            if ( !isObsoleteOrNotExist( annotatorResponse.getValueUri() ) ) {
+                annotatorResponseWithNoObsolete.add( annotatorResponse );
+            }
+        }
+        return annotatorResponseWithNoObsolete;
     }
 
 }
