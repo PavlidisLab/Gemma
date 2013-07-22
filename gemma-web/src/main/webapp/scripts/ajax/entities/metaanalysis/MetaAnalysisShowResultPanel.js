@@ -74,8 +74,9 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
                                              'taskId' : taskId
                                           });
                                        task.showTaskProgressWindow({
-                                             'expandLogOnFinish' : true
-                                          });
+                                           'showLogButton' : true,
+                                           'showBackgroundButton' : true
+                                       });
                                        task.on('task-completed', function(metaAnalysisReturned) {
                                              // Assume if it is null, saving result is NOT successful.
                                              if (metaAnalysisReturned === null) {
@@ -114,8 +115,9 @@ Gemma.MetaAnalysisShowResultPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, {
                                  'taskId' : taskId
                               });
                            task.showTaskProgressWindow({
-                                 'expandLogOnFinish' : true
-                              });
+                               'showLogButton' : true,
+                               'showBackgroundButton' : true
+                           });
                            task.on('task-completed', function(metaAnalysisReturned) {
                                  resultPanel.setMetaAnalysis(metaAnalysisReturned);
                                  nextButton.setDisabled(!metaAnalysisReturned);

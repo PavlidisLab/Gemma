@@ -25,13 +25,12 @@ import org.apache.commons.logging.LogFactory;
 import org.compass.core.spi.InternalCompass;
 import org.compass.gps.impl.SingleCompassGps;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.MailEngine;
 
@@ -43,7 +42,7 @@ import ubic.gemma.util.MailEngine;
  */
 @Component
 @Scope("prototype")
-public class IndexerTaskImpl implements IndexerTask {
+public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskCommand> implements IndexerTask {
 
     /*
      * NOTE not configured using annotations because they get confused by the interfaces here.
@@ -123,74 +122,67 @@ public class IndexerTaskImpl implements IndexerTask {
     @Autowired
     private MailEngine mailEngine;
 
-    private IndexerTaskCommand command;
-
-    @Override
-    public void setCommand( IndexerTaskCommand command ) {
-        this.command = command;
-    }
-
     @Override
     public IndexerResult execute() {
-        IndexerResult result = new IndexerResult( command );
+        IndexerResult result = new IndexerResult( taskCommand );
 
-        if ( command.isIndexEE() ) {
+        if ( taskCommand.isIndexEE() ) {
             if ( rebuildIndex( expressionGps, "Expression Experiment index" ) )
                 result.setPathToExpressionIndex( getIndexPath( compassExpression ) );
             else
                 result.setPathToExpressionIndex( null );
 
         }
-        if ( command.isIndexAD() ) {
+        if ( taskCommand.isIndexAD() ) {
             if ( rebuildIndex( arrayGps, "Platform/Array design index" ) )
                 result.setPathToArrayIndex( getIndexPath( compassArray ) );
             else
                 result.setPathToArrayIndex( null );
 
         }
-        if ( command.isIndexBibRef() ) {
+        if ( taskCommand.isIndexBibRef() ) {
             if ( rebuildIndex( bibliographicGps, "Bibliographic Reference Index" ) )
                 result.setPathToBibliographicIndex( getIndexPath( compassBibliographic ) );
             else
                 result.setPathToBibliographicIndex( null );
 
         }
-        if ( command.isIndexBioSequence() ) {
+        if ( taskCommand.isIndexBioSequence() ) {
             if ( rebuildIndex( biosequenceGps, "Biosequence Reference Index" ) )
                 result.setPathToBiosequenceIndex( getIndexPath( compassBiosequence ) );
             else
                 result.setPathToBiosequenceIndex( null );
         }
 
-        if ( command.isIndexProbe() ) {
+        if ( taskCommand.isIndexProbe() ) {
             if ( rebuildIndex( probeGps, "Probe Reference Index" ) )
                 result.setPathToProbeIndex( getIndexPath( compassProbe ) );
             else
                 result.setPathToProbeIndex( null );
         }
 
-        if ( command.isIndexGene() ) {
+        if ( taskCommand.isIndexGene() ) {
             if ( rebuildIndex( geneGps, "Gene index" ) )
                 result.setPathToGeneIndex( getIndexPath( compassGene ) );
             else
                 result.setPathToGeneIndex( null );
         }
 
-        if ( command.isIndexGeneSet() ) {
+        if ( taskCommand.isIndexGeneSet() ) {
             if ( rebuildIndex( geneSetGps, "Gene set index" ) )
                 result.setPathToGeneSetIndex( getIndexPath( compassGeneSet ) );
             else
                 result.setPathToGeneSetIndex( null );
         }
 
-        if ( command.isIndexExperimentSet() ) {
+        if ( taskCommand.isIndexExperimentSet() ) {
             if ( rebuildIndex( experimentSetGps, "Experiment set index" ) )
                 result.setPathToExperimentSetIndex( getIndexPath( compassExperimentSet ) );
             else
                 result.setPathToExperimentSetIndex( null );
         }
 
-        if ( command.isIndexOntologies() ) {
+        if ( taskCommand.isIndexOntologies() ) {
             ontologyService.reindexAllOntologies();
         }
 

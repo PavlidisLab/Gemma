@@ -183,7 +183,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                         eeManager.fireEvent('reportUpdated', payload);
                      });
                   task.showTaskProgressWindow({
-                        'expandLogOnFinish' : true
+                        'showLogButton' : true,
+                        'showBackgroundButton' : true
                      });
                },
                errorHandler : eeManager.onTaskSubmissionError
@@ -331,8 +332,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     'taskId' : taskId
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                               task.on('task-completed', function(payload) {
                                     eeManager.fireEvent('deleted', redirectHome);
                                  });
@@ -362,8 +364,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     'taskId' : taskId
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                               Ext.getBody().unmask();
                               task.on('task-completed', function(payload) {
                                     eeManager.fireEvent('deletedAnalysis');
@@ -397,8 +400,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                  });
                               Ext.getBody().unmask();
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                            },
                            errorHandler : eeManager.onTaskSubmissionError
                         });
@@ -429,8 +433,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     eeManager.fireEvent('differential', payload);
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                            },
                            errorHandler : eeManager.onTaskSubmissionError
                         });
@@ -460,8 +465,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     'taskId' : taskId
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                            },
                            errorHandler : eeManager.onTaskSubmissionError()
                         });
@@ -490,8 +496,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     'taskId' : taskId
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                               Ext.getBody().unmask();
                            },
                            errorHandler : eeManager.onTaskSubmissionError
@@ -522,8 +529,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     'taskId' : taskId
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                               task.on('task-completed', function(payload) {
                                     eeManager.fireEvent('link', payload);
                                  });
@@ -552,8 +560,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                  'taskId' : taskId
                               });
                            task.showTaskProgressWindow({
-                                 'expandLogOnFinish' : true
-                              });
+                               'showLogButton' : true,
+                               'showBackgroundButton' : true
+                           });
                            task.on('task-completed', function(payload) {
                                  eeManager.fireEvent('pca', payload);
                               });
@@ -595,8 +604,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     'taskId' : taskId
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                               task.on('task-completed', function(payload) {
                                     eeManager.fireEvent('batchinfo', payload);
                                  });
@@ -629,8 +639,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     'taskId' : taskId
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                               task.on('task-completed', function(payload) {
                                     eeManager.fireEvent('missingValue', payload);
                                  });
@@ -805,8 +816,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                           eeManager.fireEvent('differential', payload);
                                        });
                                     task.showTaskProgressWindow({
-                                          'expandLogOnFinish' : true
-                                       });
+                                        'showLogButton' : true,
+                                        'showBackgroundButton' : true
+                                    });
                                  },
                                  errorHandler : eeManager.onTaskSubmissionError
                               });
@@ -954,8 +966,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                              'taskId' : taskId
                                           });
                                        task.showTaskProgressWindow({
-                                             'expandLogOnFinish' : true
-                                          });
+                                           'showLogButton' : true,
+                                           'showBackgroundButton' : true
+                                       });
                                        task.on('task-completed', function(payload) {
                                              eeManager.fireEvent('differential', payload);
                                           });
@@ -1052,8 +1065,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
                                     eeManager.fireEvent('processedVector', payload);
                                  });
                               task.showTaskProgressWindow({
-                                    'expandLogOnFinish' : true
-                                 });
+                                  'showLogButton' : true,
+                                  'showBackgroundButton' : true
+                              });
                            },
                            errorHandler : eeManager.onTaskSubmissionError
                         });

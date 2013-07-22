@@ -44,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * This will run on remote worker jvm CompletionService backed by ThreadPoolExecutor is used to execute tasks. TODO:
  * document me ActiveMQ communication. ApplicationContext is injected and is used to load classes implementing Tasks.
- * TODO: use MessageSender/Receiver here
  */
 @Component("remoteTaskRunningService")
 public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
@@ -52,8 +51,10 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
 
     @Autowired
     private TaskPostProcessing taskPostProcessing;
+
     @Autowired
     private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
+
     @Autowired
     private JMSHelper jmsHelper;
 
@@ -72,8 +73,6 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             // Clean up.
             SubmittedTaskRemote task = submittedTasks.remove( taskResult.getTaskId() );
             task.sendTaskResult();
-            // TODO: this should update status as well
-
         }
 
         @Override
@@ -91,7 +90,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         final Task task = getTask( taskCommand );
 
         final List<String> localProgressUpdates = new LinkedList<String>();
-        final SubmittedTaskRemote submittedTask = consrtuctSubmittedTaskRemote( taskCommand, taskId,
+        final SubmittedTaskRemote submittedTask = constructSubmittedTaskRemote( taskCommand, taskId,
                 localProgressUpdates );
 
         // Called from log appender that's attached to 'ubic.basecode' and 'ubic.gemma' loggers.
@@ -148,7 +147,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         if ( task == null )
             throw new IllegalArgumentException( "Can't find bean for Task "
                     + taskCommand.getTaskClass().getSimpleName() );
-        task.setCommand( taskCommand );
+        task.setTaskCommand( taskCommand );
         return task;
     }
 
@@ -162,8 +161,8 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         this.executorService.shutdownNow();
     }
 
-    private SubmittedTaskRemote consrtuctSubmittedTaskRemote( TaskCommand taskCommand, String taskId,
-            List<String> progressUpdates ) {
+    private SubmittedTaskRemote constructSubmittedTaskRemote( TaskCommand taskCommand, String taskId,
+                                                              List<String> progressUpdates ) {
         String resultQueueName = ConfigUtils.getString( "gemma.remoteTasks.resultQueuePrefix" ) + taskId;
         String statusQueueName = ConfigUtils.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;
         String progressQueueName = ConfigUtils.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" ) + taskId;

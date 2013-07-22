@@ -18,13 +18,15 @@
  */
 package ubic.gemma.web.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.tasks.AbstractTask;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,18 +50,18 @@ public class MockLongJobControllerImpl implements MockLongJobController {
      */
     @Override
     public String runJob( TaskCommand command ) {
-        return taskRunningService.submitLocalJob( new WasteOfTime( command ) );
+        return taskRunningService.submitLocalTask( new WasteOfTime( command ) );
     }
 
-    static class WasteOfTime extends BackgroundJob<TaskCommand, TaskResult> {
+    static class WasteOfTime extends AbstractTask<TaskResult, TaskCommand> {
+        protected Log log = LogFactory.getLog( this.getClass().getName() );
 
         public WasteOfTime( TaskCommand command ) {
             super( command );
-            this.command = command;
         }
 
         @Override
-        public TaskResult processJob() {
+        public TaskResult execute() {
 
             long millis = System.currentTimeMillis();
             while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {
@@ -68,7 +70,7 @@ public class MockLongJobControllerImpl implements MockLongJobController {
                 } catch ( InterruptedException e ) {
                 }
                 // we're using this as a test to pass in a 'die' signal, abuse of api
-                if ( !this.command.getPersistJobDetails() ) {
+                if ( !this.taskCommand.getPersistJobDetails() ) {
                     throw new RuntimeException( "Exception thrown on purpose." );
                 }
             }
@@ -77,9 +79,8 @@ public class MockLongJobControllerImpl implements MockLongJobController {
 
             Map<String, Object> model = new HashMap<String, Object>();
             model.put( "answer", "42" );
-            return new TaskResult( command, new ModelAndView( "view", model ) );
+            return new TaskResult( taskCommand, new ModelAndView( "view", model ) );
         }
-
     }
 
 }

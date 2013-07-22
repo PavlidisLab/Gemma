@@ -25,8 +25,8 @@ import ubic.gemma.job.TaskResult;
  */
 public interface Task<T extends TaskResult, C extends TaskCommand> {
 
-    void setCommand( C taskCommand );
+    public void setTaskCommand( C taskCommand );
+    public C getTaskCommand();    // TODO: add these to AbstractTask?
 
-    T execute();
-
+    public T execute();
 }

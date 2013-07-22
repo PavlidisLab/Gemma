@@ -29,7 +29,7 @@ import ubic.gemma.job.TaskResult;
 /**
  * Implements a long-running task in its own thread. Implementations simply implement processJob.
  *
- * On the way out. Use Tasks instead.
+ * Deprecated: Use Task/AbstractTask instead.
  *
  * @author klc
  * @version $Id$

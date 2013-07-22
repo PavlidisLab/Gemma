@@ -30,6 +30,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.AbstractTask;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -42,7 +43,7 @@ import java.util.HashSet;
  */
 @Component
 @Scope("prototype")
-public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpressionAnalysisTask {
+public class DifferentialExpressionAnalysisTaskImpl extends AbstractTask<TaskResult, DifferentialExpressionAnalysisTaskCommand> implements DifferentialExpressionAnalysisTask {
 
     private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
@@ -55,13 +56,6 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
-    private DifferentialExpressionAnalysisTaskCommand command;
-
-    @Override
-    public void setCommand( DifferentialExpressionAnalysisTaskCommand command ) {
-        this.command = command;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -71,8 +65,8 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     @Override
     public TaskResult execute() {
 
-        if ( command instanceof DifferentialExpressionAnalysisRemoveTaskCommand ) {
-            DifferentialExpressionAnalysis toRemove = ( ( DifferentialExpressionAnalysisRemoveTaskCommand ) command )
+        if ( taskCommand instanceof DifferentialExpressionAnalysisRemoveTaskCommand ) {
+            DifferentialExpressionAnalysis toRemove = ( ( DifferentialExpressionAnalysisRemoveTaskCommand ) taskCommand )
                     .getToRemove();
 
             if ( toRemove == null ) {
@@ -82,7 +76,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
             log.info( "Removing analysis ..." );
             this.differentialExpressionAnalysisService.delete( toRemove );
 
-            return new TaskResult( command, true );
+            return new TaskResult( taskCommand, true );
         }
 
         Collection<DifferentialExpressionAnalysis> results = doAnalysis();
@@ -98,7 +92,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
             minimalResults.add( minimalResult );
         }
 
-        TaskResult result = new TaskResult( command, minimalResults );
+        TaskResult result = new TaskResult( taskCommand, minimalResults );
 
         return result;
     }
@@ -108,20 +102,20 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
      * @return
      */
     private Collection<DifferentialExpressionAnalysis> doAnalysis() {
-        ExpressionExperiment ee = command.getExpressionExperiment();
+        ExpressionExperiment ee = taskCommand.getExpressionExperiment();
 
-        if ( command.getToRedo() != null ) {
-            if ( command.isUpdateStatsOnly() ) {
+        if ( taskCommand.getToRedo() != null ) {
+            if ( taskCommand.isUpdateStatsOnly() ) {
                 log.info( "Refreshing stats" );
-                differentialExpressionAnalyzerService.updateSummaries( command.getToRedo() );
+                differentialExpressionAnalyzerService.updateSummaries( taskCommand.getToRedo() );
                 Collection<DifferentialExpressionAnalysis> result = new HashSet<DifferentialExpressionAnalysis>();
-                result.add( command.getToRedo() );
+                result.add( taskCommand.getToRedo() );
                 return result;
             } else {
                 log.info( "Redoing analysis" );
                 ee = expressionExperimentService.thawLite( ee );
-                return differentialExpressionAnalyzerService.redoAnalysis( ee, command.getToRedo(),
-                        command.getQvalueThreshold() );
+                return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(),
+                        taskCommand.getQvalueThreshold() );
             }
         }
 
@@ -136,9 +130,9 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         Collection<DifferentialExpressionAnalysis> results;
 
-        Collection<ExperimentalFactor> factors = command.getFactors();
+        Collection<ExperimentalFactor> factors = taskCommand.getFactors();
         DifferentialExpressionAnalyzerServiceImpl.AnalysisType analyzer = analysisSelectionAndExecutionService
-                .determineAnalysis( ee, factors, command.getSubsetFactor(), command.isIncludeInteractions() );
+                .determineAnalysis( ee, factors, taskCommand.getSubsetFactor(), taskCommand.isIncludeInteractions() );
 
         if ( analyzer == null ) {
             throw new IllegalStateException( "Data set cannot be analyzed" );
@@ -149,13 +143,13 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         config.setAnalysisType( analyzer );
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( command.getQvalueThreshold() );
-        config.setSubsetFactor( command.getSubsetFactor() );
+        config.setQvalueThreshold( taskCommand.getQvalueThreshold() );
+        config.setSubsetFactor( taskCommand.getSubsetFactor() );
 
         /*
          * We only support interactions when there are exactly two factors.
          */
-        if ( command.isIncludeInteractions() && factors.size() == 2 ) {
+        if ( taskCommand.isIncludeInteractions() && factors.size() == 2 ) {
 
             /*
              * We should not include 'batch' in an interaction. But I don't want to enforce that here.

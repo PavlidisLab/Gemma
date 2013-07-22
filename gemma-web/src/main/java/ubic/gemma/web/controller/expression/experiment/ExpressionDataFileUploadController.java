@@ -17,17 +17,6 @@
  *
  */package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -36,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.preprocess.PreprocessingException;
@@ -44,7 +32,6 @@ import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -53,6 +40,17 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.AbstractTask;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Replaces SimpleExpressionExperimentLoadController
@@ -63,18 +61,38 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 @Controller
 public class ExpressionDataFileUploadController {
 
-    private class SimpleEELoadLocalJob extends BackgroundJob<SimpleExpressionExperimentLoadTaskCommand, TaskResult> {
+    private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
 
-        public SimpleEELoadLocalJob( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private PreprocessorService preprocessorService;
+
+    @Autowired
+    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+    @Autowired
+    private TaxonService taxonService;
+
+    private class SimpleEELoadLocalTask extends AbstractTask<TaskResult, SimpleExpressionExperimentLoadTaskCommand> {
+
+        public SimpleEELoadLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
         }
 
         @Override
-        public TaskResult processJob() {
+        public TaskResult execute() {
             try {
-                File file = getFile( command );
+                File file = getFile( taskCommand );
 
-                populateCommandObject( command );
+                populateCommandObject( taskCommand );
 
                 InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
 
@@ -85,8 +103,8 @@ public class ExpressionDataFileUploadController {
                 /*
                  * Main action here!
                  */
-                scrub( command );
-                ExpressionExperiment result = simpleExpressionDataLoaderService.create( command, stream );
+                scrub( taskCommand );
+                ExpressionExperiment result = simpleExpressionDataLoaderService.create( taskCommand, stream );
                 stream.close();
 
                 log.info( "Preprocessing the data for analysis" );
@@ -102,20 +120,20 @@ public class ExpressionDataFileUploadController {
                 eeUploadResponse.setTaskId( result.getId() );
                 eeUploadResponse.setError( false );
 
-                return new TaskResult( command, eeUploadResponse );
+                return new TaskResult( taskCommand, eeUploadResponse );
             } catch ( IOException e ) {
                 // log.info( "There was an error opening an uploaded file:" + e.getMessage() );
                 ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
                 eeUploadResponse.setError( true );
                 eeUploadResponse
                         .setErrorMessage( "There was an error opening your uploaded file, please re-upload the file." );
-                return new TaskResult( command, eeUploadResponse );
+                return new TaskResult( taskCommand, eeUploadResponse );
             } catch ( Exception e ) {
                 // log.warn( "There was an error submitting your dataset, exception:" + e.toString() );
                 ExpressionExperimentUploadResponse eeUploadResponse = new ExpressionExperimentUploadResponse();
                 eeUploadResponse.setError( true );
                 eeUploadResponse.setErrorMessage( e.getMessage() );
-                return new TaskResult( command, eeUploadResponse );
+                return new TaskResult( taskCommand, eeUploadResponse );
             }
         }
 
@@ -149,40 +167,24 @@ public class ExpressionDataFileUploadController {
             commandObject.setType( StandardQuantitationType.AMOUNT ); // FIXME might need to be COUNT for some data.
             commandObject.setGeneralType( GeneralType.QUANTITATIVE );
             commandObject.setIsMaskedPreferred( true );
-
         }
     }
 
     /**
      *  
      */
-    private class SimpleEEValidateLocalJob extends BackgroundJob<SimpleExpressionExperimentLoadTaskCommand, TaskResult> {
+    private class SimpleEEValidateLocalTask extends AbstractTask<TaskResult,SimpleExpressionExperimentLoadTaskCommand> {
 
-        public SimpleEEValidateLocalJob( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
+        public SimpleEEValidateLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
         }
 
         @Override
-        public TaskResult processJob() {
-            SimpleExpressionExperimentCommandValidation result = doValidate( this.command );
-            return new TaskResult( command, result );
+        public TaskResult execute() {
+            SimpleExpressionExperimentCommandValidation result = doValidate( taskCommand );
+            return new TaskResult( taskCommand, result );
         }
     }
-
-    private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
-
-    @Autowired
-    private TaskRunningService taskRunningService;
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private PreprocessorService preprocessorService;
-    @Autowired
-    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-    @Autowired
-    private TaxonService taxonService;
 
     /**
      * AJAX
@@ -192,7 +194,7 @@ public class ExpressionDataFileUploadController {
      */
     public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand ) {
         loadEECommand.setValidateOnly( false );
-        return taskRunningService.submitLocalJob( new SimpleEELoadLocalJob( loadEECommand ) );
+        return taskRunningService.submitLocalTask( new SimpleEELoadLocalTask( loadEECommand ) );
     }
 
     @RequestMapping("/expressionExperiment/upload.html")
@@ -209,7 +211,7 @@ public class ExpressionDataFileUploadController {
     public String validate( SimpleExpressionExperimentLoadTaskCommand command ) throws Exception {
         assert command != null;
         command.setValidateOnly( true );
-        return taskRunningService.submitLocalJob( new SimpleEEValidateLocalJob( command ) );
+        return taskRunningService.submitLocalTask( new SimpleEEValidateLocalTask( command ) );
     }
 
     /**
@@ -305,7 +307,6 @@ public class ExpressionDataFileUploadController {
         }
 
         return result;
-
     }
 
     /**

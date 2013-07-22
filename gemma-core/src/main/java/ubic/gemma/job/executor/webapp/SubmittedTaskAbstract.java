@@ -25,6 +25,8 @@ import ubic.gemma.job.TaskResult;
 import java.util.Date;
 
 /**
+ * Shared code between SubmittedTaskLocal and SubmittedTaskProxy.
+ *
  * author: anton
  * date: 08/02/13
  */

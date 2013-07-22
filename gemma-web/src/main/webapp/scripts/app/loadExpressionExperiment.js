@@ -76,7 +76,9 @@ function submitForm() {
 
                });
 
-            task.showTaskProgressWindow({});
+            task.showTaskProgressWindow({
+                showLogButton : true
+            });
 
          },
          errorHandler : handleFailure

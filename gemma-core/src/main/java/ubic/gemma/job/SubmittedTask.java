@@ -41,7 +41,7 @@ public interface SubmittedTask<T extends TaskResult> {
     public TaskCommand getTaskCommand();
 
     /**
-     * Returns queue of log statements from the running task. TODO: Support multiple clients accessing this.
+     * Returns queue of log statements from the running task.
      * 
      * @return Queue of log statements from the running task.
      */
@@ -72,7 +72,7 @@ public interface SubmittedTask<T extends TaskResult> {
     /**
      * @return true if task has completed or failed
      */
-    boolean isDone();
+    public boolean isDone();
 
     /**
      * Get the result of the task. The call blocks until the result is retrieved.

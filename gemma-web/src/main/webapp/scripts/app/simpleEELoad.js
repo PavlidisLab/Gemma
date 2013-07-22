@@ -111,7 +111,9 @@ function handleSuccess(taskId) {
         var task = new Gemma.ObservableSubmittedTask({'taskId':taskId});
         task.on('task-failed', handleFailure);
         task.on('task-cancelling', handleCancel);
-        task.showTaskProgressWindow();
+        task.showTaskProgressWindow({
+            showLogButton : true
+        });
 	} catch (e) {
 		handleFailure(taskId, e);
 		return;

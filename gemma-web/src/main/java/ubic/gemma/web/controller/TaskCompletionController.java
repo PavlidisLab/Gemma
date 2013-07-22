@@ -29,11 +29,10 @@ import ubic.gemma.job.executor.webapp.TaskRunningService;
 
 /**
  * Generic controller that looks for a finished job. Used when a job is done to get the result.
- * 
+ *
  * @author pavlidis
  * @version $Id$
  */
-@Deprecated
 @Controller
 public class TaskCompletionController {
 

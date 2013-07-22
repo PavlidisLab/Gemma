@@ -29,7 +29,6 @@ import org.hibernate.type.DoubleType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.BatchIterator;
@@ -42,6 +41,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
+import ubic.gemma.util.TaskCancelledException;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -540,6 +540,11 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                     timer.start();
                 }
 
+                // Check if task was cancelled.
+                if ( Thread.currentThread().isInterrupted() ) {
+                    throw new TaskCancelledException( "Search was cancelled" );
+                }
+
                 numGeneBatchesDone++;
 
                 if ( CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX < 1.0 ) {
@@ -547,6 +552,11 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                             resultsFromDb, resultSetIdBatch, cs2GeneIdMap, session );
                 }
             }// over probes.
+
+            // Check if task was cancelled.
+            if ( Thread.currentThread().isInterrupted() ) {
+                throw new TaskCancelledException( "Search was cancelled" );
+            }
 
             numResultSetBatchesDone++;
 

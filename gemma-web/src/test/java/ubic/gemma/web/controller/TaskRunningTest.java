@@ -42,8 +42,7 @@ import static org.junit.Assert.*;
 public class TaskRunningTest extends BaseSpringWebTest {
 
     @Autowired ProgressStatusService progressStatusService;
-    @Autowired
-    TaskRunningService taskRunningService;
+    @Autowired TaskRunningService taskRunningService;
     @Autowired MockLongJobController mockLongJobController;
 
     /**
@@ -104,7 +103,6 @@ public class TaskRunningTest extends BaseSpringWebTest {
 
         assertNotNull( lastResult );
         assertTrue( lastResult.isFailed() );
-
     }
 
     /**

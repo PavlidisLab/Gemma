@@ -128,7 +128,6 @@ Ext.onReady(function() {
             });
         },
 
-
         store : new Ext.data.Store({
 					proxy : new Ext.data.DWRProxy({
 								apiActionToHandlerMap : {
@@ -179,7 +178,6 @@ Ext.onReady(function() {
 						v.store.load();
 					}
 				}]
-
 	});
 
 });

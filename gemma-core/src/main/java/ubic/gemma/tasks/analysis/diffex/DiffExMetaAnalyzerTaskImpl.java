@@ -8,6 +8,7 @@ import ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
+import ubic.gemma.tasks.AbstractTask;
 
 /**
  * A differential expression meta-analysis space task
@@ -17,29 +18,24 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  */
 @Component
 @Scope("prototype")
-public class DiffExMetaAnalyzerTaskImpl implements DiffExMetaAnalyzerTask {
+public class DiffExMetaAnalyzerTaskImpl extends AbstractTask<TaskResult, DiffExMetaAnalyzerTaskCommand> implements DiffExMetaAnalyzerTask {
 
     @Autowired
     private DiffExMetaAnalyzerService diffExMetaAnalyzerService;
-    @Autowired private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
 
-    private DiffExMetaAnalyzerTaskCommand command;
-
-    @Override
-    public void setCommand(DiffExMetaAnalyzerTaskCommand command) {
-        this.command = command;
-    }
+    @Autowired
+    private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
 
     @Override
     public TaskResult execute() {
-        GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze( command
+        GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze( taskCommand
                 .getAnalysisResultSetIds() );
 
         if (metaAnalysis != null) {
-        	metaAnalysis.setName( command.getName() );
-        	metaAnalysis.setDescription( command.getDescription() );
+        	metaAnalysis.setName( taskCommand.getName() );
+        	metaAnalysis.setDescription( taskCommand.getDescription() );
 
-	        if ( command.isPersist() ) {
+	        if ( taskCommand.isPersist() ) {
 	            metaAnalysis = this.diffExMetaAnalyzerService.persist( metaAnalysis );
 	        }
         }
@@ -47,6 +43,6 @@ public class DiffExMetaAnalyzerTaskImpl implements DiffExMetaAnalyzerTask {
         GeneDifferentialExpressionMetaAnalysisDetailValueObject metaAnalysisVO = ( metaAnalysis == null ? null
                 : this.geneDiffExMetaAnalysisHelperService.convertToValueObject( metaAnalysis ) );
 
-        return new TaskResult( command, metaAnalysisVO );
+        return new TaskResult( taskCommand, metaAnalysisVO );
     }
 }

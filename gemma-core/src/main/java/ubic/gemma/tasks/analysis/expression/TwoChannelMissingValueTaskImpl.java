@@ -7,6 +7,7 @@ import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.AbstractTask;
 
 import java.util.Collection;
 
@@ -18,28 +19,21 @@ import java.util.Collection;
  */
 @Component
 @Scope("prototype")
-public class TwoChannelMissingValueTaskImpl implements TwoChannelMissingValueTask {
+public class TwoChannelMissingValueTaskImpl extends AbstractTask<TaskResult, TwoChannelMissingValueTaskCommand>
+        implements TwoChannelMissingValueTask {
 
-    @Autowired private TwoChannelMissingValues twoChannelMissingValues;
-
-    private TwoChannelMissingValueTaskCommand command;
-
-    @Override
-    public void setCommand(TwoChannelMissingValueTaskCommand command) {
-        this.command = command;
-    }
+    @Autowired
+    private TwoChannelMissingValues twoChannelMissingValues;
 
     @Override
     public TaskResult execute() {
-
-        ExpressionExperiment ee = command.getExpressionExperiment();
+        ExpressionExperiment ee = taskCommand.getExpressionExperiment();
 
         Collection<RawExpressionDataVector> missingValueVectors = twoChannelMissingValues.computeMissingValues( ee,
-                command.getS2n(), command.getExtraMissingValueIndicators() );
+                taskCommand.getS2n(), taskCommand.getExtraMissingValueIndicators() );
 
-        TaskResult result = new TaskResult( command, missingValueVectors.size() );
+        TaskResult result = new TaskResult( taskCommand, missingValueVectors.size() );
 
         return result;
     }
-
 }

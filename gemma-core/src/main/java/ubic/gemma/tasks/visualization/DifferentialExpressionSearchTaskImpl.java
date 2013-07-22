@@ -24,15 +24,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
-
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject.Condition;
+import ubic.gemma.util.EntityUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -46,7 +46,7 @@ import java.util.Map.Entry;
  */
 @Component
 @Scope("prototype")
-public class DifferentialExpressionSearchTaskImpl implements DifferentialExpressionSearchTask {
+public class DifferentialExpressionSearchTaskImpl extends AbstractTask<TaskResult, DifferentialExpressionSearchTaskCommand> implements DifferentialExpressionSearchTask {
 
     protected static Log log = LogFactory.getLog( DifferentialExpressionSearchTaskImpl.class );
 
@@ -73,8 +73,6 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
     private List<String> geneGroupNames;
 
     private List<String> experimentGroupNames;
-
-    private DifferentialExpressionSearchTaskCommand taskCommand;
 
     /*
      * Does all the actual work of the query. (non-Javadoc)
@@ -662,8 +660,9 @@ public class DifferentialExpressionSearchTaskImpl implements DifferentialExpress
     }
 
     @Override
-    public void setCommand( DifferentialExpressionSearchTaskCommand taskCommand ) {
-        this.taskCommand = taskCommand;
+    public void setTaskCommand( DifferentialExpressionSearchTaskCommand taskCommand ) {
+        super.setTaskCommand( taskCommand );
+
         this.geneGroups = taskCommand.getGeneGroups();
         this.experimentGroups = taskCommand.getExperimentGroups();
         this.geneGroupNames = taskCommand.getGeneGroupNames();

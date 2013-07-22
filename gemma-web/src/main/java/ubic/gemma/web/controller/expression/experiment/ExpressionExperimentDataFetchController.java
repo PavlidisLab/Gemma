@@ -20,6 +20,8 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,11 +31,11 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.view.DownloadBinaryFileView;
 
@@ -51,20 +53,21 @@ import java.util.HashSet;
 @Controller
 public class ExpressionExperimentDataFetchController {
 
-    class CoExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand, TaskResult> {
+    class CoExpressionDataWriterJob extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
+
+        protected Log log = LogFactory.getLog( this.getClass().getName() );
 
         public CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
             super( eeId );
         }
 
         @Override
-        public TaskResult processJob() {
-
+        public TaskResult execute() {
             StopWatch watch = new StopWatch();
             watch.start();
 
-            assert this.command != null;
-            Long eeId = this.command.getExpressionExperimentId();
+            assert this.taskCommand != null;
+            Long eeId = this.taskCommand.getExpressionExperimentId();
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
             if ( ee == null ) {
@@ -81,35 +84,35 @@ public class ExpressionExperimentDataFetchController {
 
             ModelAndView mav = new ModelAndView( new RedirectView( url ) );
 
-            return new TaskResult( command, mav );
-
+            return new TaskResult( taskCommand, mav );
         }
-
     }
 
     /**
      * @author keshav
      */
-    class DataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand, TaskResult> {
+    class DataWriterJob extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
+
+        protected Log log = LogFactory.getLog( this.getClass().getName() );
 
         public DataWriterJob( ExpressionExperimentDataFetchCommand command ) {
             super( command );
         }
 
         @Override
-        public TaskResult processJob() {
+        public TaskResult execute() {
 
             StopWatch watch = new StopWatch();
             watch.start();
 
             /* 'do yer thang' */
-            assert this.command != null;
+            assert this.taskCommand != null;
 
-            Long qtId = command.getQuantitationTypeId();
-            Long eeId = command.getExpressionExperimentId();
-            Long eedId = command.getExperimentalDesignId();
-            String format = command.getFormat();
-            boolean filtered = command.isFilter();
+            Long qtId = taskCommand.getQuantitationTypeId();
+            Long eeId = taskCommand.getExpressionExperimentId();
+            Long eedId = taskCommand.getExperimentalDesignId();
+            String format = taskCommand.getFormat();
+            boolean filtered = taskCommand.isFilter();
 
             String usedFormat = "text";
 
@@ -200,32 +203,34 @@ public class ExpressionExperimentDataFetchController {
 
             ModelAndView mav = new ModelAndView( new RedirectView( url ) );
 
-            return new TaskResult( command, mav );
+            return new TaskResult( taskCommand, mav );
 
         }
 
     }
 
     // ==========================================================
-    class DiffExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand, TaskResult> {
+    class DiffExpressionDataWriterTask extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
 
-        public DiffExpressionDataWriterJob( ExpressionExperimentDataFetchCommand command ) {
+        protected Log log = LogFactory.getLog( this.getClass().getName() );
+
+        public DiffExpressionDataWriterTask( ExpressionExperimentDataFetchCommand command ) {
             super( command );
         }
 
         @Override
-        public TaskResult processJob() {
+        public TaskResult execute() {
 
             StopWatch watch = new StopWatch();
             watch.start();
             Collection<File> files = new HashSet<File>();
 
-            assert this.command != null;
+            assert this.taskCommand != null;
 
-            if ( this.command.getAnalysisId() != null ) {
+            if ( this.taskCommand.getAnalysisId() != null ) {
 
-                File f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( command.getAnalysisId(),
-                        command.isForceRewrite() );
+                File f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( taskCommand.getAnalysisId(),
+                        taskCommand.isForceRewrite() );
 
                 files.add( f );
 
@@ -260,7 +265,7 @@ public class ExpressionExperimentDataFetchController {
             }
             String url = "/Gemma/getData.html?file=" + files.iterator().next().getName();
             ModelAndView mav = new ModelAndView( new RedirectView( url ) );
-            return new TaskResult( command, mav );
+            return new TaskResult( taskCommand, mav );
 
         }
 
@@ -309,7 +314,7 @@ public class ExpressionExperimentDataFetchController {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
         tc.setExpressionExperimentId( eeId );
         CoExpressionDataWriterJob job = new CoExpressionDataWriterJob( tc );
-        return taskRunningService.submitLocalJob( job );
+        return taskRunningService.submitLocalTask( job );
     }
 
     /**
@@ -322,7 +327,7 @@ public class ExpressionExperimentDataFetchController {
      */
     public String getDataFile( ExpressionExperimentDataFetchCommand command ) throws InterruptedException {
         DataWriterJob job = new DataWriterJob( command );
-        return taskRunningService.submitLocalJob( job );
+        return taskRunningService.submitLocalTask( job );
     }
 
     /**
@@ -335,8 +340,8 @@ public class ExpressionExperimentDataFetchController {
     public String getDiffExpressionDataFile( Long analysisId ) {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
         tc.setAnalysisId( analysisId );
-        DiffExpressionDataWriterJob job = new DiffExpressionDataWriterJob( tc );
-        return taskRunningService.submitLocalJob( job );
+        DiffExpressionDataWriterTask job = new DiffExpressionDataWriterTask( tc );
+        return taskRunningService.submitLocalTask( job );
     }
 
     /**

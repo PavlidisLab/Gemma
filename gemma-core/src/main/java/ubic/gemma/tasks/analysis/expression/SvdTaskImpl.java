@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.AbstractTask;
 
 /**
  * @author paul
@@ -28,32 +29,23 @@ import ubic.gemma.job.TaskResult;
  */
 @Component
 @Scope("prototype")
-public class SvdTaskImpl implements SvdTask {
+public class SvdTaskImpl extends AbstractTask<TaskResult, SvdTaskCommand> implements SvdTask {
 
     private Log log = LogFactory.getLog( SvdTask.class.getName() );
 
     @Autowired
     private SVDService svdService;
 
-    private SvdTaskCommand command;
-
-    @Override
-    public void setCommand( SvdTaskCommand command ) {
-        this.command = command;
-    }
-
     @Override
     public TaskResult execute() {
+        TaskResult result = new TaskResult( taskCommand, null );
 
-        TaskResult result = new TaskResult( command, null );
-
-        if ( command.getExpressionExperiment() != null ) {
-            svdService.svd( command.getExpressionExperiment().getId() );
+        if ( taskCommand.getExpressionExperiment() != null ) {
+            svdService.svd( taskCommand.getExpressionExperiment().getId() );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }
 
         return result;
     }
-
 }

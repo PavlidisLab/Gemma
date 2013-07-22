@@ -61,15 +61,19 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     @Autowired
     private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
+
     @Autowired
     private TaskPostProcessing taskPostProcessing;
 
     @Autowired
     private JMSBrokerMonitor jmsBrokerMonitor;
+
     @Autowired
     private JMSHelper jmsHelper;
+
     @Resource(name = "taskSubmissionQueue")
     private javax.jms.Queue taskSubmissionQueue;
+
     @Resource(name = "taskControlQueue")
     private javax.jms.Queue taskControlQueue;
 
@@ -89,38 +93,21 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     @Override
-    public String submitLocalJob( BackgroundJob job ) throws ConflictingTaskException {
-        checkJob( job );
+    public <T extends Task> String submitLocalTask( T task ) throws ConflictingTaskException {
+        checkTask( task );
 
-        TaskCommand taskCommand = job.getCommand();
+        TaskCommand taskCommand = task.getTaskCommand();
         checkTaskCommand( taskCommand );
 
-        final String taskId = taskCommand.getTaskId();
+        final String taskId = task.getTaskCommand().getTaskId();
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Submitting local task with id: " + taskId );
         }
 
-        SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( taskCommand, taskPostProcessing );
+        final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( task.getTaskCommand(), taskPostProcessing );
 
-        ExecutingTask<TaskResult> executingTask = constructExecutingTask( job, taskId, submittedTask );
-
-        ListenableFuture<TaskResult> future = executorService.submit( executingTask );
-        submittedTask.setFuture( future );
-
-        // Adding post-processing steps, they will run on future completion.
-        // Currently we have only email notification.
-        if ( taskCommand.isEmailAlert() ) {
-            submittedTask.addEmailAlert();
-        }
-
-        submittedTasks.put( taskId, submittedTask );
-        return taskId;
-    }
-
-    private ExecutingTask<TaskResult> constructExecutingTask( BackgroundJob job, String taskId,
-            final SubmittedTaskLocal submittedTask ) {
-        ExecutingTask<TaskResult> executingTask = new ExecutingTask<TaskResult>( job );
+        final ExecutingTask<TaskResult> executingTask = new ExecutingTask<TaskResult>( task, taskCommand );
 
         executingTask.setStatusCallback( new ExecutingTask.TaskLifecycleHandler() {
             @Override
@@ -148,11 +135,22 @@ public class TaskRunningServiceImpl implements TaskRunningService {
                 progressUpdates.add( message );
             }
         } ) );
-        return executingTask;
+
+        ListenableFuture<TaskResult> future = executorService.submit( executingTask );
+        submittedTask.setFuture( future );
+
+        // Adding post-processing steps, they will run on future completion.
+        // Currently we have only email notification.
+        if ( taskCommand.isEmailAlert() ) {
+            submittedTask.addEmailAlert();
+        }
+
+        submittedTasks.put( taskId, submittedTask );
+        return taskId;
     }
 
-    private void checkJob( BackgroundJob job ) {
-        checkNotNull( job, "Must provide a job." );
+    private void checkTask( Task task ) {
+        checkNotNull( task, "Must provide a task." );
     }
 
     private void checkTaskCommand( TaskCommand taskCommand ) {
@@ -162,17 +160,12 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     @Override
-    public String submitLocalTask( TaskCommand taskCommand ) throws ConflictingTaskException {
-        final Task task = taskCommandToTaskMatcher.match( taskCommand );
-        // TODO: fix once submitLocalJob is deprecated.
-        BackgroundJob<TaskCommand, TaskResult> job = new BackgroundJob<TaskCommand, TaskResult>( taskCommand ) {
-            @Override
-            protected TaskResult processJob() {
-                return task.execute();
-            }
-        };
+    public <C extends TaskCommand> String submitLocalTask( C taskCommand ) throws ConflictingTaskException {
+        checkTaskCommand( taskCommand );
 
-        return submitLocalJob( job );
+        final Task task = taskCommandToTaskMatcher.match( taskCommand );
+
+        return submitLocalTask( task );
     }
 
     /**
@@ -180,7 +173,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
      */
     // TODO: throw exception if remote worker is unavailable and allow client to submit locally? Or rename the method.
     @Override
-    public String submitRemoteTask( final TaskCommand taskCommand ) throws ConflictingTaskException {
+    public <C extends TaskCommand> String submitRemoteTask( final C taskCommand ) throws ConflictingTaskException {
         String taskId = taskCommand.getTaskId();
         assert ( taskId != null );
 
@@ -190,6 +183,9 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             SubmittedTask submittedTask = constructSubmittedTaskProxy( taskCommand, taskId );
             submittedTasks.put( taskId, submittedTask );
         } else {
+            if (taskCommand.isRemoteOnly()) {
+                throw new IllegalStateException( "Can't run 'remote-only' task locally." );
+            }
             this.submitLocalTask( taskCommand );
         }
         return taskId;

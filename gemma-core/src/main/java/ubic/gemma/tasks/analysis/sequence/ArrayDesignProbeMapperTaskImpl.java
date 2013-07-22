@@ -8,6 +8,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.tasks.AbstractTask;
 
 /**
  * A probe mapper spaces task .
@@ -17,37 +18,23 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  */
 @Component
 @Scope("prototype")
-public class ArrayDesignProbeMapperTaskImpl implements ArrayDesignProbeMapperTask {
+public class ArrayDesignProbeMapperTaskImpl extends AbstractTask<TaskResult, ArrayDesignProbeMapTaskCommand>
+        implements ArrayDesignProbeMapperTask {
 
     @Autowired
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService = null;
 
-    private ArrayDesignProbeMapTaskCommand command;
-
-    @Override
-    public void setCommand(ArrayDesignProbeMapTaskCommand command) {
-        this.command = command;
-    }
-
-    /*
-             * (non-Javadoc)
-             * @see
-             * ubic.gemma.grid.javaspaces.task.expression.arrayDesign.ArrayDesignProbeMapperTask#execute(ubic.gemma.grid.javaspaces
-             * .expression.arrayDesign.SpacesProbeMapperCommand)
-             */
     @Override
     public TaskResult execute() {
-
-        ArrayDesign ad = command.getArrayDesign();
+        ArrayDesign ad = taskCommand.getArrayDesign();
 
         arrayDesignProbeMapperService.processArrayDesign( ad );
 
         /*
          * FIXME get rid of web dependency
          */
-        TaskResult result = new TaskResult( command, new ModelAndView( new RedirectView( "/Gemma" ) ) );
+        TaskResult result = new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/Gemma" ) ) );
 
         return result;
     }
-
 }

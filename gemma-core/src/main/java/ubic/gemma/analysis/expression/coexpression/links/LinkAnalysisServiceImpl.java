@@ -64,7 +64,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.SecurityServiceImpl;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.TaxonUtility;
 
 import java.io.IOException;
@@ -762,8 +761,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     }
 
-    @Autowired
-    UserManager userManager;
 
     /**
      * @param p2v

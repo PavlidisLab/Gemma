@@ -44,12 +44,13 @@ function fetchData(filter, eeId, formatType, qtId, eeDId) {
                   handleDoneGeneratingFile(url);
                });
 
-            task.showTaskProgressWindow({});
+            task.showTaskProgressWindow({
+                showLogButton : true
+            });
 
          },
          errorHandler : handleFailure
       });
-
 }
 
 function fetchCoExpressionData(eeId) {
@@ -70,7 +71,9 @@ function fetchCoExpressionData(eeId) {
                   handleDoneGeneratingFile(url);
                });
 
-            task.showTaskProgressWindow({});
+            task.showTaskProgressWindow({
+                showLogButton : true
+            });
 
          },
          errorHandler : handleFailure
@@ -95,7 +98,9 @@ function fetchDiffExpressionData(analysisId) {
                   handleDoneGeneratingFile(url);
                });
 
-            task.showTaskProgressWindow({});
+            task.showTaskProgressWindow({
+                showLogButton : true
+            });
 
          },
          errorHandler : handleFailure

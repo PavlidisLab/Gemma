@@ -87,6 +87,10 @@ public class TaskCommand implements Serializable {
     private Integer maxQueueMinutes = MAX_QUEUING_MINUTES;
     private int maxRuntime = MAX_RUNTIME_MINUTES;
 
+    /**
+     * For tasks that use too much resources and must be run remotely.
+     */
+    protected boolean remoteOnly;
 
     public TaskCommand() {
         // The taskId is assigned on creation.
@@ -115,7 +119,6 @@ public class TaskCommand implements Serializable {
     public Long getEntityId() {
         return entityId;
     }
-
 
     /**
      * @return the persistJobDetails
@@ -193,4 +196,11 @@ public class TaskCommand implements Serializable {
         this.maxRuntime = maxRuntime;
     }
 
+    public boolean isRemoteOnly() {
+        return remoteOnly;
+    }
+
+    public void setRemoteOnly( boolean remoteOnly ) {
+        this.remoteOnly = remoteOnly;
+    }
 }

@@ -11,6 +11,7 @@ import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServ
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.tasks.AbstractTask;
 
 import java.util.Collection;
 
@@ -22,29 +23,16 @@ import java.util.Collection;
  */
 @Component
 @Scope("prototype")
-public class ArrayDesignRepeatScanTaskImpl implements ArrayDesignRepeatScanTask {
+public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<TaskResult, ArrayDesignRepeatScanTaskCommand>
+        implements ArrayDesignRepeatScanTask {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    private ArrayDesignRepeatScanTaskCommand command;
-
-    @Override
-    public void setCommand(ArrayDesignRepeatScanTaskCommand command) {
-        this.command = command;
-    }
-
-    /*
-             * (non-Javadoc)
-             *
-             * @see
-             * ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTask#execute(ubic.gemma.grid.javaspaces
-             * .analysis .sequence.SpacesArrayDesignRepeatScanCommand)
-             */
     @Override
     public TaskResult execute() {
 
-        ArrayDesign ad = command.getArrayDesign();
+        ArrayDesign ad = taskCommand.getArrayDesign();
 
         ad = arrayDesignService.thaw( ad );
 
@@ -52,7 +40,7 @@ public class ArrayDesignRepeatScanTaskImpl implements ArrayDesignRepeatScanTask 
         RepeatScan scanner = new RepeatScan();
         scanner.repeatScan( sequences );
 
-        TaskResult result = new TaskResult( command, new ModelAndView( new RedirectView( "/Gemma" ) ) );
+        TaskResult result = new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/Gemma" ) ) );
 
         return result;
     }

@@ -24,8 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.maintenance.IndexerResult;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.util.CompassUtils;
@@ -85,16 +85,16 @@ public class IndexServiceImpl implements IndexService {
      * @version $Id$
      */
     // This is started locally. Calls two job: ReIndex and SwapIndices if needed.
-    private class IndexerJob extends BackgroundJob<IndexerTaskCommand, IndexerResult> {
+    private class IndexerJob extends AbstractTask<IndexerResult, IndexerTaskCommand> {
 
         public IndexerJob( IndexerTaskCommand command ) {
             super( command );
         }
 
         @Override
-        protected IndexerResult processJob() {
+        public IndexerResult execute() {
             IndexerResult result = null;
-            String taskId = taskRunningService.submitRemoteTask( command );
+            String taskId = taskRunningService.submitRemoteTask( taskCommand );
             SubmittedTask<IndexerResult> indexingTask = taskRunningService.getSubmittedTask( taskId );
             try {
                 TaskResult f = indexingTask.getResult();
@@ -102,7 +102,7 @@ public class IndexServiceImpl implements IndexService {
                     return ( IndexerResult ) f;
                 } else {
                     // probably there was an error.
-                    IndexerResult ir = new IndexerResult( command );
+                    IndexerResult ir = new IndexerResult( taskCommand );
                     ir.setException( f.getException() );
                 }
             } catch ( ExecutionException e ) {
@@ -111,7 +111,7 @@ public class IndexServiceImpl implements IndexService {
                 e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
             }
             if ( indexingTask.isRunningRemotely() && result != null ) {
-                loadExternalIndices( command, result );
+                loadExternalIndices( taskCommand, result );
             }
 
             return result;
@@ -184,97 +184,57 @@ public class IndexServiceImpl implements IndexService {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.indexer.IndexService#index(ubic.gemma.grid.javaspaces.task.index.IndexerTaskCommand)
-     */
     @Override
     public String index( IndexerTaskCommand command ) {
-        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
+        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.indexer.IndexService#indexAll()
-     */
     @Override
     public String indexAll() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setAll( true );
-        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
+        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.indexer.IndexService#indexArrayDesigns()
-     */
     @Override
     public String indexArrayDesigns() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexAD( true );
-        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
+        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.indexer.IndexService#indexBibligraphicReferences()
-     */
     @Override
     public String indexBibligraphicReferences() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexBibRef( true );
-        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
+        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.indexer.IndexService#indexBioSequences()
-     */
     @Override
     public String indexBioSequences() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexBioSequence( true );
-        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
+        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.indexer.IndexService#indexExpressionExperiments()
-     */
     @Override
     public String indexExpressionExperiments() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexEE( true );
-        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
+        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.indexer.IndexService#indexGenes()
-     */
     @Override
     public String indexGenes() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexGene( true );
-        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
+        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.search.indexer.IndexService#indexProbes()
-     */
     @Override
     public String indexProbes() {
         IndexerTaskCommand command = new IndexerTaskCommand();
         command.setIndexProbe( true );
-        return taskRunningService.submitLocalJob( new IndexerJob( command ) );
+        return taskRunningService.submitLocalTask( new IndexerJob( command ) );
     }
 }

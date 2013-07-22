@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.AbstractTask;
 
 /**
  * Task to try to get 'batch' information about an experiment. This usually involves downloading raw data files from the
@@ -16,40 +17,26 @@ import ubic.gemma.job.TaskResult;
  */
 @Component
 @Scope("prototype")
-public class BatchInfoFetchTaskImpl implements BatchInfoFetchTask {
+public class BatchInfoFetchTaskImpl extends AbstractTask<TaskResult, BatchInfoFetchTaskCommand> implements BatchInfoFetchTask {
 
     @Autowired private BatchInfoPopulationService batchInfoService;
-
-    private BatchInfoFetchTaskCommand command;
 
     private Log log = LogFactory.getLog( BatchInfoFetchTask.class.getName() );
 
     @Override
-    public void setCommand( BatchInfoFetchTaskCommand command ) {
-        this.command = command;
-    }
-
-    /*
-         * (non-Javadoc)
-         *
-         * @see ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask#execute()
-         */
-    @Override
     public TaskResult execute() {
+        TaskResult result = new TaskResult( taskCommand, null );
 
-        TaskResult result = new TaskResult( command, null );
-
-        if ( command.doAll() ) {
+        if ( taskCommand.doAll() ) {
             throw new UnsupportedOperationException(
                     "Doing all Batch fetches in task not implemented, sorry, you must configure one" );
-        } else if ( command.getExpressionExperiment() != null ) {
-            command.setMaxRuntime( 30 ); // time to download files etc.
-            batchInfoService.fillBatchInformation(command.getExpressionExperiment(), true);
+        } else if ( taskCommand.getExpressionExperiment() != null ) {
+            taskCommand.setMaxRuntime( 30 ); // time to download files etc.
+            batchInfoService.fillBatchInformation( taskCommand.getExpressionExperiment(), true);
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }
 
         return result;
     }
-
 }

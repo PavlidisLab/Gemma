@@ -458,7 +458,9 @@ function load(accession) {
 				Ext.DomHelper.overwrite("messages", "Successfully loaded");
             });
            
-           task.showTaskProgressWindow({});
+           task.showTaskProgressWindow({
+               showLogButton : true
+           });
            
         },
         errorHandler : errorHandler

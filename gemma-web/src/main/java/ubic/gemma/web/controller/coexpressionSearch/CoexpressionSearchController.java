@@ -33,7 +33,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
@@ -43,6 +42,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneLightWeightCache;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 
@@ -92,30 +92,29 @@ public class CoexpressionSearchController  {
     /**
      * Inner class used for doing a long running coex search
      */
-    class CoexSearchJob extends BackgroundJob<TaskCommand, TaskResult> {
+    class CoexpressionSearchTask extends AbstractTask<TaskResult, TaskCommand> {
 
-        public CoexSearchJob(  CoexSearchTaskCommand command ) {
+        public CoexpressionSearchTask( CoexSearchTaskCommand command ) {
             super( command );
         }
 
         @Override
-        public TaskResult processJob() {
+        public TaskResult execute() {
         	
-        	CoexSearchTaskCommand coexCommand = (CoexSearchTaskCommand) command;
+        	CoexSearchTaskCommand coexCommand = (CoexSearchTaskCommand) taskCommand;
         	
         	CoexpressionMetaValueObject results  = doSearchQuick2( coexCommand.getSearchOptions());
-            return new TaskResult( command, results );
+            return new TaskResult( taskCommand, results );
 
         }
     }
-    
-    
+
     public String doBackgroundCoexSearch( CoexpressionSearchCommand searchOptions ) {
     	
-    	CoexSearchJob job = new CoexSearchJob( new CoexSearchTaskCommand( searchOptions) );
+    	CoexpressionSearchTask job = new CoexpressionSearchTask( new CoexSearchTaskCommand( searchOptions) );
 
 //        try {
-          return taskRunningService.submitLocalJob( job );
+          return taskRunningService.submitLocalTask( job );
 //        } catch ( ConflictingTaskException e ) {
 //            throw new RuntimeException( "Sorry, it looks like you already have a task like that running (taskid="
 //                    + e.getCollidingCommand().getTaskId() + ", submitted time="
@@ -257,7 +256,7 @@ public class CoexpressionSearchController  {
 
         result.setKnownGeneResults( geneResults );
 
-        // if this is not a cytoscape coex vis query, then get 'query-genes-only' results for the query genes (only do
+        // If this is not a cytoscape coex vis query, then get 'query-genes-only' results for the query genes (only do
         // this if there is more than one query gene)
         if ( queryGeneIds == null && searchOptions.getGeneIds().size() > 1 ) {
             log.info( "Coexpression search step 2: getting 'query genes only' results for " + genes.size() + " genes" );
@@ -268,7 +267,6 @@ public class CoexpressionSearchController  {
             queryGenesOnlyResults = eliminateDuplicates( queryGenesOnlyResults );
 
             result.setQueryGenesOnlyResults( queryGenesOnlyResults );
-
         }
 
         int stringencyTrimLimit = searchOptions.getEeIds().size();
@@ -290,7 +288,6 @@ public class CoexpressionSearchController  {
         }
 
         return result;
-
     }
 
     /**

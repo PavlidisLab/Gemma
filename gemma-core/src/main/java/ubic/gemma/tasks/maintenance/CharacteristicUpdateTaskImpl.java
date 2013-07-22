@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.tasks.AbstractTask;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -47,7 +48,7 @@ import java.util.Map;
  */
 @Component
 @Scope("prototype")
-public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
+public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, CharacteristicUpdateCommand> implements CharacteristicUpdateTask {
 
     private static Log log = LogFactory.getLog( CharacteristicUpdateTask.class );
 
@@ -62,20 +63,15 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
     @Autowired
     private SecurityService securityService;
 
-    private CharacteristicUpdateCommand command = null;
-
     @Override
-    public void setCommand( CharacteristicUpdateCommand command ) {
+    public void setTaskCommand( CharacteristicUpdateCommand command ) {
         assert command != null;
-        this.command = command;
+        super.setTaskCommand( command );
     }
 
     @Override
     public TaskResult execute() {
-
-        assert this.command != null;
-
-        if ( command.isRemove() ) {
+        if ( taskCommand.isRemove() ) {
             return this.doRemove();
         }
         return this.doUpdate();
@@ -183,14 +179,14 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
     }
 
     private TaskResult doRemove() {
-        Collection<AnnotationValueObject> chars = command.getAnnotationValueObjects();
+        Collection<AnnotationValueObject> chars = taskCommand.getAnnotationValueObjects();
         log.info( "Delete " + chars.size() + " characteristics..." );
 
         Collection<Characteristic> asChars = convertToCharacteristic( chars );
 
         if ( asChars.size() == 0 ) {
             log.info( "No characteristic objects were received" );
-            return new TaskResult( command, false );
+            return new TaskResult( taskCommand, false );
         }
 
         Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
@@ -201,7 +197,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
             characteristicService.delete( cFromDatabase );
             log.info( "Characteristic deleted: " + cFromDatabase + " (associated with " + parent + ")" );
         }
-        return new TaskResult( command, true );
+        return new TaskResult( taskCommand, true );
 
     }
 
@@ -210,8 +206,8 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
      * @return
      */
     private TaskResult doUpdate() {
-        Collection<AnnotationValueObject> avos = command.getAnnotationValueObjects();
-        if ( avos.size() == 0 ) return new TaskResult( command, false );
+        Collection<AnnotationValueObject> avos = taskCommand.getAnnotationValueObjects();
+        if ( avos.size() == 0 ) return new TaskResult( taskCommand, false );
         log.info( "Updating " + avos.size() + " characteristics or uncharacterized factor values..." );
         StopWatch timer = new StopWatch();
         timer.start();
@@ -221,14 +217,14 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
 
         if ( asChars.size() == 0 && factorValues.size() == 0 ) {
             log.info( "Nothing to update" );
-            return new TaskResult( command, false );
+            return new TaskResult( taskCommand, false );
         }
 
         for ( FactorValue factorValue : factorValues ) {
             factorValueService.update( factorValue );
         }
 
-        if ( asChars.size() == 0 ) return new TaskResult( command, true );
+        if ( asChars.size() == 0 ) return new TaskResult( taskCommand, true );
 
         Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
 
@@ -334,7 +330,7 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
             log.info( "Update took: " + timer.getTime() );
         }
 
-        return new TaskResult( command, true );
+        return new TaskResult( taskCommand, true );
 
     }
 

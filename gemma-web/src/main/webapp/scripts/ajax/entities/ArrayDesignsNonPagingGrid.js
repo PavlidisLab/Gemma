@@ -244,7 +244,9 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                                        task.on('task-completed', function(payload) {
                                              window.location.reload();
                                           });
-                                       task.showTaskProgressWindow({});
+                                       task.showTaskProgressWindow({
+                                           showLogButton : true
+                                       });
                                     }.createDelegate(this)
                                  });
 

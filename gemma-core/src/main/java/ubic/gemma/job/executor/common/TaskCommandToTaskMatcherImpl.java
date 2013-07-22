@@ -45,7 +45,7 @@ public class TaskCommandToTaskMatcherImpl implements TaskCommandToTaskMatcher {
         if ( task == null )
             throw new IllegalArgumentException( "Task bean is not found for " + taskClass.getSimpleName() );
 
-        task.setCommand( taskCommand );
+        task.setTaskCommand( taskCommand );
         return task;
     }
 }

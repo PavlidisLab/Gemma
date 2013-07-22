@@ -36,7 +36,6 @@ import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -50,6 +49,7 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.audit.AuditableUtil;
+import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -77,24 +77,24 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Inner class used for building array design summary
      */
-    class GenerateArraySummaryLocalJob extends BackgroundJob<TaskCommand, TaskResult> {
+    class GenerateArraySummaryLocalTask extends AbstractTask<TaskResult, TaskCommand> {
 
-        public GenerateArraySummaryLocalJob( TaskCommand command ) {
+        public GenerateArraySummaryLocalTask( TaskCommand command ) {
             super( command );
         }
 
         @Override
-        public TaskResult processJob() {
+        public TaskResult execute() {
 
-            if ( this.command.getEntityId() == null ) {
+            if ( this.taskCommand.getEntityId() == null ) {
                 log.info( "Generating summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
-                return new TaskResult( command, new ModelAndView( new RedirectView(
+                return new TaskResult( taskCommand, new ModelAndView( new RedirectView(
                         "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
             }
-            ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( this.command
+            ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( taskCommand
                     .getEntityId() );
-            return new TaskResult( command, report );
+            return new TaskResult( taskCommand, report );
 
         }
     }
@@ -102,25 +102,23 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Inner class used for deleting array designs
      */
-    class RemoveArrayLocalJob extends BackgroundJob<TaskCommand, TaskResult> {
+    class RemoveArrayLocalTask extends AbstractTask<TaskResult, TaskCommand> {
 
-        public RemoveArrayLocalJob( TaskCommand command ) {
+        public RemoveArrayLocalTask( TaskCommand command ) {
             super( command );
         }
 
         @Override
-        public TaskResult processJob() {
-            ArrayDesign ad = arrayDesignService.load( command.getEntityId() );
+        public TaskResult execute() {
+            ArrayDesign ad = arrayDesignService.load( taskCommand.getEntityId() );
             if ( ad == null ) {
-                throw new IllegalArgumentException( "Could not load platform with id=" + command.getEntityId() );
+                throw new IllegalArgumentException( "Could not load platform with id=" + taskCommand.getEntityId() );
             }
             arrayDesignService.remove( ad );
-            return new TaskResult( command, new ModelAndView( new RedirectView(
+            return new TaskResult( taskCommand, new ModelAndView( new RedirectView(
                     "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject( "message", "Array " + ad.getShortName()
                     + " removed from Database." ) );
-
         }
-
     }
 
     private static boolean AJAX = true;
@@ -142,12 +140,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Autowired private SearchService searchService;
     @Autowired private TaxonService taxonService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#addAlternateName(java.lang.Long,
-     * java.lang.String)
-     */
     @Override
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
         ArrayDesign ad = arrayDesignService.load( arrayDesignId );
@@ -167,13 +159,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return formatAlternateNames( ad );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#browse(ubic.gemma.web.remote.ListBatchCommand
-     * , java.util.Collection, boolean, boolean)
-     */
     @Override
     public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Long[] ids, boolean showMerged,
             boolean showOrphans ) {
@@ -195,13 +180,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return returnVal;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#delete(javax.servlet.http.HttpServletRequest
-     * , javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping("/deleteArrayDesign.html")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
@@ -239,13 +217,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#downloadAnnotationFile(javax.servlet.http
-     * .HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping("/downloadAnnotationFile.html")
     public ModelAndView downloadAnnotationFile( HttpServletRequest request, HttpServletResponse response ) {
@@ -298,13 +269,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#filter(javax.servlet.http.HttpServletRequest
-     * , javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping("/filterArrayDesigns.html")
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
@@ -364,18 +328,18 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         String sId = request.getParameter( "id" );
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
-        GenerateArraySummaryLocalJob job;
+        GenerateArraySummaryLocalTask job;
         if ( StringUtils.isBlank( sId ) ) {
-            job = new GenerateArraySummaryLocalJob( new TaskCommand() );
-            String taskId = taskRunningService.submitLocalJob(job);
+            job = new GenerateArraySummaryLocalTask( new TaskCommand() );
+            String taskId = taskRunningService.submitLocalTask( job );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
                     "taskId", taskId );
         }
 
         try {
             Long id = Long.parseLong( sId );
-            job = new GenerateArraySummaryLocalJob( new TaskCommand( id ) );
-            String taskId = taskRunningService.submitLocalJob(job);
+            job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
+            String taskId = taskRunningService.submitLocalTask( job );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + sId ) )
                     .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
@@ -554,31 +518,18 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     + ", it is used by an expression experiment" );
         }
 
-        RemoveArrayLocalJob job = new RemoveArrayLocalJob( new TaskCommand( arrayDesign.getId() ) );
+        RemoveArrayLocalTask job = new RemoveArrayLocalTask( new TaskCommand( arrayDesign.getId() ) );
 
-        return taskRunningService.submitLocalJob(job);
+        return taskRunningService.submitLocalTask( job );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showAllArrayDesigns(javax.servlet.http
-     * .HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping("/showAllArrayDesigns.html")
     public ModelAndView showAllArrayDesigns( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "arrayDesigns" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showArrayDesign(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping({ "/showArrayDesign.html", "/" })
     public ModelAndView showArrayDesign( HttpServletRequest request, HttpServletResponse response ) {
@@ -743,27 +694,16 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                 + ids ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#updateReport(ubic.gemma.web.remote.
-     * EntityDelegator)
-     */
     @Override
     public String updateReport( EntityDelegator ed ) {
-        GenerateArraySummaryLocalJob job = new GenerateArraySummaryLocalJob( new TaskCommand( ed.getId() ) );
-        return taskRunningService.submitLocalJob( job );
+        GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new TaskCommand( ed.getId() ) );
+        return taskRunningService.submitLocalTask( job );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#updateReportById(java.lang.Long)
-     */
     @Override
     public String updateReportById( Long id ) {
-        GenerateArraySummaryLocalJob job = new GenerateArraySummaryLocalJob( new TaskCommand( id ) );
-        return taskRunningService.submitLocalJob( job );
+        GenerateArraySummaryLocalTask job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
+        return taskRunningService.submitLocalTask( job );
     }
 
     /**
@@ -809,9 +749,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                 taxonListString = taxonListString + " (primary; Also contains sequences from: "
                         + StringUtils.join( taxonList, "; " ) + ")";
             }
-
         }
-
         return taxonListString;
     }
 

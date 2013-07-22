@@ -30,7 +30,6 @@ import java.util.concurrent.Callable;
 public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
     private Task<T, ?> task;
-    private BackgroundJob<?, T> job;
 
     // Does not survive serialization.
     private transient TaskLifecycleHandler statusCallback;
@@ -47,13 +46,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
         this.taskCommand = taskCommand;
     }
 
-    public ExecutingTask( BackgroundJob job ) {
-        this.job = job;
-        this.taskCommand = job.getCommand();
-        this.taskId = job.getCommand().getTaskId();
-    }
-
-    // These hooks can be used to update status of the running task.
+    // These hooks are used to update status of the running task.
     public interface TaskLifecycleHandler {
         public void onStart();
 
@@ -79,11 +72,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
         T result = null;
         try {
-            if ( this.task != null ) {
-                result = this.task.execute();
-            } else {
-                result = this.job.processJob();
-            }
+            result = this.task.execute();
         } catch ( Throwable e ) {
             statusCallback.onFailure( e );
             taskExecutionException = e;

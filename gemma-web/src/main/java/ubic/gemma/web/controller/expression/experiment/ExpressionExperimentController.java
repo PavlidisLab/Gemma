@@ -18,27 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.IOException;
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import net.sf.json.JSONObject;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -50,7 +30,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
@@ -68,22 +47,12 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
-import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.CitationValueObject;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.auditAndSecurity.eventType.*;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -93,22 +62,14 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.SecurityServiceImpl;
+import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.util.EntityUtils;
@@ -119,6 +80,12 @@ import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.util.*;
 
 /**
  * @author keshav
@@ -135,37 +102,37 @@ public class ExpressionExperimentController {
      * @author pavlidis
      * @version $Id$
      */
-    private class RemoveExpressionExperimentJob extends BackgroundJob<TaskCommand, TaskResult> {
+    private class RemoveExpressionExperimentTask extends AbstractTask<TaskResult, TaskCommand> {
 
-        public RemoveExpressionExperimentJob( TaskCommand command ) {
+        public RemoveExpressionExperimentTask( TaskCommand command ) {
             super( command );
         }
 
         @Override
-        public TaskResult processJob() {
-            expressionExperimentService.delete( command.getEntityId() );
+        public TaskResult execute() {
+            expressionExperimentService.delete( taskCommand.getEntityId() );
 
-            return new TaskResult( command, new ModelAndView( new RedirectView(
+            return new TaskResult( taskCommand, new ModelAndView( new RedirectView(
                     "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) ).addObject( "message",
-                    "Dataset id: " + command.getEntityId() + " removed from Database" ) );
+                    "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
 
         }
     }
 
-    private class RemovePubMed extends BackgroundJob<TaskCommand, TaskResult> {
+    private class RemovePubMed extends AbstractTask<TaskResult, TaskCommand> {
 
         public RemovePubMed( TaskCommand command ) {
             super( command );
         }
 
         @Override
-        public TaskResult processJob() {
-            ExpressionExperiment ee = expressionExperimentService.load( command.getEntityId() );
+        public TaskResult execute() {
+            ExpressionExperiment ee = expressionExperimentService.load( taskCommand.getEntityId() );
 
             ee = expressionExperimentService.thawLite( ee );
 
             if ( ee.getPrimaryPublication() == null ) {
-                return new TaskResult( command, false );
+                return new TaskResult( taskCommand, false );
             }
 
             log.info( "Removing reference" );
@@ -173,25 +140,25 @@ public class ExpressionExperimentController {
 
             expressionExperimentService.update( ee );
 
-            return new TaskResult( command, true );
+            return new TaskResult( taskCommand, true );
         }
 
     }
 
-    private class UpdatePubMed extends BackgroundJob<UpdatePubMedCommand, TaskResult> {
+    private class UpdatePubMed extends AbstractTask<TaskResult, UpdatePubMedCommand> {
 
         public UpdatePubMed( UpdatePubMedCommand command ) {
             super( command );
         }
 
         @Override
-        public TaskResult processJob() {
-            Long eeId = command.getEntityId();
+        public TaskResult execute() {
+            Long eeId = taskCommand.getEntityId();
             ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId );
             if ( expressionExperiment == null )
                 throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
 
-            String pubmedId = command.getPubmedId();
+            String pubmedId = taskCommand.getPubmedId();
             BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
 
             if ( publication != null ) {
@@ -247,7 +214,7 @@ public class ExpressionExperimentController {
             result.setId( expressionExperiment.getId() );
             result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( expressionExperiment
                     .getPrimaryPublication() ) );
-            return new TaskResult( command, result );
+            return new TaskResult( taskCommand, result );
         }
 
     }
@@ -498,8 +465,8 @@ public class ExpressionExperimentController {
      */
     public String deleteById( Long id ) {
         if ( id == null ) return null;
-        RemoveExpressionExperimentJob job = new RemoveExpressionExperimentJob( new TaskCommand( id ) );
-        return taskRunningService.submitLocalJob( job );
+        RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new TaskCommand( id ) );
+        return taskRunningService.submitLocalTask( task );
     }
 
     /**
@@ -1117,8 +1084,8 @@ public class ExpressionExperimentController {
      * @throws Exception
      */
     public String removePrimaryPublication( Long eeId ) throws Exception {
-        RemovePubMed job = new RemovePubMed( new TaskCommand( eeId ) );
-        return taskRunningService.submitLocalJob( job );
+        RemovePubMed task = new RemovePubMed( new TaskCommand( eeId ) );
+        return taskRunningService.submitLocalTask( task );
     }
 
     /**
@@ -1490,8 +1457,8 @@ public class ExpressionExperimentController {
     public String updatePubMed( Long eeId, String pubmedId ) throws Exception {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );
-        UpdatePubMed job = new UpdatePubMed( command );
-        return taskRunningService.submitLocalJob( job );
+        UpdatePubMed task = new UpdatePubMed( command );
+        return taskRunningService.submitLocalTask( task );
     }
 
     /**
@@ -1552,7 +1519,6 @@ public class ExpressionExperimentController {
             log.info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
         }
         return mav;
-
     }
 
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {

@@ -7,6 +7,7 @@ import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysis;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.AbstractTask;
 
 /**
  * @author keshav
@@ -14,27 +15,20 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 @Component
 @Scope("prototype")
-public class LinkAnalysisTaskImpl implements LinkAnalysisTask {
+public class LinkAnalysisTaskImpl extends AbstractTask<TaskResult, LinkAnalysisTaskCommand>
+        implements LinkAnalysisTask {
 
-    @Autowired private LinkAnalysisService linkAnalysisService;
-
-    private LinkAnalysisTaskCommand command;
-
-    @Override
-    public void setCommand(LinkAnalysisTaskCommand command) {
-        this.command = command;
-    }
+    @Autowired
+    private LinkAnalysisService linkAnalysisService;
 
     @Override
     public TaskResult execute() {
+        ExpressionExperiment ee = linkAnalysisService.loadDataForAnalysis( taskCommand.getExpressionExperiment().getId() );
+        LinkAnalysis la = linkAnalysisService.doAnalysis( ee, taskCommand.getLinkAnalysisConfig(), taskCommand.getFilterConfig() );
+        linkAnalysisService.saveResults( ee, la, taskCommand.getLinkAnalysisConfig(), taskCommand.getFilterConfig() );
 
-        ExpressionExperiment ee = linkAnalysisService.loadDataForAnalysis( command.getExpressionExperiment().getId() );
-        LinkAnalysis la = linkAnalysisService.doAnalysis( ee, command.getLinkAnalysisConfig(), command.getFilterConfig() );
-        linkAnalysisService.saveResults( ee, la, command.getLinkAnalysisConfig(), command.getFilterConfig() );
-
-        TaskResult result = new TaskResult( command, null );
+        TaskResult result = new TaskResult( taskCommand, null );
         return result;
 
     }
-
 }

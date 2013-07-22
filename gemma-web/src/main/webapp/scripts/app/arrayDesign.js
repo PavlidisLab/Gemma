@@ -98,7 +98,9 @@ function updateArrayDesignReport(id, callerScope) {
                var throbberEl = callerScope.getEl();
                task.showTaskProgressThrobber(throbberEl);
             } else {// e.g. refresh button on showArrayDesign.html
-               task.showTaskProgressWindow();
+               task.showTaskProgressWindow({
+                   showLogButton : true
+               });
             }
             task.on('task-completed', function(payload) {
                   handleDoneUpdateReport(id, callerScope);

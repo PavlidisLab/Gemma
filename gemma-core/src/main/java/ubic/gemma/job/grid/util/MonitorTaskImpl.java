@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.AbstractTask;
 
 /**
  * Empty task that can be run to monitor the state of the Space.
@@ -33,14 +34,14 @@ import ubic.gemma.job.TaskResult;
 @Deprecated
 @Component
 @Scope("prototype")
-public class MonitorTaskImpl implements MonitorTask {
+public class MonitorTaskImpl extends AbstractTask<TaskResult, MonitorTaskCommand> implements MonitorTask {
 
     private static Log log = LogFactory.getLog( MonitorTaskImpl.class );
 
     private MonitorTaskCommand command;
 
     @Override
-    public void setCommand(MonitorTaskCommand command) {
+    public void setTaskCommand( MonitorTaskCommand command ) {
         this.command = command;
     }
 

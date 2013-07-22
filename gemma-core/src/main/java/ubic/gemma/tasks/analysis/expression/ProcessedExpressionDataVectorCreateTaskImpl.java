@@ -23,6 +23,7 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.AbstractTask;
 
 import java.util.Collection;
 
@@ -32,35 +33,24 @@ import java.util.Collection;
  */
 @Component
 @Scope("prototype")
-public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExpressionDataVectorCreateTask {
+public class ProcessedExpressionDataVectorCreateTaskImpl
+        extends AbstractTask<TaskResult, ProcessedExpressionDataVectorCreateTaskCommand>
+        implements ProcessedExpressionDataVectorCreateTask {
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
     @Autowired
     private SampleCoexpressionMatrixService coexpressionMatrixService;
 
-    private ProcessedExpressionDataVectorCreateTaskCommand command;
-
-    @Override
-    public void setCommand( ProcessedExpressionDataVectorCreateTaskCommand command ) {
-        this.command = command;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTask#execute(ubic.gemma
-     * .grid .javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
-     */
     @Override
     public TaskResult execute() {
-
-        ExpressionExperiment ee = command.getExpressionExperiment();
+        ExpressionExperiment ee = taskCommand.getExpressionExperiment();
         Collection<ProcessedExpressionDataVector> processedVectors = null;
-        if ( command.isCorrelationMatrixOnly() ) {
+        if ( taskCommand.isCorrelationMatrixOnly() ) {
             // only create them if necessary. This is sort of stupid, it's just so I didn't have to create a whole other
             // task for the correlation matrix computation.
             processedVectors = processedExpressionDataVectorService.getProcessedDataVectors( ee );
@@ -73,8 +63,7 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
 
         coexpressionMatrixService.create( ee, processedVectors );
 
-        TaskResult result = new TaskResult( command, processedVectors.size() );
+        TaskResult result = new TaskResult( taskCommand, processedVectors.size() );
         return result;
     }
-
 }

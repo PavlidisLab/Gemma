@@ -13,13 +13,13 @@ GemmaStatUtils.Constants.BIG = 4.503599627370496e15;
 GemmaStatUtils.Constants.BIG_INVERSE = 2.22044604925031308085e-16;
 
 /**
- * Fisher's method for combining p values. (Cooper and Hedges 15-8). Requires having all the pvalues available.
+ * Fisher's method for combining p-values. (Cooper and Hedges 15-8). Requires having all the p-values available.
  * 
  * @param pValues
  * @return double upper tail
  */
 GemmaStatUtils.computeMetaPvalue = function(pValues) {
-   if (pValues.length == 0) {
+   if (pValues.length === 0) {
       return 2.0; // FIXME: for value 2.0 I display 'NA' to the user.
       // FIXME: proper fix would be using a pair (display value, sort value) so that sort doesn't trip on strings and
       // these values are ranked low.
@@ -42,7 +42,7 @@ GemmaStatUtils.computeMetaPvalue = function(pValues) {
  * Temporary!
  */
 GemmaStatUtils.computeFractionFailure = function(successes, total) {
-   if (total == 0) {
+   if (total === 0) {
       return 2.0;
    }
    // scaling to make it so values like 0.1 are 'significant'
@@ -323,7 +323,7 @@ GemmaStatUtils.dbinom_raw = function(x, n, p, q) {
       lc = (p < 0.1) ? -GemmaStatUtils.bd0(n, n * q) - n * p : n * Math.log(q);
       return (Math.exp(lc));
    }
-   if (x == n) {
+   if (x === n) {
       lc = (q < 0.1) ? -GemmaStatUtils.bd0(n, n * p) - n * q : n * Math.log(p);
       return (Math.exp(lc));
    }
@@ -437,7 +437,7 @@ GemmaStatUtils.bd0 = function(x, np) {
       for (j = 1;; j++) { /* Taylor series */
          ej *= v;
          s1 = s + ej / ((j << 1) + 1);
-         if (s1 == s) /* last term was effectively 0 */
+         if (s1 === s) /* last term was effectively 0 */
          {
             return (s1);
          }
@@ -450,8 +450,9 @@ GemmaStatUtils.bd0 = function(x, np) {
 
 GemmaStatUtils.dbinom = function(x, n, p) {
 
-   if (p < 0 || p > 1 || n < 0)
+   if (p < 0 || p > 1 || n < 0) {
       throw "IllegalArgumentException";
+   }
 
    return GemmaStatUtils.dbinom_raw(x, n, p, 1 - p);
 };

@@ -17,7 +17,7 @@ package ubic.gemma.job.executor.webapp;
 import ubic.gemma.job.ConflictingTaskException;
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.executor.common.BackgroundJob;
+import ubic.gemma.tasks.Task;
 
 import java.util.Collection;
 
@@ -35,7 +35,7 @@ public interface TaskRunningService {
     public Collection<SubmittedTask> getSubmittedTasks();
 
     // TODO: Make this user specific. Probably in a controller with a session scoped collection.
-    // TODO: at that level (WebAwareTaskRunnningService) have a rate limiter for task submission by the same user
+    // TODO: at that level (WebAwareTaskRunningService) have a rate limiter for task submission by the same user
     // TODO: this is to detect duplicate task submission (e.g. within a few seconds)
 
     /**
@@ -53,7 +53,9 @@ public interface TaskRunningService {
      * @throws ubic.gemma.job.ConflictingTaskException if the task is disallowed due to another conflicting task (e.g.,
      *         two tasks of the same type by the same user).
      */
-    public String submitLocalTask( TaskCommand taskCommand ) throws ConflictingTaskException;
+    public <C extends TaskCommand> String submitLocalTask( C  taskCommand ) throws ConflictingTaskException;
+
+    public <T extends Task> String submitLocalTask( T task ) throws ConflictingTaskException;
 
     /**
      * Run task remotely if possible, otherwise run locally.
@@ -62,8 +64,5 @@ public interface TaskRunningService {
      * @return
      * @throws ConflictingTaskException
      */
-    public String submitRemoteTask( TaskCommand taskCommand ) throws ConflictingTaskException;
-
-    @Deprecated
-    public String submitLocalJob( BackgroundJob job ) throws ConflictingTaskException;
+    public <C extends TaskCommand> String submitRemoteTask( C taskCommand ) throws ConflictingTaskException;
 }

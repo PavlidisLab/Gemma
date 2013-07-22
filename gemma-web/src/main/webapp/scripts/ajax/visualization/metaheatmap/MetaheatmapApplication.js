@@ -12,13 +12,13 @@ Ext.namespace('Gemma.Metaheatmap');
  * - top labels area 
  * - main area 
  * It is controlled by window that allows sorting/filtering and choosing data.
- * 
+ *
  * genes - Metaheatmap.Genes is shared between control panel and visualization panel.
  *         It takes care of sorting/filtering of the genes.
  * geneSelection
  * experimentSelection
- * 
- * 
+ *
+ *
  *  ----------------------------------------
  *                Toolbar	
  *  ------  --------------------  ----------
@@ -36,7 +36,7 @@ Ext.namespace('Gemma.Metaheatmap');
  * ------ ---------------------- -----------
  * </pre>
  * 
- * 
+ *
  * If 'savedState' object is passed, the application is initialized using values passed in it. The state captures:
  * sort/filter + search queries/sets used to retrieve genes and experiments. Due to URL length limitation this will not
  * always work for bookmarkable links. We can store 'savedState' in database in the future to work around this

@@ -19,7 +19,6 @@
 
 package ubic.gemma.tasks.analysis.expression;
 
-import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
@@ -27,5 +26,5 @@ import ubic.gemma.tasks.Task;
  * @author Paul
  * @version $Id$
  */
-public interface BioAssayOutlierProcessingTask extends Task<TaskResult, TaskCommand> {
+public interface BioAssayOutlierProcessingTask extends Task<TaskResult, BioAssayOutlierProcessingTaskCommand> {
 }

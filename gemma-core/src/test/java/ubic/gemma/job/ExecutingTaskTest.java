@@ -26,6 +26,7 @@ import ubic.gemma.job.executor.common.ExecutingTask;
 import ubic.gemma.job.executor.common.ProgressUpdateAppender;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.Task;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -44,8 +45,7 @@ import static org.junit.Assert.*;
  */
 public class ExecutingTaskTest extends BaseSpringContextTest {
 
-    @Autowired
-    UserManager userManager;
+    @Autowired UserManager userManager;
 
     private AtomicBoolean onStartRan = new AtomicBoolean( false );
     private AtomicBoolean onFailureRan = new AtomicBoolean( false );
@@ -104,27 +104,15 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         }
     };
 
-    private static class SuccessTestTask implements Task<TaskResult, TaskCommand> {
-        TaskCommand command;
-
-        @Override
-        public void setCommand( TaskCommand taskCommand ) {
-            command = taskCommand;
-        }
+    private static class SuccessTestTask extends AbstractTask<TaskResult, TaskCommand> {
 
         @Override
         public TaskResult execute() {
-            return new TaskResult( command, "SUCCESS" );
+            return new TaskResult( getTaskCommand(), "SUCCESS" );
         }
     }
 
-    private static class FailureTestTask implements Task<TaskResult, TaskCommand> {
-        TaskCommand command;
-
-        @Override
-        public void setCommand( TaskCommand taskCommand ) {
-            command = taskCommand;
-        }
+    private static class FailureTestTask extends AbstractTask<TaskResult, TaskCommand> {
 
         @Override
         public TaskResult execute() {
@@ -165,7 +153,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         runAsAdmin();
 
         Task<TaskResult, TaskCommand> task = new SuccessTestTask();
-        task.setCommand( taskCommand );
+        task.setTaskCommand( taskCommand );
 
         ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
         executingTask.setProgressAppender( progressAppender );
@@ -196,7 +184,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     public void testOrderOfExecutionSuccess() {
         TaskCommand taskCommand = new TaskCommand();
         Task<TaskResult, TaskCommand> task = new SuccessTestTask();
-        task.setCommand( taskCommand );
+        task.setTaskCommand( taskCommand );
 
         ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
         executingTask.setProgressAppender( progressAppender );
@@ -226,7 +214,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     public void testOrderOfExecutionFailure() {
         TaskCommand taskCommand = new TaskCommand();
         Task<TaskResult, TaskCommand> task = new FailureTestTask();
-        task.setCommand( taskCommand );
+        task.setTaskCommand( taskCommand );
 
         ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
         executingTask.setProgressAppender( progressAppender );
@@ -252,5 +240,4 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         assertFalse( onFinishRan.get() );
         assertTrue( onFailureRan.get() );
     }
-
 }

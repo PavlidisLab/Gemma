@@ -20,8 +20,6 @@ package ubic.gemma.web.controller.monitoring;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.BackgroundJob;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.job.grid.util.MonitorTask;
 import ubic.gemma.job.grid.util.MonitorTaskCommand;
@@ -57,12 +55,7 @@ public class TestTaskController {
         command.setFail( fail );
 
         if ( forceLocal ) {
-            return taskRunningService.submitLocalJob( new BackgroundJob(command) {
-                @Override
-                protected TaskResult processJob() {
-                    return testTask.execute();
-                }
-            } );
+            return taskRunningService.submitLocalTask( testTask );
         }
         return taskRunningService.submitRemoteTask( command );
     }

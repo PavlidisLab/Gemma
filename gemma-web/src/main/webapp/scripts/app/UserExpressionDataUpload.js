@@ -138,7 +138,9 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
     onStartSubmission: function (taskId) {
         var me = this;
         var task = new Gemma.ObservableSubmittedTask({'taskId': taskId});
-        task.showTaskProgressWindow({});
+        task.showTaskProgressWindow({
+            showLogButton : true
+        });
 //        Ext.getBody().unmask();
         task.on('task-completed', function (payload) {
             me.onDoneLoading(payload);
@@ -149,39 +151,14 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
         task.on('task-cancelling', function (error) {
 
         });
-
-//        var p = new Gemma.ProgressWidget({
-//            taskId: taskId
-//        });
-//
-//        var w = new Ext.Window({
-//            modal: true,
-//            closable: false,
-//            width: 500,
-//            items: [p]
-//        });
-//
-//        p.on('done', function (payload) {
-//            this.onDoneLoading(payload);
-//            w.hide('submit-data-button');
-//            w.destroy();
-//            p.destroy();
-//        }.createDelegate(this));
-//
-//        p.on('fail', function (message) {
-//            w.hide('submit-data-button');
-//            w.destroy();
-//            p.destroy();
-//        }.createDelegate(this));
-//
-//        w.show('submit-data-button');
-//        p.startProgress();
     },
 
     onStartValidation: function (taskId) {
         var me = this;
         var task = new Gemma.ObservableSubmittedTask({'taskId': taskId});
-        task.showTaskProgressWindow({});
+        task.showTaskProgressWindow({
+            showLogButton : true
+        });
 //        Ext.getBody().unmask();
         task.on('task-completed', function (payload) {
             me.onValidated(payload);
@@ -192,33 +169,6 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
         task.on('task-cancelling', function (error) {
 
         });
-
-//        var p = new Gemma.ProgressWidget({
-//            taskId: taskId
-//        });
-//
-//        var w = new Ext.Window({
-//            modal: true,
-//            closable: false,
-//            width: 400,
-//            items: [p]
-//        });
-//
-//        p.on('done', function (payload) {
-//            this.onValidated(payload);
-//            w.hide('validate-data-button');
-//            w.destroy();
-//            p.destroy();
-//        }.createDelegate(this));
-//
-//        p.on('fail', function (message) {
-//            w.hide('validate-data-button');
-//            w.destroy();
-//            p.destroy();
-//        }.createDelegate(this));
-//
-//        w.show('validate-data-button');
-//        p.startProgress();
     },
 
     onValidated: function (result) {

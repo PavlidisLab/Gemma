@@ -349,14 +349,14 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
          Gemma.MetaHeatmapDataSelection.superclass.initComponent.apply(this, arguments);
 
-         if (this.geneGroupValueObjects && this.experimentGroupValueObjects) {
-            this.doVisualization();
-         }
-      },
-      onRender : function() {
-         Gemma.MetaHeatmapDataSelection.superclass.onRender.apply(this, arguments);
-         // _sortPanel = this.ownerCt.sortPanel;
-      }
-   });
+		if(this.geneGroupValueObjects && this.experimentGroupValueObjects){
+			this.doVisualization();
+		}
+	},
+	onRender : function() {
+		Gemma.MetaHeatmapDataSelection.superclass.onRender.apply(this, arguments);
+		//_sortPanel = this.ownerCt.sortPanel;
+	}
+});
 
 Ext.reg('metaVizDataSelection', Gemma.MetaHeatmapDataSelection);

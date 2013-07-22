@@ -4,24 +4,25 @@ Ext.namespace('Gemma');
  * Task progress window that wraps ObservableSubmittedTask.
  * 
  * Config options;
- * 
+ *
  * @param {ObservableSubmittedTask}
  *           task
  * @param [displayOptions]
- * 
+ *      - showLogButton {boolean}
+ *      - showBackgroundButton {boolean}  -- show/hide 'Run in background' button
+ *      - showLogOnTaskFailure {boolean}  -- if true, expands log panel on task failure
+ *      - closeOnTaskSuccess {boolean}  -- if true, hides progress widget window on task completion.
+ *
  * @class Gemma.ProgressWindow
  * @extends Ext.Window
  */
 Gemma.ProgressWindow = Ext.extend(Ext.Window, {
-
       modal : true,
       closable : false,
       resizable : false,
       stateful : false,
-      showAllMessages : false,
       collapsible : false,
       autoHeight : true,
-
       width : 400,
 
       initComponent : function() {
@@ -36,7 +37,7 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 
          Ext.apply(this, {
                items : [this.progressWidget]
-            });
+         });
 
          Gemma.ProgressWindow.superclass.initComponent.call(this);
 
@@ -48,7 +49,7 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
                this.progressWidget.show();
             }, this);
       }
-   });
+});
 
 /**
  * Config options:
@@ -63,11 +64,13 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
       bodyBorder : false,
       stateful : false,
 
-      // Default options
-      showLogOnTaskFailure : false,
-      hideLogButton : true,
-      hideCloseButton : true,
-      closeOnTaskCompletion : true,
+      // Default options  : buttons: Cancel(always shown), Background, Show Logs
+      showLogButton : false,
+      showBackgroundButton : false,
+
+      // behaviours
+      showLogOnTaskFailure : true,
+      closeOnTaskSuccess : true,
 
       initComponent : function() {
          if (!Ext.isDefined(this.task)) {
@@ -92,14 +95,17 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
                      ref : 'logPanel',
                      items : [{
                            xtype : 'label',
-                           ref : 'textLabel'
+                           ref : 'textLabel',
+                           boxMaxHeight : 400,
+                           autoScroll : true
                         }]
                   }],
-               buttons : [{
+               fbar : {
+                   items :[{
                      text : "Logs",
-                     itemId : "progresslogsbutton",
+                     ref : "../progresslogsbutton",
                      tooltip : "Show log messages",
-                     hidden : this.hideLogButton,
+                     hidden : !this.showLogButton,
                      enableToggle : true,
                      toggleHandler : function(button, enabled) {
                         if (enabled) {
@@ -111,7 +117,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
                      scope : this
                   }, {
                      text : "Cancel Job",
-                     itemId : "progresscancelbutton",
+                     ref : "../progresscancelbutton",
                      tooltip : "Attempt to stop the job.",
                      handler : function() {
                         Ext.Msg.show({
@@ -129,10 +135,10 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
                      },
                      scope : this
                   }, {
-                     text : "Close",
-                     itemId : "progresshidebutton",
+                     text : "Run in background",
+                     ref : "../progresshidebutton",
                      tooltip : "Remove the progress bar and return to the page",
-                     hidden : this.hideCloseButton,
+                     hidden : !this.showBackgroundButton,
                      handler : function() {
                         Ext.Msg.show({
                               title : "Run in background",
@@ -151,14 +157,24 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
                         this.stopListening();
                      },
                      scope : this
-                  }]
+                     }, {
+                        text : "Close",
+                        ref : "../progressCloseWindowButton",
+                        tooltip : "Remove the progress bar and return to the page",
+                        hidden : true,
+                        handler : function() {
+                            this.destroy();
+                        },
+                    scope : this
+               }]
+            }
             });
 
          Gemma.ProgressWidget.superclass.initComponent.call(this);
 
          this.on('show', this.startListening, this, {
                single : true
-            });
+         });
       },
 
       /**
@@ -183,42 +199,51 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
        * 
        * @private
        */
-      startListening : function() {
-         this.startProgressBarAnimation();
+      startListening: function () {
+          this.startProgressBarAnimation();
 
-         this.task.on("task-completed", function() {
-               this.stopListening();
-               this.destroy();
-            }, this);
+          this.task.on("task-completed", function () {
+              this.stopListening();
+              if (this.closeOnTaskSuccess) {
+                this.destroy();
+              }
+          }, this);
 
-         this.task.on("task-failed", function() {
-               this.stopListening();
-            }, this);
+          this.task.on("task-failed", function () {
+              this.stopListening();
+              this.progressBar.updateText("Task has failed.");
+              if (this.showLogOnTaskFailure) {
+                  this.progresslogsbutton.toggle(true);
+              }
+          }, this);
 
-         this.task.on('task-cancelling', function() {
-               this.stopListening();
-               this.destroy();
-            }, this);
+          this.task.on('task-cancelling', function () {
+              this.stopListening();
+              this.destroy();
+          }, this);
 
-         this.task.on("log-message-received", function(message) {
-               this.progressBar.updateText(message);
-               if (this.logPanel.rendered) {
+          this.task.on("log-message-received", function (message) {
+              this.progressBar.updateText(message);
+              if (this.logPanel.rendered) {
                   this.logPanel.textLabel.setText(this.task.logs);
-               }
-            }, this);
+              }
+          }, this);
 
-         this.task.on("synchronization-error", function() {
-               this.progressBar.updateText("Couldn't get progress updates from the server.");
-            });
+          this.task.on("synchronization-error", function () {
+              this.progressBar.updateText("Couldn't get progress updates from the server.");
+          }, this);
       },
 
-      /**
+    /**
        * 
        * @private
        */
       stopListening : function() {
-         this.task.purgeListeners();
-         this.stopProgressBarAnimation();
+        this.task.purgeListeners();
+        this.stopProgressBarAnimation();
+        this.progresscancelbutton.hide();
+        this.progresshidebutton.hide();
+        this.progressCloseWindowButton.show();
       },
 
       /**

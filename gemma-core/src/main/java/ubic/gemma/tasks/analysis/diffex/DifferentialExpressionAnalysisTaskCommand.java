@@ -91,6 +91,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = ee;
         this.toRedo = toRedo;
         this.updateStatsOnly = !updateAnalysis;
+        this.remoteOnly = ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
     /**
@@ -104,6 +105,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.setTaskId( taskId );
         this.forceAnalysis = forceAnalysis;
         this.expressionExperiment = expressionExperiment;
+        this.remoteOnly = ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
     public AnalysisType getAnalysisType() {
@@ -179,11 +181,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     public void setUpdateStatsOnly( boolean updateStatsOnly ) {
         this.updateStatsOnly = updateStatsOnly;
-    }
-
-    // TODO: drop this or not?
-    public boolean getConfigRemoteRunValue() {
-        return ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
     @Override
