@@ -48,7 +48,6 @@
 				<prop key="/compositeSequence/*">compositeSequenceController</prop>
 				<prop key="/experimentalDesign/*">experimentalDesignController</prop>
 				<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
-				<prop key="/loadSimpleExpressionExperiment.html">expressionDataFileUploadController</prop>
 				<prop key="/getData.html">expressionExperimentDataFetchController</prop>
 				<prop key="/checkJobProgress.html">taskCompletionController</prop>
 				<prop key="/searchCoexpression.html">coexpressionSearchController</prop>

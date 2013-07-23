@@ -58,6 +58,70 @@
 		<directory>target</directory>
 		<finalName>Gemma</finalName>
 		<plugins>
+            <plugin>
+                <groupId>com.github.searls</groupId>
+                <artifactId>jasmine-maven-plugin</artifactId>
+                <version>1.3.1.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jsSrcDir>src/main/webapp/scripts</jsSrcDir>
+                    <sourceIncludes>
+                        <include>lib/prototype.js</include>
+                        <include>lib/scriptaculous/scriptaculous.js</include>
+                        <include>lib/scriptaculous/effects.js</include>
+                        <include>lib/scriptaculous/**/*.js</include>
+                        <include>lib/ext/adapter/**/*.js</include>
+                        <include>lib/ext/ext-all-debug.js</include>
+                        <include>lib/ext/extensions/**/*.js</include>
+                        <include>lib/globals.js</include>
+                        <include>lib/excanvas.js</include>
+                        <include>lib/typeface.js</include>
+                        <include>lib/excanvas-text.js</include>
+                        <include>lib/faces/**/.js</include>
+                        <include>lib/rsvp.js</include>
+                        <include>lib/*.js</include>
+                        <include>ajax/ext/**/*.js</include>
+                        <include>ajax/util/userHelpMessages.js</include>
+                        <include>ajax/util/TutorialQtips.js</include>
+                        <include>ajax/util/*.js</include>
+                        <include>ajax/visualization/cytoscape/CytoscapeSettings.js</include>
+                        <include>ajax/visualization/cytoscape/CytoscapeDisplay.js</include>
+                        <include>ajax/visualization/cytoscape/*.js</include>
+                        <include>ajax/**/*.js</include>
+                        <include>ajax/*.js</include>
+                        <include>app/*.js</include>
+                    </sourceIncludes>
+                    <sourceExcludes>
+                        <exclude>cytoscape</exclude>
+                        <exclude>ajax/dwrServices.js</exclude>
+                        <exclude>app/AnalysisResultsSearchNonWidget.js</exclude>
+                        <exclude>app/CharacteristicBrowser.js</exclude>
+                        <exclude>app/resetPassword.js</exclude>
+                        <exclude>app/userManager.js</exclude>
+                        <exclude>app/manageGroups.js</exclude>
+                        <exclude>app/signup.js</exclude>
+                        <exclude>app/loadExpressionExperiment.js</exclude>
+                        <exclude>app/jobmonitoring.js</exclude>
+                        <exclude>app/editUser.js</exclude>
+                        <exclude>app/monitoring.js</exclude>
+                        <exclude>app/indexer.js</exclude>
+                        <exclude>app/UserExpressionDataUpload.js</exclude>
+                        <exclude>app/bmFactorValues.js</exclude>
+                        <exclude>app/ontologyReIndexer.js</exclude>
+                        <exclude>app/ExperimentalDesign.js</exclude>
+                    </sourceExcludes>
+                    <preloadSources>
+                        <source>dwrServicesMock.js</source>
+                    </preloadSources>
+                    <!-- <jsTestSrcDir></jsTestSrcDir> -->
+                </configuration>
+            </plugin>
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.2</version>
@@ -139,7 +203,8 @@
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-core</artifactId>
-			<version>${project.version}</version>			<exclusions>
+			<version>${project.version}</version>
+			<exclusions>
 				<exclusion>
 					<artifactId>jsp-api</artifactId>
 					<groupId>javax.servlet</groupId>
