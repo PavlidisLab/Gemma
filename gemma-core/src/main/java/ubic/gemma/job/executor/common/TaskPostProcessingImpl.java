@@ -49,11 +49,11 @@ public class TaskPostProcessingImpl implements TaskPostProcessing {
 
     private FutureCallback<TaskResult> createEmailNotificationFutureCallback( final EmailNotificationContext context ) {
         FutureCallback<TaskResult> futureCallback = new FutureCallback<TaskResult>() {
-            private EmailNotificationContext emailNotifcationContext = context;
+            private EmailNotificationContext emailNotificationContext = context;
 
             @Override
             public void onSuccess( TaskResult taskResult ) {
-                mailUtils.sendTaskCompletedNotificationEmail( emailNotifcationContext, taskResult );
+                mailUtils.sendTaskCompletedNotificationEmail( emailNotificationContext, taskResult );
             }
 
             @Override

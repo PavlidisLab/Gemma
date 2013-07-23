@@ -56,7 +56,7 @@ public class MailUtilsImpl implements MailUtils {
             String emailAddress = user.getEmail();
 
             if ( emailAddress != null ) {
-                log.debug( "Sending email notification to " + emailAddress );
+                log.info( "Sending email notification to " + emailAddress );
                 SimpleMailMessage msg = new SimpleMailMessage();
                 msg.setTo( emailAddress );
                 msg.setFrom( ConfigUtils.getAdminEmailAddress() );
@@ -68,7 +68,7 @@ public class MailUtilsImpl implements MailUtils {
                     logs += taskResult.getException().getMessage();
                 }
 
-                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ", " + taskName + ")\n\n"
+                msg.setText( "A job you started on Gemma is completed (taskId=" + taskId + ", " + taskName + ")\n\n"
                         + logs + "\n" );
 
                 /*

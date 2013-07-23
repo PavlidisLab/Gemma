@@ -19,6 +19,8 @@
 package ubic.gemma.job.executor.worker;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import ubic.gemma.infrastructure.common.MessageSender;
 import ubic.gemma.job.EmailNotificationContext;
 import ubic.gemma.job.SubmittedTask;
@@ -36,18 +38,16 @@ import java.util.concurrent.ExecutionException;
  * @version $Id$
  */
 public class SubmittedTaskRemote {
+    private static Log log = LogFactory.getLog( SubmittedTaskRemote.class );
+
     private TaskCommand taskCommand;
-    private List<String> progressUpdates;
+    private List<String> progressUpdates;  // TODO: keep local copy of task log messages, to be used in email notification.
     private ListenableFuture<TaskResult> future;
 
     MessageSender<TaskResult> resultSender;
     MessageSender<TaskStatusUpdate> statusUpdateSender;
     MessageSender<String> progressUpdateSender;
     private TaskPostProcessing taskPostProcessing;
-
-    public SubmittedTaskRemote( String taskId ) {
-
-    }
 
     public SubmittedTaskRemote( TaskCommand taskCommand, List<String> progressUpdates,
             MessageSender<TaskResult> resultSender, MessageSender<TaskStatusUpdate> statusUpdateSender,
@@ -64,10 +64,8 @@ public class SubmittedTaskRemote {
         if ( future.isDone() ) {
             try {
                 resultSender.send( future.get() );
-            } catch ( InterruptedException e ) {
-                e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
-            } catch ( ExecutionException e ) {
-                e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
+            } catch ( InterruptedException | ExecutionException e ) {
+                log.warn( e.getMessage() );
             }
         }
     }
@@ -91,10 +89,6 @@ public class SubmittedTaskRemote {
     public void addEmailAlertNotificationAfterCompletion() {
         taskPostProcessing.addEmailNotification( future, new EmailNotificationContext( taskCommand.getTaskId(),
                 taskCommand.getSubmitter(), taskCommand.getTaskClass().getSimpleName() ) );
-    }
-
-    public void addSendTaskResultAfterCompletion() {
-
     }
 
     public void setFuture( ListenableFuture future ) {
