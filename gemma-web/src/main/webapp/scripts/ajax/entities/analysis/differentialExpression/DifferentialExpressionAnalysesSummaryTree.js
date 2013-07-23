@@ -542,7 +542,88 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 
       return text;
    },
-   drawPieCharts : function() {
+
+    /**
+     * Method to draw one-piece pie chart in a canvas, with extra colour options
+     * @param {Object} ctx the canvas component to draw in (here, the canvas tag)
+     * @param {int} x centre of pie on x axis relative to top right of ctx
+     * @param {int} y centre of pie on y axis relative to top right of ctx
+     * @param {int} size size of the pie chart
+     * @param {String} colour colour for slice one of the pie
+     * @param {int} value size of slice one in degrees
+     * @param {String} outlineColour colour for the pie outline
+     */
+    drawOneColourMiniPie: function (ctx, x, y, size, colourOne, valueOne, outlineColour) {
+        ctx.save();
+        ctx.fillStyle = 'white'; //good grey: '#E0E0E0';
+        ctx.moveTo(x, y);
+        // draw circle
+        ctx.beginPath();
+        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
+        ctx.fill();
+        // draw slice one
+        ctx.fillStyle = colourOne;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne, false);
+        ctx.lineTo(x, y);
+        ctx.fill();
+        // draw circle outline
+        ctx.beginPath();
+        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
+        ctx.lineWidth = 0.75;
+        ctx.strokeStyle = outlineColour;
+        ctx.stroke();
+
+        ctx.restore();
+    },
+
+    /**
+     * Method to draw a two-colour, two-piece pie chart in a canvas (where sum of pieces can be < total)
+     * @param {Object} ctx the canvas component to draw in (here, the canvas tag)
+     * @param {int} x centre of pie on x axis relative to top right of ctx
+     * @param {int} y centre of pie on y axis relative to top right of ctx
+     * @param {int} size size of the pie chart
+     * @param {String} colourOne colour for slice one of the pie
+     * @param {int} valueOne size of slice one in degrees
+     * @param {String} colourTwo colour for slice two of the pie
+     * @param {int} valueTwo size of slice two in degrees
+     * @param {String} outlineColour colour for the pie outline
+     */
+    drawTwoColourMiniPie: function (ctx, x, y, size, colourOne, valueOne, colourTwo, valueTwo, outlineColour) {
+        ctx.save();
+        ctx.fillStyle = 'white'; //good grey: '#E0E0E0';
+        ctx.moveTo(x, y);
+        // draw circle
+        ctx.beginPath();
+        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
+        ctx.fill();
+        // draw slice one
+        ctx.fillStyle = colourOne;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne, false);
+        ctx.lineTo(x, y);
+        ctx.fill();
+        // draw slice two
+        ctx.fillStyle = colourTwo;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.arc(x, y, size / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne,
+            Math.PI * 3 / 2 + (Math.PI / 180) * valueOne + (Math.PI / 180) * valueTwo, false);
+        ctx.lineTo(x, y);
+        ctx.fill();
+        // draw circle outline
+        ctx.beginPath();
+        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
+        ctx.lineWidth = 0.75;
+        ctx.strokeStyle = outlineColour;
+        ctx.stroke();
+
+        ctx.restore();
+    },
+
+    drawPieCharts : function() {
       var ctx, diffExpressed, interesting;
       for (var i = 0; i < this.contrastPercents.size(); i++) {
          var chartElement = Ext.get(this.calculateChartId(this.ee.id, i));
@@ -550,7 +631,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
          if (chartElement) {
             ctx = chartElement.dom.getContext("2d");
             if (this.totalProbes === null || this.totalProbes === 0 || this.contrastPercents[i] === null) {
-               drawOneColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'grey');
+               this.drawOneColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'grey');
             } else {
                up = this.contrastPercents[i].up;
                down = this.contrastPercents[i].down;
@@ -564,9 +645,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
                   interesting = true;
                }
                if (interesting) {
-                  drawOneColourMiniPie(ctx, 12, 12, 14, '#1f6568', diffExpressed * 360, 'black');
+                  this.drawOneColourMiniPie(ctx, 12, 12, 14, '#1f6568', diffExpressed * 360, 'black');
                } else {
-                  drawOneColourMiniPie(ctx, 12, 12, 14, 'rgb(95,158,160)', diffExpressed * 360, 'grey');
+                  this.drawOneColourMiniPie(ctx, 12, 12, 14, 'rgb(95,158,160)', diffExpressed * 360, 'grey');
                }
                /*
                 * this code is for up:down pies //if percentage is less than 5%, round up to 5% so it's visible if(up<0.10){up=0.10;
@@ -580,6 +661,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
          }
       }
    },
+
    showPValueDistributionWindow : function(factorName, imageUrl) {
       var eeInfoTitle = "P-value distribution for " + factorName + " in: "
          + "<a ext:qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + this.ee.id
