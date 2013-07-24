@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;

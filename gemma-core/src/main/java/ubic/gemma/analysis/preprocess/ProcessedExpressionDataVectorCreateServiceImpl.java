@@ -20,7 +20,7 @@ package ubic.gemma.analysis.preprocess;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -67,7 +67,7 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),
-                    ExceptionUtils.getFullStackTrace( e ) );
+                    ExceptionUtils.getStackTrace( e ) );
             throw new RuntimeException( e );
         }
 

@@ -24,7 +24,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +49,50 @@ public class ExperimentDataWebService {
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
+
+    @GET
+    @Path("/findExperimentDesignByEeId/{eeId}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getExperimentDataByEeId( @PathParam("eeId") Long eeId ) {
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        ExpressionExperiment ee = null;
+
+        log.info( "Request is for design file for eeId:" + eeId );
+        ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) {
+            return "Expression experiment id " + eeId
+                    + " was invalid: doesn't exist in system, or you lack authorization.";
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        File f = expressionDataFileService.writeTemporaryDesignFile( ee );
+
+        if ( f == null || !f.exists() ) throw new IllegalStateException( "No file was obtained" );
+
+        watch.stop();
+        log.info( "Finished writing a file; done in " + watch.getTime() + " milliseconds" );
+
+        String output = "";
+
+        try {
+            output = FileUtils.readFileToString( f, "UTF-8" );
+        } catch ( IOException e ) {
+            return "There has been an error";
+
+        }
+
+        // delete file
+        if ( f.canWrite() && f.delete() ) {
+            log.info( "Deleted: " + f );
+        }
+
+        return output;
+
+    }
 
     @GET
     @Path("/findExpressionDataByEeId/{eeId},{filtered}")
@@ -98,50 +142,6 @@ public class ExperimentDataWebService {
         f = expressionDataFileService.writeTemporaryDataFile( ee, filtered );
 
         if ( f == null ) throw new IllegalStateException( "No file was obtained" );
-
-        watch.stop();
-        log.info( "Finished writing a file; done in " + watch.getTime() + " milliseconds" );
-
-        String output = "";
-
-        try {
-            output = FileUtils.readFileToString( f, "UTF-8" );
-        } catch ( IOException e ) {
-            return "There has been an error";
-
-        }
-
-        // delete file
-        if ( f.canWrite() && f.delete() ) {
-            log.info( "Deleted: " + f );
-        }
-
-        return output;
-
-    }
-
-    @GET
-    @Path("/findExperimentDesignByEeId/{eeId}")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getExperimentDataByEeId( @PathParam("eeId") Long eeId ) {
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        ExpressionExperiment ee = null;
-
-        log.info( "Request is for design file for eeId:" + eeId );
-        ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            return "Expression experiment id " + eeId
-                    + " was invalid: doesn't exist in system, or you lack authorization.";
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
-
-        File f = expressionDataFileService.writeTemporaryDesignFile( ee );
-
-        if ( f == null || !f.exists() ) throw new IllegalStateException( "No file was obtained" );
 
         watch.stop();
         log.info( "Finished writing a file; done in " + watch.getTime() + " milliseconds" );

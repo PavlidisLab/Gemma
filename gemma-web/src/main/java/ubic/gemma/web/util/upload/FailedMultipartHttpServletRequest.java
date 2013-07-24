@@ -35,10 +35,12 @@ public class FailedMultipartHttpServletRequest extends AbstractMultipartHttpServ
     private String errorMessage;
 
     /**
-     * @return the errorMessage
+     * @param request
+     * @param message
      */
-    public String getErrorMessage() {
-        return errorMessage;
+    public FailedMultipartHttpServletRequest( HttpServletRequest request, String message ) {
+        this( request );
+        this.errorMessage = message;
     }
 
     /**
@@ -49,12 +51,10 @@ public class FailedMultipartHttpServletRequest extends AbstractMultipartHttpServ
     }
 
     /**
-     * @param request
-     * @param message
+     * @return the errorMessage
      */
-    public FailedMultipartHttpServletRequest( HttpServletRequest request, String message ) {
-        this( request );
-        this.errorMessage = message;
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
 }

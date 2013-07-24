@@ -28,7 +28,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.directwebremoting.WebContextFactory;
@@ -54,6 +54,14 @@ public class FileUploadController extends AbstractController {
 
     private static Log log = LogFactory.getLog( FileUploadController.class.getName() );
 
+    public UploadInfo getUploadStatus() {
+        HttpServletRequest req = WebContextFactory.get().getHttpServletRequest();
+        if ( req.getSession().getAttribute( "uploadInfo" ) != null )
+            return ( UploadInfo ) req.getSession().getAttribute( "uploadInfo" );
+
+        return new UploadInfo();
+    }
+
     /**
      * Ajax. DWR can handle this.
      * 
@@ -64,14 +72,6 @@ public class FileUploadController extends AbstractController {
         File copiedFile = FileUploadUtil.copyUploadedInputStream( is );
         log.info( "DWR Uploaded file!" );
         return copiedFile.getAbsolutePath();
-    }
-
-    public UploadInfo getUploadStatus() {
-        HttpServletRequest req = WebContextFactory.get().getHttpServletRequest();
-        if ( req.getSession().getAttribute( "uploadInfo" ) != null )
-            return ( UploadInfo ) req.getSession().getAttribute( "uploadInfo" );
-
-        return new UploadInfo();
     }
 
     /*

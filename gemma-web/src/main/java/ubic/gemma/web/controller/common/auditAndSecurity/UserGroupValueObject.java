@@ -24,10 +24,6 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
  */
 public class UserGroupValueObject {
 
-    public UserGroupValueObject() {
-        super();
-    }
-
     /**
      * Can the current user edit the group - e.g., add users.
      */
@@ -40,12 +36,20 @@ public class UserGroupValueObject {
 
     private String groupName;
 
+    public UserGroupValueObject() {
+        super();
+    }
+
     public String getGroupName() {
         return groupName;
     }
 
     public boolean isCanEdit() {
         return canEdit;
+    }
+
+    public boolean isMember() {
+        return isMember;
     }
 
     public void setCanEdit( boolean canEdit ) {
@@ -58,10 +62,6 @@ public class UserGroupValueObject {
 
     public void setMember( boolean isMember ) {
         this.isMember = isMember;
-    }
-
-    public boolean isMember() {
-        return isMember;
     }
 
 }

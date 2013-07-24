@@ -28,8 +28,8 @@ import java.util.HashSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -101,6 +101,39 @@ public class GeneController extends BaseController {
     public Collection<GeneProductValueObject> getProducts( Long geneId ) {
         if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
         return geneService.getProducts( geneId );
+    }
+
+    /**
+     * AJAX NOTE: this method updates the value object passed in
+     */
+    public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
+        Collection<ImageValueObject> images = new ArrayList<ImageValueObject>();
+        GeneValueObject gene = geneService.loadValueObject( geneId );
+
+        String queryGeneSymbol = gene.getOfficialSymbol();
+        GeneValueObject mouseGene = gene;
+        boolean usingHomologue = false;
+        if ( !gene.getTaxonCommonName().equals( "mouse" ) ) {
+            mouseGene = this.homologeneService.getHomologueValueObject( geneId, "mouse" );
+            usingHomologue = true;
+        }
+
+        if ( mouseGene != null ) {
+            Collection<ImageSeries> imageSeries = null;
+
+            try {
+                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
+                String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
+
+                Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
+                images = ImageValueObject.convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject(
+                        mouseGene ), queryGeneSymbol, usingHomologue );
+
+            } catch ( IOException e ) {
+                log.warn( "Could not get ABA data: " + e );
+            }
+        }
+        return images;
     }
 
     /**
@@ -207,41 +240,6 @@ public class GeneController extends BaseController {
     }
 
     /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
-    @RequestMapping(value = { "/showGenes.html", "/show.html" }, method = RequestMethod.GET)
-    public ModelAndView showMultiple( HttpServletRequest request, HttpServletResponse response ) {
-
-        String sId = request.getParameter( "id" );
-        Collection<GeneValueObject> genes = new ArrayList<GeneValueObject>();
-        // if no IDs are specified, then show an error message
-        if ( sId == null ) {
-            addMessage( request, "object.notfound", new Object[] { "All genes cannot be listed. Genes " } );
-        }
-
-        // if ids are specified, then display only those genes
-        else {
-            String[] idList = StringUtils.split( sId, ',' );
-
-            for ( int i = 0; i < idList.length; i++ ) {
-                Long id = Long.parseLong( idList[i] );
-                GeneValueObject gene = geneService.loadValueObject( id );
-                if ( gene == null ) {
-                    addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-                }
-                genes.add( gene );
-            }
-        }
-        /*
-         * FIXME this view doesn't exist!
-         */
-        return new ModelAndView( "genes" ).addObject( "genes", genes );
-
-    }
-
-    /**
      * Used to display the probe browser, when starting by gene.
      * 
      * @param request
@@ -288,36 +286,38 @@ public class GeneController extends BaseController {
     }
 
     /**
-     * AJAX NOTE: this method updates the value object passed in
+     * @param request
+     * @param response
+     * @return ModelAndView
      */
-    public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
-        Collection<ImageValueObject> images = new ArrayList<ImageValueObject>();
-        GeneValueObject gene = geneService.loadValueObject( geneId );
+    @RequestMapping(value = { "/showGenes.html", "/show.html" }, method = RequestMethod.GET)
+    public ModelAndView showMultiple( HttpServletRequest request, HttpServletResponse response ) {
 
-        String queryGeneSymbol = gene.getOfficialSymbol();
-        GeneValueObject mouseGene = gene;
-        boolean usingHomologue = false;
-        if ( !gene.getTaxonCommonName().equals( "mouse" ) ) {
-            mouseGene = this.homologeneService.getHomologueValueObject( geneId, "mouse" );
-            usingHomologue = true;
+        String sId = request.getParameter( "id" );
+        Collection<GeneValueObject> genes = new ArrayList<GeneValueObject>();
+        // if no IDs are specified, then show an error message
+        if ( sId == null ) {
+            addMessage( request, "object.notfound", new Object[] { "All genes cannot be listed. Genes " } );
         }
 
-        if ( mouseGene != null ) {
-            Collection<ImageSeries> imageSeries = null;
+        // if ids are specified, then display only those genes
+        else {
+            String[] idList = StringUtils.split( sId, ',' );
 
-            try {
-                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
-                String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
-
-                Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-                images = ImageValueObject.convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject(
-                        mouseGene ), queryGeneSymbol, usingHomologue );
-
-            } catch ( IOException e ) {
-                log.warn( "Could not get ABA data: " + e );
+            for ( int i = 0; i < idList.length; i++ ) {
+                Long id = Long.parseLong( idList[i] );
+                GeneValueObject gene = geneService.loadValueObject( id );
+                if ( gene == null ) {
+                    addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+                }
+                genes.add( gene );
             }
         }
-        return images;
+        /*
+         * FIXME this view doesn't exist!
+         */
+        return new ModelAndView( "genes" ).addObject( "genes", genes );
+
     }
 
     /**

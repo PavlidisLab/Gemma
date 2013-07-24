@@ -18,16 +18,17 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.apache.commons.lang.StringUtils;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX,

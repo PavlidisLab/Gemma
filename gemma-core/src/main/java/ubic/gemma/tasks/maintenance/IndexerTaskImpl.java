@@ -19,7 +19,7 @@
 
 package ubic.gemma.tasks.maintenance;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.spi.InternalCompass;
@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.CompassUtils;

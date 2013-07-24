@@ -32,7 +32,7 @@ import java.util.Set;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -51,6 +51,21 @@ import com.sdicons.json.mapper.MapperException;
  */
 public class AssayViewTag extends TagSupport {
     /**
+     * @author pavlidis
+     * @version $Id$
+     */
+    static class BioMaterialComparator implements Comparator<BioMaterial> {
+
+        @Override
+        public int compare( BioMaterial arg0, BioMaterial arg1 ) {
+            BioMaterial obj0 = arg0;
+            BioMaterial obj1 = arg1;
+
+            return obj0.getName().compareTo( obj1.getName() );
+        }
+    }
+
+    /**
      * 
      */
     private static final long serialVersionUID = 8754490187937841260L;
@@ -59,27 +74,9 @@ public class AssayViewTag extends TagSupport {
      * How many 'extra' biomaterials to add to the editing table, so the user can assing bioassays to new biomaterials.
      */
     private static final int NUM_EXTRA_BIOMATERIALS = 12;
-
     private ExpressionExperiment expressionExperiment;
+
     private boolean edit = false;
-
-    /**
-     * @param expressionExperiment
-     */
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    /**
-     * @param edit
-     */
-    public void setEdit( String edit ) {
-        if ( edit.equalsIgnoreCase( "true" ) ) {
-            this.edit = true;
-        } else {
-            this.edit = false;
-        }
-    }
 
     /*
      * (non-Javadoc)
@@ -263,40 +260,21 @@ public class AssayViewTag extends TagSupport {
     }
 
     /**
-     * Add places for completely new biomaterials to be added.
-     * 
-     * @param buf
-     * @param designs
-     * @param assayToMaterial
-     * @param count
-     * @param emptyCount
+     * @param edit
      */
-    private void addNovelBiomaterialSlots( StringBuilder buf, Set<ArrayDesign> designs,
-            Map<String, Collection<String>> assayToMaterial, int count, int emptyCount ) {
-        if ( designs.size() == 1 ) {
-            return;
+    public void setEdit( String edit ) {
+        if ( edit.equalsIgnoreCase( "true" ) ) {
+            this.edit = true;
+        } else {
+            this.edit = false;
         }
-        for ( int i = 1; i <= NUM_EXTRA_BIOMATERIALS; i++ ) {
+    }
 
-            if ( count % 2 == 0 ) {
-                buf.append( "<tr class='even' align=justify>" );
-            } else {
-                buf.append( "<tr class='odd' align=justify>" );
-            }
-            BioMaterial material = BioMaterial.Factory.newInstance();
-
-            // FIXME this is a kludge: use negative ids to distinguish the new biomaterials.
-            material.setId( 0L - i );
-
-            material.setName( "[New biomaterial " + i + "]" );
-            buf.append( "<td>" + material.getName() + "</td>" );
-            String image = "<img height=10 width=10 src='/Gemma/images/arrow_out.png' />";
-            for ( ArrayDesign design : designs ) {
-                emptyCount = addEmpty( buf, assayToMaterial, emptyCount, material, image, design );
-            }
-            buf.append( "</tr>" );
-            count++;
-        }
+    /**
+     * @param expressionExperiment
+     */
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     /**
@@ -353,17 +331,39 @@ public class AssayViewTag extends TagSupport {
     }
 
     /**
-     * @author pavlidis
-     * @version $Id$
+     * Add places for completely new biomaterials to be added.
+     * 
+     * @param buf
+     * @param designs
+     * @param assayToMaterial
+     * @param count
+     * @param emptyCount
      */
-    static class BioMaterialComparator implements Comparator<BioMaterial> {
+    private void addNovelBiomaterialSlots( StringBuilder buf, Set<ArrayDesign> designs,
+            Map<String, Collection<String>> assayToMaterial, int count, int emptyCount ) {
+        if ( designs.size() == 1 ) {
+            return;
+        }
+        for ( int i = 1; i <= NUM_EXTRA_BIOMATERIALS; i++ ) {
 
-        @Override
-        public int compare( BioMaterial arg0, BioMaterial arg1 ) {
-            BioMaterial obj0 = arg0;
-            BioMaterial obj1 = arg1;
+            if ( count % 2 == 0 ) {
+                buf.append( "<tr class='even' align=justify>" );
+            } else {
+                buf.append( "<tr class='odd' align=justify>" );
+            }
+            BioMaterial material = BioMaterial.Factory.newInstance();
 
-            return obj0.getName().compareTo( obj1.getName() );
+            // FIXME this is a kludge: use negative ids to distinguish the new biomaterials.
+            material.setId( 0L - i );
+
+            material.setName( "[New biomaterial " + i + "]" );
+            buf.append( "<td>" + material.getName() + "</td>" );
+            String image = "<img height=10 width=10 src='/Gemma/images/arrow_out.png' />";
+            for ( ArrayDesign design : designs ) {
+                emptyCount = addEmpty( buf, assayToMaterial, emptyCount, material, image, design );
+            }
+            buf.append( "</tr>" );
+            count++;
         }
     }
 }

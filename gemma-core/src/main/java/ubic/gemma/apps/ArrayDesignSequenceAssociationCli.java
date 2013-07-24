@@ -22,7 +22,7 @@ import java.io.InputStream;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.taxon.service.TaxonService;

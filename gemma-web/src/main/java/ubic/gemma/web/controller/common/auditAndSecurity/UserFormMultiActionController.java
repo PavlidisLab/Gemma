@@ -25,8 +25,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
@@ -40,10 +41,8 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.util.JSONUtil;
-
-import org.apache.commons.validator.EmailValidator;
+import ubic.gemma.web.controller.BaseController;
 
 /**
  * Controller to edit profile of users.
@@ -104,9 +103,9 @@ public class UserFormMultiActionController extends BaseController {
 
             boolean changed = false;
 
-            if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {                
-                //if ( !email.matches( "/^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$/;" ) ) {
-                if (!EmailValidator.getInstance().isValid( email ) ) {
+            if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {
+                // if ( !email.matches( "/^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$/;" ) ) {
+                if ( !EmailValidator.getInstance().isValid( email ) ) {
                     jsonText = "{success:false,message:'The email address does not look valid'}";
                     jsonUtil.writeToResponse( jsonText );
                     return;
@@ -225,8 +224,8 @@ public class UserFormMultiActionController extends BaseController {
             String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH )
                     .toLowerCase();
 
-            String token = userManager.changePasswordForUser( email, username, passwordEncoder.encodePassword( pwd,
-                    username ) );
+            String token = userManager.changePasswordForUser( email, username,
+                    passwordEncoder.encodePassword( pwd, username ) );
 
             sendResetConfirmationEmail( request, token, username, pwd, email );
 

@@ -50,21 +50,6 @@ public abstract class AbstractSetListContainer implements Serializable {
         sessionBoundModifiedGroups = new ArrayList<GemmaSessionBackedValueObject>();
     }
 
-    public Long incrementAndGetLargestSessionId() {
-        largestSessionId = largestSessionId + 1;
-
-        // unique session bound Id for each entry in the user's session(doubt that a user will have over 100000 set
-        // session
-        // entries
-        // so I believe 100000 provides a large enough range to avoid conflicts
-        //
-        if ( largestSessionId > 100000 ) {
-            largestSessionId = 0l;
-        }
-
-        return largestSessionId;
-    }
-
     /**
      * Sets the reference (generates an id and assumes this group was made as a result of a modification for the type
      * value) for the group then adds it to the session-bound list(s) for session-bound groups
@@ -105,6 +90,33 @@ public abstract class AbstractSetListContainer implements Serializable {
         }
 
         return vo;
+    }
+
+    public List<? extends GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
+
+        return allSessionBoundGroups;
+
+    }
+
+    public List<? extends GemmaSessionBackedValueObject> getSessionBoundModifiedGroups() {
+
+        return sessionBoundModifiedGroups;
+
+    }
+
+    public Long incrementAndGetLargestSessionId() {
+        largestSessionId = largestSessionId + 1;
+
+        // unique session bound Id for each entry in the user's session(doubt that a user will have over 100000 set
+        // session
+        // entries
+        // so I believe 100000 provides a large enough range to avoid conflicts
+        //
+        if ( largestSessionId > 100000 ) {
+            largestSessionId = 0l;
+        }
+
+        return largestSessionId;
     }
 
     public void removeSet( GemmaSessionBackedValueObject vo ) {
@@ -164,18 +176,6 @@ public abstract class AbstractSetListContainer implements Serializable {
             }
 
         }
-
-    }
-
-    public List<? extends GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
-
-        return allSessionBoundGroups;
-
-    }
-
-    public List<? extends GemmaSessionBackedValueObject> getSessionBoundModifiedGroups() {
-
-        return sessionBoundModifiedGroups;
 
     }
 

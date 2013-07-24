@@ -15,7 +15,7 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.loader.pazar.PazarLoader;
 import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.util.AbstractCLIContextCLI;

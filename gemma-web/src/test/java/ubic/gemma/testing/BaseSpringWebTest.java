@@ -38,15 +38,15 @@ public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     protected static final int MAIL_PORT = 2525;
 
+    public MockHttpServletRequest newGet( String url ) {
+        return new MockHttpServletRequest( "GET", url );
+    }
+
     /**
      * Convenience methods to make tests simpler
      */
     public MockHttpServletRequest newPost( String url ) {
         return new MockHttpServletRequest( "POST", url );
-    }
-
-    public MockHttpServletRequest newGet( String url ) {
-        return new MockHttpServletRequest( "GET", url );
     }
 
     /*

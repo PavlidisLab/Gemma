@@ -23,7 +23,7 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import ubic.gemma.model.common.description.LocalFile;
 

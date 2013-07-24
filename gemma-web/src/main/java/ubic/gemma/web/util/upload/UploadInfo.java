@@ -56,39 +56,39 @@ public class UploadInfo implements Serializable {
         this.status = status;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus( String status ) {
-        this.status = status;
-    }
-
-    public long getTotalSize() {
-        return totalSize;
-    }
-
-    public void setTotalSize( long totalSize ) {
-        this.totalSize = totalSize;
-    }
-
     public long getBytesRead() {
         return bytesRead;
-    }
-
-    public void setBytesRead( long bytesRead ) {
-        this.bytesRead = bytesRead;
-    }
-
-    public boolean isInProgress() {
-        return "progress".equals( status ) || "start".equals( status );
     }
 
     public int getFileIndex() {
         return fileIndex;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public long getTotalSize() {
+        return totalSize;
+    }
+
+    public boolean isInProgress() {
+        return "progress".equals( status ) || "start".equals( status );
+    }
+
+    public void setBytesRead( long bytesRead ) {
+        this.bytesRead = bytesRead;
+    }
+
     public void setFileIndex( int fileIndex ) {
         this.fileIndex = fileIndex;
+    }
+
+    public void setStatus( String status ) {
+        this.status = status;
+    }
+
+    public void setTotalSize( long totalSize ) {
+        this.totalSize = totalSize;
     }
 }

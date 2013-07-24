@@ -21,7 +21,7 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.CompassUtils;

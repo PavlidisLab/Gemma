@@ -36,11 +36,11 @@ public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
 
     ArrayDesignService arrayDesignService;
 
+    private static Log log = LogFactory.getLog( ArrayDesignPropertyEditor.class.getName() );
+
     public ArrayDesignPropertyEditor( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
     }
-
-    private static Log log = LogFactory.getLog( ArrayDesignPropertyEditor.class.getName() );
 
     @Override
     public String getAsText() {

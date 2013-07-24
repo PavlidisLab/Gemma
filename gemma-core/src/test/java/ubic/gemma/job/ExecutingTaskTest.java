@@ -45,7 +45,8 @@ import static org.junit.Assert.*;
  */
 public class ExecutingTaskTest extends BaseSpringContextTest {
 
-    @Autowired UserManager userManager;
+    @Autowired
+    UserManager userManager;
 
     private AtomicBoolean onStartRan = new AtomicBoolean( false );
     private AtomicBoolean onFailureRan = new AtomicBoolean( false );
@@ -155,7 +156,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Task<TaskResult, TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
+        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
         executingTask.setProgressAppender( progressAppender );
         executingTask.setStatusCallback( statusSecurityContextCheckerHandler );
 
@@ -186,7 +187,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Task<TaskResult, TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
+        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
         executingTask.setProgressAppender( progressAppender );
         executingTask.setStatusCallback( statusUpdateHandler );
 
@@ -216,7 +217,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Task<TaskResult, TaskCommand> task = new FailureTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
+        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
         executingTask.setProgressAppender( progressAppender );
         executingTask.setStatusCallback( statusUpdateHandler );
 

@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -458,7 +458,7 @@ public class QueryGeneCoexpression {
                                 if ( log.isDebugEnabled() )
                                     log.debug( "No evidence left : ee=" + eeID + " , crosshyb probe="
                                             + coexpressedProbe + " to genes "
-                                            + org.apache.commons.lang.StringUtils.join( genesForProbe, ',' ) );
+                                            + org.apache.commons.lang3.StringUtils.join( genesForProbe, ',' ) );
                                 toRemove.add( coExValObj );
                                 continue coexp;
                             }

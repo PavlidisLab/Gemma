@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.analysis.expression.coexpression.links;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
@@ -37,9 +38,12 @@ import ubic.gemma.tasks.analysis.coexp.LinkAnalysisTaskCommand;
 @Controller
 public class LinkAnalysisController {
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private ExpressionExperimentReportService experimentReportService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentReportService experimentReportService;
 
     /**
      * AJAX entry point.

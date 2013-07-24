@@ -18,8 +18,12 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
+import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
@@ -38,10 +43,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.view.DownloadBinaryFileView;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene

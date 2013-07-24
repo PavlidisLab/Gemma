@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,15 +76,24 @@ public class SecurityControllerImpl implements SecurityController {
 
     private static Log log = LogFactory.getLog( SecurityControllerImpl.class );
 
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
-    @Autowired private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
-    @Autowired private GeneSetService geneSetService;
-    @Autowired private PhenotypeAssociationService phenotypeAssociationService;
-    @Autowired private MailEngine mailEngine;
-    @Autowired private SecurityService securityService;
-    @Autowired private UserManager userManager;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+    @Autowired
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+    @Autowired
+    private GeneSetService geneSetService;
+    @Autowired
+    private PhenotypeAssociationService phenotypeAssociationService;
+    @Autowired
+    private MailEngine mailEngine;
+    @Autowired
+    private SecurityService securityService;
+    @Autowired
+    private UserManager userManager;
 
     /*
      * (non-Javadoc)

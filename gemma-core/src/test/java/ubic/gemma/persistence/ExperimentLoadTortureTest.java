@@ -23,12 +23,12 @@ import static org.junit.Assert.fail;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Test;
 
 import ubic.gemma.model.common.Describable;
@@ -64,7 +64,7 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
         final ConcurrentHashMap<Describable, Integer> results = new ConcurrentHashMap<Describable, Integer>();
 
         final AtomicBoolean failed = new AtomicBoolean( false );
-
+        final Random random = new Random();
         Collection<Thread> threads = new HashSet<Thread>();
         for ( int i = 0; i < numThreads; i++ ) {
             final int t = i;
@@ -74,7 +74,7 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
                     for ( int j = 0; j < numExperimentsPerThread; j++ ) {
 
                         try {
-                            Thread.sleep( RandomUtils.nextInt( 1000 ) );
+                            Thread.sleep( random.nextInt( 1000 ) );
                             log.info( "Thread " + t + " experiment " + j );
 
                             results.put( getTestPersistentCompleteExpressionExperiment( false ), 1 );

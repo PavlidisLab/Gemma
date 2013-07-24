@@ -22,7 +22,9 @@ package ubic.gemma.tasks.maintenance;
 import java.util.Collection;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.tasks.Task;
 
 /**
  * @author paul
@@ -68,7 +70,7 @@ public class CharacteristicUpdateCommand extends TaskCommand {
     }
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
         return CharacteristicUpdateTask.class;
     }
 }

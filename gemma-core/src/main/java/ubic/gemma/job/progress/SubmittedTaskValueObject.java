@@ -1,7 +1,8 @@
 package ubic.gemma.job.progress;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.job.SubmittedTask;
+import ubic.gemma.job.TaskResult;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -29,7 +30,8 @@ public class SubmittedTaskValueObject implements Serializable {
 
     public SubmittedTaskValueObject( SubmittedTask submittedTask ) {
         this.taskId = submittedTask.getTaskId();
-        this.taskType = submittedTask.getTaskCommand().getTaskClass() == null ? "Not specified" : submittedTask.getTaskCommand().getTaskClass().getSimpleName();
+        this.taskType = submittedTask.getTaskCommand().getTaskClass() == null ? "Not specified" : submittedTask
+                .getTaskCommand().getTaskClass().getSimpleName();
         this.submitter = submittedTask.getTaskCommand().getSubmitter();
         this.submissionTime = submittedTask.getSubmissionTime();
         this.startTime = submittedTask.getStartTime();
@@ -90,7 +92,8 @@ public class SubmittedTaskValueObject implements Serializable {
         return taskType;
     }
 
-    public static Collection<SubmittedTaskValueObject> convert2ValueObjects(Collection<SubmittedTask> submittedTasks) {
+    public static Collection<SubmittedTaskValueObject> convert2ValueObjects(
+            Collection<SubmittedTask<? extends TaskResult>> submittedTasks ) {
 
         Collection<SubmittedTaskValueObject> converted = new HashSet<SubmittedTaskValueObject>();
         if ( submittedTasks == null ) return converted;

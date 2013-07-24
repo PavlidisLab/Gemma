@@ -23,8 +23,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -91,6 +91,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
             factors.add( ef );
         }
 
+        Random random = new Random();
         for ( int i = 0; i < 100; i++ ) {
             BioAssay ba = BioAssay.Factory.newInstance();
             ba.setName( "ba" + i );
@@ -109,7 +110,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
                  * Note: if we use 4, then some of the biomaterials will not have a factorvalue for each factor. This is
                  * realistic. Use 3 to fill it in completely.
                  */
-                int k = RandomUtils.nextInt( 4 );
+                int k = random.nextInt( 4 );
                 int m = 0;
                 FactorValue toUse = null;
                 for ( FactorValue fv : ef.getFactorValues() ) {

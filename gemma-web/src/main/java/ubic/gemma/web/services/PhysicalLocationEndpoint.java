@@ -20,7 +20,7 @@ package ubic.gemma.web.services;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -87,8 +87,8 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         log.info( "Webservice - Phyisical location for gene: " + gene.getOfficialSymbol() + "physicallocation is: "
                 + physicalLocation );
 
-        Element wrapper = buildLocationWrapper( document, physicalLocation.getChromosome().getName(), physicalLocation
-                .getNucleotide(), physicalLocation.getNucleotideLength() );
+        Element wrapper = buildLocationWrapper( document, physicalLocation.getChromosome().getName(),
+                physicalLocation.getNucleotide(), physicalLocation.getNucleotideLength() );
 
         watch.stop();
         Long time = watch.getTime();

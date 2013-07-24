@@ -36,6 +36,20 @@ import ubic.gemma.web.view.TextView;
 public class DownloadDataAsTextController {
     protected static Log log = LogFactory.getLog( DownloadDataAsTextController.class.getName() );
 
+    protected List<Long> extractIds( String idString ) {
+        List<Long> ids = new ArrayList<Long>();
+        if ( idString != null ) {
+            for ( String s : idString.split( "," ) ) {
+                try {
+                    ids.add( Long.parseLong( s.trim() ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "invalid id " + s );
+                }
+            }
+        }
+        return ids;
+    }
+
     /*
      * Handle case of text export of the results.
      */
@@ -91,20 +105,6 @@ public class DownloadDataAsTextController {
             }
         }
         return paramList;
-    }
-
-    protected List<Long> extractIds( String idString ) {
-        List<Long> ids = new ArrayList<Long>();
-        if ( idString != null ) {
-            for ( String s : idString.split( "," ) ) {
-                try {
-                    ids.add( Long.parseLong( s.trim() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
-                }
-            }
-        }
-        return ids;
     }
 
 }

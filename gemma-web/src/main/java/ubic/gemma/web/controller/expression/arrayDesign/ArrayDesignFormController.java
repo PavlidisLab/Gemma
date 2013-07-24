@@ -29,7 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
@@ -50,10 +50,6 @@ import ubic.gemma.web.controller.BaseFormController;
 public class ArrayDesignFormController extends BaseFormController {
 
     private ArrayDesignService arrayDesignService = null;
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
 
     /*
      * (non-Javadoc)
@@ -109,6 +105,10 @@ public class ArrayDesignFormController extends BaseFormController {
         return super.processFormSubmission( request, response, command, errors );
     }
 
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
     /**
      * Case = GET: Step 1 - return instance of command class (from database). This is not called in the POST case
      * because the sessionForm is set to 'true' in the constructor. This means the command object was already bound to
@@ -153,7 +153,6 @@ public class ArrayDesignFormController extends BaseFormController {
                 + request.getParameter( "id" ) ) );
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
         Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();

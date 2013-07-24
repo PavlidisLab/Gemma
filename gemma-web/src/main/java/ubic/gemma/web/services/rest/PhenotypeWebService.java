@@ -49,22 +49,6 @@ public class PhenotypeWebService {
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @GET
-    @Path("/load-all-neurocarta-phenotypes")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes( ) {
-        return this.phenotypeAssociationManagerService.loadAllNeurocartaPhenotypes( );
-    }
-
-    @GET
-    @Path("/load-all-phenotypes")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( @QueryParam("taxonId") Long taxonId,
-            @QueryParam("showOnlyEditable") boolean showOnlyEditable ) {
-        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
-                showOnlyEditable ) );
-    }
-
-    @GET
     @Path("/find-candidate-genes")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<GeneValueObject> findCandidateGenes( @QueryParam("taxonId") Long taxonId,
@@ -82,5 +66,21 @@ public class PhenotypeWebService {
             @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
         return this.phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, new HashSet<String>(
                 phenotypeValueUris ), new EvidenceFilter( taxonId, showOnlyEditable ) );
+    }
+
+    @GET
+    @Path("/load-all-neurocarta-phenotypes")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
+        return this.phenotypeAssociationManagerService.loadAllNeurocartaPhenotypes();
+    }
+
+    @GET
+    @Path("/load-all-phenotypes")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( @QueryParam("taxonId") Long taxonId,
+            @QueryParam("showOnlyEditable") boolean showOnlyEditable ) {
+        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
+                showOnlyEditable ) );
     }
 }

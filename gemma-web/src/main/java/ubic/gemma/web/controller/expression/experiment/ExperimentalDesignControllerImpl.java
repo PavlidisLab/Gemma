@@ -31,7 +31,7 @@ import java.util.LinkedList;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.directwebremoting.extend.AccessDeniedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -255,23 +255,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         delete( toDelete );
 
-    }
-
-    /**
-     * @param toDelete
-     */
-    private void delete( Collection<ExperimentalFactor> toDelete ) {
-        for ( ExperimentalFactor factorRemove : toDelete ) {
-            experimentalFactorService.delete( factorRemove );
-        }
-
-        for ( ExperimentalFactor ef : toDelete ) {
-            ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-
-            if ( ee != null ) {
-                this.experimentReportService.evictFromCache( ee.getId() );
-            }
-        }
     }
 
     /*
@@ -746,6 +729,23 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
         return template;
+    }
+
+    /**
+     * @param toDelete
+     */
+    private void delete( Collection<ExperimentalFactor> toDelete ) {
+        for ( ExperimentalFactor factorRemove : toDelete ) {
+            experimentalFactorService.delete( factorRemove );
+        }
+
+        for ( ExperimentalFactor ef : toDelete ) {
+            ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
+
+            if ( ee != null ) {
+                this.experimentReportService.evictFromCache( ee.getId() );
+            }
+        }
     }
 
 }

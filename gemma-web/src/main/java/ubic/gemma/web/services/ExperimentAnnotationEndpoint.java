@@ -21,7 +21,7 @@ package ubic.gemma.web.services;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -32,7 +32,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- *Expression Experiments in Gemma contain annotations. These annotations can be retrieved using this service. The
+ * Expression Experiments in Gemma contain annotations. These annotations can be retrieved using this service. The
  * category often just an ontology URI and the term is the URI of the annotation. The category is left blank for terms
  * that are not from ontologies (free text). The evidence code represents how the annotation came to be.
  * (http://www.geneontology.org/GO.evidence.shtml)

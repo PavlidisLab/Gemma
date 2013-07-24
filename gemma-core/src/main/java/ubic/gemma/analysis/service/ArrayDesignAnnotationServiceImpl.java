@@ -42,13 +42,14 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.TransformIterator;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.association.Gene2GOAssociationService;
@@ -58,7 +59,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
-import ubic.gemma.util.DateUtil;
 
 /**
  * @see ArrayDesignAnnotationService

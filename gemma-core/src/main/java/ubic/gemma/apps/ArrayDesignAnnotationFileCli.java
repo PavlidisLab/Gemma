@@ -32,7 +32,7 @@ import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;

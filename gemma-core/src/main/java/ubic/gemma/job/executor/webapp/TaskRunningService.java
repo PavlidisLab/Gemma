@@ -17,6 +17,7 @@ package ubic.gemma.job.executor.webapp;
 import ubic.gemma.job.ConflictingTaskException;
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
 import java.util.Collection;
@@ -32,7 +33,7 @@ public interface TaskRunningService {
     /**
      * @return the submittedTasks
      */
-    public Collection<SubmittedTask> getSubmittedTasks();
+    public Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks();
 
     // TODO: Make this user specific. Probably in a controller with a session scoped collection.
     // TODO: at that level (WebAwareTaskRunningService) have a rate limiter for task submission by the same user

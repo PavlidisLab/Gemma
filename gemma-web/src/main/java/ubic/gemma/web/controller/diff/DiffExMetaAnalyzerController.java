@@ -18,7 +18,12 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import org.apache.commons.lang.StringUtils;
+import java.util.Collection;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +31,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+
 import ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.BaseValueObject;
@@ -34,10 +40,6 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
 
 /**
  * A controller to analyze result sets either locally or in a space.
@@ -57,24 +59,6 @@ public class DiffExMetaAnalyzerController {
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
     @Autowired
     private UserManager userManager;
-
-    private BaseValueObject generateBaseValueObject( Throwable throwable ) {
-        final BaseValueObject baseValueObject = new BaseValueObject();
-        baseValueObject.setErrorFound( true );
-
-        if ( throwable instanceof AccessDeniedException ) {
-            if ( this.userManager.loggedIn() ) {
-                baseValueObject.setAccessDenied( true );
-            } else {
-                baseValueObject.setUserNotLoggedIn( true );
-            }
-        } else {
-            // If type of throwable is not known, log it.
-            log.error( throwable.getMessage(), throwable );
-        }
-
-        return baseValueObject;
-    }
 
     /**
      * @param analysisResultSetIds
@@ -152,5 +136,23 @@ public class DiffExMetaAnalyzerController {
     @RequestMapping(value = { "/metaAnalysisManager.html" })
     public ModelAndView showMetaAnalysisManager( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "metaAnalysisManager" );
+    }
+
+    private BaseValueObject generateBaseValueObject( Throwable throwable ) {
+        final BaseValueObject baseValueObject = new BaseValueObject();
+        baseValueObject.setErrorFound( true );
+
+        if ( throwable instanceof AccessDeniedException ) {
+            if ( this.userManager.loggedIn() ) {
+                baseValueObject.setAccessDenied( true );
+            } else {
+                baseValueObject.setUserNotLoggedIn( true );
+            }
+        } else {
+            // If type of throwable is not known, log it.
+            log.error( throwable.getMessage(), throwable );
+        }
+
+        return baseValueObject;
     }
 }

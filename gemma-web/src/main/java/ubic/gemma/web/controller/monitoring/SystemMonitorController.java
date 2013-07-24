@@ -18,18 +18,19 @@
  */
 package ubic.gemma.web.controller.monitoring;
 
+import javax.jms.JMSException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+
 import ubic.gemma.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.util.monitor.CacheMonitor;
 import ubic.gemma.util.monitor.HibernateMonitor;
-
-import javax.jms.JMSException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Provide statistics about the system: hibernate, caches etc.
@@ -40,9 +41,12 @@ import javax.servlet.http.HttpServletResponse;
 @Controller
 public class SystemMonitorController {
 
-    @Autowired CacheMonitor cacheMonitor;
-    @Autowired HibernateMonitor hibernateMonitor;
-    @Autowired JMSBrokerMonitor jmsBrokerMonitor;
+    @Autowired
+    CacheMonitor cacheMonitor;
+    @Autowired
+    HibernateMonitor hibernateMonitor;
+    @Autowired
+    JMSBrokerMonitor jmsBrokerMonitor;
 
     /**
      * Flush (clear) all caches. Exposed to AJAX
@@ -98,7 +102,7 @@ public class SystemMonitorController {
         buf.append( "<p>" );
         buf.append( "JMS Broker is " );
         buf.append( jmsBrokerMonitor.isRemoteTasksEnabled() ? "enabled" : "disabled" );
-        buf.append( " in the configuration file.");
+        buf.append( " in the configuration file." );
         buf.append( "</p>" );
         if ( jmsBrokerMonitor.isRemoteTasksEnabled() ) {
             buf.append( "<p>" );
@@ -108,13 +112,13 @@ public class SystemMonitorController {
                 if ( numWorkers == 0 ) {
                     buf.append( "<img src=\"/Gemma/images/icons/exclamation.png\" /> No workers found!" );
                 } else {
-                    buf.append( "("+numWorkers+")" );
-                    for (int i=0; i < numWorkers; i++) {
-                        buf.append("<img src=\"/Gemma/images/icons/server.png\" />");
+                    buf.append( "(" + numWorkers + ")" );
+                    for ( int i = 0; i < numWorkers; i++ ) {
+                        buf.append( "<img src=\"/Gemma/images/icons/server.png\" />" );
                     }
                 }
-            } catch (JMSException e) {
-                buf.append( "Got exception: "+e.getMessage() );
+            } catch ( JMSException e ) {
+                buf.append( "Got exception: " + e.getMessage() );
             }
             buf.append( "</p>" );
         }

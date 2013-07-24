@@ -17,7 +17,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.List;
 import java.util.Vector;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 // simple way to represent a phenotype for the tree, sending the minimal information
 public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> {

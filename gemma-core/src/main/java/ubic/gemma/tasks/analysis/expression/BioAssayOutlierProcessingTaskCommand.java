@@ -17,6 +17,8 @@ package ubic.gemma.tasks.analysis.expression;
 import java.util.Collection;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
 /**
  * @author anton
@@ -49,7 +51,7 @@ public class BioAssayOutlierProcessingTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return BioAssayOutlierProcessingTask.class;
     }
 }

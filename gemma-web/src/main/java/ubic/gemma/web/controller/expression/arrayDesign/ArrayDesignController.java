@@ -99,8 +99,8 @@ public interface ArrayDesignController {
      * @param showOrphans
      * @return
      */
-    public abstract Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds,
-            boolean showMergees, boolean showOrphans );
+    public abstract Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds, boolean showMergees,
+            boolean showOrphans );
 
     /**
      * Exposed for AJAX calls.

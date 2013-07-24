@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+   xmlns:context="http://www.springframework.org/schema/context"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+   http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
-    <!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component, @Service, @Repository -->
-    <context:component-scan base-package="ubic.gemma" name-generator="ubic.gemma.util.BeanNameGenerator">
-        <context:exclude-filter type="regex" expression="ubic\.gemma\.web\..*" />
-        <context:exclude-filter type="regex" expression="ubic\.gemma\.job\.executor\.webapp\..*" />
-        <context:exclude-filter type="regex" expression="ubic\.gemma\.search\.indexer\..*" />
-        <context:exclude-filter type="regex" expression="ubic\.gemma\.job\.progress\..*" />
-    </context:component-scan>
+   <!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component, @Service, @Repository -->
+   <context:component-scan base-package="ubic.gemma" name-generator="ubic.gemma.util.BeanNameGenerator">
+      <context:exclude-filter type="regex" expression="ubic\.gemma\.web\..*" />
+      <context:exclude-filter type="regex" expression="ubic\.gemma\.job\.executor\.webapp\..*" />
+      <context:exclude-filter type="regex" expression="ubic\.gemma\.search\.indexer\..*" />
+      <context:exclude-filter type="regex" expression="ubic\.gemma\.job\.progress\..*" />
+   </context:component-scan>
 
 </beans>

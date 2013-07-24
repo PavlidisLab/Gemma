@@ -28,7 +28,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

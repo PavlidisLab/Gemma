@@ -19,7 +19,9 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.Task;
 
 /**
  * Command object for processing data vectors. Has dual purpose for updating the correlation matrices.
@@ -58,7 +60,7 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
     }
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return ProcessedExpressionDataVectorCreateTask.class;
     }
 

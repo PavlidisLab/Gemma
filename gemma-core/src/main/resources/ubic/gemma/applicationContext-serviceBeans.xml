@@ -1,91 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Somewhat miscellaneous beans. @author Gemma @version $Id: applicationContext-serviceBeans.xml,v 
-	1.1.2.1 2009/11/11 17:05:12 paul Exp $ -->
+   1.1.2.1 2009/11/11 17:05:12 paul Exp $ -->
 <beans xmlns="http://www.springframework.org/schema/beans"
-    xmlns:aop="http://www.springframework.org/schema/aop"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+   xmlns:aop="http://www.springframework.org/schema/aop"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
    <!-- Configured here because autowiring doesn't work with static fields. -->
-	<!--<bean id="progressManager" class="ubic.gemma.job.progress.ProgressManager">-->
-		<!--<property name="userManager" ref="userManager" />-->
-		<!--<property name="jobInfoService" ref="jobInfoService" />-->
-	<!--</bean>-->
+   <!--<bean id="progressManager" class="ubic.gemma.job.progress.ProgressManager">-->
+   <!--<property name="userManager" ref="userManager" />-->
+   <!--<property name="jobInfoService" ref="jobInfoService" />-->
+   <!--</bean>-->
 
-	<aop:aspectj-autoproxy />
+   <aop:aspectj-autoproxy />
 
-	<!-- See ubic.gemma.util.monitor.MonitorAdvice and Monitored. <bean id="monitorAdvice" 
-		class="ubic.gemma.util.monitor.MonitorAdvice" /> -->
+   <!-- See ubic.gemma.util.monitor.MonitorAdvice and Monitored. <bean id="monitorAdvice" 
+      class="ubic.gemma.util.monitor.MonitorAdvice" /> -->
 
-	<!-- setup/teardown for long-running tasks.
-	<bean id="taskMethodAdvice" class="ubic.gemma.job.TaskMethodAdvice">
-		<property name="spacesUtil" ref="spacesUtil" />
-	</bean>
-    -->
+   <!-- setup/teardown for long-running tasks.
+      <bean id="taskMethodAdvice" class="ubic.gemma.job.TaskMethodAdvice">
+         <property name="spacesUtil" ref="spacesUtil" />
+      </bean>
+       -->
 
-	<!-- Message source for this context, loaded from localized "messages_xx" 
-		files -->
-	<bean id="messageSource"
-		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-		<property name="basename">
-			<value>messages</value>
-		</property>
-	</bean>
-
-
-	<!-- configurationPropertyConfigurer allows you to use variables like ${mail.host} 
-		in the spring bean definitions. Variables are listed in a resource. If the 
-		resource is in your classpath, list in in 'locations'. Other config files 
-		can be added by defining PropertiesConfiguration instances -->
-	<bean id="userProperties"
-		class="org.apache.commons.configuration.PropertiesConfiguration">
-		<constructor-arg index="0">
-			<value>Gemma.properties</value>
-		</constructor-arg>
-	</bean>
+   <!-- Message source for this context, loaded from localized "messages_xx" 
+      files -->
+   <bean id="messageSource"
+      class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+      <property name="basename">
+         <value>messages</value>
+      </property>
+   </bean>
 
 
-	<bean id="configurationPropertyConfigurer"
-		class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
-		<property name="configuration">
-			<ref local="userProperties" />
-		</property>
-		<property name="locations">
-			<list>
-				<value>classpath:default.properties</value>
-			</list>
-		</property>
-		<property name="ignoreUnresolvablePlaceholders" value="false" />
-		<property name="ignoreResourceNotFound" value="false" />
-	</bean>
+   <!-- configurationPropertyConfigurer allows you to use variables like ${mail.host} 
+      in the spring bean definitions. Variables are listed in a resource. If the 
+      resource is in your classpath, list in in 'locations'. Other config files 
+      can be added by defining PropertiesConfiguration instances -->
+   <bean id="userPropertiesFileHandler" class="org.apache.commons.configuration.io.FileHandler" init-method="load">
+      <constructor-arg index="0">
+         <ref local="userProperties" />
+      </constructor-arg>
+      <property name="fileName">
+         <value>Gemma.properties</value>
+      </property>
+   </bean>
+
+   <bean id="userProperties" class="org.apache.commons.configuration.PropertiesConfiguration"  />
+
+   <bean id="configurationPropertyConfigurer"
+      class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer" depends-on="userPropertiesFileHandler">
+      <property name="configuration">
+         <ref local="userProperties" />
+      </property>
+      <property name="locations">
+         <list>
+            <value>classpath:default.properties</value>
+         </list>
+      </property>
+      <property name="ignoreUnresolvablePlaceholders" value="false" />
+      <property name="ignoreResourceNotFound" value="false" />
+   </bean>
 
 
-	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
-		<property name="host">
-			<value>${mail.host}</value>
-		</property>
-		<property name="username">
-			<value>${mail.username}</value>
-		</property>
-		<property name="password">
-			<value>${mail.password}</value>
-		</property>
-	</bean>
+   <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+      <property name="host">
+         <value>${mail.host}</value>
+      </property>
+      <property name="username">
+         <value>${mail.username}</value>
+      </property>
+      <property name="password">
+         <value>${mail.password}</value>
+      </property>
+   </bean>
 
 
-	<!-- Configure Velocity for sending e-mail -->
-	<bean id="velocityEngine"
-		class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
-		<property name="velocityProperties">
-			<props>
-				<prop key="resource.loader">class</prop>
-				<prop key="class.resource.loader.class">
+   <!-- Configure Velocity for sending e-mail -->
+   <bean id="velocityEngine"
+      class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+      <property name="velocityProperties">
+         <props>
+            <prop key="resource.loader">class</prop>
+            <prop key="class.resource.loader.class">
 					org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
-				</prop>
-			</props>
-		</property>
-	</bean>
+            </prop>
+         </props>
+      </property>
+   </bean>
 
 
 </beans>

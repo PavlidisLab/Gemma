@@ -84,11 +84,11 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
         if ( taskExecutionException == null ) {
             statusCallback.onFinish();
             return result;
-        } else {
-            result = ( T ) new TaskResult( taskId );
-            result.setException( taskExecutionException );
-            return result;
         }
+        result = ( T ) new TaskResult( taskId );
+        result.setException( taskExecutionException );
+        return result;
+
     }
 
     private void setup() {

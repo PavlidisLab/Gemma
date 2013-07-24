@@ -33,8 +33,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -400,7 +400,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             try {
                 auditTrailService.addUpdateEvent( expressionExperiment,
                         FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
-                        ExceptionUtils.getFullStackTrace( e ) );
+                        ExceptionUtils.getStackTrace( e ) );
             } catch ( Exception e2 ) {
                 log.error( "Could not attach failure audit event" );
             }

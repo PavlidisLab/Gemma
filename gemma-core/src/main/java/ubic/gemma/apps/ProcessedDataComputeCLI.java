@@ -18,7 +18,7 @@
  */
 package ubic.gemma.apps;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;

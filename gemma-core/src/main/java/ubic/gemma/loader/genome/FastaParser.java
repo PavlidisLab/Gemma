@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.loader.util.parser.RecordParser;

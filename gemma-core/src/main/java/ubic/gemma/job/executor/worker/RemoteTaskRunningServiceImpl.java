@@ -103,7 +103,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             }
         };
 
-        final ExecutingTask executingTask = new ExecutingTask( task, taskCommand );
+        final ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
         executingTask.setProgressAppender( new LogBasedProgressAppender( taskId, progressUpdateCallback ) );
         executingTask.setStatusCallback( new ExecutingTask.TaskLifecycleHandler() {
             @Override
@@ -123,7 +123,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             }
         } );
 
-        ListenableFuture future = executorService.submit( executingTask );
+        ListenableFuture<TaskResult> future = executorService.submit( executingTask );
         submittedTask.setFuture( future );
 
         // These are run on task completion.
@@ -162,7 +162,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
     }
 
     private SubmittedTaskRemote constructSubmittedTaskRemote( TaskCommand taskCommand, String taskId,
-                                                              List<String> progressUpdates ) {
+            List<String> progressUpdates ) {
         String resultQueueName = ConfigUtils.getString( "gemma.remoteTasks.resultQueuePrefix" ) + taskId;
         String statusQueueName = ConfigUtils.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;
         String progressQueueName = ConfigUtils.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" ) + taskId;

@@ -22,8 +22,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,7 +151,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         } catch ( Exception e ) {
             log.info( e, e );
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
-                    ExceptionUtils.getFullStackTrace( e ) );
+                    ExceptionUtils.getStackTrace( e ) );
 
             return false;
         } finally {

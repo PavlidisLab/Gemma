@@ -20,7 +20,7 @@ package ubic.gemma.web.propertyeditor;
 
 import java.beans.PropertyEditorSupport;
 import java.util.Collection;
-import java.util.HashSet; 
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +54,32 @@ public class UserRolesPropertyEditor extends PropertyEditorSupport {
     /*
      * (non-Javadoc)
      * 
+     * @see java.beans.PropertyEditorSupport#getAsText()
+     */
+    @Override
+    public String getAsText() {
+        Object value = getValue();
+
+        String roleNames = "";
+
+        if ( value != null && ( value instanceof Collection<?> ) ) {
+            Collection<?> r = ( Collection<?> ) value;
+            for ( Object next : r ) {
+                if ( next instanceof UserRole ) {
+                    UserRole role = ( UserRole ) next;
+                    if ( org.apache.commons.lang3.StringUtils.isEmpty( roleNames ) )
+                        roleNames = role.getName();
+                    else
+                        roleNames = roleNames + COMMA_DELIM + role.getName();
+                }
+            }
+        }
+        return roleNames;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
      */
     @Override
@@ -81,31 +107,5 @@ public class UserRolesPropertyEditor extends PropertyEditorSupport {
             }
         }
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.beans.PropertyEditorSupport#getAsText()
-     */
-    @Override
-    public String getAsText() {
-        Object value = getValue();
-
-        String roleNames = "";
-
-        if ( value != null && ( value instanceof Collection<?> ) ) {
-            Collection<?> r = ( Collection<?> ) value;
-            for ( Object next : r ) {
-                if ( next instanceof UserRole ) {
-                    UserRole role = ( UserRole ) next;
-                    if ( org.apache.commons.lang.StringUtils.isEmpty( roleNames ) )
-                        roleNames = role.getName();
-                    else
-                        roleNames = roleNames + COMMA_DELIM + role.getName();
-                }
-            }
-        }
-        return roleNames;
     }
 }

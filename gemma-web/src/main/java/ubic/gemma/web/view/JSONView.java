@@ -35,16 +35,16 @@ import org.springframework.web.servlet.View;
 public class JSONView implements View {
     private String docType = "text/html";
 
+    public JSONView() {
+        super();
+    }
+
     /**
      * @param docType e.g., text/html to switch from the default 'text/plain'.
      */
     public JSONView( String docType ) {
         this();
         this.docType = docType;
-    }
-
-    public JSONView() {
-        super();
     }
 
     /*

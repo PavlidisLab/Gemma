@@ -31,8 +31,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
@@ -113,63 +113,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     private CompositeSequenceService compositeSequenceService;
 
     /*
-     * Show the search form with settings given. The actual search is done via an ajax call (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.GeneralSearchController#doSearch(javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse, ubic.gemma.search.SearchSettings,
-     * org.springframework.validation.BindException)
-     */
-    @Override
-    @RequestMapping(value = "/searcher.html", method = RequestMethod.POST)
-    public ModelAndView doSearch( HttpServletRequest request, HttpServletResponse response, SearchSettings command,
-            BindException errors ) throws Exception {
-
-        SearchSettings settings = command;
-
-        settings.setQuery( StringUtils.trim( settings.getQuery().trim() ) );
-
-        ModelAndView mav = new ModelAndView( "generalSearch" );
-
-        if ( !searchStringValidator( settings.getQuery() ) && StringUtils.isBlank( settings.getTermUri() ) ) {
-            throw new IllegalArgumentException( "Invalid query" );
-        }
-
-        // Need this for the bookmarkable links
-        mav.addObject( "SearchString", settings.getQuery() );
-        mav.addObject( "SearchURI", settings.getTermUri() );
-        if ( ( settings.getTaxon() != null ) && ( settings.getTaxon().getId() != null ) )
-            mav.addObject( "searchTaxon", settings.getTaxon().getScientificName() );
-
-        return mav;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.GeneralSearchController#processFormSubmission(javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse, ubic.gemma.search.SearchSettings,
-     * org.springframework.validation.BindException)
-     */
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            SearchSettings command, BindException errors ) throws Exception {
-
-        if ( request.getParameter( "query" ) != null ) {
-            ModelAndView mav = new ModelAndView();
-            mav.addObject( "query", request.getParameter( "query" ) );
-            return mav;
-        }
-
-        if ( request.getParameter( "cancel" ) != null ) {
-            this.saveMessage( request, "Cancelled Search" );
-            return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE ) );
-        }
-
-        return this.doSearch( request, response, command, errors );
-    }
-
-    /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.web.controller.GeneralSearchController#search(ubic.gemma.search.SearchSettings)
@@ -224,6 +167,63 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         return new JsonReaderResponse<SearchResult>( finalResults );
+    }
+
+    /*
+     * Show the search form with settings given. The actual search is done via an ajax call (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.GeneralSearchController#doSearch(javax.servlet.http.HttpServletRequest,
+     * javax.servlet.http.HttpServletResponse, ubic.gemma.search.SearchSettings,
+     * org.springframework.validation.BindException)
+     */
+    @Override
+    @RequestMapping(value = "/searcher.html", method = RequestMethod.POST)
+    public ModelAndView doSearch( HttpServletRequest request, HttpServletResponse response, SearchSettings command,
+            BindException errors ) throws Exception {
+
+        SearchSettings settings = command;
+
+        settings.setQuery( StringUtils.trim( settings.getQuery().trim() ) );
+
+        ModelAndView mav = new ModelAndView( "generalSearch" );
+
+        if ( !searchStringValidator( settings.getQuery() ) && StringUtils.isBlank( settings.getTermUri() ) ) {
+            throw new IllegalArgumentException( "Invalid query" );
+        }
+
+        // Need this for the bookmarkable links
+        mav.addObject( "SearchString", settings.getQuery() );
+        mav.addObject( "SearchURI", settings.getTermUri() );
+        if ( ( settings.getTaxon() != null ) && ( settings.getTaxon().getId() != null ) )
+            mav.addObject( "searchTaxon", settings.getTaxon().getScientificName() );
+
+        return mav;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.web.controller.GeneralSearchController#processFormSubmission(javax.servlet.http.HttpServletRequest,
+     * javax.servlet.http.HttpServletResponse, ubic.gemma.search.SearchSettings,
+     * org.springframework.validation.BindException)
+     */
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            SearchSettings command, BindException errors ) throws Exception {
+
+        if ( request.getParameter( "query" ) != null ) {
+            ModelAndView mav = new ModelAndView();
+            mav.addObject( "query", request.getParameter( "query" ) );
+            return mav;
+        }
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            this.saveMessage( request, "Cancelled Search" );
+            return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE ) );
+        }
+
+        return this.doSearch( request, response, command, errors );
     }
 
     /**

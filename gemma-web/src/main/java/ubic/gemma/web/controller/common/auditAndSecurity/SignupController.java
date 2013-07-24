@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -59,6 +59,33 @@ public class SignupController extends BaseController {
     @Autowired
     private UserManager userManager;
 
+    @RequestMapping(value = "/ajaxLoginCheck.html")
+    public void ajaxLoginCheck( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+
+        JSONUtil jsonUtil = new JSONUtil( request, response );
+
+        String jsonText = "{success:false}";
+        String userName = null;
+
+        try {
+
+            if ( userManager.loggedIn() ) {
+                userName = userManager.getCurrentUsername();
+                jsonText = "{success:true,user:\'" + userName + "\',isAdmin:" + SecurityServiceImpl.isUserAdmin() + "}";
+            } else {
+                jsonText = "{success:false}";
+            }
+        } catch ( Exception e ) {
+
+            log.error( e, e );
+            jsonText = jsonUtil.getJSONErrorMessage( e );
+            log.info( jsonText );
+        } finally {
+            jsonUtil.writeToResponse( jsonText );
+        }
+
+    }
+
     /**
      * This is hit when a user clicks on the confirmation link they received by email.
      * 
@@ -85,6 +112,26 @@ public class SignupController extends BaseController {
             super.saveMessage( request, "Sorry, your registration could not be validated. Please register again." );
             response.sendRedirect( response.encodeRedirectURL( "/Gemma/signup.html" ) );
         }
+
+    }
+
+    /**
+     * AJAX DWR
+     * 
+     * @return loginDetails
+     */
+    public LoginDetailsValueObject loginCheck() {
+
+        LoginDetailsValueObject ldvo = new LoginDetailsValueObject();
+
+        if ( userManager.loggedIn() ) {
+            ldvo.setUserName( userManager.getCurrentUsername() );
+            ldvo.setLoggedIn( true );
+        } else {
+            ldvo.setLoggedIn( false );
+        }
+
+        return ldvo;
 
     }
 
@@ -236,52 +283,5 @@ public class SignupController extends BaseController {
         reCaptcha.setPrivateKey( recatpchaPvtKey );
         ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer( remoteAddr, rcChallenge, rcResponse );
         return reCaptchaResponse.isValid();
-    }
-
-    @RequestMapping(value = "/ajaxLoginCheck.html")
-    public void ajaxLoginCheck( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-
-        JSONUtil jsonUtil = new JSONUtil( request, response );
-
-        String jsonText = "{success:false}";
-        String userName = null;
-
-        try {
-
-            if ( userManager.loggedIn() ) {
-                userName = userManager.getCurrentUsername();
-                jsonText = "{success:true,user:\'" + userName + "\',isAdmin:" + SecurityServiceImpl.isUserAdmin() + "}";
-            } else {
-                jsonText = "{success:false}";
-            }
-        } catch ( Exception e ) {
-
-            log.error( e, e );
-            jsonText = jsonUtil.getJSONErrorMessage( e );
-            log.info( jsonText );
-        } finally {
-            jsonUtil.writeToResponse( jsonText );
-        }
-
-    }
-
-    /**
-     * AJAX DWR
-     * 
-     * @return loginDetails
-     */
-    public LoginDetailsValueObject loginCheck() {
-
-        LoginDetailsValueObject ldvo = new LoginDetailsValueObject();
-
-        if ( userManager.loggedIn() ) {
-            ldvo.setUserName( userManager.getCurrentUsername() );
-            ldvo.setLoggedIn( true );
-        } else {
-            ldvo.setLoggedIn( false );
-        }
-
-        return ldvo;
-
     }
 }

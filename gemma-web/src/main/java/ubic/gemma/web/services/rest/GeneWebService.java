@@ -26,8 +26,6 @@ import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.sun.jersey.api.NotFoundException;
-
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -40,6 +38,8 @@ import ubic.gemma.model.genome.PhysicalLocationImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+
+import com.sun.jersey.api.NotFoundException;
 
 /**
  * RESTful web services for gene
@@ -80,13 +80,6 @@ public class GeneWebService {
         return valueObjects;
     }
 
-    @GET
-    @Path("/find-genes-with-evidence")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Collection<GeneEvidenceValueObject> findGenesWithEvidence( @QueryParam("geneSymbol") String geneSymbol ) {
-        return phenotypeAssociationManagerService.findGenesWithEvidence( geneSymbol, null );
-    }
-
     /**
      * Find genes located in a given region. Genes that overlap the query region are returned.
      * 
@@ -122,6 +115,13 @@ public class GeneWebService {
         Collection<GeneValueObject> valueObjects = GeneValueObject.convert2ValueObjects( genes );
 
         return valueObjects;
+    }
+
+    @GET
+    @Path("/find-genes-with-evidence")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<GeneEvidenceValueObject> findGenesWithEvidence( @QueryParam("geneSymbol") String geneSymbol ) {
+        return phenotypeAssociationManagerService.findGenesWithEvidence( geneSymbol, null );
     }
 
 }

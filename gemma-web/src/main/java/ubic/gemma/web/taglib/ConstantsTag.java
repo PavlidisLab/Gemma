@@ -30,7 +30,7 @@ import javax.servlet.jsp.tagext.TagSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.Constants;
+import ubic.gemma.web.util.Constants;
 
 /**
  * <p>
@@ -78,6 +78,21 @@ public class ConstantsTag extends TagSupport {
      * The single variable to expose.
      */
     protected String var = null;
+
+    /**
+     * Maps lowercase JSP scope names to their PageContext integer constant values.
+     */
+    private static final Map<String, Integer> scopes = new HashMap<String, Integer>();
+
+    /**
+     * Initialize the scope names map and the encode variable with the Java 1.4 method if available.
+     */
+    static {
+        scopes.put( "page", new Integer( PageContext.PAGE_SCOPE ) );
+        scopes.put( "request", new Integer( PageContext.REQUEST_SCOPE ) );
+        scopes.put( "session", new Integer( PageContext.SESSION_SCOPE ) );
+        scopes.put( "application", new Integer( PageContext.APPLICATION_SCOPE ) );
+    }
 
     @Override
     public int doStartTag() throws JspException {
@@ -128,22 +143,8 @@ public class ConstantsTag extends TagSupport {
         return ( SKIP_BODY );
     }
 
-    /**
-     * @jsp.attribute
-     */
-    public void setClassName( String clazz ) {
-        this.clazz = clazz;
-    }
-
     public String getClassName() {
         return this.clazz;
-    }
-
-    /**
-     * @jsp.attribute
-     */
-    public void setScope( String scope ) {
-        this.scope = scope;
     }
 
     public String getScope() {
@@ -151,10 +152,20 @@ public class ConstantsTag extends TagSupport {
     }
 
     /**
-     * @jsp.attribute
+     * Converts the scope name into its corresponding PageContext constant value.
+     * 
+     * @param scopeName Can be "page", "request", "session", or "application" in any case.
+     * @return The constant representing the scope (ie. PageContext.REQUEST_SCOPE).
+     * @throws JspException if the scopeName is not a valid name.
      */
-    public void setVar( String var ) {
-        this.var = var;
+    public int getScope( String scopeName ) throws JspException {
+        Integer localScope = scopes.get( scopeName.toLowerCase() );
+
+        if ( localScope == null ) {
+            throw new JspException( "Scope '" + scopeName + "' not a valid option" );
+        }
+
+        return localScope.intValue();
     }
 
     public String getVar() {
@@ -174,34 +185,23 @@ public class ConstantsTag extends TagSupport {
     // ~========== From Struts' TagUtils class =====================
 
     /**
-     * Maps lowercase JSP scope names to their PageContext integer constant values.
+     * @jsp.attribute
      */
-    private static final Map<String, Integer> scopes = new HashMap<String, Integer>();
-
-    /**
-     * Initialize the scope names map and the encode variable with the Java 1.4 method if available.
-     */
-    static {
-        scopes.put( "page", new Integer( PageContext.PAGE_SCOPE ) );
-        scopes.put( "request", new Integer( PageContext.REQUEST_SCOPE ) );
-        scopes.put( "session", new Integer( PageContext.SESSION_SCOPE ) );
-        scopes.put( "application", new Integer( PageContext.APPLICATION_SCOPE ) );
+    public void setClassName( String clazz ) {
+        this.clazz = clazz;
     }
 
     /**
-     * Converts the scope name into its corresponding PageContext constant value.
-     * 
-     * @param scopeName Can be "page", "request", "session", or "application" in any case.
-     * @return The constant representing the scope (ie. PageContext.REQUEST_SCOPE).
-     * @throws JspException if the scopeName is not a valid name.
+     * @jsp.attribute
      */
-    public int getScope( String scopeName ) throws JspException {
-        Integer localScope = scopes.get( scopeName.toLowerCase() );
+    public void setScope( String scope ) {
+        this.scope = scope;
+    }
 
-        if ( localScope == null ) {
-            throw new JspException( "Scope '" + scopeName + "' not a valid option" );
-        }
-
-        return localScope.intValue();
+    /**
+     * @jsp.attribute
+     */
+    public void setVar( String var ) {
+        this.var = var;
     }
 }

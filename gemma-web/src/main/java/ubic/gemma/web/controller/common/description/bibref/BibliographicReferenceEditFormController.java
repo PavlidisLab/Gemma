@@ -74,6 +74,7 @@ public class BibliographicReferenceEditFormController extends BaseFormController
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest
      * )
@@ -94,6 +95,7 @@ public class BibliographicReferenceEditFormController extends BaseFormController
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
      * javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.remote;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.directwebremoting.convert.StringConverter;
 import org.directwebremoting.extend.InboundContext;
 import org.directwebremoting.extend.InboundVariable;

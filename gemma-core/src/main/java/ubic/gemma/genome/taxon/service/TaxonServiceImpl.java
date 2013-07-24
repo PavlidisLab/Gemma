@@ -290,7 +290,7 @@ public class TaxonServiceImpl implements TaxonService {
     @Override
     public java.util.Collection<Taxon> loadTaxonWithEvidence() {
         try {
-            return ( Collection<Taxon> ) this.getTaxonDao().findTaxonUsedInEvidence();
+            return this.getTaxonDao().findTaxonUsedInEvidence();
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findTaxonUsedInEvidence()' --> " + th, th );

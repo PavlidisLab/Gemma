@@ -4,13 +4,14 @@ import ubic.gemma.job.EmailNotificationContext;
 import ubic.gemma.job.TaskResult;
 
 /**
- * Created with IntelliJ IDEA.
- * User: anton
- * Date: 04/02/13
- * Time: 5:25 PM
- * To change this template use File | Settings | File Templates.
+ * @author anton
+ * @version $Id$
  */
 public interface MailUtils {
 
+    /**
+     * @param context
+     * @param taskResult
+     */
     public void sendTaskCompletedNotificationEmail( EmailNotificationContext context, TaskResult taskResult );
 }

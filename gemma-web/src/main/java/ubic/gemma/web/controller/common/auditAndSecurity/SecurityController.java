@@ -115,7 +115,6 @@ public interface SecurityController {
      */
     public abstract Collection<SecurityInfoValueObject> getUsersData( String currentGroup, boolean privateOnly );
 
-
     /**
      * AJAX
      * 

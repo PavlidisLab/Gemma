@@ -37,6 +37,11 @@ public class LinkUtils {
 
     public static final String NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
 
+    public static String getGemmaGeneLink( GeneValueObject gene ) {
+        return "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
+                + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a>";
+    }
+
     /**
      * @param blatResult
      * @return URL to the genome browser for the given blat result, or null if the URL cannot be formed correctly.
@@ -67,16 +72,6 @@ public class LinkUtils {
         return link;
     }
 
-    public static String getGemmaGeneLink( GeneValueObject gene ) {
-        return "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
-                + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a>";
-    }
-
-    public static String getNcbiUrl( GeneValueObject gene ) {
-        return "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
-                + gene.getNcbiId();
-    }
-
     /**
      * @param product
      * @return
@@ -91,6 +86,11 @@ public class LinkUtils {
 
         }
         return ncbiLink + product.getNcbiId();
+    }
+
+    public static String getNcbiUrl( GeneValueObject gene ) {
+        return "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
+                + gene.getNcbiId();
     }
 
 }

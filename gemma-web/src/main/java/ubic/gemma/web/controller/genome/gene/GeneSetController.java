@@ -24,7 +24,7 @@ import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,10 +35,10 @@ import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.TaxonValueObject;
-import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.web.persistence.SessionListManager;
 
 /**
  * Exposes GeneServices methods over ajax
@@ -50,49 +50,12 @@ import ubic.gemma.security.SecurityService;
 @RequestMapping("/geneSet")
 public class GeneSetController {
 
-    @Autowired private GeneSetService geneSetService;
-    @Autowired private SecurityService securityService;
-    @Autowired private SessionListManager sessionListManager;
-
-    /**
-     * AJAX create an entities in the database based on the value objects passed in
-     * 
-     * @param geneSetVos value objects constructed on the client.
-     * @return value objects converted from the newly created entities
-     */
-    public Collection<GeneSetValueObject> create( Collection<GeneSetValueObject> geneSetVos ) {
-
-        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
-        for ( GeneSetValueObject geneSetVo : geneSetVos ) {
-
-            if ( geneSetVo.getGeneIds() == null || geneSetVo.getGeneIds().isEmpty() ) {
-                throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
-            }
-
-            results.add( create( geneSetVo ) );
-
-        }
-        return results;
-    }
-
-    /**
-     * create an entity in the database based on the value object parameter
-     * 
-     * @param eesvo
-     * @return value object converted from the newly created entity
-     */
-    private GeneSetValueObject create( GeneSetValueObject obj ) {
-
-        if ( obj.getId() != null && obj.getId() >= 0 ) {
-            throw new IllegalArgumentException( "Should not provide an id for 'create': " + obj.getId() );
-        }
-
-        if ( StringUtils.isBlank( obj.getName() ) ) {
-            throw new IllegalArgumentException( "Gene group name cannot be blank" );
-        }
-
-        return geneSetService.createDatabaseEntity( obj );
-    }
+    @Autowired
+    private GeneSetService geneSetService;
+    @Autowired
+    private SecurityService securityService;
+    @Autowired
+    private SessionListManager sessionListManager;
 
     /**
      * AJAX adds the gene group to the session, used by SessionGeneGroupStore and SessionDatasetGroupStore sets the
@@ -150,27 +113,6 @@ public class GeneSetController {
     }
 
     /**
-     * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
-     * 
-     * @param geneId
-     * @return collection of geneSetValueObject
-     */
-    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
-
-        return findGeneSetsByGene( geneId );
-    }
-
-    /**
-     * @param query string to match to a gene set.
-     * @param taxonId
-     * @return collection of GeneSetValueObject
-     */
-    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
-
-        return geneSetService.findGeneSetsByName( query, taxonId );
-    }
-
-    /**
      * AJAX returns a JSON string encoding whether the current user owns the group and whether the group is db-backed
      * 
      * @param s
@@ -192,6 +134,48 @@ public class GeneSetController {
     }
 
     /**
+     * AJAX create an entities in the database based on the value objects passed in
+     * 
+     * @param geneSetVos value objects constructed on the client.
+     * @return value objects converted from the newly created entities
+     */
+    public Collection<GeneSetValueObject> create( Collection<GeneSetValueObject> geneSetVos ) {
+
+        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        for ( GeneSetValueObject geneSetVo : geneSetVos ) {
+
+            if ( geneSetVo.getGeneIds() == null || geneSetVo.getGeneIds().isEmpty() ) {
+                throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
+            }
+
+            results.add( create( geneSetVo ) );
+
+        }
+        return results;
+    }
+
+    /**
+     * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
+     * 
+     * @param geneId
+     * @return collection of geneSetValueObject
+     */
+    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
+
+        return findGeneSetsByGene( geneId );
+    }
+
+    /**
+     * @param query string to match to a gene set.
+     * @param taxonId
+     * @return collection of GeneSetValueObject
+     */
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
+
+        return geneSetService.findGeneSetsByName( query, taxonId );
+    }
+
+    /**
      * AJAX If the current user has access to given gene group, will return the gene value objects in the gene group
      * 
      * @param groupId
@@ -201,18 +185,6 @@ public class GeneSetController {
 
         return geneSetService.getGenesInGroup( groupId );
 
-    }
-
-    /**
-     * AJAX Returns just the current users gene sets
-     * 
-     * @param privateOnly
-     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
-     * @return
-     */
-    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
-
-        return geneSetService.getUsersGeneGroupsValueObjects( privateOnly, taxonId );
     }
 
     /**
@@ -249,6 +221,33 @@ public class GeneSetController {
         // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
         Collection<SessionBoundGeneSetValueObject> result = sessionListManager.getAllGeneSets( taxonId );
         return result;
+    }
+
+    /**
+     * AJAX Returns just the current users gene sets
+     * 
+     * @param privateOnly
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return
+     */
+    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
+
+        return geneSetService.getUsersGeneGroupsValueObjects( privateOnly, taxonId );
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param groupId
+     * @return
+     */
+    public DatabaseBackedGeneSetValueObject load( Long id ) {
+
+        if ( id == null ) {
+            throw new IllegalArgumentException( "Cannot load a gene set with a null id." );
+        }
+        return geneSetService.getValueObject( id );
+
     }
 
     /**
@@ -305,6 +304,66 @@ public class GeneSetController {
     }
 
     /**
+     * AJAX If the current user has access to given gene group will return the gene ids in the gene group
+     * 
+     * @param groupId
+     * @return
+     */
+    @RequestMapping(value = "/showGeneSet.html", method = RequestMethod.GET)
+    public ModelAndView showGeneSet( HttpServletRequest request ) {
+
+        ModelAndView mav = new ModelAndView( "geneSet.detail" );
+
+        // if this is slow, we can get rid of it
+        // checking the id here rather than in the js widget gives better error feedback
+        // though it doesn't mean we load the set twice
+        GeneSetValueObject geneSet = getGeneSetFromRequest( request );
+        mav.addObject( "geneSetId", geneSet.getId() );
+        mav.addObject( "geneSetName", geneSet.getName() );
+
+        return mav;
+    }
+
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice.
+     * 
+     * @param groupId
+     * @param geneIds
+     */
+    public Collection<DatabaseBackedGeneSetValueObject> update( Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
+
+        return geneSetService.updateDatabaseEntity( geneSetVos );
+
+    }
+
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice. Cannot update name or description, just members
+     * 
+     * @param groupId id of the gene set being updated
+     * @param geneIds
+     */
+    public String updateMembers( Long groupId, Collection<Long> geneIds ) {
+
+        return geneSetService.updateDatabaseEntityMembers( groupId, geneIds );
+
+    }
+
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice.
+     * 
+     * @param groupId
+     * @param geneIds
+     */
+    public DatabaseBackedGeneSetValueObject updateNameDesc( DatabaseBackedGeneSetValueObject geneSetVO ) {
+
+        return geneSetService.updateDatabaseEntityNameDesc( geneSetVO );
+
+    }
+
+    /**
      * AJAX Updates the session group.
      * 
      * @param groups
@@ -347,63 +406,22 @@ public class GeneSetController {
     }
 
     /**
-     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
-     * gene to be added to the gene set twice.
+     * create an entity in the database based on the value object parameter
      * 
-     * @param groupId
-     * @param geneIds
+     * @param eesvo
+     * @return value object converted from the newly created entity
      */
-    public DatabaseBackedGeneSetValueObject updateNameDesc( DatabaseBackedGeneSetValueObject geneSetVO ) {
+    private GeneSetValueObject create( GeneSetValueObject obj ) {
 
-        return geneSetService.updateDatabaseEntityNameDesc( geneSetVO );
+        if ( obj.getId() != null && obj.getId() >= 0 ) {
+            throw new IllegalArgumentException( "Should not provide an id for 'create': " + obj.getId() );
+        }
 
-    }
+        if ( StringUtils.isBlank( obj.getName() ) ) {
+            throw new IllegalArgumentException( "Gene group name cannot be blank" );
+        }
 
-    /**
-     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
-     * gene to be added to the gene set twice.
-     * 
-     * @param groupId
-     * @param geneIds
-     */
-    public Collection<DatabaseBackedGeneSetValueObject> update( Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
-
-        return geneSetService.updateDatabaseEntity( geneSetVos );
-
-    }
-
-    /**
-     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
-     * gene to be added to the gene set twice. Cannot update name or description, just members
-     * 
-     * @param groupId id of the gene set being updated
-     * @param geneIds
-     */
-    public String updateMembers( Long groupId, Collection<Long> geneIds ) {
-
-        return geneSetService.updateDatabaseEntityMembers( groupId, geneIds );
-
-    }
-
-    /**
-     * AJAX If the current user has access to given gene group will return the gene ids in the gene group
-     * 
-     * @param groupId
-     * @return
-     */
-    @RequestMapping(value = "/showGeneSet.html", method = RequestMethod.GET)
-    public ModelAndView showGeneSet( HttpServletRequest request ) {
-
-        ModelAndView mav = new ModelAndView( "geneSet.detail" );
-
-        // if this is slow, we can get rid of it
-        // checking the id here rather than in the js widget gives better error feedback
-        // though it doesn't mean we load the set twice
-        GeneSetValueObject geneSet = getGeneSetFromRequest( request );
-        mav.addObject( "geneSetId", geneSet.getId() );
-        mav.addObject( "geneSetName", geneSet.getName() );
-
-        return mav;
+        return geneSetService.createDatabaseEntity( obj );
     }
 
     /**
@@ -431,21 +449,6 @@ public class GeneSetController {
             throw new IllegalArgumentException( "You must provide an id" );
         }
         return geneSet;
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param groupId
-     * @return
-     */
-    public DatabaseBackedGeneSetValueObject load( Long id ) {
-
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Cannot load a gene set with a null id." );
-        }
-        return geneSetService.getValueObject( id );
-
     }
 
 }

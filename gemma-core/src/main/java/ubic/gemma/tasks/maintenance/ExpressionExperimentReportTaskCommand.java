@@ -19,7 +19,9 @@
 package ubic.gemma.tasks.maintenance;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.Task;
 
 /**
  * @author paul
@@ -28,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class ExpressionExperimentReportTaskCommand extends TaskCommand {
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
         return ExpressionExperimentReportTask.class;
     }
 

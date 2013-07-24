@@ -18,8 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * @see ubic.gemma.model.common.description.Characteristic

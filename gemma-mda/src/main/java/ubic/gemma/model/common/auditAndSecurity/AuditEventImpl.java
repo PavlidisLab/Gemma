@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent

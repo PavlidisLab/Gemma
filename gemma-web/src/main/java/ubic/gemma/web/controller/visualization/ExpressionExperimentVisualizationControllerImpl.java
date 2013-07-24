@@ -47,7 +47,7 @@ import ubic.gemma.web.view.TextView;
  */
 @Controller
 @Deprecated
-@SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ExpressionExperimentVisualizationControllerImpl extends BaseController implements
         ExpressionExperimentVisualizationController {
 

@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.analysis.sequence;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -34,8 +35,10 @@ import ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
 @Controller
 public class ArrayDesignRepeatScanController {
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ArrayDesignService arrayDesignService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
 
     /**
      * AJAX entry point.

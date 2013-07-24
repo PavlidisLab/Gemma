@@ -78,15 +78,16 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     }
 
+    public void setManualAuthenticationService( ManualAuthenticationService map ) {
+        this.manualAuthenticationService = map;
+
+    }
+
     protected boolean authenticate() {
         this.manualAuthenticationService.authenticateAnonymously();
         return true;
     }
 
-    public void setManualAuthenticationService( ManualAuthenticationService map ) {
-        this.manualAuthenticationService = map;
-
-    }
     /**
      * Function to handle construction of output in xml for a bad response
      */
@@ -212,6 +213,59 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     }
 
     /**
+     * basically Delegates to getSingleNodeValue and returns the just the last value.
+     * 
+     * @param requestElement
+     * @param tagName
+     * @return
+     */
+    protected String getLastSingleNodeValue( Element requestElement, String tagName ) {
+        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
+        authenticate();
+        String lastValue = null;
+        String node = "";
+        // get the Element with name = tagName
+        NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
+        // iterate over the child nodes
+        for ( int i = 0; i < children.getLength(); i++ ) {
+
+            if ( children.item( i ).getNodeType() == Node.TEXT_NODE ) {
+                node = children.item( i ).getNodeValue();
+                lastValue = node;
+            }
+            node = null;
+        }
+        if ( lastValue == null || lastValue.isEmpty() ) {
+            // throw new IllegalArgumentException( "Could not find request text node" );
+        }
+        return lastValue;
+    }
+
+    protected String getNodeValue( Element requestElement, String tagName ) {
+        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
+        authenticate();
+
+        Node node = requestElement.getElementsByTagName( tagName ).item( 0 );
+        String value = node.getNodeValue();// .getNodeValue();
+
+        return value;
+    }
+
+    protected String getOptionalNodeValue( Element requestElement, String tagName ) {
+        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
+        authenticate();
+
+        Node node = requestElement.getElementsByTagName( tagName ).item( 0 );
+        if ( node == null ) return null;
+        String value = node.getNodeValue();// .getNodeValue();
+
+        return value;
+    }
+
+    /**
      * Function that handles the retrieval of xml input. Use this method if there is only one value in the input but
      * generically, this method can also store multiple input values as well. This will depend on how the xml is parsed
      * by the client. TODO Still need to test on different types of client requests.
@@ -247,60 +301,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         }
         return value;
     }
-    
 
-    protected String getNodeValue( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
-        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
-        
-        Node node = requestElement.getElementsByTagName( tagName ).item( 0 );
-        String value = node.getTextContent();//  .getNodeValue();        
-        
-        return value;
-    }    
-    
-    protected String getOptionalNodeValue( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
-        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
-        
-        Node node = requestElement.getElementsByTagName( tagName ).item( 0 );
-        if (node == null) return null;
-        String value = node.getTextContent();//  .getNodeValue();        
-        
-        return value;
-    }    
-    
-    
-    /**
-     * basically Delegates to getSingleNodeValue and returns the just the last value. 
-     * @param requestElement
-     * @param tagName
-     * @return
-     */
-    protected String getLastSingleNodeValue( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
-        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
-        String lastValue = null;
-        String node = "";
-        // get the Element with name = tagName
-        NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
-        // iterate over the child nodes
-        for ( int i = 0; i < children.getLength(); i++ ) {
-
-            if ( children.item( i ).getNodeType() == Node.TEXT_NODE ) {
-                node = children.item( i ).getNodeValue();
-                lastValue = node;
-            }
-            node = null;
-        }
-        if ( lastValue ==null || lastValue.isEmpty() ) {
-            // throw new IllegalArgumentException( "Could not find request text node" );
-        }
-        return lastValue;
-    }
     /**
      * Looks to parse a previously generated xml report that was saved to disk. Returns null if it fails to do so.
      * 

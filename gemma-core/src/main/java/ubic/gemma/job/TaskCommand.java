@@ -22,6 +22,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import ubic.gemma.tasks.Task;
+
 import java.io.Serializable;
 
 /**
@@ -30,21 +32,20 @@ import java.io.Serializable;
  * <p>
  * This class can be used directly, or extended to create a command object to pass parameters for a specific task. See
  * for example {@link ExpressionExperimentLoadTaskCommand}. A entityId field is provided as a convenience for the case
- * when a primary key is all that is really needed.
- *
- * TODO: Make sure it is immutable.
- * TODO: Rename to TaskContext.
- *
+ * when a primary key is all that is really needed. TODO: Make sure it is immutable. TODO: Rename to TaskContext.
+ * 
  * @author keshav
  * @version $Id$
  */
 public class TaskCommand implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     // For now, this how we map from TaskCommand to Task that actually runs it.
-    // We have to have this mapping somewhere until we make Tasks themselves serializable
+    // We have to have this mapping somewhere until we make Tasks themselves serializable. Tasks are not readily
+    // serializable because they have dependencies to spring services.
     // at which point TaskCommand can be deprecated(or remain as TaskContext).
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return null;
     }
 
@@ -79,7 +80,7 @@ public class TaskCommand implements Serializable {
     /**
      * How long we will queue a task before giving up and cancelling it (default value)
      */
-     public static final int MAX_QUEUING_MINUTES = 60 * 2;
+    public static final int MAX_QUEUING_MINUTES = 60 * 2;
 
     /**
      * How long we will allow this task to be queued before giving up.
@@ -160,7 +161,6 @@ public class TaskCommand implements Serializable {
         return maxRuntime;
     }
 
-
     public String getTaskId() {
         return this.taskId;
     }
@@ -182,7 +182,7 @@ public class TaskCommand implements Serializable {
 
     /**
      * How long we will allow this task to be queued before giving up. Default = TaskRunningService.MAX_QUEUING_MINUTES
-     *
+     * 
      * @param maxQueueMinutes
      */
     public void setMaxQueueMinutes( Integer maxQueueMinutes ) {

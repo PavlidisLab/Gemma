@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess.normalize;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;

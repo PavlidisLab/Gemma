@@ -14,7 +14,9 @@
  */
 package ubic.gemma.model.association.phenotype;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -23,8 +25,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.easymock.classextension.EasyMock;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,8 +36,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeAssoOntologyHelper;
 import ubic.gemma.association.phenotype.PhenotypeAssoOntologyHelperImpl;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -51,13 +51,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Autowired
-    private GeneService geneService;
-
-    @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
 
     private int geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
 
@@ -89,6 +83,31 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     // @Test
+    public void testFindBibliographicReference() {
+
+        assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1", null ) );
+    }
+
+    // @Test
+    public void testFindCandidateGenes() {
+
+        Set<String> phenotypesValuesUri = new HashSet<String>();
+        phenotypesValuesUri.add( "testUri" );
+
+        Collection<GeneValueObject> geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes(
+                phenotypesValuesUri, null );
+
+        assertTrue( geneValueObjects != null && geneValueObjects.size() == 1 );
+    }
+
+    @Test
+    public void testFindEvidenceByGeneId() {
+        // Collection<EvidenceValueObject> evidences = this.phenotypeAssociationManagerService
+        // .findEvidenceByGeneId( this.gene.getId() );
+        // assertTrue( evidences != null && evidences.size() == 1 );
+    }
+
+    // @Test
     public void testLoadUpdateDeleteEvidence() {
         // 1- findEvidenceByGeneNCBI
         Collection<EvidenceValueObject> evidences = this.phenotypeAssociationManagerService
@@ -116,43 +135,6 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertNull( this.phenotypeAssociationManagerService.load( evidence.getId() ) );
     }
 
-    @Test
-    public void testFindEvidenceByGeneId() {
-        // Collection<EvidenceValueObject> evidences = this.phenotypeAssociationManagerService
-        // .findEvidenceByGeneId( this.gene.getId() );
-        // assertTrue( evidences != null && evidences.size() == 1 );
-    }
-
-    // @Test
-    public void testFindCandidateGenes() {
-
-        Set<String> phenotypesValuesUri = new HashSet<String>();
-        phenotypesValuesUri.add( "testUri" );
-
-        Collection<GeneValueObject> geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes(
-                phenotypesValuesUri, null );
-
-        assertTrue( geneValueObjects != null && geneValueObjects.size() == 1 );
-    }
-
-    // @Test
-    public void testFindBibliographicReference() {
-
-        assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1", null ) );
-    }
-
-    private void makeGene( int ncbiId ) {
-        this.gene = Gene.Factory.newInstance();
-        this.gene.setName( "RAT1" );
-        this.gene.setOfficialName( "RAT1" );
-        this.gene.setOfficialSymbol( "RAT1" );
-        this.gene.setNcbiGeneId( new Integer( ncbiId ) );
-        // the taxon is already populated in the test database
-        this.gene.setTaxon( this.taxonService.findByCommonName( "human" ) );
-        this.gene.getProducts().add( super.getTestPersistentGeneProduct( this.gene ) );
-        this.gene = ( Gene ) this.persisterHelper.persist( this.gene );
-    }
-
     private void createLiteratureEvidence() {
         this.litEvidence = new LiteratureEvidenceValueObject();
         this.litEvidence.setDescription( "Test Description" );
@@ -174,6 +156,18 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         this.phenotypeAssociationManagerService.makeEvidence( this.litEvidence );
     }
 
+    private void makeGene( int ncbiId ) {
+        this.gene = Gene.Factory.newInstance();
+        this.gene.setName( "RAT1" );
+        this.gene.setOfficialName( "RAT1" );
+        this.gene.setOfficialSymbol( "RAT1" );
+        this.gene.setNcbiGeneId( new Integer( ncbiId ) );
+        // the taxon is already populated in the test database
+        this.gene.setTaxon( this.taxonService.findByCommonName( "human" ) );
+        this.gene.getProducts().add( super.getTestPersistentGeneProduct( this.gene ) );
+        this.gene = ( Gene ) this.persisterHelper.persist( this.gene );
+    }
+
     private void mockOntology() throws SecurityException, NoSuchMethodException {
 
         OntologyTerm mockedOntoloyTerm = EasyMock.createMock( OntologyTerm.class );
@@ -189,9 +183,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         EasyMock.replay( mockedOntoloyTerm );
 
         // we only mock 1 method of the class in this case, the other methods of the object behave normally
-        PhenotypeAssoOntologyHelper phenotypeAssoOntologyHelperMocked = EasyMock.createMock(
-                PhenotypeAssoOntologyHelperImpl.class,
-                new Method[] { PhenotypeAssoOntologyHelperImpl.class.getMethod( "findOntologyTermByUri", String.class ) } );
+        PhenotypeAssoOntologyHelper phenotypeAssoOntologyHelperMocked = EasyMock
+                .createMock( PhenotypeAssoOntologyHelperImpl.class,
+                        new Method[] { PhenotypeAssoOntologyHelperImpl.class.getMethod( "findOntologyTermByUri",
+                                String.class ) } );
 
         org.easymock.EasyMock.expect( phenotypeAssoOntologyHelperMocked.findOntologyTermByUri( "testUri" ) )
                 .andReturn( mockedOntoloyTerm ).anyTimes();

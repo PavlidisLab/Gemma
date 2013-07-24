@@ -31,18 +31,18 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 /**
  * @author Original : plosson on 05-janv.-2006 10:46:33 - Last modified by Author: plosson on Date: 2006/01/05 10:09:38
  * @author pavlidis
- * @version  $Id$
+ * @version $Id$
  */
 public class MonitoredDiskFileItemFactory extends DiskFileItemFactory {
     private OutputStreamListener listener = null;
 
-    public MonitoredDiskFileItemFactory( OutputStreamListener listener ) {
-        super();
+    public MonitoredDiskFileItemFactory( int sizeThreshold, File repository, OutputStreamListener listener ) {
+        super( sizeThreshold, repository );
         this.listener = listener;
     }
 
-    public MonitoredDiskFileItemFactory( int sizeThreshold, File repository, OutputStreamListener listener ) {
-        super( sizeThreshold, repository );
+    public MonitoredDiskFileItemFactory( OutputStreamListener listener ) {
+        super();
         this.listener = listener;
     }
 

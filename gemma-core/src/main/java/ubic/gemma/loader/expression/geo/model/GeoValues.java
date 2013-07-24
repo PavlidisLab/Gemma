@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -333,10 +333,10 @@ public class GeoValues implements Serializable {
                 log.warn( "Adding dummy quantitation type" );
                 return;
                 // throw new IllegalStateException( "Samples must have a platform assigned." );
-            } else {
-                throw new UnsupportedOperationException(
-                        "Can't deal with empty samples when that sample is the first one on its platform." );
             }
+            throw new UnsupportedOperationException(
+                    "Can't deal with empty samples when that sample is the first one on its platform." );
+
         } else {
 
             Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
@@ -709,9 +709,9 @@ public class GeoValues implements Serializable {
                     // for data sets where there is no data, this could happen.
                     if ( platform.useDataFromGeo() ) {
                         throw new IllegalStateException( "Missing quantitation type index map for " + platform );
-                    } else {
-                        continue;
                     }
+                    continue;
+
                 }
                 Collection<String> qtNames = qtMap.get( qType );
 

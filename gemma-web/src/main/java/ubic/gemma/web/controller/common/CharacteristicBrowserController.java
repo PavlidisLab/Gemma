@@ -18,13 +18,19 @@
  */
 package ubic.gemma.web.controller.common;
 
-import org.apache.commons.lang.StringUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
@@ -42,11 +48,6 @@ import ubic.gemma.tasks.maintenance.CharacteristicUpdateCommand;
 import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * NOTE: Logging messages from this service are important for tracking changes to annotations.
@@ -77,6 +78,81 @@ public class CharacteristicBrowserController {
 
     @Autowired
     private CharacteristicService characteristicService;
+
+    /**
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
+        Integer count = characteristicService.count(); // fixme: maybe don't do this every time. It's actually fast once
+        // it's cached.
+
+        List<AnnotationValueObject> results = new ArrayList<AnnotationValueObject>();
+
+        Collection<Characteristic> records;
+        if ( StringUtils.isNotBlank( batch.getSort() ) ) {
+
+            String o = batch.getSort();
+
+            String orderBy = "";
+            if ( o.equals( "className" ) ) {
+                orderBy = "category";
+            } else if ( o.equals( "termName" ) ) {
+                orderBy = "value";
+
+            } else if ( o.equals( "evidenceCode" ) ) {
+                orderBy = "evidenceCode";
+
+            } else {
+                throw new IllegalArgumentException( "Unknown sort field: " + o );
+            }
+
+            boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
+            records = characteristicService.browse( batch.getStart(), batch.getLimit(), orderBy, descending );
+
+        } else {
+            records = characteristicService.browse( batch.getStart(), batch.getLimit() );
+        }
+
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( records );
+
+        for ( Object o : records ) {
+            Characteristic c = ( Characteristic ) o;
+            Object parent = charToParent.get( c );
+
+            AnnotationValueObject avo = new AnnotationValueObject();
+            avo.setId( c.getId() );
+            avo.setClassName( c.getCategory() );
+            avo.setTermName( c.getValue() );
+
+            if ( c.getEvidenceCode() != null ) avo.setEvidenceCode( c.getEvidenceCode().toString() );
+
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                avo.setClassUri( vc.getCategoryUri() );
+                avo.setTermUri( vc.getValueUri() );
+                avo.setObjectClass( VocabCharacteristic.class.getSimpleName() );
+            } else {
+                avo.setObjectClass( Characteristic.class.getSimpleName() );
+            }
+
+            if ( parent != null ) {
+                populateParentInformation( avo, parent );
+            }
+            results.add( avo );
+        }
+
+        JsonReaderResponse<AnnotationValueObject> returnVal = new JsonReaderResponse<AnnotationValueObject>( results,
+                count.intValue() );
+        return returnVal;
+    }
+
+    /**
+     * @return
+     */
+    public Integer count() {
+        return characteristicService.count();
+    }
 
     /**
      * @param valuePrefix
@@ -164,81 +240,6 @@ public class CharacteristicBrowserController {
         log.info( "Characteristic search for: '" + valuePrefix + "*': " + results.size() + " results, returning up to "
                 + MAX_RESULTS );
         return results.subList( 0, Math.min( results.size(), MAX_RESULTS ) );
-    }
-
-    /**
-     * @return
-     */
-    public Integer count() {
-        return characteristicService.count();
-    }
-
-    /**
-     * @param batch
-     * @return
-     */
-    public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
-        Integer count = characteristicService.count(); // fixme: maybe don't do this every time. It's actually fast once
-        // it's cached.
-
-        List<AnnotationValueObject> results = new ArrayList<AnnotationValueObject>();
-
-        Collection<Characteristic> records;
-        if ( StringUtils.isNotBlank( batch.getSort() ) ) {
-
-            String o = batch.getSort();
-
-            String orderBy = "";
-            if ( o.equals( "className" ) ) {
-                orderBy = "category";
-            } else if ( o.equals( "termName" ) ) {
-                orderBy = "value";
-
-            } else if ( o.equals( "evidenceCode" ) ) {
-                orderBy = "evidenceCode";
-
-            } else {
-                throw new IllegalArgumentException( "Unknown sort field: " + o );
-            }
-
-            boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
-            records = characteristicService.browse( batch.getStart(), batch.getLimit(), orderBy, descending );
-
-        } else {
-            records = characteristicService.browse( batch.getStart(), batch.getLimit() );
-        }
-
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( records );
-
-        for ( Object o : records ) {
-            Characteristic c = ( Characteristic ) o;
-            Object parent = charToParent.get( c );
-
-            AnnotationValueObject avo = new AnnotationValueObject();
-            avo.setId( c.getId() );
-            avo.setClassName( c.getCategory() );
-            avo.setTermName( c.getValue() );
-
-            if ( c.getEvidenceCode() != null ) avo.setEvidenceCode( c.getEvidenceCode().toString() );
-
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                avo.setClassUri( vc.getCategoryUri() );
-                avo.setTermUri( vc.getValueUri() );
-                avo.setObjectClass( VocabCharacteristic.class.getSimpleName() );
-            } else {
-                avo.setObjectClass( Characteristic.class.getSimpleName() );
-            }
-
-            if ( parent != null ) {
-                populateParentInformation( avo, parent );
-            }
-            results.add( avo );
-        }
-
-        JsonReaderResponse<AnnotationValueObject> returnVal = new JsonReaderResponse<AnnotationValueObject>( results,
-                count.intValue() );
-        return returnVal;
     }
 
     /**

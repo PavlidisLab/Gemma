@@ -22,7 +22,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,9 +30,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.Constants;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.web.controller.WebConstants;
+import ubic.gemma.web.util.Constants;
 
 /**
  * Performs actions required when we wish to indicate that the system is undergoing maintenance and many not behave

@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Controller;
 
@@ -51,6 +51,16 @@ public class FeedReader implements InitializingBean {
 
     FeedFetcher feedFetcher;
     String feedUrl;
+
+    @Override
+    public void afterPropertiesSet() {
+        FeedFetcherCache feedInfoCache = HashMapFeedInfoCache.getInstance();
+        feedFetcher = new HttpURLFeedFetcher( feedInfoCache );
+        this.feedUrl = ConfigUtils.getString( GEMMA_HOME_FEEDURL_CONFIG_PARAM );
+        if ( StringUtils.isBlank( feedUrl ) ) {
+            this.feedUrl = DEFAULT_FEED;
+        }
+    }
 
     /**
      * @return List of news items in HTML format.
@@ -104,15 +114,5 @@ public class FeedReader implements InitializingBean {
         }
         return result;
 
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        FeedFetcherCache feedInfoCache = HashMapFeedInfoCache.getInstance();
-        feedFetcher = new HttpURLFeedFetcher( feedInfoCache );
-        this.feedUrl = ConfigUtils.getString( GEMMA_HOME_FEEDURL_CONFIG_PARAM );
-        if ( StringUtils.isBlank( feedUrl ) ) {
-            this.feedUrl = DEFAULT_FEED;
-        }
     }
 }

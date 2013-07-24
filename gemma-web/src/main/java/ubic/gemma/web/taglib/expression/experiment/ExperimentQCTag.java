@@ -29,8 +29,13 @@ import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCCon
  */
 public class ExperimentQCTag extends TagSupport {
 
+    enum Size {
+        small, large
+    }
+
     private static final int NUM_PCS_TO_DISPLAY = 3;
     private static final long serialVersionUID = -466958848014180520L;
+
     private Long eeid;
 
     private boolean hasCorrMat = false;
@@ -44,67 +49,19 @@ public class ExperimentQCTag extends TagSupport {
 
     private String eeManagerId = "";
 
-    public void setEeManagerId( String eeManagerId ) {
-        this.eeManagerId = eeManagerId;
-    }
-
     @SuppressWarnings("unused")
     private boolean hasNodeDegreeDist = false;
 
     private int numFactors = 2;
 
-    enum Size {
-        small, large
-    }
-
-    /**
-     * The id of the EE to display QC info
+    /*
+     * (non-Javadoc)
      * 
-     * @param id
+     * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
-    public void setEe( Long id ) {
-        this.eeid = id;
-    }
-
-    /**
-     * @param value
-     */
-    public void setHasCorrMat( boolean value ) {
-        this.hasCorrMat = value;
-    }
-
-    /**
-     * @param value
-     */
-    public void setHasCorrDist( boolean value ) {
-        this.hasCorrDist = value;
-    }
-
-    /**
-     * @param value
-     */
-    public void setHasPCA( boolean value ) {
-        this.hasPCA = value;
-    }
-
-    /**
-     * @param value
-     */
-    public void setHasMeanVariance( boolean value ) {
-        this.hasMeanVariance = value;
-    }
-
-    public void setHasNodeDegreeDist( boolean value ) {
-        this.hasNodeDegreeDist = value;
-    }
-
-    /**
-     * How many factors (including batch etc) are available for PCA display?
-     * 
-     * @param value
-     */
-    public void setNumFactors( int value ) {
-        this.numFactors = value;
+    @Override
+    public int doEndTag() {
+        return EVAL_PAGE;
     }
 
     /*
@@ -271,14 +228,58 @@ public class ExperimentQCTag extends TagSupport {
         return buf.toString();
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * The id of the EE to display QC info
      * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
+     * @param id
      */
-    @Override
-    public int doEndTag() {
-        return EVAL_PAGE;
+    public void setEe( Long id ) {
+        this.eeid = id;
+    }
+
+    public void setEeManagerId( String eeManagerId ) {
+        this.eeManagerId = eeManagerId;
+    }
+
+    /**
+     * @param value
+     */
+    public void setHasCorrDist( boolean value ) {
+        this.hasCorrDist = value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setHasCorrMat( boolean value ) {
+        this.hasCorrMat = value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setHasMeanVariance( boolean value ) {
+        this.hasMeanVariance = value;
+    }
+
+    public void setHasNodeDegreeDist( boolean value ) {
+        this.hasNodeDegreeDist = value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setHasPCA( boolean value ) {
+        this.hasPCA = value;
+    }
+
+    /**
+     * How many factors (including batch etc) are available for PCA display?
+     * 
+     * @param value
+     */
+    public void setNumFactors( int value ) {
+        this.numFactors = value;
     }
 
 }

@@ -28,12 +28,11 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import ubic.gemma.util.JSONUtil;
 
 /**
- * Strategy used to handle a failed user authentication
- * if it is a ajax style login (ajaxLoginTrue parameter = true) then no redirect happens and a some JSON is sent to the client
- * 
- * if the request is not ajax style then the default redirection takes place
- * 
- * this is in gemma-core because configuration takes place in applicationContext-security.xml
+ * Strategy used to handle a failed user authentication if it is a ajax style login (ajaxLoginTrue parameter = true)
+ * then no redirect happens and a some JSON is sent to the client if the request is not ajax style then the default
+ * redirection takes place
+ * <p>
+ * This is in gemma-core because configuration takes place in applicationContext-security.xml
  * 
  * @author cmcdonald
  * @version $Id$

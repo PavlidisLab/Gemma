@@ -43,9 +43,8 @@ public class ValueObjectAwareIdentityRetrievalStrategyImpl implements ObjectIden
         if ( SecureValueObject.class.isAssignableFrom( domainObject.getClass() ) ) {
             SecureValueObject svo = ( SecureValueObject ) domainObject;
             return new ObjectIdentityImpl( svo.getSecurableClass(), svo.getId() );
-        } else {
-            return new ObjectIdentityImpl( domainObject );
         }
+        return new ObjectIdentityImpl( domainObject );
 
     }
 }

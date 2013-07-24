@@ -70,12 +70,20 @@ public class UserValueObject {
         return userName;
     }
 
+    public boolean isAllowModification() {
+        return allowModification;
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
 
     public boolean isInGroup() {
         return inGroup;
+    }
+
+    public void setAllowModification( boolean allowModification ) {
+        this.allowModification = allowModification;
     }
 
     public void setCurrentGroup( String currentGroup ) {
@@ -96,14 +104,6 @@ public class UserValueObject {
 
     public void setUserName( String userName ) {
         this.userName = userName;
-    }
-
-    public void setAllowModification( boolean allowModification ) {
-        this.allowModification = allowModification;
-    }
-
-    public boolean isAllowModification() {
-        return allowModification;
     }
 
 }

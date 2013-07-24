@@ -42,20 +42,6 @@ public class ArrayDesignGroupingTag extends TagSupport {
         return EVAL_PAGE;
     }
 
-    /**
-     * @param subsumer
-     */
-    public void setSubsumer( ArrayDesign subsumer ) {
-        this.subsumer = subsumer;
-    }
-
-    /**
-     * @param subsumeees
-     */
-    public void setSubsumees( Collection<ArrayDesign> subsumees ) {
-        this.subsumees = subsumees;
-    }
-
     @Override
     public int doStartTag() throws JspException {
 
@@ -89,12 +75,26 @@ public class ArrayDesignGroupingTag extends TagSupport {
         return SKIP_BODY;
     }
 
-    private String arrayDesignShortLink( ArrayDesign ad ) {
-        return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a>";
+    /**
+     * @param subsumeees
+     */
+    public void setSubsumees( Collection<ArrayDesign> subsumees ) {
+        this.subsumees = subsumees;
+    }
+
+    /**
+     * @param subsumer
+     */
+    public void setSubsumer( ArrayDesign subsumer ) {
+        this.subsumer = subsumer;
     }
 
     private String arrayDesignLink( ArrayDesign ad ) {
         return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a> ("
                 + ad.getName() + ")";
+    }
+
+    private String arrayDesignShortLink( ArrayDesign ad ) {
+        return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a>";
     }
 }

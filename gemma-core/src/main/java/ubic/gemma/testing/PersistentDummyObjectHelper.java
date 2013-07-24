@@ -23,10 +23,10 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,7 +189,7 @@ public class PersistentDummyObjectHelper {
         double[] data = new double[NUM_BIOMATERIALS];
         double bump = 0.0;
         for ( int j = 0; j < data.length; j++ ) {
-            data[j] = RandomUtils.nextDouble() + bump;
+            data[j] = new Random().nextDouble() + bump;
             if ( j % 3 == 0 ) {
                 // add some correlation structure to the data.
                 bump += 0.5;
@@ -640,7 +640,7 @@ public class PersistentDummyObjectHelper {
         Collection<BioSequence2GeneProduct> b2gCol = new HashSet<BioSequence2GeneProduct>();
 
         BlatAssociation b2g = BlatAssociation.Factory.newInstance();
-        b2g.setScore( RandomUtils.nextDouble() );
+        b2g.setScore( new Random().nextDouble() );
         b2g.setBioSequence( bioSequence );
         b2g.setGeneProduct( this.getTestPersistentGeneProduct( this.getTestPeristentGene() ) );
         b2g.setBlatResult( this.getTestPersistentBlatResult( bioSequence ) );

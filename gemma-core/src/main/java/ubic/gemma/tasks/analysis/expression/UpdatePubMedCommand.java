@@ -19,18 +19,20 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
 /**
  * @author paul
  * @version $Id$
  */
 public class UpdatePubMedCommand extends TaskCommand {
- 
+
     private static final long serialVersionUID = 1L;
     private String pubmedId;
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return null;
     }
 

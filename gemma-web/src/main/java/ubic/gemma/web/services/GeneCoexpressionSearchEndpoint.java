@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -59,16 +59,16 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
      */
     public static final int MAX_RESULTS = 100;
 
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService service ) {
+        expressionExperimentSetService = service;
+    }
+
     public void setgeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
         this.geneCoexpressionService = geneCoexpressionService;
     }
 
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
-    }
-
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService service ) {
-        expressionExperimentSetService = service;
     }
 
     /**

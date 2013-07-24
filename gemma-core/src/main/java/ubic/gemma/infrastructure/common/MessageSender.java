@@ -21,8 +21,9 @@ package ubic.gemma.infrastructure.common;
 import java.io.Serializable;
 
 /**
- * author: anton
- * date: 08/02/13
+ * Represents the output end of a queue.
+ * 
+ * @author: anton date: 08/02/13
  */
 public interface MessageSender<T extends Serializable> {
     public void send( T object );

@@ -20,7 +20,7 @@ package ubic.gemma.analysis.expression.coexpression.links;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.basecode.math.CorrelationStats;

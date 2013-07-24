@@ -1,6 +1,6 @@
 package ubic.gemma.apps;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;

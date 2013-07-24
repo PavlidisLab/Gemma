@@ -14,7 +14,7 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.util.AbstractCLIContextCLI;

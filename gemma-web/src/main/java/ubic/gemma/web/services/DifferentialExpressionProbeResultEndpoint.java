@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -169,11 +169,12 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         responseWrapper.appendChild( responseElement );
 
         for ( Gene gene : geneCol ) {
-            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultService.find( gene,
-                    bioAssaySets, Double.parseDouble( threshold ), null );
+            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultService
+                    .find( gene, bioAssaySets, Double.parseDouble( threshold ), null );
 
             for ( BioAssaySet ee : results.keySet() ) {
-                // main call to the DifferentialExpressionAnalysisService to retrieve DifferentialExpressionAnalysisResultSet collection
+                // main call to the DifferentialExpressionAnalysisService to retrieve
+                // DifferentialExpressionAnalysisResultSet collection
                 Collection<DifferentialExpressionAnalysisResult> parCol = results.get( ee );
 
                 // check that a DifferentialExpressionAnalysisResult is not null

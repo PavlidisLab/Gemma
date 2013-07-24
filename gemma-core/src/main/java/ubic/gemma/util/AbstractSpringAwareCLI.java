@@ -18,7 +18,7 @@
  */
 package ubic.gemma.util;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;

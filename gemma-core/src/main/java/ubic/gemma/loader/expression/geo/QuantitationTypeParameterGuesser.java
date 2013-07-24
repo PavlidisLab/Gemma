@@ -19,6 +19,7 @@
 package ubic.gemma.loader.expression.geo;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,7 +28,8 @@ import java.util.Set;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.configuration.io.FileHandler;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -81,17 +83,19 @@ public class QuantitationTypeParameterGuesser {
         String gemmaAppDataHome = ConfigUtils.getString( "gemma.appdata.home" );
         if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
             try {
-                config.addConfiguration( new PropertiesConfiguration( gemmaAppDataHome + File.separatorChar
-                        + "quantitationType.properties" ) );
+                PropertiesConfiguration pc = new PropertiesConfiguration();
+                FileHandler handler = new FileHandler( pc );
+                handler.setFileName( gemmaAppDataHome + File.separatorChar + "quantitationType.properties" );
+                handler.load();
             } catch ( ConfigurationException e ) {
                 log.info( "No custom quantitation type descriptors found" );
             }
         }
 
-        measuredSignalDescPatterns.addAll( config.getList( "measuredSignalPatterns" ) );
-        derivedSignalDescPatterns.addAll( config.getList( "derivedSignalPatterns" ) );
+        measuredSignalDescPatterns.addAll( Arrays.asList( config.getStringArray( "measuredSignalPatterns" ) ) );
+        derivedSignalDescPatterns.addAll( Arrays.asList( config.getStringArray( "derivedSignalPatterns" ) ) );
 
-        ratioDescPatterns.addAll( config.getList( "ratioStringPatterns" ) );
+        ratioDescPatterns.addAll( Arrays.asList( config.getStringArray( "ratioStringPatterns" ) ) );
 
         measuredSignalDescPatterns.add( ".*channel[\\s_ ][12] (mean|median) (signal|intensity) (?!- background).*" );
         measuredSignalDescPatterns.add( ".*(red|green|cy5|cy3) (mean|median) (feature)? intensity.*" );

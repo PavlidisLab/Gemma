@@ -38,8 +38,8 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -197,7 +197,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
             factorColumnName += ef.getName() + ":";
         }
-        factorColumnName = StringUtils.chomp( factorColumnName, ":" ) + ")";
+        factorColumnName = StringUtils.removeEnd( factorColumnName, ":" ) + ")";
 
         // Generate headers
         buf.append( "\tQValue" + factorColumnName );

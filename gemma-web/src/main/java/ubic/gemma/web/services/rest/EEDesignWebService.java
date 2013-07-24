@@ -58,6 +58,37 @@ public class EEDesignWebService {
     private BioAssayDao bioAssayDao;
 
     @GET
+    @Path("/getAllDatasetNames")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getAllDatasetNames() {
+
+        List<String> result = new LinkedList<String>();
+
+        Collection<ExpressionExperiment> experiments = this.expressionExperimentService.loadAll();
+        if ( experiments == null ) throw new NotFoundException( "No datasets were found." );
+
+        for ( ExpressionExperiment experiment : experiments ) {
+            result.add( experiment.getShortName() );
+
+        }
+
+        return result;
+    }
+
+    @GET
+    @Path("/findByShortName/{shortName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Map<String, String>> getAnnotations( @PathParam("shortName") String shortName ) {
+
+        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
+        if ( experiment == null ) throw new NotFoundException( "Dataset not found." );
+        Collection<BioAssay> bioAssays = experiment.getBioAssays();
+        Collection<Characteristic> chars = new ArrayList<Characteristic>();
+
+        return prepareEEAnnotationsUnstructured( bioAssays, chars );
+    }
+
+    @GET
     @Path("/findByAccession/{gsmId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Map<String, String>> getAnnotationsByGSM( @PathParam("gsmId") String gsmId ) {
@@ -67,27 +98,6 @@ public class EEDesignWebService {
         if ( foundBioAssays.isEmpty() ) throw new NotFoundException( "Sample not found." );
 
         Collection<Characteristic> characteristics = new HashSet<Characteristic>();
-
-        return prepareEEAnnotationsUnstructured( foundBioAssays, characteristics );
-    }
-
-    @GET
-    @Path("/findByAccession/includeConstantFactors/{gsmId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, String>> getAnnotationsByGSMIncludeTagsUnstructured( @PathParam("gsmId") String gsmId ) {
-
-        Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession( gsmId );
-
-        if ( foundBioAssays.isEmpty() ) throw new NotFoundException( "Sample not found." );
-
-        Collection<Characteristic> characteristics = new HashSet<Characteristic>();
-        if ( foundBioAssays.size() == 1 ) {
-            ExpressionExperiment ee = this.expressionExperimentService
-                    .findByBioAssay( foundBioAssays.iterator().next() );
-            if ( ee != null ) {
-                characteristics.addAll( ee.getCharacteristics() );
-            }
-        }
 
         return prepareEEAnnotationsUnstructured( foundBioAssays, characteristics );
     }
@@ -115,30 +125,24 @@ public class EEDesignWebService {
     }
 
     @GET
-    @Path("/findByShortName/{shortName}")
+    @Path("/findByAccession/includeConstantFactors/{gsmId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, String>> getAnnotations( @PathParam("shortName") String shortName ) {
+    public Map<String, Map<String, String>> getAnnotationsByGSMIncludeTagsUnstructured( @PathParam("gsmId") String gsmId ) {
 
-        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
-        if ( experiment == null ) throw new NotFoundException( "Dataset not found." );
-        Collection<BioAssay> bioAssays = experiment.getBioAssays();
-        Collection<Characteristic> chars = new ArrayList<Characteristic>();
+        Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession( gsmId );
 
-        return prepareEEAnnotationsUnstructured( bioAssays, chars );
-    }
+        if ( foundBioAssays.isEmpty() ) throw new NotFoundException( "Sample not found." );
 
-    @GET
-    @Path("/findByShortName/includeConstantFactors/{shortName}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, String>> getAnnotationsIncludeTagsUnstructured(
-            @PathParam("shortName") String shortName ) {
+        Collection<Characteristic> characteristics = new HashSet<Characteristic>();
+        if ( foundBioAssays.size() == 1 ) {
+            ExpressionExperiment ee = this.expressionExperimentService
+                    .findByBioAssay( foundBioAssays.iterator().next() );
+            if ( ee != null ) {
+                characteristics.addAll( ee.getCharacteristics() );
+            }
+        }
 
-        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
-        if ( experiment == null ) throw new NotFoundException( "Dataset not found." );
-        Collection<BioAssay> bioAssays = experiment.getBioAssays();
-        Collection<Characteristic> chars = experiment.getCharacteristics();
-
-        return prepareEEAnnotationsUnstructured( bioAssays, chars );
+        return prepareEEAnnotationsUnstructured( foundBioAssays, characteristics );
     }
 
     @GET
@@ -155,47 +159,55 @@ public class EEDesignWebService {
         return prepareEEAnnotationsStructured( bioAssays, chars );
     }
 
-    /**
-     * Don't introduce structure to separate experimental factors from experiment tags, instead add a prefix to tag
-     * categories
-     * 
-     * @param bioAssays
-     * @return
-     */
-    private Map<String, Map<String, String>> prepareEEAnnotationsUnstructured( Collection<BioAssay> bioAssays,
-            Collection<Characteristic> characs ) {
-        Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
+    @GET
+    @Path("/findByShortName/includeConstantFactors/{shortName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Map<String, String>> getAnnotationsIncludeTagsUnstructured(
+            @PathParam("shortName") String shortName ) {
 
-        if ( bioAssays.isEmpty() ) throw new NotFoundException( "BioAssays not found" );
-        for ( BioAssay bioAssay : bioAssays ) {
+        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
+        if ( experiment == null ) throw new NotFoundException( "Dataset not found." );
+        Collection<BioAssay> bioAssays = experiment.getBioAssays();
+        Collection<Characteristic> chars = experiment.getCharacteristics();
 
-            String accession = bioAssay.getAccession().getAccession();
+        return prepareEEAnnotationsUnstructured( bioAssays, chars );
+    }
 
-            Map<String, String> annotations = new HashMap<String, String>();
+    private String getFactorValueString( FactorValue fv ) {
+        if ( fv == null ) return "null";
 
-            BioMaterial bioMaterial = bioAssay.getSampleUsed();
-
-            for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
-                if ( factorValue.getExperimentalFactor().getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {
-                    // skip batch
-                } else {
-                    annotations
-                            .put( factorValue.getExperimentalFactor().getName(), getFactorValueString( factorValue ) );
-                }
-
+        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
+            String fvString = "";
+            for ( Characteristic c : fv.getCharacteristics() ) {
+                fvString += c.getValue() + " ";
             }
+            return fvString;
+        } else if ( fv.getMeasurement() != null ) {
+            return fv.getMeasurement().getValue();
+        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
+            return fv.getValue();
+        } else
+            return "absent ";
+    }
 
-            for ( Characteristic charac : characs ) {
+    private String[] getTagString( Characteristic characteristic ) {
 
-                String[] tagStringArr = getTagString( charac );
-                if ( !tagStringArr[0].isEmpty() && !tagStringArr[1].isEmpty() ) {
-                    annotations.put( "constant_" + tagStringArr[0], tagStringArr[1] );
-                }
-            }
-            result.put( accession, annotations );
+        String[] arr = { "", "" };
+        if ( characteristic == null ) return arr;
+        if ( ( characteristic.getCategory() == null || characteristic.getCategory().isEmpty() )
+                && ( characteristic.getValue() == null || characteristic.getValue().isEmpty() ) ) {
+            return arr;
+        } else if ( characteristic.getCategory() == null || characteristic.getCategory().isEmpty() ) {
+            arr[0] = characteristic.getValue();
+            arr[1] = characteristic.getValue();
+        } else if ( characteristic.getValue() == null || characteristic.getValue().isEmpty() ) {
+            arr[0] = characteristic.getCategory();
+            arr[1] = "no value";
+        } else {
+            arr[0] = characteristic.getCategory();
+            arr[1] = characteristic.getValue();
         }
-
-        return result;
+        return arr;
     }
 
     private Map<String, Map<String, Map<String, String>>> prepareEEAnnotationsStructured(
@@ -240,59 +252,47 @@ public class EEDesignWebService {
         return result;
     }
 
-    @GET
-    @Path("/getAllDatasetNames")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getAllDatasetNames() {
+    /**
+     * Don't introduce structure to separate experimental factors from experiment tags, instead add a prefix to tag
+     * categories
+     * 
+     * @param bioAssays
+     * @return
+     */
+    private Map<String, Map<String, String>> prepareEEAnnotationsUnstructured( Collection<BioAssay> bioAssays,
+            Collection<Characteristic> characs ) {
+        Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
 
-        List<String> result = new LinkedList<String>();
+        if ( bioAssays.isEmpty() ) throw new NotFoundException( "BioAssays not found" );
+        for ( BioAssay bioAssay : bioAssays ) {
 
-        Collection<ExpressionExperiment> experiments = this.expressionExperimentService.loadAll();
-        if ( experiments == null ) throw new NotFoundException( "No datasets were found." );
+            String accession = bioAssay.getAccession().getAccession();
 
-        for ( ExpressionExperiment experiment : experiments ) {
-            result.add( experiment.getShortName() );
+            Map<String, String> annotations = new HashMap<String, String>();
 
+            BioMaterial bioMaterial = bioAssay.getSampleUsed();
+
+            for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
+                if ( factorValue.getExperimentalFactor().getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {
+                    // skip batch
+                } else {
+                    annotations
+                            .put( factorValue.getExperimentalFactor().getName(), getFactorValueString( factorValue ) );
+                }
+
+            }
+
+            for ( Characteristic charac : characs ) {
+
+                String[] tagStringArr = getTagString( charac );
+                if ( !tagStringArr[0].isEmpty() && !tagStringArr[1].isEmpty() ) {
+                    annotations.put( "constant_" + tagStringArr[0], tagStringArr[1] );
+                }
+            }
+            result.put( accession, annotations );
         }
 
         return result;
-    }
-
-    private String getFactorValueString( FactorValue fv ) {
-        if ( fv == null ) return "null";
-
-        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-            String fvString = "";
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                fvString += c.getValue() + " ";
-            }
-            return fvString;
-        } else if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
-        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
-            return fv.getValue();
-        } else
-            return "absent ";
-    }
-
-    private String[] getTagString( Characteristic characteristic ) {
-
-        String[] arr = { "", "" };
-        if ( characteristic == null ) return arr;
-        if ( ( characteristic.getCategory() == null || characteristic.getCategory().isEmpty() )
-                && ( characteristic.getValue() == null || characteristic.getValue().isEmpty() ) ) {
-            return arr;
-        } else if ( characteristic.getCategory() == null || characteristic.getCategory().isEmpty() ) {
-            arr[0] = characteristic.getValue();
-            arr[1] = characteristic.getValue();
-        } else if ( characteristic.getValue() == null || characteristic.getValue().isEmpty() ) {
-            arr[0] = characteristic.getCategory();
-            arr[1] = "no value";
-        } else {
-            arr[0] = characteristic.getCategory();
-            arr[1] = characteristic.getValue();
-        }
-        return arr;
     }
 
 }

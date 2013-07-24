@@ -75,6 +75,64 @@ public class VisualizationValueObject {
     }
 
     /**
+     * @param vectors
+     * @param genes
+     * @param validatedProbeList
+     * @param minPvalue
+     */
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, Collection<GeneValueObject> genes,
+            Double minPvalue, Collection<DifferentialExpressionValueObject> validatedProbes ) {
+        this();
+
+        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
+        populateColorMap( new ArrayList<Long>( idMap.keySet() ) );
+
+        Collection<Long> validatedProbeIdList = new ArrayList<Long>();
+        if ( validatedProbes != null && !validatedProbes.isEmpty() ) {
+            for ( DifferentialExpressionValueObject devo : validatedProbes ) {
+                validatedProbeIdList.add( devo.getProbeId() );
+            }
+        }
+
+        for ( DoubleVectorValueObject vector : vectors ) {
+            if ( this.eevo == null ) {
+                setEEwithPvalue( vector.getExpressionExperiment(), minPvalue );
+            } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
+                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
+                        + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
+            }
+
+            String color = null;
+            Collection<Long> vectorGeneids = vector.getGenes();
+            Collection<GeneValueObject> vectorGenes = new HashSet<GeneValueObject>();
+            for ( Long g : idMap.keySet() ) {
+                if ( !vectorGeneids.contains( g ) ) {
+                    continue;
+                }
+                vectorGenes.add( idMap.get( g ) );
+                color = colorMap.get( g );
+            }
+
+            int valid = 1;
+            Double pValue = vector.getPvalue();
+
+            if ( validatedProbes != null ) {
+                for ( DifferentialExpressionValueObject devo : validatedProbes ) {
+                    if ( devo.getProbeId().equals( vector.getDesignElement().getId() ) ) {
+                        // pValue = devo.getP();
+                        valid = 2;
+                        break;
+                    }
+                }
+            }
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, vectorGenes, color, valid, pValue );
+
+            if ( !profile.isAllMissing() ) profiles.add( profile );
+
+        }
+    }
+
+    /**
      * @param Vectors to be plotted (should come from a single expression experiment)
      * @param genes Is list so that order is guaranteed. Need this so that colors are consistent.
      * @param validatedProbeList Probes which are flagged as 'valid' in some sense. For example, in coexpression plots
@@ -137,64 +195,6 @@ public class VisualizationValueObject {
     }
 
     /**
-     * @param vectors
-     * @param genes
-     * @param validatedProbeList
-     * @param minPvalue
-     */
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, Collection<GeneValueObject> genes,
-            Double minPvalue, Collection<DifferentialExpressionValueObject> validatedProbes ) {
-        this();
-
-        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
-        populateColorMap( new ArrayList<Long>( idMap.keySet() ) );
-
-        Collection<Long> validatedProbeIdList = new ArrayList<Long>();
-        if ( validatedProbes != null && !validatedProbes.isEmpty() ) {
-            for ( DifferentialExpressionValueObject devo : validatedProbes ) {
-                validatedProbeIdList.add( devo.getProbeId() );
-            }
-        }
-
-        for ( DoubleVectorValueObject vector : vectors ) {
-            if ( this.eevo == null ) {
-                setEEwithPvalue( vector.getExpressionExperiment(), minPvalue );
-            } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
-                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
-                        + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
-            }
-
-            String color = null;
-            Collection<Long> vectorGeneids = vector.getGenes();
-            Collection<GeneValueObject> vectorGenes = new HashSet<GeneValueObject>();
-            for ( Long g : idMap.keySet() ) {
-                if ( !vectorGeneids.contains( g ) ) {
-                    continue;
-                }
-                vectorGenes.add( idMap.get( g ) );
-                color = colorMap.get( g );
-            }
-
-            int valid = 1;
-            Double pValue = vector.getPvalue();
-
-            if ( validatedProbes != null ) {
-                for ( DifferentialExpressionValueObject devo : validatedProbes ) {
-                    if ( devo.getProbeId().equals( vector.getDesignElement().getId() ) ) {
-                        // pValue = devo.getP();
-                        valid = 2;
-                        break;
-                    }
-                }
-            }
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector, vectorGenes, color, valid, pValue );
-
-            if ( !profile.isAllMissing() ) profiles.add( profile );
-
-        }
-    }
-
-    /**
      * @param dvvo
      */
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
@@ -208,11 +208,23 @@ public class VisualizationValueObject {
         return eevo;
     }
 
+    public LinkedHashMap<String, LinkedHashMap<String, String>> getFactorNames() {
+        return factorNames;
+    }
+
     /**
      * @return the factorProfiles
      */
     public Collection<FactorProfile> getFactorProfiles() {
         return factorProfiles;
+    }
+
+    public List<List<String>> getFactorValues() {
+        return factorValues;
+    }
+
+    public ArrayList<LinkedHashMap<String, String[]>> getFactorValuesToNames() {
+        return factorValueMaps;
     }
 
     public Collection<GeneExpressionProfile> getProfiles() {
@@ -226,41 +238,17 @@ public class VisualizationValueObject {
         return sampleNames;
     }
 
-    public List<List<String>> getFactorValues() {
-        return factorValues;
-    }
-
-    public LinkedHashMap<String, LinkedHashMap<String, String>> getFactorNames() {
-        return factorNames;
-    }
-
-    public ArrayList<LinkedHashMap<String, String[]>> getFactorValuesToNames() {
-        return factorValueMaps;
-    }
-
-    public void setFactorValuesToNames( ArrayList<LinkedHashMap<String, String[]>> factorValueMaps2 ) {
-        this.factorValueMaps = factorValueMaps2;
-    }
-
-    public void setFactorValues( List<List<String>> factorValues ) {
-        this.factorValues = factorValues;
-    }
-
-    public void setFactorNames( LinkedHashMap<String, LinkedHashMap<String, String>> factorNames2 ) {
-        this.factorNames = factorNames2;
-    }
-
     public void setEevo( ExpressionExperimentValueObject eevo ) {
         this.eevo = eevo;
     }
 
-    // ---------------------------------
-    // Getters and Setters
-    // ---------------------------------
-
     public void setEEwithPvalue( ExpressionExperimentValueObject ee, Double minP ) {
         setEevo( ee );
         this.eevo.setMinPvalue( minP );
+    }
+
+    public void setFactorNames( LinkedHashMap<String, LinkedHashMap<String, String>> factorNames2 ) {
+        this.factorNames = factorNames2;
     }
 
     /**
@@ -268,6 +256,18 @@ public class VisualizationValueObject {
      */
     public void setFactorProfiles( Collection<FactorProfile> factorProfiles ) {
         this.factorProfiles = factorProfiles;
+    }
+
+    // ---------------------------------
+    // Getters and Setters
+    // ---------------------------------
+
+    public void setFactorValues( List<List<String>> factorValues ) {
+        this.factorValues = factorValues;
+    }
+
+    public void setFactorValuesToNames( ArrayList<LinkedHashMap<String, String[]>> factorValueMaps2 ) {
+        this.factorValueMaps = factorValueMaps2;
     }
 
     public void setProfiles( Collection<GeneExpressionProfile> profiles ) {

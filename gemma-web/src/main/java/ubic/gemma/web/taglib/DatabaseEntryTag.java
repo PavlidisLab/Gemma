@@ -42,22 +42,6 @@ public class DatabaseEntryTag extends TagSupport {
 
     private DatabaseEntryValueObject databaseEntry;
 
-    /**
-     * @param databaseEntry
-     */
-    public void setDatabaseEntry( DatabaseEntry databaseEntry ) {
-        if ( databaseEntry == null ) {
-            // if it is a user-owned data set.
-            this.databaseEntry = null;
-            return;
-        }
-        this.databaseEntry = new DatabaseEntryValueObject( databaseEntry );
-    }
-
-    public void setDatabaseEntryValueObject( DatabaseEntryValueObject databaseEntry ) {
-        this.databaseEntry = databaseEntry;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -114,6 +98,22 @@ public class DatabaseEntryTag extends TagSupport {
             throw new JspException( this.getClass().getName() + ex.getMessage() );
         }
         return SKIP_BODY;
+    }
+
+    /**
+     * @param databaseEntry
+     */
+    public void setDatabaseEntry( DatabaseEntry databaseEntry ) {
+        if ( databaseEntry == null ) {
+            // if it is a user-owned data set.
+            this.databaseEntry = null;
+            return;
+        }
+        this.databaseEntry = new DatabaseEntryValueObject( databaseEntry );
+    }
+
+    public void setDatabaseEntryValueObject( DatabaseEntryValueObject databaseEntry ) {
+        this.databaseEntry = databaseEntry;
     }
 
 }

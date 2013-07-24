@@ -17,14 +17,26 @@
  *
  */package ubic.gemma.web.controller.expression.experiment;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.preprocess.PreprocessingException;
@@ -42,16 +54,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.AbstractTask;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 /**
  * Replaces SimpleExpressionExperimentLoadController
  * 
@@ -60,26 +62,6 @@ import java.util.List;
  */
 @Controller
 public class ExpressionDataFileUploadController {
-
-    private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
-
-    @Autowired
-    private TaskRunningService taskRunningService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private PreprocessorService preprocessorService;
-
-    @Autowired
-    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-
-    @Autowired
-    private TaxonService taxonService;
 
     private class SimpleEELoadLocalTask extends AbstractTask<TaskResult, SimpleExpressionExperimentLoadTaskCommand> {
 
@@ -173,7 +155,7 @@ public class ExpressionDataFileUploadController {
     /**
      *  
      */
-    private class SimpleEEValidateLocalTask extends AbstractTask<TaskResult,SimpleExpressionExperimentLoadTaskCommand> {
+    private class SimpleEEValidateLocalTask extends AbstractTask<TaskResult, SimpleExpressionExperimentLoadTaskCommand> {
 
         public SimpleEEValidateLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
@@ -185,6 +167,26 @@ public class ExpressionDataFileUploadController {
             return new TaskResult( taskCommand, result );
         }
     }
+
+    private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
+
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private PreprocessorService preprocessorService;
+
+    @Autowired
+    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     /**
      * AJAX
@@ -336,7 +338,7 @@ public class ExpressionDataFileUploadController {
     }
 
     private String scrub( String s ) {
-        return StringEscapeUtils.escapeHtml( s );
+        return StringEscapeUtils.escapeHtml4( s );
     }
 
 }

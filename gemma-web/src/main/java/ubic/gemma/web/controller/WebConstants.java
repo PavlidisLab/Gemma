@@ -18,10 +18,8 @@
  */
 package ubic.gemma.web.controller;
 
-
 /**
  * Constant values used throughout the web portion of Gemma.
- * 
  */
 public final class WebConstants {
 

@@ -18,11 +18,19 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import org.apache.commons.lang.StringUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
@@ -36,14 +44,17 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.tasks.visualization.DifferentialExpressionSearchTaskCommand;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
-
-import java.util.*;
 
 /**
  * A controller used to get differential expression analysis and meta analysis results.
@@ -310,10 +321,11 @@ public class DifferentialExpressionSearchController {
                     if ( eevo.getId() != null ) {
                         experiments.add( expressionExperimentSetService.getExperimentsInSet( eevo.getId() ) );
                     } else {
-                        throw new IllegalArgumentException( "Experiment group should either have an id or a list of ee ids." );
+                        throw new IllegalArgumentException(
+                                "Experiment group should either have an id or a list of ee ids." );
                     }
                 } else {
-                    experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ));
+                    experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
                 }
                 datasetGroupNames.add( eevo.getName() );
             }

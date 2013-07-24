@@ -28,7 +28,7 @@ import java.util.HashSet;
  * @version $Id$
  */
 public class SimpleExpressionExperimentCommandValidation {
-    
+
     private boolean quantitationTypeIsValid = true;
 
     private boolean shortNameIsUnique = true;

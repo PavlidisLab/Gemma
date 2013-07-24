@@ -20,6 +20,8 @@
 package ubic.gemma.tasks.maintenance;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
 /**
  * @author klc
@@ -58,8 +60,8 @@ public class IndexerTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class getTaskClass() {
-        return IndexerTask.class;
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+        return ( Class<? extends Task<TaskResult, ? extends TaskCommand>> ) IndexerTask.class;
     }
 
     public boolean isCompassOn() {

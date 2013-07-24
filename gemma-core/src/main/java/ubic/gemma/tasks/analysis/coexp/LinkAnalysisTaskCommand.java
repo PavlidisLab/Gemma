@@ -22,7 +22,9 @@ package ubic.gemma.tasks.analysis.coexp;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.Task;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -73,7 +75,7 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
         return LinkAnalysisTask.class;
     }
 

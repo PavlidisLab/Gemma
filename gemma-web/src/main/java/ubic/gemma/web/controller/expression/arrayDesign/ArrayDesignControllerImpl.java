@@ -18,9 +18,30 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +49,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
@@ -40,7 +62,11 @@ import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
-import ubic.gemma.model.expression.arrayDesign.*;
+import ubic.gemma.model.expression.arrayDesign.AlternateName;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -56,11 +82,6 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.util.*;
 
 /**
  * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
@@ -118,7 +139,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             return new TaskResult( taskCommand, new ModelAndView( new RedirectView(
                     "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject( "message", "Array " + ad.getShortName()
                     + " removed from Database." ) );
+
         }
+
     }
 
     private static boolean AJAX = true;
@@ -128,17 +151,26 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
      */
     private static final int NUM_PROBES_TO_SHOW = 500;
 
-    private static final Log log = LogFactory.getLog(ArrayDesignControllerImpl.class.getName());
+    private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ArrayDesignMapResultService arrayDesignMapResultService;
-    @Autowired private ArrayDesignReportService arrayDesignReportService;
-    @Autowired private ArrayDesignService arrayDesignService;
-    @Autowired private AuditableUtil auditableUtil;
-    @Autowired private AuditTrailService auditTrailService;
-    @Autowired private CompositeSequenceService compositeSequenceService;
-    @Autowired private SearchService searchService;
-    @Autowired private TaxonService taxonService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ArrayDesignMapResultService arrayDesignMapResultService;
+    @Autowired
+    private ArrayDesignReportService arrayDesignReportService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private AuditableUtil auditableUtil;
+    @Autowired
+    private AuditTrailService auditTrailService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private SearchService searchService;
+    @Autowired
+    private TaxonService taxonService;
 
     @Override
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
@@ -213,7 +245,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         String taskId = taskRunningService.submitLocalTask( new TaskCommand( arrayDesign.getId() ) );
 
-        return new ModelAndView().addObject("taskId", taskId);
+        return new ModelAndView().addObject( "taskId", taskId );
 
     }
 
@@ -593,12 +625,12 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
         if ( troubleEvent != null ) {
             mav.addObject( "troubleEvent", troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml4( troubleEvent.toString() ) );
         }
         AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml4( validatedEvent.toString() ) );
         }
 
         Collection<ArrayDesign> subsumees = arrayDesignService.thawLite( arrayDesign.getSubsumedArrayDesigns() );
@@ -749,7 +781,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                 taxonListString = taxonListString + " (primary; Also contains sequences from: "
                         + StringUtils.join( taxonList, "; " ) + ")";
             }
+
         }
+
         return taxonListString;
     }
 

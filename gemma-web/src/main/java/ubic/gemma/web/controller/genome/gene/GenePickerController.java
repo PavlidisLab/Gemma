@@ -26,18 +26,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.model.TaxonValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.genome.gene.GOGroupValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.model.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.web.persistence.SessionListManager;
@@ -85,20 +85,6 @@ public class GenePickerController {
     }
 
     /**
-     * for AJAX get a gene set with all genes in the given taxon that are annotated with the given go id, including its
-     * child terms in the hierarchy
-     * 
-     * @param goId GO id that must be in the format "GO_#######"
-     * @param taxonId must not be null and must correspond to a taxon
-     * @return GOGroupValueObject empty if goId was blank or taxonId didn't correspond to a taxon
-     */
-    public GOGroupValueObject getGeneSetByGOId( String goId, Long taxonId ) {
-
-        return geneSetSearch.findGeneSetValueObjectByGoId( goId, taxonId );
-
-    }
-
-    /**
      * for AJAX get all genes in the given taxon that are annotated with the given go id, including its child terms in
      * the hierarchy
      * 
@@ -114,6 +100,20 @@ public class GenePickerController {
         }
 
         return new HashSet<GeneValueObject>();
+    }
+
+    /**
+     * for AJAX get a gene set with all genes in the given taxon that are annotated with the given go id, including its
+     * child terms in the hierarchy
+     * 
+     * @param goId GO id that must be in the format "GO_#######"
+     * @param taxonId must not be null and must correspond to a taxon
+     * @return GOGroupValueObject empty if goId was blank or taxonId didn't correspond to a taxon
+     */
+    public GOGroupValueObject getGeneSetByGOId( String goId, Long taxonId ) {
+
+        return geneSetSearch.findGeneSetValueObjectByGoId( goId, taxonId );
+
     }
 
     /**
@@ -139,6 +139,26 @@ public class GenePickerController {
     /**
      * AJAX
      * 
+     * @return List of taxa with array designs in gemma
+     */
+    public Collection<TaxonValueObject> getTaxaWithArrays() {
+
+        return taxonService.getTaxaWithArrays();
+    }
+
+    /**
+     * AJAX
+     * 
+     * @return collection of taxa that have expression experiments available.
+     */
+    public Collection<TaxonValueObject> getTaxaWithDatasets() {
+
+        return taxonService.getTaxaWithDatasets();
+    }
+
+    /**
+     * AJAX
+     * 
      * @return Taxon that are on NeuroCarta evidence
      */
     public Collection<TaxonValueObject> getTaxaWithEvidence() {
@@ -157,26 +177,6 @@ public class GenePickerController {
     }
 
     /**
-     * AJAX
-     * 
-     * @return collection of taxa that have expression experiments available.
-     */
-    public Collection<TaxonValueObject> getTaxaWithDatasets() {
-
-        return taxonService.getTaxaWithDatasets();
-    }
-
-    /**
-     * AJAX
-     * 
-     * @return List of taxa with array designs in gemma
-     */
-    public Collection<TaxonValueObject> getTaxaWithArrays() {
-
-        return taxonService.getTaxaWithArrays();
-    }
-
-    /**
      * AJAX (used by GeneCombo.js)
      * 
      * @param query
@@ -186,28 +186,6 @@ public class GenePickerController {
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
 
         return geneCoreService.searchGenes( query, taxonId );
-    }
-
-    /**
-     * AJAX (used by neurocarta)
-     * 
-     * @param query
-     * @param taxonId
-     * @return Collection of Gene entity objects
-     */
-    public Collection<GeneValueObject> searchGenesWithNCBIId( String query, Long taxonId ) {
-
-        Collection<GeneValueObject> geneValueObjects = this.geneCoreService.searchGenes( query, taxonId );
-
-        Collection<GeneValueObject> geneValueObjectWithNCBIId = new HashSet<GeneValueObject>();
-
-        for ( GeneValueObject geneValueObject : geneValueObjects ) {
-            if ( geneValueObject.getNcbiId() != null ) {
-                geneValueObjectWithNCBIId.add( geneValueObject );
-            }
-        }
-
-        return geneValueObjectWithNCBIId;
     }
 
     /**
@@ -243,6 +221,28 @@ public class GenePickerController {
         results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
         return results;
 
+    }
+
+    /**
+     * AJAX (used by neurocarta)
+     * 
+     * @param query
+     * @param taxonId
+     * @return Collection of Gene entity objects
+     */
+    public Collection<GeneValueObject> searchGenesWithNCBIId( String query, Long taxonId ) {
+
+        Collection<GeneValueObject> geneValueObjects = this.geneCoreService.searchGenes( query, taxonId );
+
+        Collection<GeneValueObject> geneValueObjectWithNCBIId = new HashSet<GeneValueObject>();
+
+        for ( GeneValueObject geneValueObject : geneValueObjects ) {
+            if ( geneValueObject.getNcbiId() != null ) {
+                geneValueObjectWithNCBIId.add( geneValueObject );
+            }
+        }
+
+        return geneValueObjectWithNCBIId;
     }
 
     /**

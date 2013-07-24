@@ -20,7 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.List;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -92,6 +92,6 @@ public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
     }
 
     private String scrub( String s ) {
-        return StringEscapeUtils.escapeHtml( s );
+        return StringEscapeUtils.escapeHtml4( s );
     }
 }

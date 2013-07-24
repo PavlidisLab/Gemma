@@ -1,12 +1,13 @@
 package ubic.gemma.job.executor.webapp;
 
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import ubic.gemma.job.SubmittedTask;
+import ubic.gemma.job.TaskResult;
 
 import java.util.Collection;
 import java.util.Date;
@@ -37,7 +38,7 @@ public class SubmittedTasksMaintenance {
     @Scheduled(fixedDelay = 120000)
     public void doSubmittedTasksMaintenance() {
         // Assumes collection implementing weakly consistent iterator with remove support.
-        Collection<SubmittedTask> tasks = taskRunningService.getSubmittedTasks();
+        Collection<SubmittedTask<? extends TaskResult>> tasks = taskRunningService.getSubmittedTasks();
 
         log.info( "Doing submitted tasks maintenance: " + tasks.size() + " tasks monitored." );
 

@@ -21,7 +21,7 @@ package ubic.gemma.loader.genome;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.genome.Chromosome;

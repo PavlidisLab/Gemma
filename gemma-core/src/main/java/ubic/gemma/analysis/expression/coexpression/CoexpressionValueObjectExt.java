@@ -20,7 +20,7 @@ package ubic.gemma.analysis.expression.coexpression;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.model.genome.gene.GeneValueObject;
 

@@ -49,8 +49,8 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -124,17 +124,44 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 @Controller
 public class ExpressionExperimentQCController extends BaseController {
 
-    private static final int MAX_HEATMAP_CELLSIZE = 12;
-    public static final int DEFAULT_QC_IMAGE_SIZE_PX = 200;
+    /**
+     * Overrides XYLineAndShapeRenderer such that lines are drawn on top of points.
+     */
+    private class XYRegressionRenderer extends XYLineAndShapeRenderer {
+        private static final long serialVersionUID = 1L;
 
+        @Override
+        protected boolean isItemPass( int pass ) {
+            return pass == 0;
+        }
+
+        @Override
+        protected boolean isLinePass( int pass ) {
+            return pass == 1;
+        }
+    }
+
+    private static final int MAX_HEATMAP_CELLSIZE = 12;
+
+    public static final int DEFAULT_QC_IMAGE_SIZE_PX = 200;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private SVDService svdService;
     @Autowired
     ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
+
     @Autowired
     private MeanVarianceService meanVarianceService;
+
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     /**
      * @param id
@@ -153,6 +180,38 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( !ok ) {
             writePlaceholderImage( os );
         }
+    }
+
+    /**
+     * @param id of experiment
+     */
+    @RequestMapping("/expressionExperiment/outliers.html")
+    public ModelAndView identifyOutliers( Long id ) {
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            log.warn( "Could not load experiment with id " + id );
+            return null;
+        }
+
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix,
+                15, 0.9 );
+
+        if ( !outliers.isEmpty() ) {
+            for ( OutlierDetails details : outliers ) {
+                // TODO
+                details.getBioAssay();
+            }
+        }
+
+        return null; // nothing to return;
     }
 
     /**
@@ -211,44 +270,6 @@ public class ExpressionExperimentQCController extends BaseController {
         }
         return null;
     }
-
-    /**
-     * @param id of experiment
-     */
-    @RequestMapping("/expressionExperiment/outliers.html")
-    public ModelAndView identifyOutliers( Long id ) {
-
-        if ( id == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return null;
-        }
-
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
-
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix,
-                15, 0.9 );
-
-        if ( !outliers.isEmpty() ) {
-            for ( OutlierDetails details : outliers ) {
-                // TODO
-                details.getBioAssay();
-            }
-        }
-
-        return null; // nothing to return;
-    }
-
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
-
-    @Autowired
-    private OutlierDetectionService outlierDetectionService;
 
     /**
      * @param id of experiment
@@ -324,6 +345,57 @@ public class ExpressionExperimentQCController extends BaseController {
         writer.writeToPng( cm, os, reallyShowLabels, showScalebar );
 
         return null; // nothing to return;
+    }
+
+    /**
+     * @param id of experiment
+     * @param size Multiplier on the cell size. 1 or null for standard small size.
+     * @param text if true, output a tabbed file instead of a png
+     * @param os response output stream
+     * @return ModelAndView object if text is true, otherwise null
+     * @throws Exception
+     */
+    @RequestMapping("/expressionExperiment/visualizeMeanVariance.html")
+    public ModelAndView visualizeMeanVariance( Long id, Double size, Boolean text, OutputStream os ) throws Exception {
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            log.warn( "Could not load experiment with id " + id );
+            return null;
+        }
+
+        MeanVarianceRelation mvr = meanVarianceService.find( ee );
+
+        if ( mvr == null ) {
+            return null;
+        }
+
+        if ( text != null && text ) {
+            final ByteArrayConverter bac = new ByteArrayConverter();
+
+            double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
+            double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+
+            DoubleMatrix2D matrix = new DenseDoubleMatrix2D( means.length, 2 );
+            matrix.viewColumn( 0 ).assign( means );
+            matrix.viewColumn( 1 ).assign( variances );
+
+            String matrixString = new Formatter( "%1.2G" ).toTitleString( matrix, null, new String[] { "mean",
+                    "variance" }, null, null, null, null );
+            ModelAndView mav = new ModelAndView( new TextView() );
+            mav.addObject( TextView.TEXT_PARAM, matrixString );
+
+            return mav;
+        }
+
+        writeMeanVariance( os, mvr, size );
+
+        return null;
     }
 
     /**
@@ -522,9 +594,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return series;
     }
 
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
-
     /**
      * @param ee
      * @param analysisId
@@ -623,31 +692,6 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * For conversion from legacy system.
-     * 
-     * @param file
-     * @param rsId
-     * @param pvalueDist
-     * @param counts
-     */
-    private void pvalueDistFileToPersistent( File file, Long rsId, PvalueDistribution pvalueDist, DoubleArrayList counts ) {
-        log.info( "Converting from pvalue distribution file to persistent stored version" );
-        ByteArrayConverter bac = new ByteArrayConverter();
-        Double[] countArray = ( Double[] ) counts.toList().toArray( new Double[] {} );
-        byte[] bytes = bac.doubleArrayToBytes( countArray );
-        pvalueDist.setBinCounts( bytes );
-        pvalueDist.setNumBins( countArray.length );
-        ExpressionAnalysisResultSet resultSet = differentialExpressionResultService.loadAnalysisResultSet( rsId );
-        resultSet.setPvalueDistribution( pvalueDist );
-        differentialExpressionResultService.update( resultSet );
-        if ( file.delete() ) {
-            log.info( "Old file deleted" );
-        } else {
-            log.info( "Old file could not be deleted" );
-        }
-    }
-
-    /**
      * Get the eigengene for the given component.
      * <p>
      * The values are rescaled so that jfreechart can cope. Small numbers give it fits.
@@ -677,24 +721,6 @@ public class ExpressionExperimentQCController extends BaseController {
             efs.put( ef.getId(), StringUtils.abbreviate( StringUtils.capitalize( ef.getName() ), maxWidth ) );
         }
         return efs;
-    }
-
-    /**
-     * @param svdo
-     * @return
-     */
-    private CategoryDataset getPCAScree( SVDValueObject svdo ) {
-        DefaultCategoryDataset series = new DefaultCategoryDataset();
-
-        Double[] variances = svdo.getVariances();
-        if ( variances == null || variances.length == 0 ) {
-            return series;
-        }
-        int MAX_COMPONENTS_FOR_SCREE = 10; // make constant
-        for ( int i = 0; i < Math.min( MAX_COMPONENTS_FOR_SCREE, variances.length ); i++ ) {
-            series.addValue( variances[i], new Integer( 1 ), new Integer( i + 1 ) );
-        }
-        return series;
     }
 
     /**
@@ -737,6 +763,24 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
+     * @param svdo
+     * @return
+     */
+    private CategoryDataset getPCAScree( SVDValueObject svdo ) {
+        DefaultCategoryDataset series = new DefaultCategoryDataset();
+
+        Double[] variances = svdo.getVariances();
+        if ( variances == null || variances.length == 0 ) {
+            return series;
+        }
+        int MAX_COMPONENTS_FOR_SCREE = 10; // make constant
+        for ( int i = 0; i < Math.min( MAX_COMPONENTS_FOR_SCREE, variances.length ); i++ ) {
+            series.addValue( variances[i], new Integer( 1 ), new Integer( i + 1 ) );
+        }
+        return series;
+    }
+
+    /**
      * @param ee
      * @return
      */
@@ -770,6 +814,31 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         return file;
+    }
+
+    /**
+     * For conversion from legacy system.
+     * 
+     * @param file
+     * @param rsId
+     * @param pvalueDist
+     * @param counts
+     */
+    private void pvalueDistFileToPersistent( File file, Long rsId, PvalueDistribution pvalueDist, DoubleArrayList counts ) {
+        log.info( "Converting from pvalue distribution file to persistent stored version" );
+        ByteArrayConverter bac = new ByteArrayConverter();
+        Double[] countArray = ( Double[] ) counts.toList().toArray( new Double[] {} );
+        byte[] bytes = bac.doubleArrayToBytes( countArray );
+        pvalueDist.setBinCounts( bytes );
+        pvalueDist.setNumBins( countArray.length );
+        ExpressionAnalysisResultSet resultSet = differentialExpressionResultService.loadAnalysisResultSet( rsId );
+        resultSet.setPvalueDistribution( pvalueDist );
+        differentialExpressionResultService.update( resultSet );
+        if ( file.delete() ) {
+            log.info( "Old file deleted" );
+        } else {
+            log.info( "Old file could not be deleted" );
+        }
     }
 
     /**
@@ -1037,6 +1106,79 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
+     * @param os response output stream
+     * @param mvr MeanVarianceRelation object to plot
+     * @param size
+     * @return true if mvr data points were plotted
+     */
+    private boolean writeMeanVariance( OutputStream os, MeanVarianceRelation mvr, Double size ) throws Exception {
+        // if number of datapoints > THRESHOLD then alpha = TRANSLUCENT, else alpha = OPAQUE
+        final int THRESHOLD = 1000;
+        final int TRANSLUCENT = 50;
+        final int OPAQUE = 255;
+
+        // Set maximum plot range to Y_MAX - YSCALE * OFFSET to cut down on excess white space
+        final double OFFSET_FACTOR = 0.05f;
+        final double Y_SCALE = 10f;
+
+        // set the final image size to be the minimum of MAX_IMAGE_SIZE_PX or size
+        final int MAX_IMAGE_SIZE_PX = 5;
+
+        if ( mvr == null ) {
+            return false;
+        }
+
+        // get data points
+        XYSeriesCollection collection = getMeanVariance( mvr );
+
+        if ( collection.getSeries().size() == 0 ) {
+            return false;
+        }
+
+        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        JFreeChart chart = ChartFactory.createScatterPlot( "", "mean (log2)", "variance (log2)", collection,
+                PlotOrientation.VERTICAL, false, false, false );
+
+        // adjust colors and shapes
+        XYRegressionRenderer renderer = new XYRegressionRenderer();
+        renderer.setBasePaint( Color.white );
+        int alpha = collection.getSeries( 0 ).getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
+        renderer.setSeriesPaint( 0, new Color( 0, 0, 0, alpha ) );
+        renderer.setSeriesPaint( 1, Color.red );
+        renderer.setSeriesStroke( 1, new BasicStroke( 4 ) );
+        renderer.setSeriesShape( 0, new Ellipse2D.Double( 4, 4, 4, 4 ) );
+        renderer.setSeriesShapesFilled( 0, false );
+        renderer.setSeriesLinesVisible( 0, false );
+        renderer.setSeriesLinesVisible( 1, true );
+        renderer.setSeriesShapesVisible( 1, false );
+
+        XYPlot plot = chart.getXYPlot();
+        plot.setRenderer( renderer );
+        plot.setRangeGridlinesVisible( false );
+        plot.setDomainGridlinesVisible( false );
+
+        // adjust the chart domain and ranges
+        double yRange = collection.getSeries( 0 ).getMaxY() - collection.getSeries( 0 ).getMinY();
+        double offset = ( yRange ) * OFFSET_FACTOR;
+        double newYMin = collection.getSeries( 0 ).getMinY() - offset;
+        double newYMax = collection.getSeries( 0 ).getMaxY() - Y_SCALE * offset; // cut off excess space at the top
+        double newXMin = collection.getSeries( 0 ).getMinX() - offset;
+        double newXMax = collection.getSeries( 0 ).getMaxX() + offset;
+        ValueAxis yAxis = new NumberAxis( "Variance" );
+        yAxis.setRange( newYMin, newYMax );
+        ValueAxis xAxis = new NumberAxis( "Mean" );
+        xAxis.setRange( newXMin, newXMax );
+        chart.getXYPlot().setRangeAxis( yAxis );
+        chart.getXYPlot().setDomainAxis( xAxis );
+
+        int finalSize = ( int ) Math
+                .min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX, size * DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
+
+        return true;
+    }
+
+    /**
      * Visualization of the correlation of principal components with factors or the date samples were run.
      * 
      * @param response
@@ -1188,147 +1330,6 @@ public class ExpressionExperimentQCController extends BaseController {
         g.setFont( new Font( font.getName(), font.getStyle(), 8 ) );
         g.drawString( "N/A", 9, placeholderSize );
         ImageIO.write( buffer, "png", os );
-    }
-
-    /**
-     * @param id of experiment
-     * @param size Multiplier on the cell size. 1 or null for standard small size.
-     * @param text if true, output a tabbed file instead of a png
-     * @param os response output stream
-     * @return ModelAndView object if text is true, otherwise null
-     * @throws Exception
-     */
-    @RequestMapping("/expressionExperiment/visualizeMeanVariance.html")
-    public ModelAndView visualizeMeanVariance( Long id, Double size, Boolean text, OutputStream os ) throws Exception {
-
-        if ( id == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return null;
-        }
-
-        MeanVarianceRelation mvr = meanVarianceService.find( ee );
-
-        if ( mvr == null ) {
-            return null;
-        }
-
-        if ( text != null && text && mvr != null ) {
-            final ByteArrayConverter bac = new ByteArrayConverter();
-
-            double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-            double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
-
-            DoubleMatrix2D matrix = new DenseDoubleMatrix2D( means.length, 2 );
-            matrix.viewColumn( 0 ).assign( means );
-            matrix.viewColumn( 1 ).assign( variances );
-
-            String matrixString = new Formatter( "%1.2G" ).toTitleString( matrix, null, new String[] { "mean",
-                    "variance" }, null, null, null, null );
-            ModelAndView mav = new ModelAndView( new TextView() );
-            mav.addObject( TextView.TEXT_PARAM, matrixString );
-
-            return mav;
-        }
-
-        writeMeanVariance( os, mvr, size );
-
-        return null;
-    }
-
-    /**
-     * Overrides XYLineAndShapeRenderer such that lines are drawn on top of points.
-     */
-    private class XYRegressionRenderer extends XYLineAndShapeRenderer {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        protected boolean isLinePass( int pass ) {
-            return pass == 1;
-        }
-
-        @Override
-        protected boolean isItemPass( int pass ) {
-            return pass == 0;
-        }
-    }
-
-    /**
-     * @param os response output stream
-     * @param mvr MeanVarianceRelation object to plot
-     * @param size
-     * @return true if mvr data points were plotted
-     */
-    private boolean writeMeanVariance( OutputStream os, MeanVarianceRelation mvr, Double size ) throws Exception {
-        // if number of datapoints > THRESHOLD then alpha = TRANSLUCENT, else alpha = OPAQUE
-        final int THRESHOLD = 1000;
-        final int TRANSLUCENT = 50;
-        final int OPAQUE = 255;
-
-        // Set maximum plot range to Y_MAX - YSCALE * OFFSET to cut down on excess white space
-        final double OFFSET_FACTOR = 0.05f;
-        final double Y_SCALE = 10f;
-
-        // set the final image size to be the minimum of MAX_IMAGE_SIZE_PX or size
-        final int MAX_IMAGE_SIZE_PX = 5;
-
-        if ( mvr == null ) {
-            return false;
-        }
-
-        // get data points
-        XYSeriesCollection collection = getMeanVariance( mvr );
-
-        if ( collection.getSeries().size() == 0 ) {
-            return false;
-        }
-
-        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
-        JFreeChart chart = ChartFactory.createScatterPlot( "", "mean (log2)", "variance (log2)", collection,
-                PlotOrientation.VERTICAL, false, false, false );
-
-        // adjust colors and shapes
-        XYRegressionRenderer renderer = new XYRegressionRenderer();
-        renderer.setBasePaint( Color.white );
-        int alpha = collection.getSeries( 0 ).getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
-        renderer.setSeriesPaint( 0, new Color( 0, 0, 0, alpha ) );
-        renderer.setSeriesPaint( 1, Color.red );
-        renderer.setSeriesStroke( 1, new BasicStroke( 4 ) );
-        renderer.setSeriesShape( 0, new Ellipse2D.Double( 4, 4, 4, 4 ) );
-        renderer.setSeriesShapesFilled( 0, false );
-        renderer.setSeriesLinesVisible( 0, false );
-        renderer.setSeriesLinesVisible( 1, true );
-        renderer.setSeriesShapesVisible( 1, false );
-
-        XYPlot plot = chart.getXYPlot();
-        plot.setRenderer( renderer );
-        plot.setRangeGridlinesVisible( false );
-        plot.setDomainGridlinesVisible( false );
-
-        // adjust the chart domain and ranges
-        double yRange = collection.getSeries( 0 ).getMaxY() - collection.getSeries( 0 ).getMinY();
-        double offset = ( yRange ) * OFFSET_FACTOR;
-        double newYMin = collection.getSeries( 0 ).getMinY() - offset;
-        double newYMax = collection.getSeries( 0 ).getMaxY() - Y_SCALE * offset; // cut off excess space at the top
-        double newXMin = collection.getSeries( 0 ).getMinX() - offset;
-        double newXMax = collection.getSeries( 0 ).getMaxX() + offset;
-        ValueAxis yAxis = new NumberAxis( "Variance" );
-        yAxis.setRange( newYMin, newYMax );
-        ValueAxis xAxis = new NumberAxis( "Mean" );
-        xAxis.setRange( newXMin, newXMax );
-        chart.getXYPlot().setRangeAxis( yAxis );
-        chart.getXYPlot().setDomainAxis( xAxis );
-
-        int finalSize = ( int ) Math
-                .min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX, size * DEFAULT_QC_IMAGE_SIZE_PX );
-        ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
-
-        return true;
     }
 
     /**

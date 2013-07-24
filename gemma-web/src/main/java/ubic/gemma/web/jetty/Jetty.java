@@ -37,13 +37,6 @@ public class Jetty {
     private static Log log = LogFactory.getLog( Jetty.class );
 
     /**
-     * Construct.
-     */
-    Jetty() {
-        super();
-    }
-
-    /**
      * Main function, starts the jetty server.
      * 
      * @param args
@@ -68,5 +61,12 @@ public class Jetty {
             }
             System.exit( 0 );
         }
+    }
+
+    /**
+     * Construct.
+     */
+    Jetty() {
+        super();
     }
 }

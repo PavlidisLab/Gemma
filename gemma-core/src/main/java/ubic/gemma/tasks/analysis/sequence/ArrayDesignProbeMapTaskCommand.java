@@ -50,7 +50,7 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class getTaskClass() {
+    public Class<ArrayDesignProbeMapperTask> getTaskClass() {
         return ArrayDesignProbeMapperTask.class;
     }
 

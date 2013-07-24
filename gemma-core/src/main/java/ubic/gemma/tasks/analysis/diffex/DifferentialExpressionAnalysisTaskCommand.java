@@ -21,9 +21,11 @@ package ubic.gemma.tasks.analysis.diffex;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.Task;
 import ubic.gemma.util.ConfigUtils;
 
 import java.util.Collection;
@@ -184,7 +186,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
         return DifferentialExpressionAnalysisTask.class;
     }
 }

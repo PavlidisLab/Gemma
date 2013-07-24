@@ -40,7 +40,6 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.testing.BaseSpringWebTest;
-import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController;
 
 /**
  * Tests the BibliographicReferenceController
@@ -121,16 +120,6 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         assertEquals( "bibRefView", mav.getViewName() );
     }
 
-    @Test
-    public void testShowAllForExperiments() {
-        ModelAndView mv = brc.showAllForExperiments( this.newGet( "/bibRef/showAllEeBibRefs.html" ),
-                ( HttpServletResponse ) null );
-        Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
-                .getModel().get( "citationToEEs" );
-        assertNotNull( citationToEEs );
-
-    }
-
     /**
      * Tests the exception handling of the controller's delete method.
      * 
@@ -182,5 +171,15 @@ public class BibRefControllerTest extends BaseSpringWebTest {
                 throw e;
             }
         }
+    }
+
+    @Test
+    public void testShowAllForExperiments() {
+        ModelAndView mv = brc.showAllForExperiments( this.newGet( "/bibRef/showAllEeBibRefs.html" ),
+                ( HttpServletResponse ) null );
+        Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
+                .getModel().get( "citationToEEs" );
+        assertNotNull( citationToEEs );
+
     }
 }

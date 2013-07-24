@@ -25,9 +25,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
-import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
@@ -447,7 +447,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
         q.setMaxResults( limit );
         if ( numvecsavailable > limit ) {
-            q.setFirstResult( RandomUtils.nextInt( numvecsavailable - limit ) );
+            // TODO RandomUtils removed from commons-lang 3; replace. Commons math? roll own?
+            q.setFirstResult( new Random().nextInt( numvecsavailable - limit ) );
         }
         result = q.list();
         if ( timer.getTime() > 1000 )

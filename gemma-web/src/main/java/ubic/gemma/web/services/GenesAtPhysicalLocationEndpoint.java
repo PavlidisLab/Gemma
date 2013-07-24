@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -41,25 +41,26 @@ public class GenesAtPhysicalLocationEndpoint extends AbstractGemmaEndpoint {
     public static final String GENES_PLOC_LOCAL_NAME = "genesAtPhysicalLocation";
 
     /**
+     * @param chromosomeS
+     */
+    public void setChromosomeService( ChromosomeService chromosomeS ) {
+        this.chromosomeService = chromosomeS;
+    }
+
+    /**
      * Sets the "business service" to delegate to.
      */
     public void setGeneService( GeneService geneS ) {
         this.geneService = geneS;
     }
-    
-    /**
-     * @param chromosomeS
-     */
-    public void setChromosomeService( ChromosomeService chromosomeS){
-        this.chromosomeService = chromosomeS;
-    }
-    
+
     /**
      * @param taxonS
      */
-    public void setTaxonService(TaxonService taxonS){
+    public void setTaxonService( TaxonService taxonS ) {
         this.taxonService = taxonS;
     }
+
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
      * 
@@ -74,46 +75,45 @@ public class GenesAtPhysicalLocationEndpoint extends AbstractGemmaEndpoint {
 
         setLocalName( GENES_PLOC_LOCAL_NAME );
         String startNucleotide = getLastSingleNodeValue( requestElement, "startNucleotide" );
-        String endNucleotide = getLastSingleNodeValue( requestElement, "endNucleotide");
+        String endNucleotide = getLastSingleNodeValue( requestElement, "endNucleotide" );
         String taxId = getLastSingleNodeValue( requestElement, "taxon_id" );
-        String chromosomeName= getLastSingleNodeValue( requestElement, "chromosome" );
-        
+        String chromosomeName = getLastSingleNodeValue( requestElement, "chromosome" );
+
         Long taxonId = Long.parseLong( taxId );
         Taxon taxon = taxonService.load( taxonId );
-        
+
         Long startN = Long.parseLong( startNucleotide );
         Long endN = Long.parseLong( endNucleotide );
-        Long length = endN-startN;
-        
-        
-        
-        log.info( "GenesAtPhysicalLocationEndpoint XML input: startNucleotide,endNucleotide,taxon,chromosome " + startN + " ," + endN + ", " +taxonId + " ," + chromosomeName  );
+        Long length = endN - startN;
+
+        log.info( "GenesAtPhysicalLocationEndpoint XML input: startNucleotide,endNucleotide,taxon,chromosome " + startN
+                + " ," + endN + ", " + taxonId + " ," + chromosomeName );
 
         Collection<Chromosome> chroms = this.chromosomeService.find( chromosomeName, taxon );
 
-        PhysicalLocation physicalLocation  = PhysicalLocation.Factory.newInstance();
+        PhysicalLocation physicalLocation = PhysicalLocation.Factory.newInstance();
         physicalLocation.setNucleotide( startN );
-        physicalLocation.setNucleotideLength(length.intValue());
+        physicalLocation.setNucleotideLength( length.intValue() );
         physicalLocation.setStrand( null );
 
-        Set<Long> results = new HashSet<Long>(); //so we don't get duplicates didn't want to compare strings when i have longs....
-        Set<String> geneIdResults = new HashSet<String>();  
-        
-        for(Chromosome chrom : chroms){
+        Set<Long> results = new HashSet<Long>(); // so we don't get duplicates didn't want to compare strings when i
+                                                 // have longs....
+        Set<String> geneIdResults = new HashSet<String>();
+
+        for ( Chromosome chrom : chroms ) {
             physicalLocation.setChromosome( chrom );
-            RelativeLocationData rld  = geneService.findNearest( physicalLocation, false );
-            if (rld != null && results.add( rld.getNearestGene().getId()))
+            RelativeLocationData rld = geneService.findNearest( physicalLocation, false );
+            if ( rld != null && results.add( rld.getNearestGene().getId() ) )
                 geneIdResults.add( rld.getNearestGene().getId().toString() );
         }
-        
 
-      Element result =   this.buildWrapper( document, geneIdResults, GENES_PLOC_LOCAL_NAME );
+        Element result = this.buildWrapper( document, geneIdResults, GENES_PLOC_LOCAL_NAME );
 
         watch.stop();
         Long time = watch.getTime();
         log.debug( "XML response for physical location result built in " + time + "ms." );
 
         return result;
-    }   
+    }
 
 }

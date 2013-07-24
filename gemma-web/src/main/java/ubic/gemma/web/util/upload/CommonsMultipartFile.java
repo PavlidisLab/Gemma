@@ -67,6 +67,26 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     }
 
     /**
+     * 
+     */
+    @Override
+    public byte[] getBytes() {
+        if ( !isAvailable() ) {
+            throw new IllegalStateException( "File has been moved - cannot be read again" );
+        }
+        byte[] bytes = this.fileItem.get();
+        return ( bytes != null ? bytes : new byte[0] );
+    }
+
+    /**
+     * 
+     */
+    @Override
+    public String getContentType() {
+        return this.fileItem.getContentType();
+    }
+
+    /**
      * Return the underlying <code>org.apache.commons.fileupload.FileItem</code> instance. There is hardly any need to
      * access this.
      */
@@ -78,16 +98,20 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
      * 
      */
     @Override
-    public String getName() {
-        return this.fileItem.getFieldName();
+    public InputStream getInputStream() throws IOException {
+        if ( !isAvailable() ) {
+            throw new IllegalStateException( "File has been moved - cannot be read again" );
+        }
+        InputStream inputStream = this.fileItem.getInputStream();
+        return ( inputStream != null ? inputStream : new ByteArrayInputStream( new byte[0] ) );
     }
 
     /**
      * 
      */
     @Override
-    public boolean isEmpty() {
-        return ( this.size == 0 );
+    public String getName() {
+        return this.fileItem.getFieldName();
     }
 
     /**
@@ -117,14 +141,6 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
      * 
      */
     @Override
-    public String getContentType() {
-        return this.fileItem.getContentType();
-    }
-
-    /**
-     * 
-     */
-    @Override
     public long getSize() {
         return size;
     }
@@ -133,24 +149,8 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
      * 
      */
     @Override
-    public byte[] getBytes() {
-        if ( !isAvailable() ) {
-            throw new IllegalStateException( "File has been moved - cannot be read again" );
-        }
-        byte[] bytes = this.fileItem.get();
-        return ( bytes != null ? bytes : new byte[0] );
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public InputStream getInputStream() throws IOException {
-        if ( !isAvailable() ) {
-            throw new IllegalStateException( "File has been moved - cannot be read again" );
-        }
-        InputStream inputStream = this.fileItem.getInputStream();
-        return ( inputStream != null ? inputStream : new ByteArrayInputStream( new byte[0] ) );
+    public boolean isEmpty() {
+        return ( this.size == 0 );
     }
 
     /**
@@ -189,6 +189,20 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
     }
 
     /**
+     * Return a description for the storage location of the multipart content. Tries to be as specific as possible:
+     * mentions the file location in case of a temporary file.
+     */
+    protected String getStorageDescription() {
+        if ( this.fileItem.isInMemory() ) {
+            return "in memory";
+        } else if ( this.fileItem instanceof DiskFileItem ) {
+            return "at [" + ( ( DiskFileItem ) this.fileItem ).getStoreLocation().getAbsolutePath() + "]";
+        } else {
+            return "on disk";
+        }
+    }
+
+    /**
      * Determine whether the multipart content is still available. If a temporary file has been moved, the content is no
      * longer available.
      */
@@ -203,20 +217,6 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
         }
         // Check whether current file size is different than original one.
         return ( this.fileItem.getSize() == this.size );
-    }
-
-    /**
-     * Return a description for the storage location of the multipart content. Tries to be as specific as possible:
-     * mentions the file location in case of a temporary file.
-     */
-    protected String getStorageDescription() {
-        if ( this.fileItem.isInMemory() ) {
-            return "in memory";
-        } else if ( this.fileItem instanceof DiskFileItem ) {
-            return "at [" + ( ( DiskFileItem ) this.fileItem ).getStoreLocation().getAbsolutePath() + "]";
-        } else {
-            return "on disk";
-        }
     }
 
 }

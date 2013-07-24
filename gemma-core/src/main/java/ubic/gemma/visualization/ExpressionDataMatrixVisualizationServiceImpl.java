@@ -25,9 +25,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Random;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
@@ -185,9 +185,11 @@ public class ExpressionDataMatrixVisualizationServiceImpl implements ExpressionD
             rowLabels.add( de.toString() );
         }
 
+        Random random = new Random();
+
         for ( BioAssay ba : colElements ) {
             if ( colLabels.contains( ba.getName() ) ) {
-                ba.setName( ba.getName() + " _" + RandomUtils.nextInt() );
+                ba.setName( ba.getName() + " _" + random.nextInt() );
             }
             colLabels.add( ba.getName() );
         }

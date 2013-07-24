@@ -14,40 +14,40 @@ public class NewsItem {
 
     private Date date;
 
-    public String getTitle() {
-        return title;
-    }
+    private String teaser;
 
-    public void setTitle( String title ) {
-        this.title = title;
+    private String body;
+
+    public String getBody() {
+        return body;
     }
 
     public Date getDate() {
         return date;
     }
 
-    public void setDate( Date date ) {
-        this.date = date;
-    }
-
     public String getTeaser() {
         return teaser;
     }
 
-    public void setTeaser( String teaser ) {
-        this.teaser = teaser;
-    }
-
-    public String getBody() {
-        return body;
+    public String getTitle() {
+        return title;
     }
 
     public void setBody( String body ) {
         this.body = body;
     }
 
-    private String teaser;
+    public void setDate( Date date ) {
+        this.date = date;
+    }
 
-    private String body;
+    public void setTeaser( String teaser ) {
+        this.teaser = teaser;
+    }
+
+    public void setTitle( String title ) {
+        this.title = title;
+    }
 
 }

@@ -46,21 +46,6 @@ public class JavascriptLogger {
     private static boolean needToLog = ConfigUtils.getBoolean( "gemma.javascript.log" );
 
     /**
-     * Defaults to writing to log with severity = "info"
-     * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
-     * @param userAgent details about user's browser, OS etc
-     */
-    public void writeToLog( String errorMessage, String url, String line, String href, String userAgent ) {
-        if ( !needToLog ) return;
-        String entry = this.formatLogEntry( errorMessage, url, line, href, userAgent );
-        log.info( entry );
-    }
-
-    /**
      * Write to log with severity = "debug"
      * 
      * @param errorMessage
@@ -73,36 +58,6 @@ public class JavascriptLogger {
         if ( !needToLog ) return;
         String entry = this.formatLogEntry( errorMessage, url, line, href, userAgent );
         log.debug( entry );
-    }
-
-    /**
-     * Write to log with severity = "info"
-     * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
-     * @param userAgent details about user's browser, OS etc
-     */
-    public void writeToInfoLog( String errorMessage, String url, String line, String href, String userAgent ) {
-        if ( !needToLog ) return;
-        String entry = this.formatLogEntry( errorMessage, url, line, href, userAgent );
-        log.info( entry );
-    }
-
-    /**
-     * Write to log with severity = "warn"
-     * 
-     * @param errorMessage
-     * @param url
-     * @param line
-     * @param href
-     * @param userAgent details about user's browser, OS etc
-     */
-    public void writeToWarnLog( String errorMessage, String url, String line, String href, String userAgent ) {
-        if ( !needToLog ) return;
-        String entry = this.formatLogEntry( errorMessage, url, line, href, userAgent );
-        log.warn( entry );
     }
 
     /**
@@ -133,6 +88,51 @@ public class JavascriptLogger {
         if ( !needToLog ) return;
         String entry = this.formatLogEntry( errorMessage, url, line, href, userAgent );
         log.fatal( entry );
+    }
+
+    /**
+     * Write to log with severity = "info"
+     * 
+     * @param errorMessage
+     * @param url
+     * @param line
+     * @param href
+     * @param userAgent details about user's browser, OS etc
+     */
+    public void writeToInfoLog( String errorMessage, String url, String line, String href, String userAgent ) {
+        if ( !needToLog ) return;
+        String entry = this.formatLogEntry( errorMessage, url, line, href, userAgent );
+        log.info( entry );
+    }
+
+    /**
+     * Defaults to writing to log with severity = "info"
+     * 
+     * @param errorMessage
+     * @param url
+     * @param line
+     * @param href
+     * @param userAgent details about user's browser, OS etc
+     */
+    public void writeToLog( String errorMessage, String url, String line, String href, String userAgent ) {
+        if ( !needToLog ) return;
+        String entry = this.formatLogEntry( errorMessage, url, line, href, userAgent );
+        log.info( entry );
+    }
+
+    /**
+     * Write to log with severity = "warn"
+     * 
+     * @param errorMessage
+     * @param url
+     * @param line
+     * @param href
+     * @param userAgent details about user's browser, OS etc
+     */
+    public void writeToWarnLog( String errorMessage, String url, String line, String href, String userAgent ) {
+        if ( !needToLog ) return;
+        String entry = this.formatLogEntry( errorMessage, url, line, href, userAgent );
+        log.warn( entry );
     }
 
     /**

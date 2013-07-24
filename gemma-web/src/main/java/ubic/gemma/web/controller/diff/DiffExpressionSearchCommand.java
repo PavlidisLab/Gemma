@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.diff;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 
@@ -127,6 +127,7 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     @Override

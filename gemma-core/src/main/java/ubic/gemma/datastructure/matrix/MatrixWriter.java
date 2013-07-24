@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jfree.util.Log;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;

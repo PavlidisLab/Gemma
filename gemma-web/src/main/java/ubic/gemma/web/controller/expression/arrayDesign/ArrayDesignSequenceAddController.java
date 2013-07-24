@@ -30,44 +30,46 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class ArrayDesignSequenceAddController {
 
-//    @Autowired TaxonService taxonService;
-//    @Autowired ArrayDesignService arrayDesignService;
-//    @Autowired ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
+    // @Autowired TaxonService taxonService;
+    // @Autowired ArrayDesignService arrayDesignService;
+    // @Autowired ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
 
-//    protected BackgroundJob<ArrayDesignSequenceAddCommand, TaskResult> getInProcessRunner( final TaskCommand command ) {
-//
-//        AbstractTask<TaskResult, ArrayDesignSequenceAddCommand> r = new AbstractTask<TaskResult, ArrayDesignSequenceAddCommand>(
-//                ( ArrayDesignSequenceAddCommand ) command ) {
-//            @Override
-//            public TaskResult execute() {
-//
-//                FileUpload fileUpload = taskCommand.getSequenceFile();
-//                ArrayDesign arrayDesign = taskCommand.getArrayDesign();
-//                SequenceType sequenceType = taskCommand.getSequenceType();
-//
-//                //ProgressManager.setForwardingURL( taskId, "/Gemma/arrayDesign/associateSequences.html" );
-//
-//                String filePath = fileUpload.getLocalPath();
-//
-//                assert filePath != null;
-//
-//                try {
-//                    InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( filePath );
-//
-//                    Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign(
-//                            arrayDesign, stream, sequenceType );
-//
-//                    stream.close();
-//
-//                    return new TaskResult( command, new ModelAndView( "view" ).addObject( "message",
-//                            "Successfully loaded " + bioSequences.size() + " sequences for " + arrayDesign ) );
-//                } catch ( Exception e ) {
-//                    throw new RuntimeException( e );
-//                }
-//
-//            }
-//        };
-//        return r;
-//    }
+    // protected BackgroundJob<ArrayDesignSequenceAddCommand, TaskResult> getInProcessRunner( final TaskCommand command
+    // ) {
+    //
+    // AbstractTask<TaskResult, ArrayDesignSequenceAddCommand> r = new AbstractTask<TaskResult,
+    // ArrayDesignSequenceAddCommand>(
+    // ( ArrayDesignSequenceAddCommand ) command ) {
+    // @Override
+    // public TaskResult execute() {
+    //
+    // FileUpload fileUpload = taskCommand.getSequenceFile();
+    // ArrayDesign arrayDesign = taskCommand.getArrayDesign();
+    // SequenceType sequenceType = taskCommand.getSequenceType();
+    //
+    // //ProgressManager.setForwardingURL( taskId, "/Gemma/arrayDesign/associateSequences.html" );
+    //
+    // String filePath = fileUpload.getLocalPath();
+    //
+    // assert filePath != null;
+    //
+    // try {
+    // InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( filePath );
+    //
+    // Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign(
+    // arrayDesign, stream, sequenceType );
+    //
+    // stream.close();
+    //
+    // return new TaskResult( command, new ModelAndView( "view" ).addObject( "message",
+    // "Successfully loaded " + bioSequences.size() + " sequences for " + arrayDesign ) );
+    // } catch ( Exception e ) {
+    // throw new RuntimeException( e );
+    // }
+    //
+    // }
+    // };
+    // return r;
+    // }
 
 }

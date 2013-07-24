@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.util;
 
-import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Iterator;
@@ -29,6 +28,7 @@ import javax.servlet.http.Cookie;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.io.FileHandler;
 
 /**
  * Cookie class that also presents a commons configuration interface.
@@ -57,7 +57,8 @@ public class ConfigurationCookie extends Cookie {
         // turn the value into properties.
         StringReader reader = new StringReader( this.getValue().replaceAll( PROPERTY_DELIMITER, "\n" ) );
         configuration = new PropertiesConfiguration();
-        configuration.load( reader );
+        FileHandler fh = new FileHandler( configuration );
+        fh.load( reader );
     }
 
     /**
@@ -72,32 +73,6 @@ public class ConfigurationCookie extends Cookie {
     }
 
     /**
-     * Don't use this method if you can help it! Use setProperty instead.
-     */
-    @Override
-    public final void setValue( String value ) {
-        super.setValue( value );
-    }
-
-    /**
-     * @param key
-     * @param value
-     * @see org.apache.commons.configuration.Configuration#setProperty(java.lang.String, java.lang.Object)
-     */
-    public void setProperty( String key, Object value ) {
-        this.configuration.setProperty( key, value );
-
-        // Rewrite the value.
-        StringWriter writer = new StringWriter();
-        try {
-            configuration.save( writer );
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
-        setValue( PROPERTY_DELIMITER + writer.toString().replaceAll( "\n", PROPERTY_DELIMITER ) );
-    }
-
-    /**
      * @param key
      * @param value
      * @see org.apache.commons.configuration.AbstractConfiguration#addProperty(java.lang.String, java.lang.Object)
@@ -107,7 +82,8 @@ public class ConfigurationCookie extends Cookie {
         // Rewrite the value.
         StringWriter writer = new StringWriter();
         try {
-            configuration.save( writer );
+            FileHandler fh = new FileHandler( configuration );
+            fh.save( writer );
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( e );
         }
@@ -133,28 +109,20 @@ public class ConfigurationCookie extends Cookie {
     }
 
     /**
-     * @return
-     * @see org.apache.commons.configuration.AbstractFileConfiguration#getFile()
-     */
-    public File getFile() {
-        return this.configuration.getFile();
-    }
-
-    /**
-     * @return
-     * @see org.apache.commons.configuration.AbstractFileConfiguration#getFileName()
-     */
-    public String getFileName() {
-        return this.configuration.getFileName();
-    }
-
-    /**
      * @param key
      * @return
      * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String)
      */
     public int getInt( String key ) {
         return this.configuration.getInt( key );
+    }
+
+    /**
+     * @return
+     * @see org.apache.commons.configuration.AbstractFileConfiguration#getKeys()
+     */
+    public Iterator<String> getKeys() {
+        return this.configuration.getKeys();
     }
 
     /**
@@ -203,20 +171,39 @@ public class ConfigurationCookie extends Cookie {
     }
 
     /**
-     * @return
-     * @see org.apache.commons.configuration.AbstractFileConfiguration#getKeys()
-     */
-    public Iterator<String> getKeys() {
-        return this.configuration.getKeys();
-    }
-
-    /**
      * @param key
      * @return
      * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String)
      */
     public String getString( String key ) {
         return this.configuration.getString( key );
+    }
+
+    /**
+     * @param key
+     * @param value
+     * @see org.apache.commons.configuration.Configuration#setProperty(java.lang.String, java.lang.Object)
+     */
+    public void setProperty( String key, Object value ) {
+        this.configuration.setProperty( key, value );
+
+        // Rewrite the value.
+        StringWriter writer = new StringWriter();
+        try {
+            FileHandler fh = new FileHandler( configuration );
+            fh.save( writer );
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+        setValue( PROPERTY_DELIMITER + writer.toString().replaceAll( "\n", PROPERTY_DELIMITER ) );
+    }
+
+    /**
+     * Don't use this method if you can help it! Use setProperty instead.
+     */
+    @Override
+    public final void setValue( String value ) {
+        super.setValue( value );
     }
 
 }

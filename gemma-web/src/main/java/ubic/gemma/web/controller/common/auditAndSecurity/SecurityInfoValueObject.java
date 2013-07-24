@@ -44,7 +44,7 @@ public class SecurityInfoValueObject {
     private Boolean currentGroupCanRead = false;
 
     private Boolean currentGroupCanWrite = false;
-    
+
     private Boolean currentUserCanwrite = false;
 
     private Boolean currentUserOwns = false;
@@ -54,26 +54,26 @@ public class SecurityInfoValueObject {
     private String entityDescription;
 
     private Long entityId;
-   
+
     private String entityName;
 
     private String entityShortName;
-   
+
     private Collection<String> groupsThatCanRead = new HashSet<String>();
-   
+
     private Collection<String> groupsThatCanWrite = new HashSet<String>();
-  
+
     private boolean isPubliclyReadable;
-  
+
     private boolean isShared;
-  
+
     /**
      * Principal who owns the data. Can be null.
      */
     private SidValueObject owner;
-    
+
     private Collection<String> ownersGroups = new HashSet<String>();
-  
+
     public SecurityInfoValueObject() {
     }
 
@@ -98,6 +98,10 @@ public class SecurityInfoValueObject {
      */
     public Boolean getCurrentUserCanwrite() {
         return this.currentUserCanwrite;
+    }
+
+    public Boolean getCurrentUserOwns() {
+        return this.currentUserOwns;
     }
 
     /**
@@ -153,6 +157,10 @@ public class SecurityInfoValueObject {
         return this.owner;
     }
 
+    public Collection<String> getOwnersGroups() {
+        return ownersGroups;
+    }
+
     public boolean isCurrentGroupCanRead() {
         return this.currentGroupCanRead;
     }
@@ -190,6 +198,10 @@ public class SecurityInfoValueObject {
      */
     public void setCurrentUserCanwrite( Boolean currentUserCanwrite ) {
         this.currentUserCanwrite = currentUserCanwrite;
+    }
+
+    public void setCurrentUserOwns( Boolean currentUserOwns ) {
+        this.currentUserOwns = currentUserOwns;
     }
 
     /**
@@ -245,28 +257,16 @@ public class SecurityInfoValueObject {
         this.owner = owner;
     }
 
+    public void setOwnersGroups( Collection<String> ownersGroups ) {
+        this.ownersGroups = ownersGroups;
+    }
+
     public void setPubliclyReadable( boolean isPubliclyReadable ) {
         this.isPubliclyReadable = isPubliclyReadable;
     }
 
     public void setShared( boolean isShared ) {
         this.isShared = isShared;
-    }
-
-    public void setCurrentUserOwns( Boolean currentUserOwns ) {
-        this.currentUserOwns = currentUserOwns;
-    }
-
-    public Boolean getCurrentUserOwns() {
-        return this.currentUserOwns;
-    }
-
-    public Collection<String> getOwnersGroups() {
-        return ownersGroups;
-    }
-
-    public void setOwnersGroups( Collection<String> ownersGroups ) {
-        this.ownersGroups = ownersGroups;
     }
 
 }

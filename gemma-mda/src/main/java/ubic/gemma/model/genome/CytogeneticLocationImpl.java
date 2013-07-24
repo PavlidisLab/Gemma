@@ -14,7 +14,7 @@
  */
 package ubic.gemma.model.genome;
 
-import org.apache.commons.lang.builder.CompareToBuilder;
+import org.apache.commons.lang3.builder.CompareToBuilder;
 
 /**
  * @author pavlidis

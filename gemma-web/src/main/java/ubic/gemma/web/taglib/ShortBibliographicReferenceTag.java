@@ -25,7 +25,7 @@ import java.util.GregorianCalendar;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,13 +46,6 @@ public class ShortBibliographicReferenceTag extends TagSupport {
     private static Log log = LogFactory.getLog( ShortBibliographicReferenceTag.class );
 
     private BibliographicReference citation;
-
-    /**
-     * @param citation
-     */
-    public void setCitation( BibliographicReference citation ) {
-        this.citation = citation;
-    }
 
     /*
      * (non-Javadoc)
@@ -137,5 +130,12 @@ public class ShortBibliographicReferenceTag extends TagSupport {
             throw new JspException( this.getClass().getName() + ex.getMessage() );
         }
         return SKIP_BODY;
+    }
+
+    /**
+     * @param citation
+     */
+    public void setCitation( BibliographicReference citation ) {
+        this.citation = citation;
     }
 }

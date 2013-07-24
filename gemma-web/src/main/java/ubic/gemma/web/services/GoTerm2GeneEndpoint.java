@@ -21,7 +21,7 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -103,8 +103,8 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
 
         Collection<Gene> genes = geneOntologyService.getGenes( goId, taxon );
         if ( genes == null || genes.isEmpty() ) {
-            return buildBadResponse( document, "No genes associated with goId = " + goId + " and taxon = "
-                    + taxon.getCommonName() );
+            return buildBadResponse( document,
+                    "No genes associated with goId = " + goId + " and taxon = " + taxon.getCommonName() );
         }
         // build results in the form of a collection
         Collection<String> geneIds = new HashSet<String>();

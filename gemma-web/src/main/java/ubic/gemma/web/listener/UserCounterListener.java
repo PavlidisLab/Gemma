@@ -41,6 +41,16 @@ public class UserCounterListener implements ServletContextListener, HttpSessionL
     /*
      * (non-Javadoc)
      * 
+     * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.ServletContextEvent)
+     */
+    @Override
+    public synchronized void contextDestroyed( ServletContextEvent event ) {
+        servletContext = null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see javax.servlet.ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)
      */
     @Override
@@ -48,16 +58,6 @@ public class UserCounterListener implements ServletContextListener, HttpSessionL
         this.servletContext = sce.getServletContext();
         servletContext.setAttribute( ( COUNT_KEY ), Integer.toString( 0 ) );
         servletContext.setAttribute( ( AUTH_KEY ), Integer.toString( 0 ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.ServletContextEvent)
-     */
-    @Override
-    public synchronized void contextDestroyed( ServletContextEvent event ) {
-        servletContext = null;
     }
 
     /*

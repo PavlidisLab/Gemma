@@ -19,12 +19,13 @@
 package ubic.gemma.web.feed;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +42,6 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
-
-import com.ibm.icu.util.Calendar;
 
 /**
  * @author sshao
@@ -156,9 +155,9 @@ public class TwitterOutbound {
     private String statusWithExperiment( String experimentName, int updatedExperimentsCount, int newExperimentsCount ) {
         if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
             return "Experiment of the day: " + experimentName + "; See all latest at www.chibi.ubc.ca/Gemma/rssfeed";
-        } else {
-            return "Experiment of the day: " + experimentName + "; See all " + updatedExperimentsCount
-                    + " updated and " + newExperimentsCount + " new at www.chibi.ubc.ca/Gemma/rssfeed";
         }
+        return "Experiment of the day: " + experimentName + "; See all " + updatedExperimentsCount + " updated and "
+                + newExperimentsCount + " new at www.chibi.ubc.ca/Gemma/rssfeed";
+
     }
 }

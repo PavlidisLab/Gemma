@@ -22,9 +22,9 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.TransformIterator;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -546,7 +546,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
         } else {
             log.error( "While processing " + expressionExperiment, e );
-            audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ),
+            audit( expressionExperiment, ExceptionUtils.getStackTrace( e ),
                     FailedLinkAnalysisEvent.Factory.newInstance() );
         }
     }

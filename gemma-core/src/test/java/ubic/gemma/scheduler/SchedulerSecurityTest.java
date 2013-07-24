@@ -20,7 +20,7 @@ package ubic.gemma.scheduler;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.ExpectedException;

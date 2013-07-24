@@ -20,6 +20,7 @@ package ubic.gemma.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -32,8 +33,10 @@ import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
 @Controller
 public class ExpressionExperimentReportGenerationController {
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * AJAX entry point.

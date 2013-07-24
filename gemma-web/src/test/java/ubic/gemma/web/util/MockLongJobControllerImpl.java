@@ -18,40 +18,30 @@
  */
 package ubic.gemma.web.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
+
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.tasks.AbstractTask;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Controller that does nothing except wait a while. Used for tests.
- * 
- * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
- * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
- * arrays instead.
+ * Controller that does nothing except wait a while. Used for tests. Note: do not use parameterized collections as
+ * parameters for ajax methods in this class! Type information is lost during proxy creation so DWR can't figure out
+ * what type of collection the method should take. See bug 2756. Use arrays instead.
  * 
  * @author pavlidis
  * @version $Id$
  */
 @Controller
 public class MockLongJobControllerImpl implements MockLongJobController {
-
-    @Autowired private TaskRunningService taskRunningService;
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.util.MockLongJobController#runJob(ubic.gemma.job.TaskCommand)
-     */
-    @Override
-    public String runJob( TaskCommand command ) {
-        return taskRunningService.submitLocalTask( new WasteOfTime( command ) );
-    }
 
     static class WasteOfTime extends AbstractTask<TaskResult, TaskCommand> {
         protected Log log = LogFactory.getLog( this.getClass().getName() );
@@ -81,6 +71,19 @@ public class MockLongJobControllerImpl implements MockLongJobController {
             model.put( "answer", "42" );
             return new TaskResult( taskCommand, new ModelAndView( "view", model ) );
         }
+    }
+
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.util.MockLongJobController#runJob(ubic.gemma.job.TaskCommand)
+     */
+    @Override
+    public String runJob( TaskCommand command ) {
+        return taskRunningService.submitLocalTask( new WasteOfTime( command ) );
     }
 
 }

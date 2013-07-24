@@ -18,11 +18,15 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.apache.commons.lang.StringUtils;
+import java.util.Collection;
+import java.util.HashSet;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
@@ -39,9 +43,6 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.tasks.analysis.expression.AutoTaggerTaskCommand;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
  * OntologyService and the ExpressionExperimentAnnotator
@@ -53,15 +54,22 @@ import java.util.HashSet;
 @Controller
 public class AnnotationController {
 
-    private static final Log log = LogFactory.getLog(AnnotationController.class.getName());
+    private static final Log log = LogFactory.getLog( AnnotationController.class.getName() );
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private AuditTrailService auditTrailService;
-    @Autowired private BioMaterialService bioMaterialService;
-    @Autowired private CharacteristicService characteristicService;
-    @Autowired private ExpressionExperimentService expressionExperimentService;
-    @Autowired private OntologyService ontologyService;
-    @Autowired private TaxonService taxonService;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private AuditTrailService auditTrailService;
+    @Autowired
+    private BioMaterialService bioMaterialService;
+    @Autowired
+    private CharacteristicService characteristicService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private OntologyService ontologyService;
+    @Autowired
+    private TaxonService taxonService;
 
     /**
      * @param eeId
@@ -73,7 +81,7 @@ public class AnnotationController {
             throw new IllegalArgumentException( "Id cannot be null" );
         }
 
-        return taskRunningService.submitRemoteTask( new AutoTaggerTaskCommand(eeId) );
+        return taskRunningService.submitRemoteTask( new AutoTaggerTaskCommand( eeId ) );
     }
 
     public void createBiomaterialTag( Characteristic vc, Long id ) {
@@ -102,18 +110,8 @@ public class AnnotationController {
     }
 
     /**
-     * AJAX Note that this completely scraps the indices, and runs asynchronously.
-     */
-    public void reinitializeOntologyIndices() {
-        if ( !SecurityServiceImpl.isRunningAsAdmin() ) {
-            log.warn( "Attempt to run ontology re-indexing as non-admin." );
-            return;
-        }
-        ontologyService.reinitializeAllOntologies();
-    }
-
-    /**
      * AJAX
+     * 
      * @param givenQueryString
      * @param categoryUri
      * @param taxonId
@@ -128,6 +126,17 @@ public class AnnotationController {
             taxon = taxonService.load( taxonId );
         }
         return ontologyService.findExactTermValueObject( givenQueryString, categoryUri, taxon );
+    }
+
+    /**
+     * AJAX Note that this completely scraps the indices, and runs asynchronously.
+     */
+    public void reinitializeOntologyIndices() {
+        if ( !SecurityServiceImpl.isRunningAsAdmin() ) {
+            log.warn( "Attempt to run ontology re-indexing as non-admin." );
+            return;
+        }
+        ontologyService.reinitializeAllOntologies();
     }
 
     /**

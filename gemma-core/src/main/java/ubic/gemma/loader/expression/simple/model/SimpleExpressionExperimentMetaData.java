@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -30,6 +31,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.tasks.Task;
 
 /**
  * Represents the basic data to enter about an expression experiment when starting from a delimited file of data
@@ -96,7 +98,7 @@ public class SimpleExpressionExperimentMetaData extends TaskCommand {
     Long taxonId;
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return null;
     }
 

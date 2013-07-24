@@ -27,7 +27,7 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -187,7 +187,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
             }
 
             writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
-                    description, taxon.getCommonName(), StringUtils.chomp( manufacturers.toString(), "," ) ) );
+                    description, taxon.getCommonName(), StringUtils.removeEnd( manufacturers.toString(), "," ) ) );
 
             if ( limit > 0 && ++i > limit ) break;
 
@@ -332,8 +332,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                             factorURI += ( ( VocabCharacteristic ) ef.getCategory() ).getCategoryUri() + ",";
                         }
                     }
-                    factorName = StringUtils.chomp( factorName, "," );
-                    factorURI = StringUtils.chomp( factorURI, "," );
+                    factorName = StringUtils.removeEnd( factorName, "," );
+                    factorURI = StringUtils.removeEnd( factorURI, "," );
 
                     if ( ears.getResults() == null || ears.getResults().isEmpty() ) {
                         log.warn( "No  differential expression analysis results found for " + ee );

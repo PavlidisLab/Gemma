@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;

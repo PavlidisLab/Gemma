@@ -9,13 +9,27 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 
 public interface SessionListManager {
 
+    public abstract SessionBoundExpressionExperimentSetValueObject addExperimentSet(
+            SessionBoundExpressionExperimentSetValueObject eesvo );
+
+    public abstract SessionBoundExpressionExperimentSetValueObject addExperimentSet(
+            SessionBoundExpressionExperimentSetValueObject eesvo, boolean modified );
+
+    public abstract SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo );
+
+    public abstract SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo, boolean modified );
+
+    public abstract Collection<SessionBoundExpressionExperimentSetValueObject> getAllExperimentSets();
+
     public abstract Collection<SessionBoundGeneSetValueObject> getAllGeneSets();
 
     public abstract Collection<SessionBoundGeneSetValueObject> getAllGeneSets( Long taxonId );
 
-    public abstract Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets();
-
-    public abstract Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets( Long taxonId );
+    /**
+     * @param id
+     * @return
+     */
+    public abstract Collection<Long> getExperimentIdsInSet( Long id );
 
     /**
      * Get the session-bound group using the group's id
@@ -24,6 +38,12 @@ public interface SessionListManager {
      * @return
      */
     public abstract SessionBoundExpressionExperimentSetValueObject getExperimentSetById( Long id );
+
+    /**
+     * @param id
+     * @return
+     */
+    public abstract Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id );
 
     /**
      * Get the session-bound group using the group's id
@@ -41,44 +61,24 @@ public interface SessionListManager {
      */
     public abstract Collection<GeneValueObject> getGenesInGroup( Long groupId );
 
-    /**
-     * @param id
-     * @return
-     */
-    public abstract Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id );
-
-    /**
-     * @param id
-     * @return
-     */
-    public abstract Collection<Long> getExperimentIdsInSet( Long id );
-
-    public abstract SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo );
-
-    public abstract SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo, boolean modified );
-
-    public abstract void removeGeneSet( SessionBoundGeneSetValueObject gsvo );
-
-    public abstract void updateGeneSet( SessionBoundGeneSetValueObject gsvo );
-
-    public abstract Long incrementAndGetLargestGeneSetSessionId();
-
-    public abstract Collection<SessionBoundExpressionExperimentSetValueObject> getAllExperimentSets();
-
     public abstract Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets();
 
     public abstract Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets( Long taxonId );
 
-    public abstract SessionBoundExpressionExperimentSetValueObject addExperimentSet(
-            SessionBoundExpressionExperimentSetValueObject eesvo );
+    public abstract Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets();
 
-    public abstract SessionBoundExpressionExperimentSetValueObject addExperimentSet(
-            SessionBoundExpressionExperimentSetValueObject eesvo, boolean modified );
+    public abstract Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets( Long taxonId );
+
+    public abstract Long incrementAndGetLargestExperimentSetSessionId();
+
+    public abstract Long incrementAndGetLargestGeneSetSessionId();
 
     public abstract void removeExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo );
 
+    public abstract void removeGeneSet( SessionBoundGeneSetValueObject gsvo );
+
     public abstract void updateExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo );
 
-    public abstract Long incrementAndGetLargestExperimentSetSessionId();
+    public abstract void updateGeneSet( SessionBoundGeneSetValueObject gsvo );
 
 }

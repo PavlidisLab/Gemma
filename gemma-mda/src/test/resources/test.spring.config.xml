@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<beans xmlns="http://www.springframework.org/schema/beans" 
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+ 
+   <bean id="configurationPropertyConfigurer" class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
+      <property name="configuration">
+         <ref local="buildProperties" />
+      </property>
+      <property name="locations">
+         <list>
+            <value>classpath:default.properties</value>
+         </list>
+      </property>
+      <property name="ignoreUnresolvablePlaceholders" value="false" />
+      <property name="ignoreResourceNotFound" value="false" />
+   </bean>
+
+   <bean id="buildPropertiesFileHandler" class="org.apache.commons.configuration.io.FileHandler" init-method="load">
+      <constructor-arg index="0">
+         <ref local="buildProperties" />
+      </constructor-arg>
+      <property name="fileName">
+         <value>default.properties</value>
+      </property>
+   </bean>
+
+   <bean id="buildProperties" class="org.apache.commons.configuration.PropertiesConfiguration" />
+
+   <bean id="testConfigured" class="ubic.gemma.util.JustATestBean">
+      <property name="myValue">
+         <value>${testProperty}</value>
+      </property>
+   </bean>
+
+</beans>

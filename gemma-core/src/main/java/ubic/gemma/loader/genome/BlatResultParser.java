@@ -21,7 +21,7 @@ package ubic.gemma.loader.genome;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.analysis.sequence.SequenceWriter;
 import ubic.gemma.loader.util.parser.BasicLineParser;

@@ -90,7 +90,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      */
     @Override
     public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs ) {
-        return ( ExpressionAnalysisResultSet ) this.expressionAnalysisResultSetDao.create( rs );
+        return this.expressionAnalysisResultSetDao.create( rs );
     }
 
 }

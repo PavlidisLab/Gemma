@@ -21,31 +21,26 @@ package ubic.gemma.web.controller.coexpressionSearch;
 
 import ubic.gemma.job.TaskCommand;
 
-
-
-
 /**
  * @author cmcdonald
- *
  */
 public class CoexSearchTaskCommand extends TaskCommand {
 
-    
     private static final long serialVersionUID = 1L;
-    
+
     CoexpressionSearchCommand searchOptions;
-    
+
     public CoexSearchTaskCommand( CoexpressionSearchCommand searchOptions ) {
         super();
         this.searchOptions = searchOptions;
-        this.setPersistJobDetails(false);
+        this.setPersistJobDetails( false );
     }
-    
-    public CoexpressionSearchCommand getSearchOptions() {
-		return searchOptions;
-	}
 
-	public void setSearchOptions(CoexpressionSearchCommand searchOptions) {
-		this.searchOptions = searchOptions;
-	}   
+    public CoexpressionSearchCommand getSearchOptions() {
+        return searchOptions;
+    }
+
+    public void setSearchOptions( CoexpressionSearchCommand searchOptions ) {
+        this.searchOptions = searchOptions;
+    }
 }

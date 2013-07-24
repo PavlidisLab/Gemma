@@ -42,12 +42,14 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstract<T> {
 
     private Deque<String> progressUpdates = new LinkedBlockingDeque<String>();
+
     private TaskResult taskResult;
 
     // These are used to get remote state of submitted task.
     private MessageReceiver<TaskResult> resultReceiver;
     private MessageReceiver<TaskStatusUpdate> statusUpdateReceiver;
     private MessageReceiver<String> progressUpdateReceiver;
+
     // This is used to send 'cancel' or 'add email notification' request.
     private MessageSender<TaskControl> taskControlSender;
 

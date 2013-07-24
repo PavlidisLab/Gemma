@@ -26,7 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,10 +137,10 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
                 gene.getProducts().add( newgp );
                 geneService.update( gene );
                 return gene;
-            } else {
-                log.info( gene + " already exists and is valid, will not update" );
-                return null; // no need to create it, though we ignore the name.
             }
+            log.info( gene + " already exists and is valid, will not update" );
+            return null; // no need to create it, though we ignore the name.
+
         }
 
         gene = Gene.Factory.newInstance();

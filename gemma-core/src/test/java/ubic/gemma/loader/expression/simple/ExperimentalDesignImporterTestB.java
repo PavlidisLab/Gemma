@@ -26,7 +26,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

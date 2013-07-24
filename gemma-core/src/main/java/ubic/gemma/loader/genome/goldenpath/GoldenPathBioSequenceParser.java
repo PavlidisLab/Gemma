@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.loader.util.QueuingParser;
 import ubic.gemma.loader.util.parser.BasicLineParser;

@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,18 +60,6 @@ public class HomePageController {
         otherTaxa.setAbbreviation( "Other" );
         otherTaxa.setIsGenesUsable( false );
         otherTaxa.setIsSpecies( false );
-    }
-
-    @RequestMapping(WebConstants.HOME_PAGE)
-    public ModelAndView showHomePage() {
-
-        /*
-         * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
-         * functionality here without considering that.
-         */
-        // updateCounts();
-        getCountsForTaxonPieChart();
-        return mav;
     }
 
     public void getCountsForTaxonPieChart() {
@@ -127,6 +115,18 @@ public class HomePageController {
         mav.addObject( "googleData", googleData );
         mav.addObject( "googleLabels", googleLabels );
 
+    }
+
+    @RequestMapping(WebConstants.HOME_PAGE)
+    public ModelAndView showHomePage() {
+
+        /*
+         * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
+         * functionality here without considering that.
+         */
+        // updateCounts();
+        getCountsForTaxonPieChart();
+        return mav;
     }
 
     private String encodeDataForGoogle( Set<Entry<Taxon, Long>> eesPerTaxonValueSorted, long maxValue, double groupBelow ) {

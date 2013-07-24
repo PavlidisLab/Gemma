@@ -41,11 +41,6 @@ public class WebContextLoader extends AbstractContextLoader {
     protected static final Log logger = LogFactory.getLog( WebContextLoader.class );
 
     @Override
-    protected String getResourceSuffix() {
-        return "-context.xml";
-    }
-
-    @Override
     public ApplicationContext loadContext( String... locations ) throws Exception {
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading WebApplicationContext for locations ["
@@ -60,6 +55,11 @@ public class WebContextLoader extends AbstractContextLoader {
 
         context.registerShutdownHook();
         return context;
+    }
+
+    @Override
+    protected String getResourceSuffix() {
+        return "-context.xml";
     }
 
 }

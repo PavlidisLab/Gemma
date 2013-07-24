@@ -19,6 +19,8 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
 /**
  * @author keshav
@@ -55,7 +57,7 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
     private boolean suppressMatching = false;
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
         return ExpressionExperimentLoadTask.class;
     }
 

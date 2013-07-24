@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.monitoring;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.job.grid.util.MonitorTask;
 import ubic.gemma.job.grid.util.MonitorTaskCommand;
@@ -33,8 +34,10 @@ import ubic.gemma.job.grid.util.MonitorTaskCommand;
 @Component
 public class TestTaskController {
 
-    @Autowired private TaskRunningService taskRunningService;
-    @Autowired private MonitorTask testTask;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private MonitorTask testTask;
 
     /**
      * AJAX method

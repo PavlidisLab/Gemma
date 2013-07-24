@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.loader.protein.StringProteinInteractionEvidenceCodeEnum;
 import ubic.gemma.loader.protein.string.model.StringProteinProteinInteraction;

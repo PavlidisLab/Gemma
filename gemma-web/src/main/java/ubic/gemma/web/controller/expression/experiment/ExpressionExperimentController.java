@@ -18,10 +18,30 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.IOException;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
-import org.apache.commons.lang.time.StopWatch;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +50,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+
 import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
@@ -51,8 +72,17 @@ import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.*;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CitationValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -62,7 +92,16 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.search.SearchResultDisplayObject;
@@ -81,12 +120,6 @@ import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.util.*;
-
 /**
  * @author keshav
  * @version $Id$
@@ -94,8 +127,6 @@ import java.util.*;
 @Controller
 @RequestMapping(value = { "/expressionExperiment", "/ee" })
 public class ExpressionExperimentController {
-    private static final Log log = LogFactory.getLog( ExpressionExperimentController.class.getName() );
-
     /**
      * Delete expression experiments.
      * 
@@ -219,6 +250,8 @@ public class ExpressionExperimentController {
 
     }
 
+    private static final Log log = LogFactory.getLog( ExpressionExperimentController.class.getName() );
+
     private static final Boolean AJAX = true;
 
     private static final int TRIM_SIZE = 800;
@@ -273,9 +306,14 @@ public class ExpressionExperimentController {
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
-     * level. 1. a db call returns all experiments, which are filtered by the service method 2. if the user is an admin,
-     * we filter out the troubled experiments 3. an appropriate page-sized chunk is then taken from this (filtered) list
-     * 4. another round of db calls create and fill value objects for this chunk 5. value objects are returned
+     * level.
+     * <ol>
+     * <li>a db call returns all experiments, which are filtered by the service method
+     * <li>if the user is an admin, we filter out the troubled experiments
+     * <li>an appropriate page-sized chunk is then taken from this (filtered) list
+     * <li>another round of db calls create and fill value objects for this chunk
+     * <li>value objects are returned
+     * </ol>
      * 
      * @param batch
      * @return
@@ -431,17 +469,6 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * AJAX clear entries in caches relevant to experimental design for the experiment passed in. The caches cleared are
-     * the processedDataVectorCache and the caches held in ExperimentalDesignVisualizationService
-     * 
-     * @param eeId
-     * @return msg if error occurred or empty string if successful
-     */
-    public void clearFromCaches( Long eeId ) {
-        expressionExperimentReportService.evictFromCache( eeId );
-    }
-
-    /**
      * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
      * 
      * @param
@@ -455,6 +482,17 @@ public class ExpressionExperimentController {
             return false;
         }
         return userCanEditGroup;
+    }
+
+    /**
+     * AJAX clear entries in caches relevant to experimental design for the experiment passed in. The caches cleared are
+     * the processedDataVectorCache and the caches held in ExperimentalDesignVisualizationService
+     * 
+     * @param eeId
+     * @return msg if error occurred or empty string if successful
+     */
+    public void clearFromCaches( Long eeId ) {
+        expressionExperimentReportService.evictFromCache( eeId );
     }
 
     /**
@@ -535,6 +573,15 @@ public class ExpressionExperimentController {
     public Collection<Long> find( String query, Long taxonId ) {
         log.info( "Search: query='" + query + "' taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
+    }
+
+    /**
+     * @param taxonId
+     * @return
+     */
+    public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
+
+        return expressionExperimentSearchService.getAllTaxonExperimentGroup( taxonId );
     }
 
     /**
@@ -1122,15 +1169,6 @@ public class ExpressionExperimentController {
                 .addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
 
         return displayResults;
-    }
-
-    /**
-     * @param taxonId
-     * @return
-     */
-    public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
-
-        return expressionExperimentSearchService.getAllTaxonExperimentGroup( taxonId );
     }
 
     /**
@@ -1862,57 +1900,6 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * @param limit
-     * @param initialListOfValueObject
-     * @return
-     */
-    private List<ExpressionExperimentValueObject> getSubList( Integer limit,
-            List<ExpressionExperimentValueObject> initialListOfValueObject ) {
-
-        if ( limit < initialListOfValueObject.size() ) {
-            initialListOfValueObject = initialListOfValueObject.subList( 0, limit );
-        }
-        return initialListOfValueObject;
-    }
-
-    /**
-     * This is security filtered.
-     * 
-     * @param eeIds
-     * @param taxon
-     * @return
-     */
-    private List<ExpressionExperimentValueObject> loadInitialSetOfValueObjects( Collection<Long> eeIds, Taxon taxon,
-            boolean descending ) {
-        List<ExpressionExperimentValueObject> initialListOfValueObject = null;
-        if ( eeIds != null && !eeIds.isEmpty() ) {
-
-            // only for selected IDs
-            initialListOfValueObject = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
-                    .loadValueObjects( eeIds, true );
-            if ( taxon != null ) {
-                // AND filter for taxon
-                for ( Iterator<ExpressionExperimentValueObject> it = initialListOfValueObject.iterator(); it.hasNext(); ) {
-                    ExpressionExperimentValueObject evo = it.next();
-                    if ( !evo.getTaxonId().equals( taxon.getId() ) ) {
-                        it.remove();
-                    }
-                }
-            }
-
-        } else if ( taxon != null ) {
-            // everything for taxon
-            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
-                    expressionExperimentService.loadAllValueObjectsTaxonOrdered( "dateLastUpdated", descending, taxon ) );
-        } else {
-            // everything
-            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
-                    expressionExperimentService.loadAllValueObjectsOrdered( "dateLastUpdated", descending ) );
-        }
-        return initialListOfValueObject;
-    }
-
-    /**
      * Updates the value objects with event information and summaries
      * 
      * @param expressionExperiments
@@ -1934,6 +1921,20 @@ public class ExpressionExperimentController {
             }
         }
         return eventDates;
+    }
+
+    /**
+     * @param limit
+     * @param initialListOfValueObject
+     * @return
+     */
+    private List<ExpressionExperimentValueObject> getSubList( Integer limit,
+            List<ExpressionExperimentValueObject> initialListOfValueObject ) {
+
+        if ( limit < initialListOfValueObject.size() ) {
+            initialListOfValueObject = initialListOfValueObject.subList( 0, limit );
+        }
+        return initialListOfValueObject;
     }
 
     private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch ) {
@@ -2008,6 +2009,43 @@ public class ExpressionExperimentController {
      */
     private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Taxon taxon ) {
         return loadAllValueObjectsOrdered( batch, null, taxon );
+    }
+
+    /**
+     * This is security filtered.
+     * 
+     * @param eeIds
+     * @param taxon
+     * @return
+     */
+    private List<ExpressionExperimentValueObject> loadInitialSetOfValueObjects( Collection<Long> eeIds, Taxon taxon,
+            boolean descending ) {
+        List<ExpressionExperimentValueObject> initialListOfValueObject = null;
+        if ( eeIds != null && !eeIds.isEmpty() ) {
+
+            // only for selected IDs
+            initialListOfValueObject = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
+                    .loadValueObjects( eeIds, true );
+            if ( taxon != null ) {
+                // AND filter for taxon
+                for ( Iterator<ExpressionExperimentValueObject> it = initialListOfValueObject.iterator(); it.hasNext(); ) {
+                    ExpressionExperimentValueObject evo = it.next();
+                    if ( !evo.getTaxonId().equals( taxon.getId() ) ) {
+                        it.remove();
+                    }
+                }
+            }
+
+        } else if ( taxon != null ) {
+            // everything for taxon
+            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
+                    expressionExperimentService.loadAllValueObjectsTaxonOrdered( "dateLastUpdated", descending, taxon ) );
+        } else {
+            // everything
+            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
+                    expressionExperimentService.loadAllValueObjectsOrdered( "dateLastUpdated", descending ) );
+        }
+        return initialListOfValueObject;
     }
 
     /**

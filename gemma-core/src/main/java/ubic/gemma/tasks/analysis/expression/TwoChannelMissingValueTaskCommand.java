@@ -24,7 +24,9 @@ import java.util.HashSet;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValuesImpl;
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.tasks.Task;
 
 /**
  * @author paul
@@ -95,7 +97,7 @@ public class TwoChannelMissingValueTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return TwoChannelMissingValueTask.class;
     }
 }

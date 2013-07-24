@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.MeanVarianceEstimator;
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -50,9 +49,6 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ExpressionDataMatrixService expressionDataMatrixService;
 
     /**
      * @param matrix on which mean variance relation is computed with

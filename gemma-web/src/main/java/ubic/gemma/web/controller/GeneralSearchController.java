@@ -14,18 +14,19 @@
  */
 package ubic.gemma.web.controller;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.web.remote.JsonReaderResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
@@ -37,6 +38,14 @@ import javax.servlet.http.HttpServletResponse;
  */
 @Controller
 public interface GeneralSearchController {
+
+    /**
+     * AJAX - all objects in one collection.
+     * 
+     * @param settings
+     * @return
+     */
+    public abstract JsonReaderResponse<SearchResult> ajaxSearch( SearchSettingsValueObject settings );
 
     /**
      * @param request
@@ -60,13 +69,5 @@ public interface GeneralSearchController {
      */
     public abstract ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             SearchSettings command, BindException errors ) throws Exception;
-
-    /**
-     * AJAX - all objects in one collection.
-     * 
-     * @param settings
-     * @return
-     */
-    public abstract JsonReaderResponse<SearchResult> ajaxSearch( SearchSettingsValueObject settings );
 
 }

@@ -22,7 +22,7 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- *Allows access to the gene co-expression analysis. Given 1) a collection of gene ids, 2) a taxon id, 3) a stringency,
+ * Allows access to the gene co-expression analysis. Given 1) a collection of gene ids, 2) a taxon id, 3) a stringency,
  * 4) an expression experiment set id, and 5) a boolean for whether to return results that are within the query set
  * only. The Expression Experiment Set ID (4) can be found by using the ExpressionExperimentSetIDEndpoint, which will
  * return all the expression experiment set ids for all taxons and their corresponding description. The stringency is
@@ -123,7 +123,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             for ( String id : stringencyInput ) {
                 string = id;
             }
-            
+
             Collection<String> queryGenesOnlyInput = getSingleNodeValue( requestElement, "queryGenesOnly" );
             String query = "";
             for ( String id : queryGenesOnlyInput ) {

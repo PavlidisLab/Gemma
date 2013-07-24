@@ -29,19 +29,19 @@ package ubic.gemma.web.util.upload;
  */
 public interface OutputStreamListener {
 
-    /** 
-     */
-    public void start();
-
     /**
      * @param bytesRead
      */
     public void bytesRead( int bytesRead );
+
+    public void done();
 
     /**
      * @param message
      */
     public void error( String message );
 
-    public void done();
+    /** 
+     */
+    public void start();
 }

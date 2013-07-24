@@ -21,8 +21,8 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;

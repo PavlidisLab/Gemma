@@ -19,7 +19,9 @@
 package ubic.gemma.tasks.analysis.sequence;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.tasks.Task;
 
 /**
  * A command object to be used by spaces.
@@ -65,7 +67,7 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return ArrayDesignRepeatScanTask.class;
     }
 }

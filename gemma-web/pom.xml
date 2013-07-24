@@ -6,11 +6,9 @@
 		<version>1.8-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>gemma</groupId>
 	<artifactId>gemma-web</artifactId>
 	<packaging>war</packaging>
 	<name>Gemma web</name>
-	<version>1.8-SNAPSHOT</version>
 	<description>Gemma web application</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -125,6 +123,9 @@
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.2</version>
+				<configuration>
+					<warName>Gemma</warName>
+				</configuration>
 				<!-- <configuration> <excludes> <exclude>**/*Test*,**/Test*,**/All*Tests</exclude> </excludes> </configuration> -->
 			</plugin>
 			<plugin>
@@ -198,29 +199,54 @@
 				</executions>
 			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-antrun-plugin</artifactId>
+										<versionRange>[1.7,)</versionRange>
+										<goals>
+											<goal>run</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-dependency-plugin</artifactId>
+										<versionRange>[2.1,)</versionRange>
+										<goals>
+											<goal>copy-dependencies</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-core</artifactId>
 			<version>${project.version}</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>jsp-api</artifactId>
-					<groupId>javax.servlet</groupId>
-				</exclusion>
-			</exclusions>
-
-		</dependency>
-		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-			<version>1.7.0</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-digester</groupId>
-			<artifactId>commons-digester</artifactId>
-			<version>1.6</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>
@@ -236,8 +262,13 @@
 			<groupId>jaxen</groupId>
 			<artifactId>jaxen</artifactId>
 			<version>1.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.ibm.icu</groupId>
+					<artifactId>icu4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>commons-dbutils</groupId>
 			<artifactId>commons-dbutils</artifactId>
@@ -246,27 +277,17 @@
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
-			<version>1.1</version>
+			<version>1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
-			<version>1.3</version>
+			<version>1.8</version>
 		</dependency>
 		<dependency>
 			<groupId>odmg</groupId>
 			<artifactId>odmg</artifactId>
 			<version>3.0</version>
-		</dependency>
-		<dependency>
-			<groupId>xml-apis</groupId>
-			<artifactId>xml-apis</artifactId>
-			<version>1.3.03</version>
-		</dependency>
-		<dependency>
-			<groupId>velocity</groupId>
-			<artifactId>velocity</artifactId>
-			<version>1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-validator</groupId>
@@ -297,16 +318,6 @@
 			<groupId>taglibs</groupId>
 			<artifactId>request</artifactId>
 			<version>1.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.activation</groupId>
-			<artifactId>activation</artifactId>
-			<version>1.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>xerces</groupId>
-			<artifactId>xercesImpl</artifactId>
-			<version>2.8.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sdicons.jsontools</groupId>
@@ -341,18 +352,6 @@
 			<artifactId>standard</artifactId>
 			<version>1.1.2</version>
 			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>struts-menu</groupId>
-			<artifactId>struts-menu</artifactId>
-			<version>2.4.3</version>
-			<scope>runtime</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>taglibs</groupId>
-					<artifactId>standard</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>jetty</groupId>
@@ -390,32 +389,17 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
-			<version>3.0.5.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-taglibs</artifactId>
-			<version>3.0.2.RELEASE</version>
+			<version>${spring.security.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ws</groupId>
 			<artifactId>spring-ws-core</artifactId>
 			<version>1.5.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-			<version>3.0.5.RELEASE</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<version>3.0.5.RELEASE</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-			<version>3.0.5.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>jdom</groupId>
@@ -474,6 +458,10 @@
 					<groupId>javax.xml.stream</groupId>
 					<artifactId>stax-api</artifactId>
 				</exclusion>
+				<exclusion>
+					<artifactId>stax-api</artifactId>
+					<groupId>stax</groupId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<!-- Jersey + Spring -->
@@ -512,6 +500,11 @@
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
 			<version>1.31.0</version>
+		</dependency>
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib</artifactId>
+			<version>2.2.2</version>
 		</dependency>
 	</dependencies>
 	<repositories>
@@ -554,4 +547,28 @@
 			</snapshots>
 		</repository>
 	</repositories>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>xerces</groupId>
+				<artifactId>xercesImpl</artifactId>
+				<version>2.11.0</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>2.4</version>
+			</dependency>
+			<dependency>
+				<groupId>xml-apis</groupId>
+				<artifactId>xml-apis</artifactId>
+				<version>1.4.01</version>
+			</dependency>
+			<dependency>
+				<groupId>asm</groupId>
+				<artifactId>asm</artifactId>
+				<version>3.3.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>

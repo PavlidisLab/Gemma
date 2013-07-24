@@ -14,16 +14,18 @@
  */
 package ubic.gemma.util;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.job.EmailNotificationContext;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserService;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * TODO Document Me
@@ -37,9 +39,10 @@ public class MailUtilsImpl implements MailUtils {
     private static final Log log = LogFactory.getLog( MailUtilsImpl.class );
 
     @Autowired
-    MailEngine mailEngine;
+    private MailEngine mailEngine;
+
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @Override
     public void sendTaskCompletedNotificationEmail( EmailNotificationContext emailNotificationContext,

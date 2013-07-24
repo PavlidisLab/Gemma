@@ -21,7 +21,7 @@ package ubic.gemma.loader.util.parser;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A simple tab delim file parser

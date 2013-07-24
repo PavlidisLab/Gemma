@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.easymock.classextension.EasyMock;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;

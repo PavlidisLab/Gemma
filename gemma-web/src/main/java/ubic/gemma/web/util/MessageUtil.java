@@ -78,10 +78,11 @@ public interface MessageUtil {
      * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
      * session.
      * 
-     * @param session
-     * @param msg
+     * @param request
+     * @param parameter A single parameter to be filled into the message.
+     * @param defaultMessage
      */
-    public abstract void saveMessage( HttpSession session, String msg );
+    public abstract void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage );
 
     /**
      * Put a message into the session. These can be displayed to the user.
@@ -102,10 +103,10 @@ public interface MessageUtil {
      * session.
      * 
      * @param request
-     * @param parameter A single parameter to be filled into the message.
+     * @param key
      * @param defaultMessage
      */
-    public abstract void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage );
+    public abstract void saveMessage( HttpServletRequest request, String key, String defaultMessage );
 
     /**
      * Put a message into the session. These can be displayed to the user.
@@ -113,10 +114,9 @@ public interface MessageUtil {
      * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
      * session.
      * 
-     * @param request
-     * @param key
-     * @param defaultMessage
+     * @param session
+     * @param msg
      */
-    public abstract void saveMessage( HttpServletRequest request, String key, String defaultMessage );
+    public abstract void saveMessage( HttpSession session, String msg );
 
 }

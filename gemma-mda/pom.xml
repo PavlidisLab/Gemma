@@ -1,12 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>gemma</groupId>
 	<name>Gemma MDA</name>
 	<description>
 	<![CDATA[Model-driven architecture generated code and implementations.]]>
 	</description>
 	<artifactId>gemma-mda</artifactId>
-	<version>1.8-SNAPSHOT</version>
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
@@ -15,9 +14,45 @@
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
-			<groupId>gemma</groupId>
-			<artifactId>gemma-util</artifactId>
-			<version>${project.version}</version>
+			<groupId>baseCode</groupId>
+			<artifactId>baseCode</artifactId>
+			<version>1.0.15-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ubc.chibi.compass-fork</groupId>
+			<artifactId>compass-fork</artifactId>
+			<version>1.0</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-lang</artifactId>
+					<groupId>commons-lang</groupId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.servlet</groupId>
+					<artifactId>jsp-api</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+			<version>1.8.6</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.velocity</groupId>
+			<artifactId>velocity</artifactId>
+			<version>1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.retry</groupId>
@@ -215,7 +250,8 @@
 							</classpath>
 						</taskdef>
 						<mkdir dir="target/schema" />
-						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";" output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
+						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
+							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
 							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
 					</target>
@@ -238,6 +274,48 @@
 				</dependencies>
 			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.andromda.maven.plugins</groupId>
+										<artifactId>andromda-maven-plugin</artifactId>
+										<versionRange>[3.3,)</versionRange>
+										<goals>
+											<goal>run</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-antrun-plugin</artifactId>
+										<versionRange>[1.7,)</versionRange>
+										<goals>
+											<goal>run</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<repositories>
 		<repository>
@@ -365,8 +443,7 @@
 			</activation>
 			<build>
 				<plugins>
-					<!-- todo when maven fixes bugs in properties/activation, put andromda
-						here. -->
+					<!-- todo when maven fixes bugs in properties/activation, put andromda here. -->
 				</plugins>
 			</build>
 		</profile>

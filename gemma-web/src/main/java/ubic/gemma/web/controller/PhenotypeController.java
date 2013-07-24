@@ -66,77 +66,8 @@ public class PhenotypeController extends BaseController {
     @Autowired
     private SecurityController securityController;
 
-    private ValidateEvidenceValueObject generateValidateEvidenceValueObject( Throwable throwable ) {
-        final ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
-
-        if ( throwable instanceof AccessDeniedException ) {
-            if ( this.userManager.loggedIn() ) {
-                validateEvidenceValueObject.setAccessDenied( true );
-            } else {
-                validateEvidenceValueObject.setUserNotLoggedIn( true );
-            }
-        } else {
-            // If type of throwable is not known, log it.
-            this.log.error( throwable.getMessage(), throwable );
-            // put it also in neuroCarta logs
-            logNeurocarta.error( throwable.getMessage(), throwable );
-        }
-
-        return validateEvidenceValueObject;
-    }
-
-    @RequestMapping(value = "/phenotypes.html", method = RequestMethod.GET)
-    public ModelAndView showAllPhenotypes( HttpServletRequest request ) {
-        ModelAndView mav = new ModelAndView( "phenotypes" );
-
-        mav.addObject( "phenotypeUrlId", request.getParameter( "phenotypeUrlId" ) );
-        mav.addObject( "geneId", request.getParameter( "geneId" ) );
-
-        return mav;
-    }
-
-    @RequestMapping(value = "/phenotypeAssociationManager.html", method = RequestMethod.GET)
-    public ModelAndView showPhenotypeAssociationManager() {
-        return new ModelAndView( "phenotypeAssociationManager" );
-    }
-
-    @RequestMapping(value = "/neurocartaStatistics.html", method = RequestMethod.GET)
-    public ModelAndView showNeurocartaStatistics() {
-        return new ModelAndView( "neurocartaStatistics" );
-    }
-
-    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
-        return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
-    }
-
-    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable,
-            Collection<Long> databaseIds ) {
-
-        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
-                showOnlyEditable, databaseIds ) );
-    }
-
-    /**
-     * Returns all genes that have given phenotypes.
-     * 
-     * @param phenotypes
-     * @return all genes that have given phenotypes
-     */
-    public Collection<GeneValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable,
-            Collection<Long> databaseIds, String[] phenotypes ) {
-        return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
-                showOnlyEditable, databaseIds ), new HashSet<String>( Arrays.asList( phenotypes ) ) );
-    }
-
-    /**
-     * Returns all phenotypes satisfied the given search criteria.
-     * 
-     * @param query
-     * @param geneId
-     * @return Collection of phenotypes
-     */
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String query, Long geneId ) {
-        return this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( query, geneId );
+    public Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics() {
+        return this.phenotypeAssociationManagerService.loadNeurocartaStatistics();
     }
 
     /**
@@ -159,18 +90,19 @@ public class PhenotypeController extends BaseController {
     }
 
     /**
-     * Returns mged category terms.
+     * Returns all genes that have given phenotypes.
      * 
-     * @return Collection<CharacteristicValueObject>
+     * @param phenotypes
+     * @return all genes that have given phenotypes
      */
-    public Collection<CharacteristicValueObject> findExperimentCategory() {
-        return this.phenotypeAssociationManagerService.findExperimentCategory();
+    public Collection<GeneValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable,
+            Collection<Long> databaseIds, String[] phenotypes ) {
+        return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
+                showOnlyEditable, databaseIds ), new HashSet<String>( Arrays.asList( phenotypes ) ) );
     }
 
-    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
-            String categoryUri, Long taxonId ) {
-        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri,
-                taxonId );
+    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
+        return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
     }
 
     /**
@@ -190,11 +122,49 @@ public class PhenotypeController extends BaseController {
         return userVOs;
     }
 
-    public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
+    /**
+     * Returns mged category terms.
+     * 
+     * @return Collection<CharacteristicValueObject>
+     */
+    public Collection<CharacteristicValueObject> findExperimentCategory() {
+        return this.phenotypeAssociationManagerService.findExperimentCategory();
+    }
+
+    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
+            String categoryUri, Long taxonId ) {
+        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri,
+                taxonId );
+    }
+
+    public Collection<ExternalDatabaseValueObject> findExternalDatabaseName() {
+        return this.phenotypeAssociationManagerService.findExternalDatabasesWithEvidence();
+    }
+
+    public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable,
+            Collection<Long> databaseIds ) {
+
+        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
+                showOnlyEditable, databaseIds ) );
+    }
+
+    public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
+            Double selectionThreshold ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
             validateEvidenceValueObject = this.phenotypeAssociationManagerService
-                    .validateEvidence( evidenceValueObject );
+                    .makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
+                            geneDifferentialExpressionMetaAnalysisId, phenotypes, selectionThreshold );
+
+            // get the permission of the metaAnalaysis
+            EntityDelegator ed = new EntityDelegator();
+            ed.setId( geneDifferentialExpressionMetaAnalysisId );
+            ed.setClassDelegatingFor( GeneDifferentialExpressionMetaAnalysis.class.getName() );
+
+            // update the permission of the meta analysis,(this will update all evidence linked to it)
+            this.securityController.updatePermission( this.securityController.getSecurityInfo( ed ) );
+
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
         }
@@ -239,34 +209,64 @@ public class PhenotypeController extends BaseController {
         return validateEvidenceValueObject;
     }
 
-    public Collection<ExternalDatabaseStatisticsValueObject> calculateExternalDatabasesStatistics() {
-        return this.phenotypeAssociationManagerService.loadNeurocartaStatistics();
+    /**
+     * Returns all phenotypes satisfied the given search criteria.
+     * 
+     * @param query
+     * @param geneId
+     * @return Collection of phenotypes
+     */
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String query, Long geneId ) {
+        return this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( query, geneId );
     }
 
-    public Collection<ExternalDatabaseValueObject> findExternalDatabaseName() {
-        return this.phenotypeAssociationManagerService.findExternalDatabasesWithEvidence();
+    @RequestMapping(value = "/phenotypes.html", method = RequestMethod.GET)
+    public ModelAndView showAllPhenotypes( HttpServletRequest request ) {
+        ModelAndView mav = new ModelAndView( "phenotypes" );
+
+        mav.addObject( "phenotypeUrlId", request.getParameter( "phenotypeUrlId" ) );
+        mav.addObject( "geneId", request.getParameter( "geneId" ) );
+
+        return mav;
     }
 
-    public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
-            Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
-            Double selectionThreshold ) {
+    @RequestMapping(value = "/neurocartaStatistics.html", method = RequestMethod.GET)
+    public ModelAndView showNeurocartaStatistics() {
+        return new ModelAndView( "neurocartaStatistics" );
+    }
+
+    @RequestMapping(value = "/phenotypeAssociationManager.html", method = RequestMethod.GET)
+    public ModelAndView showPhenotypeAssociationManager() {
+        return new ModelAndView( "phenotypeAssociationManager" );
+    }
+
+    public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
             validateEvidenceValueObject = this.phenotypeAssociationManagerService
-                    .makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
-                            geneDifferentialExpressionMetaAnalysisId, phenotypes, selectionThreshold );
-
-            // get the permission of the metaAnalaysis
-            EntityDelegator ed = new EntityDelegator();
-            ed.setId( geneDifferentialExpressionMetaAnalysisId );
-            ed.setClassDelegatingFor( GeneDifferentialExpressionMetaAnalysis.class.getName() );
-
-            // update the permission of the meta analysis,(this will update all evidence linked to it)
-            this.securityController.updatePermission( this.securityController.getSecurityInfo( ed ) );
-
+                    .validateEvidence( evidenceValueObject );
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
         }
+        return validateEvidenceValueObject;
+    }
+
+    private ValidateEvidenceValueObject generateValidateEvidenceValueObject( Throwable throwable ) {
+        final ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
+
+        if ( throwable instanceof AccessDeniedException ) {
+            if ( this.userManager.loggedIn() ) {
+                validateEvidenceValueObject.setAccessDenied( true );
+            } else {
+                validateEvidenceValueObject.setUserNotLoggedIn( true );
+            }
+        } else {
+            // If type of throwable is not known, log it.
+            this.log.error( throwable.getMessage(), throwable );
+            // put it also in neuroCarta logs
+            logNeurocarta.error( throwable.getMessage(), throwable );
+        }
+
         return validateEvidenceValueObject;
     }
 }

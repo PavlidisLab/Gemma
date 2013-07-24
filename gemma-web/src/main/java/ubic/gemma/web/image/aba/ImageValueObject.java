@@ -44,8 +44,6 @@ import ubic.gemma.image.aba.Image;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
- * 
- * 
  * @author tvrossum
  * @version $Id$
  */
@@ -54,7 +52,23 @@ public class ImageValueObject implements java.io.Serializable {
      * 
      */
     private static final long serialVersionUID = -4487372931236671216L;
-    
+
+    public static Collection<ImageValueObject> convert2ValueObjects( Collection<Image> images, String abaGeneURL,
+            GeneValueObject abaHomologousMouseGene, String queryGeneSymbol, boolean usingHomologue ) {
+        Collection<ImageValueObject> converted = new HashSet<ImageValueObject>();
+        if ( images == null ) return converted;
+
+        for ( Image i : images ) {
+            if ( i == null ) continue;
+            converted.add( new ImageValueObject( i.getDisplayName(), i.getId(), i.getPosition(), i
+                    .getReferenceAtlasIndex(), i.getThumbnailUrl(), i.getZoomifiedNisslUrl(), i
+                    .getExpressionThumbnailUrl(), i.getDownloadImagePath(), i.getDownloadExpressionPath(), i
+                    .getHeight(), i.getWidth(), abaGeneURL, abaHomologousMouseGene, queryGeneSymbol, usingHomologue ) );
+        }
+
+        return converted;
+    }
+
     private String displayName;
     private int id;
     private int position;
@@ -69,8 +83,9 @@ public class ImageValueObject implements java.io.Serializable {
     private String abaGeneURL;
     private GeneValueObject abaHomologousMouseGene;
     private String queryGeneSymbol;
+
     private boolean usingHomologue;
-    
+
     /**
      * needed for javabean contract
      */
@@ -115,164 +130,11 @@ public class ImageValueObject implements java.io.Serializable {
         this.usingHomologue = usingHomologue;
     }
 
-    public static Collection<ImageValueObject> convert2ValueObjects( Collection<Image> images, String abaGeneURL, GeneValueObject abaHomologousMouseGene, String queryGeneSymbol, boolean usingHomologue ){
-        Collection<ImageValueObject> converted = new HashSet<ImageValueObject>();
-        if ( images == null ) return converted;
-
-        for ( Image i : images ) {
-            if ( i == null ) continue;
-            converted.add( new ImageValueObject( i.getDisplayName(), i.getId(), i.getPosition(), i.getReferenceAtlasIndex(), 
-                    i.getThumbnailUrl(), i.getZoomifiedNisslUrl(), i.getExpressionThumbnailUrl(), i.getDownloadImagePath(), 
-                    i.getDownloadExpressionPath(), i.getHeight(), i.getWidth(), abaGeneURL, abaHomologousMouseGene, queryGeneSymbol, usingHomologue ) );
-        }
-
-        return converted;
-    }
-    /**
-     * @return the displayName
-     */
-    public String getDisplayName() {
-        return displayName;
-    }
-    /**
-     * @param displayName the displayName to set
-     */
-    public void setDisplayName( String displayName ) {
-        this.displayName = displayName;
-    }
-    /**
-     * @return the id
-     */
-    public int getId() {
-        return id;
-    }
-    /**
-     * @param id the id to set
-     */
-    public void setId( int id ) {
-        this.id = id;
-    }
-    /**
-     * @return the position
-     */
-    public int getPosition() {
-        return position;
-    }
-    /**
-     * @param position the position to set
-     */
-    public void setPosition( int position ) {
-        this.position = position;
-    }
-    /**
-     * @return the referenceAtlasIndex
-     */
-    public int getReferenceAtlasIndex() {
-        return referenceAtlasIndex;
-    }
-    /**
-     * @param referenceAtlasIndex the referenceAtlasIndex to set
-     */
-    public void setReferenceAtlasIndex( int referenceAtlasIndex ) {
-        this.referenceAtlasIndex = referenceAtlasIndex;
-    }
-    /**
-     * @return the thumbnailUrl
-     */
-    public String getThumbnailUrl() {
-        return thumbnailUrl;
-    }
-    /**
-     * @param thumbnailUrl the thumbnailUrl to set
-     */
-    public void setThumbnailUrl( String thumbnailUrl ) {
-        this.thumbnailUrl = thumbnailUrl;
-    }
-    /**
-     * @return the zoomifiedNisslUrl
-     */
-    public String getZoomifiedNisslUrl() {
-        return zoomifiedNisslUrl;
-    }
-    /**
-     * @param zoomifiedNisslUrl the zoomifiedNisslUrl to set
-     */
-    public void setZoomifiedNisslUrl( String zoomifiedNisslUrl ) {
-        this.zoomifiedNisslUrl = zoomifiedNisslUrl;
-    }
-    /**
-     * @return the expressionThumbnailUrl
-     */
-    public String getExpressionThumbnailUrl() {
-        return expressionThumbnailUrl;
-    }
-    /**
-     * @param expressionThumbnailUrl the expressionThumbnailUrl to set
-     */
-    public void setExpressionThumbnailUrl( String expressionThumbnailUrl ) {
-        this.expressionThumbnailUrl = expressionThumbnailUrl;
-    }
-    /**
-     * @return the downloadImagePath
-     */
-    public String getDownloadImagePath() {
-        return downloadImagePath;
-    }
-    /**
-     * @param downloadImagePath the downloadImagePath to set
-     */
-    public void setDownloadImagePath( String downloadImagePath ) {
-        this.downloadImagePath = downloadImagePath;
-    }
-    /**
-     * @return the downloadExpressionPath
-     */
-    public String getDownloadExpressionPath() {
-        return downloadExpressionPath;
-    }
-    /**
-     * @param downloadExpressionPath the downloadExpressionPath to set
-     */
-    public void setDownloadExpressionPath( String downloadExpressionPath ) {
-        this.downloadExpressionPath = downloadExpressionPath;
-    }
-    /**
-     * @return the height
-     */
-    public int getHeight() {
-        return height;
-    }
-    /**
-     * @param height the height to set
-     */
-    public void setHeight( int height ) {
-        this.height = height;
-    }
-    /**
-     * @return the width
-     */
-    public int getWidth() {
-        return width;
-    }
-    /**
-     * @param width the width to set
-     */
-    public void setWidth( int width ) {
-        this.width = width;
-    }
-
     /**
      * @return the abaGeneURL
      */
     public String getAbaGeneURL() {
         return abaGeneURL;
-    }
-
-    /**
-     * @param abaGeneURL the abaGeneURL to set
-     */
-    public void setAbaGeneURL( String abaGeneURL ) {
-        this.abaGeneURL = abaGeneURL;
     }
 
     /**
@@ -283,12 +145,53 @@ public class ImageValueObject implements java.io.Serializable {
     }
 
     /**
-     * @param abaHomologousMouseGene the abaHomologousMouseGene to set
+     * @return the displayName
      */
-    public void setAbaHomologousMouseGene( GeneValueObject abaHomologousMouseGene ) {
-        this.abaHomologousMouseGene = abaHomologousMouseGene;
+    public String getDisplayName() {
+        return displayName;
     }
 
+    /**
+     * @return the downloadExpressionPath
+     */
+    public String getDownloadExpressionPath() {
+        return downloadExpressionPath;
+    }
+
+    /**
+     * @return the downloadImagePath
+     */
+    public String getDownloadImagePath() {
+        return downloadImagePath;
+    }
+
+    /**
+     * @return the expressionThumbnailUrl
+     */
+    public String getExpressionThumbnailUrl() {
+        return expressionThumbnailUrl;
+    }
+
+    /**
+     * @return the height
+     */
+    public int getHeight() {
+        return height;
+    }
+
+    /**
+     * @return the id
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @return the position
+     */
+    public int getPosition() {
+        return position;
+    }
 
     /**
      * @return the queryGeneSymbol
@@ -297,14 +200,33 @@ public class ImageValueObject implements java.io.Serializable {
         return queryGeneSymbol;
     }
 
-
     /**
-     * @param queryGeneSymbol the queryGeneSymbol to set
+     * @return the referenceAtlasIndex
      */
-    public void setQueryGeneSymbol( String queryGeneSymbol ) {
-        this.queryGeneSymbol = queryGeneSymbol;
+    public int getReferenceAtlasIndex() {
+        return referenceAtlasIndex;
     }
 
+    /**
+     * @return the thumbnailUrl
+     */
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    /**
+     * @return the width
+     */
+    public int getWidth() {
+        return width;
+    }
+
+    /**
+     * @return the zoomifiedNisslUrl
+     */
+    public String getZoomifiedNisslUrl() {
+        return zoomifiedNisslUrl;
+    }
 
     /**
      * @return the usingHomologue
@@ -313,11 +235,108 @@ public class ImageValueObject implements java.io.Serializable {
         return usingHomologue;
     }
 
+    /**
+     * @param abaGeneURL the abaGeneURL to set
+     */
+    public void setAbaGeneURL( String abaGeneURL ) {
+        this.abaGeneURL = abaGeneURL;
+    }
+
+    /**
+     * @param abaHomologousMouseGene the abaHomologousMouseGene to set
+     */
+    public void setAbaHomologousMouseGene( GeneValueObject abaHomologousMouseGene ) {
+        this.abaHomologousMouseGene = abaHomologousMouseGene;
+    }
+
+    /**
+     * @param displayName the displayName to set
+     */
+    public void setDisplayName( String displayName ) {
+        this.displayName = displayName;
+    }
+
+    /**
+     * @param downloadExpressionPath the downloadExpressionPath to set
+     */
+    public void setDownloadExpressionPath( String downloadExpressionPath ) {
+        this.downloadExpressionPath = downloadExpressionPath;
+    }
+
+    /**
+     * @param downloadImagePath the downloadImagePath to set
+     */
+    public void setDownloadImagePath( String downloadImagePath ) {
+        this.downloadImagePath = downloadImagePath;
+    }
+
+    /**
+     * @param expressionThumbnailUrl the expressionThumbnailUrl to set
+     */
+    public void setExpressionThumbnailUrl( String expressionThumbnailUrl ) {
+        this.expressionThumbnailUrl = expressionThumbnailUrl;
+    }
+
+    /**
+     * @param height the height to set
+     */
+    public void setHeight( int height ) {
+        this.height = height;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId( int id ) {
+        this.id = id;
+    }
+
+    /**
+     * @param position the position to set
+     */
+    public void setPosition( int position ) {
+        this.position = position;
+    }
+
+    /**
+     * @param queryGeneSymbol the queryGeneSymbol to set
+     */
+    public void setQueryGeneSymbol( String queryGeneSymbol ) {
+        this.queryGeneSymbol = queryGeneSymbol;
+    }
+
+    /**
+     * @param referenceAtlasIndex the referenceAtlasIndex to set
+     */
+    public void setReferenceAtlasIndex( int referenceAtlasIndex ) {
+        this.referenceAtlasIndex = referenceAtlasIndex;
+    }
+
+    /**
+     * @param thumbnailUrl the thumbnailUrl to set
+     */
+    public void setThumbnailUrl( String thumbnailUrl ) {
+        this.thumbnailUrl = thumbnailUrl;
+    }
 
     /**
      * @param usingHomologue the usingHomologue to set
      */
     public void setUsingHomologue( boolean usingHomologue ) {
         this.usingHomologue = usingHomologue;
+    }
+
+    /**
+     * @param width the width to set
+     */
+    public void setWidth( int width ) {
+        this.width = width;
+    }
+
+    /**
+     * @param zoomifiedNisslUrl the zoomifiedNisslUrl to set
+     */
+    public void setZoomifiedNisslUrl( String zoomifiedNisslUrl ) {
+        this.zoomifiedNisslUrl = zoomifiedNisslUrl;
     }
 }

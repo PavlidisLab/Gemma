@@ -18,8 +18,16 @@
  */
 package ubic.gemma.web.controller;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.List;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
@@ -27,10 +35,6 @@ import ubic.gemma.job.progress.ProgressData;
 import ubic.gemma.job.progress.ProgressStatusService;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.util.MockLongJobController;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
 
 /**
  * Test of long job control.
@@ -41,9 +45,12 @@ import static org.junit.Assert.*;
 @SuppressWarnings("null")
 public class TaskRunningTest extends BaseSpringWebTest {
 
-    @Autowired ProgressStatusService progressStatusService;
-    @Autowired TaskRunningService taskRunningService;
-    @Autowired MockLongJobController mockLongJobController;
+    @Autowired
+    ProgressStatusService progressStatusService;
+    @Autowired
+    TaskRunningService taskRunningService;
+    @Autowired
+    MockLongJobController mockLongJobController;
 
     /**
      * @throws Exception

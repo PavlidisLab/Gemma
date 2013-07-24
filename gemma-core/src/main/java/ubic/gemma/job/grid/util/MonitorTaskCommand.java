@@ -19,6 +19,8 @@
 package ubic.gemma.job.grid.util;
 
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.tasks.Task;
 
 /**
  * Useless command
@@ -36,7 +38,7 @@ public class MonitorTaskCommand extends TaskCommand {
     private int runTimeMillis = 2000;
 
     @Override
-    public Class getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
         return MonitorTask.class;
     }
 

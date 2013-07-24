@@ -50,6 +50,11 @@ public class UploadListener implements OutputStreamListener {
     private HttpServletRequest request;
     private int totalFiles = -1;
 
+    public UploadListener( HttpServletRequest request ) {
+        this.request = request;
+        this.totalToRead = request.getContentLength();
+    }
+
     /**
      * @param request
      * @param debugDelay
@@ -57,22 +62,6 @@ public class UploadListener implements OutputStreamListener {
     public UploadListener( HttpServletRequest request, long debugDelay ) {
         this( request );
         this.delay = debugDelay;
-    }
-
-    public UploadListener( HttpServletRequest request ) {
-        this.request = request;
-        this.totalToRead = request.getContentLength();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.upload.OutputStreamListener#start()
-     */
-    @Override
-    public void start() {
-        updateUploadInfo( "Start" );
-        totalFiles++;
     }
 
     /*
@@ -97,9 +86,14 @@ public class UploadListener implements OutputStreamListener {
         }
     }
 
-    private void updateUploadInfo( String status ) {
-        request.getSession().setAttribute( "uploadInfo",
-                new UploadInfo( totalFiles, totalToRead, totalBytesRead, status ) );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.upload.OutputStreamListener#done()
+     */
+    @Override
+    public void done() {
+        updateUploadInfo( "done" );
     }
 
     /*
@@ -115,11 +109,17 @@ public class UploadListener implements OutputStreamListener {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.upload.OutputStreamListener#done()
+     * @see ubic.gemma.util.upload.OutputStreamListener#start()
      */
     @Override
-    public void done() {
-        updateUploadInfo( "done" );
+    public void start() {
+        updateUploadInfo( "Start" );
+        totalFiles++;
+    }
+
+    private void updateUploadInfo( String status ) {
+        request.getSession().setAttribute( "uploadInfo",
+                new UploadInfo( totalFiles, totalToRead, totalBytesRead, status ) );
     }
 
 }

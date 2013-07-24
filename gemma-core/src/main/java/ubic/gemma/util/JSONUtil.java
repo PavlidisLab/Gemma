@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletResponseWrapper;
 
 /**
  * A utility class to do 'JSON-like' things, such as writing out JSON objects to the response {@link Writer}.
+ * <p>
+ * This is in core because it is used by the AjaxAuthenticationFailureHandler - it could be moved.
  * 
  * @author keshav
  * @version $Id$
@@ -58,14 +60,13 @@ public class JSONUtil {
         out.close();
     }
 
-    public String getJSONErrorMessage( Exception e ) {       
-        
+    public String getJSONErrorMessage( Exception e ) {
+
         String errMsg;
-        
-        if (e.getCause()!=null){
+
+        if ( e.getCause() != null ) {
             errMsg = e.getCause().getMessage();
-        }
-        else{
+        } else {
             errMsg = e.getLocalizedMessage();
         }
         String jsonText = "{success:false, message:\"" + errMsg + "\"}";

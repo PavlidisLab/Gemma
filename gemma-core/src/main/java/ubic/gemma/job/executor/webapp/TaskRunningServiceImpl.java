@@ -80,10 +80,10 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator( Executors
             .newFixedThreadPool( 20 ) );
 
-    private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<String, SubmittedTask>();
+    private final Map<String, SubmittedTask<? extends TaskResult>> submittedTasks = new ConcurrentHashMap<String, SubmittedTask<? extends TaskResult>>();
 
     @Override
-    public Collection<SubmittedTask> getSubmittedTasks() {
+    public Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks() {
         return submittedTasks.values();
     }
 
@@ -196,7 +196,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
      * @param taskId
      * @return
      */
-    private SubmittedTask constructSubmittedTaskProxy( TaskCommand taskCommand, String taskId ) {
+    private SubmittedTask<TaskResult> constructSubmittedTaskProxy( TaskCommand taskCommand, String taskId ) {
         String resultQueueName = ConfigUtils.getString( "gemma.remoteTasks.resultQueuePrefix" ) + taskId;
         String statusQueueName = ConfigUtils.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;
         String progressQueueName = ConfigUtils.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" ) + taskId;

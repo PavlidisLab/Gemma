@@ -19,36 +19,35 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 public class ExpressionExperimentUploadResponse {
-    
+
     private Long taskId;
-    
+
     private String errorMessage;
-    
+
     private boolean error;
 
-    public void setTaskId( Long taskId ) {
-        this.taskId = taskId;
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
     public Long getTaskId() {
         return taskId;
     }
 
-    public void setErrorMessage( String errorMessage ) {
-        this.errorMessage = errorMessage;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
+    public boolean isError() {
+        return error;
     }
 
     public void setError( boolean error ) {
         this.error = error;
     }
 
-    public boolean isError() {
-        return error;
+    public void setErrorMessage( String errorMessage ) {
+        this.errorMessage = errorMessage;
     }
-    
-    
+
+    public void setTaskId( Long taskId ) {
+        this.taskId = taskId;
+    }
+
 }

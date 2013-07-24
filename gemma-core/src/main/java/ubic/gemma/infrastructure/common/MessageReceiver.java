@@ -19,10 +19,12 @@
 package ubic.gemma.infrastructure.common;
 
 /**
- * author: anton
- * date: 08/02/13
+ * Represents the consumer end of a queue
+ * 
+ * @author: anton date: 08/02/13
  */
 public interface MessageReceiver<T> {
     T receive();
+
     T blockingReceive();
 }

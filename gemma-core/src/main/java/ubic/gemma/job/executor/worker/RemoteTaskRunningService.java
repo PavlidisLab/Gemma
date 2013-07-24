@@ -17,29 +17,28 @@ package ubic.gemma.job.executor.worker;
 import ubic.gemma.job.TaskCommand;
 
 /**
- *  TODO: document me
+ * Worker
  */
 public interface RemoteTaskRunningService {
 
     /**
-     * Submit task represented by TaskCommand for execution. The task may be queued for some time since the
-     * number of concurrently running tasks is limited.
+     * Submit task represented by TaskCommand for execution. The task may be queued for some time since the number of
+     * concurrently running tasks is limited.
+     * 
      * @param taskCommand
      */
-    public void submit ( TaskCommand taskCommand );
+    public void submit( TaskCommand taskCommand );
 
     /**
-     *
      * @param taskId
      * @return
      */
     public SubmittedTaskRemote getSubmittedTask( String taskId );
 
     /**
-     * Attempts to stop all actively executing tasks and halts the processing of waiting tasks.
-     * There are no guarantees beyond best-effort attempts to stop processing actively executing tasks.
-     * Cancellation is via Thread.interrupt(), so any task that fails to respond to interrupts may never terminate.
+     * Attempts to stop all actively executing tasks and halts the processing of waiting tasks. There are no guarantees
+     * beyond best-effort attempts to stop processing actively executing tasks. Cancellation is via Thread.interrupt(),
+     * so any task that fails to respond to interrupts may never terminate.
      */
     void shutdown();
 }
-

@@ -24,8 +24,8 @@ import java.util.Map;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.quartz.impl.StdScheduler;
@@ -34,11 +34,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import ubic.gemma.Constants;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.QuartzUtils;
+import ubic.gemma.web.util.Constants;
 
 /**
  * StartupListener class used to initialize the spring context and make it available to the servlet context, so filters

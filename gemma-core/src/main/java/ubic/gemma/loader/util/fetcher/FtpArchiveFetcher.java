@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.taskdefs.Untar;

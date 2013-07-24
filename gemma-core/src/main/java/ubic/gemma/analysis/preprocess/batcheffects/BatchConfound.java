@@ -21,11 +21,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ChiSquaredDistribution;
-import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
-import org.apache.commons.math.stat.inference.ChiSquareTest;
-import org.apache.commons.math.stat.inference.ChiSquareTestImpl;
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.stat.inference.ChiSquareTest;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
@@ -209,7 +206,7 @@ public class BatchConfound {
                     counts[batchIndex][factorIndex]++;
                 }
 
-                ChiSquareTest cst = new ChiSquareTestImpl();
+                ChiSquareTest cst = new ChiSquareTest();
 
                 try {
                     chiSquare = cst.chiSquare( counts );
@@ -220,15 +217,10 @@ public class BatchConfound {
                 }
 
                 df = ( counts.length - 1 ) * ( counts[0].length - 1 );
-                ChiSquaredDistribution distribution = new ChiSquaredDistributionImpl( df );
+                ChiSquaredDistribution distribution = new ChiSquaredDistribution( df );
 
                 if ( !Double.isNaN( chiSquare ) ) {
-                    try {
-                        p = 1.0 - distribution.cumulativeProbability( chiSquare );
-                    } catch ( MathException e ) {
-                        log.warn( "Math exception computing ChiSq probability for " + chiSquare + ": " + e.getMessage() );
-                        p = Double.NaN;
-                    }
+                    p = 1.0 - distribution.cumulativeProbability( chiSquare );
                 }
 
                 log.debug( "ChiSq\t" + ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t" + ef.getName()

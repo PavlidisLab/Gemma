@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
 /**
@@ -32,16 +33,21 @@ import ubic.gemma.tasks.Task;
 public class TaskCommandToTaskMatcherImpl implements TaskCommandToTaskMatcher {
 
     @Autowired
-    ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
     @Override
     public Task match( TaskCommand taskCommand ) {
-        Class taskClass = taskCommand.getTaskClass();
+        Class<? extends Task<TaskResult, ? extends TaskCommand>> taskClass = taskCommand.getTaskClass();
         if ( taskClass == null )
             throw new IllegalArgumentException( "Task is not set for " + taskCommand.getClass().getSimpleName() );
 
-        // TODO: Try using @Configurable and new operator in the future.
-        Task task = ( Task ) applicationContext.getBean( taskClass );
+        // TODO: Try using @Configurable and new operator in the future; could use "new" to get autowiring
+
+        /*
+         * Get instance of the bean that allows running the task. For remote tasks this is run on the worker, for local
+         * tasks in process.
+         */
+        Task task = applicationContext.getBean( taskClass );
         if ( task == null )
             throw new IllegalArgumentException( "Task bean is not found for " + taskClass.getSimpleName() );
 

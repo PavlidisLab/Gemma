@@ -21,7 +21,7 @@ package ubic.gemma.apps;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

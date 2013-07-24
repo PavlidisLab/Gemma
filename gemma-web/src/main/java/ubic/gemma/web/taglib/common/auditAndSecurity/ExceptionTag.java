@@ -21,7 +21,7 @@ package ubic.gemma.web.taglib.common.auditAndSecurity;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -68,7 +68,7 @@ public class ExceptionTag extends TagSupport {
                 if ( showStackTrace ) {
                     buf.append( "<div id=\"stacktrace\" class=\"stacktrace\" >" );
                     if ( exception.getStackTrace() != null ) {
-                        buf.append( ExceptionUtils.getFullStackTrace( exception ) );
+                        buf.append( ExceptionUtils.getStackTrace( exception ) );
                     } else {
                         buf.append( "There was no stack trace!" );
                     }

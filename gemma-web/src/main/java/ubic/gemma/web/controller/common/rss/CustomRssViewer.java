@@ -27,7 +27,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.feed.AbstractRssFeedView;
@@ -51,22 +51,6 @@ public class CustomRssViewer extends AbstractRssFeedView {
     StatusService statusService;
     @Autowired
     ExpressionExperimentService expressionExperimentService;
-
-    @Override
-    protected void buildFeedMetadata( Map<String, Object> model, Channel feed, HttpServletRequest request ) {
-
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addWeeks( date, -1 );
-
-        int updateCount = ( Integer ) model.get( "updateCount" );
-        int newCount = ( Integer ) model.get( "newCount" );
-        feed.setTitle( "RSS | Gemma" );
-        feed.setDescription( updateCount + " updated experiments and " + newCount + " new experiments since " + date );
-        feed.setLink( "http://www.chibi.ubc.ca/Gemma/" );
-
-        super.buildFeedMetadata( model, feed, request );
-    }
 
     /*
      * (non-Javadoc)
@@ -107,6 +91,22 @@ public class CustomRssViewer extends AbstractRssFeedView {
             items.add( item );
         }
         return items;
+    }
+
+    @Override
+    protected void buildFeedMetadata( Map<String, Object> model, Channel feed, HttpServletRequest request ) {
+
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addWeeks( date, -1 );
+
+        int updateCount = ( Integer ) model.get( "updateCount" );
+        int newCount = ( Integer ) model.get( "newCount" );
+        feed.setTitle( "RSS | Gemma" );
+        feed.setDescription( updateCount + " updated experiments and " + newCount + " new experiments since " + date );
+        feed.setLink( "http://www.chibi.ubc.ca/Gemma/" );
+
+        super.buildFeedMetadata( model, feed, request );
     }
 
 }

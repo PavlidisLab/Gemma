@@ -30,7 +30,7 @@ import javax.servlet.jsp.tagext.VariableInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.Constants;
+import ubic.gemma.web.util.Constants;
 
 /**
  * Implementation of <code>TagExtraInfo</code> for the <b>constants</b> tag, identifying the scripting object(s) to be

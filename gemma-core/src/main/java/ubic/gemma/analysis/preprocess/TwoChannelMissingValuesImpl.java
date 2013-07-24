@@ -21,8 +21,8 @@ package ubic.gemma.analysis.preprocess;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,6 @@ import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
-import ubic.gemma.Constants;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -488,11 +487,11 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         present.setName( "Detection call" );
 
         if ( !signalThreshold.isNaN() ) {
-            present.setDescription( "Detection call based on signal threshold of " + signalThreshold + " (Computed by "
-                    + Constants.APP_NAME + ")" );
+            present.setDescription( "Detection call based on signal threshold of " + signalThreshold
+                    + " (Computed by Gemma)" );
         } else {
             present.setDescription( "Detection call based on signal to noise threshold of " + signalToNoiseThreshold
-                    + " (Computed by " + Constants.APP_NAME + ")" );
+                    + " (Computed by Gemma)" );
         }
         present.setGeneralType( GeneralType.CATEGORICAL );
         present.setIsBackground( false );

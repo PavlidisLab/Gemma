@@ -25,7 +25,7 @@ import java.util.HashSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,13 +62,28 @@ public class BioAssayController {
     private ExpressionExperimentService eeService;
 
     /**
-     * AJAX
-     * 
-     * @param id
+     * @param eeId
      * @return
      */
-    public String markOutlier( Collection<Long> ids ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids ) );
+    public Collection<BioAssayValueObject> getBioAssays( Long eeId ) {
+        ExpressionExperiment ee = eeService.load( eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Could not load experiment with ID=" + eeId );
+        }
+
+        ee = eeService.thawLite( ee );
+        Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
+
+        for ( BioAssay assay : ee.getBioAssays() ) {
+
+            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
+
+            result.add( bioAssayValueObject );
+        }
+
+        log.info( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
+
+        return result;
     }
 
     /**
@@ -77,8 +92,8 @@ public class BioAssayController {
      * @param id
      * @return
      */
-    public String unmarkOutlier( Collection<Long> ids ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
+    public String markOutlier( Collection<Long> ids ) {
+        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids ) );
     }
 
     /**
@@ -115,31 +130,6 @@ public class BioAssayController {
     }
 
     /**
-     * @param eeId
-     * @return
-     */
-    public Collection<BioAssayValueObject> getBioAssays( Long eeId ) {
-        ExpressionExperiment ee = eeService.load( eeId );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Could not load experiment with ID=" + eeId );
-        }
-
-        ee = eeService.thawLite( ee );
-        Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
-
-        for ( BioAssay assay : ee.getBioAssays() ) {
-
-            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
-
-            result.add( bioAssayValueObject );
-        }
-
-        log.info( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
-
-        return result;
-    }
-
-    /**
      * @param request
      * @param response
      * @return ModelAndView
@@ -166,6 +156,16 @@ public class BioAssayController {
             }
         }
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssays );
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param id
+     * @return
+     */
+    public String unmarkOutlier( Collection<Long> ids ) {
+        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
 }

@@ -29,7 +29,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
@@ -71,12 +71,18 @@ import ubic.gemma.web.remote.EntityDelegator;
 @RequestMapping("/compositeSequence")
 public class CompositeSequenceController extends BaseController {
 
-    @Autowired private ArrayDesignMapResultService arrayDesignMapResultService;
-    @Autowired private ArrayDesignService arrayDesignService;
-    @Autowired private BlatResultService blatResultService;
-    @Autowired private CompositeSequenceService compositeSequenceService;
-    @Autowired private SearchService searchService;
-    @Autowired private BioSequenceService bioSequenceService;
+    @Autowired
+    private ArrayDesignMapResultService arrayDesignMapResultService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private BlatResultService blatResultService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private SearchService searchService;
+    @Autowired
+    private BioSequenceService bioSequenceService;
 
     /**
      * Search for probes.

@@ -18,10 +18,14 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+
 import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
@@ -36,9 +40,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
-
-import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * A controller to run differential expression analysis either locally or in a space.
@@ -103,29 +104,6 @@ public class DifferentialExpressionAnalysisController {
     }
 
     /**
-     * AJAX entry point to remove an analysis given by the ID
-     * 
-     * @param id
-     * @return
-     * @throws Exception
-     */
-    public String remove( Long eeId, Long id ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
-        }
-
-        DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService.load( id );
-        if ( toRemove == null ) {
-            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
-        }
-        DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
-                toRemove );
-        this.experimentReportService.evictFromCache( ee.getId() );
-        return taskRunningService.submitRemoteTask( cmd );
-    }
-
-    /**
      * AJAX entry point to redo an analysis.
      * 
      * @param eeId
@@ -168,6 +146,29 @@ public class DifferentialExpressionAnalysisController {
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh,
                 false );
         return taskRunningService.submitLocalTask( cmd );
+    }
+
+    /**
+     * AJAX entry point to remove an analysis given by the ID
+     * 
+     * @param id
+     * @return
+     * @throws Exception
+     */
+    public String remove( Long eeId, Long id ) throws Exception {
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
+        }
+
+        DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService.load( id );
+        if ( toRemove == null ) {
+            throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
+        }
+        DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
+                toRemove );
+        this.experimentReportService.evictFromCache( ee.getId() );
+        return taskRunningService.submitRemoteTask( cmd );
     }
 
     /**

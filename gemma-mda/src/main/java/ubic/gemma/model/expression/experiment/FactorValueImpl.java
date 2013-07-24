@@ -18,8 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.Characteristic;

@@ -30,31 +30,32 @@ import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 
 /**
- *
- *
+ * This is part of the worker Spring context-configured beans, listens for messages on task control queue.
+ * @author anton
  */
 @Component("taskControlListener")
 public class TaskControlListener implements MessageListener {
 
     private static final Log log = LogFactory.getLog( TaskControlListener.class );
 
-    @Autowired private RemoteTaskRunningService remoteTaskRunningService;
+    @Autowired
+    private RemoteTaskRunningService remoteTaskRunningService;
 
     @Override
     public void onMessage( Message message ) {
-        ObjectMessage objectMessage = (ObjectMessage) message;
+        ObjectMessage objectMessage = ( ObjectMessage ) message;
         try {
-            TaskControl taskControl = (TaskControl) objectMessage.getObject();
+            TaskControl taskControl = ( TaskControl ) objectMessage.getObject();
             String taskId = taskControl.getTaskId();
             assert taskId != null;
 
             SubmittedTaskRemote submittedTask = remoteTaskRunningService.getSubmittedTask( taskControl.getTaskId() );
-            if (submittedTask == null) {
+            if ( submittedTask == null ) {
                 log.warn( "Got control request for taskId:" + taskId + ", but no submitted task found." );
                 return;
             }
 
-            switch (taskControl.getRequest()) {
+            switch ( taskControl.getRequest() ) {
                 case CANCEL:
                     log.info( "Received CANCEL control message for task: " + taskControl.getTaskId() );
                     submittedTask.requestCancellation();
@@ -65,7 +66,7 @@ public class TaskControlListener implements MessageListener {
                     break;
             }
 
-        } catch (JMSException e) {
+        } catch ( JMSException e ) {
             log.warn( "Got JMSException: " + e.getMessage() );
         }
     }

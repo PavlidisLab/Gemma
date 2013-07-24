@@ -21,7 +21,7 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -31,6 +31,7 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
