@@ -20,7 +20,6 @@
 		<module>gemma-mda</module>
 		<module>gemma-core</module>
 		<module>gemma-web</module>
-		<module>gemma-model</module>
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
