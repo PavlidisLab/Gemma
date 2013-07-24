@@ -92,7 +92,7 @@ Gemma.Metaheatmap.ColorLegend = Ext.extend(Ext.Window, {
             if (this.pValueLabels[i] === "No Data") {
                this.drawMissingCell_(x, y, this.cellSize);
             } else if (this.pValueLabels[i] == "Not Significant") {
-               this.drawTestedButNotSignificant_(x, y, this.cellSize)
+               this.drawTestedButNotSignificant_(x, y, this.cellSize);
             } else {
                var transparency = this.pValueValues[i] / 10;
                this.drawCell_(x, y, this.cellSize, color, transparency);

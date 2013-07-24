@@ -326,7 +326,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
                   }
 
                   // why do we require that this is set in two places? The answer has been lost to the sands of time
-                  record.set('memberIds', expIds)
+                  record.set('memberIds', expIds);
                   record.get('resultValueObject').expressionExperimentIds = expIds;
                   this.lastQuery = null;
                   this.selectedExpressionExperimentGroup = record.data;

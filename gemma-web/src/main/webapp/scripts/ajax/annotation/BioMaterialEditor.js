@@ -99,7 +99,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
           * sort by id to give consistency.
           */
          factors.sort(function(a, b) {
-               return a.id - b.id
+               return a.id - b.id;
             });
 
          for (var i = 0; i < factors.length; i++) {

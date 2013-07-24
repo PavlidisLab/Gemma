@@ -49,7 +49,7 @@ Ext.onReady(function() {
 									id : 'id'
 								}, record),
 						remoteSort : false
-					})
+					});
 			userStore.load();
 
 			/* create editors for the grid */

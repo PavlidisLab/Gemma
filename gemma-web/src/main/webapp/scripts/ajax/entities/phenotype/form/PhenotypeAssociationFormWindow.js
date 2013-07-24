@@ -136,7 +136,7 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
             } else {
                errorPanel.hide();
             }
-         }
+         };
 
          // Note: it should be called when all form values are valid.
          var generateEvidenceValueObject = function(validatedPhenotypes) {

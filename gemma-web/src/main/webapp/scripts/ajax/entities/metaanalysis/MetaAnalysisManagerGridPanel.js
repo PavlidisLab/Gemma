@@ -38,7 +38,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
          var generateLinkPlaceholder = function() {
             return '<img src="/Gemma/images/s.gif" height="16" width="16">';
-         }
+         };
 
          var showLoadMask = function(msg) {
             if (!this.loadMask) {

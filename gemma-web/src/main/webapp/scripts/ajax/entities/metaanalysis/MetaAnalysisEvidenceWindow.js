@@ -51,7 +51,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
             } else {
                errorPanel.hide();
             }
-         }
+         };
 
          var submitEvidenceSavingForm = function() {
             if (formPanel.getForm().isValid()) {

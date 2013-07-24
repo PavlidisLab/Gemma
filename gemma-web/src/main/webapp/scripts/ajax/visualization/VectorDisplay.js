@@ -111,7 +111,7 @@ Gemma.VectorDisplay = Ext.extend(Ext.Window,
 
          this.refresh();
 
-      }.createDelegate(this))
+      }.createDelegate(this));
 
    }
 

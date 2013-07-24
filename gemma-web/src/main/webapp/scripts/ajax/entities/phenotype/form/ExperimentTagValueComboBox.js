@@ -46,7 +46,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagValueComboBox = Ext.extend(Ext.form.
                // Note that users may type a value that has corresponding valueUri without selecting
                // it from the drop-down list. So, storeRecord can be null in this case.
                valueUri : storeRecord == null ? '' : storeRecord.data.valueUri
-            }
+            };
 
          }
 

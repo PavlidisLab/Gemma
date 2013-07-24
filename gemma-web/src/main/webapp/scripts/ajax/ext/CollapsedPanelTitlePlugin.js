@@ -35,4 +35,4 @@ Ext.ux.CollapsedPanelTitlePlugin = function() {
 			}
 		}
 	};
-}
+};

@@ -72,7 +72,7 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
             } else if (pubMedId <= 0) {
                updatePubMedIdsValidity(false, literaturePanel, false);
             }
-         }
+         };
          var pubMedIdFieldKeyUpHandler = function(literaturePanel, event) {
             updatePubMedIdsValidity(true, literaturePanel, true);
          };
@@ -128,7 +128,7 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
             for (var i = 0; i < container.items.length; i++) {
                container.items.items[i].setVisible(isVisible);
             }
-         }
+         };
 
          Ext.apply(this, {
                setEvidenceId : function(evidenceId) {

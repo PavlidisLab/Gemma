@@ -285,7 +285,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
                hasEnabledRadioButtons : (totalSuitableResultSetCount > 0),
                experimentTitleComponent : experimentTitleComponent,
                experimentResultSetsPanel : experimentResultSetsPanel
-            }
+            };
          }.createDelegate(this);
 
          var showExperiments = function(experimentIds) {
@@ -405,7 +405,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
                      checkbox.el.parent().unmask();
                   }
                });
-         }
+         };
 
          var buttonPanel = new Ext.Panel({
                region : 'south',

@@ -17,7 +17,7 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
                // Only the first tab's grid panel should have storeAutoLoad set to true.
                storeAutoLoad : isFirstTab,
                phenotypeStoreProxy : this.phenotypeStoreProxy
-            }
+            };
          }.createDelegate(this);
 
          var gridPanels = [new Gemma.PhenotypeTreeGridPanel(getGridPanelConfig(true)), new Gemma.PhenotypeGridPanel(getGridPanelConfig(false))];
@@ -40,7 +40,7 @@ Gemma.PhenotypeTabPanel = Ext.extend(Ext.TabPanel, {
                {
                   single : true
                });
-         }
+         };
 
          for (var i = 0; i < gridPanels.length; i++) {
             gridPanels[i].on('viewready', function(gridPanel) {
