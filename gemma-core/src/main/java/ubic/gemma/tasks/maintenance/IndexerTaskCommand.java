@@ -60,8 +60,8 @@ public class IndexerTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
-        return ( Class<? extends Task<TaskResult, ? extends TaskCommand>> ) IndexerTask.class;
+    public Class<?> getTaskClass() {
+        return IndexerTask.class;
     }
 
     public boolean isCompassOn() {

@@ -45,7 +45,7 @@ public class TaskCommand implements Serializable {
     // We have to have this mapping somewhere until we make Tasks themselves serializable. Tasks are not readily
     // serializable because they have dependencies to spring services.
     // at which point TaskCommand can be deprecated(or remain as TaskContext).
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+    public Class<?> getTaskClass() {
         return null;
     }
 
