@@ -2,7 +2,7 @@ package ubic.gemma.script.framework
 import ubic.gemma.util.SpringContextUtil
 import ubic.gemma.security.authentication.ManualAuthenticationService
 import java.util.concurrent.atomic.AtomicBoolean
-import org.apache.commons.lang.time.StopWatch
+import org.apache.commons.lang3.time.StopWatch
 
 /**
  * Class for creation of a spring context. Example usage:
