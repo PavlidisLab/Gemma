@@ -156,6 +156,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     private DoubleArrayList getRanks( ExpressionDataDoubleMatrix intensities,
             ProcessedExpressionDataVectorDao.RankMethod method ) {
         log.debug( "Getting ranks" );
+        assert intensities != null;
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 
         for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
@@ -260,6 +261,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
             intensities = new ExpressionDataDoubleMatrix( processedVectors );
         }
 
+        assert intensities != null;
+
         return intensities;
     }
 
@@ -275,6 +278,10 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         StopWatch timer = new StopWatch();
         timer.start();
         ExpressionDataDoubleMatrix intensities = loadIntensities( ee, processedVectors );
+
+        if ( intensities == null ) {
+            return processedVectors;
+        }
 
         log.info( "Load intensities: " + timer.getTime() + "ms" );
 
