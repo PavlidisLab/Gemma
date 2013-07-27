@@ -18,7 +18,7 @@
  */
 package ubic.gemma.loader.expression.geo.fetcher;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Retrieve GEO GDS files from the NCBI FTP server.
@@ -51,8 +51,8 @@ public class DatasetFetcher extends GeoFetcher {
      */
     @Override
     protected void initConfig() {
-        this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
-        this.remoteBaseDir = ConfigUtils.getString( "geo.remote.datasetDir" );
+        this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );
+        this.remoteBaseDir = Settings.getString( "geo.remote.datasetDir" );
     }
 
 }

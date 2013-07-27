@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.JSONUtil;
 import ubic.gemma.web.controller.BaseController;
 
@@ -254,7 +254,7 @@ public class UserFormMultiActionController extends BaseController {
 
         // Send an account information e-mail
         SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom( ConfigUtils.getAdminEmailAddress() );
+        mailMessage.setFrom( Settings.getAdminEmailAddress() );
         mailMessage.setSubject( getText( "signup.email.subject", request.getLocale() ) );
         try {
             Map<String, Object> model = new HashMap<String, Object>();

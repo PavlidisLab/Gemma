@@ -36,7 +36,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.util.CompassUtils;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.QuartzUtils;
 import ubic.gemma.web.util.Constants;
 
@@ -111,7 +111,7 @@ public class StartupListener extends ContextLoaderListener {
      * @param ctx
      */
     private void configureScheduler( ApplicationContext ctx ) {
-        if ( !ConfigUtils.isSchedulerEnabled() ) {
+        if ( !Settings.isSchedulerEnabled() ) {
             QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
             log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
         } else {
@@ -166,11 +166,11 @@ public class StartupListener extends ContextLoaderListener {
      * @param config
      */
     private void loadTrackerInformation( Map<String, Object> config ) {
-        String gaTrackerKey = ConfigUtils.getAnalyticsKey();
+        String gaTrackerKey = Settings.getAnalyticsKey();
         if ( StringUtils.isNotBlank( gaTrackerKey ) ) {
             config.put( "ga.tracker", gaTrackerKey );
 
-            String gaTrackerDomain = ConfigUtils.getAnalyticsDomain();
+            String gaTrackerDomain = Settings.getAnalyticsDomain();
             if ( StringUtils.isNotBlank( gaTrackerDomain ) ) {
                 log.debug( "Tracker domain is " + gaTrackerDomain );
                 config.put( "ga.domain", gaTrackerDomain );
@@ -187,7 +187,7 @@ public class StartupListener extends ContextLoaderListener {
      * @param config
      */
     private void loadVersionInformation( Map<String, Object> config ) {
-        log.debug( "Version is " + ConfigUtils.getAppVersion() );
-        config.put( "version", ConfigUtils.getAppVersion() );
+        log.debug( "Version is " + Settings.getAppVersion() );
+        config.put( "version", Settings.getAppVersion() );
     }
 }

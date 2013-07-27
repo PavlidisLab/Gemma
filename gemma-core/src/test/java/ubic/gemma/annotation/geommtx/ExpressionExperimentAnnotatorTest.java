@@ -30,7 +30,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author paul
@@ -50,7 +50,7 @@ public class ExpressionExperimentAnnotatorTest extends BaseSpringContextTest {
     @Before
     public void setup() throws Exception {
 
-        boolean activated = ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
+        boolean activated = Settings.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
         if ( !activated ) {
             return;
         }
@@ -71,7 +71,7 @@ public class ExpressionExperimentAnnotatorTest extends BaseSpringContextTest {
 
     @Test
     public void testAnnotate() {
-        boolean activated = ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
+        boolean activated = Settings.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
         if ( !activated ) {
             log.warn( "MMTx is not available, skipping test" );
             return;

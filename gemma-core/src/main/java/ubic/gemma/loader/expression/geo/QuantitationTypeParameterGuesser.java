@@ -38,7 +38,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Has the unpleasant task of figuring out what the quantitation type should look like, given a description and name
@@ -80,7 +80,7 @@ public class QuantitationTypeParameterGuesser {
     static {
         CompositeConfiguration config = new CompositeConfiguration();
 
-        String gemmaAppDataHome = ConfigUtils.getString( "gemma.appdata.home" );
+        String gemmaAppDataHome = Settings.getString( "gemma.appdata.home" );
         if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
             try {
                 PropertiesConfiguration pc = new PropertiesConfiguration();

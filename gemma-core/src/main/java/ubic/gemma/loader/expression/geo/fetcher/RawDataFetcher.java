@@ -32,7 +32,7 @@ import ubic.basecode.util.NetUtils;
 import ubic.gemma.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Retrieve and unpack the raw data files for GEO series. These are the CEL and other files (RPT, EXP and maybe DAT) for
@@ -161,8 +161,8 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      */
     @Override
     public void initConfig() {
-        localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
-        remoteBaseDir = ConfigUtils.getString( "geo.remote.rawDataDir" );
+        localBasePath = Settings.getString( "geo.local.datafile.basepath" );
+        remoteBaseDir = Settings.getString( "geo.remote.rawDataDir" );
 
         if ( localBasePath == null || localBasePath.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );

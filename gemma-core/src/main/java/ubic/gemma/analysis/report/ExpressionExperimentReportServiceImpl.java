@@ -66,7 +66,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 
@@ -129,8 +129,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         /*
          * Initialize the cache; if it already exists it will not be recreated.
          */
-        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
+        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
         int maxElements = 5000;
         boolean eternal = false;
         boolean overFlowToDisk = false;

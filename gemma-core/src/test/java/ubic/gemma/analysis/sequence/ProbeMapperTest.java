@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Note that some of the tests here are dependent on the content of the mm9 and hg19 database.
@@ -182,12 +182,12 @@ public class ProbeMapperTest extends TestCase {
 
         assert blatres != null && blatres.size() > 0;
 
-        databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
-        databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
-        databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
+        databaseHost = Settings.getString( "gemma.testdb.host" );
+        databaseUser = Settings.getString( "gemma.testdb.user" );
+        databasePassword = Settings.getString( "gemma.testdb.password" );
 
         try {
-            mousegp = new GoldenPathSequenceAnalysis( 3306, ConfigUtils.getString( "gemma.goldenpath.db.mouse" ),
+            mousegp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.mouse" ),
                     databaseHost, databaseUser, databasePassword );
         } catch ( Exception e ) {
             if ( e.getMessage().contains( "Unknown database" ) ) {
@@ -199,7 +199,7 @@ public class ProbeMapperTest extends TestCase {
             }
         }
         try {
-            humangp = new GoldenPathSequenceAnalysis( 3306, ConfigUtils.getString( "gemma.goldenpath.db.human" ),
+            humangp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.human" ),
                     databaseHost, databaseUser, databasePassword );
         } catch ( Exception e ) {
             if ( e.getMessage().contains( "Unknown database" ) ) {

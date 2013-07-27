@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Process the blat results for an array design to map them onto genes.
@@ -191,7 +191,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          * Hackery to work around hg19 problems.; no longer an issue for miRNA
          */
         boolean isMissingTracks = taxon != null && taxon.getCommonName().equals( "human" )
-                && ConfigUtils.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
+                && Settings.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
 
         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
             // if ( isMissingTracks ) {

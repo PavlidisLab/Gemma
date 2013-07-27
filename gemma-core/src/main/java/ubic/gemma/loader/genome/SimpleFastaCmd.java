@@ -31,7 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.util.concurrent.ParsingStreamConsumer;
 
@@ -49,7 +49,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     private static Log log = LogFactory.getLog( SimpleFastaCmd.class.getName() );
 
-    private static String fastaCmdExecutable = ConfigUtils.getString( FASTA_CMD_ENV_VAR );
+    private static String fastaCmdExecutable = Settings.getString( FASTA_CMD_ENV_VAR );
 
     private static String blastDbHome = System.getenv( "BLASTDB" );
 

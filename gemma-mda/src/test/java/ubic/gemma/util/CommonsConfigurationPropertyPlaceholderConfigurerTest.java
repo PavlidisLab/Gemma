@@ -28,7 +28,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-
+import ubic.gemma.util.JustATestBean;
 import ubic.basecode.util.FileTools;
 
 /**

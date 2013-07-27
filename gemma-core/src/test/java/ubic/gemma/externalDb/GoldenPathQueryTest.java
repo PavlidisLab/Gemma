@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * These tests require a populated Human database. Valid as of 11/2009.
@@ -79,10 +79,10 @@ public class GoldenPathQueryTest extends TestCase {
         t.setIsSpecies( true );
 
         try {
-            String databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
-            String databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
-            String databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
-            queryer = new GoldenPathQuery( 3306, ConfigUtils.getString( "gemma.goldenpath.db.human" ), databaseHost,
+            String databaseHost = Settings.getString( "gemma.testdb.host" );
+            String databaseUser = Settings.getString( "gemma.testdb.user" );
+            String databasePassword = Settings.getString( "gemma.testdb.password" );
+            queryer = new GoldenPathQuery( 3306, Settings.getString( "gemma.goldenpath.db.human" ), databaseHost,
                     databaseUser, databasePassword );
             this.hasDb = true;
         } catch ( Exception e ) {

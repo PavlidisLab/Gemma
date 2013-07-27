@@ -36,7 +36,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Gene</code>.
@@ -406,7 +406,7 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
             @Override
             public Object doInHibernate( Session session ) throws HibernateException {
                 int i = 0;
-                int batchSize = ConfigUtils.getInt( "gemma.hibernate.jdbc_batch_size" );
+                int batchSize = Settings.getInt( "gemma.hibernate.jdbc_batch_size" );
 
                 for ( Iterator<? extends Gene> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
                     update( entityIterator.next() );

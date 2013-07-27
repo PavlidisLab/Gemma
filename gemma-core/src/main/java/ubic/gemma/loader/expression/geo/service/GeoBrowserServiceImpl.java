@@ -64,7 +64,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author pavlidis
@@ -285,7 +285,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      * @return
      */
     private File getInfoStoreFile() {
-        String path = ConfigUtils.getDownloadPath();
+        String path = Settings.getDownloadPath();
         File f = new File( path + File.separatorChar + GEO_DATA_STORE_FILE_NAME );
         return f;
     }

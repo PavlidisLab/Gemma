@@ -26,7 +26,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import ubic.gemma.loader.genome.gene.ncbi.NCBIUtil;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Taxon information from NCBI comes as a tar.gz archive; only the names.dmp file is of interest. From
@@ -50,8 +50,8 @@ public class TaxonFetcher extends FtpArchiveFetcher {
 
     @Override
     public void initConfig() {
-        this.localBasePath = ConfigUtils.getString( "ncbi.local.datafile.basepath" );
-        this.remoteBaseDir = ConfigUtils.getString( "ncbi.remote.taxon.basedir" );
+        this.localBasePath = Settings.getString( "ncbi.local.datafile.basepath" );
+        this.remoteBaseDir = Settings.getString( "ncbi.remote.taxon.basedir" );
 
         if ( remoteBaseDir == null )
             throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );

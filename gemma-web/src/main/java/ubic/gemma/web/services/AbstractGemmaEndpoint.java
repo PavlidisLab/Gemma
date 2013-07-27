@@ -44,7 +44,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.security.authentication.ManualAuthenticationService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Abstracts out the security and a few constants.
@@ -71,7 +71,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     private String localName;
 
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private String HOME_DIR = Settings.getString( "gemma.appdata.home" );
 
     public AbstractGemmaEndpoint() {
         super();

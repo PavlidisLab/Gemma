@@ -20,7 +20,7 @@ package ubic.gemma.loader.expression.geo.fetcher;
 
 import org.apache.commons.configuration.ConfigurationException;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Fetch GEO "GPLXXX_family.soft.gz" files
@@ -47,8 +47,8 @@ public class PlatformFetcher extends GeoFetcher {
      */
     @Override
     protected void initConfig() {
-        this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
-        this.remoteBaseDir = ConfigUtils.getString( "geo.remote.platformDir" );
+        this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );
+        this.remoteBaseDir = Settings.getString( "geo.remote.platformDir" );
         if ( remoteBaseDir == null ) {
             throw new RuntimeException( new ConfigurationException(
                     "geo.remote.platformDir was not defined in resource bundle" ) );

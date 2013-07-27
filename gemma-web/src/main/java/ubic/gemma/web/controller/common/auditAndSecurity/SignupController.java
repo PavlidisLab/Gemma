@@ -39,7 +39,7 @@ import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.LoginDetailsValueObject;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.JSONUtil;
 import ubic.gemma.web.controller.BaseController;
 
@@ -166,7 +166,7 @@ public class SignupController extends BaseController {
 
         String cPass = request.getParameter( "passwordConfirm" );
 
-        String recatpchaPvtKey = ConfigUtils.getString( "gemma.recaptcha.privateKey" );
+        String recatpchaPvtKey = Settings.getString( "gemma.recaptcha.privateKey" );
 
         if ( StringUtils.isNotBlank( recatpchaPvtKey ) ) {
 
@@ -247,8 +247,8 @@ public class SignupController extends BaseController {
         try {
             Map<String, Object> model = new HashMap<String, Object>();
             model.put( "username", u.getUsername() );
-            model.put( "siteurl", ConfigUtils.getBaseUrl() );
-            model.put( "confirmLink", ConfigUtils.getBaseUrl() + "confirmRegistration.html?key=" + u.getSignupToken()
+            model.put( "siteurl", Settings.getBaseUrl() );
+            model.put( "confirmLink", Settings.getBaseUrl() + "confirmRegistration.html?key=" + u.getSignupToken()
                     + "&username=" + u.getUsername() );
 
             String templateName = "accountCreated.vm";

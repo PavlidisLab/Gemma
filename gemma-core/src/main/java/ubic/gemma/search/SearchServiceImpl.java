@@ -87,7 +87,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
@@ -270,7 +270,7 @@ public class SearchServiceImpl implements SearchService {
             if ( cacheManager.cacheExists( ONTOLOGY_CHILDREN_CACHE_NAME ) ) {
                 return;
             }
-            boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+            boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
             int diskExpiryThreadIntervalSeconds = 600;
             int maxElementsOnDisk = 10000;
             boolean terracottaCoherentReads = false;

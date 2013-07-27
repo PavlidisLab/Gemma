@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.SessionCallback;
 import org.springframework.stereotype.Component;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 import javax.jms.*;
 import java.util.Enumeration;
@@ -43,7 +43,7 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
 
     @Override
     public boolean isRemoteTasksEnabled() {
-        return ConfigUtils.isRemoteTasksEnabled();
+        return Settings.isRemoteTasksEnabled();
     }
 
     @Override
@@ -85,7 +85,7 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
         return message;
     }
 
-    private MapMessage sendTaskSubmissionQueueDiagnosticMessage() throws JMSException {
+    private MapMessage sendTaskSubmissionQueueDiagnosticMessage() {
         MapMessage reply = jmsTemplate.execute( new SessionCallback<MapMessage>() {
             @Override
             public MapMessage doInJms( Session session ) throws JMSException {

@@ -30,9 +30,9 @@ import java.util.HashSet;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ubic.basecode.ncboAnnotator.AnnotatorClient;
-import ubic.basecode.ncboAnnotator.AnnotatorResponse;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.ncbo.AnnotatorClient;
+import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;

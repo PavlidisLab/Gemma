@@ -28,7 +28,7 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.util.fetcher.HttpArchiveFetcherInterface;
 import ubic.gemma.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Downloads protein interaction Files from from the STRING website. STRING makes available gzipped files of data, which
@@ -81,7 +81,7 @@ public class StringProteinFileFetcher extends HttpFetcher implements HttpArchive
     @Override
     public void initConfig() {
 
-        stringProteinFileName = ConfigUtils.getString( INTERACTION );
+        stringProteinFileName = Settings.getString( INTERACTION );
         if ( stringProteinFileName == null || stringProteinFileName.length() == 0 )
             throw new RuntimeException( new ConfigurationException( INTERACTION + " was null or empty" ) );
     }

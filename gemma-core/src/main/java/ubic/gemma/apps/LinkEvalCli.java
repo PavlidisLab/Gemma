@@ -43,7 +43,7 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.util.AbstractCLIContextCLI;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 import java.io.*;
 import java.util.*;
@@ -269,7 +269,7 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
 
     private static final String GO_PROB_MAP = "GoProbMap";
 
-    private static final String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private static final String HOME_DIR = Settings.getString( "gemma.appdata.home" );
 
     private static final String RANDOM_SUBSET = "RandomSubset1K";
 

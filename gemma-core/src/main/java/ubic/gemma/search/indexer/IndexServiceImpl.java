@@ -100,16 +100,17 @@ public class IndexServiceImpl implements IndexService {
                 TaskResult f = indexingTask.getResult();
                 if ( f instanceof IndexerResult ) {
                     return ( IndexerResult ) f;
-                } else {
-                    // probably there was an error.
-                    IndexerResult ir = new IndexerResult( taskCommand );
-                    ir.setException( f.getException() );
                 }
+                // probably there was an error.
+                IndexerResult ir = new IndexerResult( taskCommand );
+                ir.setException( f.getException() );
+
             } catch ( ExecutionException e ) {
                 e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
             } catch ( InterruptedException e ) {
                 e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
             }
+
             if ( indexingTask.isRunningRemotely() && result != null ) {
                 loadExternalIndices( taskCommand, result );
             }

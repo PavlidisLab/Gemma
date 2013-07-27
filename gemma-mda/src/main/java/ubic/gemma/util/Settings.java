@@ -32,10 +32,11 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
-import org.apache.commons.configuration.io.FileHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.basecode.util.ConfigUtils;
 
 /**
  * Convenience class to access Gemma properties defined in a resource. Methods will look in Gemma.properties,
@@ -45,7 +46,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Id$
  * @see org.apache.commons.configuration.CompositeConfiguration
  */
-public class ConfigUtils {
+public class Settings {
 
     /**
      * For web application, the key for the tracker ID in your configuration file. Tracker id for Google is something
@@ -79,7 +80,7 @@ public class ConfigUtils {
 
     private static final String REMOTE_TASKS_ENABLED_PROPERTY = "gemma.remoteTasks.enabled";
 
-    private static Log log = LogFactory.getLog( ConfigUtils.class.getName() );
+    private static Log log = LogFactory.getLog( Settings.class.getName() );
 
     private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
 
@@ -102,7 +103,7 @@ public class ConfigUtils {
          */
 
         try {
-            PropertiesConfiguration pc = loadConfig( USER_CONFIGURATION );
+            PropertiesConfiguration pc = ConfigUtils.loadConfig( USER_CONFIGURATION );
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
             // hmm, this is pretty much required.
@@ -111,7 +112,7 @@ public class ConfigUtils {
 
         try {
             // Default comes first.
-            PropertiesConfiguration pc = loadConfig( DEFAULT_CONFIGURATION );
+            PropertiesConfiguration pc = ConfigUtils.loadConfig( DEFAULT_CONFIGURATION );
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
             // hmm, this is pretty much required.
@@ -119,7 +120,7 @@ public class ConfigUtils {
         }
 
         try {
-            PropertiesConfiguration pc = loadConfig( BUILTIN_CONFIGURATION );
+            PropertiesConfiguration pc = ConfigUtils.loadConfig( BUILTIN_CONFIGURATION );
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
             // that's okay, but warn
@@ -129,7 +130,8 @@ public class ConfigUtils {
         try {
             String gemmaAppDataHome = config.getString( "gemma.appdata.home" );
             if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
-                PropertiesConfiguration pc = loadConfig( gemmaAppDataHome + File.separatorChar + "local.properties" );
+                PropertiesConfiguration pc = ConfigUtils.loadConfig( gemmaAppDataHome + File.separatorChar
+                        + "local.properties" );
                 config.addConfiguration( pc );
 
             }
@@ -139,14 +141,14 @@ public class ConfigUtils {
         }
 
         try {
-            PropertiesConfiguration pc = loadConfig( "version.properties" );
+            PropertiesConfiguration pc = ConfigUtils.loadConfig( "version.properties" );
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
             log.debug( "version.properties not found" );
         }
 
         try {
-            PropertiesConfiguration pc = loadConfig( "geommtx.properties" );
+            PropertiesConfiguration pc = ConfigUtils.loadConfig( "geommtx.properties" );
             config.addConfiguration( pc );
         } catch ( Exception e ) {
             // no big deal...hopefully.
@@ -174,19 +176,6 @@ public class ConfigUtils {
             log.debug( "********** End of configuration details ***********" );
         }
 
-    }
-
-    /**
-     * @param name
-     * @return
-     * @throws ConfigurationException
-     */
-    private static PropertiesConfiguration loadConfig( String name ) throws ConfigurationException {
-        PropertiesConfiguration pc = new PropertiesConfiguration();
-        FileHandler handler = new FileHandler( pc );
-        handler.setFileName( name );
-        handler.load();
-        return pc;
     }
 
     public static String getAdminEmailAddress() {

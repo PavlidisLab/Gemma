@@ -31,7 +31,7 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.*;
 import ubic.gemma.tasks.Task;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -163,9 +163,9 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
 
     private SubmittedTaskRemote constructSubmittedTaskRemote( TaskCommand taskCommand, String taskId,
             List<String> progressUpdates ) {
-        String resultQueueName = ConfigUtils.getString( "gemma.remoteTasks.resultQueuePrefix" ) + taskId;
-        String statusQueueName = ConfigUtils.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;
-        String progressQueueName = ConfigUtils.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" ) + taskId;
+        String resultQueueName = Settings.getString( "gemma.remoteTasks.resultQueuePrefix" ) + taskId;
+        String statusQueueName = Settings.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;
+        String progressQueueName = Settings.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" ) + taskId;
 
         MessageSender<TaskResult> resultSender = new JmsMessageSender<TaskResult>( jmsHelper, resultQueueName );
 

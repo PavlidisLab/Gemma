@@ -50,7 +50,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.TimeUtil;
 import ubic.gemma.util.concurrent.GenericStreamConsumer;
 
@@ -374,8 +374,8 @@ public class AffyPowerToolsProbesetSummarize {
         /*
          * Get the pgf, clf, mps file for this platform. qc probesets: optional.
          */
-        String toolPath = ConfigUtils.getString( "affy.power.tools.exec" );
-        String refPath = ConfigUtils.getString( "affy.power.tools.ref.path" );
+        String toolPath = Settings.getString( "affy.power.tools.exec" );
+        String refPath = Settings.getString( "affy.power.tools.ref.path" );
 
         checkFileReadable( toolPath );
 
@@ -421,7 +421,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @return
      */
     private String getOutputFilePath( ExpressionExperiment ee, String base ) {
-        File tmpdir = new File( ConfigUtils.getDownloadPath() );
+        File tmpdir = new File( Settings.getDownloadPath() );
         return tmpdir + File.separator + ee.getId() + "_" + base;
     }
 

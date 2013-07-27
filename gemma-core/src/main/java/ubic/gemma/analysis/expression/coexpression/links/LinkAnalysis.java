@@ -43,7 +43,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
@@ -195,7 +195,7 @@ public class LinkAnalysis {
         File outputDir = null;
 
         if ( this.config.isUseDb() ) {
-            outputDir = new File( ConfigUtils.getAnalysisStoragePath() );
+            outputDir = new File( Settings.getAnalysisStoragePath() );
         } else {
             outputDir = new File( System.getProperty( "user.home" ) + File.separator + "gemma.output" );
             if ( !outputDir.exists() ) {

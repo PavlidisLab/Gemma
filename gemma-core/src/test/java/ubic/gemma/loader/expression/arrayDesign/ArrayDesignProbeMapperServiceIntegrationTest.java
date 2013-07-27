@@ -37,7 +37,7 @@ import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * This test relies on having blat actually runnning.
@@ -106,7 +106,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
     }
 
     private boolean fastaCmdExecutableExists() {
-        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
         if ( fastacmdExe == null ) {
             log.warn( "No fastacmd executable is configured, skipping test" );
             return false;

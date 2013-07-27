@@ -31,7 +31,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringWebTest;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationController;
 
 /**
@@ -53,7 +53,7 @@ public class ExpressionExperimentVisualizationControllerTest extends BaseSpringW
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newGet( "/expressionExperiment/visualizeDataMatrix.html" );
 
-        request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
+        request.setRemoteUser( Settings.getString( "gemma.admin.user" ) );
 
         ExpressionExperimentService service = this.getBean( ExpressionExperimentService.class );
 

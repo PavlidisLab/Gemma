@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * BioMart is a query-oriented data management system. In our particular case we are using it to map ensembl, ncbi and
@@ -260,7 +260,7 @@ public class BiomartEnsemblNcbiFetcher {
      * @return File path to newly created biomart file on local system.
      */
     protected File getFileName( String biomartTaxonName ) {
-        String localBasePath = ConfigUtils.getDownloadPath();
+        String localBasePath = Settings.getDownloadPath();
         String directory = localBasePath + File.separator + BIOMART + File.separator;
         String fileName = BIOMART + biomartTaxonName + ".txt";
         FileTools.createDir( directory );
@@ -275,7 +275,7 @@ public class BiomartEnsemblNcbiFetcher {
      */
     public void initConfig() {
 
-        urlBiomartService = ConfigUtils.getString( BIOMARTPATH );
+        urlBiomartService = Settings.getString( BIOMARTPATH );
         if ( urlBiomartService == null || urlBiomartService.length() == 0 )
             throw new RuntimeException( new ConfigurationException( BIOMARTPATH + " was null or empty" ) );
     }

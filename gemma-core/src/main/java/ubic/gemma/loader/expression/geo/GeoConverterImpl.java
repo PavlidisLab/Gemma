@@ -90,7 +90,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
@@ -174,7 +174,7 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
      */
-    int tooManyElements = ConfigUtils.getInt( "geo.platform.import.maxelements",
+    int tooManyElements = Settings.getInt( "geo.platform.import.maxelements",
             DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
 
     private boolean forceConvertElements = false;

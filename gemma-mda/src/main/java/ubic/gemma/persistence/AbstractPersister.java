@@ -33,7 +33,7 @@ import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 
 /**
@@ -54,7 +54,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
     /**
      * This should match the JDBC batch size for Hibernate.
      */
-    protected static final int SESSION_BATCH_SIZE = ConfigUtils.getInt( "gemma.hibernate.jdbc_batch_size" );
+    protected static final int SESSION_BATCH_SIZE = Settings.getInt( "gemma.hibernate.jdbc_batch_size" );
 
     /**
      * Collections smaller than this don't result in logging about progress.

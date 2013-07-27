@@ -49,7 +49,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -677,7 +677,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
             return;
         }
 
-        boolean loadOntology = ConfigUtils.getBoolean( LOAD_GENE_ONTOLOGY_OPTION, LOAD_BY_DEFAULT );
+        boolean loadOntology = Settings.getBoolean( LOAD_GENE_ONTOLOGY_OPTION, LOAD_BY_DEFAULT );
 
         if ( !force && !loadOntology ) {
             log.info( "Loading Gene Ontology is disabled (force=" + force + ", " + LOAD_GENE_ONTOLOGY_OPTION + "="

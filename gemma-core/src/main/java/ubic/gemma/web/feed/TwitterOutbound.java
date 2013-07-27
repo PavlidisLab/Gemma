@@ -41,7 +41,7 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author sshao
@@ -66,7 +66,7 @@ public class TwitterOutbound {
     @Secured({ "GROUP_AGENT" })
     public void sendDailyFeed() {
         log.debug( "Checking if Twitter is enabled" );
-        if ( !ConfigUtils.getBoolean( "gemma.twitter.enabled" ) ) {
+        if ( !Settings.getBoolean( "gemma.twitter.enabled" ) ) {
             return;
         }
 
@@ -75,10 +75,10 @@ public class TwitterOutbound {
 
         if ( !feed.isEmpty() ) {
             log.info( "Sending out tweet: " + feed );
-            String consumerKey = ConfigUtils.getString( "gemma.twitter.consumer-key" );
-            String consumerSecret = ConfigUtils.getString( "gemma.twitter.consumer-secret" );
-            String accessToken = ConfigUtils.getString( "gemma.twitter.access-token" );
-            String accessTokenSecret = ConfigUtils.getString( "gemma.twitter.access-token-secret" );
+            String consumerKey = Settings.getString( "gemma.twitter.consumer-key" );
+            String consumerSecret = Settings.getString( "gemma.twitter.consumer-secret" );
+            String accessToken = Settings.getString( "gemma.twitter.access-token" );
+            String accessTokenSecret = Settings.getString( "gemma.twitter.access-token-secret" );
 
             Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
             StatusDetails metadata = new StatusDetails();

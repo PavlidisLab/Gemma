@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author pavlidis
@@ -93,7 +93,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
 
     // fixme duplicated from SimpleFastaCmdTest
     private boolean fastaCmdExecutableExists() {
-        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
         if ( fastacmdExe == null ) {
             log.warn( "No fastacmd executable is configured, skipping test" );
             return false;

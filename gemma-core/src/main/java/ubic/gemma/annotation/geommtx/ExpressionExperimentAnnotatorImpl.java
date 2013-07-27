@@ -61,7 +61,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -85,7 +85,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
 
     private static AtomicBoolean initializing = new AtomicBoolean( false );
 
-    private final static String MODEL_OUTPUT_PATH = ConfigUtils.getAnalysisStoragePath();
+    private final static String MODEL_OUTPUT_PATH = Settings.getAnalysisStoragePath();
 
     private static AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -125,7 +125,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     @Override
     public void afterPropertiesSet() {
 
-        boolean activated = ConfigUtils.getBoolean( MMTX_ACTIVATION_PROPERTY_KEY );
+        boolean activated = Settings.getBoolean( MMTX_ACTIVATION_PROPERTY_KEY );
 
         if ( !activated ) {
             log.debug( "Automated tagger disabled; to turn on set " + MMTX_ACTIVATION_PROPERTY_KEY

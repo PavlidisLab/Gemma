@@ -38,7 +38,7 @@ import java.util.concurrent.FutureTask;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * A generic class for fetching files via HTTP and writing them to a local file system.
@@ -65,7 +65,7 @@ public class HttpFetcher extends AbstractFetcher {
     public Collection<LocalFile> fetch( String url, String outputFileName ) {
         log.info( "Seeking " + url );
 
-        this.localBasePath = ConfigUtils.getDownloadPath();
+        this.localBasePath = Settings.getDownloadPath();
 
         try {
 

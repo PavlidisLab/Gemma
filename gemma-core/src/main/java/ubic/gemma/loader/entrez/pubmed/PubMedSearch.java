@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Search PubMed for terms, retrieve document records.
@@ -49,11 +49,11 @@ public class PubMedSearch {
      * 
      */
     public PubMedSearch() {
-        String baseURL = ( String ) ConfigUtils.getProperty( "entrez.esearch.baseurl" );
-        String db = ( String ) ConfigUtils.getProperty( "entrez.efetch.pubmed.db" );
+        String baseURL = ( String ) Settings.getProperty( "entrez.esearch.baseurl" );
+        String db = ( String ) Settings.getProperty( "entrez.efetch.pubmed.db" );
         // String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
-        String retmode = ( String ) ConfigUtils.getProperty( "entrez.efetch.pubmed.retmode" );
-        String rettype = ( String ) ConfigUtils.getProperty( "entrez.efetch.pubmed.rettype" );
+        String retmode = ( String ) Settings.getProperty( "entrez.efetch.pubmed.retmode" );
+        String rettype = ( String ) Settings.getProperty( "entrez.efetch.pubmed.rettype" );
         uri = baseURL + "&" + db + "&" + retmode + "&" + rettype;
     }
 

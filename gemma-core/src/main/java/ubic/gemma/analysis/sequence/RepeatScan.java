@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.TimeUtil;
 import ubic.gemma.util.concurrent.GenericStreamConsumer;
 
@@ -53,7 +53,7 @@ public class RepeatScan {
 
     private static Log log = LogFactory.getLog( RepeatScan.class.getName() );
 
-    private static String REPEAT_MASKER = ConfigUtils.getString( REPEAT_MASKER_CONFIG_PARAM );
+    private static String REPEAT_MASKER = Settings.getString( REPEAT_MASKER_CONFIG_PARAM );
 
     private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 2;
 

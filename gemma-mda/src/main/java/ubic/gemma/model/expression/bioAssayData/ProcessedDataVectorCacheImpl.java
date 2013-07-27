@@ -37,7 +37,7 @@ import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Configures the cache for data vectors.
@@ -79,15 +79,15 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     @Override
     public void afterPropertiesSet() throws Exception {
         CacheManager cacheManager = this.cacheManagerFactory.getObject();
-        int maxElements = ConfigUtils.getInt( "gemma.cache.vectors.maxelements", VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = ConfigUtils.getInt( "gemma.cache.vectors.timetolive", VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = ConfigUtils.getInt( "gemma.cache.vectors.timetoidle", VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
-        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.vectors.usedisk",
+        int maxElements = Settings.getInt( "gemma.cache.vectors.maxelements", VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
+        int timeToLive = Settings.getInt( "gemma.cache.vectors.timetolive", VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = Settings.getInt( "gemma.cache.vectors.timetoidle", VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
+        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.vectors.usedisk",
                 VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", true );
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.vectors.eternal", VECTOR_CACHE_DEFAULT_ETERNAL )
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
+        boolean eternal = Settings.getBoolean( "gemma.cache.vectors.eternal", VECTOR_CACHE_DEFAULT_ETERNAL )
                 && timeToLive == 0;
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", true ) && !terracottaEnabled;
+        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", true ) && !terracottaEnabled;
 
         String cacheName = VECTOR_CACHE_NAME;
 

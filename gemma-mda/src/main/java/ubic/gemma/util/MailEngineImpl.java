@@ -98,8 +98,8 @@ public class MailEngineImpl implements MailEngine {
 
         log.info( "Sending email notification to administrator regarding: " + subject );
         SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setTo( ConfigUtils.getAdminEmailAddress() );
-        msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+        msg.setTo( Settings.getAdminEmailAddress() );
+        msg.setFrom( Settings.getAdminEmailAddress() );
         msg.setSubject( subject );
         msg.setText( bodyText );
         this.send( msg );

@@ -31,7 +31,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase; 
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.
@@ -160,9 +160,9 @@ public class GoldenPath {
      * @return
      */
     private String getDriver() {
-        String driver = ConfigUtils.getString( "gemma.goldenpath.db.driver" );
+        String driver = Settings.getString( "gemma.goldenpath.db.driver" );
         if ( StringUtils.isBlank( driver ) ) {
-            driver = ConfigUtils.getString( "gemma.db.driver" );
+            driver = Settings.getString( "gemma.db.driver" );
             log.warn( "No DB driver configured for GoldenPath, falling back on gemma.db.driver=" + driver );
         }
         return driver;
@@ -186,26 +186,26 @@ public class GoldenPath {
         if ( taxon == null ) throw new IllegalStateException( "Taxon cannot be null" );
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {
-            databaseName = ConfigUtils.getString( "gemma.goldenpath.db.mouse" ); // FIXME get these names from an
+            databaseName = Settings.getString( "gemma.goldenpath.db.mouse" ); // FIXME get these names from an
             // external source - e.g., the taxon
             // service.
         } else if ( commonName.equals( "human" ) ) {
-            databaseName = ConfigUtils.getString( "gemma.goldenpath.db.human" );
+            databaseName = Settings.getString( "gemma.goldenpath.db.human" );
         } else if ( commonName.equals( "rat" ) ) {
-            databaseName = ConfigUtils.getString( "gemma.goldenpath.db.rat" );
+            databaseName = Settings.getString( "gemma.goldenpath.db.rat" );
         } else {
             throw new IllegalArgumentException( "No GoldenPath database for  " + taxon );
         }
 
-        this.host = ConfigUtils.getString( "gemma.goldenpath.db.host" );
+        this.host = Settings.getString( "gemma.goldenpath.db.host" );
         try {
-            this.port = Integer.valueOf( ConfigUtils.getString( "gemma.goldenpath.db.port" ) );
+            this.port = Integer.valueOf( Settings.getString( "gemma.goldenpath.db.port" ) );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Could not get configuration of port for goldenpath database" );
         }
 
-        this.user = ConfigUtils.getString( "gemma.goldenpath.db.user" );
-        this.password = ConfigUtils.getString( "gemma.goldenpath.db.password" );
+        this.user = Settings.getString( "gemma.goldenpath.db.user" );
+        this.password = Settings.getString( "gemma.goldenpath.db.password" );
 
         searchedDatabase = ExternalDatabase.Factory.newInstance();
         searchedDatabase.setName( databaseName );

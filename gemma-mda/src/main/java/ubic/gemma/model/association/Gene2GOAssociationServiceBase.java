@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * <p>
@@ -51,7 +51,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     @Override
     public void afterPropertiesSet() throws Exception {
 
-        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         int maxElements = 50000;
         boolean eternal = false;
         boolean terracottaCoherentReads = false;

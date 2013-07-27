@@ -50,7 +50,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 
 /**
@@ -84,7 +84,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * ArrayDesignSubsumeCheckEvent.class
      */
 
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private String HOME_DIR = Settings.getString( "gemma.appdata.home" );
 
     private Log log = LogFactory.getLog( this.getClass() );
 

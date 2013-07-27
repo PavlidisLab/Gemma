@@ -43,7 +43,9 @@ import java.util.HashSet;
  */
 @Component
 @Scope("prototype")
-public class DifferentialExpressionAnalysisTaskImpl extends AbstractTask<TaskResult, DifferentialExpressionAnalysisTaskCommand> implements DifferentialExpressionAnalysisTask {
+public class DifferentialExpressionAnalysisTaskImpl extends
+        AbstractTask<TaskResult, DifferentialExpressionAnalysisTaskCommand> implements
+        DifferentialExpressionAnalysisTask {
 
     private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
@@ -111,12 +113,12 @@ public class DifferentialExpressionAnalysisTaskImpl extends AbstractTask<TaskRes
                 Collection<DifferentialExpressionAnalysis> result = new HashSet<DifferentialExpressionAnalysis>();
                 result.add( taskCommand.getToRedo() );
                 return result;
-            } else {
-                log.info( "Redoing analysis" );
-                ee = expressionExperimentService.thawLite( ee );
-                return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(),
-                        taskCommand.getQvalueThreshold() );
             }
+            log.info( "Redoing analysis" );
+            ee = expressionExperimentService.thawLite( ee );
+            return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(),
+                    taskCommand.getQvalueThreshold() );
+
         }
 
         ee = expressionExperimentService.thawLite( ee );

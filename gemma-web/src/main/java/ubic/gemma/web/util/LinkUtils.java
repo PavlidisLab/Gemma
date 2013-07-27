@@ -23,7 +23,7 @@ import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Methods to generate links and/or urls to common resources.
@@ -56,17 +56,17 @@ public class LinkUtils {
 
         String database = "";
         if ( organism.equalsIgnoreCase( "Human" ) ) {
-            database = ConfigUtils.getString( "gemma.goldenpath.db.human" );
+            database = Settings.getString( "gemma.goldenpath.db.human" );
         } else if ( organism.equalsIgnoreCase( "Rat" ) ) {
-            database = ConfigUtils.getString( "gemma.goldenpath.db.rat" );
+            database = Settings.getString( "gemma.goldenpath.db.rat" );
         } else if ( organism.equalsIgnoreCase( "Mouse" ) ) {
-            database = ConfigUtils.getString( "gemma.goldenpath.db.mouse" );
+            database = Settings.getString( "gemma.goldenpath.db.mouse" );
         } else {
             return null;
         }
 
         String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850" + "&db=" + database
-                + "&hgt.customText=" + ConfigUtils.getBaseUrl() + "blatTrack.html?id=";
+                + "&hgt.customText=" + Settings.getBaseUrl() + "blatTrack.html?id=";
         link += blatResult.getId();
 
         return link;

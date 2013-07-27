@@ -31,7 +31,7 @@ import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Configures the cache for gene2gene coexpression.
@@ -84,21 +84,21 @@ public class Gene2GeneCoexpressionCacheImpl implements InitializingBean, Gene2Ge
     public void afterPropertiesSet() {
         CacheManager cacheManager = cacheManagerFactory.getObject();
         assert cacheManager != null;
-        int maxElements = ConfigUtils.getInt( "gemma.cache.gene2gene.maxelements",
+        int maxElements = Settings.getInt( "gemma.cache.gene2gene.maxelements",
                 GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = ConfigUtils.getInt( "gemma.cache.gene2gene.timetolive",
+        int timeToLive = Settings.getInt( "gemma.cache.gene2gene.timetolive",
                 GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = ConfigUtils.getInt( "gemma.cache.gene2gene.timetoidle",
+        int timeToIdle = Settings.getInt( "gemma.cache.gene2gene.timetoidle",
                 GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE );
 
-        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.gene2gene.usedisk",
+        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.gene2gene.usedisk",
                 GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
 
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.gene2gene.eternal",
+        boolean eternal = Settings.getBoolean( "gemma.cache.gene2gene.eternal",
                 GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
-        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
 
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
+        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
         /*
          * See TerracottaConfiguration.

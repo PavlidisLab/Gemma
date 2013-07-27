@@ -84,14 +84,15 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
     @Override
     public int compareTo( Object object ) {
         PhysicalLocationImpl other = ( PhysicalLocationImpl ) object;
-        return new CompareToBuilder().append( this.getChromosome().getName(), other.getChromosome().getName() ).append(
-                this.getNucleotide(), other.getNucleotide() ).toComparison();
+        return new CompareToBuilder().append( this.getChromosome().getName(), other.getChromosome().getName() )
+                .append( this.getNucleotide(), other.getNucleotide() ).toComparison();
     }
 
     @Override
     public int computeOverlap( PhysicalLocation other ) {
 
         if ( this.getId() == null || other.getId() == null || !this.getId().equals( other.getId() ) ) {
+            if ( this.getChromosome() == null || other.getChromosome() == null ) return 0;
             if ( !this.getChromosome().equals( other.getChromosome() ) ) return 0;
 
             if ( this.getStrand() != null && other.getStrand() != null && !this.getStrand().equals( other.getStrand() ) ) {
@@ -115,6 +116,7 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.PhysicalLocation#equals(java.lang.Object) NOTE that this implementation ignores the
      * id - it uses only location information to determine equivalence.
      */
@@ -225,11 +227,15 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append( this.getChromosome().getTaxon().getScientificName() + " chr " + this.getChromosome().getName() );
+        if ( this.getChromosome() != null ) {
+            buf.append( this.getChromosome().getTaxon().getScientificName() + " chr " + this.getChromosome().getName() );
+        }
 
-        if ( this.getNucleotide() != null ) buf.append( ":" + this.getNucleotide() );
-        if ( this.getNucleotideLength() != 0 ) {
-            buf.append( "-" + ( this.getNucleotide() + this.getNucleotideLength() ) );
+        if ( this.getNucleotide() != null ) {
+            buf.append( ":" + this.getNucleotide() );
+            if ( this.getNucleotideLength() != 0 ) {
+                buf.append( "-" + ( this.getNucleotide() + this.getNucleotideLength() ) );
+            }
         }
         if ( this.getStrand() != null ) buf.append( " on " + this.getStrand() + " strand" );
 

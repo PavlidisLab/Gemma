@@ -57,7 +57,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Service to collect data on object that are new in the system.
@@ -88,7 +88,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     @Autowired
     private CacheManager cacheManager = null;
 
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private String HOME_DIR = Settings.getString( "gemma.appdata.home" );
 
     private static final String WHATS_NEW_CACHE = "WhatsNew";
 

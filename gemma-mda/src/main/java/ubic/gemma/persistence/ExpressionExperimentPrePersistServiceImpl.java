@@ -34,7 +34,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Sets up the array designs, put the designelements in the data vectors.
@@ -214,7 +214,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         for ( ArrayDesign ad : toAdd.keySet() ) {
 
             // We might not want to allow this, as it could indicate an error.
-            if ( !ConfigUtils.getBoolean( "gemma.allow.new.probes.onexisting.platforms", true ) ) {
+            if ( !Settings.getBoolean( "gemma.allow.new.probes.onexisting.platforms", true ) ) {
                 throw new UnsupportedOperationException(
                         "The system is not configured to allow new elements to be added to an existing platform." );
             }

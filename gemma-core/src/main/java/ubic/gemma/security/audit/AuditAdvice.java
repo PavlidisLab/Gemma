@@ -45,7 +45,7 @@ import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.persistence.CrudUtilsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authorization.acl.AclAdvice;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.ReflectionUtil;
 
 import javax.annotation.PostConstruct;
@@ -86,9 +86,9 @@ public class AuditAdvice {
     protected void init() {
 
         try {
-            AUDIT_UPDATE = ConfigUtils.getBoolean( "audit.update" );
-            AUDIT_DELETE = ConfigUtils.getBoolean( "audit.delete" );
-            AUDIT_CREATE = ConfigUtils.getBoolean( "audit.create" ) || AUDIT_UPDATE;
+            AUDIT_UPDATE = Settings.getBoolean( "audit.update" );
+            AUDIT_DELETE = Settings.getBoolean( "audit.delete" );
+            AUDIT_CREATE = Settings.getBoolean( "audit.create" ) || AUDIT_UPDATE;
         } catch ( NoSuchElementException e ) {
             log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
         }

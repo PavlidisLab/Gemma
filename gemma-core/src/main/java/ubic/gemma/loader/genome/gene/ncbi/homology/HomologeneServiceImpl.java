@@ -44,7 +44,7 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Reads in the homologene list as specified in the Gemmea.properties file. Loads the list at startup and keeps a
@@ -189,8 +189,8 @@ public class HomologeneServiceImpl implements HomologeneService {
             return;
         }
 
-        boolean loadHomologene = ConfigUtils.getBoolean( LOAD_HOMOLOGENE, true );
-        this.homologeneFileName = ConfigUtils.getString( HOMOLOGENE_FILE );
+        boolean loadHomologene = Settings.getBoolean( LOAD_HOMOLOGENE, true );
+        this.homologeneFileName = Settings.getString( HOMOLOGENE_FILE );
 
         if ( !loadHomologene ) return;
 

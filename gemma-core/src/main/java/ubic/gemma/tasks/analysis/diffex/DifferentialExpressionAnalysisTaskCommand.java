@@ -26,7 +26,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.Task;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 import java.util.Collection;
 
@@ -93,7 +93,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = ee;
         this.toRedo = toRedo;
         this.updateStatsOnly = !updateAnalysis;
-        this.remoteOnly = ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" );
+        this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
     /**
@@ -107,7 +107,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.setTaskId( taskId );
         this.forceAnalysis = forceAnalysis;
         this.expressionExperiment = expressionExperiment;
-        this.remoteOnly = ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" );
+        this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
     public AnalysisType getAnalysisType() {

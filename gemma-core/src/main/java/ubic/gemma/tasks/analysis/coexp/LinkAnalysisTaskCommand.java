@@ -25,7 +25,7 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.Task;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Command object for Link analysis
@@ -46,7 +46,7 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = ee;
         this.filterConfig = fg;
         this.linkAnalysisConfig = lac;
-        this.remoteOnly =  ConfigUtils.getBoolean( "gemma.grid.gridonly.coexp" );
+        this.remoteOnly =  Settings.getBoolean( "gemma.grid.gridonly.coexp" );
     }
 
     /**

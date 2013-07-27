@@ -18,7 +18,7 @@
  */
 package ubic.gemma.loader.expression.geo.fetcher;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 public class SeriesFetcher extends GeoFetcher {
 
@@ -39,7 +39,7 @@ public class SeriesFetcher extends GeoFetcher {
      */
     @Override
     protected void initConfig() {
-        this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
-        this.remoteBaseDir = ConfigUtils.getString( "geo.remote.seriesDir" );
+        this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );
+        this.remoteBaseDir = Settings.getString( "geo.remote.seriesDir" );
     }
 }

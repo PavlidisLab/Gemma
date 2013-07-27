@@ -34,7 +34,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author paul
@@ -54,7 +54,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
 
     @org.junit.Before
     public void startup() {
-        String apt = ConfigUtils.getString( "affy.power.tools.exec" );
+        String apt = Settings.getString( "affy.power.tools.exec" );
         if ( new File( apt ).canExecute() ) {
             hasApt = true;
         }

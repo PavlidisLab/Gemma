@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Class that can retrieve pubmed records (in XML format) via HTTP. The url used is configured via a resource.
@@ -44,11 +44,11 @@ public class PubMedXMLFetcher {
     private final static int MAX_TRIES = 2;
 
     public PubMedXMLFetcher() {
-        String baseURL = ConfigUtils.getString( "entrez.efetch.baseurl" );
-        String db = ConfigUtils.getString( "entrez.efetch.pubmed.db" );
-        String idtag = ConfigUtils.getString( "entrez.efetch.pubmed.idtag" );
-        String retmode = ConfigUtils.getString( "entrez.efetch.pubmed.retmode" );
-        String rettype = ConfigUtils.getString( "entrez.efetch.pubmed.rettype" );
+        String baseURL = Settings.getString( "entrez.efetch.baseurl" );
+        String db = Settings.getString( "entrez.efetch.pubmed.db" );
+        String idtag = Settings.getString( "entrez.efetch.pubmed.idtag" );
+        String retmode = Settings.getString( "entrez.efetch.pubmed.retmode" );
+        String rettype = Settings.getString( "entrez.efetch.pubmed.rettype" );
         uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + "&" + idtag;
     }
 

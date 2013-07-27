@@ -39,7 +39,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.TaxonUtility;
 
 /**
@@ -58,7 +58,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         super.setSessionFactory( sessionFactory );
     }
 
-    private static boolean SINGLE_QUERY_FOR_LINKS = ConfigUtils.getBoolean( "store.gene.coexpression.bothways", true );
+    private static boolean SINGLE_QUERY_FOR_LINKS = Settings.getBoolean( "store.gene.coexpression.bothways", true );
 
     /**
      * For storing information about gene results that are cached.

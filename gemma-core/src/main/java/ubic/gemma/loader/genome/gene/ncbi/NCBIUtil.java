@@ -18,7 +18,7 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.NetDatasourceUtil;
 
 /**
@@ -29,7 +29,7 @@ public class NCBIUtil extends NetDatasourceUtil {
 
     @Override
     public void init() {
-        this.setHost( ConfigUtils.getString( "ncbi.host" ) );
+        this.setHost( Settings.getString( "ncbi.host" ) );
     }
 
 }

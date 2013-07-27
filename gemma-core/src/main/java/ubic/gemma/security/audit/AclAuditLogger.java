@@ -24,7 +24,7 @@ import org.springframework.security.acls.domain.AuditLogger;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.AuditableAccessControlEntry;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Wire into the {@link org.springframework.security.acls.jdbc.LookupStrategy} to enable logging of object access.
@@ -37,7 +37,7 @@ public class AclAuditLogger implements AuditLogger {
 
     private static Log log = LogFactory.getLog( AclAuditLogger.class );
 
-    private static boolean needToLog = ConfigUtils.getBoolean( "gemma.acl.audit" );
+    private static boolean needToLog = Settings.getBoolean( "gemma.acl.audit" );
 
     @Override
     public void logIfNeeded( boolean granted, AccessControlEntry ace ) {

@@ -50,7 +50,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.TimeUtil;
 import ubic.gemma.util.concurrent.GenericStreamConsumer;
 
@@ -592,7 +592,7 @@ public class Blat {
      * @throws IOException
      */
     private String getTmpPslFilePath( String base ) throws IOException {
-        File tmpdir = new File( ConfigUtils.getDownloadPath() );
+        File tmpdir = new File( Settings.getDownloadPath() );
         if ( StringUtils.isBlank( base ) ) {
             return File.createTempFile( "blat-output", ".psl", tmpdir ).getPath();
         }
@@ -627,23 +627,23 @@ public class Blat {
     private void init() throws ConfigurationException {
 
         log.debug( "Reading global config" );
-        this.humanServerPort = ConfigUtils.getInt( "gfClient.humanServerPort" );
-        this.mouseServerPort = ConfigUtils.getInt( "gfClient.mouseServerPort" );
-        this.ratServerPort = ConfigUtils.getInt( "gfClient.ratServerPort" );
+        this.humanServerPort = Settings.getInt( "gfClient.humanServerPort" );
+        this.mouseServerPort = Settings.getInt( "gfClient.mouseServerPort" );
+        this.ratServerPort = Settings.getInt( "gfClient.ratServerPort" );
 
-        this.humanSensitiveServerPort = ConfigUtils.getInt( "gfClient.sensitive.humanServerPort" );
-        this.mouseSensitiveServerPort = ConfigUtils.getInt( "gfClient.sensitive.mouseServerPort" );
-        this.ratSensitiveServerPort = ConfigUtils.getInt( "gfClient.sensitive.ratServerPort" );
+        this.humanSensitiveServerPort = Settings.getInt( "gfClient.sensitive.humanServerPort" );
+        this.mouseSensitiveServerPort = Settings.getInt( "gfClient.sensitive.mouseServerPort" );
+        this.ratSensitiveServerPort = Settings.getInt( "gfClient.sensitive.ratServerPort" );
         // this.humanServerHost = ConfigUtils.getString( "gfClient.humanServerHost" );
         // this.mouseServerHost = ConfigUtils.getString( "gfClient.mouseServerHost" );
         // this.ratServerHost = ConfigUtils.getString( "gfClient.ratServerHost" );
-        this.host = ConfigUtils.getString( "gfClient.host" );
-        this.seqDir = ConfigUtils.getString( "gfClient.seqDir" );
-        this.mouseSeqFiles = ConfigUtils.getString( "gfClient.mouse.seqFiles" );
-        this.ratSeqFiles = ConfigUtils.getString( "gfClient.rat.seqFiles" );
-        this.humanSeqFiles = ConfigUtils.getString( "gfClient.human.seqFiles" );
-        this.gfClientExe = ConfigUtils.getString( "gfClient.exe" );
-        this.gfServerExe = ConfigUtils.getString( "gfServer.exe" );
+        this.host = Settings.getString( "gfClient.host" );
+        this.seqDir = Settings.getString( "gfClient.seqDir" );
+        this.mouseSeqFiles = Settings.getString( "gfClient.mouse.seqFiles" );
+        this.ratSeqFiles = Settings.getString( "gfClient.rat.seqFiles" );
+        this.humanSeqFiles = Settings.getString( "gfClient.human.seqFiles" );
+        this.gfClientExe = Settings.getString( "gfClient.exe" );
+        this.gfServerExe = Settings.getString( "gfServer.exe" );
 
         if ( gfServerExe == null ) {
             /*

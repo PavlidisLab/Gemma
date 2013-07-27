@@ -25,7 +25,7 @@ import ubic.gemma.job.EmailNotificationContext;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * TODO Document Me
@@ -62,7 +62,7 @@ public class MailUtilsImpl implements MailUtils {
                 log.info( "Sending email notification to " + emailAddress );
                 SimpleMailMessage msg = new SimpleMailMessage();
                 msg.setTo( emailAddress );
-                msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+                msg.setFrom( Settings.getAdminEmailAddress() );
                 msg.setSubject( "Gemma task completed" );
 
                 String logs = "";

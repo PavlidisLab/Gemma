@@ -25,7 +25,7 @@ import org.apache.commons.configuration.ConfigurationException;
 
 import ubic.gemma.loader.genome.gene.ncbi.NCBIUtil;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Grabs urls like ftp:///ftp.ncbi.nih.gov/pub/HomoloGene/current/homologene.data
@@ -41,8 +41,8 @@ public class HomologeneFetcher extends FtpFetcher {
     @Override
     protected void initConfig() {
 
-        localBasePath = ConfigUtils.getString( "ncbi.local.homologene.basepath" );
-        remoteBaseDir = ConfigUtils.getString( "ncbi.remote.homologene.basedir" );
+        localBasePath = Settings.getString( "ncbi.local.homologene.basepath" );
+        remoteBaseDir = Settings.getString( "ncbi.remote.homologene.basedir" );
 
         if ( localBasePath == null || localBasePath.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );

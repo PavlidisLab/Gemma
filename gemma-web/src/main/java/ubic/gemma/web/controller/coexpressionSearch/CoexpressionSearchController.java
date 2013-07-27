@@ -50,7 +50,7 @@ import ubic.gemma.model.genome.gene.GeneLightWeightCache;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.tasks.AbstractTask;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 
 /**
@@ -86,15 +86,15 @@ public class CoexpressionSearchController {
 
     private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = 200;
 
-    private static final int MAX_GENES_PER_QUERY = ConfigUtils.getInt( "gemma.coexpressionSearch.maxGenesPerQuery",
+    private static final int MAX_GENES_PER_QUERY = Settings.getInt( "gemma.coexpressionSearch.maxGenesPerQuery",
             DEFAULT_MAX_GENES_PER_QUERY );
 
-    private static final int MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = ConfigUtils.getInt(
+    private static final int MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = Settings.getInt(
             "gemma.coexpressionSearch.maxGenesPerCoexVisQuery", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY );
 
     private static final int DEFAULT_MAX_RESULTS = 200;
 
-    private static final int MAX_RESULTS = ConfigUtils.getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene",
+    private static final int MAX_RESULTS = Settings.getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene",
             DEFAULT_MAX_RESULTS );
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -395,7 +395,7 @@ public class CoexpressionSearchController {
 
         int stringencyTrimLimit = searchOptions.getEeIds().size();
 
-        int resultsLimit = ConfigUtils.getInt( "gemma.cytoscapeweb.maxEdges", 850 );
+        int resultsLimit = Settings.getInt( "gemma.cytoscapeweb.maxEdges", 850 );
 
         result.setMaxEdges( resultsLimit );
 

@@ -108,7 +108,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.view.TextView;
@@ -786,7 +786,7 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private File locateProbeCorrFile( ExpressionExperiment ee ) {
         String shortName = ee.getShortName();
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath();
+        String analysisStoragePath = Settings.getAnalysisStoragePath();
 
         String suffix = ".correlDist.txt";
         File f = new File( analysisStoragePath + File.separatorChar + shortName + suffix );

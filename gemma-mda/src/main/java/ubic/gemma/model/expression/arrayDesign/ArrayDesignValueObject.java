@@ -205,10 +205,10 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
         if ( getClass() != obj.getClass() ) return false;
         ArrayDesignValueObject other = ( ArrayDesignValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null )
+            if ( other.id != null ) {
                 return false;
-            else
-                return id.equals( other.id );
+            }
+            return id.equals( other.id );
         } else if ( !id.equals( other.id ) ) return false;
         if ( shortName == null ) {
             if ( other.shortName != null ) return false;

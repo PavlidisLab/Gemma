@@ -23,7 +23,7 @@ import java.io.File;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author keshav
@@ -33,7 +33,7 @@ public class DifferentialExpressionFileUtils {
 
     private static Log log = LogFactory.getLog( DifferentialExpressionFileUtils.class );
 
-    private static String analysisStoragePath = ConfigUtils.getAnalysisStoragePath();
+    private static String analysisStoragePath = Settings.getAnalysisStoragePath();
 
     private static final String PVALUE_DIST = "diff" + File.separatorChar + "diffExStatDistributions";
 

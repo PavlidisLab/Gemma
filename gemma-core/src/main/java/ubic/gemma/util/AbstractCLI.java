@@ -484,7 +484,7 @@ public abstract class AbstractCLI {
     protected final Exception processCommandLine( String commandName, String[] args ) {
         /* COMMAND LINE PARSER STAGE */
         BasicParser parser = new BasicParser();
-        System.err.println( "Gemma version " + ConfigUtils.getAppVersion() );
+        System.err.println( "Gemma version " + Settings.getAppVersion() );
 
         if ( args == null ) {
             printHelp( commandName );

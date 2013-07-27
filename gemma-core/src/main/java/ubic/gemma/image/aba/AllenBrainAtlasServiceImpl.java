@@ -47,7 +47,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.loader.entrez.pubmed.XMLUtils;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Acts as a convenient front end to the Allen Brain Atlas REST (web) services Used the ABAapi.java as the original
@@ -772,7 +772,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     private void initDefaults() {
         this.verbose = false;
         this.useFileCache = false;
-        this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + ABA_CACHE;
+        this.cacheDir = Settings.getString( "gemma.appdata.home" ) + ABA_CACHE;
         File abaCacheDir = new File( this.cacheDir );
         if ( !( abaCacheDir.exists() && abaCacheDir.canRead() ) ) {
             log.warn( "Attempting to create aba cache directory in '" + this.cacheDir + "'" );

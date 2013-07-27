@@ -143,7 +143,7 @@ public class SpringContextUtil {
      * @return
      */
     private static String getGemmaHomeProperty() {
-        String gemmaHome = ConfigUtils.getString( "gemma.home" );
+        String gemmaHome = Settings.getString( "gemma.home" );
         if ( gemmaHome == null ) {
             throw new RuntimeException( "You must set 'gemma.home' in your Gemma.properties" );
         }

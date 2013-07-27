@@ -25,7 +25,7 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Methods to generate annotations for array designs, based on information alreay in the database. This can be used to
@@ -57,7 +57,7 @@ public interface ArrayDesignAnnotationService {
      * String included in file names for standard (default) annotation files. These include GO terms and all parents.
      */
     public static final String STANDARD_FILE_SUFFIX = "";
-    public static final String ANNOT_DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
+    public static final String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar
             + "microAnnots" + File.separatorChar;
 
     /**

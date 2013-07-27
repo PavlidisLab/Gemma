@@ -36,7 +36,7 @@ import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Class that is responsible for converting value objects generated from the parsing of STRING files
@@ -73,8 +73,8 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
     public StringProteinProteinInteractionConverter( Map<String, Ensembl2NcbiValueObject> ensembl2ncbi ) {
         this.ensembl2ncbi = ensembl2ncbi;
 
-        stringVersion = ConfigUtils.getString( "protein.string.version" );
-        stringUrl = ConfigUtils.getString( "protein.string.linksurl" );
+        stringVersion = Settings.getString( "protein.string.version" );
+        stringUrl = Settings.getString( "protein.string.linksurl" );
         if ( stringUrl == null || stringUrl.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "stringUrl was null or empty" ) );
         if ( stringVersion == null || stringVersion.length() == 0 )

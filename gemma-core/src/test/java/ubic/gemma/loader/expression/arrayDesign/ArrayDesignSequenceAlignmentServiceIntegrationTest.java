@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * This test will not run unless you have a blat server accessible.
@@ -52,7 +52,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
     @Test
     public final void testProcessArrayDesign() throws Exception {
         if ( ad == null ) return;
-        String gfClientExe = ConfigUtils.getString( "gfClient.exe" );
+        String gfClientExe = Settings.getString( "gfClient.exe" );
 
         if ( gfClientExe == null ) {
             log.warn( "No gfClient executable is configured, skipping test" );

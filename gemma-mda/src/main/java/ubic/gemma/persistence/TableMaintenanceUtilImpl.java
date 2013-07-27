@@ -45,7 +45,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.MailEngine;
 
 /**
@@ -70,7 +70,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
 
     private static Log log = LogFactory.getLog( TableMaintenanceUtilImpl.class.getName() );
 
-    private static final String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private static final String HOME_DIR = Settings.getString( "gemma.appdata.home" );
 
     /**
      * The location where reports are stored.
@@ -238,7 +238,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
     private void sendEmail( Gene2CsStatus results ) {
         if ( !sendEmail ) return;
         SimpleMailMessage msg = new SimpleMailMessage();
-        String adminEmailAddress = ConfigUtils.getAdminEmailAddress();
+        String adminEmailAddress = Settings.getAdminEmailAddress();
         if ( StringUtils.isBlank( adminEmailAddress ) ) {
             log.warn( "No administrator email address could be found, so gene2cs status email will not be sent." );
             return;

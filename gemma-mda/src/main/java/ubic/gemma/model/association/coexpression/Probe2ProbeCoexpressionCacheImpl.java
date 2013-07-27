@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.CoexpressionCacheValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Configures the cache for data vectors.
@@ -104,16 +104,16 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
     @Override
     public void afterPropertiesSet() throws Exception {
         CacheManager cacheManager = cacheManagerFactory.getObject();
-        int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements", CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive", CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = ConfigUtils.getInt( "gemma.cache.probe2probe.timetoidle", CACHE_DEFAULT_TIME_TO_IDLE );
+        int maxElements = Settings.getInt( "gemma.cache.probe2probe.maxelements", CACHE_DEFAULT_MAX_ELEMENTS );
+        int timeToLive = Settings.getInt( "gemma.cache.probe2probe.timetolive", CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = Settings.getInt( "gemma.cache.probe2probe.timetoidle", CACHE_DEFAULT_TIME_TO_IDLE );
 
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal", CACHE_DEFAULT_ETERNAL )
+        boolean eternal = Settings.getBoolean( "gemma.cache.probe2probe.eternal", CACHE_DEFAULT_ETERNAL )
                 && timeToLive == 0;
-        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", true );
-        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.probe2probe.usedisk",
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
+        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.probe2probe.usedisk",
                 CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
+        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
         if ( !cacheManager.cacheExists( CACHE_NAME_BASE ) ) {
             /*

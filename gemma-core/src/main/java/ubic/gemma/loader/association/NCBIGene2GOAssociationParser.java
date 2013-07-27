@@ -39,7 +39,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.GeneOntologyService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * This parses GO annotations from NCBI. See {@link ftp://ftp.ncbi.nih.gov/gene/DATA/README}.
@@ -84,13 +84,13 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     private static final String COMMENT_INDICATOR = "#";
 
-    private final int TAX_ID = ConfigUtils.getInt( "gene2go.tax_id" );
+    private final int TAX_ID = Settings.getInt( "gene2go.tax_id" );
 
-    private final int EVIDENCE_CODE = ConfigUtils.getInt( "gene2go.evidence_code" );
+    private final int EVIDENCE_CODE = Settings.getInt( "gene2go.evidence_code" );
 
-    private final int GENE_ID = ConfigUtils.getInt( "gene2go.gene_id" );
+    private final int GENE_ID = Settings.getInt( "gene2go.gene_id" );
 
-    private final int GO_ID = ConfigUtils.getInt( "gene2go.go_id" );
+    private final int GO_ID = Settings.getInt( "gene2go.go_id" );
 
     private static Set<String> ignoredEvidenceCodes = new HashSet<String>();
 

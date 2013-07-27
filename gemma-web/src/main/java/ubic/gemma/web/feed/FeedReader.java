@@ -29,7 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndFeed;
@@ -56,7 +56,7 @@ public class FeedReader implements InitializingBean {
     public void afterPropertiesSet() {
         FeedFetcherCache feedInfoCache = HashMapFeedInfoCache.getInstance();
         feedFetcher = new HttpURLFeedFetcher( feedInfoCache );
-        this.feedUrl = ConfigUtils.getString( GEMMA_HOME_FEEDURL_CONFIG_PARAM );
+        this.feedUrl = Settings.getString( GEMMA_HOME_FEEDURL_CONFIG_PARAM );
         if ( StringUtils.isBlank( feedUrl ) ) {
             this.feedUrl = DEFAULT_FEED;
         }

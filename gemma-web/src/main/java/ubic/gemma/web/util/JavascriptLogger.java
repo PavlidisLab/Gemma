@@ -27,7 +27,7 @@ import org.springframework.stereotype.Controller;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Class to handle saving client-side javascript error messages and warnings to a server-side log.
@@ -43,7 +43,7 @@ public class JavascriptLogger {
 
     private static Log log = LogFactory.getLog( "javascriptLogger" );
 
-    private static boolean needToLog = ConfigUtils.getBoolean( "gemma.javascript.log" );
+    private static boolean needToLog = Settings.getBoolean( "gemma.javascript.log" );
 
     /**
      * Write to log with severity = "debug"

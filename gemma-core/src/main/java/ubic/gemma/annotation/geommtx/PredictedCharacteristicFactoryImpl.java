@@ -32,7 +32,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author leon, paul
@@ -75,7 +75,7 @@ public class PredictedCharacteristicFactoryImpl implements InitializingBean, Pre
         // term for Biological macromolecule in FMA (FMAID=63887)
         fmaMolecule = ontologyService.getTerm( "http://purl.org/obo/owl/FMA#FMA_63887" );
 
-        boolean activated = ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
+        boolean activated = Settings.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
 
         if ( !activated ) {
             log.debug( "Automated tagger disabled; to turn on set "

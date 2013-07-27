@@ -70,7 +70,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.random.engine.DRand;
@@ -91,7 +91,7 @@ import cern.jet.stat.Descriptive;
 public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationService {
     private static final int BATCH_SIZE = 1000;
 
-    private static boolean SINGLE_QUERY_FOR_LINKS = ConfigUtils.getBoolean( "store.gene.coexpression.bothways", true );
+    private static boolean SINGLE_QUERY_FOR_LINKS = Settings.getBoolean( "store.gene.coexpression.bothways", true );
 
     private static Log log = LogFactory.getLog( Gene2GenePopulationServiceImpl.class.getName() );
 

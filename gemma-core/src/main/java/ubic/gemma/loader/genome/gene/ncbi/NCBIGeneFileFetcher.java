@@ -23,7 +23,7 @@ import java.io.File;
 import org.apache.commons.configuration.ConfigurationException;
 
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Class to download files for NCBI gene. Pass the name of the file (without the .gz) to the fetch method: for example,
@@ -36,8 +36,8 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
     @Override
     public void initConfig() {
-        this.localBasePath = ConfigUtils.getString( "ncbi.local.datafile.basepath" );
-        this.remoteBaseDir = ConfigUtils.getString( "ncbi.remote.gene.basedir" );
+        this.localBasePath = Settings.getString( "ncbi.local.datafile.basepath" );
+        this.remoteBaseDir = Settings.getString( "ncbi.remote.gene.basedir" );
 
         if ( remoteBaseDir == null )
             throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );

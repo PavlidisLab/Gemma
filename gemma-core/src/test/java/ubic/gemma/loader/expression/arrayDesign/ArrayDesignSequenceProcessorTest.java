@@ -44,7 +44,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author pavlidis
@@ -132,7 +132,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadWithIdentifiers() throws Exception {
-        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
         if ( fastacmdExe == null ) {
             log.warn( "No fastacmd executable is configured, skipping test" );
             return;

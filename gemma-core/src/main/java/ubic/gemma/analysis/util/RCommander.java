@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * A class that encapsulates a connection to R
@@ -46,7 +46,7 @@ public abstract class RCommander {
      * @throws IOException
      */
     public RCommander() throws IOException {
-        String hostname = ConfigUtils.getString( "gemma.rserve.hostname", "localhost" );
+        String hostname = Settings.getString( "gemma.rserve.hostname", "localhost" );
         this.init( hostname );
     }
 

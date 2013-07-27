@@ -24,7 +24,7 @@ import org.apache.commons.configuration.ConfigurationException;
 
 import ubic.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Fetch the SRDF file
@@ -54,8 +54,8 @@ public class SDRFFetcher extends FtpFetcher {
 
     @Override
     protected void initConfig() {
-        localBasePath = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
-        remoteBaseDir = ConfigUtils.getString( "arrayExpress.experiments.baseDir" );
+        localBasePath = Settings.getString( "arrayExpress.local.datafile.basepath" );
+        remoteBaseDir = Settings.getString( "arrayExpress.experiments.baseDir" );
 
         if ( localBasePath == null || localBasePath.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );

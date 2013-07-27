@@ -57,7 +57,7 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.remote.EntityDelegator;
 
@@ -72,7 +72,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 @Component
 public class SecurityControllerImpl implements SecurityController {
 
-    private static final String GROUP_MANAGER_URL = ConfigUtils.getBaseUrl() + "manageGroups.html";
+    private static final String GROUP_MANAGER_URL = Settings.getBaseUrl() + "manageGroups.html";
 
     private static Log log = LogFactory.getLog( SecurityControllerImpl.class );
 
@@ -138,13 +138,13 @@ public class SecurityControllerImpl implements SecurityController {
             log.debug( "Sending email notification to " + emailAddress );
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setTo( emailAddress );
-            msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+            msg.setFrom( Settings.getAdminEmailAddress() );
             msg.setSubject( "You have been added to a group on Gemma" );
 
             msg.setText( userTakingAction.getUserName() + " has added you to the group '" + groupName
                     + "'.\nTo view groups you belong to, visit " + GROUP_MANAGER_URL
                     + "\n\nIf you believe you received this email in error, contact "
-                    + ConfigUtils.getAdminEmailAddress() + "." );
+                    + Settings.getAdminEmailAddress() + "." );
 
             mailEngine.send( msg );
         }

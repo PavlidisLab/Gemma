@@ -1,6 +1,6 @@
 package ubic.gemma.loader.expression.arrayExpress.util;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.NetDatasourceUtil;
 
 /**
@@ -11,7 +11,7 @@ public class ArrayExpressUtil extends NetDatasourceUtil {
 
     @Override
     public void init() {
-        this.setHost( ConfigUtils.getString( "arrayExpress.host" ) );
+        this.setHost( Settings.getString( "arrayExpress.host" ) );
         assert this.getHost() != null;
     }
 

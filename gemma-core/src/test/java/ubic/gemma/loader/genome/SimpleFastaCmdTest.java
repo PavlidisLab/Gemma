@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author pavlidis
@@ -155,7 +155,7 @@ public class SimpleFastaCmdTest {
 
     private boolean fastaCmdExecutableExists() {
 
-        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
         if ( fastacmdExe == null ) {
             return false;
         }

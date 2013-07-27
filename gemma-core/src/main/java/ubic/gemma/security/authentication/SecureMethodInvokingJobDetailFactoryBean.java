@@ -29,7 +29,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.security.audit.AuditAdvice;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Specialization of Spring task-running support so task threads have secure context (without using MODE_GLOBAL!). The
@@ -62,8 +62,8 @@ public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobD
     @Override
     public Object invoke() throws InvocationTargetException, IllegalAccessException {
 
-        String serverUserName = ConfigUtils.getString( "gemma.agent.userName" );
-        String serverPassword = ConfigUtils.getString( "gemma.agent.password" );
+        String serverUserName = Settings.getString( "gemma.agent.userName" );
+        String serverPassword = Settings.getString( "gemma.agent.password" );
         Object result;
         Authentication oldAuth = SecurityContextHolder.getContext().getAuthentication();
 

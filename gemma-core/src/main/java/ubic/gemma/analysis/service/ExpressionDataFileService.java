@@ -26,7 +26,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * @author paul
@@ -35,10 +35,10 @@ import ubic.gemma.util.ConfigUtils;
 public interface ExpressionDataFileService {
 
     public static final String DATA_ARCHIVE_FILE_SUFFIX = ".archive.zip";
-    public static final String DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
+    public static final String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
-    public static final String TMP_DATA_DIR = ConfigUtils.getString( "gemma.tmpdata.home" ) + File.separatorChar
+    public static final String TMP_DATA_DIR = Settings.getString( "gemma.tmpdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
     public static final String DATA_FILE_SUFFIX_COMPRESSED = ".data.txt.gz";

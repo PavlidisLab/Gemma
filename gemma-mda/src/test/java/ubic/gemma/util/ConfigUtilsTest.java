@@ -35,7 +35,7 @@ public class ConfigUtilsTest extends TestCase {
      * This tests whether the 'include' is working.
      */
     public final void testInclude() {
-        String actualResult = ConfigUtils.getString( TEST_VARIABLE );
+        String actualResult = Settings.getString( TEST_VARIABLE );
         assertFalse( actualResult.contains( "$" ) );
     }
 

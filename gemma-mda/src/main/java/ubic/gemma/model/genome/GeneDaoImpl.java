@@ -59,7 +59,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.CommonQueries;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 import ubic.gemma.util.SequenceBinUtils;
@@ -1092,7 +1092,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         /*
          * Initialize the cache; if it already exists it will not be recreated.
          */
-        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         boolean diskPersistent = false;
         int maxElements = 500000;
         boolean eternal = false;

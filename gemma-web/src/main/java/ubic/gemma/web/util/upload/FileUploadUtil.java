@@ -34,7 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 
 /**
  * Utility methods for uploading files.
@@ -97,7 +97,7 @@ public class FileUploadUtil {
 
     public static File copyUploadedInputStream( InputStream is ) throws IOException, FileNotFoundException {
         // Create the directory if it doesn't exist
-        String uploadDir = ConfigUtils.getDownloadPath() + "userUploads";
+        String uploadDir = Settings.getDownloadPath() + "userUploads";
         File uploadDirFile = FileTools.createDir( uploadDir );
 
         File copiedFile = new File( uploadDirFile.getAbsolutePath() + File.separatorChar
@@ -119,7 +119,7 @@ public class FileUploadUtil {
      * @return
      */
     public static String getUploadPath() {
-        return ConfigUtils.getDownloadPath() + "userUploads";
+        return Settings.getDownloadPath() + "userUploads";
     }
 
     /**

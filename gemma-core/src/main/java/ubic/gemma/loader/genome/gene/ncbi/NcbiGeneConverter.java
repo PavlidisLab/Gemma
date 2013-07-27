@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.SequenceBinUtils;
 
 /**
@@ -64,7 +64,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     private static ExternalDatabase genBank;
     private static ExternalDatabase ensembl;
 
-    private static boolean retainProteinInformation = ConfigUtils.getBoolean( RETAIN_PROTEIN_INFO_PARAM, false );
+    private static boolean retainProteinInformation = Settings.getBoolean( RETAIN_PROTEIN_INFO_PARAM, false );
 
     static {
         genBank = ExternalDatabase.Factory.newInstance();

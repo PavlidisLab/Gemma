@@ -31,7 +31,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.mail.SimpleMailMessage;
 
-import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.util.MessageUtil;
 
@@ -142,7 +142,7 @@ public abstract class BaseController {
     protected void sendEmail( String name, String emailAddress, String subject, String templateName,
             Map<String, Object> model ) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom( ConfigUtils.getAdminEmailAddress() );
+        mailMessage.setFrom( Settings.getAdminEmailAddress() );
         mailMessage.setSubject( subject );
         mailMessage.setTo( name + "<" + emailAddress + ">" );
         mailEngine.sendMessage( mailMessage, templateName, model );
