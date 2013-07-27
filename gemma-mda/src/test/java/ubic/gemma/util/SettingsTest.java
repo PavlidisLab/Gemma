@@ -24,7 +24,7 @@ import junit.framework.TestCase;
  * @author pavlidis
  * @version $Id$
  */
-public class ConfigUtilsTest extends TestCase {
+public class SettingsTest extends TestCase {
 
     /**
      * This has to exist in Gemma.properties for this test to work.
