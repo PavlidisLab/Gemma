@@ -30,6 +30,7 @@ import java.util.Properties;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.ConfigurationUtils;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.lang3.StringUtils;
@@ -104,6 +105,8 @@ public class Settings {
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadConfig( USER_CONFIGURATION );
+            ConfigurationUtils.dump( pc, System.err );
+
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
             // hmm, this is pretty much required.
@@ -113,6 +116,8 @@ public class Settings {
         try {
             // Default comes first.
             PropertiesConfiguration pc = ConfigUtils.loadConfig( DEFAULT_CONFIGURATION );
+            ConfigurationUtils.dump( pc, System.err );
+
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
             // hmm, this is pretty much required.
@@ -120,11 +125,11 @@ public class Settings {
         }
 
         try {
-            PropertiesConfiguration pc = ConfigUtils.loadConfig( BUILTIN_CONFIGURATION );
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( BUILTIN_CONFIGURATION );
+            ConfigurationUtils.dump( pc, System.err );
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
-            // that's okay, but warn
-            log.warn( BUILTIN_CONFIGURATION + " not found" );
+            throw new RuntimeException( "build-in configuration could not be loaded" );
         }
 
         try {
@@ -141,7 +146,9 @@ public class Settings {
         }
 
         try {
-            PropertiesConfiguration pc = ConfigUtils.loadConfig( "version.properties" );
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( "version.properties" );
+            ConfigurationUtils.dump( pc, System.err );
+
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
             log.debug( "version.properties not found" );
@@ -149,12 +156,14 @@ public class Settings {
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadConfig( "geommtx.properties" );
+            ConfigurationUtils.dump( pc, System.err );
+
             config.addConfiguration( pc );
         } catch ( Exception e ) {
             // no big deal...hopefully.
         }
 
-        // step through the result and do a final round of variable substitution
+        // step through the result and do a final round of variable substitution. is this needed?
         for ( Iterator<String> it = config.getKeys(); it.hasNext(); ) {
             String key = it.next();
             String property = config.getString( key );
@@ -168,11 +177,7 @@ public class Settings {
 
         if ( log.isDebugEnabled() ) {
             log.debug( "********** Configuration details ***********" );
-            for ( Iterator<?> it = config.getKeys(); it.hasNext(); ) {
-                String key = ( String ) it.next();
-                Object prop = config.getProperty( key );
-                log.debug( key + " = " + prop );
-            }
+            ConfigurationUtils.dump( config, System.err );
             log.debug( "********** End of configuration details ***********" );
         }
 
@@ -636,7 +641,7 @@ public class Settings {
      */
     public static String getString( String key ) {
         try {
-            return config.getString( key );
+            return StringUtils.strip( config.getString( key ), "\"\'" );
         } catch ( NoSuchElementException nsee ) {
             log.info( key + " is not configured, returning empty string" );
             return "";

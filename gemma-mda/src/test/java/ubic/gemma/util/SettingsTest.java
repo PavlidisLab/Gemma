@@ -18,13 +18,15 @@
  */
 package ubic.gemma.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+
+import org.junit.Test;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class SettingsTest extends TestCase {
+public class SettingsTest {
 
     /**
      * This has to exist in Gemma.properties for this test to work.
@@ -34,9 +36,20 @@ public class SettingsTest extends TestCase {
     /**
      * This tests whether the 'include' is working.
      */
+    @Test
     public final void testInclude() {
         String actualResult = Settings.getString( TEST_VARIABLE );
         assertFalse( actualResult.contains( "$" ) );
+    }
+
+    @Test
+    public void testProp1() {
+        Settings.getString( "geo.remote.platformDir" );
+    }
+
+    @Test
+    public void testProp2() {
+        Settings.getString( "gemma.compass.dir" );
     }
 
 }

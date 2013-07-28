@@ -59,6 +59,13 @@ public class SimpleFastaCmd implements FastaCmd {
 
     public SimpleFastaCmd() {
         super();
+
+        if ( System.getProperty( "os.name" ) != null && System.getProperty( "os.name" ).startsWith( "Windows" )
+                && !fastaCmdExecutable.endsWith( "\"" ) ) {
+            fastaCmdExecutable = StringUtils.strip( fastaCmdExecutable, "\"\'" );
+            fastaCmdExecutable = "\"" + fastaCmdExecutable + "\"";
+        }
+
         if ( fastaCmdExecutable.contains( "blastdbcmd" ) ) {
             dbOption = "db";
             queryOption = "entry";

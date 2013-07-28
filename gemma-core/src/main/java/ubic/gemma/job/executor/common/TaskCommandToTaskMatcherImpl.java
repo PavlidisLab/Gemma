@@ -21,8 +21,8 @@ package ubic.gemma.job.executor.common;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
 /**

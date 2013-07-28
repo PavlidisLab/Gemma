@@ -20,8 +20,6 @@
 package ubic.gemma.tasks.maintenance;
 
 import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.tasks.Task;
 
 /**
  * @author klc

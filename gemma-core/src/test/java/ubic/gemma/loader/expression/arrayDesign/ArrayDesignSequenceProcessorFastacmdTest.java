@@ -100,8 +100,8 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
         }
 
         File fi = new File( fastacmdExe );
-        if ( !fi.canRead() ) {
-            log.warn( fastacmdExe + " not found, skipping test" );
+        if ( !fi.exists() ) {
+            log.warn( fastacmdExe + " not executable, skipping test" );
             return false;
         }
         return true;
