@@ -614,7 +614,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids ) {
-        if (ids.isEmpty()) return new ArrayList<ExpressionExperimentValueObject>();
+        if ( ids.isEmpty() ) return new ArrayList<ExpressionExperimentValueObject>();
 
         String orderByClause = "";
         if ( orderField.equals( "taxon" ) ) {
@@ -1728,7 +1728,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getBioAssays() );
         Hibernate.initialize( result.getAuditTrail() );
-        Hibernate.initialize( result.getAuditTrail().getEvents() );
+        if ( result.getAuditTrail() != null ) Hibernate.initialize( result.getAuditTrail().getEvents() );
         Hibernate.initialize( result.getStatus() );
 
         for ( BioAssay ba : result.getBioAssays() ) {

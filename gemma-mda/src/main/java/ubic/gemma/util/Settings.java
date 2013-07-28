@@ -187,7 +187,7 @@ public class Settings {
      *         unix).
      */
     public static String getAnalysisStoragePath() {
-        String val = getString( "analysis.dir" );
+        String val = getString( "gemma.analysis.dir" );
         if ( val.endsWith( File.separator ) ) return val;
         return val + File.separatorChar;
     }
