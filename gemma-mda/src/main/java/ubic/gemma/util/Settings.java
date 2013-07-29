@@ -105,7 +105,6 @@ public class Settings {
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadConfig( USER_CONFIGURATION );
-            ConfigurationUtils.dump( pc, System.err );
 
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
@@ -116,7 +115,6 @@ public class Settings {
         try {
             // Default comes first.
             PropertiesConfiguration pc = ConfigUtils.loadConfig( DEFAULT_CONFIGURATION );
-            ConfigurationUtils.dump( pc, System.err );
 
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
@@ -126,10 +124,9 @@ public class Settings {
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( BUILTIN_CONFIGURATION );
-            ConfigurationUtils.dump( pc, System.err );
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "build-in configuration could not be loaded" );
+            throw new RuntimeException( "Built-in configuration could not be loaded: " + e.getMessage(), e );
         }
 
         try {
@@ -147,7 +144,6 @@ public class Settings {
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( "version.properties" );
-            ConfigurationUtils.dump( pc, System.err );
 
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
@@ -156,7 +152,6 @@ public class Settings {
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadConfig( "geommtx.properties" );
-            ConfigurationUtils.dump( pc, System.err );
 
             config.addConfiguration( pc );
         } catch ( Exception e ) {
@@ -275,7 +270,6 @@ public class Settings {
             log.info( key + " is not configured, returning default value of false" );
             return false;
         }
-
     }
 
     /**
