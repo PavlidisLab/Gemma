@@ -114,7 +114,7 @@ public class Settings {
 
         try {
             // Default comes first.
-            PropertiesConfiguration pc = ConfigUtils.loadConfig( DEFAULT_CONFIGURATION );
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( DEFAULT_CONFIGURATION );
 
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
@@ -152,7 +152,6 @@ public class Settings {
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadConfig( "geommtx.properties" );
-
             config.addConfiguration( pc );
         } catch ( Exception e ) {
             // no big deal...hopefully.
@@ -162,6 +161,7 @@ public class Settings {
         for ( Iterator<String> it = config.getKeys(); it.hasNext(); ) {
             String key = it.next();
             String property = config.getString( key );
+            // This isn't doing anything if the variable is like "${foo}/bar"
             if ( property != null && property.startsWith( "${" ) && property.endsWith( "}" ) ) {
                 String keyToSubstitute = property.substring( 2, property.length() - 1 );
                 String valueToSubstitute = config.getString( keyToSubstitute );
@@ -188,8 +188,10 @@ public class Settings {
      */
     public static String getAnalysisStoragePath() {
         String val = getString( "gemma.analysis.dir" );
+        ConfigurationUtils.dump( config, System.err );
+        assert val != null;
         if ( val.endsWith( File.separator ) ) return val;
-        return val + File.separatorChar;
+        return val + File.separator;
     }
 
     public static String getAnalyticsDomain() {
