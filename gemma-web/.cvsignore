@@ -5,5 +5,4 @@ cobertura.ser
 pom.properties
 logs
 null
-.settings
-WebContent
+ehcache.disk.store.dir
