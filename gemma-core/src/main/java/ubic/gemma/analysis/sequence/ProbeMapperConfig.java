@@ -19,6 +19,12 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public class ProbeMapperConfig {
 
+    public static final boolean DEFAULT_ALLOW_NONCANONICAL_CHROMOSOMES = false;
+
+    public static final boolean DEFAULT_ALLOW_PARS = false;
+
+    public static final boolean DEFAULT_ALLOW_PREDICTED = false;
+
     /**
      * Sequence identity below which we throw hits away.
      */
@@ -59,15 +65,17 @@ public class ProbeMapperConfig {
      */
     public static final double REPEAT_FRACTION_MAXIMUM = 0.3;
 
-    public static final boolean DEFAULT_ALLOW_PREDICTED = false;
-
-    public static final boolean DEFAULT_ALLOW_PARS = false;
-
     /**
      * Should we allow new PARs to be created. This used to be of interest but we have decided they are no longer
      * workable, so this is now false by default.
      */
     private boolean allowMakeProbeAlignedRegion = false;
+
+    /**
+     * Whether "non-canonical" chromsomes such as 6_cox_hap2 should be omitted from the results if there is a mapping to
+     * a canonical one.
+     */
+    private boolean allowNonCanonicalChromosomes = DEFAULT_ALLOW_NONCANONICAL_CHROMOSOMES;
 
     /**
      * Allow predicted genes; setting this to false overrides the effect of useAcembly, useNscan and useEnsembl.
@@ -159,6 +167,10 @@ public class ProbeMapperConfig {
         return allowMakeProbeAlignedRegion;
     }
 
+    public boolean isAllowNonCanonicalChromosomes() {
+        return allowNonCanonicalChromosomes;
+    }
+
     public boolean isAllowPredictedGenes() {
         return allowPredictedGenes;
     }
@@ -225,6 +237,10 @@ public class ProbeMapperConfig {
 
     public void setAllowMakeProbeAlignedRegion( boolean allowMakeProbeAlignedRegion ) {
         this.allowMakeProbeAlignedRegion = allowMakeProbeAlignedRegion;
+    }
+
+    public void setAllowNonCanonicalChromosomes( boolean allowNonCanonicalChromosomes ) {
+        this.allowNonCanonicalChromosomes = allowNonCanonicalChromosomes;
     }
 
     public void setAllowPredictedGenes( boolean allowPredictedGenes ) {

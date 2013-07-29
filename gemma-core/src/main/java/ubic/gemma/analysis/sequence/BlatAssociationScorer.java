@@ -54,13 +54,14 @@ public class BlatAssociationScorer {
      * will be less than 1.
      * 
      * @param blatAssociations for a single sequence.
+     * @param config 
      * @return the highest-scoring result (if there are ties this will be a random one). Note that this return value is
      *         not all that useful because it assumes there is a "clear winner". The passed-in blatAssociations will be
      *         pruned to remove redundant entires, and will have score information filled in as well. It is intended
      *         that these 'refined' BlatAssociations will be used in further analysis.
      * @throws IllegalArgumentException if the blatAssociations are from multiple biosequences.
      */
-    public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations ) {
+    public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations, ProbeMapperConfig config ) {
 
         Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProductAndInitializeScores( blatAssociations );
 
@@ -86,6 +87,14 @@ public class BlatAssociationScorer {
         Map<PhysicalLocation, Double> scores = new HashMap<PhysicalLocation, Double>();
         for ( PhysicalLocation pl : geneClusters.keySet() ) {
             Double geneScore = 0.0;
+            
+            if (!config.isAllowNonCanonicalChromosomes()) {
+                /*
+                 * Figure out if this is a canonical chromosome.
+                 */
+                // TODO see bug 3683
+            }
+            
             for ( Gene cgene : geneClusters.get( pl ) ) {
                 for ( BlatAssociation blatAssociation : genes2Associations.get( cgene ) ) {
                     Double alignScore = blatAssociation.getScore();

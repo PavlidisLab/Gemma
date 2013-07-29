@@ -114,6 +114,7 @@ public class ProbeMapperImpl implements ProbeMapper {
                 continue;
             }
 
+          
             /*
              * Sanity check to make sure user is paying attention to what they are putting in.
              */
@@ -169,7 +170,7 @@ public class ProbeMapperImpl implements ProbeMapper {
             if ( blatAssociationsForSequence.size() == 0 ) continue;
 
             // Another important step: fill in the specificity, remove duplicates
-            BlatAssociationScorer.scoreResults( blatAssociationsForSequence );
+            BlatAssociationScorer.scoreResults( blatAssociationsForSequence, config );
 
             // Remove hits not meeting criteria
             blatAssociationsForSequence = filterOnScores( blatAssociationsForSequence, config );

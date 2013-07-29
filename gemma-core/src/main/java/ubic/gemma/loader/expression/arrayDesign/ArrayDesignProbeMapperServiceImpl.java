@@ -144,7 +144,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     }
 
     /*
-     * (non-Javadoc)
+     * (non-Javadoc) - mapping to the genome ourselves.
      * 
      * @see
      * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression
@@ -248,7 +248,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     }
 
     /*
-     * (non-Javadoc)
+     * (non-Javadoc) - from an input file, not mapped with sequences.
      * 
      * @see
      * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression
