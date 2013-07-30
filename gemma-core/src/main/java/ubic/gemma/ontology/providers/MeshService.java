@@ -62,7 +62,7 @@ public class MeshService {
     private static ExternalDatabase meshdb;
 
     static {
-        model = OntologyLoader.loadPersistentModel( MESH_ONT_URL, false ); // no force.
+        model = OntologyLoader.loadMemoryModel( MESH_ONT_URL ); // no force.
         index = OntologyIndexer.indexOntology( MESH_INDEX_NAME, model );
         meshdb = ExternalDatabase.Factory.newInstance();
         meshdb.setName( "mesh" );
