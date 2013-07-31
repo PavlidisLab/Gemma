@@ -12,23 +12,24 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.association.phenotype.externalDatabaseUpload;
+package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.ncbo.AnnotatorClient;
@@ -37,176 +38,88 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 
-public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenceImporterAbstractCLI {
+public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
-    HashMap<String, String> phenotypeToOmimMapping = new HashMap<String, String>();
+    // name of the external database
+    protected static final String OMIM = "OMIM";
+
+    // ***********************************************************************************
+    // reading OMIM static files
+    public static final String OMIM_FILES_PATH = File.separator + "neurocarta" + File.separator
+            + "externalDatabaseImporter" + File.separator + OMIM + File.separator;
+    // manual static file mapping
+    public static final String MANUAL_MAPPING_OMIM = OMIM_FILES_PATH + "ManualDescriptionMapping.tsv";
+    // terms to exclude when we search for a phenotype the second time
+    public static final String EXCLUDE_KEYWORDS_OMIM = OMIM_FILES_PATH + "KeyWordsToExclude.tsv";
+    // results we exclude, we know those results are not good
+    public static final String RESULTS_TO_IGNORE = OMIM_FILES_PATH + "ResultsToIgnore.tsv";
+    // when we find this description ingore it
+    public static final String DESCRIPTION_TO_IGNORE = OMIM_FILES_PATH + "DescriptionToIgnore.tsv";
+
+    // ********************************************************************************
+    // the OMIM files to download
+    public static final String OMIM_URL_PATH = "ftp://grcf.jhmi.edu/OMIM/";
+    public static final String OMIM_FILE_MORBID = "morbidmap";
+    public static final String OMIM_FILE_MIM = "mim2gene.txt";
+    // ********************************************************************************
+
+    // data structure that we will be using with OMIM data
+    private HashMap<String, String> phenotypeToOmimMapping = new HashMap<String, String>();
+    private HashMap<String, ArrayList<GenericEvidenceValueObject>> omimIDGeneToEvidence = new HashMap<String, ArrayList<GenericEvidenceValueObject>>();
 
     public static void main( String[] args ) throws Exception {
 
-        // choose the external database to export
-        String externalDatabase = "OMIM";
+        OmimDatabaseImporter importEvidence = new OmimDatabaseImporter();
 
-        ExternalDatabaseEvidenceImporterCLI importEvidence = new ExternalDatabaseEvidenceImporterCLI();
-        // access the Gemma Ontologies Service
-        importEvidence.loadOntologyServices( args );
+        // JUST FOR NOW
+        Logger root = Logger.getRootLogger();
+        root.setLevel( Level.INFO );
 
-        // create a special Folder where to place and file Download + Results
-        String writeFolder = importEvidence.createWriteFolder( externalDatabase );
+        // load all needed services in Gemma
+        importEvidence.loadServices( args );
 
-        if ( externalDatabase.equalsIgnoreCase( "OMIM" ) ) {
+        // creates the folder where to place the file web downloaded files and final output files
+        String writeFolder = importEvidence.createWriteFolder( OMIM );
 
-            // download the disease Ontology File
-            String diseaseOntologyFile = importEvidence.downloadFileFromWeb( writeFolder, DISEASE_ONT_PATH,
-                    DISEASE_ONT_FILE );
-            // download the OMIM File called morbid
-            String morbidmap = importEvidence.downloadFileFromWeb( writeFolder, OMIM_URL_PATH, OMIM_FILE_MORBID );
-            // download the OMIM File called mim2gene
-            String mim2gene = importEvidence.downloadFileFromWeb( writeFolder, OMIM_URL_PATH, OMIM_FILE_MIM );
+        // download the disease Ontology File
+        String diseaseOntologyFile = importEvidence.downloadFileFromWeb( writeFolder, DISEASE_ONT_PATH,
+                DISEASE_ONT_FILE );
+        // download the OMIM File called morbid
+        String morbidmap = importEvidence.downloadFileFromWeb( writeFolder, OMIM_URL_PATH, OMIM_FILE_MORBID );
+        // download the OMIM File called mim2gene
+        String mim2gene = importEvidence.downloadFileFromWeb( writeFolder, OMIM_URL_PATH, OMIM_FILE_MIM );
 
-            // map the omim id to the PhenotypeValueUri using the disease Ontology file downloaded
-            HashMap<String, HashSet<String>> omimIdToPhenotypeMapping = importEvidence
-                    .findOmimPhenotypeMapping( diseaseOntologyFile );
-
-            importEvidence.processOmimFiles( writeFolder, omimIdToPhenotypeMapping, morbidmap, mim2gene );
-
-        }
+        importEvidence.processOmimFiles( writeFolder, morbidmap, mim2gene, diseaseOntologyFile );
     }
 
-    private HashMap<String, HashSet<String>> findOmimPhenotypeMapping( String diseaseOntologyPath ) throws IOException {
+    // process all OMIm files to get the data out and manipulates it
+    private void processOmimFiles( String writeFolder, String morbidmap, String mim2gene, String diseaseOntologyFile )
+            throws IOException {
 
-        HashMap<String, HashSet<String>> omimIdToPhenotypeMapping = new HashMap<String, HashSet<String>>();
+        // map the omim id to the PhenotypeValueUri using the disease Ontology file downloaded
+        // OMIM_ID ---> ( uri1,uri2...)
+        HashMap<String, HashSet<String>> omimIdToPhenotypeMapping = findOmimPhenotypeMapping( diseaseOntologyFile );
 
-        HashSet<String> omimIds = new HashSet<String>();
-        String valueUri = null;
-
-        BufferedReader br = new BufferedReader( new FileReader( diseaseOntologyPath ) );
-
-        String line = "";
-
-        boolean foundTerm = false;
-
-        while ( ( line = br.readLine() ) != null ) {
-
-            String[] tokens = null;
-
-            line = line.trim();
-
-            // found a term
-            if ( line.equalsIgnoreCase( "[Term]" ) ) {
-                foundTerm = true;
-                valueUri = null;
-                omimIds = new HashSet<String>();
-            } else if ( foundTerm ) {
-
-                if ( line.startsWith( "id:" ) ) {
-
-                    tokens = line.split( ":" );
-
-                    String diseaseId = tokens[2].trim();
-                    // will throw exception if a number is not found
-                    Integer.parseInt( diseaseId );
-                    // disease id
-                    valueUri = "http://purl.obolibrary.org/obo/DOID_" + diseaseId;
-
-                } else if ( line.indexOf( "xref: OMIM" ) != -1 ) {
-
-                    tokens = line.split( ":" );
-                    omimIds.add( tokens[2].trim() );
-                }
-
-                // end of a term
-                else if ( line.equalsIgnoreCase( "" ) ) {
-
-                    foundTerm = false;
-
-                    for ( String omimId : omimIds ) {
-
-                        HashSet<String> h = new HashSet<String>();
-
-                        if ( omimIdToPhenotypeMapping.get( omimId ) == null ) {
-                            h.add( valueUri );
-                        } else {
-                            h = omimIdToPhenotypeMapping.get( omimId );
-                            h.add( valueUri );
-                        }
-                        omimIdToPhenotypeMapping.put( omimId, h );
-
-                        // only add the mapping if not obsolete
-                        if ( !isObsoleteOrNotExist( valueUri ) ) {
-                            phenotypeToOmimMapping.put( valueUri, omimId );
-                        }
-                    }
-                }
-            }
-        }
-
-        return omimIdToPhenotypeMapping;
-    }
-
-    /**
-     * Goes on the specified urlPath and download the file to place it into the writeFolder
-     */
-    private String downloadFileFromWeb( String writeFolder, String pathName, String fileUrlName ) {
-
-        String fileName = fileUrlName;
-
-        String fullPathToDownload = pathName + fileUrlName;
-
-        // here we change the name of this specific file so itcan be human readable
-        if ( fileName.equalsIgnoreCase( DISEASE_ONT_FILE ) ) {
-            fileName = "diseaseOntology.txt";
-        }
-
-        String pathFileName = writeFolder + "/" + fileName;
-
-        try {
-
-            System.out.println( "Trying to download : " + fullPathToDownload );
-
-            URL url = new URL( fullPathToDownload );
-            url.openConnection();
-            InputStream reader = url.openStream();
-
-            FileOutputStream writer = new FileOutputStream( pathFileName );
-            byte[] buffer = new byte[153600];
-            int bytesRead = 0;
-
-            while ( ( bytesRead = reader.read( buffer ) ) > 0 ) {
-                writer.write( buffer, 0, bytesRead );
-                buffer = new byte[153600];
-            }
-
-            writer.close();
-            reader.close();
-            System.out.println( "Download Completed" );
-
-        } catch ( MalformedURLException e ) {
-            e.printStackTrace();
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
-
-        return pathFileName;
-    }
-
-    private void processOmimFiles( String writeFolder, HashMap<String, HashSet<String>> omimIdToPhenotypeMapping,
-            String morbidmap, String mim2gene ) throws IOException {
-
-        // special keywords to exclude on search with annotator (manual mapping)
+        // special keywords to exclude on search with annotator (manual mapping), (stop words)
         ArrayList<String> wordsToExclude = parseFileFindExcludeTerms();
-        // special resultsToIgnore
+        // special resultsToIgnore, results returned that are too general
         HashSet<String> resultsToIgnore = parseResultsToIgnore();
-        // omim description we want to ignore
+        // omim description we want to ignore, when we find those description, we know we are not interested in them
         HashSet<String> descriptionToIgnore = parseDescriptionToIgnore();
 
-        // mapping from OMIM description to phenotype (manual mapping)
+        // mapping from OMIM id to valueURI, those are the ones we know are good, because they were checked manually
+        // (OMIM_ID --->
         HashMap<String, Collection<String>> omimIdToPhenotype = parseFileOmimDescriptionToPhenotype();
+
         // mapping find using mim2gene file, Omim id ---> Gene NCBI
         HashMap<String, String> omimIdToGeneNCBI = parseFileOmimIdToGeneNCBI( mim2gene );
 
-        // create the 4 possible outputFiles
+        // create the 3 possible outputFiles
+        // 1- sure results to import
         BufferedWriter outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
+        // 2- results found to check
         BufferedWriter outMappinpFound = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
+        // 3- no results found
         BufferedWriter outNotFound = new BufferedWriter( new FileWriter( writeFolder + "/notFound.tsv" ) );
         TreeSet<String> outMappingFoundBuffer = new TreeSet<String>();
         TreeSet<String> outNotFoundBuffer = new TreeSet<String>();
@@ -215,14 +128,14 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
         BufferedReader br = new BufferedReader( new FileReader( morbidmap ) );
 
-        int v = 0;
+        int lineNumber = 1;
 
         Collection<Long> ontologiesToUse = new HashSet<Long>();
         ontologiesToUse.add( 1009l );
         ontologiesToUse.add( 1125l );
         AnnotatorClient anoClient = new AnnotatorClient( ontologiesToUse );
 
-        // parse the last Omim file and decide what outfile file each result should be put
+        // parse the morbid OMIM file
         while ( ( line = br.readLine() ) != null ) {
 
             String[] tokens = line.split( "\\|" );
@@ -232,23 +145,27 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
             // if there is a database link
             if ( pos != -1 ) {
 
+                // phenotypes found
                 Collection<String> phenotypesUri = new HashSet<String>();
-                // this is how we find the result
+                // this represents the case used to find the result
                 String conditionUsed = "";
 
-                // OMIM description find in file
+                // OMIM description find in file, the annotator use description
                 String description = tokens[0].substring( 0, pos ).trim();
 
                 // evidence code we will use
                 String evidenceCode = "TAS";
-                // database Link
+                // the OMIM id, (also is the database link)
                 String omimId = tokens[0].substring( pos + 1, tokens[0].length() ).trim().split( " " )[0];
-
+                // OMOM gene id
                 String omimGeneId = tokens[2];
 
-                // search terms that will be used by the annotator
+                // search term that will be used by the annotator we run it 2 times
+                // this search term is not mofified
                 String searchTerm = removeSymbol( description );
+                // the searchTermWithOutKeywords is a modified version of the searchTerm
                 String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm, wordsToExclude );
+                // omimGeneid ---> ncbi id
                 String ncbiGeneId = omimIdToGeneNCBI.get( omimGeneId );
 
                 // is the omimGeneId found in the other file
@@ -256,21 +173,22 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
                     String geneSymbol = this.geneService.findByNCBIId( new Integer( ncbiGeneId ) ).getOfficialSymbol();
 
-                    // if there is no databaselink we cannot do anything with this line (happens often)
+                    // if there is no omim id given we cannot do anything with this line (happens often)
                     if ( !isInteger( omimId ) || Integer.parseInt( omimId ) < 100 ) {
                         continue;
                     }
 
-                    v++;
-                    System.out.println( "teating line: " + v );
+                    log.info( "teating line: " + lineNumber++ );
 
                     // Case 0: we want to exclude this omim descriptipn
                     if ( descriptionToIgnore.contains( description ) ) {
                         conditionUsed = "Case 0: Ignored Descripton";
                     }
 
-                    // Case 1: lets use the Omim id to find the mapping phenotype, it cannot be obsolete
-                    if ( omimIdToPhenotypeMapping.get( omimId ) != null ) {
+                    // we go in order of importance to treat the line
+
+                    // Case 1: lets use the Omim id to find the mapping phenotype, if it exists and not obsolote
+                    else if ( omimIdToPhenotypeMapping.get( omimId ) != null ) {
                         phenotypesUri = omimIdToPhenotypeMapping.get( omimId );
                         conditionUsed = "Case 1: Found with OMIM ID";
                     }
@@ -281,13 +199,18 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                         conditionUsed = "Case 2: Found with Description, Manual Mapping";
                     }
 
-                    // lets use the annotator to see if we find it there
+                    // if Case 1 and 2 fail, then lets use the annotator to try finding an answer
                     else {
 
+                        // search with the annotator and filter result to take out obsolete terms given
                         Collection<AnnotatorResponse> ontologyTermsNormal = removeNotExistAndObsolete( anoClient
                                 .findTerm( searchTerm ) );
+
+                        // same thing, but with the searchTermWithOutKeywords
                         Collection<AnnotatorResponse> ontologyTermsWithOutKeywords = new HashSet<AnnotatorResponse>();
 
+                        // the results are ordered by importance, check first result to see if a correct mapping was
+                        // found, we are only interested in exacts matches and synonim at this point
                         AnnotatorResponse annotatorResponseFirstNormal = null;
 
                         if ( !ontologyTermsNormal.isEmpty() ) {
@@ -362,10 +285,13 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                             }
                         }
 
+                        // no exact match or synonym were found in DOID or HP, check if other mapping were found
+
                         if ( conditionUsed.isEmpty() ) {
 
                             if ( ontologyTermsNormal.size() > 0 || ontologyTermsWithOutKeywords.size() > 0 ) {
 
+                                // keep all that was found by the annotator
                                 HashSet<String> mappingFoundNotExactValueUri = new HashSet<String>();
                                 HashSet<String> mappingFoundNotExactValue = new HashSet<String>();
 
@@ -389,7 +315,6 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                                         resultsIgnored = resultsIgnored + phenoValueUri + "; ";
                                     } else {
                                         mappingFoundNotExactValue2.add( phenoValueUri );
-
                                     }
                                 }
 
@@ -416,7 +341,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                         outNotFoundBuffer.add( description + "\t" + conditionUsed + "\n" );
                     }
 
-                    // found
+                    // Case 1 and Case are the only cases that we want to import
                     else if ( conditionUsed.indexOf( "Case 1:" ) != -1 || conditionUsed.indexOf( "Case 2:" ) != -1 ) {
 
                         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
@@ -429,7 +354,6 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                             }
 
                             // ontologyTerm can never be null or obsolete we checked before
-
                             CharacteristicValueObject c = new CharacteristicValueObject( ontologyTerm.getLabel(),
                                     valueUri );
                             phenotypes.add( c );
@@ -474,8 +398,6 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                                 o = this.humanPhenotypeOntologyService.getTerm( valueUri );
                             }
 
-                            // ontologyTerm can never be null or obsolete we checked before
-
                             phenotypeValueUri = phenotypeValueUri + o.getUri() + ";";
                             phenotypeValue = phenotypeValue + o.getLabel() + ";";
 
@@ -506,14 +428,15 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
         if ( !errorMessages.isEmpty() ) {
 
-            System.out.println( "here is the error messages :\n" );
+            log.info( "here is the error messages :\n" );
 
             for ( String err : errorMessages ) {
 
-                System.err.println( err );
+                log.error( err );
             }
         }
 
+        // write final output found
         for ( String lineMappinpFound : outMappingFoundBuffer ) {
             outMappinpFound.write( lineMappinpFound );
         }
@@ -521,7 +444,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
             outNotFound.write( lineNotFound );
         }
 
-        // case 0 and 1 at the end
+        // case 0 and 1 at the end, combine same
         for ( ArrayList<GenericEvidenceValueObject> evidences : omimIDGeneToEvidence.values() ) {
 
             String geneSymbol = "";
@@ -575,6 +498,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
         outNotFound.close();
     }
 
+    // special rule used to format the search term
     private String removeSmallNumberAndTxt( String txt ) {
 
         String txtWithoutSimpLetters = "";
@@ -600,9 +524,9 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
             }
         }
         return txtWithoutSimpLetters.trim();
-
     }
 
+    // special rule used to format the search ter
     private String removeSpecificKeywords( String txt, ArrayList<String> wordsToExclude ) {
 
         String txtWithExcludeDigitWords = removeEndDigitWords( txt );
@@ -640,6 +564,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
         return newTxt.replaceAll( ",", " " );
     }
 
+    // special rule used to format the search ter
     private String removeEndDigitWords( String txt ) {
         String finalTxt = "";
         String[] termFoundInFile = txt.split( "," );
@@ -686,17 +611,20 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
         }
     }
 
+    // if a excel file was used values sometime save as "value", always take out the "
     private String removeCha( String txt ) {
 
         String newTxt = txt.replaceAll( "\"", "" );
         return newTxt.trim();
     }
 
+    // parse file and returns a collecction of terms found
     private ArrayList<String> parseFileFindExcludeTerms() throws IOException {
 
         ArrayList<String> wordsToExclude = new ArrayList<String>();
 
-        BufferedReader br = new BufferedReader( new FileReader( EXCLUDE_KEYWORDS_OMIM ) );
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                OmimDatabaseImporter.class.getResourceAsStream( EXCLUDE_KEYWORDS_OMIM ) ) );
 
         String line = "";
 
@@ -713,11 +641,13 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
         return wordsToExclude;
     }
 
+    // parse file and returns a collecction of terms found
     private HashSet<String> parseResultsToIgnore() throws IOException {
 
         HashSet<String> resultsToIgnore = new HashSet<String>();
 
-        BufferedReader br = new BufferedReader( new FileReader( RESULTS_TO_IGNORE ) );
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                OmimDatabaseImporter.class.getResourceAsStream( RESULTS_TO_IGNORE ) ) );
 
         String line = "";
 
@@ -735,7 +665,8 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
         HashSet<String> descriptionToIgnore = new HashSet<String>();
 
-        BufferedReader br = new BufferedReader( new FileReader( DESCRIPTION_TO_IGNORE ) );
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                OmimDatabaseImporter.class.getResourceAsStream( DESCRIPTION_TO_IGNORE ) ) );
 
         String line = "";
 
@@ -753,7 +684,8 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
 
         HashMap<String, Collection<String>> omimIdToPhenotype = new HashMap<String, Collection<String>>();
 
-        BufferedReader br = new BufferedReader( new FileReader( MANUAL_MAPPING_OMIM ) );
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                OmimDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING_OMIM ) ) );
 
         String line = br.readLine();
 
@@ -766,7 +698,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
             tokens = line.split( "\t" );
 
             String omimIdStaticFile = removeCha( tokens[0] );
-            String valueUriStaticFile = removeCha( tokens[1] );
+            String valueUriStaticFile = removeCha( tokens[1] ).replaceAll( ";", "" );
 
             if ( !isObsoleteOrNotExist( valueUriStaticFile ) ) {
 
@@ -779,9 +711,7 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
                 }
                 omimIdToPhenotype.put( omimIdStaticFile, col );
             } else {
-
                 errorMessages.add( "MANUAL MAPPING FILE TERM OBSOLETE OR NOT EXISTANT: " + line );
-
             }
         }
 
@@ -831,32 +761,77 @@ public class ExternalDatabaseEvidenceImporterCLI extends ExternalDatabaseEvidenc
         return newTxt;
     }
 
-    private boolean isObsoleteOrNotExist( String valueUri ) {
+    // parse the downloaded disease ontology file to find OMIm mapping, this could be done better with xml parses but
+    // working now
+    private HashMap<String, HashSet<String>> findOmimPhenotypeMapping( String diseaseOntologyPath ) throws IOException {
 
-        OntologyTerm o = this.diseaseOntologyService.getTerm( valueUri );
-        if ( o == null ) {
-            o = this.humanPhenotypeOntologyService.getTerm( valueUri );
-        }
+        HashMap<String, HashSet<String>> omimIdToPhenotypeMapping = new HashMap<String, HashSet<String>>();
 
-        if ( o == null || o.isTermObsolete() ) {
+        HashSet<String> omimIds = new HashSet<String>();
+        String valueUri = null;
 
-            return true;
-        }
+        BufferedReader br = new BufferedReader( new FileReader( diseaseOntologyPath ) );
 
-        return false;
-    }
+        String line = "";
 
-    private Collection<AnnotatorResponse> removeNotExistAndObsolete( Collection<AnnotatorResponse> annotatorResponses ) {
+        boolean foundTerm = false;
 
-        Collection<AnnotatorResponse> annotatorResponseWithNoObsolete = new TreeSet<AnnotatorResponse>();
+        while ( ( line = br.readLine() ) != null ) {
 
-        for ( AnnotatorResponse annotatorResponse : annotatorResponses ) {
+            String[] tokens = null;
 
-            if ( !isObsoleteOrNotExist( annotatorResponse.getValueUri() ) ) {
-                annotatorResponseWithNoObsolete.add( annotatorResponse );
+            line = line.trim();
+
+            // found a term
+            if ( line.equalsIgnoreCase( "[Term]" ) ) {
+                foundTerm = true;
+                valueUri = null;
+                omimIds = new HashSet<String>();
+            } else if ( foundTerm ) {
+
+                if ( line.startsWith( "id:" ) ) {
+
+                    tokens = line.split( ":" );
+
+                    String diseaseId = tokens[2].trim();
+                    // will throw exception if a number is not found
+                    Integer.parseInt( diseaseId );
+                    // disease id
+                    valueUri = "http://purl.obolibrary.org/obo/DOID_" + diseaseId;
+
+                } else if ( line.indexOf( "xref: OMIM" ) != -1 ) {
+
+                    tokens = line.split( ":" );
+                    omimIds.add( tokens[2].trim() );
+                }
+
+                // end of a term
+                else if ( line.equalsIgnoreCase( "" ) ) {
+
+                    foundTerm = false;
+
+                    for ( String omimId : omimIds ) {
+
+                        HashSet<String> h = new HashSet<String>();
+
+                        if ( omimIdToPhenotypeMapping.get( omimId ) == null ) {
+                            h.add( valueUri );
+                        } else {
+                            h = omimIdToPhenotypeMapping.get( omimId );
+                            h.add( valueUri );
+                        }
+                        omimIdToPhenotypeMapping.put( omimId, h );
+
+                        // only add the mapping if not obsolete
+                        if ( !isObsoleteOrNotExist( valueUri ) ) {
+                            phenotypeToOmimMapping.put( valueUri, omimId );
+                        }
+                    }
+                }
             }
         }
-        return annotatorResponseWithNoObsolete;
+
+        return omimIdToPhenotypeMapping;
     }
 
 }
