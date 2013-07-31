@@ -28,9 +28,6 @@ import java.util.HashSet;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
@@ -70,10 +67,6 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     public static void main( String[] args ) throws Exception {
 
         OmimDatabaseImporter importEvidence = new OmimDatabaseImporter();
-
-        // JUST FOR NOW
-        Logger root = Logger.getRootLogger();
-        root.setLevel( Level.INFO );
 
         // load all needed services in Gemma
         importEvidence.loadServices( args );
@@ -131,8 +124,8 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         int lineNumber = 1;
 
         Collection<Long> ontologiesToUse = new HashSet<Long>();
-        ontologiesToUse.add( 1009l );
-        ontologiesToUse.add( 1125l );
+        ontologiesToUse.add( AnnotatorClient.DOID_ONTOLOGY );
+        ontologiesToUse.add( AnnotatorClient.HP_ONTOLOGY );
         AnnotatorClient anoClient = new AnnotatorClient( ontologiesToUse );
 
         // parse the morbid OMIM file
