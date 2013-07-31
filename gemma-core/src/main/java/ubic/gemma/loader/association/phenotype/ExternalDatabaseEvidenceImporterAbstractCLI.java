@@ -84,7 +84,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         }
     }
 
-    @Override
+    @Override 
     protected Exception doWork( String[] args ) {
         // TODO Auto-generated method stub
         return null;

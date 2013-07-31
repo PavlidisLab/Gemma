@@ -61,7 +61,6 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     // ********************************************************************************
 
     // data structure that we will be using with OMIM data
-    private HashMap<String, String> phenotypeToOmimMapping = new HashMap<String, String>();
     private HashMap<String, ArrayList<GenericEvidenceValueObject>> omimIDGeneToEvidence = new HashMap<String, ArrayList<GenericEvidenceValueObject>>();
 
     public static void main( String[] args ) throws Exception {
@@ -437,6 +436,10 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             outNotFound.write( lineNotFound );
         }
 
+        // headers of the final file
+        outFinalResults
+                .write( "GeneSymbol\tGeneId\tEvidenceCode\tComments\tDatabaseLink\tPhenotypes\tExtraInfo\tExtraInfo\tisNegative\tExternalDatabase\n" );
+
         // case 0 and 1 at the end, combine same
         for ( ArrayList<GenericEvidenceValueObject> evidences : omimIDGeneToEvidence.values() ) {
 
@@ -480,7 +483,8 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             }
 
             String evidenceLine = geneSymbol + "\t" + ncbiGeneId + "\t" + evidenceCode + "\t" + description + "\t"
-                    + databaseLink + "\t" + allValueUri + "\t" + phenotypeValue + "\t" + conditionUsed + "\n";
+                    + databaseLink + "\t" + allValueUri + "\t" + phenotypeValue + "\t" + conditionUsed + "\t" + ""
+                    + "\t" + OMIM + "\n";
 
             outFinalResults.write( evidenceLine );
         }
@@ -808,23 +812,21 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
                         HashSet<String> h = new HashSet<String>();
 
                         if ( omimIdToPhenotypeMapping.get( omimId ) == null ) {
-                            h.add( valueUri );
+                            if ( !isObsoleteOrNotExist( valueUri ) ) {
+                                h.add( valueUri );
+                            }
                         } else {
                             h = omimIdToPhenotypeMapping.get( omimId );
-                            h.add( valueUri );
+                            if ( !isObsoleteOrNotExist( valueUri ) ) {
+                                h.add( valueUri );
+                            }
                         }
                         omimIdToPhenotypeMapping.put( omimId, h );
-
-                        // only add the mapping if not obsolete
-                        if ( !isObsoleteOrNotExist( valueUri ) ) {
-                            phenotypeToOmimMapping.put( valueUri, omimId );
-                        }
                     }
                 }
             }
-        }
 
+        }
         return omimIdToPhenotypeMapping;
     }
-
 }
