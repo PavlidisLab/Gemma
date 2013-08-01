@@ -57,6 +57,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find all PhenotypeAssociation for a specific NCBI id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
+    
+    /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI,Set<String> phenotype );
 
     /** find category terms currently used in the database by evidence */
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms();

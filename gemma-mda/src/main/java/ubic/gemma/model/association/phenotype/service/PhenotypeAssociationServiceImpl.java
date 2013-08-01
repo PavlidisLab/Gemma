@@ -169,6 +169,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI );
     }
+    
+    /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
+    @Override
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI,Set<String> phenotype) {
+        return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI,phenotype );
+    }
 
     /** find mged category term that were used in the database, used to annotated Experiments */
     @Override

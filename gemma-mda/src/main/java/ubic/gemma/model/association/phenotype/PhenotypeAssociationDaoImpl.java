@@ -175,6 +175,24 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return geneQueryCriteria.list();
     }
 
+    @Override
+    /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype ) {
+
+        String sqlPhenotypes = "";
+        for ( String p : phenotype ) {
+            sqlPhenotypes = sqlPhenotypes + "'" + p + "',";
+        }
+        sqlPhenotypes = "(" + sqlPhenotypes.substring( 0, sqlPhenotypes.length() - 1 ) + ")";
+
+        Collection<PhenotypeAssociation> phenotypeAssociation = this
+                .getHibernateTemplate()
+                .find( "select p from PhenotypeAssociationImpl as p inner join p.phenotypes as phe inner join p.gene as g where phe.valueUri in "
+                        + sqlPhenotypes + " and g.ncbiGeneId=" + geneNCBI );
+        return phenotypeAssociation;
+
+    }
+
     /** find category terms currently used in the database by evidence */
     @Override
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms() {
@@ -377,7 +395,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
             sqlQuery += ") ";
         }
-        
+
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
         return phenotypesGenesAssociations;

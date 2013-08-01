@@ -1672,7 +1672,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private EvidenceValueObject evidenceAlreadyInDatabase( EvidenceValueObject evidence ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
-                .findPhenotypeAssociationForGeneNCBI( evidence.getGeneNCBI() );
+                .findPhenotypeAssociationForGeneNCBI( evidence.getGeneNCBI(), evidence.getPhenotypesValueUri() );
 
         Collection<EvidenceValueObject> evidenceValueObjects = convert2ValueObjects( phenotypeAssociations );
 

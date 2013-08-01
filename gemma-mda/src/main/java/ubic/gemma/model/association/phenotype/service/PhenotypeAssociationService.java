@@ -128,6 +128,11 @@ public interface PhenotypeAssociationService {
     /** find all PhenotypeAssociation for a specific NCBI id */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
+    
+    
+    /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI,Set<String> phenotype );
 
     /** find category term that were used in the database, used to annotated Experiments */
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
