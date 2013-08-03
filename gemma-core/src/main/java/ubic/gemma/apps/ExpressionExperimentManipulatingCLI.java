@@ -463,7 +463,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         int newSize = ees.size();
         if ( newSize != size ) {
             assert newSize < size;
-            if ( size == 0 && theOnlyOne != null ) {
+            if ( size == 1 && theOnlyOne != null ) {
                 log.info( theOnlyOne.getName() + " has an active trouble flag" );
             } else {
                 log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
