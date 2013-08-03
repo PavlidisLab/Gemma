@@ -236,11 +236,7 @@ DEDVController.getDEDVForDiffExVisualization = function(p0, p1, p2, p3, callback
 DEDVController.getDEDVForVisualization = function(p0, p1, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getDEDVForVisualization");
    dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForVisualization', p0, p1, callback);
-};
-DEDVController.getVectorData = function(p0, callback) {
-   googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getVectorData");
-   dwr.engine._execute(DEDVController._path, 'DEDVController', 'getVectorData', p0, callback);
-};
+}; 
 DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/DEDVController/getDEDVForDiffExVisualizationByThreshold");
    dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByThreshold', p0, p1, callback);

@@ -34,8 +34,8 @@ public class BooleanVectorValueObject extends DataVectorValueObject {
     private static final long serialVersionUID = 1L;
     private boolean[] data;
 
-    public BooleanVectorValueObject( DesignElementDataVector dedv ) {
-        super( dedv );
+    public BooleanVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
+        super( dedv, badvo );
         if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
             throw new IllegalArgumentException( "Can only store boolean vectors, got " + dedv.getQuantitationType() );
         }

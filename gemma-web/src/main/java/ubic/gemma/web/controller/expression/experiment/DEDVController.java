@@ -47,7 +47,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
@@ -63,8 +62,6 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -82,10 +79,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
-import ubic.gemma.web.controller.visualization.ExpressionProfileDataObject;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
-import cern.colt.list.DoubleArrayList;
 
 /**
  * Exposes methods for accessing underlying Design Element Data Vectors. eg: ajax methods for visualization
@@ -142,26 +137,34 @@ public class DEDVController {
 
     @Autowired
     private CompositeSequenceService compositeSequenceService;
-    @Autowired
-    private DesignElementDataVectorService designElementDataVectorService;
+
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
+
     @Autowired
     private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
     @Autowired
     private SVDService svdService;
+
     @Autowired
     private GeneDifferentialExpressionService geneDifferentialExpressionService;
+
     @Autowired
     private GeneService geneService;
+
     @Autowired
     private FactorValueService factorValueService;
+
     @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
+
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
@@ -564,34 +567,6 @@ public class DEDVController {
 
         return makeVisCollection( dedvs, null, null, layouts );
 
-    }
-
-    /**
-     * @param dedvIds
-     * @return
-     */
-    public Collection<ExpressionProfileDataObject> getVectorData( Collection<Long> dedvIds ) {
-        List<ExpressionProfileDataObject> result = new ArrayList<ExpressionProfileDataObject>();
-        for ( Long id : dedvIds ) {
-            DesignElementDataVector vector = this.designElementDataVectorService.load( id );
-            try {
-                DoubleVectorValueObject dvvo = new DoubleVectorValueObject( vector );
-                ExpressionProfileDataObject epdo = new ExpressionProfileDataObject( dvvo );
-
-                DoubleArrayList doubleArrayList = new cern.colt.list.DoubleArrayList( epdo.getData() );
-                DescriptiveWithMissing.standardize( doubleArrayList );
-                epdo.setData( doubleArrayList.elements() );
-
-                result.add( epdo );
-            } catch ( IllegalArgumentException iae ) {
-                log.warn( iae );
-            }
-
-        }
-
-        // TODO fill in gene; normalize and clip if desired.; watch for invalid ids.
-
-        return result;
     }
 
     /**

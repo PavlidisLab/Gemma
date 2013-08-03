@@ -54,10 +54,13 @@ public abstract class DataVectorValueObject implements Serializable {
     public DataVectorValueObject() {
     }
 
-    public DataVectorValueObject( DesignElementDataVector dedv ) {
-
-        BioAssayDimension badim = dedv.getBioAssayDimension();
-        this.bioAssayDimension = new BioAssayDimensionValueObject( badim );
+    public DataVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
+        if ( badvo == null ) {
+            BioAssayDimension badim = dedv.getBioAssayDimension();
+            this.bioAssayDimension = new BioAssayDimensionValueObject( badim );
+        } else {
+            this.bioAssayDimension = badvo;
+        }
         assert !this.bioAssayDimension.getBioAssays().isEmpty();
         this.quantitationType = new QuantitationTypeValueObject( dedv.getQuantitationType() );
         this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
@@ -65,8 +68,9 @@ public abstract class DataVectorValueObject implements Serializable {
         this.id = dedv.getId();
     }
 
-    public DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes ) {
-        this( dedv );
+    public DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
+            BioAssayDimensionValueObject badvo ) {
+        this( dedv, badvo );
         this.genes = genes;
     }
 
@@ -84,7 +88,7 @@ public abstract class DataVectorValueObject implements Serializable {
 
     /**
      * Represents the order of the bioassays for this. It might not be a real (persistent) BioAssayDimension: it might
-     * be a subset, or a "padded" one. 
+     * be a subset, or a "padded" one.
      * 
      * @return
      */

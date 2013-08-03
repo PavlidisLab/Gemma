@@ -22,8 +22,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -228,15 +229,7 @@ public class BioMaterialValueObject implements Serializable {
      * @return
      */
     private String getCharacteristicString( Collection<Characteristic> characters ) {
-        StringBuffer buf = new StringBuffer();
-        for ( Iterator<Characteristic> iter = characters.iterator(); iter.hasNext(); ) {
-            Characteristic c = iter.next();
-            buf.append( c.getCategory() );
-            buf.append( ": " );
-            buf.append( c.getValue() == null ? "no value" : c.getValue() );
-            if ( iter.hasNext() ) buf.append( ", " );
-        }
-        return buf.length() > 0 ? buf.toString() : "no characteristics";
+        return StringUtils.join( characters, "," );
     }
 
     /**

@@ -166,28 +166,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
-    private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
-        /*
-         * Figure out if it is two-channel
-         */
-        boolean isTwoChannel = false;
-        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this
-                .getSessionFactory().getCurrentSession() );
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            TechnologyType technologyType = ad.getTechnologyType();
-
-            if ( technologyType == null ) {
-                throw new IllegalStateException(
-                        "Array designs must have a technology type assigned before processed vector computation" );
-            }
-
-            if ( !technologyType.equals( TechnologyType.ONECOLOR ) && !technologyType.equals( TechnologyType.NONE ) ) {
-                isTwoChannel = true;
-            }
-        }
-        return isTwoChannel;
-    }
-
     @Override
     public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType ) {
@@ -912,6 +890,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
+     * Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably just have one
+     * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector.
+     * 
+     * @param data
+     * @return
+     */
+    private Map<BioAssayDimension, BioAssayDimensionValueObject> getBioAssayDimensionValueObjects(
+            Collection<? extends DesignElementDataVector> data ) {
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = new HashMap<BioAssayDimension, BioAssayDimensionValueObject>();
+        for ( DesignElementDataVector v : data ) {
+            BioAssayDimension bioAssayDimension = v.getBioAssayDimension();
+            if ( !badvos.containsKey( bioAssayDimension ) ) {
+                badvos.put( bioAssayDimension, new BioAssayDimensionValueObject( bioAssayDimension ) );
+            }
+        }
+        return badvos;
+    }
+
+    /**
      * @param bas
      * @return
      */
@@ -1111,6 +1108,28 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
+    private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
+        /*
+         * Figure out if it is two-channel
+         */
+        boolean isTwoChannel = false;
+        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this
+                .getSessionFactory().getCurrentSession() );
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            TechnologyType technologyType = ad.getTechnologyType();
+
+            if ( technologyType == null ) {
+                throw new IllegalStateException(
+                        "Array designs must have a technology type assigned before processed vector computation" );
+            }
+
+            if ( !technologyType.equals( TechnologyType.ONECOLOR ) && !technologyType.equals( TechnologyType.NONE ) ) {
+                isTwoChannel = true;
+            }
+        }
+        return isTwoChannel;
+    }
+
     /**
      * @param newResults
      * @return
@@ -1282,9 +1301,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private Map<CompositeSequence, DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data ) {
         Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<CompositeSequence, DoubleVectorValueObject>();
-
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data );
         for ( DesignElementDataVector v : data ) {
-            result.put( v.getDesignElement(), new DoubleVectorValueObject( v ) );
+            result.put( v.getDesignElement(), new DoubleVectorValueObject( v, badvos.get( v.getBioAssayDimension() ) ) );
         }
         return result;
     }
@@ -1296,10 +1315,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     private Map<CompositeSequence, DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
             Map<Long, Collection<Long>> cs2GeneMap ) {
         Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<CompositeSequence, DoubleVectorValueObject>();
-
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data );
         for ( DesignElementDataVector v : data ) {
-            result.put( v.getDesignElement(),
-                    new DoubleVectorValueObject( v, cs2GeneMap.get( v.getDesignElement().getId() ) ) );
+            result.put(
+                    v.getDesignElement(),
+                    new DoubleVectorValueObject( v, cs2GeneMap.get( v.getDesignElement().getId() ), badvos.get( v
+                            .getBioAssayDimension() ) ) );
         }
         return result;
     }
@@ -1313,9 +1334,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
             Map<Long, Collection<Long>> cs2GeneMap, BioAssayDimension longestBad ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
-
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data );
         for ( DesignElementDataVector v : data ) {
-            result.add( new DoubleVectorValueObject( v, cs2GeneMap.get( v.getDesignElement().getId() ), longestBad ) );
+            result.add( new DoubleVectorValueObject( v, badvos.get( v.getBioAssayDimension() ), cs2GeneMap.get( v
+                    .getDesignElement().getId() ), longestBad ) );
         }
         return result;
     }
@@ -1326,8 +1348,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private Collection<DoubleVectorValueObject> unpack( Map<? extends DesignElementDataVector, Collection<Long>> data ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data.keySet() );
+
         for ( DesignElementDataVector v : data.keySet() ) {
-            result.add( new DoubleVectorValueObject( v, data.get( v ) ) );
+            result.add( new DoubleVectorValueObject( v, data.get( v ), badvos.get( v.getBioAssayDimension() ) ) );
         }
         return result;
     }
@@ -1340,8 +1364,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     private Collection<? extends DoubleVectorValueObject> unpack(
             Map<ProcessedExpressionDataVector, Collection<Long>> data, BioAssayDimension longestBad ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data.keySet() );
         for ( DesignElementDataVector v : data.keySet() ) {
-            result.add( new DoubleVectorValueObject( v, data.get( v ), longestBad ) );
+            result.add( new DoubleVectorValueObject( v, badvos.get( v.getBioAssayDimension() ), data.get( v ),
+                    longestBad ) );
         }
         return result;
     }
@@ -1353,8 +1379,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends DesignElementDataVector> data ) {
         Collection<BooleanVectorValueObject> result = new HashSet<BooleanVectorValueObject>();
 
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data );
+
         for ( DesignElementDataVector v : data ) {
-            result.add( new BooleanVectorValueObject( v ) );
+            result.add( new BooleanVectorValueObject( v, badvos.get( v.getBioAssayDimension() ) ) );
         }
         return result;
     }

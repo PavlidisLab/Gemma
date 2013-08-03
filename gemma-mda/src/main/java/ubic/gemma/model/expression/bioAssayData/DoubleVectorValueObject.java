@@ -98,16 +98,17 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     /**
      * @param dedv
      */
-    public DoubleVectorValueObject( DesignElementDataVector dedv ) {
-        this( dedv, null );
+    public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
+        this( dedv, null, badvo );
     }
 
     /**
      * @param dedv
      * @param genes
      */
-    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes ) {
-        super( dedv, genes );
+    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
+            BioAssayDimensionValueObject badvo ) {
+        super( dedv, genes, badvo );
         QuantitationType qt = dedv.getQuantitationType();
         if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
             throw new IllegalArgumentException( "Can only store double vectors, got " + qt + " "
@@ -139,8 +140,9 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * @param dimToMatch ensure that the vector missing values to match the locations of any bioassays in dimToMatch
      *        that aren't in the dedv's bioAssayDimension.
      */
-    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes, BioAssayDimension dimToMatch ) {
-        this( dedv, genes );
+    public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject vectorsBadvo,
+            Collection<Long> genes, BioAssayDimension dimToMatch ) {
+        this( dedv, genes, vectorsBadvo );
 
         if ( dimToMatch.getBioAssays().size() != this.data.length ) {
             addGaps( dimToMatch );
