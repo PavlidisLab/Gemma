@@ -621,8 +621,7 @@ public abstract class AbstractCLI {
                 Class<?> loggerclaz = Class.forName( loggerName );
                 log4jLogger = LogManager.getLogger( loggerclaz );
             } catch ( ClassNotFoundException e ) {
-                log.warn( "ClassNotFound: " + loggerName + ", logging could not be configured." );
-                return;
+                // ...
             }
 
             if ( log4jLogger == null ) {
