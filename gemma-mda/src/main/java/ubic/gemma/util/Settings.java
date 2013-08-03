@@ -108,25 +108,23 @@ public class Settings {
 
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
-            // hmm, this is pretty much required.
             log.warn( USER_CONFIGURATION + " not found" );
         }
 
         try {
             // Default comes first.
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( DEFAULT_CONFIGURATION );
-
+            // ConfigurationUtils.dump( pc, System.err );
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
-            // hmm, this is pretty much required.
-            log.warn( DEFAULT_CONFIGURATION + " not found" );
+            throw new RuntimeException( "Default configuration could not be loaded: " + e.getMessage(), e );
         }
 
         try {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( BUILTIN_CONFIGURATION );
             config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "Built-in configuration could not be loaded: " + e.getMessage(), e );
+            throw new RuntimeException( "Extra built-in configuration could not be loaded: " + e.getMessage(), e );
         }
 
         try {
@@ -157,7 +155,7 @@ public class Settings {
             // no big deal...hopefully.
         }
 
-        // step through the result and do a final round of variable substitution. is this needed?
+        // step through the result and do a final round of variable substitution. FIXME is this needed?
         for ( Iterator<String> it = config.getKeys(); it.hasNext(); ) {
             String key = it.next();
             String property = config.getString( key );
@@ -165,7 +163,7 @@ public class Settings {
             if ( property != null && property.startsWith( "${" ) && property.endsWith( "}" ) ) {
                 String keyToSubstitute = property.substring( 2, property.length() - 1 );
                 String valueToSubstitute = config.getString( keyToSubstitute );
-                log.debug( key + "=" + property + " -> " + valueToSubstitute );
+                // log.debug( key + "=" + property + " -> " + valueToSubstitute );
                 config.setProperty( key, valueToSubstitute );
             }
         }
@@ -188,7 +186,7 @@ public class Settings {
      */
     public static String getAnalysisStoragePath() {
         String val = getString( "gemma.analysis.dir" );
-        ConfigurationUtils.dump( config, System.err );
+        // ConfigurationUtils.dump( config, System.err );
         assert val != null;
         if ( val.endsWith( File.separator ) ) return val;
         return val + File.separator;
