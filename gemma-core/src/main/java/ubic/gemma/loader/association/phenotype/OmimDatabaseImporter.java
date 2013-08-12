@@ -42,8 +42,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
     // ***********************************************************************************
     // reading OMIM static files
-    public static final String OMIM_FILES_PATH = File.separator + "neurocarta" + File.separator
-            + "externalDatabaseImporter" + File.separator + OMIM + File.separator;
+    public static final String OMIM_FILES_PATH = RESOURCE_PATH + OMIM + File.separator;
     // manual static file mapping
     public static final String MANUAL_MAPPING_OMIM = OMIM_FILES_PATH + "ManualDescriptionMapping.tsv";
     // terms to exclude when we search for a phenotype the second time
@@ -65,32 +64,28 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
     public static void main( String[] args ) throws Exception {
 
-        OmimDatabaseImporter importEvidence = new OmimDatabaseImporter();
-
-        // load all needed services in Gemma
-        importEvidence.loadServices( args );
+        OmimDatabaseImporter importEvidence = new OmimDatabaseImporter( args );
 
         // creates the folder where to place the file web downloaded files and final output files
         String writeFolder = importEvidence.createWriteFolder( OMIM );
 
-        // download the disease Ontology File
-        String diseaseOntologyFile = importEvidence.downloadFileFromWeb( writeFolder, DISEASE_ONT_PATH,
-                DISEASE_ONT_FILE );
         // download the OMIM File called morbid
         String morbidmap = importEvidence.downloadFileFromWeb( writeFolder, OMIM_URL_PATH, OMIM_FILE_MORBID );
         // download the OMIM File called mim2gene
         String mim2gene = importEvidence.downloadFileFromWeb( writeFolder, OMIM_URL_PATH, OMIM_FILE_MIM );
 
-        importEvidence.processOmimFiles( writeFolder, morbidmap, mim2gene, diseaseOntologyFile );
+        // find the OMIM and Mesh terms
+        importEvidence.findOmimAndMeshMappingUsingOntologyFile( writeFolder );
+
+        importEvidence.processOmimFiles( writeFolder, morbidmap, mim2gene );
+    }
+
+    public OmimDatabaseImporter( String[] args ) throws Exception {
+        super( args );
     }
 
     // process all OMIm files to get the data out and manipulates it
-    private void processOmimFiles( String writeFolder, String morbidmap, String mim2gene, String diseaseOntologyFile )
-            throws IOException {
-
-        // map the omim id to the PhenotypeValueUri using the disease Ontology file downloaded
-        // OMIM_ID ---> ( uri1,uri2...)
-        HashMap<String, HashSet<String>> omimIdToPhenotypeMapping = findOmimPhenotypeMapping( diseaseOntologyFile );
+    private void processOmimFiles( String writeFolder, String morbidmap, String mim2gene ) throws IOException {
 
         // special keywords to exclude on search with annotator (manual mapping), (stop words)
         ArrayList<String> wordsToExclude = parseFileFindExcludeTerms();
@@ -638,7 +633,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         return wordsToExclude;
     }
 
-    // parse file and returns a collecction of terms found
+    // parse file and returns a collection of terms found
     private HashSet<String> parseResultsToIgnore() throws IOException {
 
         HashSet<String> resultsToIgnore = new HashSet<String>();
@@ -758,75 +753,4 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         return newTxt;
     }
 
-    // parse the downloaded disease ontology file to find OMIm mapping, this could be done better with xml parses but
-    // working now
-    private HashMap<String, HashSet<String>> findOmimPhenotypeMapping( String diseaseOntologyPath ) throws IOException {
-
-        HashMap<String, HashSet<String>> omimIdToPhenotypeMapping = new HashMap<String, HashSet<String>>();
-
-        HashSet<String> omimIds = new HashSet<String>();
-        String valueUri = null;
-
-        BufferedReader br = new BufferedReader( new FileReader( diseaseOntologyPath ) );
-
-        String line = "";
-
-        boolean foundTerm = false;
-
-        while ( ( line = br.readLine() ) != null ) {
-
-            String[] tokens = null;
-
-            line = line.trim();
-
-            // found a term
-            if ( line.equalsIgnoreCase( "[Term]" ) ) {
-                foundTerm = true;
-                valueUri = null;
-                omimIds = new HashSet<String>();
-            } else if ( foundTerm ) {
-
-                if ( line.startsWith( "id:" ) ) {
-
-                    tokens = line.split( ":" );
-
-                    String diseaseId = tokens[2].trim();
-                    // will throw exception if a number is not found
-                    Integer.parseInt( diseaseId );
-                    // disease id
-                    valueUri = "http://purl.obolibrary.org/obo/DOID_" + diseaseId;
-
-                } else if ( line.indexOf( "xref: OMIM" ) != -1 ) {
-
-                    tokens = line.split( ":" );
-                    omimIds.add( tokens[2].trim() );
-                }
-
-                // end of a term
-                else if ( line.equalsIgnoreCase( "" ) ) {
-
-                    foundTerm = false;
-
-                    for ( String omimId : omimIds ) {
-
-                        HashSet<String> h = new HashSet<String>();
-
-                        if ( omimIdToPhenotypeMapping.get( omimId ) == null ) {
-                            if ( !isObsoleteOrNotExist( valueUri ) ) {
-                                h.add( valueUri );
-                            }
-                        } else {
-                            h = omimIdToPhenotypeMapping.get( omimId );
-                            if ( !isObsoleteOrNotExist( valueUri ) ) {
-                                h.add( valueUri );
-                            }
-                        }
-                        omimIdToPhenotypeMapping.put( omimId, h );
-                    }
-                }
-            }
-
-        }
-        return omimIdToPhenotypeMapping;
-    }
 }

@@ -1,0 +1,400 @@
+Metabolic syndrome	http://purl.obolibrary.org/obo/DOID_0014667	disease of metabolism	14667
+Metabolic syndrome (bivariate traits)	http://purl.obolibrary.org/obo/DOID_0014667	disease of metabolism	14667
+Dengue shock syndrome 	http://purl.obolibrary.org/obo/DOID_0050125	dengue shock syndrome	50125
+Podoconiosis	http://purl.obolibrary.org/obo/DOID_0050138	podoconiosis	50138
+Idiopathic pulmonary fibrosis	http://purl.obolibrary.org/obo/DOID_0050156	idiopathic pulmonary fibrosis	50156
+Idiopathic pulmonary fibrosis	http://purl.obolibrary.org/obo/DOID_0050156	idiopathic pulmonary fibrosis	
+Restless legs syndrome	http://purl.obolibrary.org/obo/DOID_0050425	restless legs syndrome	50425
+Stevens-Johnson syndrome	http://purl.obolibrary.org/obo/DOID_0050426	Stevens-Johnson syndrome	50426
+Stevens-Johnson syndrome and toxic epidermal necrolysis (SJS-TEN)	http://purl.obolibrary.org/obo/DOID_0050426	Stevens-Johnson syndrome	50426
+Asperger disorder	http://purl.obolibrary.org/obo/DOID_0050432	Asperger syndrome	
+Nevirapine-induced rash	http://purl.obolibrary.org/obo/DOID_0050486	exanthem	50486
+Hypertriglyceridemia	http://purl.obolibrary.org/obo/DOID_0050527	familial hypertriglyceridemia	
+Orofacial clefts	http://purl.obolibrary.org/obo/DOID_0050567	orofacial cleft	
+Inflammatory bowel disease	http://purl.obolibrary.org/obo/DOID_0050589	inflammatory bowel disease	50589
+Inflammatory bowel disease (early onset)	http://purl.obolibrary.org/obo/DOID_0050589	inflammatory bowel disease	50589
+Atrial fibrillation	http://purl.obolibrary.org/obo/DOID_0050650	familial atrial fibrillation	
+Vitamin D insufficiency	http://purl.obolibrary.org/obo/DOID_0050718	vitamin metabolic disorder	
+Alcohol dependence	http://purl.obolibrary.org/obo/DOID_0050741	alcohol dependence	50741
+Depression and alcohol dependence	http://purl.obolibrary.org/obo/DOID_0050741	alcohol dependence	50741
+Nicotine dependence	http://purl.obolibrary.org/obo/DOID_0050742	nicotine dependence	50742
+Large B-cell lymphoma	http://purl.obolibrary.org/obo/DOID_0050745	diffuse large B-cell lymphoma	50745
+Ileal carcinoids	http://purl.obolibrary.org/obo/DOID_10156	ileal neoplasm	
+Osteonecrosis of the jaw	http://purl.obolibrary.org/obo/DOID_10159	osteonecrosis	10159
+Cholelithiasis-related traits in sickle cell anemia	http://purl.obolibrary.org/obo/DOID_10211	cholelithiasis	10211
+Gallstones	http://purl.obolibrary.org/obo/DOID_10211	cholelithiasis	10211
+Leprosy	http://purl.obolibrary.org/obo/DOID_1024	leprosy	1024
+Prostate cancer	http://purl.obolibrary.org/obo/DOID_10283	prostate cancer	10283
+Erectile dysfunction and prostate cancer treatment	http://purl.obolibrary.org/obo/DOID_10283	prostate cancer	10283
+Prostate cancer (gene x gene interaction)	http://purl.obolibrary.org/obo/DOID_10283	prostate cancer	10283
+Prostate cancer mortality	http://purl.obolibrary.org/obo/DOID_10283	prostate cancer	10283
+Acute lymphoblastic leukemia (childhood)	http://purl.obolibrary.org/obo/DOID_1037	lymphoblastic leukemia	1037
+Response to treatment for acute lymphoblastic leukemia	http://purl.obolibrary.org/obo/DOID_1037	lymphoblastic leukemia	1037
+Meningococcal disease	http://purl.obolibrary.org/obo/DOID_104	bacterial infectious disease	104
+Chronic lymphocytic leukemia	http://purl.obolibrary.org/obo/DOID_1040	chronic lymphocytic leukemia	1040
+Hirschsprung's disease	http://purl.obolibrary.org/obo/DOID_10487	Hirschsprung's disease	10487
+Gastric cancer	http://purl.obolibrary.org/obo/DOID_10534	stomach cancer	10534
+Esophageal cancer and gastric cancer	http://purl.obolibrary.org/obo/DOID_10534	stomach cancer	10534
+Multiple cancers (lung cancer, gastric cancer, and squamous cell carcinoma)	http://purl.obolibrary.org/obo/DOID_10534	stomach cancer	10534
+Preeclampsia	http://purl.obolibrary.org/obo/DOID_10591	pre-eclampsia	10591
+Celiac disease	http://purl.obolibrary.org/obo/DOID_10608	celiac disease	10608
+Celiac disease and Rheumatoid arthritis	http://purl.obolibrary.org/obo/DOID_10608	celiac disease	10608
+Crohn's disease and celiac disease	http://purl.obolibrary.org/obo/DOID_10608	celiac disease	10608
+Alzheimer's disease	http://purl.obolibrary.org/obo/DOID_10652	Alzheimer's disease	10652
+Alzheimer's disease (age of onset)	http://purl.obolibrary.org/obo/DOID_10652	Alzheimer's disease	10652
+Alzheimer's disease (late onset)	http://purl.obolibrary.org/obo/DOID_10652	Alzheimer's disease	10652
+Alzheimer's disease biomarkers	http://purl.obolibrary.org/obo/DOID_10652	Alzheimer's disease	10652
+Glaucoma (primary open-angle)	http://purl.obolibrary.org/obo/DOID_1070	primary open angle glaucoma	1070
+Otitis media	http://purl.obolibrary.org/obo/DOID_10754	otitis media	10754
+Hypertension	http://purl.obolibrary.org/obo/DOID_10763	hypertension	10763
+Hypertension (young onset)	http://purl.obolibrary.org/obo/DOID_10763	hypertension	10763
+Hypertension risk in short sleep duration	http://purl.obolibrary.org/obo/DOID_10763	hypertension	10763
+Obesity and blood pressure	http://purl.obolibrary.org/obo/DOID_10763	hypertension	10763
+Age-related macular degeneration (wet)	http://purl.obolibrary.org/obo/DOID_10871	age related macular degeneration	10871
+Age-related macular degeneration (GA)	http://purl.obolibrary.org/obo/DOID_10871	age related macular degeneration	10871
+Age-related macular degeneration (CNV)	http://purl.obolibrary.org/obo/DOID_10871	age related macular degeneration	10871
+Age-related macular degeneration (CNV vs. GA)	http://purl.obolibrary.org/obo/DOID_10871	age related macular degeneration	10871
+Age-related macular degeneration	http://purl.obolibrary.org/obo/DOID_10871	age related macular degeneration	10871
+Hypospadias	http://purl.obolibrary.org/obo/DOID_10892	hypospadias	10892
+Cholelithiasis-related traits in sickle cell anemia	http://purl.obolibrary.org/obo/DOID_10923	sickle cell anemia	10923
+Sickle cell anemia (severity)	http://purl.obolibrary.org/obo/DOID_10923	sickle cell anemia	10923
+Obsessive-compulsive disorder	http://purl.obolibrary.org/obo/DOID_10933	obsessive-compulsive disorder	10933
+Attention deficit hyperactivity disorder	http://purl.obolibrary.org/obo/DOID_1094	attention deficit hyperactivity disorder	1094
+Attention deficit hyperactivity disorder (time to onset)	http://purl.obolibrary.org/obo/DOID_1094	attention deficit hyperactivity disorder	1094
+Attention deficit hyperactivity disorder and conduct disorder	http://purl.obolibrary.org/obo/DOID_1094	attention deficit hyperactivity disorder	1094
+Attention deficit hyperactivity disorder motor coordination	http://purl.obolibrary.org/obo/DOID_1094	attention deficit hyperactivity disorder	1094
+Attention deficit hyperactivity disorder symptoms (interaction)	http://purl.obolibrary.org/obo/DOID_1094	attention deficit hyperactivity disorder	1094
+Intracranial aneurysm	http://purl.obolibrary.org/obo/DOID_10941	intracranial aneurysm	10941
+Nephropathy (idiopathic membranous)	http://purl.obolibrary.org/obo/DOID_10976	membranous glomerulonephritis	
+Urinary bladder cancer	http://purl.obolibrary.org/obo/DOID_11054	urinary bladder cancer	11054
+Bladder cancer	http://purl.obolibrary.org/obo/DOID_11054	urinary bladder cancer	11054
+Tourette syndrome	http://purl.obolibrary.org/obo/DOID_11119	Gilles de la Tourette syndrome	11119
+Crohn's disease and sarcoidosis (combined)	http://purl.obolibrary.org/obo/DOID_11335	sarcoidosis	11335
+Sarcoidosis	http://purl.obolibrary.org/obo/DOID_11335	sarcoidosis	11335
+Obesity and osteoporosis	http://purl.obolibrary.org/obo/DOID_11476	osteoporosis	11476
+Osteoporosis	http://purl.obolibrary.org/obo/DOID_11476	osteoporosis	11476
+Fuchs's corneal dystrophy	http://purl.obolibrary.org/obo/DOID_11555	Fuchs' endothelial dystrophy	11555
+Polycystic ovary syndrome	http://purl.obolibrary.org/obo/DOID_11612	polycystic ovary syndrome	11612
+Bronchopulmonary dysplasia	http://purl.obolibrary.org/obo/DOID_11650	bronchopulmonary dysplasia	11650
+Diabetes (gestational)	http://purl.obolibrary.org/obo/DOID_11714	gestational diabetes	11714
+Corneal astigmatism	http://purl.obolibrary.org/obo/DOID_11782	astigmatism	11782
+Myopia (pathological)	http://purl.obolibrary.org/obo/DOID_11830	myopia	11830
+Nephrotic syndrome (acquired)	http://purl.obolibrary.org/obo/DOID_1184	nephrotic syndrome	1184
+Creutzfeldt-Jakob disease (variant)	http://purl.obolibrary.org/obo/DOID_11949	Creutzfeldt-Jakob syndrome	11949
+Creutzfeldt-Jakob disease	http://purl.obolibrary.org/obo/DOID_11949	Creutzfeldt-Jakob syndrome	11949
+Obesity (early onset extreme)	http://purl.obolibrary.org/obo/DOID_11981	morbid obesity	11981
+Obesity (extreme)	http://purl.obolibrary.org/obo/DOID_11981	morbid obesity	11981
+Cardiac hypertrophy	http://purl.obolibrary.org/obo/DOID_11984	hypertrophic cardiomyopathy	
+Hypertrophic cardiomyopathy	http://purl.obolibrary.org/obo/DOID_11984	hypertrophic cardiomyopathy	11984
+IgE grass sensitization	http://purl.obolibrary.org/obo/DOID_1205	hypersensitivity reaction type I disease	
+Common variable immunodeficiency	http://purl.obolibrary.org/obo/DOID_12177	common variable immunodeficiency	12177
+Otosclerosis	http://purl.obolibrary.org/obo/DOID_12185	otosclerosis	12185
+Primary biliary cirrhosis	http://purl.obolibrary.org/obo/DOID_12236	primary biliary cirrhosis	12236
+Beta thalassemia/hemoglobin E disease	http://purl.obolibrary.org/obo/DOID_12241	beta thalassemia	12241
+Vitiligo	http://purl.obolibrary.org/obo/DOID_12306	vitiligo	12306
+Male infertility	http://purl.obolibrary.org/obo/DOID_12336	male infertility	12336
+Graves' disease	http://purl.obolibrary.org/obo/DOID_12361	Graves' disease	12361
+Malaria	http://purl.obolibrary.org/obo/DOID_12365	malaria	12365
+Infantile hypertrophic pyloric stenosis	http://purl.obolibrary.org/obo/DOID_12638	hypertrophic pyloric stenosis	12638
+Autism	http://purl.obolibrary.org/obo/DOID_12849	autistic disorder	12849
+Cardiovascular disease risk factors	http://purl.obolibrary.org/obo/DOID_1287	cardiovascular system disease	1287
+Dilated cardiomyopathy	http://purl.obolibrary.org/obo/DOID_12930	dilated cardiomyopathy	12930
+Attention deficit hyperactivity disorder and conduct disorder	http://purl.obolibrary.org/obo/DOID_12995	conduct disorder	12995
+Conduct disorder (case status)	http://purl.obolibrary.org/obo/DOID_12995	conduct disorder	12995
+Conduct disorder (interaction)	http://purl.obolibrary.org/obo/DOID_12995	conduct disorder	12995
+Conduct disorder (symptom count)	http://purl.obolibrary.org/obo/DOID_12995	conduct disorder	12995
+Moyamoya disease	http://purl.obolibrary.org/obo/DOID_13099	Moyamoya disease	13099
+Gout	http://purl.obolibrary.org/obo/DOID_13189	gout	13189
+Type 2 diabetes and gout	http://purl.obolibrary.org/obo/DOID_13189	gout	13189
+Uterine fibroids	http://purl.obolibrary.org/obo/DOID_13223	uterine fibroid	
+Lung cancer	http://purl.obolibrary.org/obo/DOID_1324	lung cancer	1324
+Lung Cancer (DNA repair capacity)	http://purl.obolibrary.org/obo/DOID_1324	lung cancer	1324
+Multiple cancers (lung cancer, gastric cancer, and squamous cell carcinoma)	http://purl.obolibrary.org/obo/DOID_1324	lung cancer	1324
+Behcet's disease	http://purl.obolibrary.org/obo/DOID_13241	Behcet's disease	13241
+Cataracts in type 2 diabetes	http://purl.obolibrary.org/obo/DOID_13328	diabetic cataract	13328
+Kawasaki disease	http://purl.obolibrary.org/obo/DOID_13378	Kawasaki disease	13378
+Biliary atresia	http://purl.obolibrary.org/obo/DOID_13608	biliary atresia	13608
+Pseudoexfoliation syndrome	http://purl.obolibrary.org/obo/DOID_13641	exfoliation syndrome	13641
+Endometrial cancer	http://purl.obolibrary.org/obo/DOID_1380	endometrial cancer	1380
+Sick sinus syndrome	http://purl.obolibrary.org/obo/DOID_13884	sick sinus syndrome	13884
+Eosinophilic esophagitis (pediatric)	http://purl.obolibrary.org/obo/DOID_13922	eosinophilic esophagitis	13922
+Non-obstructive azoospermia	http://purl.obolibrary.org/obo/DOID_14227	azoospermia	14227
+Primary sclerosing cholangitis	http://purl.obolibrary.org/obo/DOID_14268	sclerosing cholangitis	14268
+Sclerosing cholangitis and ulcerative colitis (combined)	http://purl.obolibrary.org/obo/DOID_14268	sclerosing cholangitis	14268
+Parkinson's disease	http://purl.obolibrary.org/obo/DOID_14330	Parkinson's disease	14330
+Parkinson's disease (age of onset)	http://purl.obolibrary.org/obo/DOID_14330	Parkinson's disease	14330
+Parkinson's disease (familial)	http://purl.obolibrary.org/obo/DOID_14330	Parkinson's disease	14330
+Parkinson's disease (interaction with coffee consumption)	http://purl.obolibrary.org/obo/DOID_14330	Parkinson's disease	14330
+Parkinson's disease (motor and cognition)	http://purl.obolibrary.org/obo/DOID_14330	Parkinson's disease	14330
+Testicular dysgenesis syndrome 	http://purl.obolibrary.org/obo/DOID_14447	gonadal dysgenesis	225
+Thyrotoxic hypokalemic periodic paralysis	http://purl.obolibrary.org/obo/DOID_14452	hypokalemic periodic paralysis	14452
+Hypothyroidism	http://purl.obolibrary.org/obo/DOID_1459	hypothyroidism	1459
+Bipolar disorder and major depressive disorder (combined)	http://purl.obolibrary.org/obo/DOID_1470	major depressive disorder	1470
+Major depressive disorder	http://purl.obolibrary.org/obo/DOID_1470	major depressive disorder	1470
+Major depressive disorder (broad)	http://purl.obolibrary.org/obo/DOID_1470	major depressive disorder	1470
+Cystic fibrosis (meconium ileus) 	http://purl.obolibrary.org/obo/DOID_1485	cystic fibrosis	1485
+Cystic fibrosis severity	http://purl.obolibrary.org/obo/DOID_1485	cystic fibrosis	1485
+Alcohol consumption	http://purl.obolibrary.org/obo/DOID_1574	alcohol abuse	
+Alcoholism (12-month weekly alcohol consumption)	http://purl.obolibrary.org/obo/DOID_1574	alcohol abuse	
+Alcoholism (alcohol dependence factor score)	http://purl.obolibrary.org/obo/DOID_1574	alcohol abuse	
+Alcoholism (alcohol use disorder factor score)	http://purl.obolibrary.org/obo/DOID_1574	alcohol abuse	
+Alcoholism (heaviness of drinking)	http://purl.obolibrary.org/obo/DOID_1574	alcohol abuse	
+Electroencephalographic traits in alcoholism	http://purl.obolibrary.org/obo/DOID_1574	alcohol abuse	
+Esophageal cancer  (alcohol interaction)	http://purl.obolibrary.org/obo/DOID_1574	alcohol abuse	1574
+Schizophrenia, bipolar disorder and depression (combined)	http://purl.obolibrary.org/obo/DOID_1596	mental depression	1596
+Depression (quantitative trait)	http://purl.obolibrary.org/obo/DOID_1596	mental depression	1596
+Depression (age of onset)	http://purl.obolibrary.org/obo/DOID_1596	mental depression	1596
+Breast cancer	http://purl.obolibrary.org/obo/DOID_1612	breast cancer	1612
+Breast cancer (prognosis)	http://purl.obolibrary.org/obo/DOID_1612	breast cancer	1612
+Breast cancer (survival)	http://purl.obolibrary.org/obo/DOID_1612	breast cancer	1612
+Response to tamoxifen in breast cancer	http://purl.obolibrary.org/obo/DOID_1612	breast cancer	1612
+Breast cancer (male)	http://purl.obolibrary.org/obo/DOID_1614	male breast cancer	1614
+Glaucoma	http://purl.obolibrary.org/obo/DOID_1686	glaucoma	1686
+Glaucoma (exfoliation)	http://purl.obolibrary.org/obo/DOID_1686	glaucoma	1686
+Duodenal ulcer 	http://purl.obolibrary.org/obo/DOID_1724	duodenal ulcer	1724
+Multiple cancers (lung cancer, gastric cancer, and squamous cell carcinoma)	http://purl.obolibrary.org/obo/DOID_1749	squamous cell carcinoma	1749
+Thyroid cancer	http://purl.obolibrary.org/obo/DOID_1781	thyroid cancer	1781
+Pancreatic cancer	http://purl.obolibrary.org/obo/DOID_1793	pancreatic cancer	1793
+Response to gemcitabine in pancreatic cancer 	http://purl.obolibrary.org/obo/DOID_1793	pancreatic cancer	1793
+Epilepsy	http://purl.obolibrary.org/obo/DOID_1826	epilepsy syndrome	
+Epilepsy (generalized)	http://purl.obolibrary.org/obo/DOID_1826	epilepsy syndrome	
+Cannabis dependence	http://purl.obolibrary.org/obo/DOID_1849	cannabis dependence	1849
+Erectile dysfunction and prostate cancer treatment	http://purl.obolibrary.org/obo/DOID_1875	impotence 	1875
+Erectile dysfunction	http://purl.obolibrary.org/obo/DOID_1875	impotence 	1875
+Sexual dysfunction (female)	http://purl.obolibrary.org/obo/DOID_1876	sexual dysfunction	1876
+Sexual dysfunction (SSRI/SNRI-related)	http://purl.obolibrary.org/obo/DOID_1876	sexual dysfunction	1876
+Chronic Hepatitis C infection	http://purl.obolibrary.org/obo/DOID_1883	hepatitis C	1883
+Hepatitis C induced liver fibrosis	http://purl.obolibrary.org/obo/DOID_1883	hepatitis C	1883
+Lipid levels in hepatitis C treatment	http://purl.obolibrary.org/obo/DOID_1883	hepatitis C	1883
+Response to hepatitis C treatment	http://purl.obolibrary.org/obo/DOID_1883	hepatitis C	1883
+Hepatitis C induced liver cirrhosis	http://purl.obolibrary.org/obo/DOID_1883	hepatitis C	1883
+Melanoma	http://purl.obolibrary.org/obo/DOID_1909	melanoma	1909
+Gaucher disease severity	http://purl.obolibrary.org/obo/DOID_1926	Gaucher's disease	1926
+Carotid atherosclerosis in HIV infection	http://purl.obolibrary.org/obo/DOID_1936	atherosclerosis	1936
+Subclinical atherosclerosis traits (other)	http://purl.obolibrary.org/obo/DOID_1936	atherosclerosis	1936
+Hepatitis B	http://purl.obolibrary.org/obo/DOID_2043	hepatitis B	2043
+Hepatitis B (viral clearance)	http://purl.obolibrary.org/obo/DOID_2043	hepatitis B	2043
+Drug-induced liver injury (flucloxacillin)	http://purl.obolibrary.org/obo/DOID_2044	drug-induced hepatitis	
+Post- traumatic stress disorder	http://purl.obolibrary.org/obo/DOID_2055	post-traumatic stress disorder	2055
+Wilms tumor	http://purl.obolibrary.org/obo/DOID_2154	nephroblastoma	
+Dental caries	http://purl.obolibrary.org/obo/DOID_216	dental caries	216
+Partial epilepsies	http://purl.obolibrary.org/obo/DOID_2234	focal epilepsy	
+Sagittal craniosynostosis	http://purl.obolibrary.org/obo/DOID_2340	craniosynostosis	2340
+Ribavirin-induced anemia	http://purl.obolibrary.org/obo/DOID_2355	anemia	2355
+Multiple sclerosis	http://purl.obolibrary.org/obo/DOID_2377	multiple sclerosis	2377
+Multiple sclerosis (age of onset)	http://purl.obolibrary.org/obo/DOID_2377	multiple sclerosis	2377
+Multiple sclerosis (severity)	http://purl.obolibrary.org/obo/DOID_2377	multiple sclerosis	2377
+Multiple sclerosis--Brain Glutamate Levels	http://purl.obolibrary.org/obo/DOID_2377	multiple sclerosis	
+Ovarian cancer	http://purl.obolibrary.org/obo/DOID_2394	ovarian cancer	2394
+Basal cell carcinoma 	http://purl.obolibrary.org/obo/DOID_2513	basal cell carcinoma	2513
+Nevus count	http://purl.obolibrary.org/obo/DOID_2681	nevus	2681
+Asthma	http://purl.obolibrary.org/obo/DOID_2841	asthma	2841
+Asthma (aspirin-intolerant) 	http://purl.obolibrary.org/obo/DOID_2841	asthma	2841
+Asthma (bronchodilator response)	http://purl.obolibrary.org/obo/DOID_2841	asthma	2841
+Asthma (childhood onset)	http://purl.obolibrary.org/obo/DOID_2841	asthma	2841
+Asthma (toluene diisocyanate-induced)	http://purl.obolibrary.org/obo/DOID_2841	asthma	2841
+Asthma treatment response	http://purl.obolibrary.org/obo/DOID_2841	asthma	2841
+Endometriosis	http://purl.obolibrary.org/obo/DOID_289	endometriosis	289
+IgA nephropathy	http://purl.obolibrary.org/obo/DOID_2986	IgA glomerulonephritis	2986
+Testicular cancer	http://purl.obolibrary.org/obo/DOID_2998	testicular cancer	2998
+Glioblastoma	http://purl.obolibrary.org/obo/DOID_3068	glioblastoma	3068
+Glioma	http://purl.obolibrary.org/obo/DOID_3070	malignant glioma	3070
+Glioma (high-grade)	http://purl.obolibrary.org/obo/DOID_3070	malignant glioma	3070
+Interstitial lung disease 	http://purl.obolibrary.org/obo/DOID_3082	interstitial lung disease	3082
+Chronic obstructive pulmonary disease	http://purl.obolibrary.org/obo/DOID_3083	chronic obstructive pulmonary disease	3083
+Body mass in chronic obstructive pulmonary disease	http://purl.obolibrary.org/obo/DOID_3083	chronic obstructive pulmonary disease	3083
+Chronic obstructive pulmonary disease-related biomarkers	http://purl.obolibrary.org/obo/DOID_3083	chronic obstructive pulmonary disease	3083
+Gallbladder cancer	http://purl.obolibrary.org/obo/DOID_3121	gallbladder cancer	3121
+Lipid metabolism phenotypes	http://purl.obolibrary.org/obo/DOID_3146	lipid metabolism disorder	
+Atopic dermatitis	http://purl.obolibrary.org/obo/DOID_3310	atopic dermatitis	3310
+Bipolar disorder	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Bipolar disorder (age of onset and psychomotor symptoms)	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Bipolar disorder and schizophrenia	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Migraine in bipolar disorder	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Response to lithium treatment in bipolar disorder	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Schizophrenia, bipolar disorder and depression (combined)	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Suicide attempts in bipolar disorder	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Bipolar disorder and major depressive disorder (combined)	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Temperament (bipolar disorder)	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	
+Bipolar disorder (mood-incongruent)	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Bipolar disorder (Negative mood delusions)	http://purl.obolibrary.org/obo/DOID_3312	bipolar disorder	3312
+Amyotrophic lateral sclerosis	http://purl.obolibrary.org/obo/DOID_332	amyotrophic lateral sclerosis	332
+Amyotrophic lateral sclerosis (interaction)	http://purl.obolibrary.org/obo/DOID_332	amyotrophic lateral sclerosis	332
+Amyotrophic lateral sclerosis (age of onset)	http://purl.obolibrary.org/obo/DOID_332	amyotrophic lateral sclerosis	332
+Major mood disorders	http://purl.obolibrary.org/obo/DOID_3324	mood disorder	
+Coronary artery calcification	http://purl.obolibrary.org/obo/DOID_3363	coronary arteriosclerosis	
+Ewing sarcoma	http://purl.obolibrary.org/obo/DOID_3369	peripheral primitive neuroectodermal tumor	3369
+Coronary heart disease	http://purl.obolibrary.org/obo/DOID_3393	coronary heart disease	3393
+Peripheral artery disease	http://purl.obolibrary.org/obo/DOID_341	peripheral vascular disease	341
+Paget's disease	http://purl.obolibrary.org/obo/DOID_3443	mammary Paget's disease	3443
+Stroke	http://purl.obolibrary.org/obo/DOID_3455	cerebrovascular accident	
+Stroke (ischemic)	http://purl.obolibrary.org/obo/DOID_3455	cerebrovascular accident	3455
+Stroke (pediatric)	http://purl.obolibrary.org/obo/DOID_3455	cerebrovascular accident	3455
+Meningioma 	http://purl.obolibrary.org/obo/DOID_3565	meningioma	3565
+Esophageal cancer (squamous cell)	http://purl.obolibrary.org/obo/DOID_3748	esophagus squamous cell carcinoma	3748
+Non-small cell lung cancer	http://purl.obolibrary.org/obo/DOID_3908	non-small cell lung carcinoma	3908
+Response to irinotecan in non-small-cell lung cancer	http://purl.obolibrary.org/obo/DOID_3908	non-small cell lung carcinoma	3909
+Response to platinum-based chemotherapy in non-small-cell lung cancer	http://purl.obolibrary.org/obo/DOID_3908	non-small cell lung carcinoma	3910
+Lung adenocarcinoma	http://purl.obolibrary.org/obo/DOID_3910	lung adenocarcinoma	3910
+Lung adenocarcinoma (clinical stage)	http://purl.obolibrary.org/obo/DOID_3910	lung adenocarcinoma	3910
+Tuberculosis	http://purl.obolibrary.org/obo/DOID_399	tuberculosis	399
+Systemic sclerosis	http://purl.obolibrary.org/obo/DOID_418	systemic scleroderma	418
+Coronary restenosis	http://purl.obolibrary.org/obo/DOID_4247	coronary restenosis	4247
+Myasthenia gravis	http://purl.obolibrary.org/obo/DOID_437	myasthenia gravis	437
+Handedness in dyslexia	http://purl.obolibrary.org/obo/DOID_4428	dyslexia	4428
+Speech perception in dyslexia	http://purl.obolibrary.org/obo/DOID_4428	dyslexia	4428
+Renal cell carcinoma	http://purl.obolibrary.org/obo/DOID_4450	renal cell carcinoma	4450
+Allergic rhinitis	http://purl.obolibrary.org/obo/DOID_4481	allergic rhinitis	4481
+Myeloproliferative neoplasms	http://purl.obolibrary.org/obo/DOID_4972	myelodysplastic myeloproliferative cancer	
+Pancreatitis	http://purl.obolibrary.org/obo/DOID_4989	pancreatitis	4989
+Essential tremor	http://purl.obolibrary.org/obo/DOID_4990	essential tremor	4990
+Esophageal cancer	http://purl.obolibrary.org/obo/DOID_5041	esophageal cancer	5041
+Esophageal cancer and gastric cancer	http://purl.obolibrary.org/obo/DOID_5041	esophageal cancer	5041
+Esophageal cancer  (alcohol interaction)	http://purl.obolibrary.org/obo/DOID_5041	esophageal cancer	5041
+Hepatitis C induced liver cirrhosis	http://purl.obolibrary.org/obo/DOID_5082	liver cirrhosis	5082
+Carotid atherosclerosis in HIV infection	http://purl.obolibrary.org/obo/DOID_526	Human immunodeficiency virus infectious disease	526
+HIV-1 control	http://purl.obolibrary.org/obo/DOID_526	Human immunodeficiency virus infectious disease	
+HIV-1 replication	http://purl.obolibrary.org/obo/DOID_526	Human immunodeficiency virus infectious disease	
+HIV-1 susceptibility	http://purl.obolibrary.org/obo/DOID_526	Human immunodeficiency virus infectious disease	
+HIV-1 viral setpoint	http://purl.obolibrary.org/obo/DOID_526	Human immunodeficiency virus infectious disease	
+Beta thalassemia/hemoglobin E disease	http://purl.obolibrary.org/obo/DOID_5379	hemoglobin E disease	5379
+Response to platinum-based chemotherapy in small-cell lung cancer	http://purl.obolibrary.org/obo/DOID_5409	lung small cell carcinoma	5409
+Small-cell lung cancer	http://purl.obolibrary.org/obo/DOID_5409	lung small cell carcinoma	5409
+Bipolar disorder and schizophrenia	http://purl.obolibrary.org/obo/DOID_5419	schizophrenia	5419
+Schizophrenia, bipolar disorder and depression (combined)	http://purl.obolibrary.org/obo/DOID_5419	schizophrenia	5419
+Brain imaging in schizophrenia (interaction)	http://purl.obolibrary.org/obo/DOID_5419	schizophrenia	5419
+Formal thought disorder in schizophrenia	http://purl.obolibrary.org/obo/DOID_5419	schizophrenia	5419
+Schizophrenia	http://purl.obolibrary.org/obo/DOID_5419	schizophrenia	5419
+Schizophrenia (treatment refractory) 	http://purl.obolibrary.org/obo/DOID_5419	schizophrenia	5419
+Premature ovarian failure	http://purl.obolibrary.org/obo/DOID_5426	premature ovarian failure	5426
+Testicular germ cell cancer	http://purl.obolibrary.org/obo/DOID_5557	testicular germ cell cancer	5557
+End-stage renal disease	http://purl.obolibrary.org/obo/DOID_557	kidney disease	557
+End-stage renal disease (non-diabetic)	http://purl.obolibrary.org/obo/DOID_557	kidney disease	558
+Chronic kidney disease	http://purl.obolibrary.org/obo/DOID_557	kidney disease	557
+Chronic kidney disease and serum creatinine levels	http://purl.obolibrary.org/obo/DOID_557	kidney disease	557
+Renal function and chronic kidney disease	http://purl.obolibrary.org/obo/DOID_557	kidney disease	557
+Myocardial infarction	http://purl.obolibrary.org/obo/DOID_5844	myocardial infarction	5844
+Myocardial infarction (early onset)	http://purl.obolibrary.org/obo/DOID_5844	myocardial infarction	5844
+Kidney stones	http://purl.obolibrary.org/obo/DOID_585	nephrolithiasis	585
+Nephrolithiasis	http://purl.obolibrary.org/obo/DOID_585	nephrolithiasis	585
+Panic disorder	http://purl.obolibrary.org/obo/DOID_594	panic disorder	594
+Heart failure	http://purl.obolibrary.org/obo/DOID_6000	congestive heart failure	
+Mortality among heart failure patients	http://purl.obolibrary.org/obo/DOID_6000	congestive heart failure	
+Epirubicin-induced leukopenia 	http://purl.obolibrary.org/obo/DOID_615	leukopenia	615
+AIDS	http://purl.obolibrary.org/obo/DOID_635	acquired immunodeficiency syndrome	635
+AIDS progression	http://purl.obolibrary.org/obo/DOID_635	acquired immunodeficiency syndrome	635
+Migraine in bipolar disorder	http://purl.obolibrary.org/obo/DOID_6364	migraine	6364
+Migraine	http://purl.obolibrary.org/obo/DOID_6364	migraine	6364
+Prion diseases	http://purl.obolibrary.org/obo/DOID_649	prion disease	
+Arthritis (juvenile idiopathic)	http://purl.obolibrary.org/obo/DOID_676	juvenile rheumatoid arthritis	676
+Progressive supranuclear palsy	http://purl.obolibrary.org/obo/DOID_678	progressive supranuclear palsy	678
+Hepatocellular carcinoma	http://purl.obolibrary.org/obo/DOID_684	hepatocellular carcinoma	684
+Hepatocellular carcinoma (hepatitis B virus related)	http://purl.obolibrary.org/obo/DOID_684	hepatocellular carcinoma	684
+Ankylosing spondylitis	http://purl.obolibrary.org/obo/DOID_7147	ankylosing spondylitis	7147
+Rheumatoid arthritis	http://purl.obolibrary.org/obo/DOID_7148	rheumatoid arthritis	7148
+Celiac disease and Rheumatoid arthritis	http://purl.obolibrary.org/obo/DOID_7148	rheumatoid arthritis	7148
+Response to TNF-alpha inhibitors in rheumatoid arthritis	http://purl.obolibrary.org/obo/DOID_7148	rheumatoid arthritis	7148
+Response to tocilizumab in rheumatoid arthritis	http://purl.obolibrary.org/obo/DOID_7148	rheumatoid arthritis	7148
+Immune response to anthrax vaccine	http://purl.obolibrary.org/obo/DOID_7427	anthrax disease	
+Neuroblastoma	http://purl.obolibrary.org/obo/DOID_769	neuroblastoma	769
+Neuroblastoma (high-risk)	http://purl.obolibrary.org/obo/DOID_769	neuroblastoma	769
+Abdominal aortic aneurysm	http://purl.obolibrary.org/obo/DOID_7693	abdominal aortic aneurysm	7693
+Periodontitis	http://purl.obolibrary.org/obo/DOID_824	periodontitis	824
+Knee osteoarthritis	http://purl.obolibrary.org/obo/DOID_8398	osteoarthritis	8398
+Osteoarthritis	http://purl.obolibrary.org/obo/DOID_8398	osteoarthritis	8398
+Influenza (severity)	http://purl.obolibrary.org/obo/DOID_8469	influenza	8469
+Follicular lymphoma	http://purl.obolibrary.org/obo/DOID_8524	nodular lymphoma	8524
+Chronic fatigue syndrome	http://purl.obolibrary.org/obo/DOID_8544	chronic fatigue syndrome	8544
+Chronic myeloid leukemia	http://purl.obolibrary.org/obo/DOID_8552	chronic myeloid leukemia	8552
+Hodgkin's lymphoma	http://purl.obolibrary.org/obo/DOID_8567	Hodgkin's lymphoma	8567
+Sclerosing cholangitis and ulcerative colitis (combined)	http://purl.obolibrary.org/obo/DOID_8577	ulcerative colitis	8577
+Ulcerative colitis	http://purl.obolibrary.org/obo/DOID_8577	ulcerative colitis	8577
+Antineutrophil cytoplasmic antibody-associated vasculitis 	http://purl.obolibrary.org/obo/DOID_865	vasculitis	865
+Eating disorders	http://purl.obolibrary.org/obo/DOID_8670	eating disorder	
+Anorexia nervosa	http://purl.obolibrary.org/obo/DOID_8689	anorexia nervosa	8689
+Paclitaxel-induced neuropathy	http://purl.obolibrary.org/obo/DOID_870	neuropathy	870
+Vascular dementia	http://purl.obolibrary.org/obo/DOID_8725	vascular dementia	8725
+Immune reponse to smallpox (secreted IFN-alpha)	http://purl.obolibrary.org/obo/DOID_8736	smallpox	8736
+Immune reponse to smallpox (secreted IL-10)	http://purl.obolibrary.org/obo/DOID_8736	smallpox	8736
+Immune reponse to smallpox (secreted IL-12p40)	http://purl.obolibrary.org/obo/DOID_8736	smallpox	8736
+Immune reponse to smallpox (secreted IL-1beta)	http://purl.obolibrary.org/obo/DOID_8736	smallpox	8736
+Immune reponse to smallpox (secreted IL-2)	http://purl.obolibrary.org/obo/DOID_8736	smallpox	8736
+Immune reponse to smallpox (secreted TNF-alpha)	http://purl.obolibrary.org/obo/DOID_8736	smallpox	8736
+Immune response to smallpox vaccine (IL-6)	http://purl.obolibrary.org/obo/DOID_8736	smallpox	8736
+Crohn's disease	http://purl.obolibrary.org/obo/DOID_8778	Crohn's disease	8778
+Crohn's disease and psoriasis	http://purl.obolibrary.org/obo/DOID_8778	Crohn's disease	8778
+Crohn's disease and sarcoidosis (combined)	http://purl.obolibrary.org/obo/DOID_8778	Crohn's disease	8778
+Crohn's disease and celiac disease	http://purl.obolibrary.org/obo/DOID_8778	Crohn's disease	8778
+Nodular sclerosis Hodgkin lymphoma	http://purl.obolibrary.org/obo/DOID_8838	Hodgkin's lymphoma, nodular sclerosis	8838
+Lupus	http://purl.obolibrary.org/obo/DOID_8857	lupus erythematosus	8857
+Neonatal lupus	http://purl.obolibrary.org/obo/DOID_8857	lupus erythematosus	8857
+Neuromyelitis optica	http://purl.obolibrary.org/obo/DOID_8869	neuromyelitis optica	8869
+Crohn's disease and psoriasis	http://purl.obolibrary.org/obo/DOID_8893	psoriasis	8893
+Psoriasis	http://purl.obolibrary.org/obo/DOID_8893	psoriasis	8893
+Dupuytren's disease	http://purl.obolibrary.org/obo/DOID_8936	plantar fascial fibromatosis	
+Diabetic retinopathy 	http://purl.obolibrary.org/obo/DOID_8947	diabetic retinopathy	8947
+Narcolepsy	http://purl.obolibrary.org/obo/DOID_8986	narcolepsy	8986
+Psoriatic arthritis	http://purl.obolibrary.org/obo/DOID_9008	psoriatic arthritis	9008
+Leishmaniasis (visceral)	http://purl.obolibrary.org/obo/DOID_9065	leishmaniasis	9065
+Systemic lupus erythematosus	http://purl.obolibrary.org/obo/DOID_9074	systemic lupus erythematosus	9074
+Serologic markers in systemic lupus erythematosus	http://purl.obolibrary.org/obo/DOID_9074	systemic lupus erythematosus	9074
+Pemphigus vulgaris	http://purl.obolibrary.org/obo/DOID_9182	pemphigus	9182
+Barrett's esophagus	http://purl.obolibrary.org/obo/DOID_9206	Barrett's esophagus	9206
+Frontotemporal lobar degeneration	http://purl.obolibrary.org/obo/DOID_9255	frontotemporal dementia	9255
+Colorectal cancer	http://purl.obolibrary.org/obo/DOID_9256	colorectal cancer	9256
+Fluorouracil treatment response in colorectal cancer	http://purl.obolibrary.org/obo/DOID_9256	colorectal cancer	9256
+Nasopharyngeal carcinoma	http://purl.obolibrary.org/obo/DOID_9261	nasopharynx carcinoma	9261
+Cleft lip	http://purl.obolibrary.org/obo/DOID_9296	cleft lip	9296
+Diabetes (incident)	http://purl.obolibrary.org/obo/DOID_9351	diabetes mellitus	9351
+Diabetes related insulin traits	http://purl.obolibrary.org/obo/DOID_9351	diabetes mellitus	9351
+Cataracts in type 2 diabetes	http://purl.obolibrary.org/obo/DOID_9352	type 2 diabetes mellitus	9352
+Type 2 diabetes	http://purl.obolibrary.org/obo/DOID_9352	type 2 diabetes mellitus	9352
+Type 2 diabetes and 6 quantitative traits	http://purl.obolibrary.org/obo/DOID_9352	type 2 diabetes mellitus	9353
+Type 2 diabetes and other traits	http://purl.obolibrary.org/obo/DOID_9352	type 2 diabetes mellitus	9354
+Type 2 diabetes nephropathy	http://purl.obolibrary.org/obo/DOID_9352	type 2 diabetes mellitus	9355
+Type 2 diabetes and gout	http://purl.obolibrary.org/obo/DOID_9352	type 2 diabetes mellitus	9352
+Non-alcoholic fatty liver disease histology (AST)	http://purl.obolibrary.org/obo/DOID_9452	fatty liver disease	9452
+Non-alcoholic fatty liver disease histology (lobular)	http://purl.obolibrary.org/obo/DOID_9452	fatty liver disease	9452
+Non-alcoholic fatty liver disease histology (other)	http://purl.obolibrary.org/obo/DOID_9452	fatty liver disease	9452
+Nonalcoholic fatty liver disease	http://purl.obolibrary.org/obo/DOID_9452	fatty liver disease	9452
+Multiple myeloma	http://purl.obolibrary.org/obo/DOID_9538	multiple myeloma	9538
+Emphysema-related traits	http://purl.obolibrary.org/obo/DOID_9675	pulmonary emphysema	
+Glycemic control in type 1 diabetes (HbA1c)	http://purl.obolibrary.org/obo/DOID_9744	type 1 diabetes mellitus	9744
+Type 1 diabetes	http://purl.obolibrary.org/obo/DOID_9744	type 1 diabetes mellitus	9744
+Type 1 diabetes autoantibodies	http://purl.obolibrary.org/obo/DOID_9744	type 1 diabetes mellitus	9745
+Type 1 diabetes nephropathy	http://purl.obolibrary.org/obo/DOID_9744	type 1 diabetes mellitus	9744
+Refractive error	http://purl.obolibrary.org/obo/DOID_9835	refractive error	9835
+Alopecia areata	http://purl.obolibrary.org/obo/DOID_986	alopecia areata	986
+Obesity	http://purl.obolibrary.org/obo/DOID_9970	obesity	9970
+Obesity and blood pressure	http://purl.obolibrary.org/obo/DOID_9970	obesity	9970
+Obesity and osteoporosis	http://purl.obolibrary.org/obo/DOID_9970	obesity	9970
+Obesity-related traits	http://purl.obolibrary.org/obo/DOID_9970	obesity	
+Substance dependence	http://purl.obolibrary.org/obo/DOID_9973	substance dependence	9973
+Alcohol and nictotine co-dependence	http://purl.obolibrary.org/obo/DOID_9973	substance dependence	
+Peripartum cardiomyopathy	http://purl.obolibrary.org/obo/DOID_9997	peripartum cardiomyopathy	9997
+Glomerulosclerosis	http://purl.obolibrary.org/obo/HP_0000096	Glomerulosclerosis	96
+Type 2 diabetes nephropathy	http://purl.obolibrary.org/obo/HP_0000112	Nephropathy	112
+Type 1 diabetes nephropathy	http://purl.obolibrary.org/obo/HP_0000112	Nephropathy	112
+Nephropathy	http://purl.obolibrary.org/obo/HP_0000112	Nephropathy	112
+Hearing impairment	http://purl.obolibrary.org/obo/HP_0000365	Hearing impairment	365
+Insulin resistance/response	http://purl.obolibrary.org/obo/HP_0000855	Insulin resistance	855
+Skin pigmentation	http://purl.obolibrary.org/obo/HP_0001000	Abnormality of skin pigmentation	1000
+Cognitive decline	http://purl.obolibrary.org/obo/HP_0001268	Mental deterioration	1268
+Freckling	http://purl.obolibrary.org/obo/HP_0001480	Freckling	1480
+Burning and freckling	http://purl.obolibrary.org/obo/HP_0001480	Freckling	1480
+Sudden cardiac arrest	http://purl.obolibrary.org/obo/HP_0001645	Sudden cardiac death	1645
+Ventricular fibrillation	http://purl.obolibrary.org/obo/HP_0001663	Ventricular fibrillation	1663
+Venous thromboembolism	http://purl.obolibrary.org/obo/HP_0001907	Thromboembolism	1907
+Postoperative nausea and vomiting	http://purl.obolibrary.org/obo/HP_0002017	Nausea and vomiting	2017
+Stroke (ischemic)	http://purl.obolibrary.org/obo/HP_0002140	Ischemic stroke	2140
+Attention deficit hyperactivity disorder motor coordination	http://purl.obolibrary.org/obo/HP_0002275	Poor motor coordination	HP:0002275
+Black vs. blond hair color	http://purl.obolibrary.org/obo/HP_0002286	Fair hair	2286
+Male-pattern baldness	http://purl.obolibrary.org/obo/HP_0002292	Frontal balding	
+Black vs. red hair color	http://purl.obolibrary.org/obo/HP_0002297	Red hair	2297
+Scoliosis	http://purl.obolibrary.org/obo/HP_0002650	Scoliosis	2650
+Atrial fibrillation/atrial flutter	http://purl.obolibrary.org/obo/HP_0005110	Atrial fibrillation	5110
+Keloid	http://purl.obolibrary.org/obo/HP_0010562	Keloids	
+Life threatening arrhythmia	http://purl.obolibrary.org/obo/HP_0011675	Arrhythmia	11675
+Chronic kidney disease and serum creatinine levels	http://purl.obolibrary.org/obo/HP_0012100	Abnormal circulating creatinine level	HP:0012100
+Insomnia (caffeine-induced)	http://purl.obolibrary.org/obo/HP_0100785	Insomnia	100785
+Treatment response for severe sepsis	http://purl.obolibrary.org/obo/HP_0100806	Sepsis	100806
