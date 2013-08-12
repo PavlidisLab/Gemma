@@ -27,7 +27,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
+import ubic.gemma.model.analysis.Direction;
+import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -550,6 +553,10 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                 devo.setP( r.getPvalue() );
                 devo.setCorrP( r.getCorrectedPvalue() );
                 devo.setMetThreshold( r.getCorrectedPvalue() < threshold );
+
+                Direction direction = computeDirection( r.getContrasts() );
+                devo.setDirection( direction );
+
                 devos.add( devo );
 
             }
@@ -559,7 +566,35 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         if ( timer.getTime() > 1000 ) {
             log.info( "Postprocess Diff ex results: " + timer.getTime() + " ms" );
         }
+
         return devos;
+    }
+
+    private Direction computeDirection( Collection<ContrastResult> crs ) {
+        boolean down = false;
+        boolean up = false;
+        for ( ContrastResult cr : crs ) {
+            Double lf = cr.getLogFoldChange();
+            if ( lf == null ) {
+                /*
+                 * A contrast which is actually not valid, so it won't be counted in the hit list.
+                 */
+                continue;
+            } else if ( lf < 0 ) {
+                down = true;
+            } else if ( lf > 0 ) {
+                up = true;
+            }
+        }
+        if ( down && up ) {
+            return Direction.EITHER;
+        } else if ( down ) {
+            return Direction.DOWN;
+        } else if ( up ) {
+            return Direction.UP;
+        } else {
+            return null;
+        }
     }
 
 }

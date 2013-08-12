@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 
+import ubic.gemma.model.analysis.Direction;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -41,15 +42,18 @@ public class DifferentialExpressionValueObject {
     private Long probeId;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private Double p;
+    private Direction direction;
     private Double corrP;
     private String sortKey;
 
     private Boolean metThreshold = false;
 
     private Boolean fisherContribution = false;
+
     public Double getCorrP() {
         return corrP;
     }
+
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
     }
@@ -76,6 +80,10 @@ public class DifferentialExpressionValueObject {
 
     public Double getP() {
         return p;
+    }
+
+    public Direction getDirection() {
+        return direction;
     }
 
     public String getProbe() {
@@ -120,6 +128,10 @@ public class DifferentialExpressionValueObject {
 
     public void setP( Double p ) {
         this.p = p;
+    }
+
+    public void setDirection( Direction direction ) {
+        this.direction = direction;
     }
 
     public void setProbe( String probe ) {
