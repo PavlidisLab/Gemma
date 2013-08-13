@@ -370,6 +370,7 @@
 	<bean id="phenotypeController" class="ubic.gemma.web.controller.PhenotypeController">
 		<dwr:remote javascript="PhenotypeController">
 			<dwr:include method="findEvidenceByFilters" />
+			<dwr:include method="findExperimentCategory" />
 			<dwr:include method="findCandidateGenes" />
 			<dwr:include method="calculateExternalDatabasesStatistics" />
 			<dwr:include method="findExperimentOntologyValue" />
