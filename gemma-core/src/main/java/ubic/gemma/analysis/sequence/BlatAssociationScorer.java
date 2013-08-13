@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.util.ChromosomeUtil;
 
 /**
  * Given a set of BlatAssociations that might be redundant, clean them up and score them.
@@ -54,16 +55,18 @@ public class BlatAssociationScorer {
      * will be less than 1.
      * 
      * @param blatAssociations for a single sequence.
-     * @param config 
+     * @param config
      * @return the highest-scoring result (if there are ties this will be a random one). Note that this return value is
      *         not all that useful because it assumes there is a "clear winner". The passed-in blatAssociations will be
-     *         pruned to remove redundant entires, and will have score information filled in as well. It is intended
+     *         pruned to remove redundant entries, and will have score information filled in as well. It is intended
      *         that these 'refined' BlatAssociations will be used in further analysis.
      * @throws IllegalArgumentException if the blatAssociations are from multiple biosequences.
      */
     public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations, ProbeMapperConfig config ) {
 
         Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProductAndInitializeScores( blatAssociations );
+
+        removeNonCanonicalChromosomeHits( geneProducts2Associations, config );
 
         BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
@@ -87,14 +90,7 @@ public class BlatAssociationScorer {
         Map<PhysicalLocation, Double> scores = new HashMap<PhysicalLocation, Double>();
         for ( PhysicalLocation pl : geneClusters.keySet() ) {
             Double geneScore = 0.0;
-            
-            if (!config.isAllowNonCanonicalChromosomes()) {
-                /*
-                 * Figure out if this is a canonical chromosome.
-                 */
-                // TODO see bug 3683
-            }
-            
+
             for ( Gene cgene : geneClusters.get( pl ) ) {
                 for ( BlatAssociation blatAssociation : genes2Associations.get( cgene ) ) {
                     Double alignScore = blatAssociation.getScore();
@@ -224,6 +220,31 @@ public class BlatAssociationScorer {
     }
 
     /**
+     * @param geneProduct2Associations
+     * @param config
+     */
+    private static void removeNonCanonicalChromosomeHits(
+            Map<GeneProduct, Collection<BlatAssociation>> geneProduct2Associations, ProbeMapperConfig config ) {
+
+        if ( config.isAllowNonCanonicalChromosomes() ) {
+            return;
+        }
+
+        for ( GeneProduct geneProduct : geneProduct2Associations.keySet() ) {
+            Collection<BlatAssociation> toKeep = new HashSet<>();
+            for ( BlatAssociation blatAssociation : geneProduct2Associations.get( geneProduct ) ) {
+                if ( !ChromosomeUtil.isCanonical( blatAssociation.getBlatResult().getTargetChromosome() ) ) {
+                    log.debug( "Removing blat association " + blatAssociation );
+                    continue;
+                }
+                toKeep.add( blatAssociation );
+            }
+            geneProduct2Associations.put( geneProduct, toKeep );
+        }
+
+    }
+
+    /**
      * @param blatAssociations
      * @return
      */
@@ -290,6 +311,7 @@ public class BlatAssociationScorer {
         double globalMaxScore = 0.0;
         BlatAssociation globalBest = null;
         Collection<BlatAssociation> keepers = new HashSet<BlatAssociation>();
+
         for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
             Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
 

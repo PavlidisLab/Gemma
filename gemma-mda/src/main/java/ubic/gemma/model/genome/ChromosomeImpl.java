@@ -27,35 +27,6 @@ public class ChromosomeImpl extends ubic.gemma.model.genome.Chromosome {
      */
     private static final long serialVersionUID = -8353766718193697363L;
 
-    /**
-     * This method is only familiar with chromosomes as named in the UCSC GoldenPath database and would have to be
-     * modified if the 'rules' are broken by some other source used.
-     * 
-     * @return true if this is a regular chromosome, not a separate assembly for e.g. a haplotype (6_cox_hap2 for
-     *         example).
-     */
-    public static boolean isCanonical( Chromosome c ) {
-        String name = c.getName();
-
-        /*
-         * X|Un, 1|2|3|4,
-         */
-        if ( name.contains( "|" ) ) return false;
-
-        /*
-         * ??
-         */
-        if ( name.equals( "-" ) ) return false;
-
-        /*
-         * ???
-         */
-        if ( name.contains( "_random" ) ) return false;
-
-        return true;
-
-    }
-
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
