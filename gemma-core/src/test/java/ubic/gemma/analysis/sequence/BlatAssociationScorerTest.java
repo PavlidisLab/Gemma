@@ -104,13 +104,15 @@ public class BlatAssociationScorerTest {
         association_1.setBlatResult( blatResult_1 );
         association_1.setScore( 50.0 );
         association_1.setOverlap( 50 );
+        association_1.setBioSequence( BioSequence.Factory.newInstance() );
 
         BlatAssociation association_2 = BlatAssociation.Factory.newInstance();
         association_2.setGeneProduct( geneProduct );
         association_2.setBlatResult( blatResult_2 );
         association_2.setScore( 30.0 );
         association_2.setOverlap( 30 );
-
+        association_2.setBioSequence( BioSequence.Factory.newInstance() );
+        
         Collection<BlatAssociation> blatAssociations = new ArrayList<BlatAssociation>();
         blatAssociations.add( association_1 );
         blatAssociations.add( association_2 );
