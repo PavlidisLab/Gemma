@@ -18,6 +18,10 @@
  */
 package ubic.gemma.loader.expression.geo;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -25,10 +29,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
 import org.junit.Test;
 
 import ubic.basecode.util.FileTools;
@@ -42,7 +45,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
  * @author Paul
  * @version $Id$
  */
-public class QuantitationTypeParameterGuesserTest extends TestCase {
+public class QuantitationTypeParameterGuesserTest {
 
     private static Log log = LogFactory.getLog( QuantitationTypeParameterGuesserTest.class.getName() );
 
@@ -126,6 +129,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         assertEquals( "got " + s, ScaleType.PERCENT, s );
     }
 
+    @Test
     public void testPixels() {
         String a = "B Pixels";
         String b = "number of background pixels";
@@ -133,8 +137,20 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         assertEquals( "got " + s, PrimitiveType.INT, s );
     }
 
+    @Test
     public void testMas5() {
         String a = "MAS5.0 signal intensity";
+        ScaleType guessScaleType = QuantitationTypeParameterGuesser.guessScaleType( "VALUE", a.toLowerCase() );
+        assertEquals( ScaleType.LOG2, guessScaleType );
+
+        a = "MAS 5.0 signal intensity";
+        guessScaleType = QuantitationTypeParameterGuesser.guessScaleType( "VALUE", a.toLowerCase() );
+        assertEquals( ScaleType.LOG2, guessScaleType );
+    }
+
+    @Test
+    public void testMas6() {
+        String a = "MAS 6.1 signal intensity";
         ScaleType guessScaleType = QuantitationTypeParameterGuesser.guessScaleType( "VALUE", a.toLowerCase() );
         assertEquals( ScaleType.LOG2, guessScaleType );
     }
@@ -280,9 +296,8 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
 
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         qt = QuantitationType.Factory.newInstance();
         qt.setIsBackground( false );
         qt.setScale( ScaleType.LINEAR );
