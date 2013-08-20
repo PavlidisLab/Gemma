@@ -44,9 +44,9 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
         QueuingParser<NcbiGeneData> {
 
     /**
-     * 
+     * They keep changing this...
      */
-    private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 13;
+    private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 16;
 
     Collection<NCBIGene2Accession> results = new HashSet<NCBIGene2Accession>();
 
@@ -159,6 +159,24 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
                     return null;
                 }
             }
+
+            // #Format:
+            // tax_id 0
+            // GeneID 1
+            // status 2
+            // RNA_nucleotide_accession.version 3
+            // RNA_nucleotide_gi 4
+            // protein_accession.version 5
+            // protein_gi 6
+            // genomic_nucleotide_accession.version 7
+            // genomic_nucleotide_gi 8
+            // start_position_on_the_genomic_accession 9
+            // end_position_on_the_genomic_accession 10
+            // orientation 11
+            // assembly 12
+            // mature_peptide_accession.version 13
+            // mature_peptide_gi 14
+            // Symbol 15
 
             newGene.setTaxId( Integer.parseInt( fields[0] ) );
             newGene.setStatus( fields[2].equals( "-" ) ? null : fields[2] );
