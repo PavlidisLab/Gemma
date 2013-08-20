@@ -5,19 +5,20 @@ Ext.namespace('Gemma');
  * 
  * @class
  */
-Gemma.ObservableCoexpressionSearchResults = Ext.extend(Ext.util.Observable, {
+Gemma.CoexpressionSearchData = Ext.extend(Ext.util.Observable, {
       searchCommandUsed : {}, // type CoexpressionSearchCommand
       searchResults : {},
       cytoscapeSearchResults : {},
       cytoscapeResultsUpToDate : false,
       coexSearchTimeout : 420000,
       stringency : null,
-      coexpressionPairs : [],
+      displayedResults : [],
+      allGeneIdsSet:[],
 
       initComponent : function() {
          this.searchParameters.stringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(this.searchParameters.displayStringency);
 
-         Gemma.ObservableCoexpressionSearchResults.superclass.initComponent.call(this);
+         Gemma.CoexpressionSearchData.superclass.initComponent.call(this);
          this.addEvents('search-results-ready', 'complete-search-results-ready', 'search-error');
       },
 
@@ -25,11 +26,11 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend(Ext.util.Observable, {
          if (typeof configs !== 'undefined') {
             Ext.apply(this, configs);
          }
-         Gemma.ObservableCoexpressionSearchResults.superclass.constructor.call(this);
+         Gemma.CoexpressionSearchData.superclass.constructor.call(this);
       },
 
-      getCoexpressionPairs : function() {
-         return this.coexpressionPairs;
+      getDisplayedResults : function() {
+         return this.displayedResults;
       },
 
       getKnownGeneResults : function() {
@@ -44,16 +45,16 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend(Ext.util.Observable, {
          return this.cytoscapeSearchResults.nonQueryGeneTrimmedValue;
       },
 
-      getCytoscapeCoexpressionPairs : function() {
+      getCytoscapeKnownGeneResults : function() {
          return this.cytoscapeSearchResults.knownGeneResults;
       },
 
-      setCytoscapeCoexpressionPairs : function(coexPairs) {
-         this.cytoscapeSearchResults.knownGeneResults = coexPairs;
+      setCytoscapeKnownGeneResults : function(knownGeneResults) {
+         this.cytoscapeSearchResults.knownGeneResults = knownGeneResults;
       },
 
       getCytoscapeGeneSymbolsMatchingQuery : function(query) {
-         var genePairs = this.cytoscapeSearchResults.knownGeneResults;
+         var knownGeneResults = this.cytoscapeSearchResults.knownGeneResults;
          var genesMatchingSearch = [];
          var queries = query.split(",");
          var i, j;
@@ -66,9 +67,9 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend(Ext.util.Observable, {
             }
             var queryRegEx = new RegExp(Ext.escapeRe(queries[j]), 'i');
 
-            for (i = 0; i < genePairs.length; i++) {
-               var foundGene = genePairs[i].foundGene;
-               var queryGene = genePairs[i].queryGene;
+            for (i = 0; i < knownGeneResults.length; i++) {
+               var foundGene = knownGeneResults[i].foundGene;
+               var queryGene = knownGeneResults[i].queryGene;
 
                if (genesMatchingSearch.indexOf(foundGene.officialSymbol) !== 1) {
                   if (queryRegEx.test(foundGene.officialSymbol) || queryRegEx.test(foundGene.officialName)) {
@@ -166,8 +167,8 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend(Ext.util.Observable, {
 
       search : function(searchCommand) {
          this.searchCommandUsed = searchCommand;
-         var me = this;
-         me.fireEvent('search-started');
+         var ref = this;
+         ref.fireEvent('search-started');
          ExtCoexpressionSearchController.doBackgroundCoexSearch(searchCommand, {
                callback : function(taskId) {
                   var task = new Gemma.ObservableSubmittedTask({
@@ -176,25 +177,27 @@ Gemma.ObservableCoexpressionSearchResults = Ext.extend(Ext.util.Observable, {
                   task.showTaskProgressWindow({});
                   Ext.getBody().unmask();
                   task.on('task-completed', function(results) {
-                        me.searchResults = results;
-                        var combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(me.getKnownGeneResults(), me.getQueryGenesOnlyResults());
-                        me.coexpressionPairs = combinedData;
-
-                        me.cytoscapeResultsUpToDate = false;
-                        me.fireEvent('aftersearch');
-                        me.fireEvent('search-results-ready', results);
+                        ref.searchResults = results;
+                        var combinedData = Gemma.CoexVOUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(ref.getKnownGeneResults(), ref.getQueryGenesOnlyResults());
+                        var geneIdSet = Gemma.CoexVOUtil.getAllGeneIds(combinedData);
+                        ref.displayedResults = combinedData;                        
+                        ref.allGeneIdsSet=geneIdSet;
+                        ref.cytoscapeResultsUpToDate = false;
+                        ref.fireEvent('aftersearch');
+                        ref.fireEvent('search-results-ready', results);
                      });
                   task.on('task-failed', function(error) {
-                        me.fireEvent('aftersearch', error, true);
+                        ref.fireEvent('aftersearch', error, true);
                      });
                   task.on('task-cancelling', function(error) {
-                        me.fireEvent('aftersearch', error, true);
+                        ref.fireEvent('aftersearch', error, true);
                      });
                },
                errorHandler : function(error) {
-                  me.fireEvent('aftersearch', error);
+                  ref.fireEvent('aftersearch', error);
                   Ext.Msg.alert(Gemma.HelpText.CommonWarnings.Timeout.title, Gemma.HelpText.CommonWarnings.Timeout.text);
                } // sometimes got triggered without timeout
             });
       }
+      
    });

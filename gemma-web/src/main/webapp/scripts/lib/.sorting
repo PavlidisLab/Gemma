@@ -6,3 +6,5 @@ excanvas.js
 typeface.js
 excanvas-text.js
 faces/
+jquery-1.6.4.min.js
+jquery.qtip-1.0.0-rc3.min.js

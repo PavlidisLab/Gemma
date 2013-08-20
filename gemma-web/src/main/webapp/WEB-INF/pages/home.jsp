@@ -5,9 +5,12 @@
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/AnalysisResultsSearchNonWidget.js' />
 <jwr:script src='/scripts/app/generalSearchSimple.js' />
+
+<script src="/Gemma/scriptsnonjawr/arbor.js"></script>
+
+
 </head>
 
-<%@ include file="/WEB-INF/pages/frontPageSlideShowShowOff.jsp"%>
 
 <div id="main" style="text-align: left">
 	<%@ include file="/common/messages.jsp"%>

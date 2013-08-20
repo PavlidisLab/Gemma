@@ -55,7 +55,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 	},
 
 	applyOverlay: function() {
-        this.display.observableDisplaySettings.setOverlayGeneIds( this.getSelectedIds() );
+        this.display.coexDisplaySettings.setOverlayGeneIds( this.getSelectedIds() );
 		this.hide();
 	},
 	
@@ -71,7 +71,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 
 	show: function() {
 		if (this.getSelectedIds().length > 0){
-            var r = this.display.getNodeOverlap(this.getSelectedIds());
+            var r = this.display.getNodesMatching(this.getSelectedIds());
             var numNodesMatched = r.total;
             var numNodesMatchedWithHidden = r.hidden;
 			this.setTitle(this.getTextForTitle(numNodesMatched, numNodesMatchedWithHidden));
@@ -90,7 +90,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend(Ext.Window, {
 			showTaxonCombo : false,
 			listeners : {
 				geneSelected : function() {
-                    var r = cytoscapeDisplay.getNodeOverlap(this.searchForm.getSelectedIds());
+                    var r = cytoscapeDisplay.getNodesMatching(this.searchForm.getSelectedIds());
 					var numNodesMatched = r.total;
 					var numNodesMatchedWithHidden = r.hidden;
 

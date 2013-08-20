@@ -15,15 +15,8 @@
  */
 Ext.namespace('Gemma');
 
-/**
- * Shared coexpression search results display settings for grid and cytoscape views.
- * It's used to synchronize settings between different clients.
- *
- * TODO: ideally it shouldn't notify the client who called the set method, since it already knows about the change.
- *
- * @class
- */
-Gemma.ObservableCoexpressionDisplaySettings = Ext.extend(Ext.util.Observable, {
+
+Gemma.CoexpressionDisplaySettings = Ext.extend(Ext.util.Observable, {
 
     // @private
     stringency: 2,
@@ -95,6 +88,6 @@ Gemma.ObservableCoexpressionDisplaySettings = Ext.extend(Ext.util.Observable, {
             Ext.apply(this, configs);
         }
 
-        Gemma.ObservableCoexpressionDisplaySettings.superclass.constructor.call(this);
+        Gemma.CoexpressionDisplaySettings.superclass.constructor.call(this);
     }
 });

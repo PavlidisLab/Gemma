@@ -56,11 +56,35 @@ Gemma.CytoscapePanelUtil.decimalPlaceRounder = function (number) {
 
 };
 
-Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
+Gemma.CytoscapePanelUtil.nodeDegreeOpacityMapper = function (nodeDegree) {
+	
 
     // no data for some genes
     if (nodeDegree == null) {
-        return null;
+        return 0;
+    }
+    
+    if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest) {
+        return Gemma.CytoscapeSettings.nodeDegreeOpacity.lightest;
+    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light) {
+        return Gemma.CytoscapeSettings.nodeDegreeOpacity.light;
+    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.moderate) {
+        return Gemma.CytoscapeSettings.nodeDegreeOpacity.moderate;
+    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark) {
+        return Gemma.CytoscapeSettings.nodeDegreeOpacity.dark;
+    } else {
+    	//darkest
+        return Gemma.CytoscapeSettings.nodeDegreeOpacity.darkest;
+    }
+
+};
+
+Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
+	
+
+    // no data for some genes
+    if (nodeDegree == null) {
+        return 0;
     }
 
 
@@ -75,6 +99,7 @@ Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
     } else {
         return Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name;
     }
+    
 
 };
 
@@ -113,7 +138,7 @@ Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function (searchR
     }
 
     var originalQueryGeneIds = searchResults.getQueryGeneIds();
-    var originalCoexpressionPairs = searchResults.getCoexpressionPairs();
+    var originalCoexpressionPairs = searchResults.getDisplayedResults();
 
     // Genes to get complete results for.
     var geneIds = [];

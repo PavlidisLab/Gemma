@@ -25,15 +25,7 @@ Ext.namespace('Gemma');
 Gemma.SHOW_ONLY_MINE = "Show only my data";
 Gemma.SHOW_ALL = "Show all results";
 
-/**
- * 
- * @param {}
- *           observableDisplaySettings
- * @param {}
- *           observableSearchResults
- * 
- * @type {*}
- */
+
 Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
    collapsible : false,
    editable : false,
@@ -43,7 +35,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
    stateful : false,
 
    observableDisplaySettings : {},
-   observableSearchResults : {},
+   coexpressionSearchData : {},
 
    viewConfig : {
       forceFit : true,
@@ -226,11 +218,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
       var coexpressionGrid = this;
 
-      this.observableSearchResults.on("search-results-ready", function(results) {
+      this.coexpressionSearchData.on("search-results-ready", function(results) {
             var displayStringency = coexpressionGrid.observableDisplaySettings.getStringency();
 
             // Lower stringency until results are visible.
-            displayStringency = Gemma.CoexValueObjectUtil.getHighestResultStringencyUpToInitialDisplayStringency(coexpressionGrid.observableSearchResults.getCoexpressionPairs(),
+            displayStringency = Gemma.CoexValueObjectUtil.getHighestResultStringencyUpToInitialDisplayStringency(coexpressionGrid.coexpressionSearchData.getDisplayedResults(),
                displayStringency);
 
             coexpressionGrid.observableDisplaySettings.setStringency(displayStringency);
@@ -242,13 +234,13 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                coexpressionGrid.hideBottomToolbar();
             }
 
-            var numQueryGenes = coexpressionGrid.observableSearchResults.getQueryGeneIds().length;
+            var numQueryGenes = coexpressionGrid.coexpressionSearchData.getQueryGeneIds().length;
             coexpressionGrid.decideQueryColumn(numQueryGenes);
-            coexpressionGrid.loadData(coexpressionGrid.observableSearchResults.getCoexpressionPairs(), null);
+            coexpressionGrid.loadData(coexpressionGrid.coexpressionSearchData.getDisplayedResults(), null);
             coexpressionGrid.applyFilters();
          });
 
-      this.observableSearchResults.on('query-genes-changed', function(queryGeneIds) {
+      this.coexpressionSearchData.on('query-genes-changed', function(queryGeneIds) {
             if (queryGeneIds.length < 2) {
                coexpressionGrid.getTopToolbar().getComponent('queryGenesOnly').setDisabled(true);
                coexpressionGrid.getTopToolbar().getComponent('queryGenesOnly').setValue(false);
@@ -373,7 +365,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
       var stringency = this.observableDisplaySettings.getStringency();
       var queryGenesOnly = this.observableDisplaySettings.getQueryGenesOnly();
-      var queryGeneIds = this.observableSearchResults.getQueryGeneIds();
+      var queryGeneIds = this.coexpressionSearchData.getQueryGeneIds();
 
       var value;
 
@@ -509,7 +501,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
          gene.taxonName = "?";
       }
 
-      if (this.observableSearchResults.getQueryGeneIds().indexOf(gene.id) !== -1) {
+      if (this.coexpressionSearchData.getQueryGeneIds().indexOf(gene.id) !== -1) {
          gene.fontWeight = 'bold';
       }
       return this.foundGeneTemplateNoGemma.apply(gene);
@@ -577,19 +569,19 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
       }
    },
 
-   // TODO: would it be simpler just returning items currently in the store? i.e. let the grid do all the filtering?
+  
    exportData : function() {
       var filteredData;
       var queryGenesOnly = this.observableDisplaySettings.getQueryGenesOnly();
       var stringency = this.observableDisplaySettings.getStringency();
 
       if (queryGenesOnly) {
-         filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.observableSearchResults.getQueryGenesOnlyResults(), stringency);
+         filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.coexpressionSearchData.getQueryGenesOnlyResults(), stringency);
       } else {
-         var combinedData = this.observableSearchResults.getCoexpressionPairs();
-         if (this.observableSearchResults.getQueryGenesOnlyResults()) {
-            combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(this.observableSearchResults.getCoexpressionPairs(),
-               this.observableSearchResults.getQueryGenesOnlyResults());
+         var combinedData = this.coexpressionSearchData.getDisplayedResults();
+         if (this.coexpressionSearchData.getQueryGenesOnlyResults()) {
+            combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(this.coexpressionSearchData.getDisplayedResults(),
+               this.coexpressionSearchData.getQueryGenesOnlyResults());
          }
          filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(combinedData, stringency);
       }
@@ -606,86 +598,4 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
    }
 });
 
-// Gemma.CoexpressionGrid.getAllenAtlasImage = function (geneSymbol) {
-// LinkOutController.getAllenBrainAtlasLink(geneSymbol, Gemma.CoexpressionGrid.linkOutPopUp);
-//
-// /*
-// * Show the throbber
-// */
-// Ext.DomHelper.overwrite("aba-" + geneSymbol + "-button", {
-// tag: 'img',
-// src: '/Gemma/images/default/tree/loading.gif'
-// });
-// };
-//
-// /**
-// * Callback.
-// */
-// Gemma.CoexpressionGrid.linkOutPopUp = function (linkOutValueObject) {
-//
-// /*
-// * Put the aba icon back for the throbber.
-// */
-// Ext.DomHelper.overwrite("aba-" + linkOutValueObject.geneSymbol + "-button", {
-// tag: 'img',
-// src: '/Gemma/images/logo/aba-icon.png'
-// });
-//
-// // TODO: Make pop up window show more than one image (have a button for
-// // scrolling to next image)
-// var popUpHtml;
-//
-// if (linkOutValueObject.abaGeneImageUrls.length === 0) {
-// window.alert("No Allen Brain Atlas images available for this gene");
-// return;
-// } else {
-// popUpHtml = String.format("<img height=200 width=400 src={0}>", linkOutValueObject.abaGeneImageUrls[0]);
-// }
-//
-// var abaWindowId = "coexpressionAbaWindow";
-//
-// var popUpLinkOutWin = Ext.getCmp(abaWindowId);
-// if (popUpLinkOutWin !== undefined && popUpLinkWin !== null) {
-// popUpLinkOutWin.close();
-// popUpLinkOutWin = null;
-// }
-//
-// popUpLinkOutWin = new Ext.Window({
-// id: abaWindowId,
-// html: popUpHtml,
-// stateful: false,
-// resizable: false
-// });
-// popUpLinkOutWin
-// .setTitle("<a href='"
-// + linkOutValueObject.abaGeneUrl
-// + "' target='_blank'> <img src='/Gemma/images/logo/aba-icon.png' ext:qtip='Link to Allen Brain Atlas gene details' />
-// </a> &nbsp; &nbsp;<img height=15 src=/Gemma/images/abaExpressionLegend.gif> "
-// + linkOutValueObject.geneSymbol);
-//
-// // An attempt at adding a button to the window so that the different image
-// // from allen brain atlas could be seen clicking on it.
-// // failed to work because window wouldn't refresh with new html information.
-// // :(
-// // Also was a host of scope issue... should have made in own widget.
-// // popUpLinkOutWin.linkOutValueObject = linkOutValueObject;
-// // popUpLinkOutWin.currentImageIndex = 0;
-// //
-// // popUpLinkOutWin.nextImage = function(e){
-// //
-// // if (e.scope.currentImageIndex ==
-// // e.scope.linkOutValueObject.abaGeneImageUrls.length)
-// // e.scope.currentImageIndex = 0;
-// // else
-// // e.scope.currentImageIndex++;
-// //
-// // e.scope.innerHTML= String.format("<img height=200 width=400 src={0}>",
-// // e.scope.linkOutValueObject.abaGeneImageUrls[e.scope.currentImageIndex]);
-// // e.scope.render();
-// //
-// // };
-// // popUpLinkOutWin.addButton('next image',
-// // popUpLinkOutWin.nextImage.createDelegate(this), popUpLinkOutWin);
-//
-// popUpLinkOutWin.show(this);
-// };
+

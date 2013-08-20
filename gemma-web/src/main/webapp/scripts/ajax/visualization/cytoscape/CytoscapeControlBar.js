@@ -22,6 +22,7 @@ Ext.namespace('Gemma');
 Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
     initComponent: function () {
         var display = this.display;
+        var cytoscapePanel = this.cytoscapePanel;
 
         this.visualOptionsMenu = new Ext.menu.Menu({
             items: [
@@ -29,15 +30,8 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                     itemId: 'refreshLayoutButton',
                     text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutText,
                     handler: function () {
-                        display.refreshLayout();
-                    }
-                },
-                {
-                    itemId: 'compressGraphButton',
-                    text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.compressGraphText,
-                    checked: false,
-                    handler: function (menuItem) {
-                        display.compressGraph( !menuItem.checked );
+                        
+                    	cytoscapePanel.refreshLayout();
                     }
                 },
                 {
@@ -53,16 +47,16 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
 
         this.geneSetOverlayPicker = new Gemma.GeneSetOverlayPicker({
             display: this.display,
-            taxonId: this.observableSearchResults.getTaxonId()
+            taxonId: this.coexpressionSearchData.getTaxonId()
         });
 
-        var cytoscapePanel = this.cytoscapePanel;
+        
         this.actionsMenu = new Ext.menu.Menu({
             items: [
                 {
                     itemId: 'extendSelectedNodesButton',
                     text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.extendNodeText,
-                    disabled: true,
+                    disabled: false,
                     handler: function () {
                         cytoscapePanel.extendSelectedNodes();
                     }
@@ -70,7 +64,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 {
                     itemId: 'searchWithSelectedNodesButton',
                     text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchWithSelectedText,
-                    disabled: true,
+                    disabled: false,
                     handler: function () {
                         cytoscapePanel.searchWithSelectedNodes();
                     }
@@ -83,7 +77,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                         if (!item.checked) {
                             this.geneSetOverlayPicker.show();
                         } else {
-                            this.observableDisplaySettings.setOverlayGeneIds([]);
+                            this.coexDisplaySettings.setOverlayGeneIds([]);
                         }
                     },
                     scope: this
@@ -117,7 +111,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                     minValue: Gemma.MIN_STRINGENCY,
                     maxValue: 999,
                     fieldLabel: 'Stringency ',
-                    value: this.observableDisplaySettings.getStringency(),
+                    value: this.coexDisplaySettings.getStringency(),
                     width: 60,
                     enableKeyEvents: true,
                     listeners: {
@@ -159,12 +153,12 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                     itemId: 'searchInCytoscapeBox',
                     tabIndex: 1,
                     enableKeyEvents: true,
-                    value: this.observableDisplaySettings.getSearchTextValue(),
+                    value: this.coexDisplaySettings.getSearchTextValue(),
                     emptyText: 'Find gene in results',
                     listeners: {
                         "keyup": {
                             fn: function (textField) {
-                                    this.observableDisplaySettings.setSearchTextValue( textField.getValue() );
+                                    this.coexDisplaySettings.setSearchTextValue( textField.getValue() );
                             },
                             scope: this,
                             delay: 500
@@ -178,7 +172,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                     itemId: 'queryGenesOnly',
                     boxLabel: 'Query Genes Only',
                     handler: function (checkbox, checked) {
-                        this.observableDisplaySettings.setQueryGenesOnly(checked);
+                        this.coexDisplaySettings.setQueryGenesOnly(checked);
                     },
                     checked: false,
                     scope: this
@@ -207,7 +201,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                                     this.display.exportPNG();
                                 },
                                 scope: this
-                            },
+                            }/*,
                             {
                                 text: 'Save as GraphML',
                                 handler: function () {
@@ -235,7 +229,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                                     this.display.exportSVG();
                                 },
                                 scope: this
-                            }
+                            }*/
                         ]
                     })
                 },
@@ -259,7 +253,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                     enableToggle: 'true',
                     pressed: 'true',
                     toggleHandler: function (button, pressed) {
-                        display.toggleNodeDegreeEmphasis(pressed);
+                        display.nodeDegreeEmphasize(pressed);
                     }
                 },
                 {
@@ -284,15 +278,15 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
             this.actionsMenu.getComponent('searchWithSelectedNodesButton').setDisabled(true);
         }, this);
 
-        this.observableDisplaySettings.on('stringency_change', function( value ) {
+        this.coexDisplaySettings.on('stringency_change', function( value ) {
             this.setStringencySpinnerValue( value );
         }, this);
 
-        this.observableDisplaySettings.on('query_genes_only_change', function( value ) {
+        this.coexDisplaySettings.on('query_genes_only_change', function( value ) {
             this.setQueryGenesOnlyCheckBox( value );
         }, this);
 
-        this.observableDisplaySettings.on('search_text_change', function( text ) {
+        this.coexDisplaySettings.on('search_text_change', function( text ) {
             this.setSearchText( text );
         }, this);
     },
@@ -300,8 +294,8 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
     onStringencyChange: function (requestedDisplayStringency) {
         var controlBar = this;
 
-        var savedDisplayStringency = this.observableDisplaySettings.getStringency();
-        var resultsStringency = this.observableSearchResults.getResultsStringency();
+        var savedDisplayStringency = this.coexDisplaySettings.getStringency();
+        var resultsStringency = this.coexpressionSearchData.getResultsStringency();
 
         if (requestedDisplayStringency < resultsStringency) {
             Ext.Msg.show({
@@ -313,8 +307,8 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 },
                 fn: function (button) {
                     if (button === 'ok') {
-                        controlBar.observableSearchResults.searchForCytoscapeDataWithStringency(requestedDisplayStringency);
-                        controlBar.observableDisplaySettings.setStringency(requestedDisplayStringency);
+                        controlBar.coexpressionSearchData.searchForCytoscapeDataWithStringency(requestedDisplayStringency);
+                        controlBar.coexDisplaySettings.setStringency(requestedDisplayStringency);
                     } else {
                         // restore spinner field
                         controlBar.setStringencySpinnerValue( savedDisplayStringency );
@@ -322,7 +316,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                 }
             });
         } else {
-            controlBar.observableDisplaySettings.setStringency(requestedDisplayStringency);
+            controlBar.coexDisplaySettings.setStringency(requestedDisplayStringency);
         }
     },
 

@@ -260,10 +260,10 @@ Gemma.AnalysesSearchUtils = {
     * @param result
     * @param lastSearchCommand
     * @param displayedResults
-    * @return {Gemma.ObservableCoexpressionSearchResults}
+    * @return {Gemma.CoexpressionSearchData}
     */
    constructCoexpressionSearchData : function(result, lastSearchCommand, displayedResults) {
-      var coexpressionSearchData = new Gemma.ObservableCoexpressionSearchResults({
+      var coexpressionSearchData = new Gemma.CoexpressionSearchData({
             coexGridCoexCommand : lastSearchCommand,
             cytoscapeCoexCommand : Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand(lastSearchCommand),
             coexGridResults : result

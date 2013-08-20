@@ -172,7 +172,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
             return;
          }
 
-         var coexpressionSearchResults = new Gemma.ObservableCoexpressionSearchResults({
+         var coexpressionSearchResults = new Gemma.CoexpressionSearchData({
                searchParameters : searchForm.getLastCoexpressionSearchCommand(),
                coexGridCoexCommand : searchForm.getLastCoexpressionSearchCommand(),
                cytoscapeCoexCommand : Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand(searchForm.getLastCoexpressionSearchCommand()),

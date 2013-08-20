@@ -22,12 +22,12 @@ Ext.onReady(function() {
         });
     }
 
-    var observableSearchResults = new Gemma.ObservableCoexpressionSearchResults();
+    var coexpressionSearchData = new Gemma.CoexpressionSearchData();
 
     // panel for performing search, appears on load
 	var searchPanel = new Gemma.AnalysisResultsSearchForm({
 		width: Gemma.SEARCH_FORM_WIDTH,
-        observableSearchResults : observableSearchResults
+        observableSearchResults : coexpressionSearchData
 	});
 
 	// window that controls diff visualizer; 
@@ -89,12 +89,12 @@ Ext.onReady(function() {
 			flashPanel.stopRender = true;
 		}
 
-        observableSearchResults.purgeListeners();
-        observableSearchResults.on('aftersearch', function(result){
+        coexpressionSearchData.purgeListeners();
+        coexpressionSearchData.on('aftersearch', function(result){
             searchPanel.loadMask.hide();
         });
 
-        observableSearchResults.on('search-started', function(result){
+        coexpressionSearchData.on('search-started', function(result){
             searchPanel.loadMask.show();
         });
 
@@ -137,12 +137,12 @@ Ext.onReady(function() {
             return initialDisplayStringency;
         }
 
-        var observableDisplaySettings = new Gemma.ObservableCoexpressionDisplaySettings();
+        var coexDisplaySettings = new Gemma.CoexpressionDisplaySettings();
 
         var displayStringency = decideInitialDisplayStringency( searchCommand.eeIds.length );
-        observableDisplaySettings.setStringency( displayStringency );
+        coexDisplaySettings.setStringency( displayStringency );
 
-        observableSearchResults.setSearchCommand(searchCommand);
+        coexpressionSearchData.setSearchCommand(searchCommand);
 
         var coexpressionGrid = new Gemma.CoexpressionGrid({
             width: 900,
@@ -154,11 +154,11 @@ Ext.onReady(function() {
             user: user,
             layoutOnTabChange: true,
             hideMode: 'offsets',
-            observableSearchResults: observableSearchResults,
-            observableDisplaySettings : observableDisplaySettings
+            coexpressionSearchData: coexpressionSearchData,
+            observableDisplaySettings : coexDisplaySettings
         });
 
-        var cytoscapePanel = new Gemma.CytoscapePanel({
+        var cytoscapePanel = new Gemma.CytoscapeJSPanel({
             id: "cytoscaperesults",
             ref: 'coexCytoscapeResults',
             title: "Visualization",
@@ -167,16 +167,16 @@ Ext.onReady(function() {
             taxonName: searchPanel.getTaxonName(),
             hideMode: 'visibility',
             searchPanel: searchPanel,
-            observableSearchResults: observableSearchResults,
-            observableDisplaySettings : observableDisplaySettings
+            coexpressionSearchData: coexpressionSearchData,
+            coexDisplaySettings : coexDisplaySettings
         });
 
         coexpressionSearchResultsPanel.add(coexpressionGrid);
         coexpressionSearchResultsPanel.add(cytoscapePanel);
 
-        observableSearchResults.search( searchCommand );
+        coexpressionSearchData.search( searchCommand );
 
-        observableSearchResults.on("search-results-ready", function () {
+        coexpressionSearchData.on("search-results-ready", function () {
 
             if (showTutorial) {
                 setupCoexTutorial(coexpressionSearchResultsPanel, coexpressionGrid);
@@ -279,13 +279,4 @@ Ext.onReady(function() {
 	}, this);
 });
 
-// Begin construction of coexpression viewer
 
-//        var displayedResults = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(
-//            result.knownGeneResults,
-//            result.queryGenesOnlyResults );
-//
-//        var observableSearchResults = Gemma.AnalysesSearchUtils.constructCoexpressionSearchData(
-//            result,
-//            searchPanel.getLastCoexpressionSearchCommand(),
-//            displayedResults );

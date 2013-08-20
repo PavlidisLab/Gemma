@@ -15,6 +15,8 @@
  */
 Ext.namespace('Gemma');
 
+//TODO remove unnecessary settings from old cytoscape web implementation
+
 Gemma.CytoscapeSettings = {
 
    backgroundColor : "#FFF7FB",
@@ -36,10 +38,11 @@ Gemma.CytoscapeSettings = {
 
    nodeColor : "#969696",
    nodeColorFade : "#FFF7FB",
+   nodeColorOverlay : "#000099",
    defaultNodeBorderWidth : 0,
    queryNodeBorderWidth : 5,
-   nodeSize : 25,
-   queryNodeSize : 30,
+   nodeSize : 15,
+   queryNodeSize : 20,
 
    nodeQueryColorTrue : "#E41A1C",
    nodeQueryColorFalse : "#6BAED6",
@@ -70,6 +73,14 @@ Gemma.CytoscapeSettings = {
       moderate : 0.35,
       dark : 0.2
    },
+   
+   nodeDegreeOpacity : {
+	      lightest : 0.1,
+	      light : 0.3,
+	      moderate : 0.5,
+	      dark : 0.65,
+	      darkest : 1
+	   },
 
    // note that high node degree means low specificity(see nodeDegreeValue above)
    nodeDegreeColor : {
@@ -382,6 +393,72 @@ Gemma.CytoscapeSettings.forceDirectedLayoutCompressed = {
 
 };
 
+Gemma.CytoscapejsSettings = {
+		
+		nodeSettings:{
+			
+		},
+		
+		arborLayout : {
+			    name: 'arbor',
+			    liveUpdate: false,
+			    
+			    edgeLength:100,
+			    nodeMass: 2
+			    /*nodeMass: function(data){
+			    	
+			    	if (data.nodeDegree < 0.4) return 2;
+			        return 50; // use the weight attribute in the node's data as mass
+			    },
+			    
+			    repulsion: 1500
+				/*,
+			    repulsion: 1, // whether to show the layout as it's running
+			    ready: undefined, // callback on layoutready 
+			    stop: undefined, // callback on layoutstop
+			    maxSimulationTime: 5000, // max length in ms to run the layout
+			    fit: true, // fit to viewport
+			    padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
+			    ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
+
+			    // forces used by arbor (use arbor default on undefined)
+			    //defaults:
+			    //repulsion: 600,
+			    //stiffness: 1000,
+			    //friction: 0.3,
+			    //gravity: false,
+			    
+			    repulsion: 1,
+			    stiffness: 1,
+			    friction: 0.1,
+			    gravity: true,
+			    
+			    fps: undefined,
+			    
+			    precision: undefined,
+
+			    // static numbers or functions that dynamically return what these
+			    // values should be for each element
+			    //nodeMass: 2, 
+			    edgeLength: undefined,
+
+			    stepSize: 1, // size of timestep in simulation
+
+			    // function that returns true if the system is stable to indicate
+			    // that the layout can be stopped
+			    //stableEnergy: function( energy ){
+			    //    var e = energy; 
+			    //    return (e.max <= 0.1) || (e.mean <= 0.05);
+			    //}*/
+			}
+		
+};
+
+
+
+
+
+
 Gemma.CytoscapeSettings.defaultForceDirectedLayout = {
    name : "ForceDirected"
 };
@@ -394,50 +471,5 @@ Gemma.CytoscapeSettings.secondGeneListBypassOverlay = {
    labelFontWeight : "bold"
 };
 
-// cytoscapeweb doesn't allow mappers in a bypass object so we have to do it ourselves, hence the similar objects below
-Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeLightest = {
-   color : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.lightest.value,
-   labelGlowStrength : 240,
-   labelFontColor : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.lightest.value,
-   labelFontStyle : "italic",
-   labelFontWeight : "bold"
 
-};
-
-Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeLight = {
-   color : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.light.value,
-   labelGlowStrength : 240,
-   labelFontColor : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.light.value,
-   labelFontStyle : "italic",
-   labelFontWeight : "bold"
-
-};
-
-Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeModerate = {
-   color : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.moderate.value,
-   labelGlowStrength : 240,
-   labelFontColor : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.moderate.value,
-   labelFontStyle : "italic",
-   labelFontWeight : "bold"
-
-};
-
-Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeDark = {
-   color : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.dark.value,
-   labelGlowStrength : 240,
-   labelFontColor : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.dark.value,
-   labelFontStyle : "italic",
-   labelFontWeight : "bold"
-
-};
-Gemma.CytoscapeSettings.secondGeneListBypassOverlayNodeDegreeDarkest = {
-   color : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.darkest.value,
-   labelGlowStrength : 240,
-   labelFontColor : Gemma.CytoscapeSettings.nodeDegreeColorSecondGeneList.darkest.value,
-   labelFontStyle : "italic",
-   labelFontWeight : "bold"
-
-};
-// cytoscapeweb doesn't allow mappers in a bypass object so we have to do it ourselves, erstwhile the similar objects
-// above
 
