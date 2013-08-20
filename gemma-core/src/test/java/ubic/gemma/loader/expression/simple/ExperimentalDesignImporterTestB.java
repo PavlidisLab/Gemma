@@ -32,8 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -43,13 +41,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -59,34 +55,25 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
-    ExpressionExperiment ee;
+    private ExpressionExperiment ee;
 
     @Autowired
-    OntologyService ontologyService;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExperimentalDesignImporter experimentalDesignImporter;
 
     @Autowired
-    ExperimentalDesignImporter experimentalDesignImporter;
+    private ExperimentalFactorService experimentalFactorService;
 
     @Autowired
-    ExperimentalFactorService experimentalFactorService;
+    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
     @Autowired
-    SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    BioMaterialService bioMaterialService;
-
-    @Autowired
-    ExperimentalDesignService experimentalDesignService;
-
-    @Autowired
-    AclTestUtils aclTestUtils;
+    private AclTestUtils aclTestUtils;
 
     @After
     public void tearDown() {
@@ -105,14 +92,6 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
                 "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-        ExperimentalFactorOntologyService mos = ontologyService.getExperimentalFactorOntologyService();
-        if ( !mos.isOntologyLoaded() ) {
-            mos.startInitializationThread( true );
-            while ( !mos.isOntologyLoaded() ) {
-                Thread.sleep( 1000 );
-                log.info( "Waiting for mgedontology to load" );
-            }
-        }
 
         Taxon salmon = taxonService.findByCommonName( "salmonid" );
 

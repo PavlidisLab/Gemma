@@ -38,7 +38,7 @@ public interface BioMaterialService {
     public BioMaterial copy( BioMaterial bioMaterial );
 
     /**
-     * 
+     * Total number of biomaterials in the system.
      */
     public Integer countAll();
 
@@ -47,13 +47,6 @@ public interface BioMaterialService {
      */
     @Secured({ "GROUP_USER" })
     public BioMaterial create( BioMaterial bioMaterial );
-
-    /**
-     * @param bioMaterial
-     * @return true if a matching biomaterial exists in the system.
-     */
-    @Secured("GROUP_USER")
-    public boolean exists( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );

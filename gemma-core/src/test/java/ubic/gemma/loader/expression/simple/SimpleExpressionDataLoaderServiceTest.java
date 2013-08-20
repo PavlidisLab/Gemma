@@ -48,13 +48,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest {
 
-    ExpressionExperiment ee;
+    private ExpressionExperiment ee;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    SimpleExpressionDataLoaderService service;
+    private SimpleExpressionDataLoaderService service;
 
     @After
     public void after() {

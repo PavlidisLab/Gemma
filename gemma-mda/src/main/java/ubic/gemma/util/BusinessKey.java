@@ -143,8 +143,12 @@ public class BusinessKey {
         }
 
         if ( bioMaterial.getExternalAccession() != null ) {
+            // this is not completely foolproof.
             queryObject.createCriteria( "externalAccession" ).add(
                     Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
+        } else if ( StringUtils.isNotBlank( bioMaterial.getDescription() ) ) {
+            // The description is generally only filled in by Gemma, and contains the experiment short name.
+            queryObject.add( Restrictions.eq( "description", bioMaterial.getDescription() ) );
         }
 
         if ( bioMaterial.getSourceTaxon() != null ) {

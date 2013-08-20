@@ -41,18 +41,6 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
 
     private static Logger log = LoggerFactory.getLogger( BioMaterialServiceImpl.class );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.biomaterial.BioMaterialService#exists(ubic.gemma.model.expression.biomaterial.BioMaterial
-     * )
-     */
-    @Override
-    public boolean exists( BioMaterial bioMaterial ) {
-        return this.getBioMaterialDao().find( bioMaterial ) != null;
-    }
-
     @Override
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         return this.getBioMaterialDao().findByExperiment( experiment );
