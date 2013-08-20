@@ -563,8 +563,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
          * constructing a constraint on SubSets. See bug 2173.
          */
         final String nativeQuery = "select e.ID from ANALYSIS a inner join INVESTIGATION e ON a.EXPERIMENT_ANALYZED_FK = e.ID "
-                + "inner join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK=e.ID inner join SAMPLES_USED sa ON ba.ID=sa.BIO_ASSAYS_USED_IN_FK "
-                + " inner join BIO_MATERIAL bm ON bm.ID=sa.SAMPLES_USED_FK inner join TAXON t ON bm.SOURCE_TAXON_FK=t.ID "
+                + "inner join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK=e.ID "
+                + " inner join BIO_MATERIAL bm ON bm.ID=ba.SAMPLE_USED_FK inner join TAXON t ON bm.SOURCE_TAXON_FK=t.ID "
                 + " inner join COMPOSITE_SEQUENCE cs ON ba.ARRAY_DESIGN_USED_FK =cs.ARRAY_DESIGN_FK where cs.ID in "
                 + " (:probes) ";
 
