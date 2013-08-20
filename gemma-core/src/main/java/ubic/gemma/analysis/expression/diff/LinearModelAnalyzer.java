@@ -701,7 +701,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param bioAssaySet source data
+     * @param bioAssaySet source data, could be a SubSet
      * @param config
      * @param dmatrix data
      * @param samplesUsed analyzed
