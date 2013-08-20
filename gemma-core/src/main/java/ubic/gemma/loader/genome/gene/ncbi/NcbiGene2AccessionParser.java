@@ -44,9 +44,9 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
         QueuingParser<NcbiGeneData> {
 
     /**
-     * They keep changing this...
+     * They keep changing this...this is now a minimum value.
      */
-    private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 16;
+    private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 13;
 
     Collection<NCBIGene2Accession> results = new HashSet<NCBIGene2Accession>();
 
@@ -88,7 +88,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
     public NCBIGene2Accession parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
-        if ( fields.length != NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
+        if ( fields.length < NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
             throw new IllegalArgumentException( "Line is not in the right format: has " + fields.length
                     + " fields, expected " + NCBI_GENE2ACCESSION_FIELDS_PER_ROW );
         }
