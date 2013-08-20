@@ -6,8 +6,9 @@
 <jwr:script src='/scripts/app/AnalysisResultsSearchNonWidget.js' />
 <jwr:script src='/scripts/app/generalSearchSimple.js' />
 
-<script type="text/javascript" src="<c:url value='/scriptsnonjawr/arbor.js'/>"></script>
-
+<script type="text/javascript"
+		src="/Gemma/scripts/scriptsnonjawr/arbor.js">
+</script>
 
 </head>
 
