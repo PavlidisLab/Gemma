@@ -4,8 +4,8 @@
 # Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=6290
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
-#$GeneticModification : Category=GeneticModification Type=Categorical
-#$SamplingTimePoint : Category=SamplingTimePoint Type=Categorical
+#$GeneticModification : Category=Genetic_Modification Type=Categorical
+#$SamplingTimePoint : Category=TimePoint Type=Categorical
 Bioassay	ExternalID	GeneticModification	SamplingTimePoint
 GSE18795_Biomat_1___BioAssayImplId=223822Name=Embryo_WT_48hpf_biologicalrep4	GSM466310	wild_type	48h
 GSE18795_Biomat_10___BioAssayImplId=223823Name=Embryo_WT_48hpf_biologicalrep3	GSM466309	wild_type	48h
