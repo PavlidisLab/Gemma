@@ -29,6 +29,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
+import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -179,7 +181,7 @@ public class CommonQueries {
         Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
 
         String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds) and g.AD in (:ads)";
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.addScalar( "csid", LongType.INSTANCE );
         queryObject.addScalar( "geneId", LongType.INSTANCE );
         queryObject.setParameterList( "ads", arrayDesigns );
@@ -200,6 +202,41 @@ public class CommonQueries {
         results.close();
 
         return cs2genes;
+
+    }
+
+    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes,
+            Collection<ArrayDesign> arrayDesigns, Session session ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
+                + " and gene in (:genes) and cs.arrayDesign in (:ads) ";
+
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        Query queryObject = session.createQuery( csQueryString );
+        queryObject.setCacheable( true );
+        queryObject.setParameterList( "genes", genes );
+        queryObject.setParameterList( "ads", arrayDesigns );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
+            Gene g = ( Gene ) results.get( 1 );
+            if ( !cs2gene.containsKey( cs ) ) {
+                cs2gene.put( cs, new HashSet<Gene>() );
+            }
+            cs2gene.get( cs ).add( g );
+        }
+        results.close();
+        if ( timer.getTime() > 200 ) {
+            log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
+        }
+        return cs2gene;
 
     }
 
@@ -357,4 +394,5 @@ public class CommonQueries {
         results.close();
         return r;
     }
+
 }

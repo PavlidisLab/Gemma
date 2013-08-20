@@ -39,6 +39,7 @@ import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -443,49 +444,60 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSessionFactory()
-                .getCurrentSession() );
-        if ( cs2gene.keySet().size() == 0 ) {
+
+        Collection<ArrayDesign> arrayDesigns = CommonQueries.getArrayDesignsUsed(
+                EntityUtils.getIds( expressionExperiments ), this.getSessionFactory().getCurrentSession() ).keySet();
+
+        // this could be further improved by getting probes specific to experiments in batches.
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, arrayDesigns, this
+                .getSessionFactory().getCurrentSession() );
+
+        if ( cs2gene.isEmpty() ) {
             log.warn( "No composite sequences found for genes" );
             return new HashMap<ExpressionExperiment, Map<Gene, Collection<Double>>>();
         }
-
-        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, "
-                + "dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
-                + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
-
-        List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
-                new Object[] { cs2gene.keySet(), expressionExperiments } );
-
         Map<ExpressionExperiment, Map<Gene, Collection<Double>>> result = new HashMap<ExpressionExperiment, Map<Gene, Collection<Double>>>();
-        for ( Object o : qr ) {
-            Object[] oa = ( Object[] ) o;
-            ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
-            CompositeSequence d = ( CompositeSequence ) oa[1];
-            Double rMean = ( Double ) oa[2];
-            Double rMax = ( Double ) oa[3];
 
-            if ( !result.containsKey( e ) ) {
-                result.put( e, new HashMap<Gene, Collection<Double>>() );
-            }
+        BatchIterator<CompositeSequence> batchIterator = new BatchIterator<>( cs2gene.keySet(), 500 );
 
-            Map<Gene, Collection<Double>> rmap = result.get( e );
+        for ( Collection<CompositeSequence> batch : batchIterator ) {
 
-            Collection<Gene> genes4probe = cs2gene.get( d );
+            final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, "
+                    + "dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
+                    + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
 
-            for ( Gene gene : genes4probe ) {
-                if ( !rmap.containsKey( gene ) ) {
-                    rmap.put( gene, new ArrayList<Double>() );
+            List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
+                    new Object[] { batch, expressionExperiments } );
+
+            for ( Object o : qr ) {
+                Object[] oa = ( Object[] ) o;
+                ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
+                CompositeSequence d = ( CompositeSequence ) oa[1];
+                Double rMean = ( Double ) oa[2];
+                Double rMax = ( Double ) oa[3];
+
+                if ( !result.containsKey( e ) ) {
+                    result.put( e, new HashMap<Gene, Collection<Double>>() );
                 }
-                switch ( method ) {
-                    case mean:
-                        rmap.get( gene ).add( rMean );
-                        break;
-                    case max:
-                        rmap.get( gene ).add( rMax );
-                        break;
-                    default:
-                        break;
+
+                Map<Gene, Collection<Double>> rmap = result.get( e );
+
+                Collection<Gene> genes4probe = cs2gene.get( d );
+
+                for ( Gene gene : genes4probe ) {
+                    if ( !rmap.containsKey( gene ) ) {
+                        rmap.put( gene, new ArrayList<Double>() );
+                    }
+                    switch ( method ) {
+                        case mean:
+                            rmap.get( gene ).add( rMean );
+                            break;
+                        case max:
+                            rmap.get( gene ).add( rMax );
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         }
