@@ -65,6 +65,24 @@ public class ExperimentalDesignUtils {
     }
 
     /**
+     * Check if a factor has missing values (samples that lack an assigned value)
+     * 
+     * @param factor
+     * @param samplesUsed
+     * @param baselines not really important for this
+     * @return false if there are any missing values.
+     */
+    public static boolean isComplete( ExperimentalFactor factor, List<BioMaterial> samplesUsed,
+            Map<ExperimentalFactor, FactorValue> baselines ) {
+        for ( BioMaterial samp : samplesUsed ) {
+            Object value = extractFactorValueForSample( baselines, samp, factor );
+            if ( value == null ) return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Convert factors to a matrix usable in R. The rows are in the same order as the columns of our data matrix
      * (defined by samplesUsed).
      * 
@@ -99,6 +117,9 @@ public class ExperimentalDesignUtils {
                 designMatrix.set( row, col, value );
 
                 // if the value is null, we have to skip this factor, actually, but we do it later.
+                if ( value == null ) {
+                    throw new IllegalStateException( "Missing values not tolerated in design matrix" );
+                }
 
                 col++;
 
@@ -107,31 +128,32 @@ public class ExperimentalDesignUtils {
 
         }
 
-        /*
-         * Drop columns that have missing values.
-         */
-        List<String> toKeep = new ArrayList<String>();
-        for ( int i = 0; i < designMatrix.columns(); i++ ) {
-            boolean skip = false;
-            Object[] column = designMatrix.getColumn( i );
-            for ( Object o : column ) {
-                if ( o == null ) {
-                    skip = true;
-                }
-            }
-
-            if ( !skip ) {
-                toKeep.add( designMatrix.getColName( i ) );
-            }
-        }
-
-        if ( toKeep.isEmpty() ) {
-            throw new IllegalStateException( "Design matrix had no columns without missing values" );
-        }
-
-        if ( toKeep.size() < designMatrix.columns() ) {
-            designMatrix = designMatrix.subsetColumns( toKeep );
-        }
+        //
+        // /*
+        // * Drop columns that have missing values.
+        // */
+        // List<String> toKeep = new ArrayList<String>();
+        // for ( int i = 0; i < designMatrix.columns(); i++ ) {
+        // boolean skip = false;
+        // Object[] column = designMatrix.getColumn( i );
+        // for ( Object o : column ) {
+        // if ( o == null ) {
+        // skip = true;
+        // }
+        // }
+        //
+        // if ( !skip ) {
+        // toKeep.add( designMatrix.getColName( i ) );
+        // }
+        // }
+        //
+        // if ( toKeep.isEmpty() ) {
+        // throw new IllegalStateException( "Design matrix had no columns without missing values" );
+        // }
+        //
+        // if ( toKeep.size() < designMatrix.columns() ) {
+        // designMatrix = designMatrix.subsetColumns( toKeep );
+        // }
 
         designMatrix.setRowNames( rowNames );
         return designMatrix;

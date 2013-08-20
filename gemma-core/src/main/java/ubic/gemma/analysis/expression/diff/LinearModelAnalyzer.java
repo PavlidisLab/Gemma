@@ -728,6 +728,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils.getBaselineConditions(
                 samplesUsed, factors );
 
+        dropIncompleteFactors( samplesUsed, factors, baselineConditions );
+
+        if ( factors.isEmpty() ) {
+            log.error( "Must provide at least one factor; they were all removed due to incomplete values" );
+            return null;
+        }
+
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
         ExperimentalFactor interceptFactor = determineInterceptFactor( factors, quantitationType );
@@ -749,8 +756,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             modelFormula = buildModelFormula( config, label2Factors, interceptFactor, interactionFactorLists );
         }
 
-        // calculate library size before log transformation
-        DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
         dmatrix = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( quantitationType, dmatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
@@ -767,7 +772,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, sNamedMatrix, label2Factors,
                 modelFormula, properDesignMatrix, interceptFactor, interactionFactorLists, baselineConditions,
-                quantitationType, librarySize );
+                quantitationType );
 
         if ( rawResults.size() == 0 ) {
             log.error( "Got no results from the analysis" );
@@ -962,6 +967,24 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         log.info( "Analysis processing phase done ..." );
 
         return expressionAnalysis;
+    }
+
+    /**
+     * @param samplesUsed
+     * @param factors
+     * @param baselineConditions
+     */
+    private void dropIncompleteFactors( List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors,
+            Map<ExperimentalFactor, FactorValue> baselineConditions ) {
+        Collection<ExperimentalFactor> toDrop = new HashSet<>();
+        for ( ExperimentalFactor f : factors ) {
+            if ( !ExperimentalDesignUtils.isComplete( f, samplesUsed, baselineConditions ) ) {
+                toDrop.add( f );
+                log.info( "Droppipng " + f + ", missing values" );
+            }
+        }
+        factors.removeAll( toDrop );
+
     }
 
     /**
@@ -1537,12 +1560,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             final DoubleMatrix<String, String> sNamedMatrix,
             final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
             DesignMatrix designMatrix, ExperimentalFactor interceptFactor, List<String[]> interactionFactorLists,
-            Map<ExperimentalFactor, FactorValue> baselineConditions, QuantitationType quantitationType,
-            final DoubleMatrix1D librarySize ) {
+            Map<ExperimentalFactor, FactorValue> baselineConditions, QuantitationType quantitationType ) {
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
 
-        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, quantitationType, librarySize );
+        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, quantitationType );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1600,8 +1622,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @return
      */
     private Future<?> runAnalysisFuture( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
-            final Map<String, LinearModelSummary> rawResults, final QuantitationType quantitationType,
-            final DoubleMatrix1D librarySize ) {
+            final Map<String, LinearModelSummary> rawResults, final QuantitationType quantitationType ) {
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<?> f = service.submit( new Runnable() {
@@ -1611,6 +1632,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 timer.start();
                 LeastSquaresFit fit = null;
                 if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
+                    // calculate library size before log transformation (needed for RNA-seq only)
+                    DoubleMatrix1D librarySize = MatrixStats.colSums( data );
                     MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, data, librarySize );
                     log.info( "Model weights from mean-variance model: " + timer.getTime() + "ms" );
                     timer.reset();

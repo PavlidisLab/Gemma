@@ -36,6 +36,8 @@ import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
+ * This test relies on having genes in the system ... pretty useless.
+ * 
  * @author keshav
  * @author paul
  * @version $Id$
