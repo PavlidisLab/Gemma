@@ -425,7 +425,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
         q.setMaxResults( limit );
         if ( numvecsavailable > limit ) {
-            // TODO RandomUtils removed from commons-lang 3; replace. Commons math? roll own?
             q.setFirstResult( new Random().nextInt( numvecsavailable - limit ) );
         }
         result = q.list();
@@ -451,7 +450,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return new HashMap<ExpressionExperiment, Map<Gene, Collection<Double>>>();
         }
 
-        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
+        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, "
+                + "dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
                 + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
 
         List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
@@ -511,8 +511,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         final String queryString = "select distinct dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
-                + " inner join fetch dedv.bioAssayDimension bd "
-                + " inner join dedv.designElement de  "
                 + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment.id = :eeid ";
 
         List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "eeid" },
@@ -557,7 +555,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     @Override
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
-        final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment.id = :ee";
+        final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
+                + "where dedv.expressionExperiment.id = :ee";
         List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment.getId() );
         Map<CompositeSequence, Double> result = new HashMap<CompositeSequence, Double>();
         for ( Object o : qr ) {
@@ -585,13 +584,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSessionFactory()
                 .getCurrentSession() );
+
         if ( cs2gene.keySet().size() == 0 ) {
             log.warn( "No composite sequences found for genes" );
             return new HashMap<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>>();
         }
 
-        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
-                + " inner join dedv.bioAssayDimension bd "
+        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax "
+                + "from ProcessedExpressionDataVectorImpl dedv "
                 + " inner join dedv.designElement de  "
                 + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in (:ees) ";
 
@@ -891,7 +891,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably just have one
-     * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector.
+     * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629 for details.
      * 
      * @param data
      * @return
@@ -944,6 +944,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return result;
     }
 
+    /**
+     * @param preferredQt
+     * @return
+     */
     private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
         QuantitationType present = QuantitationType.Factory.newInstance();
         present.setName( preferredQt.getName() + " - Masked " );
@@ -1108,10 +1112,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
+    /**
+     * Figure out if any platform used by the ee is two-channel
+     */
     private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
-        /*
-         * Figure out if it is two-channel
-         */
+
         boolean isTwoChannel = false;
         Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this
                 .getSessionFactory().getCurrentSession() );
@@ -1255,19 +1260,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param ees
-     * @param vecs
-     * @return
+     * @param ees Experiments and/or subsets required
+     * @param vecs vectors to select from and if necessary slice, obviously from the given ees.
+     * @return vectors that are for the requested subset. If an ee is not a subset, vectors will be unchanged. Otherwise
+     *         the data in a vector will be for the subset of samples in the eesubset.
      */
     private Collection<DoubleVectorValueObject> sliceSubsets( Collection<? extends BioAssaySet> ees,
             Collection<DoubleVectorValueObject> vecs ) {
         Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
         if ( vecs == null || vecs.isEmpty() ) return results;
 
-        /*
-         * FIXME nested loops; this is probably quite inefficient once the number of data sets & vectors grows beyond a
-         * few (if both are small, no big deal)
-         */
         for ( BioAssaySet bas : ees ) {
             if ( bas instanceof ExpressionExperimentSubSet ) {
 
