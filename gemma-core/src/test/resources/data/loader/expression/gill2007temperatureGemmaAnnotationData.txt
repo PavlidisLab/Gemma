@@ -1,28 +1,28 @@
-#$Sodium : Category=EnvironmentalHistory Type=continuous																									
-#$chloride : Category=EnvironmentalHistory Type=continuous																									
-#$Fat Probe 1 : Category=EnvironmentalHistory Type=continuous																									
-#$Fat Probe 2 : Category=EnvironmentalHistory Type=continuous																									
-#$glucose : Category=EnvironmentalHistory Type=continuous																									
-#$lactate : Category=EnvironmentalHistory Type=continuous																									
-#$Osmorality : Category=EnvironmentalHistory Type=continuous																									
-#$Pottasium : Category=EnvironmentalHistory Type=continuous																									
-#$Testosterone : Category=EnvironmentalHistory Type=continuous																									
-#$Cortisol : Category=EnvironmentalHistory Type=continuous																									
-#$Estradiol : Category=EnvironmentalHistory Type=continuous																									
-#$fork length : Category=EnvironmentalHistory Type=continuous																									
-#$Standard length : Category=EnvironmentalHistory Type=continuous																									
-#$POH : Category=EnvironmentalHistory Type=continuous																									
-#$Total weight : Category=EnvironmentalHistory Type=continuous																									
-#$PA Dorsal Wt (g) : Category=OrganismPart Type=continuous																									
-#$Gonad Wt (g) : Category=OrganismPart Type=continuous																									
-#$Liver Wt (g) : Category=OrganismPart Type=continuous																									
-#$POF Length (cm) : Category=EnvironmentalHistory Type=continuous																									
+#$Sodium : Category=Environmental_History Type=continuous																									
+#$chloride : Category=Environmental_History Type=continuous																									
+#$Fat Probe 1 : Category=Environmental_History Type=continuous																									
+#$Fat Probe 2 : Category=Environmental_History Type=continuous																									
+#$glucose : Category=Environmental_History Type=continuous																									
+#$lactate : Category=Environmental_History Type=continuous																									
+#$Osmorality : Category=Environmental_History Type=continuous																									
+#$Pottasium : Category=Environmental_History Type=continuous																									
+#$Testosterone : Category=Environmental_History Type=continuous																									
+#$Cortisol : Category=Environmental_History Type=continuous																									
+#$Estradiol : Category=Environmental_History Type=continuous																									
+#$fork length : Category=Environmental_History Type=continuous																									
+#$Standard length : Category=Environmental_History Type=continuous																									
+#$POH : Category=Environmental_History Type=continuous																									
+#$Total weight : Category=Environmental_History Type=continuous																									
+#$PA Dorsal Wt (g) : Category=Organism_Part Type=continuous																									
+#$Gonad Wt (g) : Category=Organism_Part Type=continuous																									
+#$Liver Wt (g) : Category=Organism_Part Type=continuous																									
+#$POF Length (cm) : Category=Environmental_History Type=continuous																									
 #$Stock sockeye : Category=Ecotype Type=categorical																									
 #$Sex : Category=Sex Type=categorical																									
 #$Fish pairing number : Category=Ecotype Type=categorical																									
-#$Temperature treatment : Category=EnvironmentalHistory Type=categorical																									
-#$Sample Timing : Category=SamplingTimePoint Type=categorical																									
-#$Tank : Category=EnvironmentalHistory Type=categorical																									
+#$Temperature treatment : Category=Environmental_History Type=categorical																									
+#$Sample Timing : Category=timepoint Type=categorical																									
+#$Tank : Category=Environmental_History Type=categorical																									
 Sample	chloride	Cortisol	Estradiol	Fat Probe 1	Fat Probe 2	Fish pairing number	fork length	glucose	Gonad Wt (g)	lactate	Liver Wt (g)	Osmorality	PA Dorsal Wt (g)	POF Length (cm)	POH	Pottasium	Sample Timing	Sex	Sodium	Standard length	Stock sockeye	Tank	Temperature treatment	Testosterone	Total weight
 Adams_14_First_26_HH008_204	136.6	239.24	3.16			27		4.68		1.64		309.5				2.55	First	F	170.23		Adams	5	14	19.19	
 Adams_14_First_40_HH008_192	138.35	328.11	1.12			23		10.3		0.73		312.5				4.04	First	F	176.94		Adams	6	14	9.91	

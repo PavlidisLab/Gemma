@@ -1,6 +1,6 @@
 # Brain 2003 data set
-#$Run time : Category=EnvironmentalHistory Type=categorical
-#$SamplingLocation : Category=EnvironmentalHistory Type=categorical
+#$Run time : Category=Environmental_History Type=categorical
+#$SamplingLocation : Category=Environmental_History Type=categorical
 #$Stock : Category=Ecotype Type=categorical
 Sample	Run time	SamplingLocation	Stock 
 B006_008_Onne_aRNA_Brain_77	Summer run	Port Renfrew	Upper Adams
