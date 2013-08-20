@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 public class ExperimentalDesignUtils {
+
     public static final String BATCH_FACTOR_CATEGORY_NAME = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME;
 
     public static final String BATCH_FACTOR_CATEGORY_URI = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_URI;
@@ -93,16 +94,43 @@ public class ExperimentalDesignUtils {
 
             int col = 0;
             for ( ExperimentalFactor factor : factors ) {
-
                 Object value = extractFactorValueForSample( baselines, samp, factor );
 
                 designMatrix.set( row, col, value );
+
+                // if the value is null, we have to skip this factor, actually, but we do it later.
 
                 col++;
 
             }
             row++;
 
+        }
+
+        /*
+         * Drop columns that have missing values.
+         */
+        List<String> toKeep = new ArrayList<String>();
+        for ( int i = 0; i < designMatrix.columns(); i++ ) {
+            boolean skip = false;
+            Object[] column = designMatrix.getColumn( i );
+            for ( Object o : column ) {
+                if ( o == null ) {
+                    skip = true;
+                }
+            }
+
+            if ( !skip ) {
+                toKeep.add( designMatrix.getColName( i ) );
+            }
+        }
+
+        if ( toKeep.isEmpty() ) {
+            throw new IllegalStateException( "Design matrix had no columns without missing values" );
+        }
+
+        if ( toKeep.size() < designMatrix.columns() ) {
+            designMatrix = designMatrix.subsetColumns( toKeep );
         }
 
         designMatrix.setRowNames( rowNames );
@@ -348,12 +376,7 @@ public class ExperimentalDesignUtils {
             }
         }
         if ( !found ) {
-            /*
-             * TODO: It would be better to throw a more specific catchable exception, so the caller can decide what to
-             * do.
-             */
-            throw new IllegalStateException( samp + " did not have a matching factor value for: " + factor
-                    + "[assay e.g. " + samp.getBioAssaysUsedIn().iterator().next() + "]" );
+            return null;
 
         }
         return value;
