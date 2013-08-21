@@ -33,7 +33,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.ChromosomeUtil;
 
 /**
  * Given a set of BlatAssociations that might be redundant, clean them up and score them.
@@ -65,8 +64,6 @@ public class BlatAssociationScorer {
     public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations, ProbeMapperConfig config ) {
 
         Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProductAndInitializeScores( blatAssociations );
-
-        removeNonCanonicalChromosomeHits( geneProducts2Associations, config );
 
         BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
@@ -103,7 +100,9 @@ public class BlatAssociationScorer {
         }
 
         for ( PhysicalLocation pl : geneClusters.keySet() ) {
+
             Double alignScore = scores.get( pl );
+
             for ( Gene cgene : geneClusters.get( pl ) ) {
                 // All members of the cluster get the same specificity.
                 for ( BlatAssociation blatAssociation : genes2Associations.get( cgene ) ) {
@@ -217,31 +216,6 @@ public class BlatAssociationScorer {
     public static double computeOverlapFraction( BlatAssociation blatAssociation ) {
         return ( double ) blatAssociation.getOverlap()
                 / ( double ) blatAssociation.getBlatResult().getQuerySequence().getLength();
-    }
-
-    /**
-     * @param geneProduct2Associations
-     * @param config
-     */
-    private static void removeNonCanonicalChromosomeHits(
-            Map<GeneProduct, Collection<BlatAssociation>> geneProduct2Associations, ProbeMapperConfig config ) {
-
-        if ( config.isAllowNonCanonicalChromosomes() ) {
-            return;
-        }
-
-        for ( GeneProduct geneProduct : geneProduct2Associations.keySet() ) {
-            Collection<BlatAssociation> toKeep = new HashSet<>();
-            for ( BlatAssociation blatAssociation : geneProduct2Associations.get( geneProduct ) ) {
-                if ( !ChromosomeUtil.isCanonical( blatAssociation.getBlatResult().getTargetChromosome() ) ) {
-                    log.debug( "Removing blat association " + blatAssociation );
-                    continue;
-                }
-                toKeep.add( blatAssociation );
-            }
-            geneProduct2Associations.put( geneProduct, toKeep );
-        }
-
     }
 
     /**

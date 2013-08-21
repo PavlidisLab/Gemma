@@ -19,7 +19,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public class ProbeMapperConfig {
 
-    public static final boolean DEFAULT_ALLOW_NONCANONICAL_CHROMOSOMES = false;
+    public static final boolean DEFAULT_TRIM_NONCANONICAL_CHROMOSOMES = true;
 
     public static final boolean DEFAULT_ALLOW_PARS = false;
 
@@ -73,9 +73,9 @@ public class ProbeMapperConfig {
 
     /**
      * Whether "non-canonical" chromsomes such as 6_cox_hap2 should be omitted from the results if there is a mapping to
-     * a canonical one.
+     * a canonical one. If true, we trim them; If false, we don't do anything.
      */
-    private boolean allowNonCanonicalChromosomes = DEFAULT_ALLOW_NONCANONICAL_CHROMOSOMES;
+    private boolean trimNonCanonicalChromosomeHits = DEFAULT_TRIM_NONCANONICAL_CHROMOSOMES;
 
     /**
      * Allow predicted genes; setting this to false overrides the effect of useAcembly, useNscan and useEnsembl.
@@ -167,8 +167,8 @@ public class ProbeMapperConfig {
         return allowMakeProbeAlignedRegion;
     }
 
-    public boolean isAllowNonCanonicalChromosomes() {
-        return allowNonCanonicalChromosomes;
+    public boolean isTrimNonCanonicalChromosomehits() {
+        return trimNonCanonicalChromosomeHits;
     }
 
     public boolean isAllowPredictedGenes() {
@@ -239,8 +239,8 @@ public class ProbeMapperConfig {
         this.allowMakeProbeAlignedRegion = allowMakeProbeAlignedRegion;
     }
 
-    public void setAllowNonCanonicalChromosomes( boolean allowNonCanonicalChromosomes ) {
-        this.allowNonCanonicalChromosomes = allowNonCanonicalChromosomes;
+    public void setTrimNonCanonicalChromosomeHits( boolean trimNonCanonicalChromosomeHits ) {
+        this.trimNonCanonicalChromosomeHits = trimNonCanonicalChromosomeHits;
     }
 
     public void setAllowPredictedGenes( boolean allowPredictedGenes ) {

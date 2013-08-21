@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
+import ubic.gemma.util.ChromosomeUtil;
 
 /**
  * Provides methods for mapping sequences to genes and gene products. Some methods accept a configuration object that
@@ -49,6 +50,19 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     private Log log = LogFactory.getLog( ProbeMapperImpl.class.getName() );
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
+     * java.util.Collection)
+     */
+    @Override
+    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
+            Collection<BlatResult> blatResults ) {
+        return this.processBlatResults( goldenPathDb, blatResults, new ProbeMapperConfig() );
+    }
 
     /*
      * (non-Javadoc)
@@ -92,12 +106,15 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             if ( blatResultsForSequence.size() == 0 ) continue;
 
+            Collection<BlatResult> trimmedBlatResultsForSequence = trimNonCanonicalChromosomeHits(
+                    blatResultsForSequence, config );
+
             /*
              * Screen out likely repeats, where cross-hybridization is a problem.
              */
             Double fractionRepeats = sequence.getFractionRepeats();
             if ( fractionRepeats != null && fractionRepeats > config.getMaximumRepeatFraction()
-                    && blatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
+                    && trimmedBlatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
                 skippedDueToRepeat++;
                 skipped++;
                 continue;
@@ -108,24 +125,23 @@ public class ProbeMapperImpl implements ProbeMapper {
              * just seems like a good idea to reject probes that have too many alignment sites, even if only one of them
              * is to the site of a known gene.
              */
-            if ( blatResultsForSequence.size() >= config.getNonRepeatNonSpecificSiteCountThreshold() ) {
+            if ( trimmedBlatResultsForSequence.size() >= config.getNonRepeatNonSpecificSiteCountThreshold() ) {
                 skippedDueToNonSpecific++;
                 skipped++;
                 continue;
             }
 
-          
             /*
              * Sanity check to make sure user is paying attention to what they are putting in.
              */
             if ( blatResultsForSequence.size() > 25 ) {
-                log.warn( sequence + " has " + blatResultsForSequence.size() + " raw blat associations" );
+                log.warn( sequence + " has " + trimmedBlatResultsForSequence.size() + " raw blat associations" );
             }
 
             Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<BlatAssociation>();
 
             // map each blat result.
-            for ( BlatResult blatResult : blatResultsForSequence ) {
+            for ( BlatResult blatResult : trimmedBlatResultsForSequence ) {
                 assert blatResult.score() >= 0 : "Score was " + blatResult.score();
                 assert blatResult.identity() >= 0 : "Identity was " + blatResult.identity();
                 if ( blatResult.score() < config.getBlatScoreThreshold()
@@ -198,63 +214,6 @@ public class ProbeMapperImpl implements ProbeMapper {
         }
 
         return allRes;
-    }
-
-    /**
-     * TODO implement checking the score, not just the exon overlap.
-     * 
-     * @param blatAssociationsForSequence
-     * @param config
-     * @return filtered collection
-     */
-    private Collection<BlatAssociation> filterOnScores( Collection<BlatAssociation> blatAssociationsForSequence,
-            ProbeMapperConfig config ) {
-        double minimumExonOverlapFraction = config.getMinimumExonOverlapFraction();
-        if ( minimumExonOverlapFraction == 0 ) return blatAssociationsForSequence;
-
-        Collection<BlatAssociation> result = new HashSet<BlatAssociation>();
-
-        for ( BlatAssociation ba : blatAssociationsForSequence ) {
-            if ( BlatAssociationScorer.computeOverlapFraction( ba ) < minimumExonOverlapFraction ) {
-                log.debug( "Result failed to meet exon overlap threshold" );
-                continue;
-            }
-            result.add( ba );
-        }
-
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
-     * java.util.Collection)
-     */
-    @Override
-    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
-            Collection<BlatResult> blatResults ) {
-        return this.processBlatResults( goldenPathDb, blatResults, new ProbeMapperConfig() );
-    }
-
-    /**
-     * group results together by BioSequence
-     * 
-     * @param blatResults
-     * @return
-     */
-    private Map<BioSequence, Collection<BlatResult>> groupBlatResultsByBioSequence( Collection<BlatResult> blatResults ) {
-
-        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
-
-        for ( BlatResult blatResult : blatResults ) {
-            if ( !biosequenceToBlatResults.containsKey( blatResult.getQuerySequence() ) ) {
-                biosequenceToBlatResults.put( blatResult.getQuerySequence(), new HashSet<BlatResult>() );
-            }
-            biosequenceToBlatResults.get( blatResult.getQuerySequence() ).add( blatResult );
-        }
-        return biosequenceToBlatResults;
     }
 
     /*
@@ -363,6 +322,77 @@ public class ProbeMapperImpl implements ProbeMapper {
     }
 
     /**
+     * It is assume that strand should only be used if the sequence type is AFFY_{PROBE,COLLAPSED,TARGET} or OLIGO. In
+     * all other cases (ESTs etc) the strand is ignored.
+     * 
+     * @param blatResult
+     * @return boolean indicating, essentially, if the sequence on the array is double-stranded.
+     */
+    private boolean determineStrandTreatment( BlatResult blatResult ) {
+        boolean ignoreStrand = true;
+
+        SequenceType type = blatResult.getQuerySequence().getType();
+        if ( type == null ) {
+            return true;
+        }
+        if ( type.equals( SequenceType.OLIGO ) ) {
+            ignoreStrand = false;
+        } else if ( type.equals( SequenceType.AFFY_COLLAPSED ) ) {
+            ignoreStrand = false;
+        } else if ( type.equals( SequenceType.AFFY_PROBE ) ) {
+            ignoreStrand = false;
+        } else if ( type.equals( SequenceType.AFFY_TARGET ) ) {
+            ignoreStrand = false;
+        }
+        return ignoreStrand;
+    }
+
+    /**
+     * TODO implement checking the score, not just the exon overlap.
+     * 
+     * @param blatAssociationsForSequence associations for one sequence.
+     * @param config
+     * @return filtered collection
+     */
+    private Collection<BlatAssociation> filterOnScores( Collection<BlatAssociation> blatAssociationsForSequence,
+            ProbeMapperConfig config ) {
+
+        double minimumExonOverlapFraction = config.getMinimumExonOverlapFraction();
+        if ( minimumExonOverlapFraction == 0 ) return blatAssociationsForSequence;
+
+        Collection<BlatAssociation> result = new HashSet<BlatAssociation>();
+
+        for ( BlatAssociation ba : blatAssociationsForSequence ) {
+            if ( BlatAssociationScorer.computeOverlapFraction( ba ) < minimumExonOverlapFraction ) {
+                log.debug( "Result failed to meet exon overlap threshold" );
+                continue;
+            }
+            result.add( ba );
+        }
+
+        return result;
+    }
+
+    /**
+     * group results together by BioSequence
+     * 
+     * @param blatResults
+     * @return
+     */
+    private Map<BioSequence, Collection<BlatResult>> groupBlatResultsByBioSequence( Collection<BlatResult> blatResults ) {
+
+        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
+
+        for ( BlatResult blatResult : blatResults ) {
+            if ( !biosequenceToBlatResults.containsKey( blatResult.getQuerySequence() ) ) {
+                biosequenceToBlatResults.put( blatResult.getQuerySequence(), new HashSet<BlatResult>() );
+            }
+            biosequenceToBlatResults.get( blatResult.getQuerySequence() ).add( blatResult );
+        }
+        return biosequenceToBlatResults;
+    }
+
+    /**
      * Process a single BlatResult, identifying gene products it maps to.
      * 
      * @param goldenPathDb
@@ -394,29 +424,38 @@ public class ProbeMapperImpl implements ProbeMapper {
     }
 
     /**
-     * It is assume that strand should only be used if the sequence type is AFFY_{PROBE,COLLAPSED,TARGET} or OLIGO. In
-     * all other cases (ESTs etc) the strand is ignored.
+     * Potentially trim out alignments to "non-canonical" chromosomes.
+     * <ol>
+     * <li>If there is just one hit, keep it.
+     * <li>If there are multiple hits, but all are to non-canonical chromosomes, keep them for now.
+     * <li>Otherwise keep only the ones to canonical chromosomes.
+     * </ol>
      * 
-     * @param blatResult
-     * @return boolean indicating, essentially, if the sequence on the array is double-stranded.
+     * @param blatResultsForSequence
+     * @param config
+     * @return trimmed results.
      */
-    private boolean determineStrandTreatment( BlatResult blatResult ) {
-        boolean ignoreStrand = true;
+    private Collection<BlatResult> trimNonCanonicalChromosomeHits( Collection<BlatResult> blatResultsForSequence,
+            ProbeMapperConfig config ) {
 
-        SequenceType type = blatResult.getQuerySequence().getType();
-        if ( type == null ) {
-            return true;
+        Collection<BlatResult> trimmedBlatResultsForSequence = blatResultsForSequence;
+
+        if ( config.isTrimNonCanonicalChromosomehits() && blatResultsForSequence.size() > 1 ) {
+
+            Collection<BlatResult> toKeep = new HashSet<>();
+            for ( BlatResult ba : blatResultsForSequence ) {
+                if ( ChromosomeUtil.isCanonical( ba.getTargetChromosome() ) ) {
+                    toKeep.add( ba );
+                }
+            }
+            if ( toKeep.size() > 0 && toKeep.size() < blatResultsForSequence.size() ) {
+                trimmedBlatResultsForSequence = toKeep;
+            }
         }
-        if ( type.equals( SequenceType.OLIGO ) ) {
-            ignoreStrand = false;
-        } else if ( type.equals( SequenceType.AFFY_COLLAPSED ) ) {
-            ignoreStrand = false;
-        } else if ( type.equals( SequenceType.AFFY_PROBE ) ) {
-            ignoreStrand = false;
-        } else if ( type.equals( SequenceType.AFFY_TARGET ) ) {
-            ignoreStrand = false;
-        }
-        return ignoreStrand;
+
+        assert !trimmedBlatResultsForSequence.isEmpty();
+
+        return trimmedBlatResultsForSequence;
     }
 
 }
