@@ -94,6 +94,23 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                     return null;
                 }
             }
+            
+            // #Format:
+            // tax_id
+            // GeneID
+            // Symbol
+            // LocusTag
+            // Synonyms
+            // dbXrefs
+            // chromosome 
+            // map_location
+            // description
+            // type_of_gene
+            // Symbol_from_nomenclature_authority
+            // Full_name_from_nomenclature_authority
+            // Nomenclature_status
+            // Other_designations
+            // Modification_date
 
             geneInfo.setTaxId( taxonId );
             geneInfo.setGeneId( fields[1] );
