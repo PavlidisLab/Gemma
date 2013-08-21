@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,6 +52,8 @@ import cern.jet.stat.Descriptive;
  */
 @Component
 public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixService {
+
+    private static Log log = LogFactory.getLog( ExpressionDataMatrixServiceImpl.class );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -181,14 +185,15 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             for ( ExpressionExperiment e : matrix.getColNames() ) {
                 if ( ranks.containsKey( e ) ) {
                     Collection<Double> r = ranks.get( e ).get( g );
-                    if ( r != null ) {
+                    Double[] ar = r.toArray( new Double[r.size()] );
+                    try {
                         // compute median of collection.
-                        Double[] ar = new Double[r.size()];
-                        r.toArray( ar );
                         double[] dar = ArrayUtils.toPrimitive( ar );
                         double medianRank = Descriptive.median( new DoubleArrayList( dar ) );
-
                         matrix.setByKeys( g, e, medianRank );
+                    } catch ( NullPointerException exp ) {
+                        log.warn( "Gene " + g.getOfficialSymbol() + " has a null expression rank value in experiment "
+                                + e.getShortName() );
                     }
                 }
             }
