@@ -185,8 +185,8 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             for ( ExpressionExperiment e : matrix.getColNames() ) {
                 if ( ranks.containsKey( e ) ) {
                     Collection<Double> r = ranks.get( e ).get( g );
-                    Double[] ar = r.toArray( new Double[r.size()] );
                     try {
+                        Double[] ar = r.toArray( new Double[r.size()] );
                         // compute median of collection.
                         double[] dar = ArrayUtils.toPrimitive( ar );
                         double medianRank = Descriptive.median( new DoubleArrayList( dar ) );
