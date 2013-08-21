@@ -532,8 +532,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;
             CompositeSequence d = ( CompositeSequence ) oa[0];
-            Double rMean = ( Double ) oa[1];
-            Double rMax = ( Double ) oa[2];
+            Double rMean = oa[1] == null ? Double.NaN : ( Double ) oa[1];
+            Double rMax = oa[2] == null ? Double.NaN : ( Double ) oa[2];
 
             Collection<Gene> genes4probe = cs2gene.get( d );
 
