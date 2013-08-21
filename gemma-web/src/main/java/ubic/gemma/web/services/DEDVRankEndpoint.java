@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -128,8 +128,8 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
                 + " and method: " + methodString );
 
         // main call to expressionDataMatrixService to obtain rank results
-        DenseDoubleMatrix<Gene, ExpressionExperiment> rankMatrix = expressionDataMatrixService.getRankMatrix(
-                geneInput, eeInput, method );
+        DoubleMatrix<Gene, ExpressionExperiment> rankMatrix = expressionDataMatrixService.getRankMatrix( geneInput,
+                eeInput, method );
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint

@@ -16,7 +16,7 @@ package ubic.gemma.analysis.service;
 
 import java.util.Collection;
 
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -74,7 +74,7 @@ public interface ExpressionDataMatrixService {
      */
     public abstract Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee );
 
-    public abstract DenseDoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
+    public abstract DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method );
 
 }

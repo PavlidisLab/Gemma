@@ -24,12 +24,12 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorSer
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
@@ -52,8 +51,6 @@ import cern.jet.stat.Descriptive;
  */
 @Component
 public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixService {
-
-    private static Log log = LogFactory.getLog( ExpressionDataMatrixServiceImpl.class );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -165,9 +162,10 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
      * java.util.Collection, ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
     @Override
-    public DenseDoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
+    public DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method ) {
-        DenseDoubleMatrix<Gene, ExpressionExperiment> matrix = new DenseDoubleMatrix<Gene, ExpressionExperiment>(
+
+        DoubleMatrix<Gene, ExpressionExperiment> matrix = new DenseDoubleMatrix<Gene, ExpressionExperiment>(
                 genes.size(), ees.size() );
 
         Map<ExpressionExperiment, Map<Gene, Collection<Double>>> ranks = processedExpressionDataVectorService.getRanks(
@@ -185,16 +183,13 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             for ( ExpressionExperiment e : matrix.getColNames() ) {
                 if ( ranks.containsKey( e ) ) {
                     Collection<Double> r = ranks.get( e ).get( g );
-                    try {
-                        Double[] ar = r.toArray( new Double[r.size()] );
-                        // compute median of collection.
-                        double[] dar = ArrayUtils.toPrimitive( ar );
-                        double medianRank = Descriptive.median( new DoubleArrayList( dar ) );
-                        matrix.setByKeys( g, e, medianRank );
-                    } catch ( NullPointerException exp ) {
-                        log.warn( "Gene " + g.getOfficialSymbol() + " has a null expression rank value in experiment "
-                                + e.getShortName() );
-                    }
+                    Double[] ar = r.toArray( new Double[r.size()] );
+
+                    // compute median of collection.
+                    double[] dar = ArrayUtils.toPrimitive( ar );
+                    double medianRank = DescriptiveWithMissing.median( new DoubleArrayList( dar ) );
+                    matrix.setByKeys( g, e, medianRank );
+
                 }
             }
         }
