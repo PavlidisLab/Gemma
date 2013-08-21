@@ -50,19 +50,12 @@ import java.util.*;
 
 /**
  * Implementation for Spring Security, plus some other handy methods.
- *
- *
- *
+ * 
  * @author pavlidis
  * @version $Id$
  */
 @Service
 public class UserManagerImpl implements UserManager {
-
-    /**
-     * Name of the default user group (not to be confused with the group authority GROUP_USER).
-     */
-    private static final String USER_GROUP_NAME = "Users";
 
     protected final Log logger = LogFactory.getLog( getClass() );
 
@@ -225,7 +218,7 @@ public class UserManagerImpl implements UserManager {
         }
 
         // Add the user to the default user group.
-        UserGroup g = loadGroup( USER_GROUP_NAME );
+        UserGroup g = loadGroup( AuthorityConstants.USER_GROUP_NAME );
         userService.addUserToGroup( g, u );
 
         /*
@@ -242,13 +235,16 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public void deleteUser( String username ) {
-
         User user = loadUser( username );
-
         userService.delete( user );
         userCache.removeUserFromCache( username );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.security.provisioning.GroupManager#findAllGroups()
+     */
     @Override
     public List<String> findAllGroups() {
         Collection<UserGroup> groups = userService.listAvailableGroups();
@@ -260,6 +256,11 @@ public class UserManagerImpl implements UserManager {
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.security.authentication.UserManager#findAllUsers()
+     */
     @Override
     public Collection<String> findAllUsers() {
         Collection<User> users = userService.loadAll();

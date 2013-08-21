@@ -22,7 +22,9 @@ import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authorization.acl.AclService;
+import ubic.gemma.util.AuthorityConstants;
 
 import java.util.Collection;
 
@@ -91,15 +93,17 @@ public class UserServiceImpl implements UserService {
         }
 
         /*
-         * make sure this isn't one of the special groups - Administrators, Users, Agents
+         * make sure this isn't one of the special groups
          */
-        if ( groupName.equalsIgnoreCase( "Administrator" ) || groupName.equalsIgnoreCase( "Users" )
-                || groupName.equalsIgnoreCase( "Agents" ) ) {
+        if ( groupName.equals( AuthorityConstants.USER_GROUP_NAME )
+                || groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME )
+                || groupName.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot delete that group, it is required for system operation." );
         }
 
-        if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) ) ) {
-            throw new AccessDeniedException( "Only the owner of a group can delete it" );
+        if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) )
+                && !SecurityServiceImpl.isUserAdmin() ) {
+            throw new AccessDeniedException( "Only administrator of owner of a group can delete it" );
         }
 
         String authority = securityService.getGroupAuthorityNameFromGroupName( groupName );
@@ -144,6 +148,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public void removeUserFromGroup( User user, UserGroup group ) {
         group.getGroupMembers().remove( user );
+
+        String userName = user.getName();
+        String groupName = group.getName();
+
+        if ( userName.equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME )
+                && groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) ) {
+            throw new IllegalArgumentException( "You cannot remove the administrator from the ADMIN group!" );
+        }
+
+        if ( groupName.equals( AuthorityConstants.USER_GROUP_NAME ) ) {
+            throw new IllegalArgumentException( "You cannot remove users from the USER group!" );
+        }
         this.userGroupDao.update( group );
 
         /*

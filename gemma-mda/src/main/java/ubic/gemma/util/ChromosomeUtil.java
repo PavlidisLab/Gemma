@@ -33,7 +33,7 @@ public class ChromosomeUtil {
      * This method is only familiar with chromosomes as named in the UCSC GoldenPath database and would have to be
      * modified if the 'rules' are broken by some other source used.
      * 
-     * @param chr 
+     * @param chr
      * @return true if this is a regular chromosome, not a separate assembly for e.g. a haplotype (6_cox_hap2 for
      *         example).
      */
@@ -44,16 +44,16 @@ public class ChromosomeUtil {
          * 6_cox_hap2
          */
         if ( name.contains( "_hap" ) ) return false;
-        
+
         /*
          * chr1_gl000191_random
          */
-        if ( name.contains( "_random" ) ) return false;
-        
+        if ( name.endsWith( "_random" ) ) return false;
+
         /*
          * Un_gl000249
          */
-        if ( name.contains( "Un" ) ) return false;
+        if ( name.startsWith( "Un_" ) ) return false;
 
         /*
          * X|Un, 1|2|3|4,
@@ -68,6 +68,5 @@ public class ChromosomeUtil {
         return true;
 
     }
-
 
 }

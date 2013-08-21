@@ -484,6 +484,7 @@ public class SecurityServiceImpl implements SecurityService {
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Securable, Collection<String>> getGroupsEditableBy( Collection<? extends Securable> securables ) {
         Collection<String> groupNames = getGroupsUserCanView();
+
         Map<Securable, Collection<String>> result = new HashMap<Securable, Collection<String>>();
 
         List<Permission> write = new ArrayList<Permission>();
@@ -1329,7 +1330,7 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     /**
-     * @return
+     * @return groups that the current user can view. For administrators, this is all groups.
      */
     private Collection<String> getGroupsUserCanView() {
         Collection<String> groupNames;
@@ -1337,6 +1338,8 @@ public class SecurityServiceImpl implements SecurityService {
             // administrator...
             groupNames = userManager.findAllGroups();
         } catch ( AccessDeniedException e ) {
+            // I'm not sure this actually happens. Usermanager.findAllGroups should just show all of the user's viewable
+            // groups.
             groupNames = userManager.findGroupsForUser( userManager.getCurrentUsername() );
         }
         return groupNames;

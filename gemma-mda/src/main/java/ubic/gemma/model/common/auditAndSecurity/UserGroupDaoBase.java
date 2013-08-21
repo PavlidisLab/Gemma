@@ -62,19 +62,6 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#create(int transform,
-     *      ubic.gemma.model.common.auditAndSecurity.UserGroup)
-     */
-    @Override
-    public UserGroup create( final ubic.gemma.model.common.auditAndSecurity.UserGroup userGroup ) {
-        if ( userGroup == null ) {
-            throw new IllegalArgumentException( "UserGroup.create - 'userGroup' can not be null" );
-        }
-        this.getHibernateTemplate().save( userGroup );
-        return userGroup;
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#findByUserGroupName(int, java.lang.String)
      */
     @Override
@@ -162,17 +149,6 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#remove(ubic.gemma.model.common.auditAndSecurity.UserGroup)
-     */
-    @Override
-    public void remove( ubic.gemma.model.common.auditAndSecurity.UserGroup userGroup ) {
-        if ( userGroup == null ) {
-            throw new IllegalArgumentException( "UserGroup.remove - 'userGroup' can not be null" );
-        }
-        this.getHibernateTemplate().delete( userGroup );
-    }
-
-    /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
@@ -195,15 +171,6 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
                 } );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#update(ubic.gemma.model.common.auditAndSecurity.UserGroup)
-     */
-    @Override
-    public void update( ubic.gemma.model.common.auditAndSecurity.UserGroup userGroup ) {
-        if ( userGroup == null ) {
-            throw new IllegalArgumentException( "UserGroup.update - 'userGroup' can not be null" );
-        }
-        this.getHibernateTemplate().update( userGroup );
-    }
+  
 
 }

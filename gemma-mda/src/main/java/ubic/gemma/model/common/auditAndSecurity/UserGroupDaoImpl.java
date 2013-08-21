@@ -27,6 +27,8 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.util.AuthorityConstants;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
  */
@@ -45,6 +47,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#addAuthority(ubic.gemma.model.common.auditAndSecurity.UserGroup
      * , java.lang.String)
@@ -70,6 +73,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#addToGroup(ubic.gemma.model.common.auditAndSecurity.UserGroup
      * , ubic.gemma.model.common.auditAndSecurity.User)
@@ -80,20 +84,59 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
         this.getHibernateTemplate().update( group );
     }
 
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#create(int transform,
+     *      ubic.gemma.model.common.auditAndSecurity.UserGroup)
+     */
+    @Override
+    public UserGroup create( final ubic.gemma.model.common.auditAndSecurity.UserGroup userGroup ) {
+        if ( userGroup == null ) {
+            throw new IllegalArgumentException( "UserGroup.create - 'userGroup' can not be null" );
+        }
+        if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME )
+                || userGroup.getName().equals( AuthorityConstants.ADMIN_GROUP_NAME )
+                || userGroup.getName().equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+            throw new IllegalArgumentException( "Cannot create group with that name: " + userGroup.getName() );
+        }
+        this.getHibernateTemplate().save( userGroup );
+        return userGroup;
+    }
+
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#findGroupsForUser(ubic.gemma.model.common.auditAndSecurity
      * .User)
-     */ 
+     */
     @Override
     public Collection<UserGroup> findGroupsForUser( User user ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select ug from UserGroupImpl ug inner join ug.groupMembers memb where memb = :user", "user", user );
     }
 
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#remove(ubic.gemma.model.common.auditAndSecurity.UserGroup)
+     */
+    @Override
+    public void remove( UserGroup userGroup ) {
+        if ( userGroup == null ) {
+            throw new IllegalArgumentException( "UserGroup.remove - 'userGroup' can not be null" );
+        }
+
+        // this check is done higher up as well...
+        if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME )
+                || userGroup.getName().equals( AuthorityConstants.ADMIN_GROUP_NAME )
+                || userGroup.getName().equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+            throw new IllegalArgumentException( "Cannot delete group: " + userGroup );
+        }
+
+        this.getHibernateTemplate().delete( userGroup );
+    }
+
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#removeAuthority(ubic.gemma.model.common.auditAndSecurity
      * .UserGroup, java.lang.String)
@@ -109,5 +152,27 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
         }
 
         this.getHibernateTemplate().update( group );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#update(ubic.gemma.model.common.auditAndSecurity.UserGroup)
+     */
+    @Override
+    public void update( UserGroup userGroup ) {
+        if ( userGroup == null ) {
+            throw new IllegalArgumentException( "UserGroup.update - 'userGroup' can not be null" );
+        }
+
+        UserGroup groupToUpdate = this.getHibernateTemplate().load( UserGroupImpl.class, userGroup.getId() );
+
+        String name = groupToUpdate.getName();
+        if ( !name.equals( userGroup.getName() )
+                && ( name.equals( AuthorityConstants.USER_GROUP_NAME )
+                        || name.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || name
+                            .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
+            throw new IllegalArgumentException( "Cannot change name of group: " + groupToUpdate.getName() );
+        }
+
+        this.getHibernateTemplate().update( userGroup );
     }
 }

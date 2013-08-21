@@ -70,7 +70,7 @@
 				<version>1.7</version>
 				<executions>
 					<execution>
-						<id>Generate version file</id>
+						<id>version-file</id>
 						<phase>process-classes</phase>
 						<goals>
 							<goal>run</goal>
@@ -266,6 +266,7 @@
 			<artifactId>jsch</artifactId>
 			<version>0.1.17</version>
 		</dependency>
+		<!-- used for tar, a few others -->
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
@@ -308,10 +309,9 @@
 			<version>1.8.5</version>
 		</dependency>
 		<dependency>
-			<groupId>hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<version>1.8.0.10</version>
-			<scope>test</scope>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.5</version>
 		</dependency>
 	</dependencies>
 	<repositories>

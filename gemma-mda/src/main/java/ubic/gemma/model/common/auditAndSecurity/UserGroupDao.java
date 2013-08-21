@@ -37,7 +37,7 @@ public interface UserGroupDao extends BaseDao<UserGroup> {
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.UserGroup findByUserGroupName( java.lang.String name );
+    public UserGroup findByUserGroupName( java.lang.String name );
 
     public Collection<UserGroup> findGroupsForUser( User user );
 

@@ -143,8 +143,8 @@ public class SecurityControllerImpl implements SecurityController {
 
             msg.setText( userTakingAction.getUserName() + " has added you to the group '" + groupName
                     + "'.\nTo view groups you belong to, visit " + GROUP_MANAGER_URL
-                    + "\n\nIf you believe you received this email in error, contact "
-                    + Settings.getAdminEmailAddress() + "." );
+                    + "\n\nIf you believe you received this email in error, contact " + Settings.getAdminEmailAddress()
+                    + "." );
 
             mailEngine.send( msg );
         }
@@ -469,13 +469,7 @@ public class SecurityControllerImpl implements SecurityController {
     public boolean removeUsersFromGroup( String[] userNames, String groupName ) {
         for ( String userName : userNames ) {
 
-            if ( userName.equals( "administrator" ) && groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) ) {
-                throw new IllegalArgumentException( "You cannot remove the administrator from the ADMIN group!" );
-            }
-
-            if ( groupName.equals( AuthorityConstants.USER_GROUP_NAME ) ) {
-                throw new IllegalArgumentException( "You cannot remove users from the USER group!" );
-            }
+        
 
             securityService.removeUserFromGroup( userName, groupName );
         }
@@ -634,7 +628,8 @@ public class SecurityControllerImpl implements SecurityController {
      * @return groups the user can edit (not just the ones they are in!)
      */
     private Collection<String> getGroupsForCurrentUser() {
-        return userManager.findGroupsForUser( userManager.getCurrentUsername() );
+        return userManager.findAllGroups();
+        // return userManager.findGroupsForUser( userManager.getCurrentUsername() );
     }
 
     private Collection<String> getGroupsForUser( String username ) {

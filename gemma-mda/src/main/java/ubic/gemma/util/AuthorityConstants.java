@@ -32,6 +32,10 @@ import org.springframework.security.access.vote.AuthenticatedVoter;
  * @see org.springframework.security.core.GrantedAuthority
  */
 public class AuthorityConstants {
+    /**
+     * The name of the initial administrator. This name is hard-coded for system initialization in init-entities.sql.
+     */
+    public static final String REQUIRED_ADMINISTRATOR_USER_NAME = "administrator";
 
     /**
      * The name of the administrator group authority. All administrators must be in this group.

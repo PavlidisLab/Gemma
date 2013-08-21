@@ -25,7 +25,7 @@ import java.util.Collection;
 /**
  * TODO: document me
  * 
- * @author paul
+ * @author paul, anton
  * @version $Id$
  */
 public interface TaskRunningService {
@@ -54,7 +54,7 @@ public interface TaskRunningService {
      * @throws ubic.gemma.job.ConflictingTaskException if the task is disallowed due to another conflicting task (e.g.,
      *         two tasks of the same type by the same user).
      */
-    public <C extends TaskCommand> String submitLocalTask( C  taskCommand ) throws ConflictingTaskException;
+    public <C extends TaskCommand> String submitLocalTask( C taskCommand ) throws ConflictingTaskException;
 
     public <T extends Task> String submitLocalTask( T task ) throws ConflictingTaskException;
 

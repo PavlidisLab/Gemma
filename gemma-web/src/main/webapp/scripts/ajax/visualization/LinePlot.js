@@ -131,13 +131,13 @@ var LinePlot = (function() {
                }
                // compute approximate pixel size of that label...not so easy without context.
                var labelHeight = Math.round(Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength, SAMPLE_LABEL_MAX_CHAR) * fontSize * 0.8)); // 0.8
-                                                                                                                                                         // is
-                                                                                                                                                         // about
-                                                                                                                                                         // right
-                                                                                                                                                         // (pixel
-                                                                                                                                                         // width)/(pixel
-                                                                                                                                                         // of
-                                                                                                                                                         // height).
+               // is
+               // about
+               // right
+               // (pixel
+               // width)/(pixel
+               // of
+               // height).
 
                var id = 'sampleLabels-' + Ext.id();
 
@@ -327,6 +327,8 @@ var LinePlot = (function() {
     * Parameters: none
     * 
     * Returns: ctx
+    * 
+    * @private
     */
    function constructCanvas(div, canvasWidth, canvasHeight) {
 

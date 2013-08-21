@@ -76,7 +76,7 @@ insert into AUDIT_EVENT VALUES (14, @n, 'C', 'From init script', '', 1, NULL, 14
 -- username=gemmaAgent: id = 2, password = 'gemmaAgent', audit trail #2, using salt={username}
 insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT, STATUS_FK) values (2, "UserImpl", "gemmaAgent",  "", "gemmaAgent", "a99c3785155e31ac8f9273537f14e9304cc22f20", 1, 2, "gemma@chibi.ubc.ca", "hint",2);
 
--- Note that 'Administrators' is a constant set in AuthorityConstants.
+-- Note that 'Administrators' is a constant set in AuthorityConstants. The names of these groups are defined in UserGroupDao.
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK, STATUS_FK) VALUES (1, "Administrators", "Users with administrative rights", 3,3);
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK, STATUS_FK) VALUES (2, "Users", "Default group for all authenticated users", 4,4);
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK, STATUS_FK) VALUES (3, "Agents", "For 'autonomous' agents that run within the server context, such as scheduled tasks.", 5,5);

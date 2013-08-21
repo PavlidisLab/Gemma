@@ -22,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
+
+import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.BusinessKey;
 
 import java.util.*;
@@ -29,7 +31,7 @@ import java.util.*;
 /**
  * DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.common.auditAndSecurity.User</code>.
- *
+ * 
  * @see ubic.gemma.model.common.auditAndSecurity.User
  * @version $Id$
  */
@@ -39,6 +41,17 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     @Autowired
     public UserDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
+    }
+
+    @Override
+    public void addAuthority( User user, String roleName ) {
+        throw new UnsupportedOperationException( "Use user group-based authority instead." );
+    }
+
+    @Override
+    public void changePassword( User user, String password ) {
+        user.setPassword( password );
+        this.getHibernateTemplate().update( user );
     }
 
     @Override
@@ -62,20 +75,14 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     }
 
     @Override
-    public void addAuthority( User user, String roleName ) {
-        throw new UnsupportedOperationException( "Use user group-based authority instead." );
-    }
-
-    @Override
-    public void changePassword( User user, String password ) {
-        user.setPassword( password );
-        this.getHibernateTemplate().update( user );
-    }
-
-    @Override
     public User find( User user ) {
         BusinessKey.checkKey( user );
         return this.findByUserName( user.getUserName() );
+    }
+
+    @Override
+    public User findByEmail( final String email ) {
+        return this.findByEmail( "from UserImpl c where c.email = :email", email );
     }
 
     @Override
@@ -94,20 +101,8 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     }
 
     @Override
-    public User findByEmail( final String email ) {
-        return this.findByEmail( "from UserImpl c where c.email = :email", email );
-    }
-
-    @Override
-    public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );
-    }
-
-    @Override
-    public Collection<UserGroup> loadGroups( User user ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );
+    public Collection<? extends User> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from UserImpl where id in (:ids)", "ids", ids );
     }
 
     @Override
@@ -120,14 +115,30 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     }
 
     @Override
-    public Collection<? extends User> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from UserImpl where id in (:ids)", "ids", ids );
-    }
-
-    @Override
     public Collection<? extends User> loadAll() {
         final Collection<? extends User> results = this.getHibernateTemplate().loadAll( UserImpl.class );
         return results;
+    }
+
+    @Override
+    public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user",
+                user );
+    }
+
+    @Override
+    public Collection<UserGroup> loadGroups( User user ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );
+    }
+
+    @Override
+    public void remove( Collection<? extends User> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "User.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
     }
 
     @Override
@@ -142,18 +153,16 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     }
 
     @Override
-    public void remove( Collection<? extends User> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "User.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    @Override
     public void remove( User user ) {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.remove - 'user' can not be null" );
         }
+
+        if ( user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
+            throw new IllegalArgumentException( "Cannot delete user "
+                    + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
+        }
+
         this.getHibernateTemplate().delete( user );
     }
 
@@ -172,9 +181,22 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.update - 'user' can not be null" );
         }
+
+        UserImpl userToUpdate = this.getHibernateTemplate().load( UserImpl.class, user.getName() );
+        if ( userToUpdate.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME )
+                && !userToUpdate.getName().equals( user.getName() ) ) {
+            throw new IllegalArgumentException( "Cannot modify name of user "
+                    + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
+        }
+
         this.getHibernateTemplate().update( user );
     }
 
+    /**
+     * @param queryString
+     * @param email
+     * @return
+     */
     private User findByEmail( final String queryString, final String email ) {
         List<String> argNames = new ArrayList<String>();
         List<Object> args = new ArrayList<Object>();
@@ -184,8 +206,8 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         User result = null;
         if ( results.size() > 1 ) {
-            throw new InvalidDataAccessResourceUsageException (
-                    "More than one instance of 'Contact" + "' was found when executing query --> '" + queryString + "'" );
+            throw new InvalidDataAccessResourceUsageException( "More than one instance of 'Contact"
+                    + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
         }

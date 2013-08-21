@@ -179,7 +179,7 @@ public interface SecurityService {
 
     /**
      * @param s
-     * @return
+     * @return names of groups which have read access to the securable, limited to groups the current user can read.
      */
     @Secured({ "ACL_SECURABLE_READ" })
     public abstract Collection<String> getGroupsReadableBy( Securable s );
