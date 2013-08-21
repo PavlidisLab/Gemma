@@ -86,7 +86,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     @Override
     public boolean isMultipart( HttpServletRequest request ) {
-        return FileUploadBase.isMultipartContent( request );
+        return ServletFileUpload.isMultipartContent( request );
     }
 
     /*
