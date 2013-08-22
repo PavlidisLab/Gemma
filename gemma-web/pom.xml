@@ -40,6 +40,20 @@
 					<include>**/*.csv</include>
 				</includes>
 			</testResource>
+			<testResource>
+				<targetPath>WEB-INF</targetPath>
+				<directory>target/Gemma/WEB-INF</directory>
+				<includes>
+					<include>**/*.xml</include>
+				</includes>
+			</testResource>
+			<testResource>
+				<targetPath>WEB-INF</targetPath>
+				<directory>src/main/webapp/WEB-INF</directory>
+				<includes>
+					<include>**/*.xml</include>
+				</includes>
+			</testResource>
 		</testResources>
 		<plugins>
 			<plugin>
