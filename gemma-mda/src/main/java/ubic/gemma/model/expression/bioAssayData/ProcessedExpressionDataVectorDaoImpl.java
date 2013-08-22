@@ -473,8 +473,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 Object[] oa = ( Object[] ) o;
                 ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
                 CompositeSequence d = ( CompositeSequence ) oa[1];
-                Double rMean = ( Double ) oa[2];
-                Double rMax = ( Double ) oa[3];
+                Double rMean = oa[2] == null ? Double.NaN : ( Double ) oa[2];
+                Double rMax = oa[3] == null ? Double.NaN : ( Double ) oa[3];
 
                 if ( !result.containsKey( e ) ) {
                     result.put( e, new HashMap<Gene, Collection<Double>>() );
@@ -574,8 +574,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;
             CompositeSequence d = ( CompositeSequence ) oa[0];
-            Double rMean = ( Double ) oa[1];
-            Double rMax = ( Double ) oa[2];
+            Double rMean = oa[1] == null ? Double.NaN : ( Double ) oa[1];
+            Double rMax = oa[2] == null ? Double.NaN : ( Double ) oa[2];
             switch ( method ) {
                 case mean:
                     result.put( d, rMean );
