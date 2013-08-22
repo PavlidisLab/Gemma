@@ -332,6 +332,26 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         if ( !this.isHomologueEvidence && evidenceValueObject.isHomologueEvidence ) return -1;
         if ( this.isHomologueEvidence && !evidenceValueObject.isHomologueEvidence ) return 1;
 
+        // sort them using the score server side
+
+        if ( this.getScoreValueObject().getStrength() != null
+                && evidenceValueObject.getScoreValueObject().getStrength() != null ) {
+
+            if ( this.getScoreValueObject().getStrength() != null
+                    && evidenceValueObject.getScoreValueObject().getStrength() == null ) {
+                return -1;
+            } else if ( this.getScoreValueObject().getStrength() == null
+                    && evidenceValueObject.getScoreValueObject().getStrength() != null ) {
+                return 1;
+            } else if ( this.getScoreValueObject().getStrength() > evidenceValueObject.getScoreValueObject()
+                    .getStrength() ) {
+                return -1;
+            } else if ( this.getScoreValueObject().getStrength() < evidenceValueObject.getScoreValueObject()
+                    .getStrength() ) {
+                return 1;
+            }
+        }
+
         if ( ( this.phenotypes != null && this.phenotypes.size() > 0 )
                 && ( evidenceValueObject.phenotypes == null || evidenceValueObject.phenotypes.size() == 0 ) ) {
             return -1;
