@@ -266,11 +266,6 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      */
     @Override
     protected void handleRemoveAll() {
-        // this does not delete the associated vocabCharacteristics, though it is fast.
-        // "No joins, either implicit or explicit, can be specified in a bulk HQL query"
-        // http://docs.jboss.org/hibernate/core/3.3/reference/en/html/batch.html#batch-direct
-        // final String queryString = "delete from Gene2GOAssociationImpl go ";
-        // this.getHibernateTemplate().bulkUpdate( queryString );
 
         int total = 0;
         Session sess = getSessionFactory().getCurrentSession();
@@ -285,6 +280,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             total += list.size();
 
             this.getHibernateTemplate().deleteAll( list );
+            log.info( "Deleted " + total + " so far..." );
         }
 
         log.info( "Deleted: " + total );

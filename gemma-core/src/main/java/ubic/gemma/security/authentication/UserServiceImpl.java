@@ -152,12 +152,12 @@ public class UserServiceImpl implements UserService {
         String userName = user.getName();
         String groupName = group.getName();
 
-        if ( userName.equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME )
-                && groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) ) {
+        if ( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( userName )
+                && AuthorityConstants.ADMIN_GROUP_NAME.equals( groupName ) ) {
             throw new IllegalArgumentException( "You cannot remove the administrator from the ADMIN group!" );
         }
 
-        if ( groupName.equals( AuthorityConstants.USER_GROUP_NAME ) ) {
+        if ( AuthorityConstants.USER_GROUP_NAME.equals( groupName ) ) {
             throw new IllegalArgumentException( "You cannot remove users from the USER group!" );
         }
         this.userGroupDao.update( group );

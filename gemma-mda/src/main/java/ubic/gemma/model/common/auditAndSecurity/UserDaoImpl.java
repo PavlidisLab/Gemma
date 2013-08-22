@@ -182,12 +182,15 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
             throw new IllegalArgumentException( "User.update - 'user' can not be null" );
         }
 
-        UserImpl userToUpdate = this.getHibernateTemplate().load( UserImpl.class, user.getName() );
-        if ( userToUpdate.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME )
+        UserImpl userToUpdate = this.getHibernateTemplate().load( UserImpl.class, user.getId() );
+        if ( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( userToUpdate.getName() )
                 && !userToUpdate.getName().equals( user.getName() ) ) {
             throw new IllegalArgumentException( "Cannot modify name of user "
                     + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
         }
+
+        // we're done with it.
+        this.getSessionFactory().getCurrentSession().evict( userToUpdate );
 
         this.getHibernateTemplate().update( user );
     }
