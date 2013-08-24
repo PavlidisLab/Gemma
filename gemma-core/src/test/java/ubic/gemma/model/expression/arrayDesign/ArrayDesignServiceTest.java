@@ -118,11 +118,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         assertNotNull( cs.getId() );
         assertNotNull( cs.getArrayDesign().getId() );
 
-        Map<CompositeSequence, Collection<BlatResult>> alignments = arrayDesignService.getAlignments( ad );
-        /*
-         * This will be empty
-         */
-        assertNotNull( alignments );
     }
 
     @Test

@@ -54,37 +54,37 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
- * This integration test makes use of the {@link ArrayDesignProbeMapperServiceImpl}. These tests add array data and gene
- * data to the database to be used for testing. GPL96.
+ * This test makes use of the {@link ArrayDesignProbeMapperServiceImpl}. These tests add array data and gene data to the
+ * database to be used for testing. GPL96.
  * 
  * @author keshav
  * @version $Id$
  */
-public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractGeoServiceTest {
+public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
-    CompositeSequenceService compositeSequenceService = null;
+    private CompositeSequenceService compositeSequenceService = null;
 
     @Autowired
-    GeneService geneService = null;
+    private GeneService geneService = null;
 
     @Autowired
-    ArrayDesignService arrayDesignService = null;
+    private ArrayDesignService arrayDesignService = null;
 
     @Autowired
-    GeoService geoService = null;
+    private GeoService geoService = null;
 
-    ArrayDesign ad = null;
+    private ArrayDesign ad = null;
 
-    String arrayAccession = "GPL96";
+    private String arrayAccession = "GPL96";
 
-    String csName = "117_at";// "218120_s_at";
+    private String csName = "117_at";// "218120_s_at";
 
-    String geneOfficialSymbol = "HSPA6";// "HMOX2";
+    private String geneOfficialSymbol = "HSPA6";// "HMOX2";
 
-    Blat blat = new Blat();
+    private Blat blat = new Blat();
 
-    static boolean alreadyPersistedData = false;
+    private static boolean alreadyPersistedData = false;
 
     /**
      *
@@ -95,6 +95,13 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         ad = arrayDesignService.findByShortName( arrayAccession );
 
         if ( !alreadyPersistedData ) {
+            /*
+             * Really should delete all the old data.
+             */
+            if ( ad != null ) {
+                arrayDesignService.remove( ad );
+            }
+
             // first load small two-color
             geoService
                     .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
@@ -126,12 +133,12 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
         Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
 
-        log.info( "Found " + compositeSequences.size() + " composite sequence(s) for gene " + g.getOfficialSymbol()
-                + " ... " );
+        // log.info( "Found " + compositeSequences.size() + " composite sequence(s) for gene " + g.getOfficialSymbol()
+        // + " ... " );
 
         assertNotNull( compositeSequences );
-        // assertEquals( compositeSequences.size(), 1 );
-        // assertEquals( ( compositeSequences.iterator().next() ).getName(), csName );
+        assertEquals( compositeSequences.size(), 1 );
+        assertEquals( ( compositeSequences.iterator().next() ).getName(), csName );
     }
 
     /**
@@ -148,14 +155,14 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
         Collection<Gene> genes = compositeSequenceService.getGenes( cs );
 
-        log.info( "Found " + genes.size() + " gene(s) for " + cs.getName() );
+        // log.info( "Found " + genes.size() + " gene(s) for " + cs.getName() );
 
         assertNotNull( genes );
-        // assertEquals( genes.size(), 1 );
-        // assertEquals( genes.iterator().next().getName(), geneOfficialSymbol );
+        assertEquals( 1, genes.size() );
+        assertEquals( geneOfficialSymbol, genes.iterator().next().getName() );
 
         Map<CompositeSequence, Collection<BlatResult>> alignments = arrayDesignService.getAlignments( ad );
-        assertEquals( 0, alignments.size() );
+        assertEquals( 289, alignments.size() );
         for ( CompositeSequence c : alignments.keySet() ) {
             assertTrue( !alignments.get( c ).isEmpty() );
         }
@@ -171,7 +178,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         ArrayDesignSequenceAlignmentService aligner = getBean( ArrayDesignSequenceAlignmentService.class );
 
         InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl140.blatresults.psl.gz" ) ); // TODO create the correct blat results file
+                "/data/loader/genome/gpl96.blatresults.psl.gz" ) );
 
         Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
@@ -223,10 +230,11 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      */
     private void loadSequenceData() throws IOException {
         InputStream sequenceFile = this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl96_short.sequences.fasta" );
+                "/data/loader/genome/gpl96_short.sequences2.fasta" );
         ArrayDesignSequenceProcessingService sequenceProcessingService = getBean( ArrayDesignSequenceProcessingService.class );
 
-        sequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST );
+        sequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST,
+                taxonService.findByCommonName( "human" ) );
 
     }
 

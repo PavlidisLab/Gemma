@@ -36,7 +36,6 @@ import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -51,8 +50,6 @@ import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authentication.UserService;
@@ -60,6 +57,8 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * Test of adding audit events when objects are created, updated or deleted.
+ * <p>
+ * Note: this test used to use genes, but we removed auditability from genes.
  * 
  * @author pavlidis
  * @version $Id$
@@ -77,9 +76,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private GeneService geneService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -124,31 +120,32 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Test
     public void testCascadingCreateOnUpdate() throws Exception {
-        Gene g = this.getTestPeristentGene();
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        g = this.geneService.load( g.getId() );
-        g = this.geneService.thaw( g );
+        ee = this.expressionExperimentService.load( ee.getId() );
+        ee = this.expressionExperimentService.thawLite( ee );
 
-        // should have create only, normally, but the persist method calls both create and update.
-        assertEquals( 2, g.getAuditTrail().getEvents().size() );
+        // should have create only
+        assertEquals( 1, ee.getAuditTrail().getEvents().size() );
 
-        GeneProduct gp = GeneProduct.Factory.newInstance();
+        BioAssay ba = BioAssay.Factory.newInstance();
         String name = RandomStringUtils.randomAlphabetic( 20 );
-        gp.setName( name );
-        g.getProducts().add( gp );
-        gp.setGene( g );
-        this.geneService.update( g );
-        assertNotNull( g.getAuditTrail() );
+        ba.setName( name );
+        ba.setArrayDesignUsed( ee.getBioAssays().iterator().next().getArrayDesignUsed() );
+        ee.getBioAssays().add( ba );
 
-        // should have create and 1 updates, because we update to add the gene product.
-        assertEquals( 3, g.getAuditTrail().getEvents().size() );
+        this.expressionExperimentService.update( ee );
+        assertNotNull( ee.getAuditTrail() );
+
+        // should have create and 1 updates
+        assertEquals( 2, ee.getAuditTrail().getEvents().size() );
 
         Session session = sessionFactory.openSession();
-        session.update( g );
+        session.update( ee );
 
-        for ( GeneProduct prod : g.getProducts() ) {
-            assertNotNull( prod.getAuditTrail() );
-            Collection<AuditEvent> events = prod.getAuditTrail().getEvents();
+        for ( BioAssay bioa : ee.getBioAssays() ) {
+            assertNotNull( bioa.getAuditTrail() );
+            Collection<AuditEvent> events = bioa.getAuditTrail().getEvents();
             assertEquals( 1, events.size() );
             for ( AuditEvent e : events ) {
                 assertNotNull( e.getId() );
@@ -158,16 +155,16 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         session.close();
 
-        this.geneService.update( g );
-        this.geneService.update( g );
-        this.geneService.update( g );
+        this.expressionExperimentService.update( ee );
+        this.expressionExperimentService.update( ee );
+        this.expressionExperimentService.update( ee );
 
-        assertEquals( 6, g.getAuditTrail().getEvents().size() );
+        assertEquals( 5, ee.getAuditTrail().getEvents().size() );
 
         /*
          * Check we didn't get any extra events added to children.
          */
-        for ( GeneProduct prod : g.getProducts() ) {
+        for ( BioAssay prod : ee.getBioAssays() ) {
             assertEquals( 1, prod.getAuditTrail().getEvents().size() );
         }
     }
@@ -179,19 +176,18 @@ public class AuditAdviceTest extends BaseSpringContextTest {
      */
     @Test
     public void testCascadingCreateWithAssociatedAuditable() throws Exception {
-        Gene g = this.getTestPeristentGene();
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        g = this.geneService.load( g.getId() );
-        g = this.geneService.thaw( g );
+        ee = this.expressionExperimentService.load( ee.getId() );
+        ee = this.expressionExperimentService.thawLite( ee );
 
-        assertEquals( 1, g.getProducts().size() );
+        assertEquals( 16, ee.getBioAssays().size() );
 
-        assertNotNull( g.getProducts().iterator().next().getId() );
+        assertNotNull( ee.getBioAssays().iterator().next().getId() );
 
-        // should have create and 1 because we update to add the gene product.
-        assertEquals( 2, g.getAuditTrail().getEvents().size() );
+        assertEquals( 1, ee.getAuditTrail().getEvents().size() );
 
-        for ( GeneProduct prod : g.getProducts() ) {
+        for ( BioAssay prod : ee.getBioAssays() ) {
             assertNotNull( prod.getAuditTrail() );
 
             assertNotNull( prod.getStatus() );

@@ -27,12 +27,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -47,24 +45,15 @@ import ubic.gemma.util.Settings;
  */
 public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayDesignProcessingTest {
 
-    Blat blat;
     @Autowired
-    ArrayDesignSequenceProcessingService app;
-    @Autowired
-    ArrayDesignProbeMapperService arrayDesignProbeMapperService;
-    @Autowired
-    ArrayDesignSequenceAlignmentService aligner;
+    private ArrayDesignSequenceProcessingService app;
 
-    @Before
-    public void setup() {
-        blat = new Blat();
-    }
+    @Autowired
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
 
-    /**
-     * Test method for
-     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}
-     * .
-     */
+    @Autowired
+    private ArrayDesignSequenceAlignmentService aligner;
+
     @Test
     public final void testProcessArrayDesign() throws Exception {
         if ( !fastaCmdExecutableExists() ) return;
