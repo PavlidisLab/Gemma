@@ -1055,7 +1055,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             log.info( "Done deleting " + blatAssociations.size() + "  Associations for " + arrayDesign );
         }
 
-        // FIXME this is probably not doing anything.
+        this.getSessionFactory().getCurrentSession().flush();
+
         final String annotationAssociationQueryString = "select ba from CompositeSequenceImpl cs "
                 + " inner join cs.biologicalCharacteristic bs, AnnotationAssociationImpl ba "
                 + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
@@ -1792,15 +1793,20 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         return bb;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAlignments(ubic.gemma.model.expression.arrayDesign
+     * .ArrayDesign)
+     */
     @Override
     public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign ) {
-        List<Object[]> m = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select cs, br from CompositeSequenceImpl cs "
-                                + " join fetch cs.biologicalCharacteristic bs join fetch bs.bioSequence2GeneProduct bs2gp join fetch bs2gp.blatResult br "
-                                + "  where bs2gp.class='BlatAssociationImpl' and cs.arrayDesign.id=:adid", "adid",
-                        arrayDesign.getId() );
+        List<Object[]> m = this.getHibernateTemplate().findByNamedParam(
+                "select cs, br from CompositeSequenceImpl cs "
+                        + " join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp"
+                        + " join bs2gp.blatResult br "
+                        + "  where bs2gp.class='BlatAssociationImpl' and cs.arrayDesign=:ad", "ad", arrayDesign );
 
         Map<CompositeSequence, Collection<BlatResult>> result = new HashMap<CompositeSequence, Collection<BlatResult>>();
         for ( Object[] objects : m ) {
