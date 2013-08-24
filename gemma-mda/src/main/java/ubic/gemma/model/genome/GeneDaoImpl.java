@@ -1050,8 +1050,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 .findByNamedParam(
                         "select distinct g from GeneImpl g "
                                 + "left join fetch g.aliases left join fetch g.accessions acc"
-                                + " left join fetch acc.externalDatabase left join fetch g.products gp "
-                                + " left join fetch g.auditTrail at left join fetch at.events "
+                                + " left join fetch acc.externalDatabase left join fetch g.products gp " 
                                 + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
                                 + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
                                 + " left join fetch g.taxon t left join fetch t.externalDatabase left join fetch g.multifunctionality "
