@@ -14,19 +14,24 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.NumberFormat;
+import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.Rank;
 import ubic.gemma.analysis.expression.diff.DiffExAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -47,9 +52,19 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     private static final int DEFAULT_QUANTILE = 15;
 
-    private static final double DEFAULT_FRACTION = 0.9;
+    private static final double DEFAULT_FRACTION = 0.90;
+
+    // Optional: the maximum fraction of samples that can be outliers
+    private static final double MAX_FRACTION_OUTLIERS = 0.3;
 
     private static Log log = LogFactory.getLog( OutlierDetectionServiceImpl.class );
+
+    private boolean testMode = false;
+
+//    // For test purposes. Allows the printing of matrices based on residuals. 
+//    private boolean printMatrices = false;
+
+    private OutlierDetectionTestDetails testDetails;
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -63,6 +78,10 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     @Autowired
     private SVDServiceHelper svdService;
 
+    // For working with filtered data
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
+
     /*
      * (non-Javadoc)
      * 
@@ -75,6 +94,69 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return this.identifyOutliers( ee, false, DEFAULT_QUANTILE, DEFAULT_FRACTION );
     }
 
+    /* Runs in testmode; returns OutlierDetectionTestDetails */
+    @Override
+    public OutlierDetectionTestDetails identifyOutliers( ExpressionExperiment ee, boolean useRegression,
+            boolean findByMedian ) {
+
+        testMode = true;
+        testDetails = new OutlierDetectionTestDetails( ee.getShortName() );
+
+        Collection<OutlierDetails> outliers;
+
+        if ( findByMedian ) {
+            outliers = identifyOutliersByMedianCorrelation( ee, useRegression );
+        } else {
+            outliers = this.identifyOutliers( ee, useRegression, DEFAULT_QUANTILE, DEFAULT_FRACTION );
+        }
+
+        testDetails.setOutliers( outliers );
+        testDetails.setNumOutliers( outliers.size() );
+
+        return testDetails;
+    }
+
+    /* Runs in testmode; returns OutlierDetectionTestDetails */
+    @Override
+    public OutlierDetectionTestDetails identifyOutliersByCombinedMethod( ExpressionExperiment ee ) {
+
+        testMode = true;
+        testDetails = new OutlierDetectionTestDetails( ee.getShortName() );
+
+        Collection<OutlierDetails> outliers = new HashSet<OutlierDetails>();
+
+        // Always use regression when calculating the correlation matrix:
+        DoubleMatrix<BioAssay, BioAssay> cormat = getCorrelationMatrix( ee, true );
+
+        outliers.addAll( this.identifyOutliers( ee, cormat, DEFAULT_QUANTILE, DEFAULT_FRACTION ) );
+        outliers.addAll( this.identifyOutliersByMedianCorrelation( ee, cormat ) );
+
+        testDetails.setOutliers( outliers );
+        testDetails.setNumOutliers( outliers.size() );
+
+        log.info( "Total number of outliers: " + testDetails.getNumOutliers() );
+
+        return testDetails;
+    }
+
+    @Override
+    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, boolean useRegression,
+            int quantileThreshold, double fractionThreshold ) {
+
+        DoubleMatrix<BioAssay, BioAssay> cormat = getCorrelationMatrix( ee, useRegression );
+
+        return identifyOutliers( ee, cormat, quantileThreshold, fractionThreshold );
+    }
+
+    @Override
+    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
+            boolean useRegression ) {
+
+        DoubleMatrix<BioAssay, BioAssay> cormat = getCorrelationMatrix( ee, useRegression );
+
+        return identifyOutliersByMedianCorrelation( ee, cormat );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -82,9 +164,8 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
      * ubic.gemma.analysis.preprocess.OutlierDetectionService#identifyOutliers(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, boolean, int, double)
      */
-    @Override
-    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, boolean useRegression,
-            int quantileThreshold, double fractionThreshold ) {
+
+    private DoubleMatrix<BioAssay, BioAssay> getCorrelationMatrix( ExpressionExperiment ee, boolean useRegression ) {
 
         /*
          * Get the experimental design
@@ -97,29 +178,82 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
 
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
+        /*
+         * Work with filtered data
+         */
+        FilterConfig fconfig = new FilterConfig();
+        fconfig.setIgnoreMinimumRowsThreshold( true );
+        fconfig.setIgnoreMinimumSampleThreshold( true );
+        ExpressionDataDoubleMatrix mat = expressionDataMatrixService.getFilteredMatrix( ee, fconfig, vectos );
+
+        /* For test purposes: make note of the number of experimental factors */
+        if ( testMode ) {
+            testDetails.setNumExpFactors( ee.getExperimentalDesign().getExperimentalFactors().size() );
+        }
 
         /*
          * Optional: Regress out any 'major' factors; work with residuals only.
          */
         if ( useRegression && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+
             double importanceThreshold = 0.01;
             Set<ExperimentalFactor> importantFactors = svdService.getImportantFactors( ee, ee.getExperimentalDesign()
                     .getExperimentalFactors(), importanceThreshold );
+            /* Remove 'batch' from important factors */
+            ExperimentalFactor batch = null;
+            for ( ExperimentalFactor factor : importantFactors ) {
+                if ( factor.getName().toLowerCase().equals( "batch" ) ) batch = factor;
+            }
+            if ( batch != null ) {
+                importantFactors.remove( batch );
+                System.out.println( "Removed 'batch' from the list of significant factors." );
+            }
             if ( !importantFactors.isEmpty() ) {
+                /* If in test mode, make note of significant experimental factors */
+                if ( testMode ) {
+                    testDetails.setNumSigFactors( importantFactors.size() );
+                    testDetails.setSignificantFactors( importantFactors );
+                }
                 log.info( "Regressing out covariates" );
                 DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
                 config.setFactorsToInclude( importantFactors );
                 mat = lma.regressionResiduals( mat, config, true );
             }
         }
+//        // For testing purposes:
+//        if ( useRegression && printMatrices ) {
+//            printResidualMatrix( mat );
+//        }
 
         /*
          * Determine the correlation of samples.
          */
         DoubleMatrix<BioAssay, BioAssay> cormat = SampleCoexpressionMatrixServiceImpl.getMatrix( mat );
 
-        return identifyOutliers( ee, cormat, quantileThreshold, fractionThreshold );
+        // Remove any existing outliers from cormat:
+        int col = 0;
+        int numRemoved = 0;
+        while ( col < cormat.columns() ) {
+            if ( cormat.getColName( col ).getIsOutlier() ) {
+                log.info( "Removing existing outlier " + cormat.getColName( col ) + " from " + ee.getShortName() );
+                List<BioAssay> colNames = getRemainingColumns( cormat, cormat.getColName( col ) );
+                cormat = cormat.subsetRows( colNames );
+                cormat = cormat.subsetColumns( colNames );
+                numRemoved++;
+            } else
+                col++; // increment only if sample is not an outlier so as not to skip columns
+        }
+
+        if ( testMode ) {
+            testDetails.setNumRemoved( numRemoved );
+        }
+
+//        // For testing purposes:
+//        if ( useRegression && printMatrices ) {
+//            printCorrelationMatrix( cormat );
+//        }
+
+        return cormat;
 
     }
 
@@ -140,30 +274,15 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
          */
 
         /*
-         * First pass: Determine the threshold (quartile?)
+         * First pass: Determine the threshold
          */
-        assert cormat.rows() == cormat.columns();
-        DoubleArrayList cors = new DoubleArrayList();
-        for ( int i = 0; i < cormat.rows(); i++ ) {
-            for ( int j = i + 1; j < cormat.rows(); j++ ) {
-                double d = cormat.get( i, j );
-                cors.add( d );
-            }
-        }
+        DoubleArrayList cors = getCorrelationList( cormat );
 
         /*
          * TODO sanity checks to make sure correlations aren't all the same, etc.
          */
 
-        DoubleArrayList ranks = Rank.rankTransform( cors );
-        assert ranks != null;
-        int desiredQuantileIndex = ( int ) Math.ceil( cors.size() * ( quantileThreshold / 100.0 ) );
-        double valueAtDesiredQuantile = Double.MIN_VALUE;
-        for ( int i = 0; i < ranks.size(); i++ ) {
-            if ( ranks.get( i ) == desiredQuantileIndex ) {
-                valueAtDesiredQuantile = cors.get( i );
-            }
-        }
+        double valueAtDesiredQuantile = findValueAtDesiredQuantile( cors, quantileThreshold );
 
         if ( valueAtDesiredQuantile == Double.MIN_VALUE ) {
             throw new IllegalStateException( "Could not determine desired quantile" );
@@ -184,24 +303,302 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
             }
 
             // if it has more than the threshold fraction of low correlations, we flag it.
-            if ( countBelow > fractionThreshold * cormat.columns() ) {
+            if ( countBelow > fractionThreshold * ( cormat.columns() - 1 ) ) {
                 OutlierDetails outlier = new OutlierDetails( ba, countBelow / ( double ) ( cormat.columns() - 1 ),
                         valueAtDesiredQuantile );
                 outliers.add( outlier );
+
             }
         }
 
-        if ( outliers.size() == 0 ) {
-            log.info( "No outliers for " + ee );
-            return outliers;
+        // Jenni's code: make note of correlation threshold etc.
+        if ( testMode ) {
+            testDetails.setLastThreshold( valueAtDesiredQuantile );
+            testDetails.setNumOutliersByBasicAlgorithm( outliers.size() );
         }
 
+        log.info( "Found " + outliers.size() + " outlier(s) in " + ee );
+
         /*
-         * TODO additional checks: does it 'agree' with replicates of the same condition? (esp. if we didn't work with
-         * residuals)
+         * TODO additional checks
          */
 
         return outliers;
+
     }
+
+    /*** Identify outliers by sorting by median, then looking for non-overlap of first quartile-second quartile range ***/
+    private Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
+            DoubleMatrix<BioAssay, BioAssay> cormat ) {
+
+        List<OutlierDetails> allSamples = new ArrayList<OutlierDetails>();
+        OutlierDetails sample;
+
+        /* Find the 1st, 2nd, and 3rd quartiles of each sample */
+        for ( int i = 0; i < cormat.rows(); i++ ) {
+            DoubleArrayList cors = new DoubleArrayList();
+            sample = new OutlierDetails( cormat.getRowName( i ) );
+            for ( int j = 0; j < cormat.columns(); j++ ) {
+                if ( j != i ) { // get all sample correlations except correlation with self
+                    double d = cormat.get( i, j );
+                    cors.add( d );
+                }
+            }
+            assert ( cors.size() == cormat.rows() - 1 );
+
+            sample.setFirstQuartile( findValueAtDesiredQuantile( cors, 25 ) );
+            sample.setMedianCorrelation( findValueAtDesiredQuantile( cors, 50 ) );
+            sample.setThirdQuartile( findValueAtDesiredQuantile( cors, 75 ) );
+
+            if ( sample.getFirstQuartile() == Double.MIN_VALUE || sample.getMedianCorrelation() == Double.MIN_VALUE
+                    || sample.getThirdQuartile() == Double.MIN_VALUE ) {
+                throw new IllegalStateException( "Could not determine one or more quartiles for a sample; " );
+            }
+
+            allSamples.add( sample );
+        }
+
+        /* Sort all samples by median correlation */
+        Collections.sort( allSamples, OutlierDetails.MedianComparator );
+
+        int numOutliers = 0;
+
+        /* Check for overlap of first quartile and median of consecutive samples */
+        for ( int k = 0; k < allSamples.size() - 1; k++ ) {
+            // if ( allSamples.get( k ).getMedianCorrelation() < allSamples.get( k + 1 ).getFirstQuartile() ) {
+            if ( allSamples.get( k ).getThirdQuartile() < allSamples.get( k + 1 ).getFirstQuartile() ) {
+                numOutliers = k + 1;
+            }
+        }
+
+        /* TO DO: Add sanity checks here ... */
+        // if ( numOutliers >= allSamples.size() * MAX_FRACTION_OUTLIERS )
+        // numOutliers = 0;
+
+        List<OutlierDetails> outliers = new ArrayList<OutlierDetails>();
+
+        for ( int m = 0; m < numOutliers; m++ ) {
+            outliers.add( allSamples.get( m ) );
+        }
+
+        /*
+         * Check that all outliers are legitimate (controls for situations where sorting by median does not give 'true'
+         * order)
+         */
+        if ( numOutliers > 0 ) {
+            log.info( "Removing false positives; number of outliers before test: " + numOutliers );
+            outliers = removeFalsePositives( allSamples, outliers, numOutliers );
+
+            numOutliers = outliers.size();
+            log.info( "Number of outliers after removing false positives: " + numOutliers );
+        }
+
+        if ( testMode ) {
+            testDetails.setNumOutliers( numOutliers );
+            testDetails.setNumOutliersByMedian( numOutliers );
+        }
+
+        log.info( "Found " + numOutliers + " outlier(s) in " + ee );
+
+        return outliers;
+
+    }
+
+    private DoubleArrayList getCorrelationList( DoubleMatrix<BioAssay, BioAssay> cormat ) {
+        assert cormat.rows() == cormat.columns();
+        DoubleArrayList cors = new DoubleArrayList();
+        for ( int i = 0; i < cormat.rows(); i++ ) {
+            for ( int j = i + 1; j < cormat.rows(); j++ ) {
+                double d = cormat.get( i, j );
+                cors.add( d );
+            }
+        }
+        return cors;
+    }
+
+    /*** Jenni's (almost) fool proof method for finding quantiles using R's method #8 ***/
+    private double findValueAtDesiredQuantile( DoubleArrayList cors, int quantileThreshold ) {
+
+        double lowerQuantileValue = Double.MIN_VALUE;
+        double upperQuantileValue = Double.MIN_VALUE;
+
+        double desiredQuantileIndex = findDesiredQuantileIndex( cors.size(), quantileThreshold );
+
+        double[] sortedCors = new double[cors.size()];
+
+        /*
+         * Get all sample correlations
+         */
+        for ( int i = 0; i < cors.size(); i++ ) {
+            sortedCors[i] = cors.get( i );
+        }
+
+        Arrays.sort( sortedCors );
+
+        // Get the correlations from the sorted array. Use -1 b/c rank indices start at 1 but array entries start at 0
+        lowerQuantileValue = sortedCors[( int ) ( Math.floor( desiredQuantileIndex ) - 1 )];
+        upperQuantileValue = sortedCors[( int ) Math.floor( desiredQuantileIndex )];
+
+        return ( lowerQuantileValue + ( ( desiredQuantileIndex - Math.floor( desiredQuantileIndex ) ) * ( upperQuantileValue - lowerQuantileValue ) ) );
+    }
+
+    /*
+     * Calculate index (rank) of desired quantile using R's method #8
+     */
+    public double findDesiredQuantileIndex( int numCors, int quantileThreshold ) {
+
+        double index = 0.0;
+        double n = ( double ) numCors;
+        double fraction = ( ( double ) quantileThreshold / 100.0 );
+
+        if ( fraction < ( 2.0 / 3.0 ) / ( n + ( 1.0 / 3.0 ) ) ) {
+            index = 1;
+        } else if ( fraction >= ( ( n - ( 1.0 / 3.0 ) ) / ( n + ( 1.0 / 3.0 ) ) ) ) {
+            index = n;
+        } else {
+            index = ( ( ( n + ( 1.0 / 3.0 ) ) * fraction ) + ( 1.0 / 3.0 ) );
+        }
+
+        return index;
+
+    }
+
+    /* 
+     *  
+     */
+    private List<OutlierDetails> removeFalsePositives( List<OutlierDetails> allSamples, List<OutlierDetails> outliers,
+            int numOutliers ) {
+
+        List<OutlierDetails> inliers = new ArrayList<OutlierDetails>();
+
+        for ( int j = numOutliers; j < allSamples.size(); j++ ) {
+            inliers.add( allSamples.get( j ) );
+        }
+
+        Collections.sort( inliers, OutlierDetails.FirstQuartileComparator );
+
+        double threshold = inliers.get( 0 ).getFirstQuartile();
+
+        return removeFalsePositives( outliers, threshold );
+
+    }
+
+    private List<OutlierDetails> removeFalsePositives( List<OutlierDetails> outliers, double threshold ) {
+
+        log.info( "outliers.size() = " + outliers.size() + "; threshold = " + threshold );
+
+        for ( int i = 0; i < outliers.size(); i++ ) {
+            // if ( outliers.get( i ).getMedianCorrelation() >= threshold ) {
+            if ( outliers.get( i ).getThirdQuartile() >= threshold ) {
+                if ( outliers.get( i ).getFirstQuartile() < threshold ) {
+                    threshold = outliers.get( i ).getFirstQuartile();
+                }
+                outliers.remove( i );
+                outliers = removeFalsePositives( outliers, threshold );
+            }
+        }
+        return outliers;
+    }
+
+    private List<BioAssay> getRemainingColumns( DoubleMatrix<BioAssay, BioAssay> cormat, BioAssay outlier ) {
+        List<BioAssay> bas = new ArrayList<BioAssay>();
+        for ( int i = 0; i < cormat.columns(); i++ ) {
+            if ( cormat.getColName( i ) != outlier ) bas.add( cormat.getColName( i ) );
+        }
+        return bas;
+    }
+     
+//    // Prints residual matrix to file. May be used for testing. Note: need to change path of output file.
+//    private void printResidualMatrix( ExpressionDataDoubleMatrix resmat ) {
+//
+//        File file = new File( "/home/jhantula/validation/" + testDetails.getExperimentName() + "-residuals" );
+//
+//        NumberFormat nf = NumberFormat.getInstance();
+//        nf.setMaximumFractionDigits( 4 );
+//
+//        try {
+//            file.createNewFile();
+//
+//            FileWriter fw = new FileWriter( file.getAbsoluteFile() );
+//            BufferedWriter bw = new BufferedWriter( fw );
+//
+//            int columns = resmat.columns();
+//            int rows = resmat.rows();
+//
+//            for ( int i = 0; i < columns; i++ ) {
+//                bw.write( resmat.getBioMaterialForColumn( i ).getName() + ":" );
+//                for ( BioAssay ba : resmat.getBioAssaysForColumn( i ) ) {
+//                    bw.write( ba.getName() + "," );
+//                }
+//                if ( i < columns - 1 ) bw.write( "\t" );
+//            }
+//            bw.newLine();
+//
+//            for ( int j = 0; j < rows; j++ ) {
+//                for ( int i = 0; i < columns - 1; i++ ) {
+//                    Double val = resmat.get( j, i );
+//                    if ( Double.isNaN( val ) ) {
+//                        bw.write( val.toString() );
+//                    } else {
+//                        bw.write( nf.format( resmat.get( j, i ) ) + "\t" );
+//                    }
+//                }
+//                bw.write( nf.format( resmat.get( j, columns - 1 ) ) );
+//                bw.newLine();
+//            }
+//            bw.close();
+//
+//        } catch ( IOException e ) {
+//            log.error( "Error while writing results to file: " + e.getMessage() );
+//        }
+//
+//    }
+//
+//    //Prints correlation matrix based on residuals to file. May be used for testing. Note: need to change path of output file.
+//    private void printCorrelationMatrix( DoubleMatrix<BioAssay, BioAssay> cormat ) {
+//
+//        File file = new File( "/home/jhantula/validation/" + testDetails.getExperimentName() + "-residual-cormat" );
+//
+//        int rows = cormat.rows();
+//        int columns = cormat.columns();
+//
+//        try {
+//            file.createNewFile();
+//
+//            FileWriter fw = new FileWriter( file.getAbsoluteFile() );
+//            BufferedWriter bw = new BufferedWriter( fw );
+//
+//            for ( int i = 0; i < columns; i++ ) {
+//                if ( cormat.hasColNames() ) {
+//                    bw.write( "\t" + cormat.getColName( i ) );
+//                } else {
+//                    bw.write( "\t" + i );
+//                }
+//            }
+//            bw.write( "\n" );
+//            for ( int j = 0; j < rows; j++ ) {
+//
+//                if ( cormat.hasRowNames() ) {
+//                    bw.write( "" + cormat.getRowName( j ) );
+//                } else {
+//                    bw.write( j );
+//                }
+//                for ( int i = 0; i < columns; i++ ) {
+//                    double value = cormat.get( j, i );
+//                    if ( Double.isNaN( value ) ) {
+//                        bw.write( "\t" );
+//                    } else {
+//                        bw.write( "\t" + String.format( "%.4g", value ) );
+//                    }
+//                }
+//                bw.write( "\n" );
+//            }
+//            bw.close();
+//
+//        } catch ( IOException e ) {
+//            log.error( "Error while writing results to file: " + e.getMessage() );
+//        }
+//
+//    }
 
 }

@@ -34,10 +34,17 @@ public interface OutlierDetectionService {
      */
     public abstract Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee );
 
+    /* Jenni's code for outlier detection validation */
+    public abstract OutlierDetectionTestDetails identifyOutliers( ExpressionExperiment ee, boolean useRegression,
+            boolean findByMedian );
+
+    /* Jenni's code for detecting outliers by combining two detection methods */
+    public abstract OutlierDetectionTestDetails identifyOutliersByCombinedMethod( ExpressionExperiment ee );
+
     /**
      * @param ee
-     * @param useRegression whether the experimental design should be accounted for (Not recommended, based on our
-     *        tests; it tends to cause more outlier calls, not fewer)
+     * @param useRegression whether the experimental design should be accounted for (Based on our tests, it tends to
+     *        cause more outlier calls, not fewer)
      * @param which quantile the correlation has to be in before it's considered potentially outlying (suggestion: 15)
      * @param what fraction of samples have to have a correlation lower than the quantile for a sample, for that sample
      *        to be considered an outlier (suggestion: 0.9)
@@ -45,6 +52,9 @@ public interface OutlierDetectionService {
      */
     public abstract Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, boolean useRegression,
             int quantileThreshold, double fractionThreshold );
+
+    public abstract Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
+            boolean useRegression );
 
     /**
      * @param ee
