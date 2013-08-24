@@ -41,6 +41,7 @@ import ubic.gemma.web.controller.WebConstants;
  * @version $Id$
  */
 public class BibliographicReferenceEditFormController extends BaseFormController {
+
     private BibliographicReferenceService bibliographicReferenceService;
     private static final String PUB_MED = "PubMed";
     private ExternalDatabaseService externalDatabaseService;

@@ -42,8 +42,10 @@ import ubic.gemma.web.controller.WebConstants;
  * 
  * @author joseph
  * @version $Id$
+ * @deprecated
  */
 @Controller
+@Deprecated
 public class GemmaClassicHomePageController {
 
     @Autowired

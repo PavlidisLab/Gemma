@@ -46,11 +46,13 @@ import ubic.gemma.web.util.MockLongJobController;
 public class TaskRunningTest extends BaseSpringWebTest {
 
     @Autowired
-    ProgressStatusService progressStatusService;
+    private ProgressStatusService progressStatusService;
+
     @Autowired
-    TaskRunningService taskRunningService;
+    private TaskRunningService taskRunningService;
+
     @Autowired
-    MockLongJobController mockLongJobController;
+    private MockLongJobController mockLongJobController;
 
     /**
      * @throws Exception
@@ -65,7 +67,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         // let it go a little while
         Thread.sleep( 100 );
 
-        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
+        SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
         assertNotNull( task );
 
         // cancel it.

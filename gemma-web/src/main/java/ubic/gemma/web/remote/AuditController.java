@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
@@ -37,10 +36,9 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
- * This is required soley for exposing auditables to remote services would try to marshall the abstract class Auditable.
+ * This is required solely for exposing auditables to remote services would try to marshall the abstract class Auditable.
  * 
  * @author pavlidis
  * @version $Id$
@@ -61,9 +59,6 @@ public class AuditController {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private GeneService geneService;
 
     /**
      * AJAX
@@ -122,8 +117,8 @@ public class AuditController {
             result = expressionExperimentService.load( e.getId() );
         } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
             result = arrayDesignService.load( e.getId() );
-        } else if ( Gene.class.isAssignableFrom( clazz ) ) {
-            result = geneService.load( e.getId() );
+            // } else if ( Gene.class.isAssignableFrom( clazz ) ) {
+            // result = geneService.load( e.getId() );
         } else {
             log.warn( "We don't support that class yet, sorry" );
             return null;

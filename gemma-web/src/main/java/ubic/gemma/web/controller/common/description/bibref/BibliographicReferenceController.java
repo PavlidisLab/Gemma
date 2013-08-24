@@ -19,7 +19,6 @@ import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -29,14 +28,15 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 
 /**
- * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
- * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
- * arrays instead.
- * 
  * @version $Id$
  */
-@RequestMapping("/bibRef")
 public interface BibliographicReferenceController {
+
+    /*
+     * Note: do not use parameterized collections as parameters for ajax methods. Type information is lost during proxy
+     * creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use arrays
+     * instead.
+     */
 
     /**
      * Add or update a record.
@@ -45,7 +45,6 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
-    @RequestMapping("/bibRefAdd.html")
     public abstract ModelAndView add( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -61,7 +60,6 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
-    @RequestMapping("/deleteBibRef.html")
     public abstract ModelAndView delete( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -108,7 +106,6 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
-    @RequestMapping("/searchBibRefs.html")
     public abstract ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -116,7 +113,6 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
-    @RequestMapping("/bibRefView.html")
     public abstract ModelAndView show( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -124,7 +120,6 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
-    @RequestMapping("/showAllEeBibRefs.html")
     public abstract ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response );
 
     /**
