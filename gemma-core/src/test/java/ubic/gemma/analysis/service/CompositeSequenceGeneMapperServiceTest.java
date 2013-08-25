@@ -97,17 +97,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
      */
     @Before
     public void setup() throws Exception {
-
-        ad = arrayDesignService.findByShortName( arrayAccession );
-
-        if ( ad != null ) {
-            for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( ad ) ) {
-                eeService.delete( ee );
-            }
-
-            arrayDesignService.remove( ad );
-        }
-
+        cleanup();
         // first load small two-color
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession, true,
@@ -123,8 +113,22 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     }
 
     @After
-    public void tearDown() throws Exception {
-        geneService.remove( geneService.loadAll() );
+    public void cleanup() throws Exception {
+
+        ad = arrayDesignService.findByShortName( arrayAccession );
+
+        if ( ad != null ) {
+            for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( ad ) ) {
+                eeService.delete( ee );
+            }
+
+            arrayDesignService.remove( ad );
+        }
+
+        Collection<Gene> genes = geneService.loadAll();
+        for ( Gene gene : genes ) {
+            geneService.remove( gene );
+        }
     }
 
     /**

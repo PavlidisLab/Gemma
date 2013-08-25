@@ -24,10 +24,12 @@ import static org.junit.Assert.assertNotNull;
 import java.util.Collection;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -44,20 +46,31 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
 
     private String testGeneIdentifier = RandomStringUtils.randomAlphabetic( 4 );
 
-    String testSequence = RandomStringUtils.random( 35, "ATGC" );
-    String testSequenceName = RandomStringUtils.randomAlphabetic( 6 );
+    private String testSequence = RandomStringUtils.random( 35, "ATGC" );
+    private String testSequenceName = RandomStringUtils.randomAlphabetic( 6 );
 
     @Autowired
     private BlatAssociationService blatAssociationService;
 
     @Autowired
-    BlatResultService blatResultService;
+    private BlatResultService blatResultService;
 
     @Autowired
-    BioSequenceService bioSequenceService;
+    private BioSequenceService bioSequenceService;
 
     @Autowired
-    GeneProductService geneProductService;
+    private GeneProductService geneProductService;
+
+    @Autowired
+    private GeneService geneService;
+
+    @After
+    public void tearDown() {
+        Collection<Gene> genes = geneService.loadAll();
+        for ( Gene gene : genes ) {
+            geneService.remove( gene );
+        }
+    }
 
     /*
      * (non-Javadoc)

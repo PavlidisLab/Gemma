@@ -60,6 +60,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.TableMaintenenceUtil;
 
@@ -456,7 +457,11 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             }
             arrayDesignService.remove( gpl97 );
         }
-        geneService.remove( geneService.loadAll() );
+
+        Collection<Gene> genes = geneService.loadAll();
+        for ( Gene gene : genes ) {
+            geneService.remove( gene );
+        }
 
     }
 

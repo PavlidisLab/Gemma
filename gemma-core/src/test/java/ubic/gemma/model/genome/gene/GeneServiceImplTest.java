@@ -23,10 +23,15 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.reset;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import junit.framework.TestCase;
 import ubic.gemma.genome.gene.service.GeneServiceImpl;
@@ -40,21 +45,21 @@ import ubic.gemma.model.genome.Taxon;
  * @author daq2101
  * @version $Id$
  */
-public class GeneServiceImplTest extends TestCase {
+public class GeneServiceImplTest {
 
     private static final String STRAND = "+";
-    private Taxon t = null;
+    Collection<Gene> allThree = new HashSet<Gene>();
+    Collection<Gene> justRab = new HashSet<Gene>();
+    Collection<Gene> justRabble = new HashSet<Gene>();
+    GeneServiceImpl svc;
     private Gene g = null;
     private Gene g2 = null;
     private Gene g3 = null;
     private GeneDao geneDaoMock;
-    GeneServiceImpl svc;
-    Collection<Gene> allThree = new HashSet<Gene>();
-    Collection<Gene> justRab = new HashSet<Gene>();
-    Collection<Gene> justRabble = new HashSet<Gene>();
+    private Taxon t = null;
 
-    @Override
-    protected void setUp() {
+    @Before
+    public void setUp() {
 
         geneDaoMock = createMock( GeneDao.class );
         svc = new GeneServiceImpl();
@@ -169,51 +174,14 @@ public class GeneServiceImplTest extends TestCase {
 
     }
 
-    public void testFindByAccessionNoSource() {
-        reset( geneDaoMock );
-        geneDaoMock.findByAccession( "12345", null );
-        expectLastCall().andReturn( g3 );
-        replay( geneDaoMock );
-        svc.findByAccession( "12345", null );
-        verify( geneDaoMock );
+    @After
+    public void tearDown() {
+        justRab.clear();
+        justRabble.clear();
+        allThree.clear();
     }
 
-    public void testFindByNcbiId() {
-        reset( geneDaoMock );
-        geneDaoMock.findByNcbiId( 12345 );
-        expectLastCall().andReturn( g3 );
-        replay( geneDaoMock );
-        svc.findByNCBIId( 12345 );
-        verify( geneDaoMock );
-    }
-
-    public void testFindByOfficialName() {
-        reset( geneDaoMock );
-        geneDaoMock.findByOfficialName( "rabble" );
-        expectLastCall().andReturn( justRab );
-        replay( geneDaoMock );
-        svc.findByOfficialName( "rabble" );
-        verify( geneDaoMock );
-    }
-
-    public void testFindByOfficialSymbol() {
-        reset( geneDaoMock );
-        geneDaoMock.findByOfficalSymbol( "rabble" );
-        expectLastCall().andReturn( justRab );
-        replay( geneDaoMock );
-        svc.findByOfficialSymbol( "rabble" );
-        verify( geneDaoMock );
-    }
-
-    public void testFindByOfficialSymbolInexact() {
-        reset( geneDaoMock );
-        geneDaoMock.findByOfficialSymbolInexact( "ra%" );
-        expectLastCall().andReturn( allThree );
-        replay( geneDaoMock );
-        svc.findByOfficialSymbolInexact( "ra%" );
-        verify( geneDaoMock );
-    }
-
+    @Test
     public void testFindAll() {
         reset( geneDaoMock );
         geneDaoMock.loadAll();
@@ -223,6 +191,57 @@ public class GeneServiceImplTest extends TestCase {
         verify( geneDaoMock );
     }
 
+    @Test
+    public void testFindByAccessionNoSource() {
+        reset( geneDaoMock );
+        geneDaoMock.findByAccession( "12345", null );
+        expectLastCall().andReturn( g3 );
+        replay( geneDaoMock );
+        svc.findByAccession( "12345", null );
+        verify( geneDaoMock );
+    }
+
+    @Test
+    public void testFindByNcbiId() {
+        reset( geneDaoMock );
+        geneDaoMock.findByNcbiId( 12345 );
+        expectLastCall().andReturn( g3 );
+        replay( geneDaoMock );
+        svc.findByNCBIId( 12345 );
+        verify( geneDaoMock );
+    }
+
+    @Test
+    public void testFindByOfficialName() {
+        reset( geneDaoMock );
+        geneDaoMock.findByOfficialName( "rabble" );
+        expectLastCall().andReturn( justRab );
+        replay( geneDaoMock );
+        svc.findByOfficialName( "rabble" );
+        verify( geneDaoMock );
+    }
+
+    @Test
+    public void testFindByOfficialSymbol() {
+        reset( geneDaoMock );
+        geneDaoMock.findByOfficalSymbol( "rabble" );
+        expectLastCall().andReturn( justRab );
+        replay( geneDaoMock );
+        svc.findByOfficialSymbol( "rabble" );
+        verify( geneDaoMock );
+    }
+
+    @Test
+    public void testFindByOfficialSymbolInexact() {
+        reset( geneDaoMock );
+        geneDaoMock.findByOfficialSymbolInexact( "ra%" );
+        expectLastCall().andReturn( allThree );
+        replay( geneDaoMock );
+        svc.findByOfficialSymbolInexact( "ra%" );
+        verify( geneDaoMock );
+    }
+
+    @Test
     public void testGetMaxPhysicalLength() {
         reset( geneDaoMock );
         geneDaoMock.thaw( g3 );
@@ -230,12 +249,5 @@ public class GeneServiceImplTest extends TestCase {
         PhysicalLocation ploc = svc.getMaxPhysicalLength( g3 );
         assertTrue( ploc.getNucleotide() == 90 );
         assertTrue( ploc.getNucleotideLength() == 120 );
-    }
-
-    @Override
-    protected void tearDown() {
-        justRab.clear();
-        justRabble.clear();
-        allThree.clear();
     }
 }
