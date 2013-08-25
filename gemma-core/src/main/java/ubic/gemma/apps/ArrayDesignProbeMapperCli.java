@@ -610,26 +610,29 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         /*
+         * FIXME merged arraydesigns don't really need to get done, but it is confusing when looking at reports so we do
+         * allow it. Fix would be to report when the mergees were run.
+         * 
+         * The issue addressed here is that we don't normally run sequence analysis etc. on merged platforms either, so
+         * it looks like they are not ready for probemapping.
+         */
+        boolean isNotMerged = arrayDesign.getMergees().isEmpty();
+
+        /*
          * make sure the last repeat mask and sequence analysis were done after the last sequence update. This is a
          * check that is not done by the default 'needToRun' implementation. Note that Repeatmasking can be done in any
          * order w.r.t. the sequence analysis, so we don't need to check that order.
          */
-        if ( lastSequenceUpdate != null ) {
-            if ( lastRepeatMask != null ) {
-                if ( lastSequenceUpdate.getDate().after( lastRepeatMask.getDate() ) ) {
-                    log.warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking" );
-                    return false;
-                }
+        if ( isNotMerged && lastSequenceUpdate != null ) {
+            if ( lastRepeatMask != null && lastSequenceUpdate.getDate().after( lastRepeatMask.getDate() ) ) {
+                log.warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking" );
+                return false;
+
             }
 
-            if ( lastSequenceAnalysis != null ) {
-                if ( lastSequenceUpdate.getDate().after( lastSequenceAnalysis.getDate() ) ) {
-                    if ( lastSequenceUpdate.getDate().after( lastSequenceAnalysis.getDate() ) ) {
-                        log.warn( arrayDesign
-                                + ": Sequences were updated more recently than the last sequence analysis" );
-                    }
-                    return false;
-                }
+            if ( lastSequenceAnalysis != null && lastSequenceUpdate.getDate().after( lastSequenceAnalysis.getDate() ) ) {
+                log.warn( arrayDesign + ": Sequences were updated more recently than the last sequence analysis" );
+                return false;
             }
         }
 
@@ -637,13 +640,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          * This checks to make sure all the prerequsite steps have actually done. NOTE we don't check the sequence
          * update because this wasn't always filled in. Really we should.
          */
-        if ( lastSequenceAnalysis == null ) {
+
+        if ( isNotMerged && lastSequenceAnalysis == null ) {
             log.warn( arrayDesign + ": Must do sequence analysis before probe mapping" );
             // We return false because we're not in a state to run it.
             return false;
         }
 
-        if ( lastRepeatMask == null ) {
+        if ( isNotMerged && lastRepeatMask == null ) {
             log.warn( arrayDesign + ": Must do repeat mask analysis before probe mapping" );
             return false;
         }
