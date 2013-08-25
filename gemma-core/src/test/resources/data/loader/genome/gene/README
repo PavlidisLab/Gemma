@@ -1,1 +1,5 @@
-egrep "^9606" selected_gene_info | cut -f 3 | xargs -i grep -w {} gene_history  > selected_gene_history
+gzip -dc /space/gemmaData/microAnnots/HG-U133A_B_Plus_2.an.txt.gz | grep -wf GPL96.probesets.txt | sort > gpl96.test.ncbigenes.txt
+cut -f 2 gpl96.test.ncbigenes.txt | sort > gpl96.test.symbols.txt
+grep -wf gpl96.test.symbols.txt  /space/scratch/paul/databases/ncbi/gene_info.human >  selected_gene_info
+cut -f 3 selected_gene_info | xargs -i grep -w {} /space/scratch/paul/databases/ncbi/gene2accession.human > selected_gene2accession
+cut -f 3 selected_gene_info | xargs -i grep -w {} /space/scratch/paul/databases/ncbi/gene_history.human > selected_gene_history
