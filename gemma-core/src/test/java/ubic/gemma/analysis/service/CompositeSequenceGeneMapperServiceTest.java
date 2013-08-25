@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +87,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
     private Blat blat = new Blat();
 
-    private static boolean alreadyPersistedData = false;
+    // private static boolean alreadyPersistedData = false;
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -99,28 +100,31 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         ad = arrayDesignService.findByShortName( arrayAccession );
 
-        if ( !alreadyPersistedData ) {
-            if ( ad != null ) {
-                for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( ad ) ) {
-                    eeService.delete( ee );
-                }
-
-                arrayDesignService.remove( ad );
+        if ( ad != null ) {
+            for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( ad ) ) {
+                eeService.delete( ee );
             }
 
-            // first load small two-color
-            geoService
-                    .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
-            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession,
-                    true, true, false, false );
-            ad = ads.iterator().next();
-
-            ad = arrayDesignService.thaw( ad );
-
-            loadData();
-
-            alreadyPersistedData = true;
+            arrayDesignService.remove( ad );
         }
+
+        // first load small two-color
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession, true,
+                true, false, false );
+        ad = ads.iterator().next();
+
+        ad = arrayDesignService.thaw( ad );
+
+        loadData();
+
+        // alreadyPersistedData = true;
+
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        geneService.remove( geneService.loadAll() );
     }
 
     /**
@@ -168,7 +172,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         assertEquals( geneOfficialSymbol, genes.iterator().next().getName() );
 
         Map<CompositeSequence, Collection<BlatResult>> alignments = arrayDesignService.getAlignments( ad );
-        assertEquals( 289, alignments.size() );
+        assertEquals( 13, alignments.size() );
         for ( CompositeSequence c : alignments.keySet() ) {
             assertTrue( !alignments.get( c ).isEmpty() );
         }

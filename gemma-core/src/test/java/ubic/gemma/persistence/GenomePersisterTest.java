@@ -58,6 +58,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
 
         assertNotNull( gene.getId() );
         assertNotNull( gene.getName() );
+        assertNotNull( gene.getProducts() );
         for ( GeneProduct product : gene.getProducts() ) {
             assertNotNull( product.getId() );
             assertNotNull( product.getName() );

@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -109,6 +110,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
+
+    @Autowired
+    private GeneService geneService;
 
     @Autowired
     private GeoService geoService;
@@ -452,6 +456,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             }
             arrayDesignService.remove( gpl97 );
         }
+        geneService.remove( geneService.loadAll() );
 
     }
 
