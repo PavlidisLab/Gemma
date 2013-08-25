@@ -64,10 +64,15 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     @After
     public void tearDown() {
         gene2GoService.removeAll();
-        if ( testTaxon != null ) {
-            Collection<Gene> genes = geneService.loadAll( testTaxon );
-            if ( !genes.isEmpty() ) geneService.remove( genes );
+        Collection<Gene> genes = geneService.loadAll();
+        for ( Gene gene : genes ) {
+            try {
+                geneService.remove( gene );
+            } catch ( Exception e ) {
+
+            }
         }
+
     }
 
     /**

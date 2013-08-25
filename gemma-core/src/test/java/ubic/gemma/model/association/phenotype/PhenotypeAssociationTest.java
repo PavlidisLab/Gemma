@@ -36,6 +36,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeAssoOntologyHelper;
 import ubic.gemma.association.phenotype.PhenotypeAssoOntologyHelperImpl;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -59,6 +60,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     private LiteratureEvidenceValueObject litEvidence = null;
 
+    @Autowired
+    private GeneService geneService;
+
     @Before
     public void setup() {
         // make a test gene
@@ -80,6 +84,16 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         // this.geneService.update( this.gene );
         // this.geneService.remove( this.gene );
+
+        Collection<Gene> genes = geneService.loadAll();
+        for ( Gene gene : genes ) {
+            try {
+                geneService.remove( gene );
+            } catch ( Exception e ) {
+
+            }
+        }
+
     }
 
     // @Test
@@ -156,6 +170,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         this.phenotypeAssociationManagerService.makeEvidence( this.litEvidence );
     }
 
+    /**
+     * @param ncbiId
+     */
     private void makeGene( int ncbiId ) {
         this.gene = Gene.Factory.newInstance();
         this.gene.setName( "RAT1" );
@@ -168,6 +185,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         this.gene = ( Gene ) this.persisterHelper.persist( this.gene );
     }
 
+    /**
+     * @throws SecurityException
+     * @throws NoSuchMethodException
+     */
     private void mockOntology() throws SecurityException, NoSuchMethodException {
 
         OntologyTerm mockedOntoloyTerm = EasyMock.createMock( OntologyTerm.class );

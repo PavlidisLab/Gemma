@@ -21,13 +21,16 @@ package ubic.gemma.loader.expression.arrayDesign;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 
+import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -43,10 +46,25 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
     @Autowired
     ArrayDesignService arrayDesignService;
 
+    @Autowired
+    private GeneService geneService;
+
     final static String ACCESSION = "GPL140";
 
     public ArrayDesign getAd() {
         return ad;
+    }
+
+    @After
+    public void tearDown() {
+        Collection<Gene> genes = geneService.loadAll();
+        for ( Gene gene : genes ) {
+            try {
+                geneService.remove( gene );
+            } catch ( Exception e ) {
+
+            }
+        }
     }
 
     /*
