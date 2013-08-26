@@ -173,14 +173,12 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         Collection<Gene> genes = compositeSequenceService.getGenes( cs );
 
-        // log.info( "Found " + genes.size() + " gene(s) for " + cs.getName() );
-
         assertNotNull( genes );
         assertEquals( 1, genes.size() );
         assertEquals( geneOfficialSymbol, genes.iterator().next().getName() );
 
         Map<CompositeSequence, Collection<BlatResult>> alignments = arrayDesignService.getAlignments( ad );
-        assertEquals( 13, alignments.size() );
+        assertTrue( !alignments.isEmpty() );
         for ( CompositeSequence c : alignments.keySet() ) {
             assertTrue( !alignments.get( c ).isEmpty() );
         }
