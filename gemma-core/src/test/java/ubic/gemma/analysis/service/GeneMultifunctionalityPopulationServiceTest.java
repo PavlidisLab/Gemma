@@ -102,7 +102,11 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         gene2GoService.removeAll();
         Collection<Gene> oldgenes = geneService.loadAll();
         for ( Gene gene : oldgenes ) {
-            geneService.remove( gene );
+            try {
+                geneService.remove( gene );
+            } catch ( Exception e ) {
+
+            }
         }
 
         log.info( "Creating new genes  ..." );

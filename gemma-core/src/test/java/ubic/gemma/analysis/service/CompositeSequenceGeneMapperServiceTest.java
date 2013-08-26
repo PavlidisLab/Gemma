@@ -127,7 +127,11 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         Collection<Gene> genes = geneService.loadAll();
         for ( Gene gene : genes ) {
-            geneService.remove( gene );
+            try {
+                geneService.remove( gene );
+            } catch ( Exception e ) {
+
+            }
         }
     }
 
