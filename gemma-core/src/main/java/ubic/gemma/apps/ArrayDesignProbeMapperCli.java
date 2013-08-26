@@ -555,6 +555,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return true;
         }
 
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+
         /*
          * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
          */
