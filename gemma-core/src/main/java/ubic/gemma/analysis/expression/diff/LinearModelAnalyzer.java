@@ -608,6 +608,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
 
             String factorName = ExperimentalDesignUtils.nameForR( factor );
+
+            if ( !designMatrix.containsColumnName( factorName ) ) {
+                /*
+                 * This means the factor was dropped, so we don't need to figure out the baseline.
+                 */
+                continue;
+            }
+
             Object[] column = designMatrix.getColumn( designMatrix.getColIndexByName( factorName ) );
 
             if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
