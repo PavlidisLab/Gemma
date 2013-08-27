@@ -57,8 +57,7 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
         int milliBad = 0;
         if ( total != 0 ) {
             milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3.0 * Math
-                    .log( 1.0 + sizeDif ) ) ) )
-                    / total;
+                    .log( 1.0 + sizeDif ) ) ) ) / total;
         }
         assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad + " for result "
                 + this;
@@ -86,7 +85,8 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
             if ( StringUtils.isNotBlank( this.getQuerySequence().getSequence() ) ) {
                 length = this.getQuerySequence().getSequence().length();
             } else {
-                throw new IllegalArgumentException( "No sequence length information for " + this.getQuerySequence() );
+                throw new IllegalArgumentException( "Sequence is missing; cannot compute score for "
+                        + this.getQuerySequence() );
             }
         }
 
