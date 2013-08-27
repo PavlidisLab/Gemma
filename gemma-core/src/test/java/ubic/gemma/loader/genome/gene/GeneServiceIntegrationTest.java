@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceIntegrationTest;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.loader.expression.geo.service.GeoService;
@@ -50,24 +49,23 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class GeneServiceIntegrationTest extends BaseSpringContextTest {
-    ArrayDesignProbeMapperServiceIntegrationTest pTest = new ArrayDesignProbeMapperServiceIntegrationTest();
 
-    String officialName = "PPARA";
-    String accession = "GPL140";
+    private String officialName = "PPARA";
+    private String accession = "GPL140";
 
     static boolean setupDone = false;
 
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
     @Autowired
-    ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
+    private ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
 
     @Autowired
-    ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
 
     @Autowired
-    ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
+    private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
 
     @Before
     public void setup() throws Exception {
