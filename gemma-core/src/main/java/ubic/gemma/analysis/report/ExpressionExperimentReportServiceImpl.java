@@ -453,11 +453,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return results;
     }
 
-    /**
-     * Fills in link analysis and other info from the report.
-     * 
-     * @return map of when the objects were most recently updated (or created)
-     */
+
     @Override
     public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos ) {
         StopWatch timer = new StopWatch();

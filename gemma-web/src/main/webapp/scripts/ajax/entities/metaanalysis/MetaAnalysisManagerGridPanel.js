@@ -68,12 +68,15 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
                });
          };
 
+         /**
+          * Pop up the details of a meta-analysis.
+          */
          var showMetaAnalysisWindow = function(metaAnalysis, analysisName, numGenesAnalyzed) {
             metaAnalysis.name = analysisName;
             metaAnalysis.numGenesAnalyzed = numGenesAnalyzed;
 
             var viewMetaAnalysisWindow = new Gemma.MetaAnalysisWindow({
-                  title : 'View Meta-analysis for ' + analysisName,
+                  title : 'Details of: ' + unescape(analysisName),
                   metaAnalysis : metaAnalysis,
                   defaultQvalueThreshold : DEFAULT_THRESHOLD
                });
@@ -244,11 +247,11 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
                   dataIndex : 'name',
                   width : 0.3,
                   renderer : function(value, metadata, record, rowIndex, colIndex, store) {
+                     // FIXME: eval() evil.
                      return value
                         + ' '
                         + generateLink('eval(\'processMetaAnalysis(' + record.data.id + ', ' + '\\\'Cannot view meta-analysis\\\', ' + 'showMetaAnalysisWindow, ' + '[ \\\''
-                              + record.data.name + '\\\', ' + record.data.numGenesAnalyzed + ' ])\');', '/Gemma/images/icons/magnifier.png',
-                           'View included result sets and results', 10, 10);
+                              + escape(record.data.name) + '\\\', ' + record.data.numGenesAnalyzed + ' ])\');', '/Gemma/images/icons/magnifier.png', 'Show details', 10, 10);
                   }
                }, {
                   header : 'Description',
@@ -286,6 +289,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
                            adminLinks += generateLinkPlaceholder();
                         }
                      } else {
+                        // FIXME: eval() evil.
                         adminLinks += generateLink('eval(\'processMetaAnalysis(' + record.data.id + ', ' + '\\\'Cannot view Neurocarta evidence\\\', ' + 'showViewEvidenceWindow, '
                               + '[ ' + record.data.id + ' ])\');', '/Gemma/images/icons/neurocarta-check.png', 'View Neurocarta evidence');
                      }

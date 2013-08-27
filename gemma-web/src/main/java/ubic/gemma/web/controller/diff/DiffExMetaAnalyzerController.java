@@ -87,6 +87,7 @@ public class DiffExMetaAnalyzerController {
                 baseValueObject.setValueObject( analysisVO );
             }
         } catch ( Throwable throwable ) {
+            log.error( throwable.getMessage(), throwable );
             baseValueObject = generateBaseValueObject( throwable );
         }
         return baseValueObject;
@@ -108,6 +109,7 @@ public class DiffExMetaAnalyzerController {
         try {
             baseValueObject = this.geneDiffExMetaAnalysisService.delete( id );
         } catch ( Throwable throwable ) {
+            log.error( throwable.getMessage(), throwable );
             baseValueObject = generateBaseValueObject( throwable );
         }
         return baseValueObject;

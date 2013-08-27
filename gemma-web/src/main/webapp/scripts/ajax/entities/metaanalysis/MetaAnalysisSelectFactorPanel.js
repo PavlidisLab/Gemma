@@ -296,7 +296,7 @@ Gemma.MetaAnalysisSelectFactorPanel = Ext.extend(Gemma.WizardTabPanelItemPanel, 
 
             nextButton.setDisabled(true);
 
-            ExpressionExperimentController.loadExpressionExperiments(experimentIds, function(experiments) {
+            ExpressionExperimentController.loadDetailedExpressionExperiments(experimentIds, function(experiments) {
                   // Sort experiment by short name.
                   experiments.sort(function(experiment1, experiment2) {
                         return experiment1.shortName.localeCompare(experiment2.shortName);

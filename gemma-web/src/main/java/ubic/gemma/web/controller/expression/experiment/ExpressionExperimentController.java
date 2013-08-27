@@ -1001,7 +1001,23 @@ public class ExpressionExperimentController {
         }
         Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
                 false, null, true );
-        // this.expressionExperimentReportService.getReportInformation( result );
+
+        return result;
+    }
+
+    /**
+     * AJAX - for display in tables. Get more details.
+     * 
+     * @param ids of EEs to load
+     * @return security-filtered set of value objects.
+     */
+    public Collection<ExpressionExperimentValueObject> loadDetailedExpressionExperiments( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return new HashSet<ExpressionExperimentValueObject>();
+        }
+        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
+                false, null, true );
+        this.expressionExperimentReportService.getReportInformation( result );
         return result;
     }
 

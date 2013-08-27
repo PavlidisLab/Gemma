@@ -397,6 +397,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 .getExperimentalFactors( rs1.getResults() );
         assertTrue( factorsByResultMap.keySet().containsAll( rs1.getResults() ) );
 
+        // bug 3722
+        analysisService.delete( metaAnalysis );
+
     }
 
     /**

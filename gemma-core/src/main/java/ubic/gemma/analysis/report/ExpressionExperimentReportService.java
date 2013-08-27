@@ -76,8 +76,10 @@ public interface ExpressionExperimentReportService {
     public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos );
 
     /**
+     * Fills in link analysis and differential expression analysis summaries, and other info from the report.
+     * 
      * @param vos
-     * @return
+     * @return map of when the objects were most recently updated (or created)
      */
     public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos );
 

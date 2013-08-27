@@ -463,6 +463,10 @@ ExpressionExperimentController.loadExpressionExperiments = function(p0, callback
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadExpressionExperiments?" + p0);
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadExpressionExperiments', p0, callback);
 };
+ExpressionExperimentController.loadDetailedExpressionExperiments = function(p0, callback) {
+   googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadDetailedExpressionExperiments?" + p0);
+   dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadDetailedExpressionExperiments', p0, callback);
+};
 ExpressionExperimentController.loadStatusSummaries = function(p0, p1, p2, p3, p4, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentController/loadStatusSummaries");
    dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadStatusSummaries', p0, p1, p2, p3, p4, callback);
