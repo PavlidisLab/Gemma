@@ -15,10 +15,8 @@
 package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
@@ -26,7 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 
 public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
@@ -77,16 +74,16 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         GwasDatabaseImporter importEvidence = new GwasDatabaseImporter( args );
 
         // creates the folder where to place the file web downloaded files and final output files
-        String writeFolder = importEvidence.createWriteFolder( GWAS );
+        importEvidence.createWriteFolderWithDate( GWAS );
 
         // download the GWAS file
-        String gwasFile = importEvidence.downloadFileFromWeb( writeFolder, GWAS_URL_PATH, GWAS_FILE );
+        String gwasFile = importEvidence.downloadFileFromWeb( GWAS_URL_PATH, GWAS_FILE );
 
         // Use the manual description file, to link description to valueUri
         HashMap<String, Collection<String>> descriptionToValueUri = importEvidence.parseFileManualDescriptionFile();
 
         // process the gwas file
-        importEvidence.processGwasFile( writeFolder, gwasFile, descriptionToValueUri );
+        importEvidence.processGwasFile( gwasFile, descriptionToValueUri );
 
     }
 
@@ -96,7 +93,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         HashMap<String, Collection<String>> description2ValueUri = new HashMap<String, Collection<String>>();
 
         BufferedReader br = new BufferedReader( new InputStreamReader(
-                OmimDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING_GWAS ) ) );
+                GwasDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING_GWAS ) ) );
 
         String line = "";
 
@@ -136,23 +133,12 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     }
 
     // process the gwas file, line by line
-    private void processGwasFile( String writeFolder, String gwasFile,
-            HashMap<String, Collection<String>> descriptionToValueUri ) throws Exception {
-
-        // this file have the final data to be imported
-        BufferedWriter outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
+    private void processGwasFile( String gwasFile, HashMap<String, Collection<String>> descriptionToValueUri )
+            throws Exception {
 
         // headers of the final file
         outFinalResults
                 .write( "GeneSymbol\tPrimaryPubMed\tEvidenceCode\tComments\tScore\tStrength\tScoreType\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
-
-        // this file we are unsure, the correct data needs to be move to the manual mapping
-        BufferedWriter outMappingFound = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
-
-        Collection<Long> ontologiesToUse = new HashSet<Long>();
-        ontologiesToUse.add( AnnotatorClient.DOID_ONTOLOGY );
-        ontologiesToUse.add( AnnotatorClient.HP_ONTOLOGY );
-        AnnotatorClient anoClient = new AnnotatorClient( ontologiesToUse );
 
         BufferedReader br = new BufferedReader( new FileReader( gwasFile ) );
 
@@ -176,8 +162,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             // can we map the description with the static file
             String description = tokens[DISEASE_TRAIT_INDEX];
             if ( descriptionToValueUri.get( description ) != null ) {
-                writeFinalFile( outFinalResults, writeFolder, geneSymbol, tokens,
-                        descriptionToValueUri.get( description ) );
+                writeFinalFile( geneSymbol, tokens, descriptionToValueUri.get( description ) );
             } else {
 
                 // something if found by the annotator
@@ -234,6 +219,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             }
         }
 
+        br.close();
         outMappingFound.close();
 
         if ( !errorMessages.isEmpty() ) {
@@ -249,8 +235,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     }
 
     // the final file format
-    private void writeFinalFile( BufferedWriter outFinalResults, String writeFolder, String geneSymbol,
-            String[] tokens, Collection<String> valuesUri ) throws IOException {
+    private void writeFinalFile( String geneSymbol, String[] tokens, Collection<String> valuesUri ) throws IOException {
 
         String comment = DISEASE_TRAIT + ": " + tokens[DISEASE_TRAIT_INDEX] + "; " + INITIAL_SAMPLE_SIZE + ": "
                 + tokens[INITIAL_SAMPLE_SIZE_INDEX] + "; " + REPLICATION_SAMPLE_SIZE + ": "
@@ -276,17 +261,15 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
         // TODO
         String geneSymbol = null;
-        if ( false ) {
 
-            if ( !reportedGene.isEmpty() && !mappedGene.isEmpty() ) {
+        if ( !reportedGene.isEmpty() && !mappedGene.isEmpty() ) {
 
-                if ( reportedGene.equalsIgnoreCase( mappedGene ) ) {
-                    geneSymbol = reportedGene;
-                } else if ( reportedGene.indexOf( mappedGene ) != -1 ) {
-                    geneSymbol = mappedGene;
-                } else if ( mappedGene.indexOf( reportedGene ) != -1 ) {
-                    geneSymbol = reportedGene;
-                }
+            if ( reportedGene.equalsIgnoreCase( mappedGene ) ) {
+                geneSymbol = reportedGene;
+            } else if ( reportedGene.indexOf( mappedGene ) != -1 ) {
+                geneSymbol = mappedGene;
+            } else if ( mappedGene.indexOf( reportedGene ) != -1 ) {
+                geneSymbol = reportedGene;
             }
         } else {
             geneSymbol = reportedGene;
@@ -324,7 +307,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     private void checkHeader( String valueFile, String valueExpected ) throws Exception {
 
         if ( !valueFile.equalsIgnoreCase( valueExpected ) ) {
-            throw new Exception( "Wrong header foudn in file, expected: " + valueExpected + "  found:" + valueFile );
+            throw new Exception( "Wrong header found in file, expected: " + valueExpected + "  found:" + valueFile );
 
         }
     }

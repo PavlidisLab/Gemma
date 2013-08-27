@@ -16,10 +16,16 @@ package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.FileTools;
 
 public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
@@ -33,50 +39,71 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     public static final String RGD_FILE_MOUSE = "mus_genes_rdo";
     public static final String RGD_FILE_RAT = "rattus_genes_rdo";
 
+    // path for resources
+    public static final String RGD_FILES_PATH = RESOURCE_PATH + RGD + "_CTD" + File.separator;
+
+    // manual static file mapping
+    public static final String MANUAL_MAPPING_RGD = RGD_FILES_PATH + "ManualDescriptionMapping_CTD_RGD.tsv";
+
     public static void main( String[] args ) throws Exception {
+
+        // JUST FOR NOW
+        Logger root = Logger.getRootLogger();
+        root.setLevel( Level.INFO );
 
         RgdDatabaseImporter importEvidence = new RgdDatabaseImporter( args );
 
         // creates the folder where to place the file web downloaded files and final output files
-        String writeFolder = importEvidence.createWriteFolder( RGD );
+        importEvidence.createWriteFolderWithDate( RGD );
 
-        String rgdHuman = importEvidence.downloadFileFromWeb( writeFolder, RGD_URL_PATH, RGD_FILE_HUMAN );
-        String rgdMouse = importEvidence.downloadFileFromWeb( writeFolder, RGD_URL_PATH, RGD_FILE_MOUSE );
-        String rgdRat = importEvidence.downloadFileFromWeb( writeFolder, RGD_URL_PATH, RGD_FILE_RAT );
+        String rgdHuman = importEvidence.downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_HUMAN );
+        String rgdMouse = importEvidence.downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_MOUSE );
+        String rgdRat = importEvidence.downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_RAT );
 
         // find the OMIM and Mesh terms from the disease ontology file
-        importEvidence.findOmimAndMeshMappingUsingOntologyFile( writeFolder );
+        importEvidence.findOmimAndMeshMappingUsingOntologyFile();
 
         // process the rgd files
-        importEvidence.processRGDFiles( rgdHuman, rgdMouse, rgdRat, writeFolder );
+        importEvidence.processRGDFiles( rgdHuman, rgdMouse, rgdRat );
 
     }
 
-    private void processRGDFiles( String rgdHuman, String rgdMouse, String rgdRat, String writeFolder )
-            throws IOException {
+    private void processRGDFiles( String rgdHuman, String rgdMouse, String rgdRat ) throws IOException {
 
         // this file have the final data to be imported
-        BufferedWriter outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
+        outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
 
         // headers of the final file
         outFinalResults
                 .write( "GeneSymbol\tTaxon\tPrimaryPubMed\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
 
-        processRGDFile( outFinalResults, "human", rgdHuman );
-        processRGDFile( outFinalResults, "mouse", rgdMouse );
-        processRGDFile( outFinalResults, "rat", rgdRat );
+        processRGDFile( "human", rgdHuman );
+        processRGDFile( "mouse", rgdMouse );
+        processRGDFile( "rat", rgdRat );
         outFinalResults.close();
+
+        if ( !errorMessages.isEmpty() ) {
+
+            log.info( "here is the error messages :\n" );
+
+            for ( String err : errorMessages ) {
+
+                log.error( err );
+            }
+        }
 
     }
 
-    public void processRGDFile( BufferedWriter outFinalResults, String taxon, String fileName ) throws IOException {
+    public void processRGDFile( String taxon, String fileName ) throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader(
                 FileTools.getInputStreamFromPlainOrCompressedFile( fileName ) ) );
 
+        HashMap<String, String> mesh2ValueUri = parseFileManualDescriptionFile();
+
         String line = "";
 
-        // reads the manual file and put the data in a stucture
+        // reads the manual file and put the data in a structure
         while ( ( line = br.readLine() ) != null ) {
             if ( line.indexOf( '!' ) != -1 ) {
                 continue;
@@ -90,13 +117,18 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
             String comment = tokens[3];
             String databaseLink = "?term=" + tokens[4] + "&id=" + tokens[1];
             String diseaseId = tokens[10];
-            String valuesUri = findValueUriWithDiseaseId( diseaseId );
 
-            if ( !valuesUri.isEmpty() && !evidenceCode.equalsIgnoreCase( "ISS" )
+            String valueUri = findValueUriWithDiseaseId( diseaseId );
+
+            if ( valueUri.isEmpty() ) {
+                valueUri = mesh2ValueUri.get( findId( diseaseId ) );
+            }
+
+            if ( valueUri != null && !valueUri.isEmpty() && !evidenceCode.equalsIgnoreCase( "ISS" )
                     && !evidenceCode.equalsIgnoreCase( "NAS" ) && !evidenceCode.equalsIgnoreCase( "IEA" ) ) {
 
                 outFinalResults.write( geneSymbol + "\t" + taxon + "\t" + pubmed + "\t" + evidenceCode + "\t" + comment
-                        + "\t" + RGD + "\t" + databaseLink + "\t" + valuesUri + "\n" );
+                        + "\t" + RGD + "\t" + databaseLink + "\t" + valueUri + "\n" );
 
             }
         }
@@ -104,6 +136,43 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     public RgdDatabaseImporter( String[] args ) throws Exception {
         super( args );
+    }
+
+    // create the mapping from the static file also verify that what is in the file makes sense
+    private HashMap<String, String> parseFileManualDescriptionFile() throws IOException {
+
+        HashMap<String, String> mesh2ValueUri = new HashMap<String, String>();
+
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                RgdDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING_RGD ) ) );
+
+        String line = "";
+
+        // reads the manual file and put the data in a structure
+        while ( ( line = br.readLine() ) != null ) {
+            String[] tokens = line.split( "\t" );
+
+            String meshId = tokens[0];
+            String valueUriStaticFile = tokens[1];
+            String valueStaticFile = tokens[2];
+
+            OntologyTerm ontologyTerm = findOntologyTermExistAndNotObsolote( valueUriStaticFile );
+
+            if ( ontologyTerm != null ) {
+
+                if ( ontologyTerm.getLabel().equalsIgnoreCase( valueStaticFile ) ) {
+
+                    mesh2ValueUri.put( meshId, valueUriStaticFile );
+
+                } else {
+                    errorMessages.add( "MANUAL VALUEURI AND VALUE DOESNT MATCH: " + line );
+                }
+            } else {
+                errorMessages.add( "MANUAL MAPPING FILE TERM OBSOLETE OR NOT EXISTANT: '" + valueUriStaticFile + "' "
+                        + " (" + valueStaticFile + ")" );
+            }
+        }
+        return mesh2ValueUri;
     }
 
 }

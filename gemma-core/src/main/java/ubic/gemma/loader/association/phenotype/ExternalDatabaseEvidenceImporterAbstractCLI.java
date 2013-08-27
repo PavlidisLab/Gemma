@@ -15,15 +15,19 @@
 package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,6 +35,7 @@ import java.util.HashSet;
 import java.util.TreeSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
@@ -41,18 +46,30 @@ import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.Settings;
 
 /**
- * TODO Document Me
+ * TODO Parent of all Importers
  * 
  * @author Paul
  * @version $Id$
  */
 public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
 
+    protected AnnotatorClient anoClient = null;
+
     // this is where the results and files downloaded are put
     protected static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" );
-    // those are where the static resources are kept, like manual mapping files
+    // this are where the static resources are kept, like manual mapping files and others
     protected static final String RESOURCE_PATH = File.separator + "neurocarta" + File.separator
             + "externalDatabaseImporter" + File.separator;
+    // this is where files that can be used by all importer are kept
+    protected static final String RESOURCE_PATH_GENERAL = RESOURCE_PATH + "GENERAL" + File.separator;
+
+    // terms to exclude when we search for a phenotype using the annotator (stop words)
+    protected static final String EXCLUDE_KEYWORDS = RESOURCE_PATH_GENERAL + "KeyWordsToExclude.tsv";
+    protected ArrayList<String> wordsToExclude = new ArrayList<String>();
+
+    // results we exclude, we know those results are not good
+    protected static final String RESULTS_TO_IGNORE = RESOURCE_PATH_GENERAL + "ResultsToIgnore.tsv";
+    protected HashSet<String> resultsToIgnore = new HashSet<String>();
 
     // ********************************************************************************
     // the services that will be needed
@@ -61,9 +78,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected OntologyService ontologyService = null;
     protected GeneService geneService = null;
     protected TaxonService taxonService = null;
-
-    // keep all errors and show unique ones at the end of the program
-    protected TreeSet<String> errorMessages = new TreeSet<String>();
 
     // *********************************************************************************************
     // the disease ontology file, we are interested in the MESH and OMIM Id in it ( we dont have this information in
@@ -74,6 +88,28 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected HashMap<String, HashSet<String>> omimIdToPhenotypeMapping = new HashMap<String, HashSet<String>>();
     // found using the disease ontology file, MESH ID --> ValuesUri
     protected HashMap<String, HashSet<String>> meshIdToPhenotypeMapping = new HashMap<String, HashSet<String>>();
+
+    protected TreeSet<String> outMappingFoundBuffer = new TreeSet<String>();
+    protected TreeSet<String> outNotFoundBuffer = new TreeSet<String>();
+    protected String valueUriForCondition = "";
+    protected String valueForCondition = "";
+
+    protected String writeFolder = null;
+
+    // keep all errors and show unique ones at the end of the program
+    protected TreeSet<String> errorMessages = new TreeSet<String>();
+    // the 3 possible out files
+    protected BufferedWriter outFinalResults = null;
+    protected BufferedWriter outMappingFound = null;
+    protected BufferedWriter outNotFound = null;
+
+    // *********************************************************************************************
+    // Used by RGD and CTD
+    public static final String MANUAL_MAPPING_RGD_CTD = RESOURCE_PATH + "RGD_CTD" + File.separator
+            + "ManualDescriptionMapping_CTD_RGD.tsv";
+
+    // MeshId --> valueUri
+    protected HashMap<String, HashSet<String>> mesh2ValueUri_RGD_CTD = new HashMap<String, HashSet<String>>();
 
     // load all needed services
     protected synchronized void loadServices( String[] args ) throws Exception {
@@ -103,6 +139,17 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     public ExternalDatabaseEvidenceImporterAbstractCLI( String[] args ) throws Exception {
         super();
         loadServices( args );
+        // results to exclude using the annoator
+        wordsToExclude = parseFileFindExcludeTerms();
+        // set up the annotator
+        initAnnotatorClient();
+    }
+
+    private void initAnnotatorClient() {
+        Collection<Long> ontologiesToUse = new HashSet<Long>();
+        ontologiesToUse.add( AnnotatorClient.DOID_ONTOLOGY );
+        ontologiesToUse.add( AnnotatorClient.HP_ONTOLOGY );
+        anoClient = new AnnotatorClient( ontologiesToUse );
     }
 
     @Override
@@ -117,32 +164,46 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     }
 
     // creates the folder where the output files will be put, with today date
-    protected String createWriteFolder( String externalDatabaseUse ) throws Exception {
+    protected void createWriteFolderWithDate( String externalDatabaseUse ) throws Exception {
 
         // where to put the final results
-        String folderToWrite = WRITE_FOLDER + File.separator + externalDatabaseUse + "_" + getTodayDate();
+        writeFolder = WRITE_FOLDER + File.separator + externalDatabaseUse + "_" + getTodayDate();
 
-        File folder = new File( folderToWrite );
+        File folder = new File( writeFolder );
 
         if ( !folder.mkdir() ) {
             throw new Exception( "having trouble to create a folder" );
         }
-        return folderToWrite;
+
+        initOutputfiles();
     }
 
     // creates the folder where the output files will be put, use this one if file is too big
     protected String createWriteFolderIfDoesntExist( String externalDatabaseUse ) throws Exception {
 
         // where to put the final results
-        String folderToWrite = WRITE_FOLDER + File.separator + externalDatabaseUse;
+        writeFolder = WRITE_FOLDER + File.separator + externalDatabaseUse;
 
-        File folder = new File( folderToWrite );
+        File folder = new File( writeFolder );
         folder.mkdir();
 
         if ( !folder.exists() ) {
             throw new Exception( "having trouble to create a folder" );
         }
-        return folderToWrite;
+
+        initOutputfiles();
+
+        return writeFolder;
+    }
+
+    // all imported can have up to 3 outputFiles, that are the results
+    private void initOutputfiles() throws IOException {
+        // 1- sure results to be imported into Neurocarta
+        outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
+        // 2- results found with the annotator need to be verify and if ok moved to a manual annotation file
+        outMappingFound = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
+        // 3- no results found with id, manual mapping and annotator
+        outNotFound = new BufferedWriter( new FileWriter( writeFolder + "/notFound.tsv" ) );
     }
 
     private String getTodayDate() {
@@ -154,7 +215,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     /**
      * Goes on the specified urlPath and download the file to place it into the writeFolder
      */
-    protected String downloadFileFromWeb( String writeFolder, String pathName, String fileUrlName ) {
+    protected String downloadFileFromWeb( String pathName, String fileUrlName ) {
 
         String fileName = fileUrlName;
 
@@ -245,10 +306,10 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
      * parse the disease ontology file to create the structure needed (omimIdToPhenotypeMapping and
      * meshIdToPhenotypeMapping)
      **/
-    protected void findOmimAndMeshMappingUsingOntologyFile( String writeFolder ) throws IOException {
+    protected void findOmimAndMeshMappingUsingOntologyFile() throws IOException {
 
         // download the disease Ontology File
-        String diseaseOntologyFile = downloadFileFromWeb( writeFolder, DISEASE_ONT_PATH, DISEASE_ONT_FILE );
+        String diseaseOntologyFile = downloadFileFromWeb( DISEASE_ONT_PATH, DISEASE_ONT_FILE );
 
         HashSet<String> omimIds = new HashSet<String>();
         HashSet<String> meshIds = new HashSet<String>();
@@ -335,9 +396,67 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                 }
             }
         }
+
+        br.close();
     }
 
-    // transform the given line to its valueURi, ex: OMIM:1234= 1234-->valueUri
+    // parse file and returns a collection of stop words to exclude
+    protected ArrayList<String> parseFileFindExcludeTerms() throws IOException {
+
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                OmimDatabaseImporter.class.getResourceAsStream( EXCLUDE_KEYWORDS ) ) );
+
+        String line = "";
+
+        while ( ( line = br.readLine() ) != null ) {
+
+            line = removeSmallNumberAndTxt( line );
+
+            wordsToExclude.add( removeCha( line ) );
+        }
+        MyComparator myComparator = new MyComparator();
+
+        java.util.Collections.sort( wordsToExclude, myComparator );
+
+        return wordsToExclude;
+    }
+
+    // special rules used to format the search term, when using a modified search in the annotator
+    protected String removeSmallNumberAndTxt( String txt ) {
+
+        String txtWithoutSimpLetters = "";
+
+        String[] tokens = txt.split( " " );
+
+        for ( int i = 0; i < tokens.length; i++ ) {
+
+            String token = tokens[i];
+
+            // last token
+            if ( tokens.length - 1 == i ) {
+
+                if ( token.length() < 4 ) {
+                    // contains a number
+                    if ( token.matches( ".*\\d.*" ) ) {
+                        token = "";
+                    }
+                }
+                txtWithoutSimpLetters = txtWithoutSimpLetters + token;
+            } else {
+                txtWithoutSimpLetters = txtWithoutSimpLetters + token + " ";
+            }
+        }
+        return txtWithoutSimpLetters.trim();
+    }
+
+    // if a excel file was used values sometime save as "value", always take out the "
+    protected String removeCha( String txt ) {
+
+        String newTxt = txt.replaceAll( "\"", "" );
+        return newTxt.trim();
+    }
+
+    // transform the given line to its valueUri, ex: OMIM:1234= 1234-->valueUri
     protected String findValueUriWithDiseaseId( String diseaseId ) {
 
         Collection<String> valuesUri = new HashSet<String>();
@@ -365,8 +484,266 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
     }
 
-    private String findId( String txt ) {
+    protected String findId( String txt ) {
         return txt.substring( txt.indexOf( ":" ) + 1, txt.length() );
+    }
+
+    // special rule used to format the search term
+    protected String removeSpecificKeywords( String txt ) {
+
+        String txtWithExcludeDigitWords = removeEndDigitWords( txt );
+
+        String newTxt = txtWithExcludeDigitWords;
+
+        for ( String word : wordsToExclude ) {
+            int indexOfWordToExclude = newTxt.indexOf( word );
+            int wordLength = word.length();
+
+            if ( indexOfWordToExclude != -1 ) {
+                newTxt = newTxt.substring( 0, indexOfWordToExclude )
+                        + newTxt.substring( indexOfWordToExclude + wordLength, newTxt.length() );
+            }
+        }
+
+        String[] tokens = newTxt.split( "," );
+        newTxt = "";
+        for ( String token : tokens ) {
+            token = token.trim();
+            if ( token.length() > 0 ) {
+                newTxt = newTxt + token + ",";
+            }
+        }
+        newTxt = newTxt.substring( 0, newTxt.length() - 1 );
+
+        tokens = newTxt.split( "," );
+
+        // reverse them if 2 tokens,
+        if ( tokens.length == 2 ) {
+            newTxt = tokens[1] + "," + tokens[0];
+        }
+
+        // replace , with " "
+        return newTxt.replaceAll( ",", " " );
+    }
+
+    // special rule used to format the search term
+    protected String removeEndDigitWords( String txt ) {
+        String finalTxt = "";
+        String[] termFoundInFile = txt.split( "," );
+        int j = 0;
+
+        for ( String term : termFoundInFile ) {
+
+            String[] txtFoundInTerms = term.split( " " );
+
+            for ( int i = 0; i < txtFoundInTerms.length; i++ ) {
+
+                String txtFoundInTerm = txtFoundInTerms[i];
+
+                // last token
+                if ( txtFoundInTerms.length - 1 == i ) {
+
+                    if ( txtFoundInTerm.length() < 4 ) {
+                        // contains a number
+                        if ( txtFoundInTerm.matches( ".*\\d.*" ) ) {
+                            txtFoundInTerm = "";
+                        }
+                    }
+                }
+                finalTxt = finalTxt + txtFoundInTerm.trim();
+
+                if ( i != txtFoundInTerms.length - 1 ) {
+                    finalTxt = finalTxt + " ";
+                }
+            }
+            if ( j != termFoundInFile.length - 1 ) {
+                finalTxt = finalTxt.trim() + ",";
+            }
+            j++;
+        }
+        return finalTxt;
+    }
+
+    protected boolean isInteger( String input ) {
+        try {
+            Integer.parseInt( input );
+            return true;
+        } catch ( Exception e ) {
+            return false;
+        }
+    }
+
+    // order strings by length, when we remove stop words, we need to remove longest words first
+    public class MyComparator implements java.util.Comparator<String> {
+        @Override
+        public int compare( String s1, String s2 ) {
+            if ( s1.length() > s2.length() ) {
+
+                return -1;
+            }
+            return 1;
+        }
+    }
+
+    protected String findConditionUsed( Collection<AnnotatorResponse> ontologyTerms, boolean modifiedKeywords ) {
+
+        String conditionUsed = null;
+
+        AnnotatorResponse annotatorResponseFirst = null;
+
+        if ( !ontologyTerms.isEmpty() ) {
+            annotatorResponseFirst = ontologyTerms.iterator().next();
+        }
+
+        if ( annotatorResponseFirst != null
+                && this.ontologyService.getTerm( annotatorResponseFirst.getValueUri() ) != null
+                && !this.ontologyService.getTerm( annotatorResponseFirst.getValueUri() ).isTermObsolete() ) {
+
+            valueUriForCondition = annotatorResponseFirst.getValueUri();
+            valueForCondition = annotatorResponseFirst.getValue();
+
+            if ( annotatorResponseFirst.getOntologyUsed().equalsIgnoreCase( "DOID" ) ) {
+
+                if ( annotatorResponseFirst.isExactMatch() ) {
+
+                    conditionUsed = "Case 4a: Found Exact With Disease Annotator";
+
+                } else if ( annotatorResponseFirst.isSynonym() ) {
+                    conditionUsed = "Case 5a: Found Synonym With Disease Annotator Synonym";
+                }
+            } else if ( annotatorResponseFirst.getOntologyUsed().equalsIgnoreCase( "HP" ) ) {
+
+                if ( annotatorResponseFirst.isExactMatch() ) {
+
+                    conditionUsed = "Case 6a: Found Exact With HP Annotator";
+
+                } else if ( annotatorResponseFirst.isSynonym() ) {
+
+                    conditionUsed = "Case 7a: Found Synonym With HP Annotator Synonym";
+                }
+            }
+        }
+
+        if ( conditionUsed != null && modifiedKeywords ) {
+            conditionUsed = conditionUsed + " (keywords taken out)";
+        }
+
+        return conditionUsed;
+
+    }
+
+    // many importers can have different headers, this is 1 possible case
+    protected void writeOutputFileHeaders() throws IOException {
+
+        // headers of the final out file to write
+        outFinalResults
+                .write( "GeneSymbol\tGeneId\tPrimaryPubMed\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
+
+    }
+
+    // write all found in set to files and close files
+    // the reason this is done that way is to not have duplicates for 2 files
+    protected void writeBuffersAndCloseFiles() throws IOException {
+
+        // write all possible mapping found
+        for ( String lineMappinpFound : outMappingFoundBuffer ) {
+            outMappingFound.write( lineMappinpFound );
+        }
+
+        // write all not found mapping
+        for ( String lineNotFound : outNotFoundBuffer ) {
+            outNotFound.write( lineNotFound );
+        }
+
+        outMappingFound.close();
+        outNotFound.close();
+        outFinalResults.close();
+
+    }
+
+    // create the mapping use by CTD and RGD
+    protected void parseFileManualDescriptionFile_RGD_CTD() throws IOException {
+
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                RgdDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING_RGD_CTD ) ) );
+
+        String line = "";
+
+        // reads the manual file and put the data in a structure
+        while ( ( line = br.readLine() ) != null ) {
+
+            HashSet<String> col = new HashSet<String>();
+
+            String[] tokens = line.split( "\t" );
+
+            String meshId = tokens[0];
+            String valueUriStaticFile = tokens[1];
+            String valueStaticFile = tokens[2];
+
+            OntologyTerm ontologyTerm = findOntologyTermExistAndNotObsolote( valueUriStaticFile );
+
+            if ( ontologyTerm != null ) {
+
+                if ( ontologyTerm.getLabel().equalsIgnoreCase( valueStaticFile ) ) {
+
+                    if ( mesh2ValueUri_RGD_CTD.get( meshId ) != null ) {
+                        col = mesh2ValueUri_RGD_CTD.get( meshId );
+                    }
+
+                    col.add( valueUriStaticFile );
+                    mesh2ValueUri_RGD_CTD.put( meshId, col );
+
+                } else {
+                    errorMessages.add( "MANUAL VALUEURI AND VALUE DOESNT MATCH: " + line );
+                }
+            } else {
+                errorMessages.add( "MANUAL MAPPING FILE TERM OBSOLETE OR NOT EXISTANT: '" + valueUriStaticFile + "' "
+                        + " (" + valueStaticFile + ")" );
+            }
+        }
+    }
+
+    // parse file and returns a collection of terms found
+    protected HashSet<String> parseResultsToIgnore() throws IOException {
+
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                OmimDatabaseImporter.class.getResourceAsStream( RESULTS_TO_IGNORE ) ) );
+
+        String line = "";
+
+        while ( ( line = br.readLine() ) != null ) {
+
+            String[] tokens = line.split( "\t" );
+
+            resultsToIgnore.add( removeCha( tokens[0] ) );
+        }
+
+        return resultsToIgnore;
+    }
+
+    protected void writeInPossibleMapping_RGD_CTD( Collection<AnnotatorResponse> annotatorResponses, String diseaseId,
+            String diseaseName ) {
+
+        // keep all that was found by the annotator
+        String valueUri = "";
+        String value = "";
+
+        for ( AnnotatorResponse annotatorResponse : annotatorResponses ) {
+
+            if ( !resultsToIgnore.contains( annotatorResponse.getValue() ) ) {
+
+                valueUri = valueUri + annotatorResponse.getValueUri() + "; ";
+                value = value + annotatorResponse.getValue() + "; ";
+            }
+        }
+
+        if ( !value.isEmpty() ) {
+            String lineToWrite = diseaseId + "\t" + valueUri + "\t" + value + "\t" + diseaseName + "\t"
+                    + "Case 8: Found Mappings, No Match Detected" + "\n";
+            // multiple mapping detected
+            outMappingFoundBuffer.add( lineToWrite );
+        }
+
     }
 
 }

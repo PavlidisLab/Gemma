@@ -15,10 +15,8 @@
 package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -29,7 +27,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
@@ -45,10 +42,6 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     public static final String OMIM_FILES_PATH = RESOURCE_PATH + OMIM + File.separator;
     // manual static file mapping
     public static final String MANUAL_MAPPING_OMIM = OMIM_FILES_PATH + "ManualDescriptionMapping.tsv";
-    // terms to exclude when we search for a phenotype the second time
-    public static final String EXCLUDE_KEYWORDS_OMIM = OMIM_FILES_PATH + "KeyWordsToExclude.tsv";
-    // results we exclude, we know those results are not good
-    public static final String RESULTS_TO_IGNORE = OMIM_FILES_PATH + "ResultsToIgnore.tsv";
     // when we find this description ingore it
     public static final String DESCRIPTION_TO_IGNORE = OMIM_FILES_PATH + "DescriptionToIgnore.tsv";
 
@@ -67,17 +60,17 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         OmimDatabaseImporter importEvidence = new OmimDatabaseImporter( args );
 
         // creates the folder where to place the file web downloaded files and final output files
-        String writeFolder = importEvidence.createWriteFolder( OMIM );
+        importEvidence.createWriteFolderWithDate( OMIM );
 
         // download the OMIM File called morbid
-        String morbidmap = importEvidence.downloadFileFromWeb( writeFolder, OMIM_URL_PATH, OMIM_FILE_MORBID );
+        String morbidmap = importEvidence.downloadFileFromWeb( OMIM_URL_PATH, OMIM_FILE_MORBID );
         // download the OMIM File called mim2gene
-        String mim2gene = importEvidence.downloadFileFromWeb( writeFolder, OMIM_URL_PATH, OMIM_FILE_MIM );
+        String mim2gene = importEvidence.downloadFileFromWeb( OMIM_URL_PATH, OMIM_FILE_MIM );
 
         // find the OMIM and Mesh terms
-        importEvidence.findOmimAndMeshMappingUsingOntologyFile( writeFolder );
+        importEvidence.findOmimAndMeshMappingUsingOntologyFile();
 
-        importEvidence.processOmimFiles( writeFolder, morbidmap, mim2gene );
+        importEvidence.processOmimFiles( morbidmap, mim2gene );
     }
 
     public OmimDatabaseImporter( String[] args ) throws Exception {
@@ -85,12 +78,10 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     }
 
     // process all OMIm files to get the data out and manipulates it
-    private void processOmimFiles( String writeFolder, String morbidmap, String mim2gene ) throws IOException {
+    private void processOmimFiles( String morbidmap, String mim2gene ) throws IOException {
 
-        // special keywords to exclude on search with annotator (manual mapping), (stop words)
-        ArrayList<String> wordsToExclude = parseFileFindExcludeTerms();
         // special resultsToIgnore, results returned that are too general
-        HashSet<String> resultsToIgnore = parseResultsToIgnore();
+        parseResultsToIgnore();
         // omim description we want to ignore, when we find those description, we know we are not interested in them
         HashSet<String> descriptionToIgnore = parseDescriptionToIgnore();
 
@@ -101,26 +92,11 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         // mapping find using mim2gene file, Omim id ---> Gene NCBI
         HashMap<String, String> omimIdToGeneNCBI = parseFileOmimIdToGeneNCBI( mim2gene );
 
-        // create the 3 possible outputFiles
-        // 1- sure results to import
-        BufferedWriter outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
-        // 2- results found to check
-        BufferedWriter outMappinpFound = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
-        // 3- no results found
-        BufferedWriter outNotFound = new BufferedWriter( new FileWriter( writeFolder + "/notFound.tsv" ) );
-        TreeSet<String> outMappingFoundBuffer = new TreeSet<String>();
-        TreeSet<String> outNotFoundBuffer = new TreeSet<String>();
-
         String line = null;
 
         BufferedReader br = new BufferedReader( new FileReader( morbidmap ) );
 
         int lineNumber = 1;
-
-        Collection<Long> ontologiesToUse = new HashSet<Long>();
-        ontologiesToUse.add( AnnotatorClient.DOID_ONTOLOGY );
-        ontologiesToUse.add( AnnotatorClient.HP_ONTOLOGY );
-        AnnotatorClient anoClient = new AnnotatorClient( ontologiesToUse );
 
         // parse the morbid OMIM file
         while ( ( line = br.readLine() ) != null ) {
@@ -149,9 +125,9 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
                 // search term that will be used by the annotator we run it 2 times
                 // this search term is not mofified
-                String searchTerm = removeSymbol( description );
+                String searchTerm = description;
                 // the searchTermWithOutKeywords is a modified version of the searchTerm
-                String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm, wordsToExclude );
+                String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm );
                 // omimGeneid ---> ncbi id
                 String ncbiGeneId = omimIdToGeneNCBI.get( omimGeneId );
 
@@ -425,7 +401,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
         // write final output found
         for ( String lineMappinpFound : outMappingFoundBuffer ) {
-            outMappinpFound.write( lineMappinpFound );
+            outMappingFound.write( lineMappinpFound );
         }
         for ( String lineNotFound : outNotFoundBuffer ) {
             outNotFound.write( lineNotFound );
@@ -484,173 +460,9 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             outFinalResults.write( evidenceLine );
         }
 
-        // close the used files
-        outFinalResults.close();
-        outMappinpFound.close();
-        outNotFound.close();
-    }
+        writeBuffersAndCloseFiles();
 
-    // special rule used to format the search term
-    private String removeSmallNumberAndTxt( String txt ) {
-
-        String txtWithoutSimpLetters = "";
-
-        String[] tokens = txt.split( " " );
-
-        for ( int i = 0; i < tokens.length; i++ ) {
-
-            String token = tokens[i];
-
-            // last token
-            if ( tokens.length - 1 == i ) {
-
-                if ( token.length() < 4 ) {
-                    // contains a number
-                    if ( token.matches( ".*\\d.*" ) ) {
-                        token = "";
-                    }
-                }
-                txtWithoutSimpLetters = txtWithoutSimpLetters + token;
-            } else {
-                txtWithoutSimpLetters = txtWithoutSimpLetters + token + " ";
-            }
-        }
-        return txtWithoutSimpLetters.trim();
-    }
-
-    // special rule used to format the search ter
-    private String removeSpecificKeywords( String txt, ArrayList<String> wordsToExclude ) {
-
-        String txtWithExcludeDigitWords = removeEndDigitWords( txt );
-
-        String newTxt = txtWithExcludeDigitWords;
-
-        for ( String word : wordsToExclude ) {
-            int indexOfWordToExclude = newTxt.indexOf( word );
-            int wordLength = word.length();
-
-            if ( indexOfWordToExclude != -1 ) {
-                newTxt = newTxt.substring( 0, indexOfWordToExclude )
-                        + newTxt.substring( indexOfWordToExclude + wordLength, newTxt.length() );
-            }
-        }
-
-        String[] tokens = newTxt.split( "," );
-        newTxt = "";
-        for ( String token : tokens ) {
-            token = token.trim();
-            if ( token.length() > 0 ) {
-                newTxt = newTxt + token + ",";
-            }
-        }
-        newTxt = newTxt.substring( 0, newTxt.length() - 1 );
-
-        tokens = newTxt.split( "," );
-
-        // reverse them if 2 tokens,
-        if ( tokens.length == 2 ) {
-            newTxt = tokens[1] + "," + tokens[0];
-        }
-
-        // replace , with " "
-        return newTxt.replaceAll( ",", " " );
-    }
-
-    // special rule used to format the search ter
-    private String removeEndDigitWords( String txt ) {
-        String finalTxt = "";
-        String[] termFoundInFile = txt.split( "," );
-        int j = 0;
-
-        for ( String term : termFoundInFile ) {
-
-            String[] txtFoundInTerms = term.split( " " );
-
-            for ( int i = 0; i < txtFoundInTerms.length; i++ ) {
-
-                String txtFoundInTerm = txtFoundInTerms[i];
-
-                // last token
-                if ( txtFoundInTerms.length - 1 == i ) {
-
-                    if ( txtFoundInTerm.length() < 4 ) {
-                        // contains a number
-                        if ( txtFoundInTerm.matches( ".*\\d.*" ) ) {
-                            txtFoundInTerm = "";
-                        }
-                    }
-                }
-                finalTxt = finalTxt + txtFoundInTerm.trim();
-
-                if ( i != txtFoundInTerms.length - 1 ) {
-                    finalTxt = finalTxt + " ";
-                }
-            }
-            if ( j != termFoundInFile.length - 1 ) {
-                finalTxt = finalTxt.trim() + ",";
-            }
-            j++;
-        }
-        return finalTxt;
-    }
-
-    private boolean isInteger( String input ) {
-        try {
-            Integer.parseInt( input );
-            return true;
-        } catch ( Exception e ) {
-            return false;
-        }
-    }
-
-    // if a excel file was used values sometime save as "value", always take out the "
-    private String removeCha( String txt ) {
-
-        String newTxt = txt.replaceAll( "\"", "" );
-        return newTxt.trim();
-    }
-
-    // parse file and returns a collecction of terms found
-    private ArrayList<String> parseFileFindExcludeTerms() throws IOException {
-
-        ArrayList<String> wordsToExclude = new ArrayList<String>();
-
-        BufferedReader br = new BufferedReader( new InputStreamReader(
-                OmimDatabaseImporter.class.getResourceAsStream( EXCLUDE_KEYWORDS_OMIM ) ) );
-
-        String line = "";
-
-        while ( ( line = br.readLine() ) != null ) {
-
-            line = removeSmallNumberAndTxt( line );
-
-            wordsToExclude.add( removeCha( line ) );
-        }
-        MyComparator myComparator = new MyComparator();
-
-        java.util.Collections.sort( wordsToExclude, myComparator );
-
-        return wordsToExclude;
-    }
-
-    // parse file and returns a collection of terms found
-    private HashSet<String> parseResultsToIgnore() throws IOException {
-
-        HashSet<String> resultsToIgnore = new HashSet<String>();
-
-        BufferedReader br = new BufferedReader( new InputStreamReader(
-                OmimDatabaseImporter.class.getResourceAsStream( RESULTS_TO_IGNORE ) ) );
-
-        String line = "";
-
-        while ( ( line = br.readLine() ) != null ) {
-
-            String[] tokens = line.split( "\t" );
-
-            resultsToIgnore.add( removeCha( tokens[0] ) );
-        }
-
-        return resultsToIgnore;
+        br.close();
     }
 
     private HashSet<String> parseDescriptionToIgnore() throws IOException {
@@ -726,31 +538,9 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
                 omimIdToGeneNCBI.put( tokens[0], tokens[2] );
             }
         }
+        br.close();
         return omimIdToGeneNCBI;
 
-    }
-
-    // order strings by length
-    public class MyComparator implements java.util.Comparator<String> {
-        @Override
-        public int compare( String s1, String s2 ) {
-            if ( s1.length() > s2.length() ) {
-
-                return -1;
-            }
-            return 1;
-        }
-    }
-
-    private String removeSymbol( String txt ) {
-
-        String newTxt = txt.replaceAll( "\\{", "" );
-        newTxt = newTxt.replaceAll( "\\}", "" );
-        newTxt = newTxt.replaceAll( "\\[", "" );
-        newTxt = newTxt.replaceAll( "\\]", "" );
-        newTxt = newTxt.replaceAll( "\\?", "" );
-
-        return newTxt;
     }
 
 }
