@@ -336,6 +336,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         if ( !noGeneProbes.isEmpty() ) {
             Collection<ExpressionExperiment> eesForNoGeneProbes = new HashSet<ExpressionExperiment>();
             eesForNoGeneProbes.addAll( ( Collection<? extends ExpressionExperiment> ) ees );
+            needToSearch.addAll( eesForNoGeneProbes );
             rawResults.putAll( getProcessedVectors( EntityUtils.getIds( eesForNoGeneProbes ), noGeneProbes ) );
         }
 
