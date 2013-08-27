@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
@@ -1045,6 +1046,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @param arrayDesign
      */
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
+
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
+                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
+
         // this query is polymorphic, id gets the annotation associations
         final String queryString = "select ba from CompositeSequenceImpl  cs "
                 + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProductImpl ba "
