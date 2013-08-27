@@ -73,8 +73,6 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
         String line = "";
 
-        int i = 0;
-
         // for each line of the file treat it
         while ( ( line = br.readLine() ) != null ) {
             if ( line.indexOf( '#' ) != -1 ) {
@@ -99,10 +97,6 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
             // the evidence must be marker/mechanism or therapeutic to be imported into Neurocarta
             if ( ( directEvidence.equalsIgnoreCase( "marker/mechanism" ) || directEvidence
                     .equalsIgnoreCase( "therapeutic" ) ) && !pubmedIds.equalsIgnoreCase( "" ) ) {
-
-                i++;
-
-                System.out.println( i + "/22 264" );
 
                 // 1- using the disease ontology first look is a mapping is found
                 String valuesUri = findValueUriWithDiseaseId( diseaseId );
