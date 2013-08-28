@@ -201,12 +201,9 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 if ( existingSymbolmap.containsKey( gene.getOfficialSymbol() ) ) {
                     csForGene = existingSymbolmap.get( gene.getOfficialSymbol() );
                 } else if ( existingGeneMap.containsKey( gene ) ) {
-
                     csForGene = existingGeneMap.get( gene );
-
                     log.debug( "Gene symbol has changed for: " + gene + "? Current element has name="
                             + csForGene.getName() );
-
                     csForGene.setName( gene.getOfficialSymbol() );
                 }
             }
@@ -230,7 +227,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 Collection<DatabaseEntry> accessions = geneProduct.getAccessions();
                 bioSequence.setName( name );
                 bioSequence.setTaxon( taxon );
-
                 bioSequence.setPolymerType( PolymerType.RNA );
 
                 // FIXME miRNAs (though, we don't really use this field.)
@@ -423,6 +419,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     }
 
     /**
+     * For gene symbols.
+     * 
      * @param arrayDesign
      * @return
      */
@@ -441,8 +439,21 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
         for ( CompositeSequence cs : genemap.keySet() ) {
             Collection<Gene> genes = genemap.get( cs );
-            assert genes.size() == 1;
-            Gene g = genes.iterator().next();
+
+            /*
+             * Two genes with the same symbol, but might be a mistake from an earlier run.
+             */
+            Gene g = null;
+            if ( genes.size() > 1 ) {
+                log.warn( "More than one gene for: " + cs + ": " + StringUtils.join( genes, ";" ) );
+                for ( Gene cg : genes ) {
+                    if ( cg.getOfficialSymbol().equals( cs.getName() ) ) {
+                        g = cg;
+                    }
+                }
+            } else {
+                g = genes.iterator().next();
+            }
             existingElements.put( g, cs );
         }
 
