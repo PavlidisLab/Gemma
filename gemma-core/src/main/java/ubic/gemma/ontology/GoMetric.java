@@ -65,7 +65,7 @@ public class GoMetric {
 
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
-    private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() ); 
+    private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );
 
     /**
      * @param ontoM
@@ -226,7 +226,7 @@ public class GoMetric {
              * aspect filtering.
              */
             if ( goAspect != null ) {
-                if ( GeneOntologyServiceImpl.getTermAspect( goTerm1 ).equals( goAspect ) ) {
+                if ( geneOntologyService.getTermAspect( goTerm1 ).equals( goAspect ) ) {
                     continue;
                 }
             }
@@ -236,7 +236,7 @@ public class GoMetric {
             for ( String goTerm2 : mergedGoTerms2 ) {
 
                 if ( goAspect != null ) {
-                    if ( GeneOntologyServiceImpl.getTermAspect( goTerm2 ).equals( goAspect ) ) {
+                    if ( geneOntologyService.getTermAspect( goTerm2 ).equals( goAspect ) ) {
                         continue;
                     }
                 }

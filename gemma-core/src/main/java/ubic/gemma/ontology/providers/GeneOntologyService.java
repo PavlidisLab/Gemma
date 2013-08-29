@@ -22,6 +22,7 @@ import java.util.Map;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.GeneOntologyServiceImpl.GOAspect;
@@ -259,5 +260,17 @@ public interface GeneOntologyService extends InitializingBean {
      * Primarily here for testing, to recover memory.
      */
     public abstract void shutDown();
+
+    /**
+     * @param goId
+     * @return
+     */
+    public GOAspect getTermAspect( VocabCharacteristic goId );
+
+    /**
+     * @param goId
+     * @return
+     */
+    public GOAspect getTermAspect( String goId );
 
 }

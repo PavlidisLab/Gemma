@@ -77,9 +77,9 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     private static final String ALL_ROOT = BASE_GO_URI + "ALL";
 
-    private final static String GO_URL = "http://purl.obolibrary.org/obo/go.owl";
-
     private static boolean enabled = true;
+
+    private final static String GO_URL = "http://purl.obolibrary.org/obo/go.owl";
 
     private final static boolean LOAD_BY_DEFAULT = true;
 
@@ -120,25 +120,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
-     * @param goId
-     * @return
-     */
-    public static GOAspect getTermAspect( String goId ) {
-        OntologyTerm term = getTermForId( goId );
-        if ( term == null ) return null;
-        return getTermAspect( term );
-    }
-
-    /**
-     * @param goId
-     * @return
-     */
-    public static GOAspect getTermAspect( VocabCharacteristic goId ) {
-        String string = asRegularGoId( goId );
-        return getTermAspect( string );
-    }
-
-    /**
      * @param goId e.g. GO:0001312
      * @return null if not found
      */
@@ -158,35 +139,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     public static boolean isEnabled() {
         return enabled;
-    }
-
-    /**
-     * @param term
-     * @return
-     */
-    private static GOAspect getTermAspect( OntologyTerm term ) {
-        assert term != null;
-        String goid = term.getTerm();
-        if ( term2Aspect.containsKey( goid ) ) {
-            return term2Aspect.get( goid );
-        }
-
-        String nameSpace = null;
-        for ( AnnotationProperty annot : term.getAnnotations() ) {
-            if ( annot.getProperty().equals( "hasOBONamespace" ) ) {
-                nameSpace = annot.getContents();
-                break;
-            }
-        }
-
-        if ( nameSpace == null ) {
-            throw new IllegalArgumentException( "Unknown GO id " + goid );
-        }
-
-        GOAspect aspect = GOAspect.valueOf( nameSpace.toUpperCase() );
-        term2Aspect.put( goid, aspect );
-
-        return aspect;
     }
 
     /**
@@ -277,6 +229,23 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return overlap;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.ontology.providers.GeneOntologyService#calculateGoTermOverlap(ubic.gemma.model.genome.Gene,
+     * ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) {
+
+        if ( queryGene1 == null || queryGene2 == null ) return null;
+
+        Collection<OntologyTerm> queryGeneTerms1 = getGOTerms( queryGene1 );
+        Collection<OntologyTerm> queryGeneTerms2 = getGOTerms( queryGene2 );
+
+        return computeOverlap( queryGeneTerms1, queryGeneTerms2 );
+    }
+
     @Override
     public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Long queryGene, Collection<Long> geneIds ) {
         Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
@@ -308,23 +277,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         }
 
         return overlap;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.providers.GeneOntologyService#calculateGoTermOverlap(ubic.gemma.model.genome.Gene,
-     * ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) {
-
-        if ( queryGene1 == null || queryGene2 == null ) return null;
-
-        Collection<OntologyTerm> queryGeneTerms1 = getGOTerms( queryGene1 );
-        Collection<OntologyTerm> queryGeneTerms2 = getGOTerms( queryGene2 );
-
-        return computeOverlap( queryGeneTerms1, queryGeneTerms2 );
     }
 
     /*
@@ -457,12 +409,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return getAncestors( entry, includePartOf );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.providers.GeneOntologyService#getChildren(ubic.basecode.ontology.model.OntologyTerm)
-     */
-
     @Override
     public Collection<OntologyTerm> getChildren( OntologyTerm entry ) {
         return getChildren( entry, false );
@@ -507,16 +453,17 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.ontology.providers.GeneOntologyService#getChildren(ubic.basecode.ontology.model.OntologyTerm)
+     */
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.providers.GeneOntologyService#getGOTerms(ubic.gemma.model.genome.Gene)
      */
     @Override
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
         return getGOTerms( gene, true, null );
-    }
-
-    @Override
-    public Collection<OntologyTerm> getGOTerms( Long geneId ) {
-        return getGOTerms( geneId, true, null );
     }
 
     /*
@@ -527,18 +474,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     @Override
     public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
         return getGOTerms( gene, includePartOf, null );
-    }
-
-    /**
-     * FIXME it might be better to avoid the fetch.
-     * 
-     * @param gene
-     * @param includePartOf
-     * @param goAspect
-     * @return
-     */
-    public Collection<OntologyTerm> getGOTerms( Long gene, boolean includePartOf, GOAspect goAspect ) {
-        return this.getGOTerms( geneService.load( gene ), includePartOf, goAspect );
     }
 
     /*
@@ -589,6 +524,23 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return cachedTerms;
     }
 
+    @Override
+    public Collection<OntologyTerm> getGOTerms( Long geneId ) {
+        return getGOTerms( geneId, true, null );
+    }
+
+    /**
+     * FIXME it might be better to avoid the fetch.
+     * 
+     * @param gene
+     * @param includePartOf
+     * @param goAspect
+     * @return
+     */
+    public Collection<OntologyTerm> getGOTerms( Long gene, boolean includePartOf, GOAspect goAspect ) {
+        return this.getGOTerms( geneService.load( gene ), includePartOf, goAspect );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -630,6 +582,27 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         if ( includePartOf ) results.addAll( getIsPartOf( entry ) );
 
         return results;
+    }
+
+    /**
+     * @param goId
+     * @return
+     */
+    @Override
+    public GOAspect getTermAspect( String goId ) {
+        OntologyTerm term = getTermForId( goId );
+        if ( term == null ) return null;
+        return getTermAspect( term );
+    }
+
+    /**
+     * @param goId
+     * @return
+     */
+    @Override
+    public GOAspect getTermAspect( VocabCharacteristic goId ) {
+        String string = asRegularGoId( goId );
+        return getTermAspect( string );
     }
 
     /*
@@ -799,6 +772,31 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         addTerms( terms );
     }
 
+    @Override
+    public void shutDown() {
+        if ( this.isReady() ) {
+            try {
+                this.goTerms.clear();
+                this.childrenCache.clear();
+                this.parentsCache.clear();
+                term2Aspect.clear();
+                for ( IndexLARQ l : indices ) {
+                    l.close();
+                }
+
+                this.model.close();
+                this.model = null;
+            } catch ( Exception e ) {
+                throw new RuntimeException( e );
+            } finally {
+                ready.set( false );
+                running.set( false );
+            }
+
+        }
+
+    }
+
     /**
      * 
      */
@@ -951,6 +949,48 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
+     * @param term
+     * @return
+     */
+    private GOAspect getTermAspect( OntologyTerm term ) {
+        assert term != null;
+        String goid = term.getTerm();
+        if ( term2Aspect.containsKey( goid ) ) {
+            return term2Aspect.get( goid );
+        }
+
+        String nameSpace = null;
+        for ( AnnotationProperty annot : term.getAnnotations() ) {
+            if ( annot.getProperty().equals( "hasOBONamespace" ) ) {
+                nameSpace = annot.getContents();
+                break;
+            }
+        }
+
+        GOAspect aspect;
+        if ( nameSpace == null ) {
+            /*
+             * Newer GO owl files do not have this, so you have to trace up to the root.
+             */
+            for ( OntologyTerm t : getAllParents( term ) ) {
+                aspect = getTermAspect( t );
+                if ( aspect != null ) {
+                    term2Aspect.put( goid, aspect );
+                    return aspect;
+                }
+            }
+
+            log.warn( "aspect could not be determined for: " + term );
+            return null;
+        }
+
+        aspect = GOAspect.valueOf( nameSpace.toUpperCase() );
+        term2Aspect.put( goid, aspect );
+
+        return aspect;
+    }
+
+    /**
      * 
      */
     private synchronized void initializeGeneOntology() {
@@ -1009,31 +1049,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         }
         buf.append( " ]" );
         log.trace( buf.toString() );
-    }
-
-    @Override
-    public void shutDown() {
-        if ( this.isReady() ) {
-            try {
-                this.goTerms.clear();
-                this.childrenCache.clear();
-                this.parentsCache.clear();
-                term2Aspect.clear();
-                for ( IndexLARQ l : indices ) {
-                    l.close();
-                }
-
-                this.model.close();
-                this.model = null;
-            } catch ( Exception e ) {
-                throw new RuntimeException( e );
-            } finally {
-                ready.set( false );
-                running.set( false );
-            }
-
-        }
-
     }
 
 }

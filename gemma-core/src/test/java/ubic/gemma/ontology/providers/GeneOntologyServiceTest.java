@@ -18,28 +18,41 @@
  */
 package ubic.gemma.ontology.providers;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 
 /**
  * @author Paul
  * @version $Id$
  */
 @SuppressWarnings("static-access")
-public class GeneOntologyServiceTest extends TestCase {
-    GeneOntologyServiceImpl gos;
+public class GeneOntologyServiceTest {
+    static GeneOntologyServiceImpl gos;
     private static Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
+    // note: no spring context.
+    @BeforeClass
+    public static void setUp() throws Exception {
+        gos = new GeneOntologyServiceImpl();
+        InputStream is = new GZIPInputStream(
+                GeneOntologyServiceTest.class
+                        .getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) );
+        assert is != null;
+        gos.loadTermsInNameSpace( is );
+    }
+
+    @Test
     public final void testAllParents() {
         String id = "GO:0035242";
 
@@ -50,6 +63,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 9, terms.size() );
     }
 
+    @Test
     public final void testAllParents2() {
         String id = "GO:0000006";
         OntologyTerm termForId = gos.getTermForId( id );
@@ -59,15 +73,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 11, terms.size() );
     }
 
-    public final void testGetAspect() {
-        String aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0000107" ).toString().toLowerCase();
-        assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0016791" ).toString().toLowerCase();
-        assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0000107" ).toString().toLowerCase();
-        assertEquals( "molecular_function", aspect );
-    }
-
+    @Test
     public final void testAsRegularGoId() {
         String id = "GO:0000107";
         OntologyTerm termForId = gos.getTermForId( id );
@@ -76,6 +82,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( id, formatedId );
     }
 
+    @Test
     public final void testGetAllChildren() {
         String id = "GO:0016791";
         OntologyTerm termForId = gos.getTermForId( id );
@@ -85,6 +92,17 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 136, terms.size() );
     }
 
+    @Test
+    public final void testGetAspect() {
+        String aspect = gos.getTermAspect( "GO:0000107" ).toString().toLowerCase();
+        assertEquals( "molecular_function", aspect );
+        aspect = gos.getTermAspect( "GO:0016791" ).toString().toLowerCase();
+        assertEquals( "molecular_function", aspect );
+        aspect = gos.getTermAspect( "GO:0000107" ).toString().toLowerCase();
+        assertEquals( "molecular_function", aspect );
+    }
+
+    @Test
     public final void testGetChildren() {
         String id = "GO:0016791";
         OntologyTerm termForId = gos.getTermForId( id );
@@ -92,16 +110,6 @@ public class GeneOntologyServiceTest extends TestCase {
         Collection<OntologyTerm> terms = gos.getChildren( termForId );
 
         assertEquals( 65, terms.size() );
-    }
-
-    public final void testGetChildrenPartOf() {
-        String id = "GO:0023025";
-        OntologyTerm termForId = gos.getTermForId( id );
-        assertNotNull( termForId );
-        Collection<OntologyTerm> terms = gos.getAllChildren( termForId, true );
-
-        // has a part.
-        assertEquals( 1, terms.size() );
     }
 
     // latest versions do not have definitions included.
@@ -112,6 +120,18 @@ public class GeneOntologyServiceTest extends TestCase {
     // assertTrue( definition.startsWith( "I am a test definition" ) );
     // }
 
+    @Test
+    public final void testGetChildrenPartOf() {
+        String id = "GO:0023025";
+        OntologyTerm termForId = gos.getTermForId( id );
+        assertNotNull( termForId );
+        Collection<OntologyTerm> terms = gos.getAllChildren( termForId, true );
+
+        // has a part.
+        assertEquals( 1, terms.size() );
+    }
+
+    @Test
     public final void testGetParents() {
         String id = "GO:0000014";
         OntologyTerm termForId = gos.getTermForId( id );
@@ -124,6 +144,7 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 1, terms.size() );
     }
 
+    @Test
     public final void testGetParentsPartOf() {
         String id = "GO:0000332";
         OntologyTerm termForId = gos.getTermForId( id );
@@ -137,23 +158,12 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 12, terms.size() );
     }
 
+    @Test
     public final void testGetTermForId() {
         String id = "GO:0000310";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         assertEquals( "xanthine phosphoribosyltransferase activity", termForId.getTerm() );
-    }
-
-    // note: no spring context.
-    @Override
-    @BeforeClass
-    protected void setUp() throws Exception {
-        gos = new GeneOntologyServiceImpl();
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/ontology/molecular-function.test.owl.gz" ) );
-        assert is != null;
-        gos.loadTermsInNameSpace( is );
-        log.info( "Ready to test" );
     }
 
 }
