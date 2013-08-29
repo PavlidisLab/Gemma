@@ -71,6 +71,13 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected static final String RESULTS_TO_IGNORE = RESOURCE_PATH_GENERAL + "ResultsToIgnore.tsv";
     protected HashSet<String> resultsToIgnore = new HashSet<String>();
 
+    // manual description file, MeshID, OmimID or txt description to a valueUri
+    public static final String MANUAL_MAPPING = RESOURCE_PATH_GENERAL + "ManualDescriptionMapping.tsv";
+    protected HashMap<String, HashSet<String>> manualDescriptionToValuesUriMapping = new HashMap<String, HashSet<String>>();
+
+    // populated using the disease ontology file
+    protected HashMap<String, HashSet<String>> diseaseFileMappingFound = new HashMap<String, HashSet<String>>();
+
     // ********************************************************************************
     // the services that will be needed
     protected DiseaseOntologyService diseaseOntologyService = null;
@@ -84,10 +91,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // gemma)
     protected static final String DISEASE_ONT_PATH = "http://rest.bioontology.org/bioportal/virtual/download/";
     protected static final String DISEASE_ONT_FILE = "1009?apikey=68835db8-b142-4c7d-9509-3c843849ad67";
-    // found using the disease ontology file, OMIM ID --> ValuesUri
-    protected HashMap<String, HashSet<String>> omimIdToPhenotypeMapping = new HashMap<String, HashSet<String>>();
-    // found using the disease ontology file, MESH ID --> ValuesUri
-    protected HashMap<String, HashSet<String>> meshIdToPhenotypeMapping = new HashMap<String, HashSet<String>>();
 
     protected TreeSet<String> outMappingFoundBuffer = new TreeSet<String>();
     protected TreeSet<String> outNotFoundBuffer = new TreeSet<String>();
@@ -103,19 +106,11 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected BufferedWriter outMappingFound = null;
     protected BufferedWriter outNotFound = null;
 
-    // *********************************************************************************************
-    // Used by RGD and CTD
-    public static final String MANUAL_MAPPING_RGD_CTD = RESOURCE_PATH + "RGD_CTD" + File.separator
-            + "ManualDescriptionMapping_CTD_RGD.tsv";
-
-    // MeshId --> valueUri
-    protected HashMap<String, HashSet<String>> mesh2ValueUri_RGD_CTD = new HashMap<String, HashSet<String>>();
-
     // load all needed services
     protected synchronized void loadServices( String[] args ) throws Exception {
 
         // this gets the context, so we can access beans
-        Exception err = processCommandLine( "ExternalDatabaseEvidenceImporterCLI", args );
+        Exception err = processCommandLine( "ExternalDatabaseEvidenceImporterAbstractCLI", args );
         if ( err != null ) throw err;
 
         this.ontologyService = this.getBean( OntologyService.class );
@@ -138,9 +133,15 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // the loadServices is in the constructor, we always need those
     public ExternalDatabaseEvidenceImporterAbstractCLI( String[] args ) throws Exception {
         super();
+
+        // load all needed services
         loadServices( args );
         // results to exclude using the annoator
-        wordsToExclude = parseFileFindExcludeTerms();
+        parseFileFindExcludeTerms();
+        // results returned by the annotator to ignore
+        parseResultsToIgnore();
+        // parse the manual mapping file
+        parseManualMappingFile();
         // set up the annotator
         initAnnotatorClient();
     }
@@ -350,7 +351,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                     tokens = line.split( ":" );
                     omimIds.add( tokens[2].trim() );
                 } else if ( line.indexOf( "xref: MSH" ) != -1 ) {
-
                     tokens = line.split( ":" );
                     meshIds.add( tokens[2].trim() );
                 }
@@ -364,34 +364,34 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
                         HashSet<String> h = new HashSet<String>();
 
-                        if ( omimIdToPhenotypeMapping.get( omimId ) == null ) {
+                        if ( diseaseFileMappingFound.get( omimId ) == null ) {
                             if ( !isObsoleteOrNotExist( valueUri ) ) {
                                 h.add( valueUri );
                             }
                         } else {
-                            h = omimIdToPhenotypeMapping.get( omimId );
+                            h = diseaseFileMappingFound.get( omimId );
                             if ( !isObsoleteOrNotExist( valueUri ) ) {
                                 h.add( valueUri );
                             }
                         }
-                        omimIdToPhenotypeMapping.put( omimId, h );
+                        diseaseFileMappingFound.put( "OMIM:" + omimId, h );
                     }
 
                     for ( String meshId : meshIds ) {
 
                         HashSet<String> h = new HashSet<String>();
 
-                        if ( meshIdToPhenotypeMapping.get( meshId ) == null ) {
+                        if ( diseaseFileMappingFound.get( meshId ) == null ) {
                             if ( !isObsoleteOrNotExist( valueUri ) ) {
                                 h.add( valueUri );
                             }
                         } else {
-                            h = meshIdToPhenotypeMapping.get( meshId );
+                            h = diseaseFileMappingFound.get( meshId );
                             if ( !isObsoleteOrNotExist( valueUri ) ) {
                                 h.add( valueUri );
                             }
                         }
-                        meshIdToPhenotypeMapping.put( meshId, h );
+                        diseaseFileMappingFound.put( "MESH:" + meshId, h );
                     }
                 }
             }
@@ -412,7 +412,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
             line = removeSmallNumberAndTxt( line );
 
-            wordsToExclude.add( removeCha( line ) );
+            wordsToExclude.add( removeCha( line ).toLowerCase() );
         }
         MyComparator myComparator = new MyComparator();
 
@@ -459,21 +459,10 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // transform the given line to its valueUri, ex: OMIM:1234= 1234-->valueUri
     protected String findValueUriWithDiseaseId( String diseaseId ) {
 
-        Collection<String> valuesUri = new HashSet<String>();
+        Collection<String> valuesUri = diseaseFileMappingFound.get( diseaseId );
         String allValueUri = "";
 
-        if ( diseaseId.indexOf( "OMIM" ) != -1 ) {
-            if ( omimIdToPhenotypeMapping.get( findId( diseaseId ) ) != null ) {
-                valuesUri = omimIdToPhenotypeMapping.get( findId( diseaseId ) );
-            }
-        } else if ( diseaseId.indexOf( "MESH" ) != -1 ) {
-
-            if ( meshIdToPhenotypeMapping.get( findId( diseaseId ) ) != null ) {
-                valuesUri = meshIdToPhenotypeMapping.get( findId( diseaseId ) );
-            }
-        }
-
-        if ( !valuesUri.isEmpty() ) {
+        if ( valuesUri != null && !valuesUri.isEmpty() ) {
 
             for ( String valueUri : valuesUri ) {
                 allValueUri = allValueUri + valueUri + ";";
@@ -484,19 +473,20 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
     }
 
-    protected String findId( String txt ) {
-        return txt.substring( txt.indexOf( ":" ) + 1, txt.length() );
-    }
-
     // special rule used to format the search term
     protected String removeSpecificKeywords( String txt ) {
 
         String txtWithExcludeDigitWords = removeEndDigitWords( txt );
 
+        if ( txtWithExcludeDigitWords.isEmpty() ) {
+            txtWithExcludeDigitWords = txt;
+        }
+
         String newTxt = txtWithExcludeDigitWords;
 
         for ( String word : wordsToExclude ) {
-            int indexOfWordToExclude = newTxt.indexOf( word );
+            String newTxtLowerCase = newTxt.toLowerCase();
+            int indexOfWordToExclude = newTxtLowerCase.indexOf( word );
             int wordLength = word.length();
 
             if ( indexOfWordToExclude != -1 ) {
@@ -513,7 +503,9 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                 newTxt = newTxt + token + ",";
             }
         }
-        newTxt = newTxt.substring( 0, newTxt.length() - 1 );
+        if ( !newTxt.isEmpty() ) {
+            newTxt = newTxt.substring( 0, newTxt.length() - 1 );
+        }
 
         tokens = newTxt.split( "," );
 
@@ -543,11 +535,12 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                 // last token
                 if ( txtFoundInTerms.length - 1 == i ) {
 
-                    if ( txtFoundInTerm.length() < 4 ) {
+                    if ( txtFoundInTerm.length() < 5 ) {
+                        txtFoundInTerm = "";
                         // contains a number
-                        if ( txtFoundInTerm.matches( ".*\\d.*" ) ) {
-                            txtFoundInTerm = "";
-                        }
+                        // if ( txtFoundInTerm.matches( ".*\\d.*" ) ) {
+                        // txtFoundInTerm = "";
+                        // }
                     }
                 }
                 finalTxt = finalTxt + txtFoundInTerm.trim();
@@ -606,20 +599,20 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
                 if ( annotatorResponseFirst.isExactMatch() ) {
 
-                    conditionUsed = "Case 4a: Found Exact With Disease Annotator";
+                    conditionUsed = "Case 4: Found Exact With Disease Annotator";
 
                 } else if ( annotatorResponseFirst.isSynonym() ) {
-                    conditionUsed = "Case 5a: Found Synonym With Disease Annotator Synonym";
+                    conditionUsed = "Case 5: Found Synonym With Disease Annotator Synonym";
                 }
             } else if ( annotatorResponseFirst.getOntologyUsed().equalsIgnoreCase( "HP" ) ) {
 
                 if ( annotatorResponseFirst.isExactMatch() ) {
 
-                    conditionUsed = "Case 6a: Found Exact With HP Annotator";
+                    conditionUsed = "Case 6: Found Exact With HP Annotator";
 
                 } else if ( annotatorResponseFirst.isSynonym() ) {
 
-                    conditionUsed = "Case 7a: Found Synonym With HP Annotator Synonym";
+                    conditionUsed = "Case 7: Found Synonym With HP Annotator Synonym";
                 }
             }
         }
@@ -633,12 +626,25 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     }
 
     // many importers can have different headers, this is 1 possible case
-    protected void writeOutputFileHeaders() throws IOException {
+    protected void writeOutputFileHeaders1() throws IOException {
 
         // headers of the final out file to write
         outFinalResults
                 .write( "GeneSymbol\tGeneId\tPrimaryPubMed\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
+    }
 
+    // many importers can have different headers, this is 1 possible case
+    protected void writeOutputFileHeaders2() throws IOException {
+
+        // headers of the final file
+        outFinalResults
+                .write( "GeneSymbol\tTaxon\tPrimaryPubMed\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
+    }
+
+    // many importers can have different headers, this is 1 possible case
+    protected void writeOutputFileHeaders3() throws IOException {
+        outFinalResults
+                .write( "GeneSymbol\tPrimaryPubMed\tEvidenceCode\tComments\tScore\tStrength\tScoreType\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
     }
 
     // write all found in set to files and close files
@@ -659,15 +665,26 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         outNotFound.close();
         outFinalResults.close();
 
+        if ( !errorMessages.isEmpty() ) {
+
+            log.info( "here are the error messages :\n" );
+
+            for ( String err : errorMessages ) {
+
+                log.error( err );
+            }
+        }
     }
 
-    // create the mapping use by CTD and RGD
-    protected void parseFileManualDescriptionFile_RGD_CTD() throws IOException {
+    protected void parseManualMappingFile() throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader(
-                RgdDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING_RGD_CTD ) ) );
+                RgdDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING ) ) );
 
         String line = "";
+        
+        // skip first line, the headers
+        line = br.readLine();
 
         // reads the manual file and put the data in a structure
         while ( ( line = br.readLine() ) != null ) {
@@ -686,12 +703,13 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
                 if ( ontologyTerm.getLabel().equalsIgnoreCase( valueStaticFile ) ) {
 
-                    if ( mesh2ValueUri_RGD_CTD.get( meshId ) != null ) {
-                        col = mesh2ValueUri_RGD_CTD.get( meshId );
+                    if ( manualDescriptionToValuesUriMapping.get( meshId ) != null ) {
+                        col = manualDescriptionToValuesUriMapping.get( meshId );
                     }
 
                     col.add( valueUriStaticFile );
-                    mesh2ValueUri_RGD_CTD.put( meshId, col );
+
+                    manualDescriptionToValuesUriMapping.put( meshId, col );
 
                 } else {
                     errorMessages.add( "MANUAL VALUEURI AND VALUE DOESNT MATCH: " + line );
@@ -704,7 +722,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     }
 
     // parse file and returns a collection of terms found
-    protected HashSet<String> parseResultsToIgnore() throws IOException {
+    private HashSet<String> parseResultsToIgnore() throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader(
                 OmimDatabaseImporter.class.getResourceAsStream( RESULTS_TO_IGNORE ) ) );
@@ -721,29 +739,77 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         return resultsToIgnore;
     }
 
-    protected void writeInPossibleMapping_RGD_CTD( Collection<AnnotatorResponse> annotatorResponses, String diseaseId,
-            String diseaseName ) {
+    protected boolean writeInPossibleMapping( Collection<AnnotatorResponse> annotatorResponses, String identifier,
+            String searchTerm, String externalDatabaseName ) {
 
         // keep all that was found by the annotator
-        String valueUri = "";
-        String value = "";
+        String valuesUri = "";
+        String values = "";
 
         for ( AnnotatorResponse annotatorResponse : annotatorResponses ) {
 
-            if ( !resultsToIgnore.contains( annotatorResponse.getValue() ) ) {
+            if ( !resultsToIgnore.contains( annotatorResponse.getValueUri() ) ) {
 
-                valueUri = valueUri + annotatorResponse.getValueUri() + "; ";
-                value = value + annotatorResponse.getValue() + "; ";
+                valuesUri = valuesUri + annotatorResponse.getValueUri() + "; ";
+                values = values + annotatorResponse.getValue() + "; ";
             }
         }
 
-        if ( !value.isEmpty() ) {
-            String lineToWrite = diseaseId + "\t" + valueUri + "\t" + value + "\t" + diseaseName + "\t"
-                    + "Case 8: Found Mappings, No Match Detected" + "\n";
+        if ( !values.isEmpty() ) {
+            String lineToWrite = identifier + "\t" + valuesUri + "\t" + values + "\t" + searchTerm + "\t"
+                    + "Case 8: Found Mappings, No Match Detected" + "\t" + externalDatabaseName + "\n";
             // multiple mapping detected
             outMappingFoundBuffer.add( lineToWrite );
+            return true;
+        }
+        return false;
+    }
+
+    protected void writeInPossibleMappingAndNotFound( String identifier, String searchTerm, String line,
+            String externalDatabaseName ) {
+
+        // search with the annotator and filter result to take out obsolete terms given
+        Collection<AnnotatorResponse> ontologyTermsNormal = removeNotExistAndObsolete( anoClient.findTerm( searchTerm ) );
+
+        Collection<AnnotatorResponse> ontologyTermsWithOutKeywords = new HashSet<AnnotatorResponse>();
+
+        // did we find something ?
+        String condition = findConditionUsed( ontologyTermsNormal, false );
+
+        if ( condition == null ) {
+            // search again manipulating the search string
+            String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm );
+
+            ontologyTermsWithOutKeywords = removeNotExistAndObsolete( anoClient.findTerm( searchTermWithOutKeywords ) );
+            // did we find something ?
+            condition = findConditionUsed( ontologyTermsWithOutKeywords, true );
         }
 
+        // if a satisfying condition was found write in down in the mapping found
+        if ( condition != null ) {
+
+            String lineToWrite = identifier + "\t" + valueUriForCondition + "\t" + valueForCondition + "\t"
+                    + searchTerm + "\t" + condition + "\t" + externalDatabaseName + "\n";
+
+            outMappingFoundBuffer.add( lineToWrite );
+
+        } else if ( !ontologyTermsNormal.isEmpty() || !ontologyTermsWithOutKeywords.isEmpty() ) {
+
+            Collection<AnnotatorResponse> allAnnotatorResponse = new TreeSet<AnnotatorResponse>();
+            allAnnotatorResponse.addAll( ontologyTermsNormal );
+            allAnnotatorResponse.addAll( ontologyTermsWithOutKeywords );
+            // multiple mapping found without a specific condition
+            boolean found = writeInPossibleMapping( allAnnotatorResponse, identifier, searchTerm, externalDatabaseName );
+
+            if ( !found ) {
+                outNotFoundBuffer.add( line + "\n" );
+            }
+        }
+
+        else {
+            // nothing was found with the annotator, write the line in the not found file
+            outNotFoundBuffer.add( line + "\n" );
+        }
     }
 
 }

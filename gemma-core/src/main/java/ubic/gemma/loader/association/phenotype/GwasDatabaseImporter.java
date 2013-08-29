@@ -15,16 +15,9 @@
 package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 
 public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
@@ -34,12 +27,6 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     // path of file to download
     public static final String GWAS_URL_PATH = "http://www.genome.gov/admin/";
     public static final String GWAS_FILE = "gwascatalog.txt";
-
-    // path for resources
-    public static final String GWAS_FILES_PATH = RESOURCE_PATH + GWAS + File.separator;
-
-    // manual static file mapping
-    public static final String MANUAL_MAPPING_GWAS = GWAS_FILES_PATH + "ManualDescriptionMapping.tsv";
 
     // names and positions of the headers, this will be check with the file to verify all headers
     protected static final String PUBMED_ID = "PUBMEDID";
@@ -79,66 +66,16 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         // download the GWAS file
         String gwasFile = importEvidence.downloadFileFromWeb( GWAS_URL_PATH, GWAS_FILE );
 
-        // Use the manual description file, to link description to valueUri
-        HashMap<String, Collection<String>> descriptionToValueUri = importEvidence.parseFileManualDescriptionFile();
-
         // process the gwas file
-        importEvidence.processGwasFile( gwasFile, descriptionToValueUri );
+        importEvidence.processGwasFile( gwasFile );
 
-    }
-
-    // create the mapping from the static file also verify that what is in the file makes sense
-    private HashMap<String, Collection<String>> parseFileManualDescriptionFile() throws IOException {
-
-        HashMap<String, Collection<String>> description2ValueUri = new HashMap<String, Collection<String>>();
-
-        BufferedReader br = new BufferedReader( new InputStreamReader(
-                GwasDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING_GWAS ) ) );
-
-        String line = "";
-
-        // reads the manual file and put the data in a stucture
-        while ( ( line = br.readLine() ) != null ) {
-
-            Collection<String> col = new HashSet<String>();
-
-            String[] tokens = line.split( "\t" );
-
-            String descriptionStaticFile = tokens[0];
-            String valueUriStaticFile = tokens[1];
-            String valueStaticFile = tokens[2];
-
-            OntologyTerm ontologyTerm = findOntologyTermExistAndNotObsolote( valueUriStaticFile );
-
-            if ( ontologyTerm != null ) {
-
-                if ( ontologyTerm.getUri().equalsIgnoreCase( valueStaticFile ) ) {
-
-                    if ( description2ValueUri.get( descriptionStaticFile ) == null ) {
-
-                        col.add( valueUriStaticFile );
-                    } else {
-                        col = description2ValueUri.get( descriptionStaticFile );
-                        col.add( valueUriStaticFile );
-                    }
-                    description2ValueUri.put( descriptionStaticFile, col );
-                } else {
-                    errorMessages.add( "MANUAL VALUEURI AND VALUE DOESNT MATCH: " + line );
-                }
-            } else {
-                errorMessages.add( "MANUAL MAPPING FILE TERM OBSOLETE OR NOT EXISTANT: " + line );
-            }
-        }
-        return description2ValueUri;
     }
 
     // process the gwas file, line by line
-    private void processGwasFile( String gwasFile, HashMap<String, Collection<String>> descriptionToValueUri )
-            throws Exception {
+    private void processGwasFile( String gwasFile ) throws Exception {
 
         // headers of the final file
-        outFinalResults
-                .write( "GeneSymbol\tPrimaryPubMed\tEvidenceCode\tComments\tScore\tStrength\tScoreType\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
+        writeOutputFileHeaders3();
 
         BufferedReader br = new BufferedReader( new FileReader( gwasFile ) );
 
@@ -159,78 +96,18 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
                 continue;
             }
 
-            // can we map the description with the static file
+            // case 1: can we map the description with the static file
             String description = tokens[DISEASE_TRAIT_INDEX];
-            if ( descriptionToValueUri.get( description ) != null ) {
-                writeFinalFile( geneSymbol, tokens, descriptionToValueUri.get( description ) );
+            if ( manualDescriptionToValuesUriMapping.get( description ) != null ) {
+                writeFinalFile( geneSymbol, tokens, manualDescriptionToValuesUriMapping.get( description ) );
             } else {
+                writeInPossibleMappingAndNotFound( description, description, line, GWAS );
 
-                // something if found by the annotator
-                Collection<AnnotatorResponse> responses = removeNotExistAndObsolete( anoClient.findTerm( description ) );
-
-                if ( !responses.isEmpty() ) {
-
-                    String conditionUsed = "";
-                    String annotatorValueFound = "";
-                    String annotatorValueUriFound = "";
-
-                    AnnotatorResponse annotatorResponseFirstNormal = responses.iterator().next();
-
-                    if ( annotatorResponseFirstNormal.getOntologyUsed().equalsIgnoreCase( "DOID" ) ) {
-
-                        if ( annotatorResponseFirstNormal.isExactMatch() ) {
-                            annotatorValueFound = annotatorResponseFirstNormal.getValue();
-                            annotatorValueUriFound = annotatorResponseFirstNormal.getValueUri();
-                            conditionUsed = "Case 4a: Found Exact With Disease Annotator";
-
-                        } else if ( annotatorResponseFirstNormal.isSynonym() ) {
-                            annotatorValueFound = annotatorResponseFirstNormal.getValue();
-                            annotatorValueUriFound = annotatorResponseFirstNormal.getValueUri();
-                            conditionUsed = "Case 5a: Found Synonym With Disease Annotator Synonym";
-                        }
-                    } else if ( annotatorResponseFirstNormal.getOntologyUsed().equalsIgnoreCase( "HP" ) ) {
-
-                        if ( annotatorResponseFirstNormal.isExactMatch() ) {
-                            annotatorValueFound = annotatorResponseFirstNormal.getValue();
-                            annotatorValueUriFound = annotatorResponseFirstNormal.getValueUri();
-                            conditionUsed = "Case 6a: Found Exact With HP Annotator";
-
-                        } else if ( annotatorResponseFirstNormal.isSynonym() ) {
-                            annotatorValueFound = annotatorResponseFirstNormal.getValue();
-                            annotatorValueUriFound = annotatorResponseFirstNormal.getValueUri();
-                            conditionUsed = "Case 7a: Found Synonym With HP Annotator Synonym";
-                        }
-                    }
-
-                    if ( conditionUsed.isEmpty() ) {
-                        conditionUsed = "Case 8: Found Mappings, No Match Detected";
-
-                        for ( AnnotatorResponse annotatorResponse : responses ) {
-
-                            annotatorValueFound = annotatorValueFound + annotatorResponse.getValue() + "; ";
-                            annotatorValueUriFound = annotatorValueUriFound + annotatorResponse.getValueUri() + "; ";
-
-                        }
-                    }
-
-                    outMappingFound.write( description + "\t" + annotatorValueUriFound + "\t" + annotatorValueFound
-                            + "\t" + conditionUsed + "\n" );
-                }
             }
         }
 
         br.close();
-        outMappingFound.close();
-
-        if ( !errorMessages.isEmpty() ) {
-
-            log.info( "here is the error messages :\n" );
-
-            for ( String err : errorMessages ) {
-
-                log.error( err );
-            }
-        }
+        writeBuffersAndCloseFiles();
 
     }
 
@@ -308,7 +185,6 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
         if ( !valueFile.equalsIgnoreCase( valueExpected ) ) {
             throw new Exception( "Wrong header found in file, expected: " + valueExpected + "  found:" + valueFile );
-
         }
     }
 

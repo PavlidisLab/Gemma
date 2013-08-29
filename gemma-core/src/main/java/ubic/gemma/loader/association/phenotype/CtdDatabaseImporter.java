@@ -18,11 +18,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.TreeSet;
 
-import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 import ubic.basecode.util.FileTools;
 
 public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
@@ -46,7 +42,7 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     public CtdDatabaseImporter( String[] args ) throws Exception {
         super( args );
 
-        // create a folder name CTD
+        // create a folder named CTD
         writeFolder = createWriteFolderIfDoesntExist( CTD );
 
         // download the CTD file if we dont already have it
@@ -55,14 +51,8 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
         findOmimAndMeshMappingUsingOntologyFile();
 
-        // parse the manual description file
-        parseFileManualDescriptionFile_RGD_CTD();
-
-        // parse the results to ignore when using the annotator
-        parseResultsToIgnore();
-
         // write headers of the final file
-        writeOutputFileHeaders();
+        writeOutputFileHeaders1();
     }
 
     private void processCTDFile() throws IOException {
@@ -101,9 +91,9 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                 // 1- using the disease ontology first look is a mapping is found
                 String valuesUri = findValueUriWithDiseaseId( diseaseId );
 
-                if ( valuesUri.isEmpty() && mesh2ValueUri_RGD_CTD.get( diseaseId ) != null ) {
+                if ( valuesUri.isEmpty() && manualDescriptionToValuesUriMapping.get( diseaseId ) != null ) {
 
-                    for ( String valueUriFound : mesh2ValueUri_RGD_CTD.get( diseaseId ) ) {
+                    for ( String valueUriFound : manualDescriptionToValuesUriMapping.get( diseaseId ) ) {
                         // 2 - If we couldnt find it lets use the manual mapping file
                         valuesUri = valuesUri + valueUriFound + ";";
                     }
@@ -127,48 +117,7 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                  * value make sense to add them to the manual mapping
                  **/
                 else {
-
-                    String searchTerm = diseaseName;
-
-                    // search with the annotator and filter result to take out obsolete terms given
-                    Collection<AnnotatorResponse> ontologyTermsNormal = removeNotExistAndObsolete( anoClient
-                            .findTerm( searchTerm ) );
-
-                    Collection<AnnotatorResponse> ontologyTermsWithOutKeywords = new HashSet<AnnotatorResponse>();
-
-                    // did we find something ?
-                    String condition = findConditionUsed( ontologyTermsNormal, false );
-
-                    if ( condition == null ) {
-                        // search again manipulating the search string
-                        String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm );
-
-                        ontologyTermsWithOutKeywords = removeNotExistAndObsolete( anoClient
-                                .findTerm( searchTermWithOutKeywords ) );
-                        // did we find something ?
-                        condition = findConditionUsed( ontologyTermsWithOutKeywords, true );
-                    }
-
-                    // if a satisfying condition was found write in down in the mapping found
-                    if ( condition != null ) {
-
-                        String lineToWrite = diseaseId + "\t" + valueUriForCondition + "\t" + valueForCondition + "\t"
-                                + diseaseName + "\t" + condition + "\n";
-
-                        outMappingFoundBuffer.add( lineToWrite );
-                    } else if ( !ontologyTermsNormal.isEmpty() || !ontologyTermsWithOutKeywords.isEmpty() ) {
-
-                        Collection<AnnotatorResponse> allAnnotatorResponse = new TreeSet<AnnotatorResponse>();
-                        allAnnotatorResponse.addAll( ontologyTermsNormal );
-                        allAnnotatorResponse.addAll( ontologyTermsWithOutKeywords );
-                        // multiple mapping found without a specific condition
-                        writeInPossibleMapping_RGD_CTD( allAnnotatorResponse, diseaseId, diseaseName );
-                    }
-
-                    else {
-                        // nothing was found with the annotator, write the line in the not found file
-                        outNotFoundBuffer.add( line + "\n" );
-                    }
+                    writeInPossibleMappingAndNotFound( diseaseId, diseaseName, line, CTD );
                 }
             }
         }
