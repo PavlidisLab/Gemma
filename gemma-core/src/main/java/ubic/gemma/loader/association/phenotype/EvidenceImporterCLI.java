@@ -54,9 +54,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)
     private static String[] initArguments() {
 
-        // specify what is the name of the imported file
-        String fileName = "OMIM.tsv";
-
         String[] args = new String[12];
         // user
         args[0] = "-u";
@@ -66,7 +63,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         args[3] = "administrator";
         // the path of the file
         args[4] = "-f";
-        args[5] = "./gemma-core/src/main/resources/neurocarta/evidenceImporter/FilesToImport/" + fileName;
+        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/evidenceImporter/FilesToImport/finalResults.tsv";
         // create the evidence in the database
         args[6] = "-c";
         args[7] = "true";
@@ -245,7 +242,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         String description = tokens[this.mapColumns.get( "Comments" )].trim();
 
-        if ( tokens[this.mapColumns.get( "IsNegative" )].trim().equals( "1" ) ) {
+        if ( this.mapColumns.get( "IsNegative" ) != null
+                && tokens[this.mapColumns.get( "IsNegative" )].trim().equals( "1" ) ) {
             isNegativeEvidence = true;
         }
 
@@ -442,7 +440,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             return null;
         }
 
-        // check for onsolte terms
+        // check for obsolete terms
         if ( ot.isTermObsolete() ) {
             writeError( "TERM IS OBSOLETE: " + ot.getLabel() + " " + ot.getUri() );
         }
@@ -457,21 +455,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
      * @throws Exception
      */
     private int verifyGeneIdExist( String geneId, String geneName ) throws IOException {
-
-        // specifics cases : we dont import those geneID, species not in gemma
-        if ( geneId.equalsIgnoreCase( "100195119" ) || geneId.equalsIgnoreCase( "100305177" )
-                || geneId.equalsIgnoreCase( "1100195758" ) || geneId.equalsIgnoreCase( "100049380" )
-                || geneId.equalsIgnoreCase( "100125427" ) || geneId.equalsIgnoreCase( "100156830" )
-                || geneId.equalsIgnoreCase( "100328933" ) || geneId.equalsIgnoreCase( "100400516" )
-                || geneId.equalsIgnoreCase( "380482" ) || geneId.equalsIgnoreCase( "396058" )
-                || geneId.equalsIgnoreCase( "414399" ) || geneId.equalsIgnoreCase( "445693" )
-                || geneId.equalsIgnoreCase( "480491" ) || geneId.equalsIgnoreCase( "595061" )
-                || geneId.equalsIgnoreCase( "697193" ) || geneId.equalsIgnoreCase( "724036" )
-                || geneId.equalsIgnoreCase( "443231" )
-
-        ) {
-            throw new EntityNotFoundException( "this gene Id is an exception and the line wont be imported: " + geneId );
-        }
 
         Gene g = this.geneService.findByNCBIId( new Integer( geneId ) );
 
@@ -492,17 +475,33 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                     && !g.getTaxon().getCommonName().equals( "worm" )
                     && !g.getTaxon().getCommonName().equals( "zebrafish" ) ) {
 
-                writeWarning( "Strange species Found !!! : " + geneId + "    " + geneName + "    "
-                        + g.getTaxon().getCommonName() );
+                String speciesFound = g.getTaxon().getCommonName();
+
+                // lets try to map it to a human taxon using its symbol
+                g = this.geneService.findByOfficialSymbol( geneName, taxonService.findByCommonName( "human" ) );
+
+                if ( g != null ) {
+                    writeWarning( "We found species: " + speciesFound + " on geneId: " + geneId
+                            + " and changed to it to the human symbol: " + geneName );
+                } else {
+                    throw new EntityNotFoundException( "The geneId: " + geneId + " using species: " + speciesFound
+                            + " exist but couldnt be map to its human symbol using: " + geneName
+                            + ", this evidence wont be imported" );
+                }
             }
+        } else {
+            // lets try to map it to a human taxon using its symbol
+            g = this.geneService.findByOfficialSymbol( geneName, taxonService.findByCommonName( "human" ) );
 
-            return g.getNcbiGeneId();
+            if ( g != null ) {
+                writeWarning( "We didnt found the geneId: " + geneId + " and changed it to the human symbol: "
+                        + geneName );
+            } else {
+                throw new EntityNotFoundException( "The geneId:" + geneId + " symbol: " + geneName
+                        + " was not found in Gemma, this evidence wont be imported" );
+            }
         }
-
-        // this should never happen if not there is a problem
-        writeError( "Gene not found in Gemma: " + geneId + "   " + geneName );
-
-        return -1;
+        return g.getNcbiGeneId();
     }
 
     private Set<CharacteristicValueObject> experiementTags2Ontology( Set<String> values, String category,
@@ -723,7 +722,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
      * hard coded rules to set scores depending on the type of the database
      */
     private void setScoreDependingOnExternalSource( String externalDatabaseName, EvidenceValueObject evidence ) {
-
         // OMIM got special character in description to find score
         if ( externalDatabaseName.equalsIgnoreCase( "OMIM" ) ) {
 
@@ -780,6 +778,9 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             return;
         } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) ) {
             evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+        } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" )
+                || externalDatabaseName.equalsIgnoreCase( "BDgene" ) ) {
+            return;
         }
 
         // no score set ?

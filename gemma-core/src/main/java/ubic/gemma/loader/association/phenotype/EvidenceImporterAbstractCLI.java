@@ -279,8 +279,8 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
         // Minimum fields any evidence should have
         if ( !( this.mapColumns.containsKey( "GeneSymbol" ) && this.mapColumns.containsKey( "GeneId" )
-                && this.mapColumns.containsKey( "EvidenceCode" ) && this.mapColumns.containsKey( "Comments" )
-                && this.mapColumns.containsKey( "IsNegative" ) && this.mapColumns.containsKey( "Phenotypes" ) ) ) {
+                && this.mapColumns.containsKey( "EvidenceCode" ) && this.mapColumns.containsKey( "Comments" ) && this.mapColumns
+                    .containsKey( "Phenotypes" ) ) ) {
 
             throw new Exception( "Headers not set correctly" );
         }
@@ -428,7 +428,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
         log.info( message );
         this.warningMessage += "\n" + message;
-        this.logFileWriter.write( "\n" + message );
+        this.logFileWriter.write( "\n" + message + " (warning)" );
         this.logFileWriter.flush();
     }
 
