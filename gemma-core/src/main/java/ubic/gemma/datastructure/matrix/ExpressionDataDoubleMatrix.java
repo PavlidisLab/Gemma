@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -229,8 +230,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         }
 
         dim.setBioAssays( bioassays );
-        dim.setDescription( "Built from matrix supplied to Constructor" );
-        dim.setName( "For " + ee + " from matrix" );
+        dim.setDescription( "Built from matrix supplied to Constructor for " + ee + " from matrix" );
+        dim.setName( StringUtils.abbreviate( "For " + ee.getShortName() + " from matrix", 255 ) );
 
         assert !matrix.getRowNames().isEmpty();
         int i = 0;

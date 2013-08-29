@@ -2687,8 +2687,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @return
      */
     private String formatName( StringBuilder dimensionName ) {
-        return dimensionName.length() > 100 ? dimensionName.toString().substring( 0, 100 ) : dimensionName.toString()
-                + "...";
+        return StringUtils.abbreviate( dimensionName.toString(), 100 );
     }
 
     /**
