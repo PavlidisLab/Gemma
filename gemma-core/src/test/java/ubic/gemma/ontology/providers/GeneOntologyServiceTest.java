@@ -45,6 +45,9 @@ public class GeneOntologyServiceTest {
     @BeforeClass
     public static void setUp() throws Exception {
         gos = new GeneOntologyServiceImpl();
+        /*
+         * Note that this test file is out of date in some ways. See GeneOntologyServiceTest2
+         */
         InputStream is = new GZIPInputStream(
                 GeneOntologyServiceTest.class
                         .getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) );

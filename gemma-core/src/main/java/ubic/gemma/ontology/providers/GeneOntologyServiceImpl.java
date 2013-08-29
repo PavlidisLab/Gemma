@@ -573,6 +573,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
                 // OntologyTerm restrictedTo = ( ( OntologyClassRestriction ) term ).getRestrictedTo();
                 // results.add( restrictedTo );
                 // }
+                // don't keep it. - for example, "ends_during" RO_0002093
             } else {
                 // log.info( "Adding " + term );
                 results.add( term );
@@ -955,36 +956,29 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private GOAspect getTermAspect( OntologyTerm term ) {
         assert term != null;
         String goid = term.getTerm();
+
         if ( term2Aspect.containsKey( goid ) ) {
             return term2Aspect.get( goid );
         }
 
         String nameSpace = null;
         for ( AnnotationProperty annot : term.getAnnotations() ) {
-            if ( annot.getProperty().equals( "hasOBONamespace" ) ) {
+            /*
+             * Why they changed this, I can't say. It used to be hasOBONamespace but now comes through as
+             * has_obo_namespace.
+             */
+            if ( annot.getProperty().equals( "hasOBONamespace" ) || annot.getProperty().equals( "has_obo_namespace" ) ) {
                 nameSpace = annot.getContents();
                 break;
             }
         }
 
-        GOAspect aspect;
         if ( nameSpace == null ) {
-            /*
-             * Newer GO owl files do not have this, so you have to trace up to the root.
-             */
-            for ( OntologyTerm t : getAllParents( term ) ) {
-                aspect = getTermAspect( t );
-                if ( aspect != null ) {
-                    term2Aspect.put( goid, aspect );
-                    return aspect;
-                }
-            }
-
             log.warn( "aspect could not be determined for: " + term );
             return null;
         }
 
-        aspect = GOAspect.valueOf( nameSpace.toUpperCase() );
+        GOAspect aspect = GOAspect.valueOf( nameSpace.toUpperCase() );
         term2Aspect.put( goid, aspect );
 
         return aspect;
