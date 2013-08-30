@@ -331,7 +331,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                         + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
         }
 
-        arrayDesignService.update( arrayDesign );
+        // is this necessary? causes an error sometimes.
+        // arrayDesignService.update( arrayDesign );
 
         log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
                 + " 'probes' associated with genes." );
