@@ -62,7 +62,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         if ( diseaseOntologyService.isEnabled() ) {
             this.ontologies.add( diseaseOntologyService );
         } else {
-            log.warn( "DO is not enabled, phenotype tools will not work correctly" );
+            log.debug( "DO is not enabled, phenotype tools will not work correctly" );
         }
 
         MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = ontologyService
@@ -70,7 +70,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         if ( mammalianPhenotypeOntologyService.isEnabled() ) {
             this.ontologies.add( mammalianPhenotypeOntologyService );
         } else {
-            log.warn( "MPO is not enabled, phenotype tools will not work correctly" );
+            log.debug( "MPO is not enabled, phenotype tools will not work correctly" );
         }
 
         HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
@@ -78,7 +78,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         if ( humanPhenotypeOntologyService.isEnabled() ) {
             this.ontologies.add( humanPhenotypeOntologyService );
         } else {
-            log.warn( "HPO is not enabled, phenotype tools will not work correctly" );
+            log.debug( "HPO is not enabled, phenotype tools will not work correctly" );
         }
     }
 
