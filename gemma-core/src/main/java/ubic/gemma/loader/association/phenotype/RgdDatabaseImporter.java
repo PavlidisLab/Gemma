@@ -15,8 +15,6 @@
 package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.InputStreamReader;
 
 import ubic.basecode.ontology.ncbo.AnnotatorClient;
@@ -54,16 +52,11 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     private void processRGDFiles( String rgdHuman, String rgdMouse, String rgdRat ) throws Exception {
 
-        // this file have the final data to be imported
-        outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
-
         writeOutputFileHeaders2();
-
         processRGDFile( "human", rgdHuman );
         processRGDFile( "mouse", rgdMouse );
         processRGDFile( "rat", rgdRat );
         writeBuffersAndCloseFiles();
-
     }
 
     public void processRGDFile( String taxon, String fileName ) throws Exception {
@@ -81,15 +74,16 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
             String[] tokens = line.split( "\t" );
 
-            String geneSymbol = tokens[2];
+            String geneSymbol = removeSpecialSymbol( tokens[2] );
+
             String pubmed = tokens[5].substring( tokens[5].indexOf( "PMID:" ) + 5, tokens[5].length() );
             String evidenceCode = tokens[6];
             String comment = tokens[3];
             String databaseLink = "?term=" + tokens[4] + "&id=" + tokens[1];
             String diseaseId = tokens[10];
 
-            if ( evidenceCode.equalsIgnoreCase( "ISS" ) && !evidenceCode.equalsIgnoreCase( "NAS" )
-                    && !evidenceCode.equalsIgnoreCase( "IEA" ) ) {
+            if ( !evidenceCode.equalsIgnoreCase( "ISS" ) && !evidenceCode.equalsIgnoreCase( "NAS" )
+                    && !evidenceCode.equalsIgnoreCase( "IEA" ) && !diseaseId.equals( "" ) && !pubmed.equals( "" ) ) {
 
                 // 1- using the disease ontology first look is a mapping is found
                 String valuesUri = findValueUriWithDiseaseId( diseaseId );
@@ -106,7 +100,6 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
                     outFinalResults.write( geneSymbol + "\t" + taxon + "\t" + pubmed + "\t" + evidenceCode + "\t"
                             + comment + "\t" + RGD + "\t" + databaseLink + "\t" + valuesUri + "\n" );
-
                 }
                 /**
                  * nothing was found in 1- or 2-, in this case lets use the annotator and check later if the returned
@@ -120,20 +113,23 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
                     String description = findDescriptionUsingTerm( diseaseId );
 
-                    writeInPossibleMappingAndNotFound( diseaseId, description, line, RGD );
+                    if ( description != null && !description.isEmpty() ) {
+                        writeInPossibleMappingAndNotFound( diseaseId, description, line, RGD );
+                    }
                 }
             }
         }
     }
 
+    // we are not given the phenotype description, use a web service to find it
     private String findDescriptionUsingTerm( String diseaseId ) throws Exception {
 
+        String conceptId = diseaseId.substring( diseaseId.indexOf( ":" ) + 1, diseaseId.length() );
+
         if ( diseaseId.indexOf( "OMIM:" ) != -1 ) {
-            return AnnotatorClient.findLabelUsingIdentifier( AnnotatorClient.OMIM_ONTOLOGY,
-                    diseaseId.substring( 0, diseaseId.indexOf( "OMIM:" ) ) );
+            return AnnotatorClient.findLabelUsingIdentifier( AnnotatorClient.OMIM_ONTOLOGY, conceptId );
         } else if ( diseaseId.indexOf( "MESH:" ) != -1 ) {
-            return AnnotatorClient.findLabelUsingIdentifier( AnnotatorClient.MESH_ONTOLOGY,
-                    diseaseId.substring( 0, diseaseId.indexOf( "MESH:" ) ) );
+            return AnnotatorClient.findLabelUsingIdentifier( AnnotatorClient.MESH_ONTOLOGY, conceptId );
         } else {
             throw new Exception( "diseaseId not OMIM or MESH: " + diseaseId );
         }
@@ -142,6 +138,15 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     public RgdDatabaseImporter( String[] args ) throws Exception {
         super( args );
+    }
+
+    private String removeSpecialSymbol( String geneId ) {
+        int index1 = geneId.indexOf( "<sup>" );
+
+        if ( index1 != -1 ) {
+            return geneId.substring( 0, index1 );
+        }
+        return geneId;
     }
 
 }

@@ -34,6 +34,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
@@ -60,19 +63,21 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // this are where the static resources are kept, like manual mapping files and others
     protected static final String RESOURCE_PATH = File.separator + "neurocarta" + File.separator
             + "externalDatabaseImporter" + File.separator;
-    // this is where files that can be used by all importer are kept
-    protected static final String RESOURCE_PATH_GENERAL = RESOURCE_PATH + "GENERAL" + File.separator;
 
     // terms to exclude when we search for a phenotype using the annotator (stop words)
-    protected static final String EXCLUDE_KEYWORDS = RESOURCE_PATH_GENERAL + "KeyWordsToExclude.tsv";
+    protected static final String EXCLUDE_KEYWORDS = RESOURCE_PATH + "KeyWordsToExclude.tsv";
     protected ArrayList<String> wordsToExclude = new ArrayList<String>();
 
     // results we exclude, we know those results are not good
-    protected static final String RESULTS_TO_IGNORE = RESOURCE_PATH_GENERAL + "ResultsToIgnore.tsv";
+    protected static final String RESULTS_TO_IGNORE = RESOURCE_PATH + "ResultsToIgnore.tsv";
     protected HashSet<String> resultsToIgnore = new HashSet<String>();
 
+    // description we want to ignore, when we find those description, we know we are not interested in them
+    public static final String DESCRIPTION_TO_IGNORE = RESOURCE_PATH + "DescriptionToIgnore.tsv";
+    protected HashSet<String> descriptionToIgnore = new HashSet<String>();
+
     // manual description file, MeshID, OmimID or txt description to a valueUri
-    public static final String MANUAL_MAPPING = RESOURCE_PATH_GENERAL + "ManualDescriptionMapping.tsv";
+    public static final String MANUAL_MAPPING = RESOURCE_PATH + "ManualDescriptionMapping.tsv";
     protected HashMap<String, HashSet<String>> manualDescriptionToValuesUriMapping = new HashMap<String, HashSet<String>>();
 
     // populated using the disease ontology file
@@ -106,6 +111,10 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected BufferedWriter outMappingFound = null;
     protected BufferedWriter outNotFound = null;
 
+    // for a search term we always get the answer, no reason to call the annotator again if it gave us the answer for
+    // that request before
+    private HashMap<String, Collection<AnnotatorResponse>> cacheAnswerFromAnnotator = new HashMap<String, Collection<AnnotatorResponse>>();
+
     // load all needed services
     protected synchronized void loadServices( String[] args ) throws Exception {
 
@@ -133,6 +142,9 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // the loadServices is in the constructor, we always need those
     public ExternalDatabaseEvidenceImporterAbstractCLI( String[] args ) throws Exception {
         super();
+        // JUST FOR NOW
+        Logger root = Logger.getRootLogger();
+        root.setLevel( Level.INFO );
 
         // load all needed services
         loadServices( args );
@@ -142,11 +154,13 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         parseResultsToIgnore();
         // parse the manual mapping file
         parseManualMappingFile();
+        // description we know we are not intereted in the result
+        parseDescriptionToIgnore();
         // set up the annotator
-        initAnnotatorClient();
+        initNcboAnnotatorClient();
     }
 
-    private void initAnnotatorClient() {
+    private void initNcboAnnotatorClient() {
         Collection<Long> ontologiesToUse = new HashSet<Long>();
         ontologiesToUse.add( AnnotatorClient.DOID_ONTOLOGY );
         ontologiesToUse.add( AnnotatorClient.HP_ONTOLOGY );
@@ -456,7 +470,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         return newTxt.trim();
     }
 
-    // transform the given line to its valueUri, ex: OMIM:1234= 1234-->valueUri
     protected String findValueUriWithDiseaseId( String diseaseId ) {
 
         Collection<String> valuesUri = diseaseFileMappingFound.get( diseaseId );
@@ -470,7 +483,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         }
 
         return allValueUri;
-
     }
 
     // special rule used to format the search term
@@ -647,6 +659,13 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                 .write( "GeneSymbol\tPrimaryPubMed\tEvidenceCode\tComments\tScore\tStrength\tScoreType\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
     }
 
+    // many importers can have different headers, this is 1 possible case
+    protected void writeOutputFileHeaders4() throws IOException {
+        // headers of the final file
+        outFinalResults
+                .write( "GeneSymbol\tGeneId\tEvidenceCode\tComments\tDatabaseLink\tPhenotypes\tExtraInfo\tExtraInfo\tisNegative\tExternalDatabase\tPubmed\tExtraInfo\n" );
+    }
+
     // write all found in set to files and close files
     // the reason this is done that way is to not have duplicates for 2 files
     protected void writeBuffersAndCloseFiles() throws IOException {
@@ -682,7 +701,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                 RgdDatabaseImporter.class.getResourceAsStream( MANUAL_MAPPING ) ) );
 
         String line = "";
-        
+
         // skip first line, the headers
         line = br.readLine();
 
@@ -693,9 +712,9 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
             String[] tokens = line.split( "\t" );
 
-            String meshId = tokens[0];
-            String valueUriStaticFile = tokens[1];
-            String valueStaticFile = tokens[2];
+            String meshId = tokens[0].trim();
+            String valueUriStaticFile = tokens[1].trim();
+            String valueStaticFile = tokens[2].trim();
 
             OntologyTerm ontologyTerm = findOntologyTermExistAndNotObsolote( valueUriStaticFile );
 
@@ -712,7 +731,8 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                     manualDescriptionToValuesUriMapping.put( meshId, col );
 
                 } else {
-                    errorMessages.add( "MANUAL VALUEURI AND VALUE DOESNT MATCH: " + line );
+                    errorMessages.add( "MANUAL VALUEURI AND VALUE DOESNT MATCH IN FILE: line" + line
+                            + "\t What the value supposed to be:" + ontologyTerm.getLabel() );
                 }
             } else {
                 errorMessages.add( "MANUAL MAPPING FILE TERM OBSOLETE OR NOT EXISTANT: '" + valueUriStaticFile + "' "
@@ -768,48 +788,85 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected void writeInPossibleMappingAndNotFound( String identifier, String searchTerm, String line,
             String externalDatabaseName ) {
 
-        // search with the annotator and filter result to take out obsolete terms given
-        Collection<AnnotatorResponse> ontologyTermsNormal = removeNotExistAndObsolete( anoClient.findTerm( searchTerm ) );
+        if ( descriptionToIgnore.contains( searchTerm ) ) {
+            outNotFoundBuffer.add( line + "\n" );
+        } else {
 
-        Collection<AnnotatorResponse> ontologyTermsWithOutKeywords = new HashSet<AnnotatorResponse>();
+            Collection<AnnotatorResponse> ontologyTermsNormal = cacheAnswerFromAnnotator.get( searchTerm );
 
-        // did we find something ?
-        String condition = findConditionUsed( ontologyTermsNormal, false );
+            if ( ontologyTermsNormal == null ) {
+                // search with the annotator and filter result to take out obsolete terms given
+                ontologyTermsNormal = removeNotExistAndObsolete( anoClient.findTerm( searchTerm ) );
+                // cache results
+                cacheAnswerFromAnnotator.put( searchTerm, ontologyTermsNormal );
+            }
 
-        if ( condition == null ) {
-            // search again manipulating the search string
-            String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm );
+            Collection<AnnotatorResponse> ontologyTermsWithOutKeywords = new HashSet<AnnotatorResponse>();
 
-            ontologyTermsWithOutKeywords = removeNotExistAndObsolete( anoClient.findTerm( searchTermWithOutKeywords ) );
             // did we find something ?
-            condition = findConditionUsed( ontologyTermsWithOutKeywords, true );
-        }
+            String condition = findConditionUsed( ontologyTermsNormal, false );
 
-        // if a satisfying condition was found write in down in the mapping found
-        if ( condition != null ) {
+            if ( condition == null ) {
+                // search again manipulating the search string
+                String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm );
 
-            String lineToWrite = identifier + "\t" + valueUriForCondition + "\t" + valueForCondition + "\t"
-                    + searchTerm + "\t" + condition + "\t" + externalDatabaseName + "\n";
+                ontologyTermsWithOutKeywords = cacheAnswerFromAnnotator.get( searchTermWithOutKeywords );
 
-            outMappingFoundBuffer.add( lineToWrite );
+                if ( ontologyTermsWithOutKeywords == null ) {
+                    // search with the modifed keyword
+                    ontologyTermsWithOutKeywords = removeNotExistAndObsolete( anoClient
+                            .findTerm( searchTermWithOutKeywords ) );
+                    // cache results
+                    cacheAnswerFromAnnotator.put( searchTermWithOutKeywords, ontologyTermsWithOutKeywords );
+                }
 
-        } else if ( !ontologyTermsNormal.isEmpty() || !ontologyTermsWithOutKeywords.isEmpty() ) {
+                // did we find something ?
+                condition = findConditionUsed( ontologyTermsWithOutKeywords, true );
+            }
 
-            Collection<AnnotatorResponse> allAnnotatorResponse = new TreeSet<AnnotatorResponse>();
-            allAnnotatorResponse.addAll( ontologyTermsNormal );
-            allAnnotatorResponse.addAll( ontologyTermsWithOutKeywords );
-            // multiple mapping found without a specific condition
-            boolean found = writeInPossibleMapping( allAnnotatorResponse, identifier, searchTerm, externalDatabaseName );
+            // if a satisfying condition was found write in down in the mapping found
+            if ( condition != null ) {
 
-            if ( !found ) {
+                String lineToWrite = identifier + "\t" + valueUriForCondition + "\t" + valueForCondition + "\t"
+                        + searchTerm + "\t" + condition + "\t" + externalDatabaseName + "\n";
+
+                outMappingFoundBuffer.add( lineToWrite );
+
+            } else if ( !ontologyTermsNormal.isEmpty() || !ontologyTermsWithOutKeywords.isEmpty() ) {
+
+                Collection<AnnotatorResponse> allAnnotatorResponse = new TreeSet<AnnotatorResponse>();
+                allAnnotatorResponse.addAll( ontologyTermsNormal );
+                allAnnotatorResponse.addAll( ontologyTermsWithOutKeywords );
+                // multiple mapping found without a specific condition
+                boolean found = writeInPossibleMapping( allAnnotatorResponse, identifier, searchTerm,
+                        externalDatabaseName );
+
+                if ( !found ) {
+                    outNotFoundBuffer.add( line + "\n" );
+                }
+            }
+
+            else {
+                // nothing was found with the annotator, write the line in the not found file
                 outNotFoundBuffer.add( line + "\n" );
             }
         }
+    }
 
-        else {
-            // nothing was found with the annotator, write the line in the not found file
-            outNotFoundBuffer.add( line + "\n" );
+    private void parseDescriptionToIgnore() throws IOException {
+
+        BufferedReader br = new BufferedReader( new InputStreamReader(
+                OmimDatabaseImporter.class.getResourceAsStream( DESCRIPTION_TO_IGNORE ) ) );
+
+        String line = "";
+
+        while ( ( line = br.readLine() ) != null ) {
+
+            line = removeSmallNumberAndTxt( line );
+
+            descriptionToIgnore.add( removeCha( line ).trim() );
         }
+
     }
 
 }
