@@ -70,7 +70,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     protected BufferedReader br = null;
     protected boolean createInDatabase = false;
     protected boolean prodDatabase = false;
-    protected String geneNcbiIdMissingUsingTaxon = "";
 
     protected final String EXPERIMENTAL_EVIDENCE = "EXPERIMENTAL";
     protected final String LITERATURE_EVIDENCE = "LITERATURE";
@@ -103,10 +102,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         Option prodOption = OptionBuilder.withDescription( "Using production database (false or true)" ).hasArg()
                 .withArgName( "indicate if Prod database" ).isRequired().create( "e" );
         addOption( prodOption );
-        @SuppressWarnings("static-access")
-        Option geneNcbiOption = OptionBuilder.withDescription( "If the gene BCBI is missing what taxon are we using" )
-                .hasArg().withArgName( "if we are using the symbol to identify the gene" ).isRequired().create( "n" );
-        addOption( geneNcbiOption );
     }
 
     @Override
@@ -115,7 +110,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         this.inputFile = getOptionValue( 'f' );
         this.createInDatabase = new Boolean( getOptionValue( 'c' ) );
         this.prodDatabase = new Boolean( getOptionValue( 'e' ) );
-        this.geneNcbiIdMissingUsingTaxon = getOptionValue( 'n' );
     }
 
     protected EvidenceSourceValueObject makeEvidenceSource( String databaseID, String externalDatabaseName ) {
@@ -267,21 +261,21 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 this.mapColumns.put( "Score", index );
             } else if ( header.equalsIgnoreCase( "ScoreType" ) ) {
                 this.mapColumns.put( "ScoreType", index );
+            } else if ( header.equalsIgnoreCase( "Taxon" ) ) {
+                this.mapColumns.put( "Taxon", index );
             }
             // not used by evidence importer, used to add extra information only human readable, let this header pass
-            else if ( header.equalsIgnoreCase( "ExtraInfo" ) ) {
-                this.mapColumns.put( "ScoreType", index );
-            } else {
+            else if ( !header.equalsIgnoreCase( "ExtraInfo" ) ) {
                 throw new Exception( "header not found: " + header );
             }
             index++;
         }
 
         // Minimum fields any evidence should have
-        if ( !( this.mapColumns.containsKey( "GeneSymbol" ) && this.mapColumns.containsKey( "GeneId" )
-                && this.mapColumns.containsKey( "EvidenceCode" ) && this.mapColumns.containsKey( "Comments" ) && this.mapColumns
-                    .containsKey( "Phenotypes" ) ) ) {
-
+        if ( !( ( ( this.mapColumns.containsKey( "GeneSymbol" ) && this.mapColumns.containsKey( "Taxon" ) ) || this.mapColumns
+                .containsKey( "GeneId" ) )
+                && this.mapColumns.containsKey( "EvidenceCode" )
+                && this.mapColumns.containsKey( "Comments" ) && this.mapColumns.containsKey( "Phenotypes" ) ) ) {
             throw new Exception( "Headers not set correctly" );
         }
 

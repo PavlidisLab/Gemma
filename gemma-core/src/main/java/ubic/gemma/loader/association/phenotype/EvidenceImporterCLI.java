@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
@@ -54,7 +56,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)
     private static String[] initArguments() {
 
-        String[] args = new String[12];
+        String[] args = new String[10];
         // user
         args[0] = "-u";
         args[1] = "administrator";
@@ -72,11 +74,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // false == testDatabase, put gene not found to NCBI 1
         args[8] = "-e";
         args[9] = "true";
-        // is the geneNCBI missing ???
-        // then it will use the taxon and official symbol to find the gene NBCI, let it know the taxon
-        // possible values are : "human","mouse","rat" and "" ( if we have the NCBI gene id )
-        args[10] = "-n";
-        args[11] = "";
 
         return args;
     }
@@ -164,10 +161,23 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                         } else {
                             throw ex;
                         }
+                    } catch ( RuntimeException ex ) {
+                        log.error( ExceptionUtils.getStackTrace( ex ) );
+                        this.writeError( "RuntimeException trying to make evidence again 1: " + e.getId() );
+
+                        try {
+                            // create the evidence in neurocarta
+                            this.phenotypeAssociationService.makeEvidence( e );
+                        } catch ( RuntimeException ex2 ) {
+                            log.error( ExceptionUtils.getStackTrace( ex2 ) );
+                            this.writeError( "RuntimeException trying to make evidence again 2: " + e.getId() );
+
+                            // create the evidence in neurocarta
+                            this.phenotypeAssociationService.makeEvidence( e );
+                        }
                     }
 
-                    log.info( "created evidence " + i );
-                    i++;
+                    log.info( "created evidence " + i++ );
                 }
             }
 
@@ -208,7 +218,13 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             try {
 
                 if ( evidenceType.equals( this.LITERATURE_EVIDENCE ) ) {
-                    evidenceValueObjects.add( convertFileLine2LiteratureValueObjects( tokens ) );
+                    String primaryReferencePubmed = tokens[this.mapColumns.get( "PrimaryPubMed" )].trim();
+
+                    if ( primaryReferencePubmed.equalsIgnoreCase( "" ) ) {
+                        evidenceValueObjects.add( convertFileLine2GenericValueObjects( tokens ) );
+                    } else {
+                        evidenceValueObjects.add( convertFileLine2LiteratureValueObjects( tokens ) );
+                    }
                 } else if ( evidenceType.equals( this.EXPERIMENTAL_EVIDENCE ) ) {
                     evidenceValueObjects.add( convertFileLine2ExperimentalValueObjects( tokens ) );
                 } else if ( evidenceType.equals( this.GENERIC_EVIDENCE ) ) {
@@ -234,7 +250,11 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         boolean isNegativeEvidence = false;
 
         String geneSymbol = tokens[this.mapColumns.get( "GeneSymbol" )].trim();
-        String geneID = tokens[this.mapColumns.get( "GeneId" )].trim();
+        String geneID = "";
+
+        if ( this.mapColumns.get( "GeneId" ) != null ) {
+            geneID = tokens[this.mapColumns.get( "GeneId" )].trim();
+        }
 
         String evidenceCode = tokens[this.mapColumns.get( "EvidenceCode" )].trim();
 
@@ -251,12 +271,17 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         String databaseID = tokens[this.mapColumns.get( "DatabaseLink" )].trim();
 
+        String evidenceTaxon = "";
+        if ( tokens[this.mapColumns.get( "ExternalDatabase" )].trim() != null ) {
+            evidenceTaxon = tokens[this.mapColumns.get( "Taxon" )].trim();
+        }
+
         Set<String> phenotypeFromArray = trimArray( tokens[this.mapColumns.get( "Phenotypes" )].split( ";" ) );
 
         int geneNcbiId = 0;
 
-        if ( geneID.equals( "" ) && !this.geneNcbiIdMissingUsingTaxon.equals( "" ) ) {
-            geneNcbiId = findGeneId( geneSymbol );
+        if ( geneID.equals( "" ) && !evidenceTaxon.equals( "" ) ) {
+            geneNcbiId = findGeneId( geneSymbol, evidenceTaxon );
         } else {
             geneNcbiId = verifyGeneIdExist( geneID, geneSymbol );
         }
@@ -288,7 +313,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             }
 
         } else if ( !externalDatabaseName.equalsIgnoreCase( "" ) ) {
-            setScoreDependingOnExternalSource( externalDatabaseName, evidence );
+            setScoreDependingOnExternalSource( externalDatabaseName, evidence, evidenceTaxon );
         }
     }
 
@@ -529,7 +554,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     // sometimes we dont have the gene nbci, so we use taxon and gene symbol to find the correct gene
-    private Integer findGeneId( String officialSymbol ) throws IOException {
+    private Integer findGeneId( String officialSymbol, String evidenceTaxon ) throws IOException {
 
         Collection<Gene> genes = this.geneService.findByOfficialSymbol( officialSymbol );
 
@@ -537,7 +562,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         for ( Gene gene : genes ) {
 
-            if ( gene.getTaxon().getCommonName().equalsIgnoreCase( this.geneNcbiIdMissingUsingTaxon ) ) {
+            if ( gene.getTaxon().getCommonName().equalsIgnoreCase( evidenceTaxon ) ) {
                 if ( gene.getNcbiGeneId() != null ) {
                     genesWithTaxon.add( gene );
                 }
@@ -547,14 +572,13 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         if ( genesWithTaxon.isEmpty() ) {
             if ( this.prodDatabase ) {
 
-                Integer geneNCBi = checkForSymbolChange( officialSymbol );
+                Integer geneNCBi = checkForSymbolChange( officialSymbol, evidenceTaxon );
 
                 if ( geneNCBi != null ) {
                     return geneNCBi;
                 }
 
-                writeError( "Gene not found using symbol: " + officialSymbol + "   and taxon: "
-                        + this.geneNcbiIdMissingUsingTaxon );
+                writeError( "Gene not found using symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon );
 
                 return -1;
             }
@@ -564,17 +588,16 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // too many results found, to check why
         if ( genesWithTaxon.size() >= 2 ) {
 
-            Gene g = treatGemmaMultipleGeneSpeacialCases( officialSymbol, genesWithTaxon );
+            Gene g = treatGemmaMultipleGeneSpeacialCases( officialSymbol, genesWithTaxon, evidenceTaxon );
 
             if ( g != null ) {
                 return g.getNcbiGeneId();
             }
 
-            writeError( "Found more than 1 gene using Symbol: " + officialSymbol + "   and taxon: "
-                    + this.geneNcbiIdMissingUsingTaxon );
+            String error = "Found more than 1 gene using Symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon;
 
             for ( Gene geneWithTaxon : genesWithTaxon ) {
-                writeError( "Gene NCBI: " + geneWithTaxon.getNcbiId() );
+                writeError( error + "\tGene NCBI: " + geneWithTaxon.getNcbiId() );
             }
         }
 
@@ -582,12 +605,13 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     // when we have more than 1 choice, which one to choose, some hard coded rules so we dont redo them each time
-    private Gene treatGemmaMultipleGeneSpeacialCases( String officialSymbol, Collection<Gene> genesFound ) {
+    private Gene treatGemmaMultipleGeneSpeacialCases( String officialSymbol, Collection<Gene> genesFound,
+            String evidenceTaxon ) {
 
         Gene theChosenGene = null;
 
         // human exceptions
-        if ( this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "human" ) ) {
+        if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
 
             // HLA-DRB1 => 3123
             if ( officialSymbol.equalsIgnoreCase( "HLA-DRB1" ) ) {
@@ -621,7 +645,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
                 theChosenGene = findCorrectGene( "100507436", genesFound );
             }
-        } else if ( this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "rat" ) ) {
+        } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
 
             // Itga2b => 685269
             if ( officialSymbol.equalsIgnoreCase( "Itga2b" ) ) {
@@ -643,12 +667,20 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             else if ( officialSymbol.equalsIgnoreCase( "Mef2a" ) ) {
                 theChosenGene = findCorrectGene( "309957", genesFound );
             }
-        } else if ( this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "mouse" ) ) {
+            // Mmp1 => 432357
+            else if ( officialSymbol.equalsIgnoreCase( "Mmp1" ) ) {
+                theChosenGene = findCorrectGene( "300339", genesFound );
+            }
+
+        } else if ( evidenceTaxon.equalsIgnoreCase( "mouse" ) ) {
             // H2-Ea-ps => 100504404
             if ( officialSymbol.equalsIgnoreCase( "H2-Ea-ps" ) ) {
                 theChosenGene = findCorrectGene( "100504404", genesFound );
             }
-
+            // Ccl21b => 100504404
+            else if ( officialSymbol.equalsIgnoreCase( "Ccl21b" ) ) {
+                theChosenGene = findCorrectGene( "100042493", genesFound );
+            }
         }
 
         return theChosenGene;
@@ -666,11 +698,11 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     // special case to change symbol, used when nothing was found with symbol
-    private Integer checkForSymbolChange( String officialSymbol ) throws IOException {
+    private Integer checkForSymbolChange( String officialSymbol, String evidenceTaxon ) throws IOException {
 
         String newOfficialSymbol = null;
 
-        if ( this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "human" ) ) {
+        if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
 
             if ( officialSymbol.equalsIgnoreCase( "ARVD2" ) ) {
                 newOfficialSymbol = "RYR2";
@@ -684,8 +716,33 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                 newOfficialSymbol = "COX3";
             } else if ( officialSymbol.equalsIgnoreCase( "CYB" ) ) {
                 newOfficialSymbol = "CYTB";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ATP6" ) ) {
+                newOfficialSymbol = "ATP6";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ATP8" ) ) {
+                newOfficialSymbol = "ATP8";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-CO3" ) ) {
+                newOfficialSymbol = "COX3";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-CYB" ) ) {
+                newOfficialSymbol = "CYTB";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND1" ) ) {
+                newOfficialSymbol = "ND1";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND2" ) ) {
+                newOfficialSymbol = "ND2";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND3" ) ) {
+                newOfficialSymbol = "ND3";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND4" ) ) {
+                newOfficialSymbol = "ND4";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND4L" ) ) {
+                newOfficialSymbol = "ND4L";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND5" ) ) {
+                newOfficialSymbol = "ND5";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND6" ) ) {
+                newOfficialSymbol = "ND6";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-TL1" ) ) {
+                newOfficialSymbol = "TRNL1";
             }
-        } else if ( this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "rat" ) ) {
+
+        } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
 
             if ( officialSymbol.equalsIgnoreCase( "Hsd3b2" ) ) {
                 newOfficialSymbol = "Hsd3b1";
@@ -707,11 +764,13 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                 newOfficialSymbol = "Naip2";
             } else if ( officialSymbol.equalsIgnoreCase( "Slco1a4" ) ) {
                 newOfficialSymbol = "Slco1a2";
+            } else if ( officialSymbol.equalsIgnoreCase( "Klk1b3" ) ) {
+                newOfficialSymbol = "Klk1";
             }
         }
 
         if ( newOfficialSymbol != null ) {
-            return findGeneId( newOfficialSymbol );
+            return findGeneId( newOfficialSymbol, evidenceTaxon );
         }
 
         return null;
@@ -721,7 +780,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     /**
      * hard coded rules to set scores depending on the type of the database
      */
-    private void setScoreDependingOnExternalSource( String externalDatabaseName, EvidenceValueObject evidence ) {
+    private void setScoreDependingOnExternalSource( String externalDatabaseName, EvidenceValueObject evidence,
+            String evidenceTaxon ) {
         // OMIM got special character in description to find score
         if ( externalDatabaseName.equalsIgnoreCase( "OMIM" ) ) {
 
@@ -743,7 +803,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // RGD we use the taxon and the evidence code
         else if ( externalDatabaseName.equalsIgnoreCase( "RGD" ) ) {
 
-            if ( this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "human" ) ) {
+            if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
 
                 String evidenceCode = evidence.getEvidenceCode();
 
@@ -767,8 +827,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                     evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
                 }
 
-            } else if ( this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "rat" )
-                    || this.geneNcbiIdMissingUsingTaxon.equalsIgnoreCase( "mouse" ) ) {
+            } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) || evidenceTaxon.equalsIgnoreCase( "mouse" ) ) {
                 evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
             }
         }
@@ -786,7 +845,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // no score set ?
         else if ( evidence.getScoreValueObject().getStrength() == null ) {
             writeError( "no score found for a evidence using Symbol: " + evidence.getGeneOfficialSymbol()
-                    + "   and taxon: " + this.geneNcbiIdMissingUsingTaxon );
+                    + "   and taxon: " + evidenceTaxon );
         }
     }
 
