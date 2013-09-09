@@ -161,22 +161,48 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                         } else {
                             throw ex;
                         }
-                    } catch ( RuntimeException ex ) {
-                        log.error( ExceptionUtils.getStackTrace( ex ) );
-                        this.writeError( "RuntimeException trying to make evidence again 1: " + e.getId() );
+                    } catch ( RuntimeException ex1 ) {
+                        log.error( ExceptionUtils.getStackTrace( ex1 ) );
+                        this.writeError( "RuntimeException trying to make evidence again 1: " + e.getGeneNCBI() );
 
                         try {
+                            // something is wrong with the pubmed api, wait it out
+                            log.info( "tring again 1: waiting 10 sec" );
+                            Thread.sleep( 10000 );
                             // create the evidence in neurocarta
                             this.phenotypeAssociationService.makeEvidence( e );
                         } catch ( RuntimeException ex2 ) {
                             log.error( ExceptionUtils.getStackTrace( ex2 ) );
-                            this.writeError( "RuntimeException trying to make evidence again 2: " + e.getId() );
+                            this.writeError( "RuntimeException trying to make evidence again 2: " + e.getGeneNCBI() );
+                            // something is wrong with the pubmed api, wait it out more 5000 seconds, this often run at
+                            // night so make it wait doesn't matter
+                            log.info( "tring again 2: waiting 100 sec" );
+                            Thread.sleep( 100000 );
+                            try {
+                                this.phenotypeAssociationService.makeEvidence( e );
+                            }
 
-                            // create the evidence in neurocarta
-                            this.phenotypeAssociationService.makeEvidence( e );
+                            catch ( RuntimeException ex3 ) {
+                                log.error( ExceptionUtils.getStackTrace( ex3 ) );
+                                this.writeError( "RuntimeException trying to make evidence again 3: " + e.getGeneNCBI() );
+                                // something is wrong with the pubmed api, wait it out more 5000 seconds, this often run
+                                // at night so make it wait doesn't matter
+                                log.info( "tring again 3: waiting 1000 sec" );
+                                Thread.sleep( 1000000 );
+                                try {
+                                    this.phenotypeAssociationService.makeEvidence( e );
+                                } catch ( RuntimeException ex4 ) {
+                                    log.error( ExceptionUtils.getStackTrace( ex4 ) );
+                                    this.writeError( "RuntimeException trying to make evidence again 4: "
+                                            + e.getGeneNCBI() );
+                                    // something is wrong with the pubmed api, wait it out more 4 hours, this often
+                                    // run at night so make it wait doesn't matter
+                                    log.info( "tring again 3: waiting 15000 sec" );
+                                    Thread.sleep( 15000000 );
+                                }
+                            }
                         }
                     }
-
                     log.info( "created evidence " + i++ );
                 }
             }
@@ -272,7 +298,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         String databaseID = tokens[this.mapColumns.get( "DatabaseLink" )].trim();
 
         String evidenceTaxon = "";
-        if ( tokens[this.mapColumns.get( "ExternalDatabase" )].trim() != null ) {
+        if ( this.mapColumns.get( "Taxon" ) != null ) {
             evidenceTaxon = tokens[this.mapColumns.get( "Taxon" )].trim();
         }
 
@@ -645,6 +671,22 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
                 theChosenGene = findCorrectGene( "100507436", genesFound );
             }
+
+            // MICA => 100507436
+            else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
+                theChosenGene = findCorrectGene( "100507436", genesFound );
+            }
+
+            // ADH5P2 => 343296
+            else if ( officialSymbol.equalsIgnoreCase( "ADH5P2" ) ) {
+                theChosenGene = findCorrectGene( "343296", genesFound );
+            }
+
+            // RPL15P3 => 653232
+            else if ( officialSymbol.equalsIgnoreCase( "RPL15P3" ) ) {
+                theChosenGene = findCorrectGene( "653232", genesFound );
+            }
+
         } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
 
             // Itga2b => 685269

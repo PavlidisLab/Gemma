@@ -109,7 +109,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
                 // the OMIM id, (also is the database link)
                 String omimPhenotypeId = tokens[0].substring( pos + 1, tokens[0].length() ).trim().split( " " )[0];
                 // OMOM gene id
-                String omimGeneId = tokens[2];
+                String omimGeneId = tokens[2].trim();
                 // omimGeneid ---> ncbi id
                 String ncbiGeneId = omimIdToGeneNCBI.get( omimGeneId );
 
@@ -134,8 +134,8 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
                     }
 
                     // Case 2: use the static manual annotation file
-                    else if ( manualDescriptionToValuesUriMapping.get( omimId ) != null ) {
-                        phenotypesUri = manualDescriptionToValuesUriMapping.get( omimId );
+                    else if ( findManualMappingTermValueUri( omimId ) != null ) {
+                        phenotypesUri = findManualMappingTermValueUri( omimId );
                         conditionUsed = "Case 2: Found with Description, Manual Mapping";
                     }
 
@@ -308,7 +308,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             for ( Long pubmed : commonsPubmeds ) {
                 String evidenceLine = geneSymbol + "\t" + ncbiGeneId + "\t" + evidenceCode + "\t" + description + "\t"
                         + omimPhenotypeId + "\t" + allValueUri + "\t" + phenotypeValue + "\t" + conditionUsed + "\t"
-                        + "" + "\t" + OMIM + "\t" + pubmed + "\t" + omimGeneId + "\n";
+                        + "\t" + OMIM + "\t" + pubmed + "\t" + omimGeneId + "\n";
 
                 outFinalResults.write( evidenceLine );
             }
@@ -316,7 +316,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             if ( commonsPubmeds.isEmpty() ) {
                 String evidenceLine = geneSymbol + "\t" + ncbiGeneId + "\t" + evidenceCode + "\t" + description + "\t"
                         + omimPhenotypeId + "\t" + allValueUri + "\t" + phenotypeValue + "\t" + conditionUsed + "\t"
-                        + "" + "\t" + OMIM + "\t" + "" + "\t" + omimGeneId + "\n";
+                        + "\t" + OMIM + "\t" + "" + "\t" + omimGeneId + "\n";
 
                 outFinalResults.write( evidenceLine );
             }

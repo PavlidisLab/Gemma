@@ -71,11 +71,11 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
             String[] tokens = line.split( "\t" );
             // structure of the file
-            String geneSymbol = tokens[0];
-            String geneId = tokens[1];
-            String diseaseName = tokens[2];
-            String diseaseId = tokens[3];
-            String directEvidence = tokens[4];
+            String geneSymbol = tokens[0].trim();
+            String geneId = tokens[1].trim();
+            String diseaseName = tokens[2].trim();
+            String diseaseId = tokens[3].trim();
+            String directEvidence = tokens[4].trim();
             String pubmedIds = "";
 
             if ( tokens.length < 9 ) {
@@ -91,9 +91,9 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                 // 1- using the disease ontology first look is a mapping is found
                 String valuesUri = findValueUriWithDiseaseId( diseaseId );
 
-                if ( valuesUri.isEmpty() && manualDescriptionToValuesUriMapping.get( diseaseId ) != null ) {
+                if ( valuesUri.isEmpty() && findManualMappingTermValueUri( diseaseId ) != null ) {
 
-                    for ( String valueUriFound : manualDescriptionToValuesUriMapping.get( diseaseId ) ) {
+                    for ( String valueUriFound : findManualMappingTermValueUri( diseaseId ) ) {
                         // 2 - If we couldnt find it lets use the manual mapping file
                         valuesUri = valuesUri + valueUriFound + ";";
                     }

@@ -74,13 +74,13 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
             String[] tokens = line.split( "\t" );
 
-            String geneSymbol = removeSpecialSymbol( tokens[2] );
+            String geneSymbol = removeSpecialSymbol( tokens[2] ).trim();
 
-            String pubmed = tokens[5].substring( tokens[5].indexOf( "PMID:" ) + 5, tokens[5].length() );
-            String evidenceCode = tokens[6];
-            String comment = tokens[3];
-            String databaseLink = "?term=" + tokens[4] + "&id=" + tokens[1];
-            String diseaseId = tokens[10];
+            String pubmed = ( tokens[5].substring( tokens[5].indexOf( "PMID:" ) + 5, tokens[5].length() ) ).trim();
+            String evidenceCode = tokens[6].trim();
+            String comment = tokens[3].trim();
+            String databaseLink = "?term=" + tokens[4].trim() + "&id=" + tokens[1].trim();
+            String diseaseId = tokens[10].trim();
 
             if ( !evidenceCode.equalsIgnoreCase( "ISS" ) && !evidenceCode.equalsIgnoreCase( "NAS" )
                     && !evidenceCode.equalsIgnoreCase( "IEA" ) && !diseaseId.equals( "" ) && !pubmed.equals( "" ) ) {
@@ -88,9 +88,9 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                 // 1- using the disease ontology first look is a mapping is found
                 String valuesUri = findValueUriWithDiseaseId( diseaseId );
 
-                if ( valuesUri.isEmpty() && manualDescriptionToValuesUriMapping.get( diseaseId ) != null ) {
+                if ( valuesUri.isEmpty() && findManualMappingTermValueUri( diseaseId ) != null ) {
 
-                    for ( String valueUriFound : manualDescriptionToValuesUriMapping.get( diseaseId ) ) {
+                    for ( String valueUriFound : findManualMappingTermValueUri( diseaseId ) ) {
                         // 2 - If we couldnt find it lets use the manual mapping file
                         valuesUri = valuesUri + valueUriFound + ";";
                     }

@@ -22,7 +22,7 @@ import java.util.Collection;
 public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database
-    public static final String GWAS = "GWAS";
+    public static final String GWAS = "GWAS_Catalog";
 
     // path of file to download
     public static final String GWAS_URL_PATH = "http://www.genome.gov/admin/";
@@ -68,7 +68,6 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
         // process the gwas file
         importEvidence.processGwasFile( gwasFile );
-
     }
 
     // process the gwas file, line by line
@@ -90,19 +89,19 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             String[] tokens = line.split( "\t" );
 
             // the geneSymbol found in the file
-            String geneSymbol = findGeneSymbol( tokens[REPORTED_GENES_INDEX], tokens[MAPPED_GENE_INDEX] );
+            String geneSymbol = findGeneSymbol( tokens[REPORTED_GENES_INDEX].trim(), tokens[MAPPED_GENE_INDEX].trim() );
 
             if ( geneSymbol == null ) {
                 continue;
             }
 
             // case 1: can we map the description with the static file
-            String description = tokens[DISEASE_TRAIT_INDEX];
-            if ( manualDescriptionToValuesUriMapping.get( description ) != null ) {
-                writeFinalFile( geneSymbol, tokens, manualDescriptionToValuesUriMapping.get( description ) );
-            } else {
-                writeInPossibleMappingAndNotFound( description, description, line, GWAS );
+            String description = tokens[DISEASE_TRAIT_INDEX].trim();
 
+            if ( findManualMappingTermValueUri( description ) != null ) {
+                writeFinalFile( geneSymbol, tokens, findManualMappingTermValueUri( description ) );
+            } else {
+                writeInPossibleMappingAndNotFound( description, removeParentheses( description ), line, GWAS );
             }
         }
 
@@ -129,8 +128,8 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         }
 
         outFinalResults.write( geneSymbol + "\t" + tokens[PUBMED_ID_INDEX] + "\tTAS\t" + comment + "\t"
-                + tokens[P_VALUE_INDEX] + "\t0.4\tP-value\tGWAS_Catalog\t?gene=" + geneSymbol + "\t"
-                + valuesUrisFormated + "\n" );
+                + tokens[P_VALUE_INDEX] + "\t0.4\tP-value\t" + GWAS + "\t?gene=" + geneSymbol + "\t"
+                + valuesUrisFormated + "\t" + "human" + "\n" );
     }
 
     // the rules to choose the gene symbol
@@ -143,14 +142,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
             if ( reportedGene.equalsIgnoreCase( mappedGene ) ) {
                 geneSymbol = reportedGene;
-            } else if ( reportedGene.indexOf( mappedGene ) != -1 ) {
-                geneSymbol = mappedGene;
-            } else if ( mappedGene.indexOf( reportedGene ) != -1 ) {
-                geneSymbol = reportedGene;
             }
-        } else {
-            geneSymbol = reportedGene;
-
         }
 
         if ( geneSymbol == null ) {
@@ -161,6 +153,35 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         if ( this.geneService.findByOfficialSymbol( geneSymbol, taxonService.findByCommonName( "human" ) ) != null ) {
             return geneSymbol;
         }
+
+        else if ( geneSymbol.equalsIgnoreCase( "AGPHD1" ) ) {
+            geneSymbol = "HYKK";
+        } else if ( geneSymbol.equalsIgnoreCase( "C8orf42" ) ) {
+            geneSymbol = "TDRP";
+        } else if ( geneSymbol.equalsIgnoreCase( "CCBP2" ) ) {
+            geneSymbol = "ACKR2";
+        } else if ( geneSymbol.equalsIgnoreCase( "DBC1" ) ) {
+            geneSymbol = "BRINP1";
+        } else if ( geneSymbol.equalsIgnoreCase( "EFHA2" ) ) {
+            geneSymbol = "MICU3";
+        } else if ( geneSymbol.equalsIgnoreCase( "FAM108C1" ) ) {
+            geneSymbol = "ABHD17C";
+        } else if ( geneSymbol.equalsIgnoreCase( "GLT25D2" ) ) {
+            geneSymbol = "COLGALT2";
+        } else if ( geneSymbol.equalsIgnoreCase( "LOC729852" ) ) {
+            return null;
+        } else if ( geneSymbol.equalsIgnoreCase( "TRA@" ) ) {
+            geneSymbol = "TRA";
+        } else if ( geneSymbol.equalsIgnoreCase( "UTS2D" ) ) {
+            geneSymbol = "UTS2B";
+        }
+
+        // try a second time, might have been changed
+        if ( this.geneService.findByOfficialSymbol( geneSymbol, taxonService.findByCommonName( "human" ) ) != null ) {
+            return geneSymbol;
+        }
+
+        this.errorMessages.add( "Gene found in the file but not in Gemma: " + geneSymbol );
 
         return null;
     }
@@ -190,6 +211,19 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
     public GwasDatabaseImporter( String[] args ) throws Exception {
         super( args );
+    }
+
+    private String removeParentheses( String txt ) {
+
+        int index1 = txt.indexOf( "(" );
+        int index2 = txt.indexOf( ")" );
+
+        if ( index1 != -1 && index2 != -1 ) {
+
+            return txt.substring( 0, index1 ) + txt.substring( index2 + 1, txt.length() );
+
+        }
+        return txt;
     }
 
 }

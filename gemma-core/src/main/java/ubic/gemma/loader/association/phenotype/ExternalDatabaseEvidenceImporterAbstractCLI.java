@@ -34,9 +34,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
@@ -78,7 +75,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
     // manual description file, MeshID, OmimID or txt description to a valueUri
     public static final String MANUAL_MAPPING = RESOURCE_PATH + "ManualDescriptionMapping.tsv";
-    protected HashMap<String, HashSet<String>> manualDescriptionToValuesUriMapping = new HashMap<String, HashSet<String>>();
+    private HashMap<String, HashSet<String>> manualDescriptionToValuesUriMapping = new HashMap<String, HashSet<String>>();
 
     // populated using the disease ontology file
     protected HashMap<String, HashSet<String>> diseaseFileMappingFound = new HashMap<String, HashSet<String>>();
@@ -142,9 +139,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // the loadServices is in the constructor, we always need those
     public ExternalDatabaseEvidenceImporterAbstractCLI( String[] args ) throws Exception {
         super();
-        // JUST FOR NOW
-        Logger root = Logger.getRootLogger();
-        root.setLevel( Level.INFO );
 
         // load all needed services
         loadServices( args );
@@ -656,14 +650,14 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // many importers can have different headers, this is 1 possible case
     protected void writeOutputFileHeaders3() throws IOException {
         outFinalResults
-                .write( "GeneSymbol\tPrimaryPubMed\tEvidenceCode\tComments\tScore\tStrength\tScoreType\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
+                .write( "GeneSymbol\tPrimaryPubMed\tEvidenceCode\tComments\tScore\tStrength\tScoreType\tExternalDatabase\tDatabaseLink\tPhenotypes\tTaxon\n" );
     }
 
     // many importers can have different headers, this is 1 possible case
     protected void writeOutputFileHeaders4() throws IOException {
         // headers of the final file
         outFinalResults
-                .write( "GeneSymbol\tGeneId\tEvidenceCode\tComments\tDatabaseLink\tPhenotypes\tExtraInfo\tExtraInfo\tisNegative\tExternalDatabase\tPubmed\tExtraInfo\n" );
+                .write( "GeneSymbol\tGeneId\tEvidenceCode\tComments\tDatabaseLink\tPhenotypes\tExtraInfo\tExtraInfo\tExternalDatabase\tPrimaryPubMed\tExtraInfo\n" );
     }
 
     // write all found in set to files and close files
@@ -712,7 +706,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
             String[] tokens = line.split( "\t" );
 
-            String meshId = tokens[0].trim();
+            String termId = tokens[0].trim().toLowerCase();
             String valueUriStaticFile = tokens[1].trim();
             String valueStaticFile = tokens[2].trim();
 
@@ -722,13 +716,13 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
                 if ( ontologyTerm.getLabel().equalsIgnoreCase( valueStaticFile ) ) {
 
-                    if ( manualDescriptionToValuesUriMapping.get( meshId ) != null ) {
-                        col = manualDescriptionToValuesUriMapping.get( meshId );
+                    if ( manualDescriptionToValuesUriMapping.get( termId ) != null ) {
+                        col = manualDescriptionToValuesUriMapping.get( termId );
                     }
 
                     col.add( valueUriStaticFile );
 
-                    manualDescriptionToValuesUriMapping.put( meshId, col );
+                    manualDescriptionToValuesUriMapping.put( termId, col );
 
                 } else {
                     errorMessages.add( "MANUAL VALUEURI AND VALUE DOESNT MATCH IN FILE: line" + line
@@ -788,6 +782,8 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected void writeInPossibleMappingAndNotFound( String identifier, String searchTerm, String line,
             String externalDatabaseName ) {
 
+        String searchTermWithOutKeywords = "";
+
         if ( descriptionToIgnore.contains( searchTerm ) ) {
             outNotFoundBuffer.add( line + "\n" );
         } else {
@@ -808,7 +804,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
             if ( condition == null ) {
                 // search again manipulating the search string
-                String searchTermWithOutKeywords = removeSpecificKeywords( searchTerm );
+                searchTermWithOutKeywords = removeSpecificKeywords( searchTerm );
 
                 ontologyTermsWithOutKeywords = cacheAnswerFromAnnotator.get( searchTermWithOutKeywords );
 
@@ -827,8 +823,14 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
             // if a satisfying condition was found write in down in the mapping found
             if ( condition != null ) {
 
+                String searchTerms = searchTerm;
+
+                if ( !searchTermWithOutKeywords.isEmpty() ) {
+                    searchTerms = searchTerms + " (" + searchTermWithOutKeywords + ")";
+                }
+
                 String lineToWrite = identifier + "\t" + valueUriForCondition + "\t" + valueForCondition + "\t"
-                        + searchTerm + "\t" + condition + "\t" + externalDatabaseName + "\n";
+                        + searchTerms + "\t" + condition + "\t" + externalDatabaseName + "\n";
 
                 outMappingFoundBuffer.add( lineToWrite );
 
@@ -867,6 +869,11 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
             descriptionToIgnore.add( removeCha( line ).trim() );
         }
 
+    }
+
+    // the search key will only work if lower case, the key is always lower case, this method take care of it
+    protected Collection<String> findManualMappingTermValueUri( String termId ) {
+        return manualDescriptionToValuesUriMapping.get( termId.toLowerCase() );
     }
 
 }
