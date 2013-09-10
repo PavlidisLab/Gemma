@@ -246,7 +246,7 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
                var phenotypeSearchComboBoxData = [];
                for (var i = 0; i < records.length; i++) {
                   phenotypeSearchComboBoxData.push({
-                        value : records[i].data.value,
+                	    value : records[i].data.value+" ("+records[i].data.urlId+")",
                         urlId : records[i].data.urlId
                      });
                }
