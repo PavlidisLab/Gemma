@@ -9,7 +9,7 @@
 <jwr:script src='/scripts/scriptsnonjawr/arbor.js' />
 
 </head>
-
+<%@ include file="/WEB-INF/pages/frontPageSlideShowShowOff.jsp"%>
 
 <div id="main" style="text-align: left">
 	<%@ include file="/common/messages.jsp"%>
