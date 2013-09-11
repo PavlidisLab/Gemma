@@ -835,9 +835,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 						if (!this.hidden && record.data.className !== 'DiffExpressionEvidenceValueObject') {
 							adminLinks += Gemma.SecurityManager.getSecurityLink(
 									'ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl', record.data.id,
-									record.data.evidenceSecurityValueObject.public,
+									record.data.evidenceSecurityValueObject.publik,
 									record.data.evidenceSecurityValueObject.shared,
-									record.data.evidenceSecurityValueObject.currentUserIsOwner, null, null,
+									record.data.evidenceSecurityValueObject.currentUserHasWritePermission, null, null,
 									'Phenotype Association', // Evidence name for the title in Security dialog.
 									record.data.evidenceSecurityValueObject.currentUserIsOwner);
 
