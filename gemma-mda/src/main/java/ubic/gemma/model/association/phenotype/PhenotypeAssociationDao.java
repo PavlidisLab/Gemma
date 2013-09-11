@@ -106,5 +106,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** Gets all External Databases that are used with evidence */
     public Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
+    
+    /** find statistics all evidences */
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence();
 
 }

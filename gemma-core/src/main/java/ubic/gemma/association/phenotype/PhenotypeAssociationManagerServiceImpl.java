@@ -943,9 +943,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // find statistics the external databases sources
         externalDatabaseStatisticsValueObjects.addAll( this.associationService.loadStatisticsOnExternalDatabases() );
-
         // manual curation
         externalDatabaseStatisticsValueObjects.add( this.associationService.loadStatisticsOnManualCuration() );
+        // total
+        externalDatabaseStatisticsValueObjects.add( this.associationService.loadStatisticsOnAllEvidence() );
 
         return externalDatabaseStatisticsValueObjects;
     }

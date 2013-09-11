@@ -185,5 +185,9 @@ public interface PhenotypeAssociationService {
      * @return Collection<ExternalDatabaseValueObject> the externalDatabases
      */
     public Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
+    
+    
+    /** find statistics all evidences */
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence();
 
 }

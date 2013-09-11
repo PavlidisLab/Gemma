@@ -367,6 +367,55 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return externalDatabaseStatisticsValueObject;
     }
+    
+    /** find statistics all evidences */
+    @Override
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence() {
+
+        Long numEvidence = ( Long ) this.getHibernateTemplate()
+                .find( "select count (p) from PhenotypeAssociationImpl as p" )
+                .iterator().next();
+
+        Long numGenes = ( Long ) this
+                .getHibernateTemplate()
+                .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p" )
+                .iterator().next();
+
+        Long numPhenotypes = ( Long ) this
+                .getHibernateTemplate()
+                .find( "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c" )
+                .iterator().next();
+
+        Collection<String> publicationsLiterature = this
+                .getHibernateTemplate()
+                .find( "select distinct l.citation.pubAccession.accession from LiteratureEvidenceImpl as l" );
+
+        // find all primary pubmed for ExperimentalEvidence
+        Collection<String> publicationsExperimentalPrimary = this
+                .getHibernateTemplate()
+                .find( "select distinct ex.experiment.primaryPublication.pubAccession.accession from ExperimentalEvidenceImpl as ex" );
+
+        // find all secondary pubmed for ExperimentalEvidence
+        Collection<String> publicationsExperimentalSecondary = this
+                .getHibernateTemplate()
+                .find( "select distinct o.pubAccession.accession from ExperimentalEvidenceImpl as ex join ex.experiment.otherRelevantPublications as o" );
+
+        Set<String> publications = new HashSet<String>();
+        publications.addAll( publicationsLiterature );
+        System.out.println(publicationsLiterature.size());
+        publications.addAll( publicationsExperimentalPrimary );
+        System.out.println(publicationsExperimentalPrimary.size());
+        publications.addAll( publicationsExperimentalSecondary );
+        System.out.println(publicationsExperimentalSecondary.size());
+
+        Long numPublications = new Long( publications.size() );
+
+        ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
+                "Total (unique)", "", "", numEvidence, numGenes,
+                numPhenotypes, numPublications, null );
+
+        return externalDatabaseStatisticsValueObject;
+    }
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override

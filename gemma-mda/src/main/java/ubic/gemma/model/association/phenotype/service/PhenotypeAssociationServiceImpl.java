@@ -234,6 +234,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration() {
         return this.phenotypeAssociationDao.loadStatisticsOnManualCuration();
     }
+    
+    /** find statistics all evidences */
+    @Override
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence(){
+        return this.phenotypeAssociationDao.loadStatisticsOnAllEvidence();
+    }
 
     /**
      * returns a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
