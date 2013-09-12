@@ -42,7 +42,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
       this.ee = this.experimentDetails;
 
       // always editable by admin user
-      if (this.editable == undefined && Ext.get("hasAdmin").getValue() == 'true') {
+      if (this.editable === undefined && Ext.get("hasAdmin").getValue() === 'true') {
          this.editable = true;
       }
 
@@ -173,6 +173,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
          else {
             for (var i = 0; i < analysis.resultSets.size(); i++) {
                resultSet = analysis.resultSets[i];
+               
+             //  console.log(resultSet);
 
                // get experimental factor string and build
                // analysis parent
@@ -210,7 +212,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
                      numberOfFactors : resultSet.experimentalFactors.size(),
                      analysisId : resultSet.analysisId,
                      resultSetId : resultSet.resultSetId,
-                     numberOfFactorValues : resultSet.experimentalFactors.size() == 1 ? analysis.factorValuesUsed[resultSet.experimentalFactors[0].id].size() : null,
+                     numberOfFactorValues : resultSet.experimentalFactors.size() === 1 ? analysis.factorValuesUsed[resultSet.experimentalFactors[0].id].size() : null,
 
                      leaf : true
                   });
@@ -222,6 +224,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 
             }
          }
+         
          // figure out type of a ANOVA
          var numberOfFactors = 0;
          for (i = 0; i < analysis.resultSets.size(); i++) {
@@ -352,7 +355,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
       // get baseline info
       var base = '';
       if (resultSet.baselineGroup) {
-         base = (resultSet.baselineGroup.value != null) ? ' with baseline&nbsp;=&nbsp;' + resultSet.baselineGroup.value : (resultSet.baselineGroup.factorValue != null)
+         base = (resultSet.baselineGroup.value !== null) ? ' with baseline&nbsp;=&nbsp;' + resultSet.baselineGroup.value : (resultSet.baselineGroup.factorValue !== null)
             ? ' with baseline&nbsp;=&nbsp;' + resultSet.baselineGroup.factorValue
             : '';
       }
@@ -543,87 +546,104 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
       return text;
    },
 
-    /**
-     * Method to draw one-piece pie chart in a canvas, with extra colour options
-     * @param {Object} ctx the canvas component to draw in (here, the canvas tag)
-     * @param {int} x centre of pie on x axis relative to top right of ctx
-     * @param {int} y centre of pie on y axis relative to top right of ctx
-     * @param {int} size size of the pie chart
-     * @param {String} colour colour for slice one of the pie
-     * @param {int} value size of slice one in degrees
-     * @param {String} outlineColour colour for the pie outline
-     */
-    drawOneColourMiniPie: function (ctx, x, y, size, colourOne, valueOne, outlineColour) {
-        ctx.save();
-        ctx.fillStyle = 'white'; //good grey: '#E0E0E0';
-        ctx.moveTo(x, y);
-        // draw circle
-        ctx.beginPath();
-        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
-        ctx.fill();
-        // draw slice one
-        ctx.fillStyle = colourOne;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne, false);
-        ctx.lineTo(x, y);
-        ctx.fill();
-        // draw circle outline
-        ctx.beginPath();
-        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
-        ctx.lineWidth = 0.75;
-        ctx.strokeStyle = outlineColour;
-        ctx.stroke();
+   /**
+    * Method to draw one-piece pie chart in a canvas, with extra colour options
+    * 
+    * @param {Object}
+    *           ctx the canvas component to draw in (here, the canvas tag)
+    * @param {int}
+    *           x centre of pie on x axis relative to top right of ctx
+    * @param {int}
+    *           y centre of pie on y axis relative to top right of ctx
+    * @param {int}
+    *           size size of the pie chart
+    * @param {String}
+    *           colour colour for slice one of the pie
+    * @param {int}
+    *           value size of slice one in degrees
+    * @param {String}
+    *           outlineColour colour for the pie outline
+    */
+   drawOneColourMiniPie : function(ctx, x, y, size, colourOne, valueOne, outlineColour) {
+      ctx.save();
+      ctx.fillStyle = 'white'; // good grey: '#E0E0E0';
+      ctx.moveTo(x, y);
+      // draw circle
+      ctx.beginPath();
+      ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
+      ctx.fill();
+      // draw slice one
+      ctx.fillStyle = colourOne;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne, false);
+      ctx.lineTo(x, y);
+      ctx.fill();
+      // draw circle outline
+      ctx.beginPath();
+      ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
+      ctx.lineWidth = 0.75;
+      ctx.strokeStyle = outlineColour;
+      ctx.stroke();
 
-        ctx.restore();
-    },
+      ctx.restore();
+   },
 
-    /**
-     * Method to draw a two-colour, two-piece pie chart in a canvas (where sum of pieces can be < total)
-     * @param {Object} ctx the canvas component to draw in (here, the canvas tag)
-     * @param {int} x centre of pie on x axis relative to top right of ctx
-     * @param {int} y centre of pie on y axis relative to top right of ctx
-     * @param {int} size size of the pie chart
-     * @param {String} colourOne colour for slice one of the pie
-     * @param {int} valueOne size of slice one in degrees
-     * @param {String} colourTwo colour for slice two of the pie
-     * @param {int} valueTwo size of slice two in degrees
-     * @param {String} outlineColour colour for the pie outline
-     */
-    drawTwoColourMiniPie: function (ctx, x, y, size, colourOne, valueOne, colourTwo, valueTwo, outlineColour) {
-        ctx.save();
-        ctx.fillStyle = 'white'; //good grey: '#E0E0E0';
-        ctx.moveTo(x, y);
-        // draw circle
-        ctx.beginPath();
-        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
-        ctx.fill();
-        // draw slice one
-        ctx.fillStyle = colourOne;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne, false);
-        ctx.lineTo(x, y);
-        ctx.fill();
-        // draw slice two
-        ctx.fillStyle = colourTwo;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.arc(x, y, size / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne,
-            Math.PI * 3 / 2 + (Math.PI / 180) * valueOne + (Math.PI / 180) * valueTwo, false);
-        ctx.lineTo(x, y);
-        ctx.fill();
-        // draw circle outline
-        ctx.beginPath();
-        ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
-        ctx.lineWidth = 0.75;
-        ctx.strokeStyle = outlineColour;
-        ctx.stroke();
+   /**
+    * Method to draw a two-colour, two-piece pie chart in a canvas (where sum of pieces can be < total)
+    * 
+    * @param {Object}
+    *           ctx the canvas component to draw in (here, the canvas tag)
+    * @param {int}
+    *           x centre of pie on x axis relative to top right of ctx
+    * @param {int}
+    *           y centre of pie on y axis relative to top right of ctx
+    * @param {int}
+    *           size size of the pie chart
+    * @param {String}
+    *           colourOne colour for slice one of the pie
+    * @param {int}
+    *           valueOne size of slice one in degrees
+    * @param {String}
+    *           colourTwo colour for slice two of the pie
+    * @param {int}
+    *           valueTwo size of slice two in degrees
+    * @param {String}
+    *           outlineColour colour for the pie outline
+    */
+   drawTwoColourMiniPie : function(ctx, x, y, size, colourOne, valueOne, colourTwo, valueTwo, outlineColour) {
+      ctx.save();
+      ctx.fillStyle = 'white'; // good grey: '#E0E0E0';
+      ctx.moveTo(x, y);
+      // draw circle
+      ctx.beginPath();
+      ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
+      ctx.fill();
+      // draw slice one
+      ctx.fillStyle = colourOne;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne, false);
+      ctx.lineTo(x, y);
+      ctx.fill();
+      // draw slice two
+      ctx.fillStyle = colourTwo;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.arc(x, y, size / 2, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne, Math.PI * 3 / 2 + (Math.PI / 180) * valueOne + (Math.PI / 180) * valueTwo, false);
+      ctx.lineTo(x, y);
+      ctx.fill();
+      // draw circle outline
+      ctx.beginPath();
+      ctx.arc(x, y, size / 2, Math.PI * 3 / 2, Math.PI * 3 / 2 + (Math.PI * 2), false);
+      ctx.lineWidth = 0.75;
+      ctx.strokeStyle = outlineColour;
+      ctx.stroke();
 
-        ctx.restore();
-    },
+      ctx.restore();
+   },
 
-    drawPieCharts : function() {
+   drawPieCharts : function() {
       var ctx, diffExpressed, interesting;
       for (var i = 0; i < this.contrastPercents.size(); i++) {
          var chartElement = Ext.get(this.calculateChartId(this.ee.id, i));
