@@ -355,9 +355,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * Deal with possibility of 'gaps' and unpack the vectors.
          */
         Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
-        for ( ExpressionExperiment ee : needToSearch ) {
+        for ( BioAssaySet bioassayset : needToSearch ) {
 
-            Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
+            Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( bioassayset );
 
             if ( bioAssayDimensions.size() == 1 ) {
                 newResults.addAll( unpack( rawResults ) );
@@ -860,6 +860,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return ( Collection<BioAssayDimension> ) r;
         }
 
+        // subset.
         return getBioAssayDimensions( getExperiment( ee ) );
 
     }
