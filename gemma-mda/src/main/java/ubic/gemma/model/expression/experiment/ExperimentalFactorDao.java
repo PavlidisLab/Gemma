@@ -24,16 +24,15 @@ import ubic.gemma.persistence.BaseDao;
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
  */
 public interface ExperimentalFactorDao extends BaseDao<ExperimentalFactor> {
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor find(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor findOrCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+    public ExperimentalFactor find( ExperimentalFactor experimentalFactor );
+
+    /**
+     * 
+     */
+    public ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
 }

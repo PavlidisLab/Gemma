@@ -31,58 +31,20 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.persistence.AbstractDao;
 import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
  */
 @Repository
-public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase {
-
-    @Override
-    public void remove( ExperimentalFactor experimentalFactor ) {
-        Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
-        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
-                .load( ExperimentalDesignImpl.class, experimentalDesignId );
-
-        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee where ee.experimentalDesign = :ed";
-        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
-
-        if ( results.size() == 0 ) {
-            throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
-        }
-
-        ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
-
-            Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
-            for ( FactorValue factorValue : bm.getFactorValues() ) {
-                if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
-                    factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
-                }
-            }
-
-            // if there are factorvalues to remove
-            if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
-                bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                // getBioMaterialDao().update( bm ); // needed?
-            }
-        }
-
-        // ed.getExperimentalFactors().remove( experimentalFactor );
-        // delete the experimental factor this cascades to values.
-
-        // this.getExperimentalDesignDao().update( ed );
-        this.getHibernateTemplate().delete( experimentalFactor );
-    }
+public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> implements ExperimentalFactorDao {
 
     private static Log log = LogFactory.getLog( ExperimentalFactorDaoImpl.class.getName() );
 
     @Autowired
     public ExperimentalFactorDaoImpl( SessionFactory sessionFactory ) {
+        super( ExperimentalFactorImpl.class );
         super.setSessionFactory( sessionFactory );
     }
 
@@ -132,5 +94,45 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
         }
         log.debug( "Creating new arrayDesign: " + experimentalFactor.getName() );
         return create( experimentalFactor );
+    }
+
+    @Override
+    public void remove( ExperimentalFactor experimentalFactor ) {
+        Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
+        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
+                .load( ExperimentalDesignImpl.class, experimentalDesignId );
+
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee where ee.experimentalDesign = :ed";
+        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
+
+        if ( results.size() == 0 ) {
+            throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
+        }
+
+        ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+
+            Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
+            for ( FactorValue factorValue : bm.getFactorValues() ) {
+                if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
+                    factorValuesToRemoveFromBioMaterial.add( factorValue );
+                    this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
+                }
+            }
+
+            // if there are factorvalues to remove
+            if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
+                bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
+                // getBioMaterialDao().update( bm ); // needed?
+            }
+        }
+
+        // ed.getExperimentalFactors().remove( experimentalFactor );
+        // delete the experimental factor this cascades to values.
+
+        // this.getExperimentalDesignDao().update( ed );
+        this.getHibernateTemplate().delete( experimentalFactor );
     }
 }
