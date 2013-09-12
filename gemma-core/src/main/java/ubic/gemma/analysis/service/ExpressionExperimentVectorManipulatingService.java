@@ -47,25 +47,6 @@ public abstract class ExpressionExperimentVectorManipulatingService {
     protected ByteArrayConverter converter = new ByteArrayConverter();
 
     /**
-     * @param arrayDesign
-     * @param type
-     * @return
-     */
-    protected Collection<? extends DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
-            QuantitationType type ) {
-
-        Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign,
-                type );
-
-        if ( vectorsForQt == null || vectorsForQt.isEmpty() ) {
-            return null;
-        }
-
-        designElementDataVectorService.thaw( vectorsForQt );
-        return vectorsForQt;
-    }
-
-    /**
      * @param data where data will be stored
      * @param representation of the quantitation type for the vector
      * @param oldV vector to be converted
@@ -106,6 +87,25 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         } else {
             throw new UnsupportedOperationException( "Don't know how to handle " + representation );
         }
+    }
+
+    /**
+     * @param arrayDesign
+     * @param type
+     * @return
+     */
+    protected Collection<? extends DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
+            QuantitationType type ) {
+
+        Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign,
+                type );
+
+        if ( vectorsForQt == null || vectorsForQt.isEmpty() ) {
+            return null;
+        }
+
+        designElementDataVectorService.thaw( vectorsForQt );
+        return vectorsForQt;
     }
 
 }

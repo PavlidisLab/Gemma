@@ -81,67 +81,6 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
         keepers = new ObjectArrayList();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
-     */
-    @Override
-    public QuantitationType getMetricType() {
-        QuantitationType m = QuantitationType.Factory.newInstance();
-        m.setIsBackground( false );
-        m.setIsBackgroundSubtracted( false );
-        m.setIsNormalized( false );
-        m.setIsPreferred( false );
-        m.setIsMaskedPreferred( false );
-        m.setIsRatio( false );
-        m.setType( StandardQuantitationType.CORRELATION );
-        m.setName( "Spearman's rank correlation" );
-        m.setGeneralType( GeneralType.QUANTITATIVE );
-        m.setRepresentation( PrimitiveType.DOUBLE );
-        m.setScale( ScaleType.LINEAR );
-        return m;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
-     */
-    @Override
-    public double correctedPvalue( int i, int j, double correl, int numused ) {
-        double p = CorrelationStats.spearmanPvalue( correl, numused );
-        double k = 1, m = 1;
-        Collection<Collection<Gene>> clusters = getGenesForRow( i );
-
-        if ( clusters != null ) {
-            for ( Collection<Gene> geneIdSet : clusters ) {
-                /*
-                 * Note we break on the first iteration because the number of probes per gene in the same cluster is
-                 * constant.
-                 */
-                for ( Gene geneId : geneIdSet ) {
-                    int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
-                    if ( k < tmpK ) k = tmpK;
-                    break;
-                }
-            }
-        }
-
-        clusters = getGenesForRow( j );
-        if ( clusters != null ) {
-            for ( Collection<Gene> geneIdSet : clusters ) {
-                for ( Gene geneId : geneIdSet ) {
-                    int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
-                    if ( m < tmpM ) m = tmpM;
-                    break;
-                }
-            }
-        }
-
-        return p * k * m;
-    }
-
     /**
      * Compute correlations.
      */
@@ -228,6 +167,91 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
         log.info( skipped + " rows skipped, due to no BLAT association" );
         finishMetrics();
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
+     */
+    @Override
+    public double correctedPvalue( int i, int j, double correl, int numused ) {
+        double p = CorrelationStats.spearmanPvalue( correl, numused );
+        double k = 1, m = 1;
+        Collection<Collection<Gene>> clusters = getGenesForRow( i );
+
+        if ( clusters != null ) {
+            for ( Collection<Gene> geneIdSet : clusters ) {
+                /*
+                 * Note we break on the first iteration because the number of probes per gene in the same cluster is
+                 * constant.
+                 */
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( k < tmpK ) k = tmpK;
+                    break;
+                }
+            }
+        }
+
+        clusters = getGenesForRow( j );
+        if ( clusters != null ) {
+            for ( Collection<Gene> geneIdSet : clusters ) {
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( m < tmpM ) m = tmpM;
+                    break;
+                }
+            }
+        }
+
+        return p * k * m;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
+     */
+    @Override
+    public QuantitationType getMetricType() {
+        QuantitationType m = QuantitationType.Factory.newInstance();
+        m.setIsBackground( false );
+        m.setIsBackgroundSubtracted( false );
+        m.setIsNormalized( false );
+        m.setIsPreferred( false );
+        m.setIsMaskedPreferred( false );
+        m.setIsRatio( false );
+        m.setType( StandardQuantitationType.CORRELATION );
+        m.setName( "Spearman's rank correlation" );
+        m.setGeneralType( GeneralType.QUANTITATIVE );
+        m.setRepresentation( PrimitiveType.DOUBLE );
+        m.setScale( ScaleType.LINEAR );
+        return m;
+    }
+
+    /**
+     * Calculate mean and sumsqsqrt for each row -- using the ranks of course!
+     */
+    @Override
+    protected void rowStatistics() {
+        int numrows = rankTransformedData.length;
+        this.rowMeans = new double[numrows];
+        this.rowSumSquaresSqrt = new double[numrows];
+        for ( int i = 0, numcols = rankTransformedData[0].length; i < numrows; i++ ) {
+            double ax = 0.0;
+            double sxx = 0.0;
+            for ( int j = 0; j < numcols; j++ ) {
+                ax += this.rankTransformedData[i][j];
+            }
+            rowMeans[i] = ( ax / numcols );
+
+            for ( int j = 0; j < numcols; j++ ) {
+                double xt = this.rankTransformedData[i][j] - rowMeans[i]; /* deviation from mean */
+                sxx += xt * xt; /* sum of squared error */
+            }
+            rowSumSquaresSqrt[i] = Math.sqrt( sxx );
+        }
     }
 
     /**
@@ -326,46 +350,6 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
     }
 
     /**
-     * @param usedB will be filled in, if not null. This also precomputes the row statistics (row means and sumsq
-     *        deviations)
-     * @return rank-transformed data, breaking ties by averaging ranks, if necessary.
-     */
-    private void getRankTransformedData( boolean[][] usedB ) {
-        int numrows = this.dataMatrix.rows();
-        int numcols = this.dataMatrix.columns();
-        rankTransformedData = new double[numrows][];
-
-        for ( int i = 0; i < numrows; i++ ) {
-
-            Double[] row = this.dataMatrix.getRow( i );
-
-            // make a copy.
-            double[] r = new double[row.length];
-            for ( int m = 0, v = row.length; m < v; m++ ) {
-                r[m] = row[m];
-            }
-
-            DoubleArrayList ranksIA = Rank.rankTransform( new DoubleArrayList( r ) );
-            assert ranksIA != null;
-            double ri[] = new double[ranksIA.size()];
-            for ( int n = 0, w = ranksIA.size(); n < w; n++ ) {
-                ri[n] = ranksIA.get( n );
-            }
-
-            rankTransformedData[i] = ri;
-
-            if ( usedB != null ) {
-                for ( int j = 0; j < numcols; j++ ) {
-                    usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
-                    // slightly.
-                }
-            }
-        }
-
-        rowStatistics();
-    }
-
-    /**
      * If there are no missing values.
      */
     private void calculateMetricsFast() {
@@ -420,26 +404,42 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
     }
 
     /**
-     * Calculate mean and sumsqsqrt for each row -- using the ranks of course!
+     * @param usedB will be filled in, if not null. This also precomputes the row statistics (row means and sumsq
+     *        deviations)
+     * @return rank-transformed data, breaking ties by averaging ranks, if necessary.
      */
-    @Override
-    protected void rowStatistics() {
-        int numrows = rankTransformedData.length;
-        this.rowMeans = new double[numrows];
-        this.rowSumSquaresSqrt = new double[numrows];
-        for ( int i = 0, numcols = rankTransformedData[0].length; i < numrows; i++ ) {
-            double ax = 0.0;
-            double sxx = 0.0;
-            for ( int j = 0; j < numcols; j++ ) {
-                ax += this.rankTransformedData[i][j];
-            }
-            rowMeans[i] = ( ax / numcols );
+    private void getRankTransformedData( boolean[][] usedB ) {
+        int numrows = this.dataMatrix.rows();
+        int numcols = this.dataMatrix.columns();
+        rankTransformedData = new double[numrows][];
 
-            for ( int j = 0; j < numcols; j++ ) {
-                double xt = this.rankTransformedData[i][j] - rowMeans[i]; /* deviation from mean */
-                sxx += xt * xt; /* sum of squared error */
+        for ( int i = 0; i < numrows; i++ ) {
+
+            Double[] row = this.dataMatrix.getRow( i );
+
+            // make a copy.
+            double[] r = new double[row.length];
+            for ( int m = 0, v = row.length; m < v; m++ ) {
+                r[m] = row[m];
             }
-            rowSumSquaresSqrt[i] = Math.sqrt( sxx );
+
+            DoubleArrayList ranksIA = Rank.rankTransform( new DoubleArrayList( r ) );
+            assert ranksIA != null;
+            double ri[] = new double[ranksIA.size()];
+            for ( int n = 0, w = ranksIA.size(); n < w; n++ ) {
+                ri[n] = ranksIA.get( n );
+            }
+
+            rankTransformedData[i] = ri;
+
+            if ( usedB != null ) {
+                for ( int j = 0; j < numcols; j++ ) {
+                    usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
+                    // slightly.
+                }
+            }
         }
+
+        rowStatistics();
     }
 }

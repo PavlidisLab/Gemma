@@ -22,25 +22,25 @@ package ubic.gemma.analysis.preprocess;
  */
 public class PreprocessingException extends Throwable {
 
-    public PreprocessingException( Exception e ) {
-        super( e );
-    }
-
     public PreprocessingException() {
         super();
     }
 
-    public PreprocessingException( String message, Throwable cause, boolean enableSuppression,
-            boolean writableStackTrace ) {
-        super( message, cause, enableSuppression, writableStackTrace );
+    public PreprocessingException( Exception e ) {
+        super( e );
+    }
+
+    public PreprocessingException( String message ) {
+        super( message );
     }
 
     public PreprocessingException( String message, Throwable cause ) {
         super( message, cause );
     }
 
-    public PreprocessingException( String message ) {
-        super( message );
+    public PreprocessingException( String message, Throwable cause, boolean enableSuppression,
+            boolean writableStackTrace ) {
+        super( message, cause, enableSuppression, writableStackTrace );
     }
 
     public PreprocessingException( Throwable cause ) {

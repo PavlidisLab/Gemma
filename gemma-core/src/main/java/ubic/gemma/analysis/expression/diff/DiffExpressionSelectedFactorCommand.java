@@ -46,12 +46,12 @@ public class DiffExpressionSelectedFactorCommand implements Serializable {
         return eeId;
     }
 
-    public void setEeId( Long eeId ) {
-        this.eeId = eeId;
-    }
-
     public Long getEfId() {
         return efId;
+    }
+
+    public void setEeId( Long eeId ) {
+        this.eeId = eeId;
     }
 
     public void setEfId( Long efId ) {

@@ -49,10 +49,10 @@ public abstract class BibliographicReferenceServiceBase implements
 
     @Autowired
     private ubic.gemma.model.common.description.LocalFileDao localFileDao;
-    
+
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
-    
+
     /**
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#addPDF(ubic.gemma.model.common.description.LocalFile,
      *      ubic.gemma.model.common.description.BibliographicReference)
@@ -98,7 +98,7 @@ public abstract class BibliographicReferenceServiceBase implements
                             + th, th );
         }
     }
-    
+
     /**
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findByExternalId(java.lang.String)
      */
@@ -106,27 +106,6 @@ public abstract class BibliographicReferenceServiceBase implements
     public ubic.gemma.model.common.description.BibliographicReference findByExternalId( final java.lang.String id ) {
         try {
             return this.handleFindByExternalId( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId(java.lang.String id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findVOByExternalId(java.lang.String)
-     */
-    @Override
-    public BibliographicReferenceValueObject findVOByExternalId( final java.lang.String id ) {
-        try {
-            BibliographicReference bibref = this.handleFindByExternalId( id );
-            if (bibref == null){
-                return null;
-            }
-            BibliographicReferenceValueObject bibrefVO = new BibliographicReferenceValueObject( bibref );
-            this.populateBibliographicPhenotypes( bibrefVO );
-            this.populateRelatedExperiments( bibref, bibrefVO );
-            return bibrefVO;
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
                     "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId(java.lang.String id)' --> "
@@ -161,6 +140,27 @@ public abstract class BibliographicReferenceServiceBase implements
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
                     "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findOrCreate(ubic.gemma.model.common.description.BibliographicReference BibliographicReference)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findVOByExternalId(java.lang.String)
+     */
+    @Override
+    public BibliographicReferenceValueObject findVOByExternalId( final java.lang.String id ) {
+        try {
+            BibliographicReference bibref = this.handleFindByExternalId( id );
+            if ( bibref == null ) {
+                return null;
+            }
+            BibliographicReferenceValueObject bibrefVO = new BibliographicReferenceValueObject( bibref );
+            this.populateBibliographicPhenotypes( bibrefVO );
+            this.populateRelatedExperiments( bibref, bibrefVO );
+            return bibrefVO;
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
+                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId(java.lang.String id)' --> "
                             + th, th );
         }
     }
@@ -207,7 +207,7 @@ public abstract class BibliographicReferenceServiceBase implements
                             + th, th );
         }
     }
-    
+
     /**
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#loadMultiple(java.util.Collection)
      */
@@ -226,7 +226,8 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#loadMultiple(java.util.Collection)
      */
     @Override
-    public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects( final java.util.Collection<Long> ids ) {
+    public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects(
+            final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultipleValueObjects( ids );
         } catch ( Throwable th ) {
@@ -367,7 +368,7 @@ public abstract class BibliographicReferenceServiceBase implements
      */
     protected abstract ubic.gemma.model.common.description.BibliographicReference handleLoad( java.lang.Long id )
             throws java.lang.Exception;
-    
+
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
@@ -377,8 +378,8 @@ public abstract class BibliographicReferenceServiceBase implements
     /**
      * Performs the core logic for {@link #loadMultipleValueObjects(java.util.Collection)}
      */
-    protected abstract java.util.Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects( java.util.Collection<Long> ids )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects(
+            java.util.Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.BibliographicReference)}
@@ -393,23 +394,45 @@ public abstract class BibliographicReferenceServiceBase implements
     protected abstract void handleUpdate(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception;
-    
 
     /**
      * @param bibRefs
      * @param idTobibRefVO
      */
-    protected void populateRelatedExperiments( BibliographicReference bibRef,
-            BibliographicReferenceValueObject bibRefVO ) {
+    protected void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {
+
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
+                .findPhenotypesForBibliographicReference( bibRefVO.getPubAccession() );
+        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+                .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
+        bibRefVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
+    }
+
+    /**
+     * @param bibRefs
+     * @param idTobibRefVO
+     */
+    protected void populateBibliographicPhenotypes( Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
+
+        for ( BibliographicReferenceValueObject vo : idTobibRefVO.values() ) {
+            this.populateBibliographicPhenotypes( vo );
+        }
+    }
+
+    /**
+     * @param bibRefs
+     * @param idTobibRefVO
+     */
+    protected void populateRelatedExperiments( BibliographicReference bibRef, BibliographicReferenceValueObject bibRefVO ) {
         Collection<ExpressionExperiment> relatedExperiments = this.getRelatedExperiments( bibRef );
-        if(relatedExperiments.isEmpty()){
+        if ( relatedExperiments.isEmpty() ) {
             bibRefVO.setExperiments( new ArrayList<ExpressionExperimentValueObject>() );
-        }else{
+        } else {
             bibRefVO.setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments ) );
         }
-        
+
     }
-    
+
     /**
      * @param bibRefs
      * @param idTobibRefVO
@@ -425,30 +448,6 @@ public abstract class BibliographicReferenceServiceBase implements
                         .get( bibref ) ) );
             }
         }
-    }
-
-    /**
-     * @param bibRefs
-     * @param idTobibRefVO
-     */
-    protected void populateBibliographicPhenotypes( Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
-
-        for(BibliographicReferenceValueObject vo : idTobibRefVO.values()){
-            this.populateBibliographicPhenotypes( vo );
-        }
-    }
-
-    /**
-     * @param bibRefs
-     * @param idTobibRefVO
-     */
-    protected void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {
-
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
-                    .findPhenotypesForBibliographicReference( bibRefVO.getPubAccession() );
-        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
-                    .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
-        bibRefVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
     }
 
 }

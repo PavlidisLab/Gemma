@@ -30,6 +30,27 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * @version $Id$
  */
 public class CompositeSequenceMapValueObject implements Comparable<CompositeSequenceMapValueObject> {
+    public static CompositeSequenceMapValueObject fromEntity( CompositeSequence cs ) {
+        CompositeSequenceMapValueObject vo = new CompositeSequenceMapValueObject();
+        vo.setArrayDesignId( cs.getArrayDesign().getId() );
+        vo.setArrayDesignName( cs.getArrayDesign().getName() );
+        vo.setBioSequenceId( cs.getBiologicalCharacteristic().getId().toString() );
+        vo.setBioSequenceName( cs.getBiologicalCharacteristic().getName() );
+        vo.setCompositeSequenceDescription( cs.getDescription() );
+        vo.setCompositeSequenceId( cs.getId().toString() );
+        vo.setCompositeSequenceName( cs.getName() );
+        // Map<String, GeneProductValueObject> gpvos = new HashMap<String, GeneProductValueObject>();
+        // Map<String, GeneValueObject> gvos = new HashMap<String, GeneValueObject>();
+        /*
+         * for (BioSequence2GeneProduct bs_2_gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
+         * GeneProduct gp = bs_2_gp.getGeneProduct(); gpvos.put(gp.getName(), GeneProductValueObject.fromEntity(gp));
+         * gvos.put(gp.getGene().getName(), GeneValueObject.fromEntity(gp.getGene())); }
+         * 
+         * vo.setGeneProducts(gpvos); vo.setGenes(gvos);
+         */
+        return vo;
+    }
+
     private String compositeSequenceId = null;
     private String compositeSequenceName = null;
     private String compositeSequenceDescription = null;
@@ -38,157 +59,23 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
     private String bioSequenceNcbiId = null;
     private String arrayDesignName = null;
     private Long arrayDesignId = null;
-    private Long numBlatHits = null;
 
+    private Long numBlatHits = null;
     private Map<String, GeneProductValueObject> geneProducts = new HashMap<String, GeneProductValueObject>();
+
     private Map<String, GeneValueObject> genes = new HashMap<String, GeneValueObject>();
 
     public CompositeSequenceMapValueObject() {
     }
 
-    /**
-     * @return the bioSequenceId
-     */
-    public String getBioSequenceId() {
-        return bioSequenceId;
-    }
-
-    /**
-     * @param bioSequenceId the bioSequenceId to set
-     */
-    public void setBioSequenceId( String bioSequenceId ) {
-        this.bioSequenceId = bioSequenceId;
-    }
-
-    /**
-     * @return the bioSequenceNcbiId
-     */
-    public String getBioSequenceNcbiId() {
-        return bioSequenceNcbiId;
-    }
-
-    /**
-     * @param bioSequenceNcbiId the bioSequenceNcbiId to set
-     */
-    public void setBioSequenceNcbiId( String bioSequenceNcbiId ) {
-        this.bioSequenceNcbiId = bioSequenceNcbiId;
-    }
-
-    /**
-     * @return the compositeSequenceId
-     */
-    public String getCompositeSequenceId() {
-        return compositeSequenceId;
-    }
-
-    /**
-     * @param compositeSequenceId the compositeSequenceId to set
-     */
-    public void setCompositeSequenceId( String compositeSequenceId ) {
-        this.compositeSequenceId = compositeSequenceId;
-    }
-
-    /**
-     * @return the compositeSequenceName
-     */
-    public String getCompositeSequenceName() {
-        return compositeSequenceName;
-    }
-
-    /**
-     * @param compositeSequenceName the compositeSequenceName to set
-     */
-    public void setCompositeSequenceName( String compositeSequenceName ) {
-        this.compositeSequenceName = compositeSequenceName;
-    }
-
-    /**
-     * @return the numBlatHits
-     */
-    public Long getNumBlatHits() {
-        return numBlatHits;
-    }
-
-    /**
-     * @param numBlatHits the numBlatHits to set
-     */
-    public void setNumBlatHits( long numBlatHits ) {
-        this.numBlatHits = numBlatHits;
-    }
-
-    /**
-     * @return the bioSequenceName
-     */
-    public String getBioSequenceName() {
-        return bioSequenceName;
-    }
-
-    /**
-     * @param bioSequenceName the bioSequenceName to set
-     */
-    public void setBioSequenceName( String bioSequenceName ) {
-        this.bioSequenceName = bioSequenceName;
-    }
-
-    /**
-     * @return the geneProducts
-     */
-    public Map<String, GeneProductValueObject> getGeneProducts() {
-        return geneProducts;
-    }
-
-    /**
-     * @param geneProducts the geneProducts to set
-     */
-    public void setGeneProducts( Map<String, GeneProductValueObject> geneProducts ) {
-        this.geneProducts = geneProducts;
-    }
-
-    /**
-     * @return the genes
-     */
-    public Map<String, GeneValueObject> getGenes() {
-        return genes;
-    }
-
-    /**
-     * @param genes the genes to set
-     */
-    public void setGenes( Map<String, GeneValueObject> genes ) {
-        this.genes = genes;
-    }
-
-    public String getArrayDesignName() {
-        return arrayDesignName;
-    }
-
-    public void setArrayDesignName( String arrayDesignName ) {
-        this.arrayDesignName = arrayDesignName;
-    }
-
-    public void setNumBlatHits( Long numBlatHits ) {
-        this.numBlatHits = numBlatHits;
-    }
-
-    public Long getArrayDesignId() {
-        return arrayDesignId;
-    }
-
-    public void setArrayDesignId( Long arrayDesignId ) {
-        this.arrayDesignId = arrayDesignId;
-    }
-
     /*
      * (non-Javadoc)
      * 
-     * @see java.lang.Object#hashCode()
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( compositeSequenceName == null ) ? 0 : compositeSequenceName.hashCode() );
-        return result;
+    public int compareTo( CompositeSequenceMapValueObject o ) {
+        return this.compositeSequenceName.compareTo( o.getCompositeSequenceName() );
     }
 
     /*
@@ -208,46 +95,157 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
+    public Long getArrayDesignId() {
+        return arrayDesignId;
+    }
+
+    public String getArrayDesignName() {
+        return arrayDesignName;
+    }
+
+    /**
+     * @return the bioSequenceId
      */
-    @Override
-    public int compareTo( CompositeSequenceMapValueObject o ) {
-        return this.compositeSequenceName.compareTo( o.getCompositeSequenceName() );
+    public String getBioSequenceId() {
+        return bioSequenceId;
+    }
+
+    /**
+     * @return the bioSequenceName
+     */
+    public String getBioSequenceName() {
+        return bioSequenceName;
+    }
+
+    /**
+     * @return the bioSequenceNcbiId
+     */
+    public String getBioSequenceNcbiId() {
+        return bioSequenceNcbiId;
     }
 
     public String getCompositeSequenceDescription() {
         return compositeSequenceDescription;
     }
 
+    /**
+     * @return the compositeSequenceId
+     */
+    public String getCompositeSequenceId() {
+        return compositeSequenceId;
+    }
+
+    /**
+     * @return the compositeSequenceName
+     */
+    public String getCompositeSequenceName() {
+        return compositeSequenceName;
+    }
+
+    /**
+     * @return the geneProducts
+     */
+    public Map<String, GeneProductValueObject> getGeneProducts() {
+        return geneProducts;
+    }
+
+    /**
+     * @return the genes
+     */
+    public Map<String, GeneValueObject> getGenes() {
+        return genes;
+    }
+
+    /**
+     * @return the numBlatHits
+     */
+    public Long getNumBlatHits() {
+        return numBlatHits;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( compositeSequenceName == null ) ? 0 : compositeSequenceName.hashCode() );
+        return result;
+    }
+
+    public void setArrayDesignId( Long arrayDesignId ) {
+        this.arrayDesignId = arrayDesignId;
+    }
+
+    public void setArrayDesignName( String arrayDesignName ) {
+        this.arrayDesignName = arrayDesignName;
+    }
+
+    /**
+     * @param bioSequenceId the bioSequenceId to set
+     */
+    public void setBioSequenceId( String bioSequenceId ) {
+        this.bioSequenceId = bioSequenceId;
+    }
+
+    /**
+     * @param bioSequenceName the bioSequenceName to set
+     */
+    public void setBioSequenceName( String bioSequenceName ) {
+        this.bioSequenceName = bioSequenceName;
+    }
+
+    /**
+     * @param bioSequenceNcbiId the bioSequenceNcbiId to set
+     */
+    public void setBioSequenceNcbiId( String bioSequenceNcbiId ) {
+        this.bioSequenceNcbiId = bioSequenceNcbiId;
+    }
+
     public void setCompositeSequenceDescription( String compositeSequenceDescription ) {
         this.compositeSequenceDescription = compositeSequenceDescription;
     }
-    
-    public static CompositeSequenceMapValueObject fromEntity(CompositeSequence cs) {
-    	CompositeSequenceMapValueObject vo = new CompositeSequenceMapValueObject();
-    	vo.setArrayDesignId(cs.getArrayDesign().getId());
-    	vo.setArrayDesignName(cs.getArrayDesign().getName());
-    	vo.setBioSequenceId(cs.getBiologicalCharacteristic().getId().toString());
-    	vo.setBioSequenceName(cs.getBiologicalCharacteristic().getName());
-    	vo.setCompositeSequenceDescription(cs.getDescription());
-    	vo.setCompositeSequenceId(cs.getId().toString());
-    	vo.setCompositeSequenceName(cs.getName());
-    	//Map<String, GeneProductValueObject> gpvos = new HashMap<String, GeneProductValueObject>();
-    	//Map<String, GeneValueObject> gvos = new HashMap<String, GeneValueObject>();
-    	/*
-    	for (BioSequence2GeneProduct bs_2_gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
-    		GeneProduct gp = bs_2_gp.getGeneProduct();    	
-    		gpvos.put(gp.getName(), GeneProductValueObject.fromEntity(gp));
-    		gvos.put(gp.getGene().getName(), GeneValueObject.fromEntity(gp.getGene()));
-    	}
-    	
-    	vo.setGeneProducts(gpvos);
-    	vo.setGenes(gvos);
-    	 */
-    	return vo;
+
+    /**
+     * @param compositeSequenceId the compositeSequenceId to set
+     */
+    public void setCompositeSequenceId( String compositeSequenceId ) {
+        this.compositeSequenceId = compositeSequenceId;
     }
-    
+
+    /**
+     * @param compositeSequenceName the compositeSequenceName to set
+     */
+    public void setCompositeSequenceName( String compositeSequenceName ) {
+        this.compositeSequenceName = compositeSequenceName;
+    }
+
+    /**
+     * @param geneProducts the geneProducts to set
+     */
+    public void setGeneProducts( Map<String, GeneProductValueObject> geneProducts ) {
+        this.geneProducts = geneProducts;
+    }
+
+    /**
+     * @param genes the genes to set
+     */
+    public void setGenes( Map<String, GeneValueObject> genes ) {
+        this.genes = genes;
+    }
+
+    /**
+     * @param numBlatHits the numBlatHits to set
+     */
+    public void setNumBlatHits( long numBlatHits ) {
+        this.numBlatHits = numBlatHits;
+    }
+
+    public void setNumBlatHits( Long numBlatHits ) {
+        this.numBlatHits = numBlatHits;
+    }
+
 }

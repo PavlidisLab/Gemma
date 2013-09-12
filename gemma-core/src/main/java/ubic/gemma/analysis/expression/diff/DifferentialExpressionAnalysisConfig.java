@@ -61,6 +61,14 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     private Double qvalueThreshold = DEFAULT_QVALUE_THRESHOLD;
 
+    public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
+        interactionsToInclude.add( factors );
+    }
+
+    public void addInteractionToInclude( ExperimentalFactor... factors ) {
+        interactionsToInclude.add( Arrays.asList( factors ) );
+    }
+
     public AnalysisType getAnalysisType() {
         return analysisType;
     }
@@ -86,12 +94,11 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         return interactionsToInclude;
     }
 
-    public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
-        interactionsToInclude.add( factors );
-    }
-
-    public void addInteractionToInclude( ExperimentalFactor... factors ) {
-        interactionsToInclude.add( Arrays.asList( factors ) );
+    /**
+     * @return threshold for retention of results.
+     */
+    public Double getQvalueThreshold() {
+        return qvalueThreshold;
     }
 
     /**
@@ -113,13 +120,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
-     * @param factorsToInclude the factorsToInclude to set
-     */
-    public void setFactorsToInclude( List<ExperimentalFactor> factorsToInclude ) {
-        this.factorsToInclude = factorsToInclude;
-    }
-
-    /**
      * @param factorsToInclude
      */
     public void setFactorsToInclude( Collection<ExperimentalFactor> factorsToInclude ) {
@@ -130,10 +130,24 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
+     * @param factorsToInclude the factorsToInclude to set
+     */
+    public void setFactorsToInclude( List<ExperimentalFactor> factorsToInclude ) {
+        this.factorsToInclude = factorsToInclude;
+    }
+
+    /**
      * @param interactionsToInclude the interactionsToInclude to set
      */
     public void setInteractionsToInclude( Collection<Collection<ExperimentalFactor>> interactionsToInclude ) {
         this.interactionsToInclude = interactionsToInclude;
+    }
+
+    /**
+     * @param qValueThreshold threshold for retention of results. Set to null to retain all.
+     */
+    public void setQvalueThreshold( Double qValueThreshold ) {
+        this.qvalueThreshold = qValueThreshold;
     }
 
     /**
@@ -187,20 +201,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
         return buf.toString();
 
-    }
-
-    /**
-     * @return threshold for retention of results.
-     */
-    public Double getQvalueThreshold() {
-        return qvalueThreshold;
-    }
-
-    /**
-     * @param qValueThreshold threshold for retention of results. Set to null to retain all.
-     */
-    public void setQvalueThreshold( Double qValueThreshold ) {
-        this.qvalueThreshold = qValueThreshold;
     }
 
 }

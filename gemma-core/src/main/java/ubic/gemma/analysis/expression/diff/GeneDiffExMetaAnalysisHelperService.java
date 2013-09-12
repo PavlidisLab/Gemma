@@ -33,22 +33,26 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  */
 public interface GeneDiffExMetaAnalysisHelperService {
     /**
-     * Find meta-analysis by the given id.
-     * @param metaAnalysisId
-     * @return detail meta-analysis value object
-     */
-    public GeneDifferentialExpressionMetaAnalysisDetailValueObject findDetailMetaAnalysisById(long metaAnalysisId);
-
-    /**
-     * Load all meta-analyses.
-     * @return a collection of summary value objects
-     */
-    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses();
-
-    /**
-     * Convert the given meta-analysis into detail value object. 
+     * Convert the given meta-analysis into detail value object.
+     * 
      * @param metaAnalysis
      * @return the converted detail value object
      */
-	public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(GeneDifferentialExpressionMetaAnalysis metaAnalysis);
+    public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(
+            GeneDifferentialExpressionMetaAnalysis metaAnalysis );
+
+    /**
+     * Find meta-analysis by the given id.
+     * 
+     * @param metaAnalysisId
+     * @return detail meta-analysis value object
+     */
+    public GeneDifferentialExpressionMetaAnalysisDetailValueObject findDetailMetaAnalysisById( long metaAnalysisId );
+
+    /**
+     * Load all meta-analyses.
+     * 
+     * @return a collection of summary value objects
+     */
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses();
 }

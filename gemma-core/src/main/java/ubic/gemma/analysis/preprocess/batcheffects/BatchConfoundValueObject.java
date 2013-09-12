@@ -32,10 +32,6 @@ public class BatchConfoundValueObject {
     private final double p;
     private int numBatches;
 
-    public int getNumBatches() {
-        return numBatches;
-    }
-
     /**
      * @param ee
      * @param ef
@@ -68,6 +64,10 @@ public class BatchConfoundValueObject {
 
     public ExperimentalFactor getEf() {
         return ef;
+    }
+
+    public int getNumBatches() {
+        return numBatches;
     }
 
     public double getP() {

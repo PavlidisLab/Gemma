@@ -7,17 +7,6 @@ import ubic.gemma.model.genome.Gene;
 public interface GeneCoexpressionService {
 
     /**
-     * @param inputEeIds
-     * @param genes
-     * @param stringency
-     * @param maxResults
-     * @param queryGenesOnly
-     * @return
-     */
-    public abstract Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Collection<Long> inputEeIds,
-            Collection<Gene> genes, int stringency, int maxResults, boolean queryGenesOnly, boolean skipDetails );
-
-    /**
      * Main entry point. Note that if possible, the query will be done using results from an ExpressionExperimentSet.
      * 
      * @param inputEeIds Expression experiments ids to consider
@@ -32,6 +21,17 @@ public interface GeneCoexpressionService {
     public abstract CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds,
             Collection<Gene> genes, int stringency, int maxResults, boolean queryGenesOnly,
             boolean forceProbeLevelSearch );
+
+    /**
+     * @param inputEeIds
+     * @param genes
+     * @param stringency
+     * @param maxResults
+     * @param queryGenesOnly
+     * @return
+     */
+    public abstract Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Collection<Long> inputEeIds,
+            Collection<Gene> genes, int stringency, int maxResults, boolean queryGenesOnly, boolean skipDetails );
 
     /**
      * Skips some of the postprocessing steps, use in situations where raw speed is more important than details.

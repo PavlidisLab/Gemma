@@ -18,11 +18,22 @@
  */
 package ubic.gemma.annotation.geommtx.evaluation;
 
-import com.hp.hpl.jena.query.*;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.vocabulary.DC_11;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import ubic.GEOMMTx.LabelLoader;
 import ubic.GEOMMTx.OntologyTools;
 import ubic.GEOMMTx.ProjectRDFModelTools;
@@ -42,8 +53,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
-import java.io.*;
-import java.util.*;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.vocabulary.DC_11;
 
 /**
  * TODO Document Me
@@ -99,6 +118,8 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     Map<String, Set<String>> mmtxURLs;
 
     HashSet<String> originalMMTxIDs;
+
+    DescriptionExtractor de;
 
     public CompareToManualCLI() {
         labels = new HashMap<String, String>();
@@ -390,8 +411,6 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     @Override
     protected void buildOptions() {
     }
-
-    DescriptionExtractor de;
 
     @Override
     protected Exception doWork( String[] args ) {

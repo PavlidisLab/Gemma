@@ -30,13 +30,13 @@ public interface MeanVarianceServiceHelper {
 
     /**
      * @param ee
-     * @return ExpressionDataDoubleMatrix of expression intensities
-     */
-    public abstract ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee );
-
-    /**
-     * @param ee
      * @param mvr
      */
     public abstract void createMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr );
+
+    /**
+     * @param ee
+     * @return ExpressionDataDoubleMatrix of expression intensities
+     */
+    public abstract ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee );
 }

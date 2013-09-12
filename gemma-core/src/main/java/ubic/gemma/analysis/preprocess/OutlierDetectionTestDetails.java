@@ -69,84 +69,84 @@ public class OutlierDetectionTestDetails {
         return this.experiment;
     }
 
-    public void setLastThreshold( double threshold ) {
-        this.lastThreshold = threshold;
-    }
-
     public double getLastThreshold() {
         return lastThreshold;
-    }
-
-    public void setSignificantFactors( Collection<ExperimentalFactor> significantFactors ) {
-        this.significantFactors.addAll( significantFactors );
-    }
-
-    public Collection<ExperimentalFactor> getSignificantFactors() {
-        return significantFactors;
-    }
-
-    public void setNumSigFactors( int n ) {
-        this.numSigFactors = n;
-    }
-
-    public int getNumSigFactors() {
-        return numSigFactors;
-    }
-
-    public void setNumExpFactors( int n ) {
-        this.numExpFactors = n;
     }
 
     public int getNumExpFactors() {
         return this.numExpFactors;
     }
 
-    public void setNumOutliers( int n ) {
-        this.numOutliers = n;
-    }
-
     public int getNumOutliers() {
         return numOutliers;
-    }
-
-    public void setNumSamples( int n ) {
-        this.numSamples = n;
-    }
-
-    public int getNumSamples() {
-        return numSamples;
-    }
-
-    public void setNumRemoved( int n ) {
-        this.numRemoved = n;
-    }
-
-    public int getNumRemoved() {
-        return numRemoved;
-    }
-
-    public void setNumOutliersByBasicAlgorithm( int n ) {
-        this.numOutliersByBasicAlgorithm = n;
     }
 
     public int getNumOutliersBasicAlgorithm() {
         return numOutliersByBasicAlgorithm;
     }
 
+    public int getNumOutliersByMedian() {
+        return numOutliersByMedian;
+    }
+
+    public int getNumRemoved() {
+        return numRemoved;
+    }
+
+    public int getNumSamples() {
+        return numSamples;
+    }
+
+    public int getNumSigFactors() {
+        return numSigFactors;
+    }
+
+    public Collection<OutlierDetails> getOutliers() {
+        return this.outliers;
+    }
+
+    public Collection<ExperimentalFactor> getSignificantFactors() {
+        return significantFactors;
+    }
+
+    public void setLastThreshold( double threshold ) {
+        this.lastThreshold = threshold;
+    }
+
+    public void setNumExpFactors( int n ) {
+        this.numExpFactors = n;
+    }
+
+    public void setNumOutliers( int n ) {
+        this.numOutliers = n;
+    }
+
+    public void setNumOutliersByBasicAlgorithm( int n ) {
+        this.numOutliersByBasicAlgorithm = n;
+    }
+
     public void setNumOutliersByMedian( int n ) {
         this.numOutliersByMedian = n;
     }
 
-    public int getNumOutliersByMedian() {
-        return numOutliersByMedian;
+    public void setNumRemoved( int n ) {
+        this.numRemoved = n;
+    }
+
+    public void setNumSamples( int n ) {
+        this.numSamples = n;
+    }
+
+    public void setNumSigFactors( int n ) {
+        this.numSigFactors = n;
     }
 
     public void setOutliers( Collection<OutlierDetails> outliers ) {
         this.outliers.addAll( outliers );
     }
 
-    public Collection<OutlierDetails> getOutliers() {
-        return this.outliers;
+    public void setSignificantFactors( Collection<ExperimentalFactor> significantFactors ) {
+        this.significantFactors.addAll( significantFactors );
     }
 
 }

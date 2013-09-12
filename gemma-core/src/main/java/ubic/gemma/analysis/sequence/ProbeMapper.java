@@ -12,21 +12,6 @@ public interface ProbeMapper {
 
     /**
      * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
-     * associated with; if there are multiple results for a single sequence, these are further analyzed for specificity
-     * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product.
-     * <p>
-     * This is a major entrypoint for this API.
-     * 
-     * @param goldenPathDb
-     * @param blatResults
-     * @param config
-     * @return A map of sequence names to collections of blat associations for each sequence.
-     */
-    public abstract Map<String, Collection<BlatAssociation>> processBlatResults(
-            GoldenPathSequenceAnalysis goldenPathDb, Collection<BlatResult> blatResults, ProbeMapperConfig config );
-
-    /**
-     * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
      * associatd with; if there are multiple results for a single sequence, these are further analyzed for specificity
      * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product. Default
      * settings (ProbeMapperConfig) are used.
@@ -40,6 +25,21 @@ public interface ProbeMapper {
      */
     public abstract Map<String, Collection<BlatAssociation>> processBlatResults(
             GoldenPathSequenceAnalysis goldenPathDb, Collection<BlatResult> blatResults );
+
+    /**
+     * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
+     * associated with; if there are multiple results for a single sequence, these are further analyzed for specificity
+     * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product.
+     * <p>
+     * This is a major entrypoint for this API.
+     * 
+     * @param goldenPathDb
+     * @param blatResults
+     * @param config
+     * @return A map of sequence names to collections of blat associations for each sequence.
+     */
+    public abstract Map<String, Collection<BlatAssociation>> processBlatResults(
+            GoldenPathSequenceAnalysis goldenPathDb, Collection<BlatResult> blatResults, ProbeMapperConfig config );
 
     /**
      * Given a genbank accession (for a mRNA or EST), find alignment data from GoldenPath.

@@ -120,6 +120,7 @@ public class OutlierDetails {
     @SuppressWarnings("rawtypes")
     public static Comparator MedianComparator = new Comparator() {
 
+        @Override
         public int compare( Object o1, Object o2 ) {
             OutlierDetails outlier1 = ( OutlierDetails ) o1;
             OutlierDetails outlier2 = ( OutlierDetails ) o2;
@@ -134,6 +135,7 @@ public class OutlierDetails {
     @SuppressWarnings("rawtypes")
     public static Comparator FirstQuartileComparator = new Comparator() {
 
+        @Override
         public int compare( Object o1, Object o2 ) {
             OutlierDetails outlier1 = ( OutlierDetails ) o1;
             OutlierDetails outlier2 = ( OutlierDetails ) o2;
@@ -148,6 +150,7 @@ public class OutlierDetails {
     @SuppressWarnings("rawtypes")
     public static Comparator ThirdQuartileComparator = new Comparator() {
 
+        @Override
         public int compare( Object o1, Object o2 ) {
             OutlierDetails outlier1 = ( OutlierDetails ) o1;
             OutlierDetails outlier2 = ( OutlierDetails ) o2;

@@ -20,9 +20,6 @@ package ubic.gemma.web.util;
 
 /**
  * Used to signifity that an entity was not found in the system.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

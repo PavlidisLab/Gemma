@@ -29,12 +29,6 @@ public interface DifferentialExpressionAnalysisHelperService {
 
     /**
      * @param entity
-     * @return
-     */
-    public DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity );
-
-    /**
-     * @param entity
      * @param resultSets
      */
     public void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets );
@@ -46,5 +40,11 @@ public interface DifferentialExpressionAnalysisHelperService {
      * @return
      */
     public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs );
+
+    /**
+     * @param entity
+     * @return
+     */
+    public DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity );
 
 }

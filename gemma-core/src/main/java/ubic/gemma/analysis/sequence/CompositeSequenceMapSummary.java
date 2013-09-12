@@ -34,9 +34,17 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public class CompositeSequenceMapSummary {
 
+    /**
+     * @return
+     */
+    public static String header() {
+        return "CompSeq\tBioSeq\t#BlatRes\tGeneProds\tGenes";
+    }
+
     private CompositeSequence compositeSequence;
     private Collection<BlatResult> blatResults;
     private Collection<GeneProduct> geneProducts;
+
     private Collection<Gene> genes;
 
     /**
@@ -56,28 +64,28 @@ public class CompositeSequenceMapSummary {
         return blatResults;
     }
 
-    public void setBlatResults( Collection<BlatResult> blatResults ) {
-        this.blatResults = blatResults;
+    public CompositeSequence getCompositeSequence() {
+        return compositeSequence;
     }
 
     public Collection<GeneProduct> getGeneProducts() {
         return geneProducts;
     }
 
-    public void setGeneProducts( Collection<GeneProduct> geneProducts ) {
-        this.geneProducts = geneProducts;
-    }
-
     public Collection<Gene> getGenes() {
         return genes;
     }
 
-    public void setGenes( Collection<Gene> genes ) {
-        this.genes = genes;
+    public void setBlatResults( Collection<BlatResult> blatResults ) {
+        this.blatResults = blatResults;
     }
 
-    public CompositeSequence getCompositeSequence() {
-        return compositeSequence;
+    public void setGeneProducts( Collection<GeneProduct> geneProducts ) {
+        this.geneProducts = geneProducts;
+    }
+
+    public void setGenes( Collection<Gene> genes ) {
+        this.genes = genes;
     }
 
     @Override
@@ -105,13 +113,6 @@ public class CompositeSequenceMapSummary {
         }
 
         return buf.toString().replaceAll( "\\|\t", "\t" ).replaceFirst( "\\|$", "" );
-    }
-
-    /**
-     * @return
-     */
-    public static String header() {
-        return "CompSeq\tBioSeq\t#BlatRes\tGeneProds\tGenes";
     }
 
 }

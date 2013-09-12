@@ -36,24 +36,32 @@ public class LinkAnalysisConfig implements Serializable {
         BALANCE, none, SPELL, SVD
     }
 
+    /**
+     * Configures whether only one of the two thresholds should be used. Set to 'none' to use the standard
+     * dual-threshold, or choose 'fwe' or 'cdfcut' to use only one of those.
+     */
+    public enum SingularThreshold {
+        none, fwe, cdfcut
+    }
+
     private static final long serialVersionUID = 1L;
 
     public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = 500;
-
     private boolean absoluteValue = false;
-    private String arrayName = null;
 
+    private String arrayName = null;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
     private double correlationCacheThreshold = 0.8;
     private double fwe = 0.01;
     private boolean knownGenesOnly = false;
+
     private boolean lowerCdfCutUsed = false;
 
     private double lowerTailCut = 0.01;
 
     private boolean makeSampleCorrMatImages = true;
-
     private String metric = "pearson"; // spearman
+
     private NormalizationMethod normalizationMethod = NormalizationMethod.none;
 
     /**
@@ -65,14 +73,6 @@ public class LinkAnalysisConfig implements Serializable {
      * Probes with more than this many links are removed.
      */
     private int probeDegreeThreshold = DEFAULT_PROBE_DEGREE_THRESHOLD;
-
-    /**
-     * Configures whether only one of the two thresholds should be used. Set to 'none' to use the standard
-     * dual-threshold, or choose 'fwe' or 'cdfcut' to use only one of those.
-     */
-    public enum SingularThreshold {
-        none, fwe, cdfcut
-    }
 
     private SingularThreshold singularThreshold = SingularThreshold.none; // fwe|cdfCut
     private boolean subset = false;
@@ -87,14 +87,6 @@ public class LinkAnalysisConfig implements Serializable {
      * Only used if textOut = true; if null, just write to stdout.
      */
     private File outputFile = null;
-
-    public File getOutputFile() {
-        return outputFile;
-    }
-
-    public void setOutputFile( File outputFile ) {
-        this.outputFile = outputFile;
-    }
 
     private double upperTailCut = 0.01;
 
@@ -129,6 +121,10 @@ public class LinkAnalysisConfig implements Serializable {
      */
     public NormalizationMethod getNormalizationMethod() {
         return normalizationMethod;
+    }
+
+    public File getOutputFile() {
+        return outputFile;
     }
 
     public Integer getProbeDegreeThreshold() {
@@ -255,6 +251,10 @@ public class LinkAnalysisConfig implements Serializable {
      */
     public void setOmitNegLinks( boolean omitNegLinks ) {
         this.omitNegLinks = omitNegLinks;
+    }
+
+    public void setOutputFile( File outputFile ) {
+        this.outputFile = outputFile;
     }
 
     /**

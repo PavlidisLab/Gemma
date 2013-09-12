@@ -56,9 +56,6 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
     protected double[] rowMeans = null;
     protected double[] rowSumSquaresSqrt = null;
 
-    protected MatrixRowPairPearsonAnalysis() {
-    }
-
     /**
      * @param
      */
@@ -76,6 +73,9 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
     public MatrixRowPairPearsonAnalysis( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
         this( dataMatrix );
         this.setStorageThresholdValue( tmts );
+    }
+
+    protected MatrixRowPairPearsonAnalysis() {
     }
 
     /**
@@ -220,6 +220,46 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
+     */
+    @Override
+    public double correctedPvalue( int i, int j, double correl, int numused ) {
+
+        double p = CorrelationStats.pvalue( correl, numused );
+
+        double k = 1, m = 1;
+        Collection<Collection<Gene>> clusters = getGenesForRow( i );
+        if ( clusters != null ) {
+            for ( Collection<Gene> geneIdSet : clusters ) {
+                /*
+                 * Note we break on the first iteration because the number of probes per gene in the same cluster is
+                 * constant.
+                 */
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( k < tmpK ) k = tmpK;
+                    break;
+                }
+            }
+        }
+
+        clusters = getGenesForRow( j );
+        if ( clusters != null ) {
+            for ( Collection<Gene> geneIdSet : clusters ) {
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( m < tmpM ) m = tmpM;
+                    break;
+                }
+            }
+        }
+
+        return p * k * m;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
      */
     @Override
@@ -238,6 +278,90 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         m.setScale( ScaleType.LINEAR );
         return m;
 
+    }
+
+    /**
+     * @return double
+     * @param n int
+     * @param sxx double
+     * @param sx double
+     * @param syy double
+     * @param sy double
+     */
+    protected double correlationNorm( int n, double sxx, double sx, double syy, double sy ) {
+        return ( sxx - sx * sx / n ) * ( syy - sy * sy / n );
+    }
+
+    /**
+     * Compute a correlation. For Spearman, the values entered must be the ranks.
+     * 
+     * @param ival
+     * @param jval
+     * @param ssi root sum squared deviation
+     * @param ssj root sum squared deviation
+     * @param mi row mean of the ranks
+     * @param mj row mean of the ranks
+     * @return
+     */
+    protected double correlFast( double[] ival, double[] jval, double ssi, double ssj, double mi, double mj ) {
+        if ( ssi == 0 || ssj == 0 ) return Double.NaN;
+        double sxy = 0.0;
+        for ( int k = 0, n = ival.length; k < n; k++ ) {
+
+            sxy += ( ival[k] - mi ) * ( jval[k] - mj );
+        }
+        double c = sxy / ( ssi * ssj );
+
+        // should never have roundoff errors this large.
+        assert c > -1.0001 && c < 1.0001 : c;
+
+        // roundoff guard
+        if ( c < -1.0 ) {
+            c = -1.0;
+        } else if ( c > 1.0 ) {
+            c = 1.0;
+        }
+
+        return c;
+    }
+
+    /**
+     * @param ival double[]
+     * @param jval double[]
+     * @param i int
+     * @param j int
+     * @return double
+     */
+    protected double correlFast( double[] ival, double[] jval, int i, int j ) {
+        double ssi = rowSumSquaresSqrt[i];
+        double ssj = rowSumSquaresSqrt[j];
+        double mi = rowMeans[i];
+        double mj = rowMeans[j];
+
+        return correlFast( ival, jval, ssi, ssj, mi, mj );
+    }
+
+    /**
+     * Calculate mean and sumsqsqrt for each row
+     */
+    protected void rowStatistics() {
+        int numrows = dataMatrix.rows();
+        this.rowMeans = new double[numrows];
+        this.rowSumSquaresSqrt = new double[numrows];
+        for ( int i = 0, numcols = dataMatrix.columns(); i < numrows; i++ ) {
+            double ax = 0.0;
+            double sxx = 0.0;
+            for ( int j = 0; j < numcols; j++ ) {
+                ax += this.dataMatrix.get( i, j );
+            }
+            rowMeans[i] = ( ax / numcols );
+
+            for ( int j = 0; j < numcols; j++ ) {
+                double xt = this.dataMatrix.get( i, j ) - rowMeans[i]; /* deviation from mean */
+                sxx += xt * xt; /* sum of squared error */
+            }
+            rowSumSquaresSqrt[i] = Math.sqrt( sxx );
+        }
     }
 
     /**
@@ -312,130 +436,6 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         log.info( skipped + " rows skipped, due to no gene association" );
         finishMetrics();
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
-     */
-    @Override
-    public double correctedPvalue( int i, int j, double correl, int numused ) {
-
-        double p = CorrelationStats.pvalue( correl, numused );
-
-        double k = 1, m = 1;
-        Collection<Collection<Gene>> clusters = getGenesForRow( i );
-        if ( clusters != null ) {
-            for ( Collection<Gene> geneIdSet : clusters ) {
-                /*
-                 * Note we break on the first iteration because the number of probes per gene in the same cluster is
-                 * constant.
-                 */
-                for ( Gene geneId : geneIdSet ) {
-                    int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
-                    if ( k < tmpK ) k = tmpK;
-                    break;
-                }
-            }
-        }
-
-        clusters = getGenesForRow( j );
-        if ( clusters != null ) {
-            for ( Collection<Gene> geneIdSet : clusters ) {
-                for ( Gene geneId : geneIdSet ) {
-                    int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
-                    if ( m < tmpM ) m = tmpM;
-                    break;
-                }
-            }
-        }
-
-        return p * k * m;
-    }
-
-    /**
-     * @return double
-     * @param n int
-     * @param sxx double
-     * @param sx double
-     * @param syy double
-     * @param sy double
-     */
-    protected double correlationNorm( int n, double sxx, double sx, double syy, double sy ) {
-        return ( sxx - sx * sx / n ) * ( syy - sy * sy / n );
-    }
-
-    /**
-     * @param ival double[]
-     * @param jval double[]
-     * @param i int
-     * @param j int
-     * @return double
-     */
-    protected double correlFast( double[] ival, double[] jval, int i, int j ) {
-        double ssi = rowSumSquaresSqrt[i];
-        double ssj = rowSumSquaresSqrt[j];
-        double mi = rowMeans[i];
-        double mj = rowMeans[j];
-
-        return correlFast( ival, jval, ssi, ssj, mi, mj );
-    }
-
-    /**
-     * Compute a correlation. For Spearman, the values entered must be the ranks.
-     * 
-     * @param ival
-     * @param jval
-     * @param ssi root sum squared deviation
-     * @param ssj root sum squared deviation
-     * @param mi row mean of the ranks
-     * @param mj row mean of the ranks
-     * @return
-     */
-    protected double correlFast( double[] ival, double[] jval, double ssi, double ssj, double mi, double mj ) {
-        if ( ssi == 0 || ssj == 0 ) return Double.NaN;
-        double sxy = 0.0;
-        for ( int k = 0, n = ival.length; k < n; k++ ) {
-
-            sxy += ( ival[k] - mi ) * ( jval[k] - mj );
-        }
-        double c = sxy / ( ssi * ssj );
-
-        // should never have roundoff errors this large.
-        assert c > -1.0001 && c < 1.0001 : c;
-
-        // roundoff guard
-        if ( c < -1.0 ) {
-            c = -1.0;
-        } else if ( c > 1.0 ) {
-            c = 1.0;
-        }
-
-        return c;
-    }
-
-    /**
-     * Calculate mean and sumsqsqrt for each row
-     */
-    protected void rowStatistics() {
-        int numrows = dataMatrix.rows();
-        this.rowMeans = new double[numrows];
-        this.rowSumSquaresSqrt = new double[numrows];
-        for ( int i = 0, numcols = dataMatrix.columns(); i < numrows; i++ ) {
-            double ax = 0.0;
-            double sxx = 0.0;
-            for ( int j = 0; j < numcols; j++ ) {
-                ax += this.dataMatrix.get( i, j );
-            }
-            rowMeans[i] = ( ax / numcols );
-
-            for ( int j = 0; j < numcols; j++ ) {
-                double xt = this.dataMatrix.get( i, j ) - rowMeans[i]; /* deviation from mean */
-                sxx += xt * xt; /* sum of squared error */
-            }
-            rowSumSquaresSqrt[i] = Math.sqrt( sxx );
-        }
     }
 
 }

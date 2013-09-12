@@ -144,6 +144,40 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.preprocess.PreprocessorService#process(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, boolean)
+     */
+    @Override
+    public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
+        if ( light ) {
+            try {
+                removeInvalidatedData( ee );
+                processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+                processForSampleCorrelation( ee );
+                processForMeanVarianceRelation( ee );
+                processForPca( ee );
+                // analyzerService.deleteAnalyses( ee ); ??
+            } catch ( Exception e ) {
+                throw new PreprocessingException( e );
+            }
+        } else {
+            process( ee );
+        }
+
+    }
+
+    /**
+     * Create the scatter plot to evaluate heteroscedasticity.
+     * 
+     * @param eeId
+     */
+    private void processForMeanVarianceRelation( ExpressionExperiment ee ) {
+        meanVarianceService.findOrCreate( ee );
+    }
+
     /**
      * @param ee
      * @return
@@ -186,15 +220,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     /**
-     * Create the scatter plot to evaluate heteroscedasticity.
-     * 
-     * @param eeId
-     */
-    private void processForMeanVarianceRelation( ExpressionExperiment ee ) {
-        meanVarianceService.findOrCreate( ee );
-    }
-
-    /**
      * @param expExp
      */
     private void removeInvalidatedData( ExpressionExperiment expExp ) {
@@ -205,30 +230,5 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.preprocess.PreprocessorService#process(ubic.gemma.model.expression.experiment.
-     * ExpressionExperiment, boolean)
-     */
-    @Override
-    public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
-        if ( light ) {
-            try {
-                removeInvalidatedData( ee );
-                processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-                processForSampleCorrelation( ee );
-                processForMeanVarianceRelation( ee );
-                processForPca( ee );
-                // analyzerService.deleteAnalyses( ee ); ??
-            } catch ( Exception e ) {
-                throw new PreprocessingException( e );
-            }
-        } else {
-            process( ee );
-        }
-
     }
 }
