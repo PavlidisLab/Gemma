@@ -71,6 +71,10 @@ public class RetryExceptionCauseClassifier extends BinaryExceptionClassifier {
             c = c.getCause();
         }
 
+        log.debug(
+                " **** could not retry after: " + classifiable.getClass().getSimpleName() + ": "
+                        + classifiable.getMessage(), classifiable );
+
         return this.getDefault();
     }
 }
