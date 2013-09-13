@@ -104,13 +104,23 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
 						labelWidth : 120,
 						items : [showOnlyEditableCheckbox, taxonCombo, databaseGrid],
 						buttonAlign : 'right',
-						buttons : [{
+						buttons : [
+						        {
+									text : 'Clear',
+									formBind : true,
+									handler : function() {
+										databaseGrid.deselectAll();
+										taxonCombo.setValue(-1);
+										showOnlyEditableCheckbox.setValue(false);
+									}
+								}, {
 									text : 'Apply',
 									formBind : true,
 									handler : function() {
 										this.fireEvent('filterApplied', {
 													showOnlyEditable : showOnlyEditableCheckbox.getValue(),
-													taxonId : taxonCombo.getValue() === '-1' ? null : taxonCombo.getValue(),
+													taxonId : taxonCombo.getValue() === '-1' ? null : taxonCombo
+															.getValue(),
 													databaseIds : databaseGrid.getChosenDatabasesId()
 												});
 

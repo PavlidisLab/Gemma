@@ -118,6 +118,11 @@ Gemma.ExternalDatabaseGrid = Ext.extend(Ext.grid.GridPanel, {
                }
             });
          return result;
-      }
+      },
+      
+  	deselectAll : function() {
+		var sModel = this.getSelectionModel();
+		sModel.clearSelections();
+	}
 
    });
