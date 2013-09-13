@@ -38,22 +38,18 @@ Gemma.ExternalDatabaseGrid = Ext.extend(Ext.grid.GridPanel, {
                            sortType : Ext.data.SortTypes.asUCString
                         }]
                   }),
-               sortInfo : {
-                  field : 'name',
-                  direction : 'ASC'
-               }
             });
 
          Ext.apply(this, {
 
-               collapsed : true,
+               collapsed : false,
                collapsible : true,
                fieldLabel : 'Data source',
                title : 'Select',
                listeners : {
                   render : function(grid) {
                      // this to hide the column header
-                     grid.getView().el.select('.x-grid3-header').setStyle('display', 'none');
+                     //  grid.getView().el.select('.x-grid3-header').setStyle('display', 'none');
                   },
 
                   collapse : function(p) {
@@ -84,7 +80,7 @@ Gemma.ExternalDatabaseGrid = Ext.extend(Ext.grid.GridPanel, {
                   }]),
                store : store,
                columns : [checkboxSelectionModel, {
-                     header : "External Database",
+                     header : "Check all",
                      dataIndex : "name",
                      width : 0.25
                   }],
