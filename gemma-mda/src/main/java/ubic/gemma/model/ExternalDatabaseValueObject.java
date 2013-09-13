@@ -15,7 +15,7 @@
 package ubic.gemma.model;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.TreeSet;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
 
@@ -23,7 +23,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  * @author Paul
  * @version $Id$
  */
-public class ExternalDatabaseValueObject {
+public class ExternalDatabaseValueObject implements Comparable<ExternalDatabaseValueObject> {
 
     private String name;
     private Long id;
@@ -55,7 +55,7 @@ public class ExternalDatabaseValueObject {
     public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {
         if ( eds == null ) return null;
 
-        Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = new HashSet<ExternalDatabaseValueObject>();
+        Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = new TreeSet<ExternalDatabaseValueObject>();
         for ( ExternalDatabase ed : eds ) {
             externalDatabaseValueObjects.add( fromEntity( ed ) );
         }
@@ -81,5 +81,10 @@ public class ExternalDatabaseValueObject {
             if ( other.name != null ) return false;
         } else if ( !name.equals( other.name ) ) return false;
         return true;
+    }
+  
+    @Override
+    public int compareTo( ExternalDatabaseValueObject externalDatabaseValueObject ) {
+        return this.getName().toLowerCase().compareTo( externalDatabaseValueObject.getName().toLowerCase() );
     }
 }
