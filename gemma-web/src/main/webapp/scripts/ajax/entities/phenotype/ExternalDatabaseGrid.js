@@ -1,5 +1,6 @@
 /** the data source component in the neurocarta filter * */
 Ext.namespace('Gemma');
+
 Gemma.ExternalDatabaseGrid = Ext.extend(Ext.grid.GridPanel, {
 
       initComponent : function() {
@@ -122,3 +123,26 @@ Gemma.ExternalDatabaseGrid = Ext.extend(Ext.grid.GridPanel, {
 	}
 
    });
+
+
+// solution for getSelectionModel().clearSelections() not deselect all CheckboxSelectionModel
+Ext.override(Ext.grid.CheckboxSelectionModel, {
+	initEvents: function() {
+		Ext.grid.CheckboxSelectionModel.superclass.initEvents.call(this);
+		this.grid.on('render', function(){
+			var view = this.grid.getView();
+			view.mainBody.on('mousedown', this.onMouseDown, this);
+			Ext.fly(view.innerHd).on('mousedown', this.onHdMouseDown, this);
+		}, this);
+		
+		this.on('selectionchange', function() { // beim Ändern der Auswahl Anpassungen vornehmen
+			// Header-Checkbox de/aktivieren je nach Auswahl (nur aktivieren, wenn alle Zeilen markiert sind)
+			var hd = Ext.fly(this.grid.getView().innerHd).child('div.x-grid3-hd-checker');
+			if (this.getCount() < this.grid.getStore().getCount() || this.getCount() <= 0) {
+				hd.removeClass('x-grid3-hd-checker-on');
+			} else {
+				hd.addClass('x-grid3-hd-checker-on');
+			}
+		}, this);
+	}
+});
