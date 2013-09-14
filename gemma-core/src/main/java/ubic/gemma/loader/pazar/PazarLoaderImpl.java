@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.loader.pazar.model.PazarRecord;
 import ubic.gemma.model.association.PazarAssociation;
 import ubic.gemma.persistence.Persister;
@@ -44,6 +45,17 @@ public class PazarLoaderImpl implements PazarLoader {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.loader.pazar.PazarLoader#load(java.io.File)
+     */
+    @Override
+    public int load( File file ) throws IOException {
+        FileInputStream i = new FileInputStream( file );
+        return this.load( i );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.pazar.PazarLoader#load(java.io.InputStream)
      */
     @Override
@@ -58,17 +70,6 @@ public class PazarLoaderImpl implements PazarLoader {
         Collection<?> persisted = persisterHelper.persist( convertedResults );
 
         return persisted.size();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.pazar.PazarLoader#load(java.io.File)
-     */
-    @Override
-    public int load( File file ) throws IOException {
-        FileInputStream i = new FileInputStream( file );
-        return this.load( i );
     }
 
 }

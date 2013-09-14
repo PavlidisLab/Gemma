@@ -31,7 +31,7 @@ import ubic.gemma.tasks.Task;
  * @version $Id$
  */
 public class CharacteristicUpdateCommand extends TaskCommand {
- 
+
     private static final long serialVersionUID = 1L;
 
     private Collection<AnnotationValueObject> annotationValueObjects;
@@ -42,24 +42,15 @@ public class CharacteristicUpdateCommand extends TaskCommand {
     private boolean remove = false;
 
     /**
-     * @param annotationValueObjects the annotationValueObjects to set
-     */
-    public void setAnnotationValueObjects( Collection<AnnotationValueObject> annotationValueObjects ) {
-        this.annotationValueObjects = annotationValueObjects;
-    }
-
-    /**
      * @return the annotationValueObjects
      */
     public Collection<AnnotationValueObject> getAnnotationValueObjects() {
         return annotationValueObjects;
     }
 
-    /**
-     * @param remove the remove to set
-     */
-    public void setRemove( boolean remove ) {
-        this.remove = remove;
+    @Override
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+        return CharacteristicUpdateTask.class;
     }
 
     /**
@@ -69,8 +60,17 @@ public class CharacteristicUpdateCommand extends TaskCommand {
         return remove;
     }
 
-    @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
-        return CharacteristicUpdateTask.class;
+    /**
+     * @param annotationValueObjects the annotationValueObjects to set
+     */
+    public void setAnnotationValueObjects( Collection<AnnotationValueObject> annotationValueObjects ) {
+        this.annotationValueObjects = annotationValueObjects;
+    }
+
+    /**
+     * @param remove the remove to set
+     */
+    public void setRemove( boolean remove ) {
+        this.remove = remove;
     }
 }

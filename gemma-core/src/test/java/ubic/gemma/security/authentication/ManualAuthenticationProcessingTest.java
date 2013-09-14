@@ -61,7 +61,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
         } catch ( UsernameNotFoundException e ) {
             String encodedPassword = passwordEncoder.encodePassword( pwd, username );
             UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, true, null, null, null, new Date() );
-            userManager.createUser( u ); 
+            userManager.createUser( u );
         }
     }
 

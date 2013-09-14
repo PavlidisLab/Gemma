@@ -85,12 +85,14 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             goService.init( true );
         }
 
+        int millis = 10000;
         int c = 0;
         while ( !goService.isReady() ) {
-            Thread.sleep( 5000 );
+
+            Thread.sleep( millis );
             log.info( "Waiting for GO to load" );
-            if ( ++c > 50 ) {
-                fail( "GO loading timeout after " + c + "ms" );
+            if ( ++c > 20 ) {
+                fail( "GO loading timeout after " + c * millis / 1000.0 + "s" );
             }
         }
 

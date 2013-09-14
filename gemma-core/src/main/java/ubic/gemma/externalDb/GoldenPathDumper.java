@@ -44,13 +44,126 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  */
 public class GoldenPathDumper extends GoldenPath {
 
+    /**
+     * @author paul
+     * @version $Id$
+     */
+    private class BioSequenceEnsemblMappingQuery extends MappingSqlQuery<BioSequence> {
+
+        public BioSequenceEnsemblMappingQuery( DataSource ds, String query ) {
+            super( ds, query );
+            compile();
+        }
+
+        @Override
+        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
+            BioSequence bioSequence = BioSequence.Factory.newInstance();
+
+            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+
+            String name = rs.getString( "name" );
+            bioSequence.setName( name );
+            bioSequence.setPolymerType( PolymerType.RNA );
+            bioSequence.setIsCircular( false );
+
+            de.setAccession( name );
+            de.setExternalDatabase( ensembl );
+
+            bioSequence.setType( SequenceType.mRNA );
+            bioSequence.setSequenceDatabaseEntry( de );
+
+            return bioSequence;
+        }
+    }
+
+    /**
+     * @author paul
+     * @version $Id$
+     */
+    private class BioSequenceMappingQuery extends MappingSqlQuery<BioSequence> {
+
+        SequenceType type;
+
+        public BioSequenceMappingQuery( DataSource ds, String table, SequenceType type, String limit ) {
+            super( ds, "SELECT qName, qSize FROM " + table + " " + limit );
+            this.type = type;
+            compile();
+        }
+
+        @Override
+        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
+            BioSequence bioSequence = BioSequence.Factory.newInstance();
+
+            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+
+            String name = rs.getString( "qName" );
+            Long length = rs.getLong( "qSize" );
+            bioSequence.setName( name );
+            bioSequence.setLength( length );
+            bioSequence.setIsApproximateLength( false );
+            bioSequence.setPolymerType( PolymerType.DNA );
+            bioSequence.setIsCircular( false );
+
+            de.setAccession( name );
+            de.setExternalDatabase( genbank );
+
+            bioSequence.setType( type );
+            bioSequence.setSequenceDatabaseEntry( de );
+
+            return bioSequence;
+        }
+
+    }
+
+    /**
+     * @author paul
+     * @version $Id$
+     */
+    private class BioSequenceRefseqMappingQuery extends MappingSqlQuery<BioSequence> {
+
+        public BioSequenceRefseqMappingQuery( DataSource ds, String query ) {
+            super( ds, query );
+            compile();
+        }
+
+        @Override
+        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
+            BioSequence bioSequence = BioSequence.Factory.newInstance();
+
+            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+
+            String name = rs.getString( "name" );
+            bioSequence.setName( name );
+            bioSequence.setPolymerType( PolymerType.DNA );
+            bioSequence.setIsCircular( false );
+
+            de.setAccession( name );
+            de.setExternalDatabase( genbank );
+
+            bioSequence.setType( SequenceType.REFSEQ );
+            bioSequence.setSequenceDatabaseEntry( de );
+
+            return bioSequence;
+        }
+    }
+
     private static final String REF_GENE_TABLE_NAME = "refGene";
     private static final String ENSEMBL_TABLE_NAME = "ensGene";
 
     // these are provided for testing (switch off ones not using)
     private boolean DO_EST = true;
+
     private boolean DO_MRNA = true;
+
     private boolean DO_REFSEQ = true;
+
+    ExternalDatabase genbank;
+
+    ExternalDatabase ensembl;
+
+    public GoldenPathDumper() {
+        super();
+    }
 
     public GoldenPathDumper( int port, String databaseName, String host, String user, String password )
             throws SQLException {
@@ -60,14 +173,6 @@ public class GoldenPathDumper extends GoldenPath {
     public GoldenPathDumper( Taxon taxon ) {
         super( taxon );
     }
-
-    public GoldenPathDumper() {
-        super();
-    }
-
-    ExternalDatabase genbank;
-
-    ExternalDatabase ensembl;
 
     /**
      * Get all ESTs and mRNAs for a taxon. This will return a very large collection.
@@ -177,23 +282,6 @@ public class GoldenPathDumper extends GoldenPath {
     }
 
     /**
-     * @param seen
-     * @param sequences
-     * @return
-     */
-    private Collection<BioSequence> screenDuplicates( Collection<Integer> seen, Collection<BioSequence> sequences ) {
-        Collection<BioSequence> toAdd = new HashSet<BioSequence>();
-        for ( BioSequence sequence : sequences ) {
-            if ( seen.contains( sequence.getName().hashCode() ) ) {
-                continue;
-            }
-            toAdd.add( sequence );
-            seen.add( sequence.getName().hashCode() );
-        }
-        return toAdd;
-    }
-
-    /**
      * @param queue
      * @param numInput
      * @param sequences
@@ -214,15 +302,6 @@ public class GoldenPathDumper extends GoldenPath {
     /**
      * 
      */
-    private void initGenbank() {
-        genbank = ExternalDatabase.Factory.newInstance();
-        genbank.setName( "Genbank" );
-        genbank.setType( DatabaseType.SEQUENCE );
-    }
-
-    /**
-     * 
-     */
     private void initEnsembl() {
         genbank = ExternalDatabase.Factory.newInstance();
         genbank.setName( "Ensembl" );
@@ -230,114 +309,22 @@ public class GoldenPathDumper extends GoldenPath {
     }
 
     /**
-     * @author paul
-     * @version $Id$
+     * 
      */
-    private class BioSequenceMappingQuery extends MappingSqlQuery<BioSequence> {
-
-        SequenceType type;
-
-        public BioSequenceMappingQuery( DataSource ds, String table, SequenceType type, String limit ) {
-            super( ds, "SELECT qName, qSize FROM " + table + " " + limit );
-            this.type = type;
-            compile();
-        }
-
-        @Override
-        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
-            BioSequence bioSequence = BioSequence.Factory.newInstance();
-
-            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-
-            String name = rs.getString( "qName" );
-            Long length = rs.getLong( "qSize" );
-            bioSequence.setName( name );
-            bioSequence.setLength( length );
-            bioSequence.setIsApproximateLength( false );
-            bioSequence.setPolymerType( PolymerType.DNA );
-            bioSequence.setIsCircular( false );
-
-            de.setAccession( name );
-            de.setExternalDatabase( genbank );
-
-            bioSequence.setType( type );
-            bioSequence.setSequenceDatabaseEntry( de );
-
-            return bioSequence;
-        }
-
-    }
-
-    /**
-     * @author paul
-     * @version $Id$
-     */
-    private class BioSequenceRefseqMappingQuery extends MappingSqlQuery<BioSequence> {
-
-        public BioSequenceRefseqMappingQuery( DataSource ds, String query ) {
-            super( ds, query );
-            compile();
-        }
-
-        @Override
-        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
-            BioSequence bioSequence = BioSequence.Factory.newInstance();
-
-            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-
-            String name = rs.getString( "name" );
-            bioSequence.setName( name );
-            bioSequence.setPolymerType( PolymerType.DNA );
-            bioSequence.setIsCircular( false );
-
-            de.setAccession( name );
-            de.setExternalDatabase( genbank );
-
-            bioSequence.setType( SequenceType.REFSEQ );
-            bioSequence.setSequenceDatabaseEntry( de );
-
-            return bioSequence;
-        }
-    }
-
-    /**
-     * @author paul
-     * @version $Id$
-     */
-    private class BioSequenceEnsemblMappingQuery extends MappingSqlQuery<BioSequence> {
-
-        public BioSequenceEnsemblMappingQuery( DataSource ds, String query ) {
-            super( ds, query );
-            compile();
-        }
-
-        @Override
-        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
-            BioSequence bioSequence = BioSequence.Factory.newInstance();
-
-            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-
-            String name = rs.getString( "name" );
-            bioSequence.setName( name );
-            bioSequence.setPolymerType( PolymerType.RNA );
-            bioSequence.setIsCircular( false );
-
-            de.setAccession( name );
-            de.setExternalDatabase( ensembl );
-
-            bioSequence.setType( SequenceType.mRNA );
-            bioSequence.setSequenceDatabaseEntry( de );
-
-            return bioSequence;
-        }
+    private void initGenbank() {
+        genbank = ExternalDatabase.Factory.newInstance();
+        genbank.setName( "Genbank" );
+        genbank.setType( DatabaseType.SEQUENCE );
     }
 
     /**
      * @param query
      * @return
      */
-    private Collection<BioSequence> loadSequencesByQuery( String table, SequenceType type, String limit ) {
-        BioSequenceMappingQuery bsQuery = new BioSequenceMappingQuery( this.jdbcTemplate.getDataSource(), table, type, limit );
+    private Collection<BioSequence> loadEnsemblByQuery( String limitSuffix ) {
+        String query = "SELECT name FROM " + ENSEMBL_TABLE_NAME + " " + limitSuffix;
+        BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( this.jdbcTemplate.getDataSource(),
+                query );
         return bsQuery.execute();
     }
 
@@ -347,7 +334,8 @@ public class GoldenPathDumper extends GoldenPath {
      */
     private Collection<BioSequence> loadRefseqByQuery( String limitSuffix ) {
         String query = "SELECT name FROM " + REF_GENE_TABLE_NAME + " " + limitSuffix;
-        BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( this.jdbcTemplate.getDataSource(), query );
+        BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( this.jdbcTemplate.getDataSource(),
+                query );
         return bsQuery.execute();
     }
 
@@ -355,10 +343,27 @@ public class GoldenPathDumper extends GoldenPath {
      * @param query
      * @return
      */
-    private Collection<BioSequence> loadEnsemblByQuery( String limitSuffix ) {
-        String query = "SELECT name FROM " + ENSEMBL_TABLE_NAME + " " + limitSuffix;
-        BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( this.jdbcTemplate.getDataSource(), query );
+    private Collection<BioSequence> loadSequencesByQuery( String table, SequenceType type, String limit ) {
+        BioSequenceMappingQuery bsQuery = new BioSequenceMappingQuery( this.jdbcTemplate.getDataSource(), table, type,
+                limit );
         return bsQuery.execute();
+    }
+
+    /**
+     * @param seen
+     * @param sequences
+     * @return
+     */
+    private Collection<BioSequence> screenDuplicates( Collection<Integer> seen, Collection<BioSequence> sequences ) {
+        Collection<BioSequence> toAdd = new HashSet<BioSequence>();
+        for ( BioSequence sequence : sequences ) {
+            if ( seen.contains( sequence.getName().hashCode() ) ) {
+                continue;
+            }
+            toAdd.add( sequence );
+            seen.add( sequence.getName().hashCode() );
+        }
+        return toAdd;
     }
 
 }

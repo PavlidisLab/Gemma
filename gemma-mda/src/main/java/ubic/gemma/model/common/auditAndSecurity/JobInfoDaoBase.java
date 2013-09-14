@@ -64,6 +64,11 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
         return jobInfo;
     }
 
+    @Override
+    public Collection<JobInfo> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from JobInfoImpl where id in (:ids)", "ids", ids );
+    }
+
     /**
      * @see JobInfoDao#load(int, java.lang.Long)
      */
@@ -74,11 +79,6 @@ public abstract class JobInfoDaoBase extends org.springframework.orm.hibernate3.
         }
         final Object entity = this.getHibernateTemplate().get( JobInfoImpl.class, id );
         return ( JobInfo ) entity;
-    }
-
-    @Override
-    public Collection<JobInfo> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from JobInfoImpl where id in (:ids)", "ids", ids );
     }
 
     /**

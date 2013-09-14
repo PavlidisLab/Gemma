@@ -8,13 +8,15 @@ import static org.junit.Assert.fail;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.model.Acl;
-import org.springframework.security.acls.model.AclService;
+import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclObjectIdentity;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -50,6 +52,7 @@ public class AclTestUtils {
      * 
      * @param f
      */
+    @Transactional(readOnly = true)
     public void checkDeletedAcl( Object f ) {
         try {
             Acl acl = getAcl( f );
@@ -66,6 +69,7 @@ public class AclTestUtils {
      * 
      * @param ee
      */
+    @Transactional(readOnly = true)
     public void checkDeleteEEAcls( ExpressionExperiment ee ) {
         checkDeletedAcl( ee );
 
@@ -106,6 +110,7 @@ public class AclTestUtils {
      * 
      * @param ee
      */
+    @Transactional(readOnly = true)
     public void checkEEAcls( ExpressionExperiment ee ) {
         ee = this.expressionExperimentService.thawLite( ee );
         checkHasAcl( ee );
@@ -175,39 +180,23 @@ public class AclTestUtils {
         }
     }
 
-    public void checkLacksAcl( Object f ) {
-        try {
-            aclService.readAclById( new ObjectIdentityImpl( f ) );
-            fail( "Should not have found an ACL" );
-        } catch ( NotFoundException okaye ) {
-            // good.S
-        }
+    @Transactional(readOnly = true)
+    public void checkHasAces( Object f ) {
+        Acl a = getAcl( f );
+        assertTrue( "For object " + f + " with ACL " + a + ":doesn't have ACEs, it should", a.getEntries().size() > 0 );
     }
 
+    @Transactional(readOnly = true)
     public void checkHasAcl( Object f ) {
         try {
-            aclService.readAclById( new ObjectIdentityImpl( f ) );
+            aclService.readAclById( new AclObjectIdentity( f ) );
             log.debug( "Have acl for " + f );
         } catch ( NotFoundException okaye ) {
             fail( "Failed to create ACL for " + f );
         }
     }
 
-    public void checkHasAces( Object f ) {
-        Acl a = getAcl( f );
-        assertTrue( "For object " + f + " with ACL " + a + ":doesn't have ACEs, it should", a.getEntries().size() > 0 );
-    }
-
-    private Acl getAcl( Object f ) {
-        Acl a = aclService.readAclById( new ObjectIdentityImpl( f ) );
-        return a;
-    }
-
-    public void checkLacksAces( Object f ) {
-        Acl a = getAcl( f );
-        assertTrue( f + " has ACEs, it shouldn't", a.getEntries().size() == 0 );
-    }
-
+    @Transactional(readOnly = true)
     public void checkHasAclParent( Object f, Object parent ) {
         Acl parentAcl = getParentAcl( f );
         assertNotNull( "No ACL for parent of " + f, parentAcl );
@@ -220,6 +209,36 @@ public class AclTestUtils {
         assertNotNull( parentAcl );
 
         log.debug( "ACL has correct parent for " + f + " <----- " + parentAcl.getObjectIdentity() );
+    }
+
+    @Transactional(readOnly = true)
+    public void checkLacksAces( Object f ) {
+        Acl a = getAcl( f );
+        assertTrue( f + " has ACEs, it shouldn't: " + a, a.getEntries().size() == 0 );
+    }
+
+    @Transactional(readOnly = true)
+    public void checkLacksAcl( Object f ) {
+
+        try {
+
+            aclService.readAclById( new AclObjectIdentity( f ) );
+            fail( "Should not have found an ACL" );
+
+        } catch ( NotFoundException okaye ) {
+            // good
+        }
+    }
+
+    @Transactional
+    public void update( MutableAcl acl ) {
+        this.aclService.updateAcl( acl );
+    }
+
+    @Transactional
+    public MutableAcl getAcl( Object f ) {
+        Acl a = aclService.readAclById( new AclObjectIdentity( f ) );
+        return ( MutableAcl ) a;
     }
 
     private Acl getParentAcl( Object f ) {

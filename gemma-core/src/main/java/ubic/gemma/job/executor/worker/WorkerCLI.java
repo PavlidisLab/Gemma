@@ -19,33 +19,34 @@
 package ubic.gemma.job.executor.worker;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.SpringContextUtil;
 
 /**
  * Generic tool for starting a remote worker.
- *
+ * 
  * @author keshav
  * @version $Id$
  */
 public class WorkerCLI extends AbstractSpringAwareCLI {
 
-    private RemoteTaskRunningService taskRunningService;
-
     public class ShutdownHook extends Thread {
         @Override
         public void run() {
-            log.info( "Remote task executor is shutting down...");
-            log.info( "Attempting to cancel all running tasks...");
+            log.info( "Remote task executor is shutting down..." );
+            log.info( "Attempting to cancel all running tasks..." );
             taskRunningService.shutdown();
-            log.info( "Shutdown sequence completed.");
+            log.info( "Shutdown sequence completed." );
         }
     }
 
     public static void main( String[] args ) {
         WorkerCLI me = new WorkerCLI();
-        me.doWork(args);
+        me.doWork( args );
     }
+
+    private RemoteTaskRunningService taskRunningService;
 
     /*
      * (non-Javadoc)
@@ -60,25 +61,26 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-//        Option mmtxOption = OptionBuilder.withDescription( "Set to force MMTX to be initialized" ).create( "mmtx" );
-//        super.addOption( mmtxOption );
+        // Option mmtxOption = OptionBuilder.withDescription( "Set to force MMTX to be initialized" ).create( "mmtx" );
+        // super.addOption( mmtxOption );
     }
 
-
     @Override
-    protected String[] getAdditionalSpringConfigLocations() {
-        String[] workerSpecificConfigs = {
-                "classpath*:ubic/gemma/workerContext-component-scan.xml",
-                "classpath*:ubic/gemma/workerContext-jms.xml"
-        };
-        return workerSpecificConfigs;
+    protected void createSpringContext() {
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false /* webapp */,
+                getAdditionalSpringConfigLocations() );
+
+        /*
+         * Important to ensure that threads get permissions from their context - not global!
+         */
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
     }
 
     /*
-         * (non-Javadoc)
-         *
-         * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-         */
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception commandArgumentErrors = processCommandLine( this.getClass().getName(), args );
@@ -94,6 +96,13 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         return commandArgumentErrors;
     }
 
+    @Override
+    protected String[] getAdditionalSpringConfigLocations() {
+        String[] workerSpecificConfigs = { "classpath*:ubic/gemma/workerContext-component-scan.xml",
+                "classpath*:ubic/gemma/workerContext-jms.xml" };
+        return workerSpecificConfigs;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -102,11 +111,11 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     @Override
     protected void processOptions() {
         super.processOptions();
-        //FIXME
-//        if ( this.hasOption( "mmtx" ) ) {
-//            ExpressionExperimentAnnotator eeAnnotator = this.getBean( ExpressionExperimentAnnotator.class );
-//            eeAnnotator.init();
-//        }
+        // FIXME
+        // if ( this.hasOption( "mmtx" ) ) {
+        // ExpressionExperimentAnnotator eeAnnotator = this.getBean( ExpressionExperimentAnnotator.class );
+        // eeAnnotator.init();
+        // }
     }
 
     /**
@@ -119,16 +128,5 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         Runtime.getRuntime().addShutdownHook( shutdownHook );
 
         taskRunningService = ctx.getBean( RemoteTaskRunningService.class );
-    }
-
-    @Override
-        protected void createSpringContext() {
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false /* webapp */,
-                getAdditionalSpringConfigLocations() );
-
-        /*
-         * Important to ensure that threads get permissions from their context - not global!
-         */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
     }
 }

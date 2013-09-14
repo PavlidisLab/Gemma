@@ -14,9 +14,15 @@
  */
 package ubic.gemma.apps;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
+
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -41,11 +47,6 @@ import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.util.AbstractCLIContextCLI;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Creates an array design based on the current set of transcripts for a taxon.
@@ -403,23 +404,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     }
 
     /**
-     * @param arrayDesign
-     * @return
-     */
-    private Map<String, CompositeSequence> getExistingProbeNameMap( ArrayDesign arrayDesign ) {
-
-        Map<String, CompositeSequence> existingElements = new HashMap<String, CompositeSequence>();
-
-        if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
-
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            assert cs.getId() != null : "Null id for " + cs;
-            existingElements.put( cs.getName(), cs );
-        }
-        return existingElements;
-    }
-
-    /**
      * For gene symbols.
      * 
      * @param arrayDesign
@@ -458,6 +442,23 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
             existingElements.put( g, cs );
         }
 
+        return existingElements;
+    }
+
+    /**
+     * @param arrayDesign
+     * @return
+     */
+    private Map<String, CompositeSequence> getExistingProbeNameMap( ArrayDesign arrayDesign ) {
+
+        Map<String, CompositeSequence> existingElements = new HashMap<String, CompositeSequence>();
+
+        if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
+
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            assert cs.getId() != null : "Null id for " + cs;
+            existingElements.put( cs.getName(), cs );
+        }
         return existingElements;
     }
 }

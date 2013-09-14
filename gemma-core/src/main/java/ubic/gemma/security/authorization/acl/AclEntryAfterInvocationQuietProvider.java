@@ -24,6 +24,7 @@ import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Overrides default behaviour by returning null, rather than throwing an access denied exception
@@ -38,15 +39,18 @@ public class AclEntryAfterInvocationQuietProvider extends
 
     public AclEntryAfterInvocationQuietProvider( AclService aclService, List<Permission> requirePermission ) {
         super( aclService, "AFTER_ACL_READ_QUIET", requirePermission );
+        this.setObjectIdentityRetrievalStrategy( new ValueObjectAwareIdentityRetrievalStrategyImpl() );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Object decide( Authentication authentication, Object object, Collection<ConfigAttribute> config,
             Object returnedObject ) throws AccessDeniedException {
         try {
             return super.decide( authentication, object, config, returnedObject );
         } catch ( AccessDeniedException e ) {
             // This is expected when user is anonymous, etc.
+            // log.warn( "Access denied to: " + object );
             if ( log.isDebugEnabled() ) log.debug( e + ": returning null" );
             return null;
         }

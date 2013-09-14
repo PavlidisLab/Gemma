@@ -45,6 +45,14 @@ public abstract class GeoData implements Serializable {
 
     private String title = "";
 
+    /**
+     * @param columnName
+     */
+    public void addColumnName( String columnName ) {
+        assert columnName != null;
+        this.columnNames.add( columnName );
+    }
+
     @Override
     public boolean equals( Object obj ) {
         if ( obj instanceof GeoData ) {
@@ -53,11 +61,11 @@ public abstract class GeoData implements Serializable {
         return false;
     }
 
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( getGeoAccession() == null ? 0 : getGeoAccession().hashCode() );
-        return hashCode;
+    /**
+     * @return Returns the columnDescriptions.
+     */
+    public List<String> getColumnDescriptions() {
+        return this.columnDescriptions;
     }
 
     /**
@@ -68,14 +76,6 @@ public abstract class GeoData implements Serializable {
      */
     public List<String> getColumnNames() {
         return this.columnNames;
-    }
-
-    /**
-     * @param columnName
-     */
-    public void addColumnName( String columnName ) {
-        assert columnName != null;
-        this.columnNames.add( columnName );
     }
 
     /**
@@ -93,29 +93,24 @@ public abstract class GeoData implements Serializable {
     }
 
     /**
-     * @param geoAccesssion The geoAccesssion to set.
-     */
-    public void setGeoAccession( String geoAccesssion ) {
-        this.geoAccession = geoAccesssion;
-    }
-
-    @Override
-    public String toString() {
-        return this.geoAccession;
-    }
-
-    /**
-     * @return Returns the columnDescriptions.
-     */
-    public List<String> getColumnDescriptions() {
-        return this.columnDescriptions;
-    }
-
-    /**
      * @return Returns the title.
      */
     public String getTitle() {
         return this.title;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( getGeoAccession() == null ? 0 : getGeoAccession().hashCode() );
+        return hashCode;
+    }
+
+    /**
+     * @param geoAccesssion The geoAccesssion to set.
+     */
+    public void setGeoAccession( String geoAccesssion ) {
+        this.geoAccession = geoAccesssion;
     }
 
     /**
@@ -123,6 +118,11 @@ public abstract class GeoData implements Serializable {
      */
     public void setTitle( String title ) {
         this.title = title;
+    }
+
+    @Override
+    public String toString() {
+        return this.geoAccession;
     }
 
 }

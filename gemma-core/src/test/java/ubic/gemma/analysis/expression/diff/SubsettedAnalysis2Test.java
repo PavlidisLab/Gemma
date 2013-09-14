@@ -61,6 +61,48 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
+    @Before
+    public void setup() throws Exception {
+
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( FileTools
+                .resourceToPath( "/data/analysis/expression/gse12991short" ) ) );
+
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE12991", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
+
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
+        toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+        for ( ExperimentalFactor ef : toremove ) {
+            experimentalFactorService.delete( ef );
+            ee.getExperimentalDesign().getExperimentalFactors().remove( ef );
+
+        }
+
+        expressionExperimentService.update( ee );
+
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+
+        ee = expressionExperimentService.thaw( ee );
+
+        designImporter.importDesign(
+                ee,
+                this.getClass().getResourceAsStream(
+                        "/data/analysis/expression/gse12991short/6283_GSE12991_expdesign.data.txt" ) );
+
+    }
+
+    @After
+    public void teardown() throws Exception {
+        if ( ee != null ) expressionExperimentService.delete( ee );
+    }
+
     @Test
     public void test() throws Exception {
 
@@ -99,48 +141,6 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
         analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
         assertEquals( 2, result.size() ); // two subsets
-
-    }
-
-    @After
-    public void teardown() throws Exception {
-        if ( ee != null ) expressionExperimentService.delete( ee );
-    }
-
-    @Before
-    public void setup() throws Exception {
-
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( FileTools
-                .resourceToPath( "/data/analysis/expression/gse12991short" ) ) );
-
-        try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE12991", false, true, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
-
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
-
-        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
-        toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
-        for ( ExperimentalFactor ef : toremove ) {
-            experimentalFactorService.delete( ef );
-            ee.getExperimentalDesign().getExperimentalFactors().remove( ef );
-
-        }
-
-        expressionExperimentService.update( ee );
-
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-
-        ee = expressionExperimentService.thaw( ee );
-
-        designImporter.importDesign(
-                ee,
-                this.getClass().getResourceAsStream(
-                        "/data/analysis/expression/gse12991short/6283_GSE12991_expdesign.data.txt" ) );
 
     }
 

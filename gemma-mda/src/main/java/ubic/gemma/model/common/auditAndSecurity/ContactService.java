@@ -35,15 +35,15 @@ public interface ContactService {
     public ubic.gemma.model.common.auditAndSecurity.Contact find(
             ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
+    @Secured({ "GROUP_USER" })
+    public Collection<ubic.gemma.model.common.auditAndSecurity.Contact> findByName( String name );
+
     /**
      * 
      */
     @Secured({ "GROUP_USER" })
     public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
             ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    @Secured({ "GROUP_USER" })
-    public Collection<ubic.gemma.model.common.auditAndSecurity.Contact> findByName( String name );
 
     /**
      * 

@@ -20,6 +20,7 @@ package ubic.gemma.loader.protein.biomart;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -28,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
+
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -46,6 +48,37 @@ public class BioMartEnsemblNcbiFetcherTest {
     @Before
     public void setUp() {
         biomartEnsemblNcbiFetcher = new BiomartEnsemblNcbiFetcher();
+    }
+
+    /**
+     * Tests that given a taxon returns the correct attributes
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testAttributesToRetrieveFromBioMart() throws Exception {
+        String[] attributes = biomartEnsemblNcbiFetcher.attributesToRetrieveFromBioMartForProteinQuery( "hsapiens" );
+        assertNotNull( attributes );
+        assertTrue( attributes.length == 5 );
+        // should be set for human
+        assertNotNull( attributes[4] );
+    }
+
+    /**
+     * Tests that given a scientific named taxon taxon name is formatted correctly for biomart
+     * {@link ubic.gemma.loader.protein.biomart.BiomartEnsemblNcbiFetcher#getBioMartTaxonName()}.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testGetBioMartTaxonName() throws Exception {
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setScientificName( "Homo sapiens" );
+
+        String biomartFormatedString = biomartEnsemblNcbiFetcher.getBiomartTaxonName( taxon );
+        assertNotNull( biomartFormatedString );
+        assertTrue( biomartFormatedString.equals( "hsapiens" ) );
+
     }
 
     /**
@@ -69,37 +102,6 @@ public class BioMartEnsemblNcbiFetcherTest {
             }
         }
 
-    }
-
-    /**
-     * Tests that given a scientific named taxon taxon name is formatted correctly for biomart
-     * {@link ubic.gemma.loader.protein.biomart.BiomartEnsemblNcbiFetcher#getBioMartTaxonName()}.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testGetBioMartTaxonName() throws Exception {
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setScientificName( "Homo sapiens" );
-
-        String biomartFormatedString = biomartEnsemblNcbiFetcher.getBiomartTaxonName( taxon );
-        assertNotNull( biomartFormatedString );
-        assertTrue( biomartFormatedString.equals( "hsapiens" ) );
-
-    }
-
-    /**
-     * Tests that given a taxon returns the correct attributes
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testAttributesToRetrieveFromBioMart() throws Exception {
-        String[] attributes = biomartEnsemblNcbiFetcher.attributesToRetrieveFromBioMartForProteinQuery( "hsapiens" );
-        assertNotNull( attributes );
-        assertTrue( attributes.length == 5 );
-        // should be set for human
-        assertNotNull( attributes[4] );
     }
 
     /*

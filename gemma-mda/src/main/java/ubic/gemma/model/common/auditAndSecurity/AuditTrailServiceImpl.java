@@ -57,34 +57,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Autowired
     private StatusDao statusDao;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
-     * java.lang.Class, java.lang.String, java.lang.String)
-     */
-    @Override
-    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
-            String detail ) {
-
-        AuditEventType auditEventType = null;
-
-        try {
-            Class<?> factory = Class.forName( type.getName() + "$Factory" );
-            Method method = factory.getMethod( "newInstance" );
-            auditEventType = ( AuditEventType ) method.invoke( type );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-
-        return this.addUpdateEvent( auditable, auditEventType, note, detail );
-    }
-
-    @Override
-    public List<AuditEvent> getEvents( Auditable ad ) {
-        return this.auditEventDao.getEvents( ad );
-    }
-
     /**
      * @see AuditTrailService#addComment(Auditable, String, String)
      */
@@ -112,19 +84,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     public void addTroubleFlag( final Auditable auditable, final String comment, final String detail ) {
         AuditEventType type = new TroubleStatusFlagEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
-    }
-
-    /**
-     * @see AuditTrailService#addUpdateEvent(Auditable, String)
-     */
-    @Override
-    public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setNote( note );
-        this.statusDao.update( auditable, null );
-        return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
 
     /**
@@ -157,6 +116,42 @@ public class AuditTrailServiceImpl implements AuditTrailService {
         return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
+     * java.lang.Class, java.lang.String, java.lang.String)
+     */
+    @Override
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
+            String detail ) {
+
+        AuditEventType auditEventType = null;
+
+        try {
+            Class<?> factory = Class.forName( type.getName() + "$Factory" );
+            Method method = factory.getMethod( "newInstance" );
+            auditEventType = ( AuditEventType ) method.invoke( type );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+        return this.addUpdateEvent( auditable, auditEventType, note, detail );
+    }
+
+    /**
+     * @see AuditTrailService#addUpdateEvent(Auditable, String)
+     */
+    @Override
+    public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( new Date() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setNote( note );
+        this.statusDao.update( auditable, null );
+        return this.auditTrailDao.addEvent( auditable, auditEvent );
+    }
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addValidatedFlag(ubic.gemma.model.common.Auditable,
      *      java.lang.String, java.lang.String)
@@ -173,6 +168,23 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Override
     public AuditTrail create( final AuditTrail auditTrail ) {
         return this.auditTrailDao.create( auditTrail );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getEntitiesWithEvent(java.lang.Class,
+     * java.lang.Class)
+     */
+    @Override
+    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
+            Class<? extends AuditEventType> auditEventClass ) {
+        return ( List<? extends Auditable> ) this.auditTrailDao.getEntitiesWithEvent( entityClass, auditEventClass );
+    }
+
+    @Override
+    public List<AuditEvent> getEvents( Auditable ad ) {
+        return this.auditEventDao.getEvents( ad );
     }
 
     /**
@@ -197,18 +209,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Override
     public AuditEvent getLastValidationEvent( final Auditable auditable ) {
         return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getEntitiesWithEvent(java.lang.Class,
-     * java.lang.Class)
-     */
-    @Override
-    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
-            Class<? extends AuditEventType> auditEventClass ) {
-        return ( List<? extends Auditable> ) this.auditTrailDao.getEntitiesWithEvent( entityClass, auditEventClass );
     }
 
 }

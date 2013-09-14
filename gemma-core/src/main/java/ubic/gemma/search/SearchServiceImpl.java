@@ -148,19 +148,19 @@ public class SearchServiceImpl implements SearchService {
     private static final String NCBI_GENE = "ncbi_gene";
 
     /**
-     * How long after creation before an object is evicted.
+     * How long after creation before an object is evicted, no matter what.
      */
-    private static final int ONTOLOGY_CACHE_TIME_TO_DIE = 2000;
+    private static final int ONTOLOGY_CACHE_TIME_TO_DIE = 10000;
 
     /**
      * How long an item in the cache lasts when it is not accessed.
      */
-    private static final int ONTOLOGY_CACHE_TIME_TO_IDLE = 600;
+    private static final int ONTOLOGY_CACHE_TIME_TO_IDLE = 3600;
 
     /**
      * How many term children can stay in memory
      */
-    private static final int ONTOLOGY_INFO_CACHE_SIZE = 15000;
+    private static final int ONTOLOGY_INFO_CACHE_SIZE = 30000;
 
     /**
      * If fewer than this number of experiments are returned from the a search of experiment characteristics, then

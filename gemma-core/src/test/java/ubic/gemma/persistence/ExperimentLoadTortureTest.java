@@ -43,12 +43,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
 @SuppressWarnings("unused")
 public class ExperimentLoadTortureTest extends BaseSpringContextTest {
 
-    /**
-     * This test can fail with a deadlock. Note that this behaviour is dependent on configuration, in complex ways, so
-     * don't worry about trying to get it to fail. The fact that it works is good ;)
-     * 
-     * @throws Exception
-     */
     @Test
     public void testConcurrentLoading() throws Exception {
         /*
@@ -56,8 +50,8 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
          */
         getTestPersistentCompleteExpressionExperiment( false );
 
-        int numThreads = 2;
-        final int numExperimentsPerThread = 1;
+        int numThreads = 4;
+        final int numExperimentsPerThread = 3;
 
         final AtomicInteger c = new AtomicInteger( 0 );
 
@@ -68,7 +62,7 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
         Collection<Thread> threads = new HashSet<Thread>();
         for ( int i = 0; i < numThreads; i++ ) {
             final int t = i;
-            new Thread( new Runnable() {
+            Thread k = new Thread( new Runnable() {
                 @Override
                 public void run() {
                     for ( int j = 0; j < numExperimentsPerThread; j++ ) {
@@ -86,7 +80,11 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
                         }
                     }
                 }
-            } ).start();
+            } );
+
+            threads.add( k );
+
+            k.start();
         }
 
         int waits = 0;
@@ -108,7 +106,7 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
          * This test passes like 4/5 times.
          */
         if ( results.size() != numThreads * numExperimentsPerThread ) {
-            log.warn( "Multithreaded loading failure: check logs for failure to recover from deadlock" );
+            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock" );
         } else {
             log.info( "TORTURE TEST PASSED!" );
         }

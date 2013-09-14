@@ -51,11 +51,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         return entities;
     }
 
-    @Override
-    public Collection<? extends AuditEvent> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from AuditEventImpl where id in (:ids)", "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
@@ -139,6 +134,11 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
                     "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditEventDao.getUpdatedSinceDate(java.util.Date date)' --> "
                             + th, th );
         }
+    }
+
+    @Override
+    public Collection<? extends AuditEvent> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from AuditEventImpl where id in (:ids)", "ids", ids );
     }
 
     /**

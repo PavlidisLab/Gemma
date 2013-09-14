@@ -288,7 +288,10 @@ public interface SecurityService {
 
     /**
      * Administrative method to allow a user to get access to an object. This is useful for cases where a data set is
-     * loaded by admin but we need to hand it off to a user.
+     * loaded by admin but we need to hand it off to a user. If the user is the same as the current owner nothing is
+     * done.
+     * <p>
+     * TODO: consider allowing a groupauthority to be the owner (GROUP_ADMIN) - see bug 2996
      * 
      * @param s
      * @param userName

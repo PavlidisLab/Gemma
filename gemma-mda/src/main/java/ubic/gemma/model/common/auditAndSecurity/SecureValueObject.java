@@ -20,8 +20,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.io.Serializable;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
-
 /**
  * Indicates that a value object represents a Securable so security filtering can be provided during reading.
  * 
@@ -31,36 +29,9 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
 public interface SecureValueObject extends Serializable, Securable {
 
     /**
-     * @return the securable Class of the represented entity.
-     */
-    public Class<? extends Securable> getSecurableClass();
-
-    /**
      * @return true if the object is public
      */
     public boolean getIsPublic();
-
-    public void setIsPublic( boolean isPublic );
-
-    /**
-     * @return true if the object is owned by the current user
-     */
-    public boolean getUserOwned();
-
-    /**
-     * @param isUserOwned
-     */
-    public void setUserOwned( boolean isUserOwned );
-
-    /**
-     * @return
-     */
-    public boolean getUserCanWrite();
-
-    /**
-     * @param userCanWrite
-     */
-    public void setUserCanWrite( boolean userCanWrite );
 
     /**
      * @return
@@ -68,8 +39,35 @@ public interface SecureValueObject extends Serializable, Securable {
     public boolean getIsShared();
 
     /**
+     * @return the securable Class of the represented entity.
+     */
+    public Class<? extends Securable> getSecurableClass();
+
+    /**
+     * @return
+     */
+    public boolean getUserCanWrite();
+
+    /**
+     * @return true if the object is owned by the current user
+     */
+    public boolean getUserOwned();
+
+    public void setIsPublic( boolean isPublic );
+
+    /**
      * @param isShared
      */
     public void setIsShared( boolean isShared );
+
+    /**
+     * @param userCanWrite
+     */
+    public void setUserCanWrite( boolean userCanWrite );
+
+    /**
+     * @param isUserOwned
+     */
+    public void setUserOwned( boolean isUserOwned );
 
 }

@@ -39,11 +39,16 @@ public class NcbiGeneHistory {
         history.add( startingId );
     }
 
-    /**
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
      */
-    public List<String> getPreviousIds() {
-        return Collections.unmodifiableList( history );
+    @Override
+    public boolean equals( Object obj ) {
+        if ( obj == null ) return false;
+        if ( obj instanceof NcbiGeneHistory ) return false;
+        return ( ( NcbiGeneHistory ) obj ).getCurrentId().equals( this.getCurrentId() );
     }
 
     public String getCurrentId() {
@@ -63,33 +68,11 @@ public class NcbiGeneHistory {
 
     }
 
-    public boolean usedToBe( String oldId ) {
-        return history.contains( oldId );
-    }
-
     /**
-     * @param newId
+     * @return
      */
-    public void update( String oldId, String newId ) {
-        if ( history.contains( newId ) ) {
-            throw new IllegalArgumentException( "History already contains " + newId );
-        }
-        if ( !history.contains( oldId ) ) {
-            throw new IllegalArgumentException( "History doesn't contain " + oldId );
-        }
-        this.history.add( history.indexOf( oldId ) + 1, newId );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals( Object obj ) {
-        if ( obj == null ) return false;
-        if ( obj instanceof NcbiGeneHistory ) return false;
-        return ( ( NcbiGeneHistory ) obj ).getCurrentId().equals( this.getCurrentId() );
+    public List<String> getPreviousIds() {
+        return Collections.unmodifiableList( history );
     }
 
     /*
@@ -105,6 +88,23 @@ public class NcbiGeneHistory {
     @Override
     public String toString() {
         return StringUtils.join( history, "->" );
+    }
+
+    /**
+     * @param newId
+     */
+    public void update( String oldId, String newId ) {
+        if ( history.contains( newId ) ) {
+            throw new IllegalArgumentException( "History already contains " + newId );
+        }
+        if ( !history.contains( oldId ) ) {
+            throw new IllegalArgumentException( "History doesn't contain " + oldId );
+        }
+        this.history.add( history.indexOf( oldId ) + 1, newId );
+    }
+
+    public boolean usedToBe( String oldId ) {
+        return history.contains( oldId );
     }
 
 }

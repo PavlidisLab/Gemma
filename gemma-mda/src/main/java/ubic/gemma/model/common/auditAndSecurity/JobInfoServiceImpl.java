@@ -35,14 +35,7 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#getJobInfoDao()
-     */
-    public JobInfoDao getJobInfoDao() {
-        return jobInfoDao;
-    }
-
-    /*
-     * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#create(ubic.gemma.model.common.auditAndSecurity.JobInfo
      * )
@@ -54,6 +47,21 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     /*
      * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#getJobInfoDao()
+     */
+    public JobInfoDao getJobInfoDao() {
+        return jobInfoDao;
+    }
+
+    @Override
+    public Collection<JobInfo> getUsersJobs( String userName ) {
+        return jobInfoDao.getUsersJob( userName );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#load(java.util.Collection)
      */
     @Override
@@ -63,6 +71,7 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#load(java.lang.Long)
      */
     @Override
@@ -72,6 +81,7 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#remove(java.util.Collection)
      */
     @Override
@@ -81,6 +91,7 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#remove(java.lang.Long)
      */
     @Override
@@ -90,6 +101,7 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#update(ubic.gemma.model.common.auditAndSecurity.JobInfo
      * )
@@ -97,11 +109,6 @@ public class JobInfoServiceImpl implements JobInfoService {
     @Override
     public void update( JobInfo entity ) {
         jobInfoDao.update( entity );
-    }
-
-    @Override
-    public Collection<JobInfo> getUsersJobs( String userName ) {
-        return jobInfoDao.getUsersJob( userName );
     }
 
 }

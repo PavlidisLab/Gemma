@@ -14,7 +14,7 @@
  */
 package ubic.gemma.analysis.preprocess.batcheffects;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -31,15 +31,15 @@ import org.junit.Test;
 public class AffyScanDateExtractorTest {
 
     @Test
-    public void testExtractInputStreamV4() throws Exception {
+    public void testExtractInputStreamGCOS() throws Exception {
         InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSM306831.part.CEL.gz" ) );
+                "/data/loader/expression/geo/GSM506974.part.CEL.gz" ) );
         AffyScanDateExtractor extractor = new AffyScanDateExtractor();
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
-        Date expected = formatter.parse( "09/09/05 12:14:40" );
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
+        Date expected = formatter.parse( "08/15/08 14:15:36" );
 
         assertEquals( expected, actual );
     }
@@ -59,6 +59,20 @@ public class AffyScanDateExtractorTest {
     }
 
     @Test
+    public void testExtractInputStreamV4() throws Exception {
+        InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSM306831.part.CEL.gz" ) );
+        AffyScanDateExtractor extractor = new AffyScanDateExtractor();
+
+        Date actual = extractor.extract( is );
+
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
+        Date expected = formatter.parse( "09/09/05 12:14:40" );
+
+        assertEquals( expected, actual );
+    }
+
+    @Test
     public void testExtractInputStreamVx() throws Exception {
         InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSM239803.CEL.gz" ) );
@@ -68,20 +82,6 @@ public class AffyScanDateExtractorTest {
 
         DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
         Date expected = formatter.parse( "01/20/05 11:04:38" );
-
-        assertEquals( expected, actual );
-    }
-
-    @Test
-    public void testExtractInputStreamGCOS() throws Exception {
-        InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSM506974.part.CEL.gz" ) );
-        AffyScanDateExtractor extractor = new AffyScanDateExtractor();
-
-        Date actual = extractor.extract( is );
-
-        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
-        Date expected = formatter.parse( "08/15/08 14:15:36" );
 
         assertEquals( expected, actual );
     }

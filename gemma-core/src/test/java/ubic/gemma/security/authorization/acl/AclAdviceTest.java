@@ -19,28 +19,32 @@
 package ubic.gemma.security.authorization.acl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.model.Acl;
-import org.springframework.security.acls.model.MutableAclService;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclObjectIdentity;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -53,7 +57,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class AclAdviceTest extends BaseSpringContextTest {
 
     @Autowired
-    private MutableAclService aclService;
+    private AclService aclService;
 
     @Autowired
     private AclTestUtils aclTestUtils;
@@ -73,6 +77,23 @@ public class AclAdviceTest extends BaseSpringContextTest {
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private SecurityService securityService;
+
+    @Test
+    public void testSecuredNotChild() throws Exception {
+        String groupName = randomName();
+        securityService.createGroup( groupName );
+        UserGroup g = userService.findGroupByName( groupName );
+        aclTestUtils.checkHasAcl( g );
+        aclTestUtils.checkHasAces( g );
+        userService.delete( g );
+        aclTestUtils.checkDeletedAcl( g );
+    }
+
     /**
      * Create Array design, check ACLs are put on correctly and removed when the design is removed. Array Designs are
      * _simple_ compared to EEs!
@@ -84,7 +105,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ArrayDesign ad = this.getTestPersistentArrayDesign( 2, true, false, false ); // need to modify
 
         aclTestUtils.checkHasAcl( ad );
-
+        aclTestUtils.checkHasAces( ad );
         arrayDesignService.remove( ad );
 
         aclTestUtils.checkDeletedAcl( ad );
@@ -115,8 +136,8 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         // make sure the ACL for objects are there (throws an exception if not).
 
-        Acl eeacl = aclService.readAclById( new ObjectIdentityImpl( ee ) );
-        aclService.readAclById( new ObjectIdentityImpl( ees ) );
+        Acl eeacl = aclService.readAclById( new AclObjectIdentity( ee ) );
+        aclService.readAclById( new AclObjectIdentity( ees ) );
 
         assertNull( eeacl.getParentAcl() );
 
@@ -137,14 +158,14 @@ public class AclAdviceTest extends BaseSpringContextTest {
     @Test
     public void testAnalysisAcl() {
 
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        DifferentialExpressionAnalysis diffExpressionAnalysis = config.toAnalysis();
-
         /*
          * Create an analysis, add a result set, persist. Problem is: what if we do things in a funny order. Must call
          * update on the Analysis.
          */
         ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        DifferentialExpressionAnalysis diffExpressionAnalysis = config.toAnalysis();
 
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance();
         resultSet.setAnalysis( diffExpressionAnalysis );
@@ -198,6 +219,9 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkEEAcls( ee );
 
         ee = expressionExperimentService.load( ee.getId() );
+
+        assertNotNull( ee );
+
         ee.setShortName( randomName() );
         expressionExperimentService.update( ee );
 

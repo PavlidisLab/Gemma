@@ -50,6 +50,8 @@ public class AclAfterFilterCollectionForMyPrivateData extends AbstractAclProvide
 
     public AclAfterFilterCollectionForMyPrivateData( AclService aclService, List<Permission> requirePermission ) {
         super( aclService, "AFTER_ACL_FILTER_MY_PRIVATE_DATA", requirePermission );
+        this.setObjectIdentityRetrievalStrategy( new ValueObjectAwareIdentityRetrievalStrategyImpl() );
+
     }
 
     private Log log = LogFactory.getLog( this.getClass() );

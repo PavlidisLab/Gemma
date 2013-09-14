@@ -14,13 +14,13 @@
  */
 package ubic.gemma.job.executor.webapp;
 
+import java.util.Collection;
+
 import ubic.gemma.job.ConflictingTaskException;
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
-
-import java.util.Collection;
 
 /**
  * TODO: document me
@@ -31,19 +31,19 @@ import java.util.Collection;
 public interface TaskRunningService {
 
     /**
-     * @return the submittedTasks
+     * @param taskId id of the task
+     * @return
      */
-    public Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks();
+    public SubmittedTask getSubmittedTask( String taskId );
 
     // TODO: Make this user specific. Probably in a controller with a session scoped collection.
     // TODO: at that level (WebAwareTaskRunningService) have a rate limiter for task submission by the same user
     // TODO: this is to detect duplicate task submission (e.g. within a few seconds)
 
     /**
-     * @param taskId id of the task
-     * @return
+     * @return the submittedTasks
      */
-    public SubmittedTask getSubmittedTask( String taskId );
+    public Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks();
 
     /**
      * Submit a task and track its progress. When it is finished, the results can be retrieved with checkResult(). Tasks

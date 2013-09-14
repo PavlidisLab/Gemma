@@ -19,14 +19,15 @@
 
 package ubic.gemma.security.authorization.acl;
 
-import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 
 import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclObjectIdentity;
 
 /**
- * Customized to know how to deal with SecureValueObject, makes it easier to share code in SecurityService.
+ * Customized to know how to deal with SecureValueObject, makes it easier to share code in SecurityService; and doesn't
+ * use the default ObjectIdentityImpl.
  * 
  * @author Paul
  * @version $Id$
@@ -42,9 +43,9 @@ public class ValueObjectAwareIdentityRetrievalStrategyImpl implements ObjectIden
     public ObjectIdentity getObjectIdentity( Object domainObject ) {
         if ( SecureValueObject.class.isAssignableFrom( domainObject.getClass() ) ) {
             SecureValueObject svo = ( SecureValueObject ) domainObject;
-            return new ObjectIdentityImpl( svo.getSecurableClass(), svo.getId() );
+            return new AclObjectIdentity( svo.getSecurableClass(), svo.getId() );
         }
-        return new ObjectIdentityImpl( domainObject );
+        return new AclObjectIdentity( domainObject );
 
     }
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.security.audit;
+package ubic.gemma.model.common.auditAndSecurity.acl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

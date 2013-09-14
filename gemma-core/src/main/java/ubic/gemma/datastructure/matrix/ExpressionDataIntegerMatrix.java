@@ -45,16 +45,9 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         vectorsToMatrix( vectors );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
-     * ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    public Integer get( CompositeSequence designElement, BioMaterial bioMaterial ) {
-        return this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
-                .getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
+    @Override
+    public int columns() {
+        return matrix.columns();
     }
 
     /*
@@ -69,6 +62,23 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         int i = this.rowElementMap.get( designElement );
         int j = this.columnAssayMap.get( bioAssay );
         return this.matrix.get( i, j );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     * ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    public Integer get( CompositeSequence designElement, BioMaterial bioMaterial ) {
+        return this.matrix.get( matrix.getRowIndexByName( designElement ),
+                matrix.getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
+    }
+
+    @Override
+    public Integer get( int row, int column ) {
+        return matrix.get( row, column );
     }
 
     /*
@@ -143,6 +153,20 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         return this.matrix.getRow( this.getRowIndex( designElement ) );
     }
 
+    @Override
+    public Integer[] getRow( Integer index ) {
+        return this.matrix.getRow( index );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowMap()
+     */
+    public Collection<CompositeSequence> getRowMap() {
+        return this.rowElementMap.keySet();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -157,31 +181,6 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         return res;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowMap()
-     */
-    public Collection<CompositeSequence> getRowMap() {
-        return this.rowElementMap.keySet();
-    }
-
-    @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) {
-            throw new IllegalArgumentException( "No vectors!" );
-        }
-
-        int maxSize = setUpColumnElements();
-
-        this.matrix = createMatrix( vectors, maxSize );
-    }
-
-    @Override
-    public int columns() {
-        return matrix.columns();
-    }
-
     @Override
     public int rows() {
         return matrix.rows();
@@ -193,13 +192,14 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
     }
 
     @Override
-    public Integer get( int row, int column ) {
-        return matrix.get( row, column );
-    }
+    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+        if ( vectors == null || vectors.size() == 0 ) {
+            throw new IllegalArgumentException( "No vectors!" );
+        }
 
-    @Override
-    public Integer[] getRow( Integer index ) {
-        return this.matrix.getRow( index );
+        int maxSize = setUpColumnElements();
+
+        this.matrix = createMatrix( vectors, maxSize );
     }
 
     /**

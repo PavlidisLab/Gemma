@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Calendar;
+import java.util.Collection;
+
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +28,9 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Repository;
+
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-
-import java.util.Calendar;
-import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao
@@ -105,65 +106,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         return create( entities );
     }
 
-    @Override
-    public AuditTrail load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "AuditTrail.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get( AuditTrailImpl.class, id );
-        return ( AuditTrail ) entity;
-    }
-
-    @Override
-    public Collection<? extends AuditTrail> loadAll() {
-        return this.getHibernateTemplate().loadAll( AuditTrailImpl.class );
-    }
-
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "AuditTrail.remove - 'id' can not be null" );
-        }
-        AuditTrail entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    @Override
-    public void update( AuditTrail auditTrail ) {
-        if ( auditTrail == null ) {
-            throw new IllegalArgumentException( "AuditTrail.update - 'auditTrail' can not be null" );
-        }
-        this.getHibernateTemplate().update( auditTrail );
-    }
-
-    @Override
-    public void remove( Collection<? extends AuditTrail> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditTrail.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    @Override
-    public void remove( AuditTrail auditTrail ) {
-        if ( auditTrail == null ) {
-            throw new IllegalArgumentException( "AuditTrail.remove - 'auditTrail' can not be null" );
-        }
-        this.getHibernateTemplate().delete( auditTrail );
-    }
-
-    @Override
-    public void update( final Collection<? extends AuditTrail> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditTrail.update - 'entities' can not be null" );
-        }
-        for ( AuditTrail auditTrail : entities ) {
-            update( auditTrail );
-        }
-    }
-
     /**
      * FIXME this returns a list, but there is no particular ordering enforced?
      * 
@@ -200,6 +142,65 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
     @Override
     public Collection<? extends AuditTrail> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from  AuditTrailImpl where id in (:ids)", "ids", ids );
+    }
+
+    @Override
+    public AuditTrail load( final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "AuditTrail.load - 'id' can not be null" );
+        }
+        final Object entity = this.getHibernateTemplate().get( AuditTrailImpl.class, id );
+        return ( AuditTrail ) entity;
+    }
+
+    @Override
+    public Collection<? extends AuditTrail> loadAll() {
+        return this.getHibernateTemplate().loadAll( AuditTrailImpl.class );
+    }
+
+    @Override
+    public void remove( AuditTrail auditTrail ) {
+        if ( auditTrail == null ) {
+            throw new IllegalArgumentException( "AuditTrail.remove - 'auditTrail' can not be null" );
+        }
+        this.getHibernateTemplate().delete( auditTrail );
+    }
+
+    @Override
+    public void remove( Collection<? extends AuditTrail> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AuditTrail.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    @Override
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "AuditTrail.remove - 'id' can not be null" );
+        }
+        AuditTrail entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
+    @Override
+    public void update( AuditTrail auditTrail ) {
+        if ( auditTrail == null ) {
+            throw new IllegalArgumentException( "AuditTrail.update - 'auditTrail' can not be null" );
+        }
+        this.getHibernateTemplate().update( auditTrail );
+    }
+
+    @Override
+    public void update( final Collection<? extends AuditTrail> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "AuditTrail.update - 'entities' can not be null" );
+        }
+        for ( AuditTrail auditTrail : entities ) {
+            update( auditTrail );
+        }
     }
 
     /**

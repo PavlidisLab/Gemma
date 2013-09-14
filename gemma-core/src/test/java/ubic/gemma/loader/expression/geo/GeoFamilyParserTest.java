@@ -78,17 +78,6 @@ public class GeoFamilyParserTest extends TestCase {
         assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
     }
 
-    @Test
-    public void testParseSAGE() throws Exception {
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse2122shortSage/GSE2122.soft.gz" ) );
-        parser.parse( is );
-        GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values()
-                .iterator().next();
-        assertTrue( !sample.hasUsableData() );
-        assertEquals( 4, sample.getColumnNames().size() ); // includes ones we aren't using.
-    }
-
     /**
      * Lacks data for some samples (on purpose)
      * 
@@ -126,6 +115,17 @@ public class GeoFamilyParserTest extends TestCase {
         // );
         // GeoValues values = series.getValues();
         // System.err.print( values );
+    }
+
+    @Test
+    public void testParseSAGE() throws Exception {
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse2122shortSage/GSE2122.soft.gz" ) );
+        parser.parse( is );
+        GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values()
+                .iterator().next();
+        assertTrue( !sample.hasUsableData() );
+        assertEquals( 4, sample.getColumnNames().size() ); // includes ones we aren't using.
     }
 
     /*

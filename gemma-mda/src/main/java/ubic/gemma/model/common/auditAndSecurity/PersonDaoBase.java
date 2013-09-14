@@ -57,11 +57,6 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
         return entities;
     }
 
-    @Override
-    public Collection<? extends Person> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from PersonImpl where id in (:ids)", "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.Person)
@@ -126,6 +121,11 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
         java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
         return ( Collection<Person> ) results;
+    }
+
+    @Override
+    public Collection<? extends Person> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from PersonImpl where id in (:ids)", "ids", ids );
     }
 
     /**

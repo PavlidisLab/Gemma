@@ -73,6 +73,12 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
 
     }
 
+    @Override
+    public Collection<Contact> findByName( String name ) {
+        return this.getHibernateTemplate()
+                .findByNamedParam( "from ContactImpl c where c.name like :d", "d", name + "%" );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -97,11 +103,5 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
          */
         return this.getHibernateTemplate().findByNamedParam(
                 "select e from ExpressionExperimentImpl e join e.investigators i where i=:c ", "c", contact );
-    }
-
-    @Override
-    public Collection<Contact> findByName( String name ) {
-        return this.getHibernateTemplate()
-                .findByNamedParam( "from ContactImpl c where c.name like :d", "d", name + "%" );
     }
 }

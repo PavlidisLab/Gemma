@@ -18,11 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.User
  */
-public class UserImpl extends ubic.gemma.model.common.auditAndSecurity.User   {
+public class UserImpl extends ubic.gemma.model.common.auditAndSecurity.User {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

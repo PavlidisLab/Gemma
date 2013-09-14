@@ -25,9 +25,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserRole
  */
-public class UserRoleImpl
-    extends ubic.gemma.model.common.auditAndSecurity.UserRole
-{
+public class UserRoleImpl extends ubic.gemma.model.common.auditAndSecurity.UserRole {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

@@ -1,4 +1,3 @@
-
 /*
  * The Gemma project
  * 
@@ -24,16 +23,14 @@ import java.util.Collection;
 
 import ubic.gemma.model.common.description.LocalFile;
 
-
-
 /**
  * Interface for downloading via http files and unarchiving them
  * 
  * @author ldonnison
  * @version $Id$
  */
-public interface HttpArchiveFetcherInterface extends Fetcher{
-    
-    public File unPackFile(Collection<LocalFile> localFile);
+public interface HttpArchiveFetcherInterface extends Fetcher {
+
+    public File unPackFile( Collection<LocalFile> localFile );
 
 }

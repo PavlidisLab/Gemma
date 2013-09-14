@@ -27,7 +27,6 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -43,7 +42,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -64,6 +63,9 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+
+    @Autowired
+    private SecurityService securityService;
 
     /*
      * @see TestCase#setUp()
@@ -162,6 +164,10 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
             }
             seqIds.add( seq.getId() );
         }
+
+        // just a wrinkle to this test -- ensure ACLs are there
+        securityService.isPublic( ad );
+
         arrayDesignService.remove( ad );
 
         ad = null;
@@ -201,6 +207,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ArrayDesign found = arrayDesignService.find( toFind );
 
         assertNotNull( found );
+
+        arrayDesignService.remove( ad );
     }
 
     @Test
@@ -223,6 +231,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ArrayDesign found = arrayDesignService.find( toFind );
 
         assertNull( found );
+
+        arrayDesignService.remove( ad );
     }
 
     @Test

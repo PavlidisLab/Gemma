@@ -39,6 +39,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
+
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        AffyExonArrayDataAddCli c = new AffyExonArrayDataAddCli();
+        c.doWork( args );
+    }
+
     private String aptFile = null;
 
     @Override
@@ -47,14 +56,6 @@ public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI
         super.addOption( APT_FILE_OPT, true,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
 
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( hasOption( APT_FILE_OPT ) ) {
-            this.aptFile = getOptionValue( APT_FILE_OPT );
-        }
     }
 
     /*
@@ -129,12 +130,12 @@ public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI
         return null;
     }
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        AffyExonArrayDataAddCli c = new AffyExonArrayDataAddCli();
-        c.doWork( args );
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( hasOption( APT_FILE_OPT ) ) {
+            this.aptFile = getOptionValue( APT_FILE_OPT );
+        }
     }
 
 }

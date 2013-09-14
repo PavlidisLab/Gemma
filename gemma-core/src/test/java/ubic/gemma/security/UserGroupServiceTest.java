@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -49,7 +48,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class UserGroupServiceTest extends BaseSpringContextTest {
-    
+
     @Autowired
     private UserManager userManager = null;
 
@@ -62,7 +61,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     private String groupName = null;
 
     private String userName1 = "jonesey";
-    
+
     private String userName2 = "mark";
 
     @Before
@@ -72,19 +71,14 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
         /*
          * Create a user with default privileges.
          */
-        try {
-            this.userManager.loadUserByUsername( this.userName1 );
-        } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", this.userName1, true, null, "foo@gmail.com", "key",
-                    new Date() ) );
-        }
+        if ( !userManager.userExists( userName1 ) )
+            this.userManager.createUser( new UserDetailsImpl( "foo", this.userName1, true, null, "foo@gmail.com",
+                    "key", new Date() ) );
 
-        try {
-            this.userManager.loadUserByUsername( this.userName2 );
-        } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo2", this.userName2, true, null, "foo2@gmail.com", "key2",
-                    new Date() ) );
-        }
+        if ( !userManager.userExists( userName2 ) )
+            this.userManager.createUser( new UserDetailsImpl( "foo2", this.userName2, true, null, "foo2@gmail.com",
+                    "key2", new Date() ) );
+
     }
 
     /**
@@ -104,6 +98,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
         }
 
     }
+
     /**
      * Test for deleting a user group
      */
@@ -114,37 +109,25 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
         List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
         authos.add( new GrantedAuthorityImpl( "GROUP_TESTING" ) );
         this.userManager.createGroup( this.groupName, authos );
-        
+
         // add another user to group
         this.userManager.addUserToGroup( this.userName1, this.groupName );
         this.userManager.addUserToGroup( this.userName2, this.groupName );
-        
+
         // grant read permission to group
         ExpressionExperiment ee = getTestPersistentExpressionExperiment();
         UserGroup group = this.userService.findGroupByName( this.groupName );
-        
+
         this.securityService.makeOwnedByUser( ee, userName1 );
         this.securityService.makeOwnedByUser( group, userName1 );
-        
+
         runAsUser( userName1 );
         this.securityService.makePrivate( ee );
         this.securityService.makeReadableByGroup( ee, this.groupName );
-        
+
         // delete the group
         this.userManager.deleteGroup( this.groupName );
-        
-    }
 
-    @Test
-    public void testUserAddSelvesToAdmin() {
-        super.runAsUser( this.userName1 );
-
-        try {
-            this.userManager.addUserToGroup( this.userName1, "Administrators" );
-            fail( "Should have gotten access denied when user tried to make themselves admin" );
-        } catch ( AccessDeniedException ok ) {
-            // expected behaviour
-        }
     }
 
     /**
@@ -170,7 +153,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
         List<String> users = this.userManager.findUsersInGroup( this.groupName );
         assertTrue( users.contains( this.userName1 ) );
-                
+
         /*
          * Make sure user can see group (from bug 2822)
          */
@@ -206,5 +189,17 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
             // expected behaviour
         }
 
+    }
+
+    @Test
+    public void testUserAddSelvesToAdmin() {
+        super.runAsUser( this.userName1 );
+
+        try {
+            this.userManager.addUserToGroup( this.userName1, "Administrators" );
+            fail( "Should have gotten access denied when user tried to make themselves admin" );
+        } catch ( AccessDeniedException ok ) {
+            // expected behaviour
+        }
     }
 }

@@ -81,17 +81,17 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
     }
 
     /**
-     * @param queryString the queryString to set
-     */
-    public void setQueryString( String queryString ) {
-        this.queryString = queryString;
-    }
-
-    /**
      * @return the queryString
      */
     public String getQueryString() {
         return queryString;
+    }
+
+    /**
+     * @param queryString the queryString to set
+     */
+    public void setQueryString( String queryString ) {
+        this.queryString = queryString;
     }
 
 }

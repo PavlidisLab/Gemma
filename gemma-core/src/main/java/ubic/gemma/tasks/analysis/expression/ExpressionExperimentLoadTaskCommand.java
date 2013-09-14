@@ -56,11 +56,6 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
      */
     private boolean suppressMatching = false;
 
-    @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
-        return ExpressionExperimentLoadTask.class;
-    }
-
     public ExpressionExperimentLoadTaskCommand() {
         super();
     }
@@ -82,6 +77,11 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
 
     public String getArrayDesignName() {
         return arrayDesignName;
+    }
+
+    @Override
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+        return ExpressionExperimentLoadTask.class;
     }
 
     public boolean isAggressiveQtRemoval() {

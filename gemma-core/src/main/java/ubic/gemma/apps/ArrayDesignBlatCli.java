@@ -81,6 +81,38 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         return "Run BLAT on the sequences for a platform; the results are persisted in the DB.";
     }
 
+    /**
+     * @param skipIfLastRunLaterThan
+     * @param design
+     */
+    void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
+            log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+            return;
+        }
+
+        if ( isSubsumedOrMerged( design ) ) {
+            log.warn( design + " is subsumed or merged into another design, it will not be run." );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return;
+        }
+
+        log.info( "============== Start processing: " + design + " ==================" );
+        try {
+            // thaw is already done.
+            arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
+            successObjects.add( design.getName() );
+            audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
+        } catch ( Exception e ) {
+            errorObjects.add( design + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+            log.error( e, e );
+        }
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -280,38 +312,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         arrayDesignSequenceAlignmentService = this.getBean( ArrayDesignSequenceAlignmentService.class );
 
-    }
-
-    /**
-     * @param skipIfLastRunLaterThan
-     * @param design
-     */
-    void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
-            log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
-            return;
-        }
-
-        if ( isSubsumedOrMerged( design ) ) {
-            log.warn( design + " is subsumed or merged into another design, it will not be run." );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
-            return;
-        }
-
-        log.info( "============== Start processing: " + design + " ==================" );
-        try {
-            // thaw is already done.
-            arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
-            successObjects.add( design.getName() );
-            audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
-        } catch ( Exception e ) {
-            errorObjects.add( design + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            log.error( e, e );
-        }
     }
 
     /**

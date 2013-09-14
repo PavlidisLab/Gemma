@@ -146,29 +146,6 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFindByName() {
-        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-        gmember.setGene( g );
-        gmember.setScore( 0.22 );
-
-        GeneSet gset = GeneSet.Factory.newInstance();
-        gset.setName( "FindTest" );
-        gset.getMembers().add( gmember );
-
-        gset = geneSetService.create( gset );
-        assertNotNull( gset.getId() );
-        assertNotNull( gset.getMembers().iterator().next().getId() );
-
-        assertEquals( g, gset.getMembers().iterator().next().getGene() );
-
-        Collection<GeneSet> foundSets = geneSetService.findByName( "Find" );
-        assertTrue( foundSets.size() > 0 );
-
-        assertTrue( geneSetService.findByName( "Find", g.getTaxon() ).size() > 0 );
-
-    }
-
-    @Test
     public void testFindByGoId() {
 
         Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance();
@@ -189,6 +166,29 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
         GeneSet gset = this.geneSetSearch.findByGoId( GOTERM_QUERY, g3.getTaxon() );
         assertEquals( 2, gset.getMembers().size() );
+    }
+
+    @Test
+    public void testFindByName() {
+        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+        gmember.setGene( g );
+        gmember.setScore( 0.22 );
+
+        GeneSet gset = GeneSet.Factory.newInstance();
+        gset.setName( "FindTest" );
+        gset.getMembers().add( gmember );
+
+        gset = geneSetService.create( gset );
+        assertNotNull( gset.getId() );
+        assertNotNull( gset.getMembers().iterator().next().getId() );
+
+        assertEquals( g, gset.getMembers().iterator().next().getGene() );
+
+        Collection<GeneSet> foundSets = geneSetService.findByName( "Find" );
+        assertTrue( foundSets.size() > 0 );
+
+        assertTrue( geneSetService.findByName( "Find", g.getTaxon() ).size() > 0 );
+
     }
 
     /**

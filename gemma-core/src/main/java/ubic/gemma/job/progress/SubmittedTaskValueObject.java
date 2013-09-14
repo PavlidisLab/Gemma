@@ -1,15 +1,29 @@
 package ubic.gemma.job.progress;
 
-import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.job.SubmittedTask;
-import ubic.gemma.job.TaskResult;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
+import org.apache.commons.lang3.StringUtils;
+
+import ubic.gemma.job.SubmittedTask;
+import ubic.gemma.job.TaskResult;
+
 public class SubmittedTaskValueObject implements Serializable {
+
+    public static Collection<SubmittedTaskValueObject> convert2ValueObjects(
+            Collection<SubmittedTask<? extends TaskResult>> submittedTasks ) {
+
+        Collection<SubmittedTaskValueObject> converted = new HashSet<SubmittedTaskValueObject>();
+        if ( submittedTasks == null ) return converted;
+
+        for ( SubmittedTask submittedTask : submittedTasks ) {
+            converted.add( new SubmittedTaskValueObject( submittedTask ) );
+        }
+
+        return converted;
+    }
 
     private String taskId;
     private Date submissionTime;
@@ -21,6 +35,7 @@ public class SubmittedTaskValueObject implements Serializable {
     private boolean runningRemotely;
     private boolean done;
     private boolean emailAlert;
+
     private String taskStatus;
 
     private String lastLogMessage;
@@ -44,34 +59,6 @@ public class SubmittedTaskValueObject implements Serializable {
         this.lastLogMessage = submittedTask.getLastProgressUpdates();
     }
 
-    public String getLogMessages() {
-        return logMessages;
-    }
-
-    public String getLastLogMessage() {
-        return lastLogMessage;
-    }
-
-    public String getTaskStatus() {
-        return taskStatus;
-    }
-
-    public Date getSubmissionTime() {
-        return submissionTime;
-    }
-
-    public Date getStartTime() {
-        return startTime;
-    }
-
-    public Date getFinishTime() {
-        return finishTime;
-    }
-
-    public boolean getRunningRemotely() {
-        return runningRemotely;
-    }
-
     public boolean getDone() {
         return done;
     }
@@ -80,28 +67,43 @@ public class SubmittedTaskValueObject implements Serializable {
         return emailAlert;
     }
 
-    public String getTaskId() {
-        return taskId;
+    public Date getFinishTime() {
+        return finishTime;
+    }
+
+    public String getLastLogMessage() {
+        return lastLogMessage;
+    }
+
+    public String getLogMessages() {
+        return logMessages;
+    }
+
+    public boolean getRunningRemotely() {
+        return runningRemotely;
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public Date getSubmissionTime() {
+        return submissionTime;
     }
 
     public String getSubmitter() {
         return submitter;
     }
 
-    public String getTaskType() {
-        return taskType;
+    public String getTaskId() {
+        return taskId;
     }
 
-    public static Collection<SubmittedTaskValueObject> convert2ValueObjects(
-            Collection<SubmittedTask<? extends TaskResult>> submittedTasks ) {
+    public String getTaskStatus() {
+        return taskStatus;
+    }
 
-        Collection<SubmittedTaskValueObject> converted = new HashSet<SubmittedTaskValueObject>();
-        if ( submittedTasks == null ) return converted;
-
-        for ( SubmittedTask submittedTask : submittedTasks ) {
-            converted.add( new SubmittedTaskValueObject( submittedTask ) );
-        }
-
-        return converted;
+    public String getTaskType() {
+        return taskType;
     }
 }

@@ -73,21 +73,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
     }
 
-    protected Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
-        log.info( "Reading " + inFile );
-
-        Collection<Integer> ids = new ArrayList<Integer>();
-        BufferedReader in = new BufferedReader( new FileReader( file ) );
-        String line;
-        while ( ( line = in.readLine() ) != null ) {
-            if ( line.startsWith( "#" ) ) continue;
-
-            ids.add( Integer.parseInt( line ) );
-
-        }
-        return ids;
-    }
-
     @Override
     protected Exception doWork( String[] args ) {
         processCommandLine( "Load PubMed records", args );
@@ -118,6 +103,31 @@ public class MeshTermFetcherCli extends AbstractCLI {
         return null;
     }
 
+    @Override
+    protected void processOptions() {
+        if ( this.hasOption( 'f' ) ) {
+            this.file = this.getOptionValue( 'f' );
+        }
+        if ( this.hasOption( 'm' ) ) {
+            this.majorTopicsOnly = true;
+        }
+    }
+
+    protected Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
+        log.info( "Reading " + inFile );
+
+        Collection<Integer> ids = new ArrayList<Integer>();
+        BufferedReader in = new BufferedReader( new FileReader( file ) );
+        String line;
+        while ( ( line = in.readLine() ) != null ) {
+            if ( line.startsWith( "#" ) ) continue;
+
+            ids.add( Integer.parseInt( line ) );
+
+        }
+        return ids;
+    }
+
     private Collection<BibliographicReference> processChunk( PubMedXMLFetcher fetcher, Collection<Integer> ids )
             throws IOException {
         Collection<BibliographicReference> refs = fetcher.retrieveByHTTP( ids );
@@ -138,16 +148,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
             System.out.print( "\n" );
         }
         return refs;
-    }
-
-    @Override
-    protected void processOptions() {
-        if ( this.hasOption( 'f' ) ) {
-            this.file = this.getOptionValue( 'f' );
-        }
-        if ( this.hasOption( 'm' ) ) {
-            this.majorTopicsOnly = true;
-        }
     }
 
 }

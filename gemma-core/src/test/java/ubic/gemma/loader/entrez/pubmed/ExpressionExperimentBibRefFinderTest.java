@@ -59,8 +59,8 @@ public class ExpressionExperimentBibRefFinderTest {
                 Thread.sleep( 1000 );
             }
             assertNotNull( bibref );
-            assertEquals( "Differential gene expression in anatomical compartments of the human eye.", bibref
-                    .getTitle() );
+            assertEquals( "Differential gene expression in anatomical compartments of the human eye.",
+                    bibref.getTitle() );
         } catch ( Exception e ) {
             checkCause( e );
             return;

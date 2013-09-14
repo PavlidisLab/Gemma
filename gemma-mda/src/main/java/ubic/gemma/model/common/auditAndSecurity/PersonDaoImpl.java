@@ -69,9 +69,7 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
      */
     @Override
     public Person findOrCreate( Person person ) {
-        if ( person == null
-                || ( person.getLastName() == null && person.getAddress() == null && person.getEmail() == null
-                        && person.getPhone() == null && person.getName() == null ) ) {
+        if ( person == null || ( person.getLastName() == null && person.getEmail() == null && person.getName() == null ) ) {
             throw new IllegalArgumentException( "Person did not have sufficient information for business key." );
         }
         Person newPerson = find( person );

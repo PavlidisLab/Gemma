@@ -412,7 +412,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
         Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
         if ( datasetsToProcess != null ) {
-            for ( String dataSetAccession : datasetsToProcess ) { 
+            for ( String dataSetAccession : datasetsToProcess ) {
                 processDataSet( series, dataSetAccession );
             }
         }

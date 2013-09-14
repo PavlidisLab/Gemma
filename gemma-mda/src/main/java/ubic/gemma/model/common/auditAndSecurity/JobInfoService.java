@@ -11,6 +11,8 @@ public interface JobInfoService {
      */
     public abstract JobInfo create( JobInfo entity );
 
+    public abstract Collection<JobInfo> getUsersJobs( String userName );
+
     /**
      * @param ids
      * @return
@@ -42,7 +44,5 @@ public interface JobInfoService {
      * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
      */
     public abstract void update( JobInfo entity );
-
-    public abstract Collection<JobInfo> getUsersJobs( String userName );
 
 }

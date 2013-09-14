@@ -63,7 +63,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     private Gene firstGene;
 
     @Before
-    public void setup()  {
+    public void setup() {
 
         analysis = GeneCoexpressionAnalysis.Factory.newInstance();
         // analysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );

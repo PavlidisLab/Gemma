@@ -18,20 +18,21 @@
  */
 package ubic.gemma.loader.association;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.AbstractCLIContextCLI;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * Load GO -> gene associations from NCBI.
@@ -42,6 +43,16 @@ import java.util.HashSet;
 public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
 
     private static final String GENE2GO_FILE = "gene2go.gz";
+
+    public static void main( String[] args ) {
+        NCBIGene2GOAssociationLoaderCLI p = new NCBIGene2GOAssociationLoaderCLI();
+        try {
+            p.doWork( args );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     private String filePath = null;
 
     /*
@@ -56,23 +67,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
                 .withDescription( "Optional location of the gene2go.gz file" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( pathOption );
-    }
-
-    public static void main( String[] args ) {
-        NCBIGene2GOAssociationLoaderCLI p = new NCBIGene2GOAssociationLoaderCLI();
-        try {
-            p.doWork( args );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( hasOption( 'f' ) ) {
-            filePath = getOptionValue( 'f' );
-        }
     }
 
     /*
@@ -130,5 +124,13 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         log.info( "Don't forget to update the annotation files for platforms." );
 
         return null;
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( hasOption( 'f' ) ) {
+            filePath = getOptionValue( 'f' );
+        }
     }
 }

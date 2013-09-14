@@ -18,9 +18,13 @@
  */
 package ubic.gemma.job.executor.worker;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.infrastructure.common.MessageSender;
 import ubic.gemma.job.EmailNotificationContext;
 import ubic.gemma.job.SubmittedTask;
@@ -29,9 +33,7 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.TaskPostProcessing;
 import ubic.gemma.job.executor.common.TaskStatusUpdate;
 
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * @author anton
@@ -41,7 +43,8 @@ public class SubmittedTaskRemote {
     private static Log log = LogFactory.getLog( SubmittedTaskRemote.class );
 
     private TaskCommand taskCommand;
-    private List<String> progressUpdates;  // TODO: keep local copy of task log messages, to be used in email notification.
+    private List<String> progressUpdates; // TODO: keep local copy of task log messages, to be used in email
+                                          // notification.
     private ListenableFuture<TaskResult> future;
 
     MessageSender<TaskResult> resultSender;
@@ -60,18 +63,9 @@ public class SubmittedTaskRemote {
         this.taskPostProcessing = taskPostProcessing;
     }
 
-    public void sendTaskResult() {
-        if ( future.isDone() ) {
-            try {
-                resultSender.send( future.get() );
-            } catch ( InterruptedException | ExecutionException e ) {
-                log.warn( e.getMessage() );
-            }
-        }
-    }
-
-    public void updateStatus( TaskStatusUpdate statusUpdate ) {
-        statusUpdateSender.send( statusUpdate );
+    public void addEmailAlertNotificationAfterCompletion() {
+        taskPostProcessing.addEmailNotification( future, new EmailNotificationContext( taskCommand.getTaskId(),
+                taskCommand.getSubmitter(), taskCommand.getTaskClass().getSimpleName() ) );
     }
 
     public void addProgressUpdate( String message ) {
@@ -86,12 +80,21 @@ public class SubmittedTaskRemote {
         } // else we keep the old status
     }
 
-    public void addEmailAlertNotificationAfterCompletion() {
-        taskPostProcessing.addEmailNotification( future, new EmailNotificationContext( taskCommand.getTaskId(),
-                taskCommand.getSubmitter(), taskCommand.getTaskClass().getSimpleName() ) );
+    public void sendTaskResult() {
+        if ( future.isDone() ) {
+            try {
+                resultSender.send( future.get() );
+            } catch ( InterruptedException | ExecutionException e ) {
+                log.warn( e.getMessage() );
+            }
+        }
     }
 
     public void setFuture( ListenableFuture future ) {
         this.future = future;
+    }
+
+    public void updateStatus( TaskStatusUpdate statusUpdate ) {
+        statusUpdateSender.send( statusUpdate );
     }
 }

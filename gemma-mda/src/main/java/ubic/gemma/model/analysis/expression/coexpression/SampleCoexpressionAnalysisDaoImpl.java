@@ -60,7 +60,8 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
      * ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public void create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad, ExpressionExperiment ee ) {
+    public SampleCoexpressionAnalysis create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad,
+            ExpressionExperiment ee ) {
 
         /*
          * First delete any old ones for the experiment.
@@ -79,6 +80,8 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         sas.setSampleCoexpressionMatrix( scm );
 
         this.getSessionFactory().getCurrentSession().save( sas );
+
+        return sas;
     }
 
     /**

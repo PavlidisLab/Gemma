@@ -58,25 +58,6 @@ public class BioMartEnsemblNcbiParserTest {
     }
 
     /**
-     * Test method for {@link ubic.gemma.loader.protein.string.BiomartEnsembleNcbiParser#parseOneLine(java.lang.String)}
-     * . Tests that a standard taxon line can be parsed
-     */
-    @Test
-    public void testParseOneValidLineNonHuman() {
-        String line = "ENSG00000220023" + "\t" + "ENST00000418749" + "\t" + "100134091" + "\t" + "ENST00000418749";
-
-        Ensembl2NcbiValueObject bioMartEnsembleNcbi = parser.parseOneLine( line );
-
-        assertTrue( bioMartEnsembleNcbi.getNcbiTaxonId().equals( 10 ) );
-        assertEquals( "ENSG00000220023", bioMartEnsembleNcbi.getEnsemblGeneId() );
-        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblTranscriptId() );
-        Collection<String> genes = bioMartEnsembleNcbi.getEntrezgenes();
-        assertTrue( genes.contains( "100134091" ) );
-        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblPeptideId() );
-
-    }
-
-    /**
      * Tests that the number of attributes are counted corrrectly
      */
     @Test
@@ -111,6 +92,58 @@ public class BioMartEnsemblNcbiParserTest {
         assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblPeptideId() );
         assertEquals( "12123", bioMartEnsembleNcbi.getHgnc_id() );
 
+    }
+
+    /**
+     * Test method for {@link ubic.gemma.loader.protein.string.BiomartEnsembleNcbiParser#parseOneLine(java.lang.String)}
+     * . Tests that a standard taxon line can be parsed
+     */
+    @Test
+    public void testParseOneValidLineNonHuman() {
+        String line = "ENSG00000220023" + "\t" + "ENST00000418749" + "\t" + "100134091" + "\t" + "ENST00000418749";
+
+        Ensembl2NcbiValueObject bioMartEnsembleNcbi = parser.parseOneLine( line );
+
+        assertTrue( bioMartEnsembleNcbi.getNcbiTaxonId().equals( 10 ) );
+        assertEquals( "ENSG00000220023", bioMartEnsembleNcbi.getEnsemblGeneId() );
+        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblTranscriptId() );
+        Collection<String> genes = bioMartEnsembleNcbi.getEntrezgenes();
+        assertTrue( genes.contains( "100134091" ) );
+        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblPeptideId() );
+
+    }
+
+    /**
+     * Test method for {@link ubic.gemma.loader.protein.string.BiomartEnsembleNcbiParser#parseOneLine(java.lang.String)}
+     * . Tests that a standard human taxon line can be parsed
+     */
+    @Test
+    public void testParseValidFileHuman() {
+
+        String[] attributesToGet = new String[] { "ensembl_gene_id", "ensembl_transcript_id", "entrezgene",
+                "ensembl_peptide_id", "hgnc_id" };
+        String fileName = "/data/loader/protein/biomart/biomartsapiens.txt";
+        URL myurl = this.getClass().getResource( fileName );
+
+        try {
+            parser.setBioMartFields( attributesToGet );
+            parser.parse( new File( myurl.getFile() ) );
+            Collection<Ensembl2NcbiValueObject> items = parser.getResults();
+            // 39 unique proteins and 36 unique genes
+            assertEquals( 10, items.size() );
+            for ( Ensembl2NcbiValueObject item : items ) {
+                if ( item.getEnsemblGeneId().equals( "ENSG00000215764" ) ) {
+                    assertEquals( 1, item.getEntrezgenes().size() );
+                    assertEquals( "6330", item.getHgnc_id() );
+                }
+            }
+
+        }
+
+        catch ( Exception e ) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     /**
@@ -150,39 +183,6 @@ public class BioMartEnsemblNcbiParserTest {
             e.printStackTrace();
             fail();
 
-        }
-    }
-
-    /**
-     * Test method for {@link ubic.gemma.loader.protein.string.BiomartEnsembleNcbiParser#parseOneLine(java.lang.String)}
-     * . Tests that a standard human taxon line can be parsed
-     */
-    @Test
-    public void testParseValidFileHuman() {
-
-        String[] attributesToGet = new String[] { "ensembl_gene_id", "ensembl_transcript_id", "entrezgene",
-                "ensembl_peptide_id", "hgnc_id" };
-        String fileName = "/data/loader/protein/biomart/biomartsapiens.txt";
-        URL myurl = this.getClass().getResource( fileName );
-
-        try {
-            parser.setBioMartFields( attributesToGet );
-            parser.parse( new File( myurl.getFile() ) );
-            Collection<Ensembl2NcbiValueObject> items = parser.getResults();
-            // 39 unique proteins and 36 unique genes
-            assertEquals( 10, items.size() );
-            for ( Ensembl2NcbiValueObject item : items ) {
-                if ( item.getEnsemblGeneId().equals( "ENSG00000215764" ) ) {
-                    assertEquals( 1, item.getEntrezgenes().size() );
-                    assertEquals( "6330", item.getHgnc_id() );
-                }
-            }
-
-        }
-
-        catch ( Exception e ) {
-            e.printStackTrace();
-            fail();
         }
     }
 

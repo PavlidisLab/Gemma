@@ -41,51 +41,13 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueO
 public interface PhenotypeAssociationManagerService {
 
     /**
-     * Links an Evidence to a Gene
+     * Find all phenotypes associated to a pubmedID
      * 
-     * @param geneNCBI The Gene NCBI we want to add the evidence
-     * @param evidence The evidence
-     * @return Status of the operation
+     * @param pubMedId
+     * @param evidenceId optional, used if we are updating to know current annotation
+     * @return BibliographicReferenceValueObject
      */
-    public abstract ValidateEvidenceValueObject makeEvidence( EvidenceValueObject evidence );
-
-    /**
-     * Return evidence satisfying the specified filters. If the current user has not logged in, empty container is
-     * returned.
-     * 
-     * @param taxonId taxon id
-     * @param limit number of evidence value objects to return
-     * @param userName user name
-     * @return evidence satisfying the specified filters
-     */
-    public abstract Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName );
-
-    /**
-     * Return all evidence for a specific gene NCBI
-     * 
-     * @param geneNCBI The Evidence id
-     * @return The Gene we are interested in
-     */
-    public abstract Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI );
-
-    /**
-     * Return all evidence for a specific gene id
-     * 
-     * @param geneId The Evidence id
-     * @return The Gene we are interested in
-     */
-    public abstract Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId );
-
-    /**
-     * Return all evidence for a specific gene id with evidence flagged, indicating more information
-     * 
-     * @param geneId The Evidence id
-     * @param phenotypesValuesUri the chosen phenotypes
-     * @param evidenceFilter can specify a taxon and to show modifiable evidence (optional)
-     * @return The Gene we are interested in
-     */
-    public abstract Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
-            EvidenceFilter evidenceFilter );
+    public abstract BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId );
 
     /**
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
@@ -107,62 +69,45 @@ public interface PhenotypeAssociationManagerService {
             Set<String> phenotypesValuesUri );
 
     /**
-     * Removes an evidence
+     * Return evidence satisfying the specified filters. If the current user has not logged in, empty container is
+     * returned.
      * 
-     * @param id The Evidence database id
+     * @param taxonId taxon id
+     * @param limit number of evidence value objects to return
+     * @param userName user name
+     * @return evidence satisfying the specified filters
      */
-    public abstract ValidateEvidenceValueObject remove( Long id );
+    public abstract Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName );
 
     /**
-     * Load an evidence
+     * Return all evidence for a specific gene id
      * 
-     * @param id The Evidence database id
+     * @param geneId The Evidence id
+     * @return The Gene we are interested in
      */
-    public abstract EvidenceValueObject load( Long id );
+    public abstract Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId );
 
     /**
-     * Modify an existing evidence
+     * Return all evidence for a specific gene id with evidence flagged, indicating more information
      * 
-     * @param evidenceValueObject the evidence with modified fields
-     * @return Status of the operation
+     * @param geneId The Evidence id
+     * @param phenotypesValuesUri the chosen phenotypes
+     * @param evidenceFilter can specify a taxon and to show modifiable evidence (optional)
+     * @return The Gene we are interested in
      */
-    public abstract ValidateEvidenceValueObject update( EvidenceValueObject evidenceValueObject );
+    public abstract Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
+            EvidenceFilter evidenceFilter );
 
     /**
-     * Giving a phenotype searchQuery, returns a selection choice to the user
+     * Return all evidence for a specific gene NCBI
      * 
-     * @param searchQuery query typed by the user
-     * @param geneId the id of the chosen gene
-     * @return Collection<CharacteristicValueObject> list of choices returned
+     * @param geneNCBI The Evidence id
+     * @return The Gene we are interested in
      */
-    public abstract Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
+    public abstract Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI );
 
-    /**
-     * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
-     * 
-     * @param query
-     * @param taxonId, can be null to not constrain by taxon
-     * @return Collection<GeneEvidenceValueObject> list of Genes
-     */
-    public abstract Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
-
-    /**
-     * Find all phenotypes associated to a pubmedID
-     * 
-     * @param pubMedId
-     * @param evidenceId optional, used if we are updating to know current annotation
-     * @return BibliographicReferenceValueObject
-     */
-    public abstract BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId );
-
-    /**
-     * Validate an Evidence before we create it
-     * 
-     * @param geneNCBI The Gene NCBI we want to add the evidence
-     * @param evidence The evidence
-     * @return ValidateEvidenceValueObject flags of information to show user messages
-     */
-    public abstract ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence );
+    /** return the list of the owners that have evidence in the system */
+    public abstract Collection<String> findEvidenceOwners();
 
     /**
      * Find category term that were used in the database, used to annotated Experiments
@@ -183,16 +128,34 @@ public interface PhenotypeAssociationManagerService {
             String categoryUri, Long taxonId );
 
     /**
-     * This method can be used if we want to reimport data from a specific external Database
+     * Gets all External Databases that are used with evidence
      * 
-     * @param externalDatabaseName
+     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
      */
-    public abstract Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName );
+    public abstract Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
 
     /**
-     * find all evidence that doesn't come from an external source
+     * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
+     * 
+     * @param query
+     * @param taxonId, can be null to not constrain by taxon
+     * @return Collection<GeneEvidenceValueObject> list of Genes
      */
-    public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName();
+    public abstract Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
+
+    /**
+     * Load an evidence
+     * 
+     * @param id The Evidence database id
+     */
+    public abstract EvidenceValueObject load( Long id );
+
+    /**
+     * load all the valueUri and value of phenotype present in Neurocarta
+     * 
+     * @return Collection<String> the valueUri of the phenotypes
+     */
+    public abstract Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
 
     /**
      * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
@@ -204,16 +167,26 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
 
     /**
-     * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,
-     * including ontology children terms
+     * This method can be used if we want to reimport data from a specific external Database
      * 
-     * @param searchQuery the query search that was type by the user
-     * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurence
+     * @param externalDatabaseName
      */
-    public abstract Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery );
+    public abstract Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName );
 
-    /** return the list of the owners that have evidence in the system */
-    public abstract Collection<String> findEvidenceOwners();
+    /**
+     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
+     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     * 
+     * @param geneDifferentialExpressionMetaAnalysisId id of the GeneDifferentialExpressionMetaAnalysis
+     * @return DifferentialExpressionEvidence if an differentialExpressionEvidence exists for that id returns it
+     */
+    public abstract DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId );
+
+    /**
+     * find all evidence that doesn't come from an external source
+     */
+    public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName();
 
     /**
      * find statistics on evidence used in neurocarta
@@ -221,13 +194,6 @@ public interface PhenotypeAssociationManagerService {
      * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
      */
     public abstract Collection<ExternalDatabaseStatisticsValueObject> loadNeurocartaStatistics();
-
-    /**
-     * load all the valueUri and value of phenotype present in Neurocarta
-     * 
-     * @return Collection<String> the valueUri of the phenotypes
-     */
-    public abstract Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
 
     /**
      * creates the DifferentialExpressionEvidences using an DiffExpressionMetaAnalysis
@@ -243,14 +209,20 @@ public interface PhenotypeAssociationManagerService {
             Double thresholdChosen );
 
     /**
-     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
-     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     * Links an Evidence to a Gene
      * 
-     * @param geneDifferentialExpressionMetaAnalysisId id of the GeneDifferentialExpressionMetaAnalysis
-     * @return DifferentialExpressionEvidence if an differentialExpressionEvidence exists for that id returns it
+     * @param geneNCBI The Gene NCBI we want to add the evidence
+     * @param evidence The evidence
+     * @return Status of the operation
      */
-    public abstract DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
-            Long geneDifferentialExpressionMetaAnalysisId );
+    public abstract ValidateEvidenceValueObject makeEvidence( EvidenceValueObject evidence );
+
+    /**
+     * Removes an evidence
+     * 
+     * @param id The Evidence database id
+     */
+    public abstract ValidateEvidenceValueObject remove( Long id );
 
     /**
      * Removes all the evidence that came from a specific metaAnalysis
@@ -262,9 +234,37 @@ public interface PhenotypeAssociationManagerService {
             Long geneDifferentialExpressionMetaAnalysisId );
 
     /**
-     * Gets all External Databases that are used with evidence
+     * For a given search string find all Ontology terms related, and then count their gene occurence by taxon,
+     * including ontology children terms
      * 
-     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     * @param searchQuery the query search that was type by the user
+     * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurence
      */
-    public abstract Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
+    public abstract Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery );
+
+    /**
+     * Giving a phenotype searchQuery, returns a selection choice to the user
+     * 
+     * @param searchQuery query typed by the user
+     * @param geneId the id of the chosen gene
+     * @return Collection<CharacteristicValueObject> list of choices returned
+     */
+    public abstract Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
+
+    /**
+     * Modify an existing evidence
+     * 
+     * @param evidenceValueObject the evidence with modified fields
+     * @return Status of the operation
+     */
+    public abstract ValidateEvidenceValueObject update( EvidenceValueObject evidenceValueObject );
+
+    /**
+     * Validate an Evidence before we create it
+     * 
+     * @param geneNCBI The Gene NCBI we want to add the evidence
+     * @param evidence The evidence
+     * @return ValidateEvidenceValueObject flags of information to show user messages
+     */
+    public abstract ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence );
 }

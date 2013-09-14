@@ -49,31 +49,27 @@ public class XMLUtils {
     protected static final Log log = LogFactory.getLog( XMLUtils.class );
 
     /**
-     * Make the horrible DOM API slightly more bearable: get the text value we know this element contains.
-     * <p>
-     * Borrowed from the Spring API.
-     * <p>
-     * Note that we can't really use the alternative Node.getTextContent() because it isn't supported by older Xerces
-     * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
+     * When there are multiple elements of the same type.
      * 
+     * @param parent
+     * @param elementName
+     * @return
      * @throws IOException
      */
-    public static String getTextValue( org.w3c.dom.Element ele ) throws IOException {
-        if ( ele == null ) return null;
-        StringBuilder value = new StringBuilder();
-        org.w3c.dom.NodeList nl = ele.getChildNodes();
-        for ( int i = 0; i < nl.getLength(); i++ ) {
-            org.w3c.dom.Node item = nl.item( i );
-            if ( item instanceof org.w3c.dom.CharacterData ) {
-                if ( !( item instanceof org.w3c.dom.Comment ) ) {
-                    value.append( item.getNodeValue() );
-                }
-            } else {
-                throw new IOException( "element is just allowed to have text and comment nodes, not: "
-                        + item.getClass().getName() );
+    public static List<String> extractMultipleChildren( Node parent, String elementName ) throws IOException {
+        List<String> r = new ArrayList<String>();
+
+        NodeList jNodes = parent.getChildNodes();
+        for ( int q = 0; q < jNodes.getLength(); q++ ) {
+            Node jitem = jNodes.item( q );
+            if ( !( jitem instanceof Element ) ) {
+                continue;
+            }
+            if ( jitem.getNodeName().equals( elementName ) ) {
+                r.add( getTextValue( ( Element ) jitem ) );
             }
         }
-        return value.toString();
+        return r;
     }
 
     /**
@@ -97,30 +93,6 @@ public class XMLUtils {
             }
         }
         return null;
-    }
-
-    /**
-     * When there are multiple elements of the same type.
-     * 
-     * @param parent
-     * @param elementName
-     * @return
-     * @throws IOException
-     */
-    public static List<String> extractMultipleChildren( Node parent, String elementName ) throws IOException {
-        List<String> r = new ArrayList<String>();
-
-        NodeList jNodes = parent.getChildNodes();
-        for ( int q = 0; q < jNodes.getLength(); q++ ) {
-            Node jitem = jNodes.item( q );
-            if ( !( jitem instanceof Element ) ) {
-                continue;
-            }
-            if ( jitem.getNodeName().equals( elementName ) ) {
-                r.add( getTextValue( ( Element ) jitem ) );
-            }
-        }
-        return r;
     }
 
     /**
@@ -149,6 +121,34 @@ public class XMLUtils {
         }
 
         return result;
+    }
+
+    /**
+     * Make the horrible DOM API slightly more bearable: get the text value we know this element contains.
+     * <p>
+     * Borrowed from the Spring API.
+     * <p>
+     * Note that we can't really use the alternative Node.getTextContent() because it isn't supported by older Xerces
+     * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
+     * 
+     * @throws IOException
+     */
+    public static String getTextValue( org.w3c.dom.Element ele ) throws IOException {
+        if ( ele == null ) return null;
+        StringBuilder value = new StringBuilder();
+        org.w3c.dom.NodeList nl = ele.getChildNodes();
+        for ( int i = 0; i < nl.getLength(); i++ ) {
+            org.w3c.dom.Node item = nl.item( i );
+            if ( item instanceof org.w3c.dom.CharacterData ) {
+                if ( !( item instanceof org.w3c.dom.Comment ) ) {
+                    value.append( item.getNodeValue() );
+                }
+            } else {
+                throw new IOException( "element is just allowed to have text and comment nodes, not: "
+                        + item.getClass().getName() );
+            }
+        }
+        return value.toString();
     }
 
     /**

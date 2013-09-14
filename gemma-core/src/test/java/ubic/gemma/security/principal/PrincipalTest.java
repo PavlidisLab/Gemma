@@ -32,7 +32,6 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
@@ -65,9 +64,8 @@ public class PrincipalTest extends BaseSpringContextTest {
         pwd = randomName();
         username = randomName();
 
-        try {
-            userManager.loadUserByUsername( username );
-        } catch ( UsernameNotFoundException e ) {
+        if ( !userManager.userExists( username ) ) {
+
             String encodedPassword = passwordEncoder.encodePassword( pwd, username );
             UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, true, null, null, null, new Date() );
             userManager.createUser( u );

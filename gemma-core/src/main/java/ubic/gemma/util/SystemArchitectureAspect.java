@@ -36,10 +36,28 @@ public class SystemArchitectureAspect {
      */
 
     /**
-     * Encompasses the 'web' packages
+     * Methods that create new objects in the persistent store
      */
-    @Pointcut("within(ubic.gemma.web..*)")
-    public void inWebLayer() {
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && ( execution(* save(..)) || execution(* create*(..)) || execution(* findOrCreate(..)) || execution(* persist*(..))   )")
+    public void creator() {//
+    }
+
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.deleter() ||ubic.gemma.util.SystemArchitectureAspect.loader() || ubic.gemma.util.SystemArchitectureAspect.creator() || ubic.gemma.util.SystemArchitectureAspect.updater()")
+    public void crud() {//
+    }
+
+    /**
+     * This pointcut is used to apply audit and acl advice at DAO boundary.
+     */
+    @Pointcut("@target(org.springframework.stereotype.Repository) && execution(public * ubic.gemma..*.*(..))")
+    public void daoMethod() {//
+    }
+
+    /**
+     * Methods that delete items in the persistent store
+     */
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && (execution(* remove(..)) || execution(* delete*(..)))")
+    public void deleter() {//
     }
 
     /**
@@ -50,14 +68,24 @@ public class SystemArchitectureAspect {
     }
 
     /**
-     * This pointcut is used to apply audit and acl advice at DAO boundary.
+     * Encompasses the 'web' packages
      */
-    @Pointcut("@target(org.springframework.stereotype.Repository) && execution(public * ubic.gemma..*.*(..))")
-    public void daoMethod() {//
+    @Pointcut("within(ubic.gemma.web..*)")
+    public void inWebLayer() {
     }
 
-    @Pointcut("@target(org.springframework.stereotype.Service) && (execution(public * ubic.gemma..*.*(*)) || execution(public * ubic.gemma..*.*(*,..)))")
-    public void serviceMethodWithArg() {//
+    /**
+     * Methods that load (read) from the persistent store
+     */
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && (execution(* load(..)) || execution(* loadAll(..)) || execution(* read(..)))")
+    public void loader() {//
+    }
+
+    /**
+     * Create, delete or update methods - with the exception of @Services flagged as @Infrastructure
+     */
+    @Pointcut("!@target(ubic.gemma.model.common.auditAndSecurity.Infrastructure) &&(ubic.gemma.util.SystemArchitectureAspect.creator() || ubic.gemma.util.SystemArchitectureAspect.updater() || ubic.gemma.util.SystemArchitectureAspect.deleter())")
+    public void modifier() {//
     }
 
     /**
@@ -74,11 +102,8 @@ public class SystemArchitectureAspect {
          */
     }
 
-    /**
-     * Methods that create new objects in the persistent store
-     */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && ( execution(* save(..)) || execution(* create*(..)) || execution(* findOrCreate(..)) || execution(* persist*(..))   )")
-    public void creator() {//
+    @Pointcut("@target(org.springframework.stereotype.Service) && (execution(public * ubic.gemma..*.*(*)) || execution(public * ubic.gemma..*.*(*,..)))")
+    public void serviceMethodWithArg() {//
     }
 
     /**
@@ -86,31 +111,6 @@ public class SystemArchitectureAspect {
      */
     @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && execution(* update(..))")
     public void updater() {//
-    }
-
-    /**
-     * Methods that delete items in the persistent store
-     */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && (execution(* remove(..)) || execution(* delete*(..)))")
-    public void deleter() {//
-    }
-
-    /**
-     * Methods that load (read) from the persistent store
-     */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && (execution(* load(..)) || execution(* loadAll(..)) || execution(* read(..)))")
-    public void loader() {//
-    }
-
-    /**
-     * Create, delete or update methods
-     */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.creator() || ubic.gemma.util.SystemArchitectureAspect.updater() || ubic.gemma.util.SystemArchitectureAspect.deleter()")
-    public void modifier() {//
-    }
-
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.deleter() ||ubic.gemma.util.SystemArchitectureAspect.loader() || ubic.gemma.util.SystemArchitectureAspect.creator() || ubic.gemma.util.SystemArchitectureAspect.updater() || ubic.gemma.util.SystemArchitectureAspect.deleter()")
-    public void crud() {//
     }
 
 }

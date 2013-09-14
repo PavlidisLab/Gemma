@@ -473,8 +473,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         ee = expressionExperimentService.thawLite( ee );
 
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
-        mnv.addObject( "hasPopulatedDesign", experimentalDesign.getExperimentalFactors().size() > 0 );
-        mnv.addObject( "experimentalDesign", experimentalDesign );
+        mnv.addObject( "hasPopulatedDesign", ee.getExperimentalDesign().getExperimentalFactors().size() > 0 );
+        mnv.addObject( "experimentalDesign", ee.getExperimentalDesign() );
         mnv.addObject( "expressionExperiment", ee );
         mnv.addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" );
         mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId() ) );

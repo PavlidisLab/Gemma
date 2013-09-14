@@ -64,19 +64,6 @@ public class DataFileFetcher extends FtpArchiveFetcher {
     }
 
     /**
-     * @param files
-     * @return
-     */
-    public LocalFile getMageMlFile( Collection<LocalFile> files ) {
-        for ( LocalFile file : files ) {
-            if ( file.getLocalURL().toString().contains( ".xml" ) ) {
-                return file;
-            }
-        }
-        return null;
-    }
-
-    /**
      * @param identifier
      * @param newDir
      * @return
@@ -98,15 +85,16 @@ public class DataFileFetcher extends FtpArchiveFetcher {
     }
 
     /**
-     * @param identifier
-     * @param suffix
+     * @param files
      * @return
      */
-    private String formRemoteFilePath( String identifier, String suffix ) {
-        String dirName = identifier.replaceFirst( "-\\d+", "" );
-        dirName = dirName.replace( "E-", "" );
-        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + suffix;
-        return seekFile;
+    public LocalFile getMageMlFile( Collection<LocalFile> files ) {
+        for ( LocalFile file : files ) {
+            if ( file.getLocalURL().toString().contains( ".xml" ) ) {
+                return file;
+            }
+        }
+        return null;
     }
 
     /**
@@ -127,11 +115,24 @@ public class DataFileFetcher extends FtpArchiveFetcher {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
      */
     @Override
     public void setNetDataSourceUtil() {
         this.netDataSourceUtil = new ArrayExpressUtil();
 
+    }
+
+    /**
+     * @param identifier
+     * @param suffix
+     * @return
+     */
+    private String formRemoteFilePath( String identifier, String suffix ) {
+        String dirName = identifier.replaceFirst( "-\\d+", "" );
+        dirName = dirName.replace( "E-", "" );
+        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + suffix;
+        return seekFile;
     }
 }

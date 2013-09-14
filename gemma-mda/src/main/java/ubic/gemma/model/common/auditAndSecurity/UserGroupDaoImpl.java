@@ -115,6 +115,25 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
                 "select ug from UserGroupImpl ug inner join ug.groupMembers memb where memb = :user", "user", user );
     }
 
+    @Override
+    public void remove( Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "UserGroup.remove - 'id' can not be null" );
+        }
+        UserGroup userGroup = this.load( id );
+        if ( userGroup == null ) {
+            throw new IllegalArgumentException( "UserGroup.remove - 'userGroup' can not be null" );
+        }
+        // this check is done higher up as well...
+        if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME )
+                || userGroup.getName().equals( AuthorityConstants.ADMIN_GROUP_NAME )
+                || userGroup.getName().equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+            throw new IllegalArgumentException( "Cannot delete group: " + userGroup );
+        }
+
+        this.getSessionFactory().getCurrentSession().delete( userGroup );
+    }
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#remove(ubic.gemma.model.common.auditAndSecurity.UserGroup)
      */
@@ -123,15 +142,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
         if ( userGroup == null ) {
             throw new IllegalArgumentException( "UserGroup.remove - 'userGroup' can not be null" );
         }
-
-        // this check is done higher up as well...
-        if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME )
-                || userGroup.getName().equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                || userGroup.getName().equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
-            throw new IllegalArgumentException( "Cannot delete group: " + userGroup );
-        }
-
-        this.getHibernateTemplate().delete( userGroup );
+        this.remove( userGroup.getId() );
     }
 
     /*

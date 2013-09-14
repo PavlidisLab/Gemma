@@ -58,14 +58,14 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     @Autowired
     private Probe2ProbeCoexpressionService ppcs;
 
-    ExpressionExperiment one;
-    ExpressionExperiment two;
+    private ExpressionExperiment one;
+    private ExpressionExperiment two;
 
-    Gene g;
+    private Gene g;
 
-    Collection<BioAssaySet> ees;
+    private Collection<BioAssaySet> ees;
 
-    String userName = randomName();
+    private String userName = randomName();
 
     @Before
     public final void setup() {
@@ -73,6 +73,9 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
         g = super.getTestPeristentGene();
         one = super.getTestPersistentBasicExpressionExperiment();
         two = super.getTestPersistentBasicExpressionExperiment();
+
+        securityService.makePublic( one );
+        securityService.makePublic( two );
 
         ees = new HashSet<BioAssaySet>();
         ees.add( one );

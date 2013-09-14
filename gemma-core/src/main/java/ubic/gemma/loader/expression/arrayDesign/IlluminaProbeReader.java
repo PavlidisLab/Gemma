@@ -35,6 +35,26 @@ public class IlluminaProbeReader extends BasicLineMapParser<String, Reporter> {
 
     private Map<String, Reporter> results = new HashMap<String, Reporter>();
 
+    @Override
+    public boolean containsKey( String key ) {
+        return results.containsKey( key );
+    }
+
+    @Override
+    public Reporter get( String key ) {
+        return results.get( key );
+    }
+
+    @Override
+    public Collection<String> getKeySet() {
+        return results.keySet();
+    }
+
+    @Override
+    public Collection<Reporter> getResults() {
+        return results.values();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -77,27 +97,7 @@ public class IlluminaProbeReader extends BasicLineMapParser<String, Reporter> {
     }
 
     @Override
-    public Reporter get( String key ) {
-        return results.get( key );
-    }
-
-    @Override
-    public Collection<Reporter> getResults() {
-        return results.values();
-    }
-
-    @Override
     protected void put( String key, Reporter value ) {
         results.put( key, value );
-    }
-
-    @Override
-    public boolean containsKey( String key ) {
-        return results.containsKey( key );
-    }
-
-    @Override
-    public Collection<String> getKeySet() {
-        return results.keySet();
     }
 }

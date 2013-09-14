@@ -27,7 +27,7 @@ import java.util.Collection;
  * @param <T>
  */
 public interface BaseDao<T> {
-    
+
     public Collection<? extends T> create( Collection<? extends T> entities );
 
     public T create( T entity );
@@ -40,6 +40,14 @@ public interface BaseDao<T> {
 
     public void remove( Collection<? extends T> entities );
 
+    /**
+     * Remove a persistent instance based on its id. The implementer is trusted to know what type of object to remove.
+     * <p>
+     * Note that this method is to be avoided for Securables, because it will leave cruft in the ACL tables. We may fix
+     * this by having this method return the removed object.
+     * 
+     * @param id
+     */
     public void remove( Long id );
 
     public void remove( T entity );

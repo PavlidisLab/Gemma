@@ -19,6 +19,7 @@
 package ubic.gemma.search.indexer;
 
 import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 
 /**
@@ -28,6 +29,13 @@ import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 public interface IndexService {
 
     /**
+     * @param command
+     * @return taskId
+     */
+    @Secured("GROUP_AGENT")
+    public String index( IndexerTaskCommand command );
+
+    /**
      * Indexes expression experiments, genes, array designs, probes and bibliographic references. This is a convenience
      * method for Quartz to schedule indexing of the entire database.
      * 
@@ -35,13 +43,6 @@ public interface IndexService {
      */
     @Secured("GROUP_AGENT")
     public String indexAll();
-
-    /**
-     * @param command
-     * @return taskId
-     */
-    @Secured("GROUP_AGENT")
-    public String index( IndexerTaskCommand command );
 
     /**
      * Indexes array designs.

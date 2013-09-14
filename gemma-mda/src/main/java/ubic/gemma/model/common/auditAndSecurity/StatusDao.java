@@ -24,29 +24,6 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface StatusDao extends BaseDao<Status> {
 
-    
-    /**
-     * Update the 'last updated' date and trouble/validated flags
-     * 
-     * @param a entity to update the status for
-     * @param auditEventType used to updated the appropriate status flags, can be null
-     */
-    void update( Auditable a, AuditEventType auditEventType );
-
-    /**
-     * Automatically turns off 'validated' if the value is 'true'.
-     * 
-     * @param a
-     * @param value
-     */
-    public void setTroubled( Auditable a, boolean value );
-
-    /**
-     * @param a
-     * @param value
-     */
-    public void setValidated( Auditable a, boolean value );
-
     /**
      * Create a persistent default status.
      * 
@@ -65,5 +42,26 @@ public interface StatusDao extends BaseDao<Status> {
     @Override
     public Status load( Long id );
 
+    /**
+     * Automatically turns off 'validated' if the value is 'true'.
+     * 
+     * @param a
+     * @param value
+     */
+    public void setTroubled( Auditable a, boolean value );
+
+    /**
+     * @param a
+     * @param value
+     */
+    public void setValidated( Auditable a, boolean value );
+
+    /**
+     * Update the 'last updated' date and trouble/validated flags
+     * 
+     * @param a entity to update the status for
+     * @param auditEventType used to updated the appropriate status flags, can be null
+     */
+    void update( Auditable a, AuditEventType auditEventType );
 
 }

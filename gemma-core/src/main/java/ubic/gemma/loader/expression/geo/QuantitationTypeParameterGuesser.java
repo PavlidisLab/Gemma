@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.expression.geo.model.GeoValues;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -293,307 +294,6 @@ public class QuantitationTypeParameterGuesser {
 
     }
 
-    /**
-     * Determine if a quantitation type is 'preferred'.
-     * 
-     * @param qt
-     * @return
-     */
-    protected static boolean isPreferred( QuantitationType qt ) {
-        assert qt != null;
-        // if ( qt.getIsBackground() || !qt.getIsNormalized() ) {
-        // log.info( qt + " is not normalized " );
-        // return false; // definitely not
-        // }
-        String name = qt.getName().toLowerCase();
-        for ( String patt : isPreferredNamePatterns ) {
-            if ( name.matches( patt ) ) {
-                log.debug( "name=" + name + " <<<matched " + patt );
-                return true;
-            }
-        }
-
-        return false;
-
-    }
-
-    /**
-     * @param name
-     * @param description
-     * @return
-     */
-    protected static boolean isBackgroundSubtracted( String name, String description ) {
-        for ( String patt : isBackgroundSubtractedNamePatterns ) {
-            log.debug( name + " test " + patt );
-            if ( name.matches( patt ) ) {
-                log.debug( "name=" + name + " <<<matched " + patt );
-                return true;
-            }
-        }
-        for ( String patt : isBackgroundSubtractedDescPatterns ) {
-            log.debug( description + " test " + patt );
-            if ( description.matches( patt ) ) {
-                log.debug( description + " <<<matched " + patt );
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected static boolean isRatio( String name, String description ) {
-
-        if ( !maybeRatio( name ) ) return false;
-
-        for ( Boolean type : isRatioNamePatterns.keySet() ) {
-            for ( String patt : isRatioNamePatterns.get( type ) ) {
-                log.debug( name + " test " + patt );
-                if ( name.matches( patt ) ) {
-                    return type;
-                }
-            }
-            for ( String patt : isRatioDescPatterns.get( type ) ) {
-                log.debug( description + " test " + patt );
-                if ( description.matches( patt ) ) {
-                    return type;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param name
-     * @param description
-     * @return
-     */
-    protected static boolean isNormalized( String name, String description ) {
-        for ( String patt : isNormalizedPatterns ) {
-            if ( name.matches( patt ) ) {
-                log.debug( "name=" + name + " matched " + patt );
-                return true;
-            }
-        }
-        for ( String patt : isNormalizedPatterns ) {
-            if ( description.matches( patt ) ) {
-                log.debug( description + " matched " + patt );
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @param name
-     * @param description
-     * @return
-     */
-    protected static StandardQuantitationType guessType( String name, String description ) {
-        for ( StandardQuantitationType type : typeDescPatterns.keySet() ) {
-
-            boolean isQuant = type == StandardQuantitationType.AMOUNT || type == StandardQuantitationType.COUNT;
-
-            if ( isQuant && !maybeDerivedSignal( name ) ) {
-                continue;
-            } else if ( isQuant && !maybeMeasuredSignal( name ) ) {
-                continue;
-            }
-
-            for ( String patt : typeNamePatterns.get( type ) ) {
-                log.debug( "name=" + name + " test " + patt );
-                if ( name.matches( patt ) ) {
-                    // special case for derived signal
-                    log.debug( "!!!!!name=" + name + " matched " + patt );
-                    return type;
-                }
-            }
-
-            for ( String patt : typeDescPatterns.get( type ) ) {
-                log.debug( "description=" + description + " test " + patt );
-                if ( description.matches( patt ) ) {
-                    log.debug( "!!!!!description=" + description + " matched " + patt );
-                    return type;
-                }
-            }
-
-        }
-
-        return StandardQuantitationType.AMOUNT; // default.
-
-    }
-
-    protected static ScaleType guessScaleType( String name, String description ) {
-        for ( ScaleType type : scaleDescPatterns.keySet() ) {
-            for ( String patt : scaleNamePatterns.get( type ) ) {
-                if ( name.matches( patt ) ) {
-                    log.debug( "!!!!!name=" + name + " matched " + patt );
-                    return type;
-                }
-            }
-            for ( String patt : scaleDescPatterns.get( type ) ) {
-                if ( description.toLowerCase().matches( patt ) ) {
-                    log.debug( "!!!!!description=" + description + " matched " + patt );
-                    return type;
-                }
-
-            }
-
-        }
-        return ScaleType.LINEAR; // default
-    }
-
-    protected static PrimitiveType guessPrimitiveType( String name, String description, Object exampleValue ) {
-
-        String exampleString = null;
-        boolean couldBeDouble = true;
-        boolean couldBeInt = true;
-        if ( exampleValue != null ) {
-            if ( exampleValue instanceof Double ) {
-                return PrimitiveType.DOUBLE;
-            } else if ( exampleValue instanceof Integer ) {
-                return PrimitiveType.INT;
-            } else if ( exampleValue instanceof Boolean ) {
-                return PrimitiveType.BOOLEAN;
-            } else if ( exampleValue instanceof String ) {
-                exampleString = ( String ) exampleValue;
-            }
-
-            /*
-             * Goofy special case of 'null' thanks to bad decision by GEO data submitters. See bug 1760
-             */
-            if ( StringUtils.isNotBlank( exampleString ) && exampleString != null
-                    && !exampleString.equalsIgnoreCase( "null" ) ) {
-
-                try {
-                    Double.parseDouble( exampleString );
-                } catch ( NumberFormatException e ) {
-                    couldBeDouble = false;
-                }
-
-                try {
-                    Integer.parseInt( exampleString );
-                } catch ( NumberFormatException e ) {
-                    couldBeInt = false;
-                }
-            }
-        }
-
-        for ( PrimitiveType type : representationDescPatterns.keySet() ) {
-            for ( String patt : representationNamePatterns.get( type ) ) {
-                if ( name.matches( patt ) ) {
-                    if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
-                        continue; // cannot be double.
-                    }
-                    if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
-                        continue;
-                    }
-
-                    return type;
-                }
-            }
-            for ( String patt : representationDescPatterns.get( type ) ) {
-                if ( description.matches( patt ) ) {
-                    if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
-                        continue; // cannot be double.
-                    }
-                    if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
-                        continue;
-                    }
-                    return type;
-                }
-            }
-
-        }
-
-        if ( !couldBeDouble ) return PrimitiveType.STRING;
-
-        return PrimitiveType.DOUBLE;
-
-    }
-
-    /**
-     * @param namelc
-     * @param descriptionlc
-     * @return
-     */
-    protected static Boolean guessIsBackground( String name, String description ) {
-        for ( Boolean type : isBackgroundDescPatterns.keySet() ) {
-            for ( String patt : isBackgroundDescPatterns.get( type ) ) {
-                if ( description.matches( patt ) ) {
-                    return type;
-                }
-            }
-            for ( String patt : isBackgroundNamePatterns.get( type ) ) {
-                if ( name.matches( patt ) ) {
-                    return type;
-                }
-            }
-
-        }
-        return Boolean.FALSE;
-    }
-
-    /**
-     * @param namelc
-     * @param descriptionlc
-     * @return
-     */
-    protected static boolean maybeBackground( String namelc, String descriptionlc ) {
-        if ( descriptionlc.contains( "background over the background" ) ) {
-            return false; // definitely not.
-        } else if ( descriptionlc.contains( "above the background" ) ) {
-            return false; // definitely not.
-        } else if ( descriptionlc.contains( "background subtracted" ) ) {
-            return false; // definitely not.
-        } else if ( descriptionlc.contains( "background-corrected" ) ) {
-            return false; // definitely not.
-        } else if ( descriptionlc.matches( "subtracted by .*? background" ) ) {
-            return false; // definitely not.
-        } else if ( namelc.matches( ".*- b(532|635)" ) ) {
-            return false; // definitely not.
-        } else if ( namelc.matches( ".*- background" ) ) {
-            return false; // definitely not.
-        } else if ( namelc.matches( "f(532|635).*" ) ) {
-            return false; // definitely not.
-        }
-
-        // this is really a 'maybe'.
-        return true;
-    }
-
-    protected static boolean maybeDerivedSignal( String name ) {
-        if ( name.matches( "(pix_)?rat(io)?.*" ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    protected static boolean maybeMeasuredSignal( String name ) {
-
-        if ( name.matches( ".*[_\\s]sd" ) ) {
-            return false;
-        }
-        if ( name.matches( ".*[_\\s]avg" ) ) {
-            return false;
-        }
-        if ( name.matches( "(pix_)?(rat(io)?).*" ) ) {
-            return false;
-        }
-
-        if ( name.matches( "detection" ) ) return false;
-
-        if ( name.matches( "CHPDetection" ) ) return false;
-
-        return true;
-    }
-
-    protected static boolean maybeRatio( String name ) {
-        if ( name.matches( "(p|m)m[\\s_]excess" ) ) {
-            return false;
-        }
-        return true;
-    }
-
     public static void guessQuantitationTypeParameters( QuantitationType qt, String name, String description ) {
         guessQuantitationTypeParameters( qt, name, description, null );
     }
@@ -684,5 +384,306 @@ public class QuantitationTypeParameterGuesser {
 
         if ( qt.getIsMaskedPreferred() == null ) qt.setIsMaskedPreferred( Boolean.FALSE );
 
+    }
+
+    /**
+     * @param namelc
+     * @param descriptionlc
+     * @return
+     */
+    protected static Boolean guessIsBackground( String name, String description ) {
+        for ( Boolean type : isBackgroundDescPatterns.keySet() ) {
+            for ( String patt : isBackgroundDescPatterns.get( type ) ) {
+                if ( description.matches( patt ) ) {
+                    return type;
+                }
+            }
+            for ( String patt : isBackgroundNamePatterns.get( type ) ) {
+                if ( name.matches( patt ) ) {
+                    return type;
+                }
+            }
+
+        }
+        return Boolean.FALSE;
+    }
+
+    protected static PrimitiveType guessPrimitiveType( String name, String description, Object exampleValue ) {
+
+        String exampleString = null;
+        boolean couldBeDouble = true;
+        boolean couldBeInt = true;
+        if ( exampleValue != null ) {
+            if ( exampleValue instanceof Double ) {
+                return PrimitiveType.DOUBLE;
+            } else if ( exampleValue instanceof Integer ) {
+                return PrimitiveType.INT;
+            } else if ( exampleValue instanceof Boolean ) {
+                return PrimitiveType.BOOLEAN;
+            } else if ( exampleValue instanceof String ) {
+                exampleString = ( String ) exampleValue;
+            }
+
+            /*
+             * Goofy special case of 'null' thanks to bad decision by GEO data submitters. See bug 1760
+             */
+            if ( StringUtils.isNotBlank( exampleString ) && exampleString != null
+                    && !exampleString.equalsIgnoreCase( "null" ) ) {
+
+                try {
+                    Double.parseDouble( exampleString );
+                } catch ( NumberFormatException e ) {
+                    couldBeDouble = false;
+                }
+
+                try {
+                    Integer.parseInt( exampleString );
+                } catch ( NumberFormatException e ) {
+                    couldBeInt = false;
+                }
+            }
+        }
+
+        for ( PrimitiveType type : representationDescPatterns.keySet() ) {
+            for ( String patt : representationNamePatterns.get( type ) ) {
+                if ( name.matches( patt ) ) {
+                    if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
+                        continue; // cannot be double.
+                    }
+                    if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
+                        continue;
+                    }
+
+                    return type;
+                }
+            }
+            for ( String patt : representationDescPatterns.get( type ) ) {
+                if ( description.matches( patt ) ) {
+                    if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
+                        continue; // cannot be double.
+                    }
+                    if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
+                        continue;
+                    }
+                    return type;
+                }
+            }
+
+        }
+
+        if ( !couldBeDouble ) return PrimitiveType.STRING;
+
+        return PrimitiveType.DOUBLE;
+
+    }
+
+    protected static ScaleType guessScaleType( String name, String description ) {
+        for ( ScaleType type : scaleDescPatterns.keySet() ) {
+            for ( String patt : scaleNamePatterns.get( type ) ) {
+                if ( name.matches( patt ) ) {
+                    log.debug( "!!!!!name=" + name + " matched " + patt );
+                    return type;
+                }
+            }
+            for ( String patt : scaleDescPatterns.get( type ) ) {
+                if ( description.toLowerCase().matches( patt ) ) {
+                    log.debug( "!!!!!description=" + description + " matched " + patt );
+                    return type;
+                }
+
+            }
+
+        }
+        return ScaleType.LINEAR; // default
+    }
+
+    /**
+     * @param name
+     * @param description
+     * @return
+     */
+    protected static StandardQuantitationType guessType( String name, String description ) {
+        for ( StandardQuantitationType type : typeDescPatterns.keySet() ) {
+
+            boolean isQuant = type == StandardQuantitationType.AMOUNT || type == StandardQuantitationType.COUNT;
+
+            if ( isQuant && !maybeDerivedSignal( name ) ) {
+                continue;
+            } else if ( isQuant && !maybeMeasuredSignal( name ) ) {
+                continue;
+            }
+
+            for ( String patt : typeNamePatterns.get( type ) ) {
+                log.debug( "name=" + name + " test " + patt );
+                if ( name.matches( patt ) ) {
+                    // special case for derived signal
+                    log.debug( "!!!!!name=" + name + " matched " + patt );
+                    return type;
+                }
+            }
+
+            for ( String patt : typeDescPatterns.get( type ) ) {
+                log.debug( "description=" + description + " test " + patt );
+                if ( description.matches( patt ) ) {
+                    log.debug( "!!!!!description=" + description + " matched " + patt );
+                    return type;
+                }
+            }
+
+        }
+
+        return StandardQuantitationType.AMOUNT; // default.
+
+    }
+
+    /**
+     * @param name
+     * @param description
+     * @return
+     */
+    protected static boolean isBackgroundSubtracted( String name, String description ) {
+        for ( String patt : isBackgroundSubtractedNamePatterns ) {
+            log.debug( name + " test " + patt );
+            if ( name.matches( patt ) ) {
+                log.debug( "name=" + name + " <<<matched " + patt );
+                return true;
+            }
+        }
+        for ( String patt : isBackgroundSubtractedDescPatterns ) {
+            log.debug( description + " test " + patt );
+            if ( description.matches( patt ) ) {
+                log.debug( description + " <<<matched " + patt );
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param name
+     * @param description
+     * @return
+     */
+    protected static boolean isNormalized( String name, String description ) {
+        for ( String patt : isNormalizedPatterns ) {
+            if ( name.matches( patt ) ) {
+                log.debug( "name=" + name + " matched " + patt );
+                return true;
+            }
+        }
+        for ( String patt : isNormalizedPatterns ) {
+            if ( description.matches( patt ) ) {
+                log.debug( description + " matched " + patt );
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Determine if a quantitation type is 'preferred'.
+     * 
+     * @param qt
+     * @return
+     */
+    protected static boolean isPreferred( QuantitationType qt ) {
+        assert qt != null;
+        // if ( qt.getIsBackground() || !qt.getIsNormalized() ) {
+        // log.info( qt + " is not normalized " );
+        // return false; // definitely not
+        // }
+        String name = qt.getName().toLowerCase();
+        for ( String patt : isPreferredNamePatterns ) {
+            if ( name.matches( patt ) ) {
+                log.debug( "name=" + name + " <<<matched " + patt );
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    protected static boolean isRatio( String name, String description ) {
+
+        if ( !maybeRatio( name ) ) return false;
+
+        for ( Boolean type : isRatioNamePatterns.keySet() ) {
+            for ( String patt : isRatioNamePatterns.get( type ) ) {
+                log.debug( name + " test " + patt );
+                if ( name.matches( patt ) ) {
+                    return type;
+                }
+            }
+            for ( String patt : isRatioDescPatterns.get( type ) ) {
+                log.debug( description + " test " + patt );
+                if ( description.matches( patt ) ) {
+                    return type;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param namelc
+     * @param descriptionlc
+     * @return
+     */
+    protected static boolean maybeBackground( String namelc, String descriptionlc ) {
+        if ( descriptionlc.contains( "background over the background" ) ) {
+            return false; // definitely not.
+        } else if ( descriptionlc.contains( "above the background" ) ) {
+            return false; // definitely not.
+        } else if ( descriptionlc.contains( "background subtracted" ) ) {
+            return false; // definitely not.
+        } else if ( descriptionlc.contains( "background-corrected" ) ) {
+            return false; // definitely not.
+        } else if ( descriptionlc.matches( "subtracted by .*? background" ) ) {
+            return false; // definitely not.
+        } else if ( namelc.matches( ".*- b(532|635)" ) ) {
+            return false; // definitely not.
+        } else if ( namelc.matches( ".*- background" ) ) {
+            return false; // definitely not.
+        } else if ( namelc.matches( "f(532|635).*" ) ) {
+            return false; // definitely not.
+        }
+
+        // this is really a 'maybe'.
+        return true;
+    }
+
+    protected static boolean maybeDerivedSignal( String name ) {
+        if ( name.matches( "(pix_)?rat(io)?.*" ) ) {
+            return false;
+        }
+        return true;
+    }
+
+    protected static boolean maybeMeasuredSignal( String name ) {
+
+        if ( name.matches( ".*[_\\s]sd" ) ) {
+            return false;
+        }
+        if ( name.matches( ".*[_\\s]avg" ) ) {
+            return false;
+        }
+        if ( name.matches( "(pix_)?(rat(io)?).*" ) ) {
+            return false;
+        }
+
+        if ( name.matches( "detection" ) ) return false;
+
+        if ( name.matches( "CHPDetection" ) ) return false;
+
+        return true;
+    }
+
+    protected static boolean maybeRatio( String name ) {
+        if ( name.matches( "(p|m)m[\\s_]excess" ) ) {
+            return false;
+        }
+        return true;
     }
 }

@@ -31,9 +31,9 @@
                   <constructor-arg name="retryableExceptions">
                      <map>
                         <!-- FIXME we probably don't need all of these. -->
-                        <entry key="org.springframework.dao.ConcurrencyFailureException" value="true" />
                         <entry key="org.hibernate.exception.LockAcquisitionException" value="true" />
-                        <entry key="org.springframework.dao.CannotAcquireLockException" value="true" />
+                        <entry key="org.springframework.dao.PessimisticLockingFailureException" value="true" />
+                        <entry key="org.springframework.dao.OptimisticLockingFailureException" value="true" />
                      </map>
                   </constructor-arg>
                </bean>
@@ -52,6 +52,7 @@
    </bean>
 
    <!-- Mostly we are using the pointcut, but this is useful for fine-tuning. -->
+   <!-- warning, may not be a good idea to mix strategies -->
    <tx:annotation-driven order="3" />
 
    <tx:advice id="txAdvice">
@@ -103,6 +104,9 @@
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/GroupAuthority.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml</value>
+            <value>classpath:ubic/gemma/model/common/auditAndSecurity/AclEntry.hbm.xml</value>
+            <value>classpath:ubic/gemma/model/common/auditAndSecurity/AclObjectIdentity.hbm.xml</value>
+            <value>classpath:ubic/gemma/model/common/auditAndSecurity/AclSid.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserRole.hbm.xml</value>
@@ -186,7 +190,7 @@
             <prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
             <prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
             <prop key="hibernate.use_sql_comments">${gemma.hibernate.use_sql_comments}</prop>
-            <prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
+            <prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop> 
          </props>
       </property>
 

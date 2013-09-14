@@ -15,11 +15,11 @@
 package ubic.gemma.security;
 
 import org.springframework.security.acls.domain.BasePermission;
-import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
 
+import ubic.gemma.model.common.auditAndSecurity.acl.AclGrantedAuthoritySid;
 import ubic.gemma.util.AuthorityConstants;
 
 /**
@@ -31,8 +31,10 @@ import ubic.gemma.util.AuthorityConstants;
 public class SecurityUtil {
 
     /**
+     * Test whether the given ACL is constraining access to users who are at privileges above "anonymous".
+     * 
      * @param acl
-     * @return
+     * @return true if the permissions indicate 'non-public', false if 'public'.
      */
     public static boolean isPrivate( Acl acl ) {
 
@@ -44,8 +46,8 @@ public class SecurityUtil {
             if ( !ace.getPermission().equals( BasePermission.READ ) ) continue;
 
             Sid sid = ace.getSid();
-            if ( sid instanceof GrantedAuthoritySid ) {
-                String grantedAuthority = ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
+            if ( sid instanceof AclGrantedAuthoritySid ) {
+                String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
                 if ( grantedAuthority.equals( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) && ace.isGranting() ) {
                     return false;
                 }
@@ -77,8 +79,8 @@ public class SecurityUtil {
             if ( !ace.getPermission().equals( BasePermission.READ ) ) continue;
 
             Sid sid = ace.getSid();
-            if ( sid instanceof GrantedAuthoritySid ) {
-                String grantedAuthority = ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
+            if ( sid instanceof AclGrantedAuthoritySid ) {
+                String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
                 if ( grantedAuthority.startsWith( "GROUP_" ) && ace.isGranting() ) {
 
                     if ( grantedAuthority.equals( AuthorityConstants.AGENT_GROUP_AUTHORITY )
@@ -92,7 +94,7 @@ public class SecurityUtil {
         }
 
         /*
-         * Even if the object is not private, it's parent might be and we might inherit that. Recursion happens here.
+         * Even if the object is not private, its parent might be and we might inherit that. Recursion happens here.
          */
         Acl parentAcl = acl.getParentAcl();
         if ( parentAcl != null && acl.isEntriesInheriting() ) {

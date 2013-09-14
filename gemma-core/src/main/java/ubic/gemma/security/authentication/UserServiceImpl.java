@@ -14,19 +14,25 @@
  */
 package ubic.gemma.security.authentication;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.stereotype.Service;
-import ubic.gemma.model.common.auditAndSecurity.*;
+
+import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserDao;
+import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.common.auditAndSecurity.UserGroupDao;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclGrantedAuthoritySid;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.SecurityServiceImpl;
-import ubic.gemma.security.authorization.acl.AclService;
 import ubic.gemma.util.AuthorityConstants;
-
-import java.util.Collection;
 
 /**
  * @see ubic.gemma.security.authentication.UserService
@@ -70,6 +76,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User create( final User user ) throws UserExistsException {
+
+        if ( user.getUserName() == null ) {
+            throw new IllegalArgumentException( "UserName cannot be null" );
+        }
+
+        if ( this.userDao.findByUserName( user.getUserName() ) != null ) {
+            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
+        }
+
+        if ( this.findByEmail( user.getEmail() ) != null ) {
+            throw new UserExistsException( "A user with email address '" + user.getEmail() + "' already exists." );
+        }
+
+        try {
+            return this.userDao.create( user );
+        } catch ( DataIntegrityViolationException e ) {
+            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
+        } catch ( InvalidDataAccessResourceUsageException e ) {
+            // shouldn't happen if we don't have duplicates in the first place...but just in case.
+            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
+        }
+
+    }
+
+    @Override
     public UserGroup create( UserGroup group ) {
         return this.userGroupDao.create( group );
     }
@@ -103,7 +135,7 @@ public class UserServiceImpl implements UserService {
 
         if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) )
                 && !SecurityServiceImpl.isUserAdmin() ) {
-            throw new AccessDeniedException( "Only administrator of owner of a group can delete it" );
+            throw new AccessDeniedException( "Only administrator or owner of a group can delete it" );
         }
 
         String authority = securityService.getGroupAuthorityNameFromGroupName( groupName );
@@ -114,10 +146,21 @@ public class UserServiceImpl implements UserService {
          * clean up acls that use this group...do that last!
          */
         try {
-            aclService.deleteSid( new GrantedAuthoritySid( authority ) );
+            aclService.deleteSid( new AclGrantedAuthoritySid( authority ) );
         } catch ( DataIntegrityViolationException div ) {
             throw div;
         }
+    }
+
+    @Override
+    public User findByEmail( final String email ) {
+        return this.userDao.findByEmail( email );
+
+    }
+
+    @Override
+    public User findByUserName( final String userName ) {
+        return this.userDao.findByUserName( userName );
     }
 
     @Override
@@ -131,8 +174,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean groupExists( String name ) {
+        return this.userGroupDao.findByUserGroupName( name ) != null;
+    }
+
+    @Override
     public Collection<UserGroup> listAvailableGroups() {
         return ( Collection<UserGroup> ) this.userGroupDao.loadAll();
+    }
+
+    @Override
+    public User load( final Long id ) {
+        return this.userDao.load( id );
+    }
+
+    @Override
+    public Collection<User> loadAll() {
+        return ( Collection<User> ) this.userDao.loadAll();
     }
 
     @Override
@@ -168,65 +226,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void update( UserGroup group ) {
-        this.userGroupDao.update( group );
-    }
-
-    @Override
-    public boolean groupExists( String name ) {
-        return this.userGroupDao.findByUserGroupName( name ) != null;
-    }
-
-    @Override
-    public User create( final User user ) throws UserExistsException {
-
-        if ( user.getUserName() == null ) {
-            throw new IllegalArgumentException( "UserName cannot be null" );
-        }
-
-        if ( this.userDao.findByUserName( user.getUserName() ) != null ) {
-            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
-        }
-
-        if ( this.findByEmail( user.getEmail() ) != null ) {
-            throw new UserExistsException( "A user with email address '" + user.getEmail() + "' already exists." );
-        }
-
-        try {
-            return this.userDao.create( user );
-        } catch ( DataIntegrityViolationException e ) {
-            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
-        } catch ( InvalidDataAccessResourceUsageException e ) {
-            // shouldn't happen if we don't have duplicates in the first place...but just in case.
-            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
-        }
-
-    }
-
-    @Override
-    public User findByEmail( final String email ) {
-        return this.userDao.findByEmail( email );
-
-    }
-
-    @Override
-    public User findByUserName( final String userName ) {
-        return this.userDao.findByUserName( userName );
-    }
-
-    @Override
-    public User load( final Long id ) {
-        return this.userDao.load( id );
-    }
-
-    @Override
-    public Collection<User> loadAll() {
-        return ( Collection<User> ) this.userDao.loadAll();
-    }
-
-    @Override
     public void update( final User user ) {
         this.userDao.update( user );
+    }
+
+    @Override
+    public void update( UserGroup group ) {
+        this.userGroupDao.update( group );
     }
 
 }

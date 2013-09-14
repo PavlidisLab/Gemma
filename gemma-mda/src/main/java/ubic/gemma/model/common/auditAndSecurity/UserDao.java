@@ -18,9 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import ubic.gemma.persistence.BaseDao;
-
 import java.util.Collection;
+
+import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.User

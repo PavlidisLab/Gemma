@@ -35,6 +35,11 @@ public interface FileCombiningParser {
     public static final int PARSE_ALERT_FREQUENCY = 10000;
 
     /**
+     * @return results
+     */
+    public Collection<Object> getResults();
+
+    /**
      * Parse a List of files.
      * 
      * @param files
@@ -49,9 +54,4 @@ public interface FileCombiningParser {
      * @throws IOException
      */
     public void parseStreams( List<InputStream> streams ) throws IOException;
-
-    /**
-     * @return results
-     */
-    public Collection<Object> getResults();
 }

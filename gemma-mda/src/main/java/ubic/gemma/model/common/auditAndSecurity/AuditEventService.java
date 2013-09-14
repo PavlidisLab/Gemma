@@ -34,51 +34,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 public interface AuditEventService {
 
     /**
-     * @param a
-     * @param type
-     * @return
-     */
-    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
-
-    /**
-     * @param a
-     * @param type
-     * @return
-     */
-    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
-
-    /**
-     * @param a
-     * @param type
-     * @return
-     */
-    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
-
-    /**
-     * @param a
-     * @param type
-     * @return
-     */
-    public boolean lacksEvent( Auditable a, Class<? extends AuditEventType> type );
-
-    /**
-     * Returns a collection of Auditables created since the date given.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date );
-
-    /**
-     * Returns a collection of Auditable objects that were updated since the date entered.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    /*
-     * Note that this security setting works even though auditables aren't necessarily securable; non-securable
-     * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
-     * applicationContext-security.xml
-     */
-    public java.util.Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
-
-    /**
      * @param auditable
      * @return
      */
@@ -119,5 +74,50 @@ public interface AuditEventService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events );
+
+    /**
+     * Returns a collection of Auditables created since the date given.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date );
+
+    /**
+     * Returns a collection of Auditable objects that were updated since the date entered.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    /*
+     * Note that this security setting works even though auditables aren't necessarily securable; non-securable
+     * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
+     * applicationContext-security.xml
+     */
+    public java.util.Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
+
+    /**
+     * @param a
+     * @param type
+     * @return
+     */
+    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
+
+    /**
+     * @param a
+     * @param type
+     * @return
+     */
+    public boolean lacksEvent( Auditable a, Class<? extends AuditEventType> type );
+
+    /**
+     * @param a
+     * @param type
+     * @return
+     */
+    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+
+    /**
+     * @param a
+     * @param type
+     * @return
+     */
+    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
 }

@@ -430,35 +430,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
-     * See bug 3328 - we don't want to use IMAGE clone IDs
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testConvertGSE4229IMAGE() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse4229Short/GSE4229.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE4229" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        Object result = this.gc.convert( series );
-        assertNotNull( result );
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
-        ExpressionExperiment ee = ees.iterator().next();
-        ArrayDesign platform = ee.getBioAssays().iterator().next().getArrayDesignUsed();
-
-        BioSequence seq = platform.getCompositeSequences().iterator().next().getBiologicalCharacteristic();
-        assertNotNull( seq.getSequenceDatabaseEntry() );
-        String acc = seq.getSequenceDatabaseEntry().getAccession();
-        assertEquals( "Genbank", seq.getSequenceDatabaseEntry().getExternalDatabase().getName() );
-        assertTrue( !acc.startsWith( "IMAGE" ) );
-    }
-
-    /**
      * Gets no 'preferred' quantitation type. - it should find one.
      * 
      * @throws Exception
@@ -490,6 +461,35 @@ public class GeoConverterTest extends BaseSpringContextTest {
         }
 
         assertTrue( ok );
+    }
+
+    /**
+     * See bug 3328 - we don't want to use IMAGE clone IDs
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testConvertGSE4229IMAGE() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse4229Short/GSE4229.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE4229" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        @SuppressWarnings("unchecked")
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        ExpressionExperiment ee = ees.iterator().next();
+        ArrayDesign platform = ee.getBioAssays().iterator().next().getArrayDesignUsed();
+
+        BioSequence seq = platform.getCompositeSequences().iterator().next().getBiologicalCharacteristic();
+        assertNotNull( seq.getSequenceDatabaseEntry() );
+        String acc = seq.getSequenceDatabaseEntry().getAccession();
+        assertEquals( "Genbank", seq.getSequenceDatabaseEntry().getExternalDatabase().getName() );
+        assertTrue( !acc.startsWith( "IMAGE" ) );
     }
 
     /**
@@ -621,68 +621,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testConvertMultiTaxonPlatformGSE28843() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE28843.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE28843" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        Object result = this.gc.convert( series );
-        assertNotNull( result );
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
-        assertEquals( 1, ees.size() );
-        Taxon primaryTaxon = ees.iterator().next().getBioAssays().iterator().next().getArrayDesignUsed()
-                .getPrimaryTaxon();
-        assertEquals( "salmonid", primaryTaxon.getCommonName() );
-    }
-
-    /**
-     * See bug 3163.
-     * 
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testConvertMultiTaxonDatasetGSE7540() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE7540.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE7540" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        Object result = this.gc.convert( series );
-        assertNotNull( result );
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
-
-        // Should get one for chimp, one for human.
-        assertEquals( 2, ees.size() );
-
-        boolean found1 = false, found2 = false;
-        for ( ExpressionExperiment ee : ees ) {
-            if ( ee.getBioAssays().size() == 15 ) {
-                found1 = true;
-            } else if ( ee.getBioAssays().size() == 22 ) {
-                found2 = true;
-            }
-        }
-
-        assertTrue( "Failed to set up the chimp data", found1 );
-        assertTrue( "Failed to set up the human data", found2 );
-
-    }
-
-    /**
      * Case where the same sample can be in multiple series, we had problems with it.
      * 
      * @throws Exception
@@ -726,6 +664,68 @@ public class GeoConverterTest extends BaseSpringContextTest {
         }
     }
 
+    /**
+     * See bug 3163.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testConvertMultiTaxonDatasetGSE7540() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE7540.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE7540" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+
+        // Should get one for chimp, one for human.
+        assertEquals( 2, ees.size() );
+
+        boolean found1 = false, found2 = false;
+        for ( ExpressionExperiment ee : ees ) {
+            if ( ee.getBioAssays().size() == 15 ) {
+                found1 = true;
+            } else if ( ee.getBioAssays().size() == 22 ) {
+                found2 = true;
+            }
+        }
+
+        assertTrue( "Failed to set up the chimp data", found1 );
+        assertTrue( "Failed to set up the human data", found2 );
+
+    }
+
+    /**
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testConvertMultiTaxonPlatformGSE28843() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE28843.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE28843" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+        Taxon primaryTaxon = ees.iterator().next().getBioAssays().iterator().next().getArrayDesignUsed()
+                .getPrimaryTaxon();
+        assertEquals( "salmonid", primaryTaxon.getCommonName() );
+    }
+
     @Test
     public void testConvertWithLotsOfPlatforms() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -738,37 +738,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
-    }
-
-    /**
-     * bug 3415. The samples do not have the same quantitation types. In some it is "detection pval" and others
-     * "raw_value". We would reject "detection pval" but if the qt already has the name "raw_value" we won't. The way
-     * the current setup works, we sort of throw up our hands and keep the data, even though it is messed up.
-     * <p>
-     * This tests that behaviour. If we start rejecting the data, this test will fail (note that rejecting the data is
-     * not unreasonable).
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testParseGSE44625() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE44625.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-        GeoParseResult result = ( GeoParseResult ) parser.getResults().iterator().next();
-
-        GeoSeries series = result.getSeries().values().iterator().next();
-
-        series.getValues();
-
-        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        Object convert = this.gc.convert( series );
-        ExpressionExperiment ee = ( ExpressionExperiment ) ( ( Collection<?> ) convert ).iterator().next();
-
-        assertEquals( 2, ee.getQuantitationTypes().size() );
     }
 
     /**
@@ -854,6 +823,31 @@ public class GeoConverterTest extends BaseSpringContextTest {
         // ArrayDesign ad = ( ArrayDesign ) result;
         // FIXME currently we reject probes, so this count is different.
         // assertEquals( 168, ad.getCompositeSequences().size() );
+    }
+
+    /**
+     * bug 3393/1709 - case change in probe names messing things up.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public final void testGSE44903() throws Exception {
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE44903.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE44903" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Set<?> result = ( Set<?> ) this.gc.convert( series );
+        ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
+
+        /*
+         * This is the current condition, because the probes are not matched up.
+         */
+        assertEquals( 0, e.getRawExpressionDataVectors().size() );
     }
 
     /**
@@ -1037,6 +1031,37 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
+     * bug 3415. The samples do not have the same quantitation types. In some it is "detection pval" and others
+     * "raw_value". We would reject "detection pval" but if the qt already has the name "raw_value" we won't. The way
+     * the current setup works, we sort of throw up our hands and keep the data, even though it is messed up.
+     * <p>
+     * This tests that behaviour. If we start rejecting the data, this test will fail (note that rejecting the data is
+     * not unreasonable).
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testParseGSE44625() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE44625.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoParseResult result = ( GeoParseResult ) parser.getResults().iterator().next();
+
+        GeoSeries series = result.getSeries().values().iterator().next();
+
+        series.getValues();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object convert = this.gc.convert( series );
+        ExpressionExperiment ee = ( ExpressionExperiment ) ( ( Collection<?> ) convert ).iterator().next();
+
+        assertEquals( 2, ee.getQuantitationTypes().size() );
+    }
+
+    /**
      * Ensure that if platform has one taxon then taxon is still set correctly
      */
     @Test
@@ -1113,31 +1138,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
             assertTrue( bs.getName().startsWith( "IMAGE" ) );
         }
 
-    }
-
-    /**
-     * bug 3393/1709 - case change in probe names messing things up.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public final void testGSE44903() throws Exception {
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE44903.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE44903" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        Set<?> result = ( Set<?> ) this.gc.convert( series );
-        ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
-
-        /*
-         * This is the current condition, because the probes are not matched up.
-         */
-        assertEquals( 0, e.getRawExpressionDataVectors().size() );
     }
 
     /**

@@ -18,30 +18,30 @@
  */
 package ubic.gemma.infrastructure.jms;
 
-import org.apache.activemq.command.ActiveMQQueue;
-import ubic.gemma.infrastructure.common.MessageSender;
-
-import javax.jms.Queue;
 import java.io.Serializable;
 
+import javax.jms.Queue;
+
+import org.apache.activemq.command.ActiveMQQueue;
+
+import ubic.gemma.infrastructure.common.MessageSender;
+
 /**
- * author: anton
- * date: 08/02/13
+ * author: anton date: 08/02/13
  */
 public class JmsMessageSender<T extends Serializable> implements MessageSender<T> {
 
     private JMSHelper jmsHelper;
     private Queue queue;
 
-
-    public JmsMessageSender(JMSHelper jmsHelper, String queueName ) {
-        this.jmsHelper = jmsHelper;
-        this.queue = new ActiveMQQueue( queueName );
-    }
-
-    public JmsMessageSender(JMSHelper jmsHelper, Queue queue ) {
+    public JmsMessageSender( JMSHelper jmsHelper, Queue queue ) {
         this.jmsHelper = jmsHelper;
         this.queue = queue;
+    }
+
+    public JmsMessageSender( JMSHelper jmsHelper, String queueName ) {
+        this.jmsHelper = jmsHelper;
+        this.queue = new ActiveMQQueue( queueName );
     }
 
     @Override

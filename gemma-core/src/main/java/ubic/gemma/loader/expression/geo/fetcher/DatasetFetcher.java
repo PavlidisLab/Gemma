@@ -38,6 +38,7 @@ public class DatasetFetcher extends GeoFetcher {
 
     /*
      * Pointing to directory: ftp://ftp.ncbi.nih.gov/pub/geo/DATA/SOFT/GDS/
+     * 
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
      */
     @Override
@@ -47,6 +48,7 @@ public class DatasetFetcher extends GeoFetcher {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
      */
     @Override

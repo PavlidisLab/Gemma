@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.DataUpdater;
@@ -52,7 +51,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -68,15 +66,12 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
-    @Autowired
-    ExperimentalDesignImporter experimentalDesignImporter;
 
     @Autowired
-    ExperimentalDesignService experimentalDesignService;
+    private ExperimentalDesignImporter experimentalDesignImporter;
+
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-    @Autowired
-    ExperimentalFactorService experimentalFactorService;
 
     @Autowired
     private DiffExAnalyzer analyzer = null;
@@ -91,68 +86,6 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ProcessedExpressionDataVectorService dataVectorService;
-
-    /**
-     * Test where probes have constant values. See bug 3177.
-     */
-    @Test
-    public void testGSE35930() throws Exception {
-
-        ExpressionExperiment ee;
-        // eeService.delete( eeService.findByShortName( "GSE35930" ) );
-        try {
-            geoService
-                    .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE35930" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE35930", false, true, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-
-        } catch ( AlreadyExistsInSystemException e ) {
-            // OK.
-            if ( e.getData() instanceof List ) {
-                ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
-            } else {
-                ee = ( ExpressionExperiment ) e.getData();
-            }
-        }
-
-        ee = eeService.thawLite( ee );
-
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-
-        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
-            ee = eeService.load( ee.getId() );
-            ee = eeService.thawLite( ee );
-
-            InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE35930/design.txt" );
-            experimentalDesignImporter.importDesign( ee, is, false );
-
-            ee = eeService.load( ee.getId() );
-            ee = eeService.thawLite( ee );
-        }
-
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
-        config.setQvalueThreshold( null );
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
-        assertNotNull( analyses );
-        assertEquals( 1, analyses.size() );
-
-        DifferentialExpressionAnalysis results = analyses.iterator().next();
-
-        boolean found = false;
-        ExpressionAnalysisResultSet resultSet = results.getResultSets().iterator().next();
-        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            // this probe has a constant value
-            if ( r.getProbe().getName().equals( "1622910_at" ) ) {
-                fail( "Should not have found a result for constant probe" );
-                // found = true;
-                // assertTrue( "Got: " + pvalue, pvalue == null || pvalue.equals( Double.NaN ) );
-            } else {
-                found = true; // got to have something...
-            }
-        }
-        assertTrue( found );
-    }
 
     /**
      * Test differential expression analysis on count data. See bug 3383.
@@ -247,6 +180,68 @@ public class DiffExTest extends AbstractGeoServiceTest {
                 // slightly smaller pvalue when using weighted least squares
                 assertEquals( 0.007914245, r.getPvalue(), 0.00001 );
                 break;
+            }
+        }
+        assertTrue( found );
+    }
+
+    /**
+     * Test where probes have constant values. See bug 3177.
+     */
+    @Test
+    public void testGSE35930() throws Exception {
+
+        ExpressionExperiment ee;
+        // eeService.delete( eeService.findByShortName( "GSE35930" ) );
+        try {
+            geoService
+                    .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE35930" ) ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE35930", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+
+        } catch ( AlreadyExistsInSystemException e ) {
+            // OK.
+            if ( e.getData() instanceof List ) {
+                ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
+            } else {
+                ee = ( ExpressionExperiment ) e.getData();
+            }
+        }
+
+        ee = eeService.thawLite( ee );
+
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+
+        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            ee = eeService.load( ee.getId() );
+            ee = eeService.thawLite( ee );
+
+            InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE35930/design.txt" );
+            experimentalDesignImporter.importDesign( ee, is, false );
+
+            ee = eeService.load( ee.getId() );
+            ee = eeService.thawLite( ee );
+        }
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        config.setQvalueThreshold( null );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
+        assertNotNull( analyses );
+        assertEquals( 1, analyses.size() );
+
+        DifferentialExpressionAnalysis results = analyses.iterator().next();
+
+        boolean found = false;
+        ExpressionAnalysisResultSet resultSet = results.getResultSets().iterator().next();
+        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+            // this probe has a constant value
+            if ( r.getProbe().getName().equals( "1622910_at" ) ) {
+                fail( "Should not have found a result for constant probe" );
+                // found = true;
+                // assertTrue( "Got: " + pvalue, pvalue == null || pvalue.equals( Double.NaN ) );
+            } else {
+                found = true; // got to have something...
             }
         }
         assertTrue( found );

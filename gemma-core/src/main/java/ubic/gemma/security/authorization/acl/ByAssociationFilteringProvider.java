@@ -47,6 +47,7 @@ public abstract class ByAssociationFilteringProvider<T extends Securable, A> ext
     public ByAssociationFilteringProvider( AclService aclService, String processConfigAttribute,
             List<Permission> requirePermission ) {
         super( aclService, processConfigAttribute, requirePermission );
+        this.setObjectIdentityRetrievalStrategy( new ValueObjectAwareIdentityRetrievalStrategyImpl() );
     }
 
     protected static final Log logger = LogFactory.getLog( ByAssociationFilteringProvider.class );

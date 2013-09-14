@@ -65,6 +65,7 @@ public class SecurityControllerTest extends BaseSpringWebTest {
     @Before
     public void setup() {
         this.ee = super.getTestPersistentBasicExpressionExperiment();
+        securityService.makePublic( ee );
         this.eeId = ee.getId();
         this.userName = randomName();
         makeUser( userName );
@@ -74,6 +75,9 @@ public class SecurityControllerTest extends BaseSpringWebTest {
         securityService.makeOwnedByUser( ee, userName );
     }
 
+    /**
+     * Experiment has to be public.
+     */
     @Test
     public void testGetInfo() {
         SecurityInfoValueObject securityInfo = securityController.getSecurityInfo( ed );

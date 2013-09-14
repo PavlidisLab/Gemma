@@ -106,16 +106,6 @@ public class HttpFetcher extends AbstractFetcher {
     }
 
     /**
-     * @param identifier
-     * @param newDir
-     * @return
-     */
-    @Override
-    protected String formLocalFilePath( String identifier, File newDir ) {
-        return newDir + File.separator + identifier;
-    }
-
-    /**
      * @param outputFileName
      * @param seekFile
      * @return
@@ -176,6 +166,36 @@ public class HttpFetcher extends AbstractFetcher {
     }
 
     /**
+     * @param identifier
+     * @param newDir
+     * @return
+     */
+    @Override
+    protected String formLocalFilePath( String identifier, File newDir ) {
+        return newDir + File.separator + identifier;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
+     */
+    @Override
+    protected String formRemoteFilePath( String identifier ) {
+        return identifier;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
+     */
+    @Override
+    protected void initConfig() {
+        return;
+    }
+
+    /**
      * @param seekFile
      * @param outputFileName
      * @return
@@ -191,24 +211,6 @@ public class HttpFetcher extends AbstractFetcher {
         newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
         result.add( newFile );
         return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
-     */
-    @Override
-    protected String formRemoteFilePath( String identifier ) {
-        return identifier;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
-     */
-    @Override
-    protected void initConfig() {
-        return;
     }
 
 }

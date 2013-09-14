@@ -64,18 +64,6 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     @Autowired
     private GeneService geneService;
 
-    @After
-    public void tearDown() {
-        Collection<Gene> genes = geneService.loadAll();
-        for ( Gene gene : genes ) {
-            try {
-                geneService.remove( gene );
-            } catch ( Exception e ) {
-
-            }
-        }
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -115,6 +103,18 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
 
             blatAssociationService.create( ba );
 
+        }
+    }
+
+    @After
+    public void tearDown() {
+        Collection<Gene> genes = geneService.loadAll();
+        for ( Gene gene : genes ) {
+            try {
+                geneService.remove( gene );
+            } catch ( Exception e ) {
+
+            }
         }
     }
 

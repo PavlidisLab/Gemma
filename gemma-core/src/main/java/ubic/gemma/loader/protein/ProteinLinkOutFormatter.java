@@ -57,6 +57,30 @@ public class ProteinLinkOutFormatter {
     private static Log log = LogFactory.getLog( ProteinLinkOutFormatter.class );
 
     /**
+     * Method to format url for string protein protein interaction. Different parameters can be queried for, such as
+     * increasing number of links displayed on string page. This method allows that number to be changed.
+     * 
+     * @param baseUrl reprsesenting base string url
+     * @param Number of links to display on page
+     * @return String appended with extra value
+     */
+    public String addStringInteractionsShown( String numberOfInteractionsToShowOnStringPage ) {
+        return LIMITPARAMETER.concat( numberOfInteractionsToShowOnStringPage );
+    }
+
+    /**
+     * Method to format url for string protein protein interaction. Different parameters can be queried for, such as
+     * increasing number of links displayed on string page. This method allows that number to be changed.
+     * 
+     * @param baseUrl reprsesenting base string url
+     * @param Number of links to display on page
+     * @return String appended with extra value
+     */
+    public String addStringRequiredConfidence( String requiredConfidenceOfScore ) {
+        return REQUIREDCONFIDENCE.concat( requiredConfidenceOfScore );
+    }
+
+    /**
      * Method that creates a string url. The url is stored in the db as two parts which need merging together that it
      * url and accession id. For a protein protein interaction there is no id so instead the id has been strored as two
      * ensembl protein ids merged together. The url has been stored in db as if only protein id is being passed as such
@@ -82,61 +106,18 @@ public class ProteinLinkOutFormatter {
     }
 
     /**
-     * Get the default STRING url for for gemma, which sets the confidence level low.
+     * Confidence score as parsed from string file is not a percentage instead a number e.g. 150 in percentage that is
+     * 0.150
      * 
-     * @param entry Database entry representing protein protein interaction
-     * @return String formated url.
+     * @param confidenceScore As parsed by string file
+     * @return Formatted confidence percentage as displayed by string
      */
-    public String getStringProteinProteinInteractionLinkGemmaDefault( DatabaseEntry entry ) {
-
-        String finalUrl = getBaseUrl( entry );
-        if ( finalUrl != null && !finalUrl.isEmpty() ) {
-            finalUrl = finalUrl.concat( addStringRequiredConfidence( DEFAULTCONFIDENCE ) );
+    public String getConfidenceScoreAsPercentage( Double confidenceScore ) {
+        String confidenceScoreAsDisplayedInString = null;
+        if ( confidenceScore != null && confidenceScore != 0 ) {
+            confidenceScoreAsDisplayedInString = Double.toString( confidenceScore / 1000 );
         }
-        return finalUrl;
-    }
-
-    /**
-     * Method that creates a formatted STRING url with extra parameters appended
-     * 
-     * @param entry Database entry representing protein protein interaction
-     * @return String formated url.
-     */
-    public String getStringProteinProteinInteractionLinkFormatted( DatabaseEntry entry,
-            String numberOfInteractionsToShowOnStringPage, String requiredConfidenceOfScore ) {
-        String finalUrl = getBaseUrl( entry );
-        if ( numberOfInteractionsToShowOnStringPage != null ) {
-            finalUrl = finalUrl.concat( addStringInteractionsShown( numberOfInteractionsToShowOnStringPage ) );
-        }
-        if ( requiredConfidenceOfScore != null ) {
-            finalUrl = finalUrl.concat( addStringRequiredConfidence( requiredConfidenceOfScore ) );
-        }
-
-        return finalUrl;
-    }
-
-    /**
-     * Method to format url for string protein protein interaction. Different parameters can be queried for, such as
-     * increasing number of links displayed on string page. This method allows that number to be changed.
-     * 
-     * @param baseUrl reprsesenting base string url
-     * @param Number of links to display on page
-     * @return String appended with extra value
-     */
-    public String addStringInteractionsShown( String numberOfInteractionsToShowOnStringPage ) {
-        return LIMITPARAMETER.concat( numberOfInteractionsToShowOnStringPage );
-    }
-
-    /**
-     * Method to format url for string protein protein interaction. Different parameters can be queried for, such as
-     * increasing number of links displayed on string page. This method allows that number to be changed.
-     * 
-     * @param baseUrl reprsesenting base string url
-     * @param Number of links to display on page
-     * @return String appended with extra value
-     */
-    public String addStringRequiredConfidence( String requiredConfidenceOfScore ) {
-        return REQUIREDCONFIDENCE.concat( requiredConfidenceOfScore );
+        return confidenceScoreAsDisplayedInString;
     }
 
     /**
@@ -171,18 +152,37 @@ public class ProteinLinkOutFormatter {
     }
 
     /**
-     * Confidence score as parsed from string file is not a percentage instead a number e.g. 150 in percentage that is
-     * 0.150
+     * Method that creates a formatted STRING url with extra parameters appended
      * 
-     * @param confidenceScore As parsed by string file
-     * @return Formatted confidence percentage as displayed by string
+     * @param entry Database entry representing protein protein interaction
+     * @return String formated url.
      */
-    public String getConfidenceScoreAsPercentage( Double confidenceScore ) {
-        String confidenceScoreAsDisplayedInString = null;
-        if ( confidenceScore != null && confidenceScore != 0 ) {
-            confidenceScoreAsDisplayedInString = Double.toString( confidenceScore / 1000 );
+    public String getStringProteinProteinInteractionLinkFormatted( DatabaseEntry entry,
+            String numberOfInteractionsToShowOnStringPage, String requiredConfidenceOfScore ) {
+        String finalUrl = getBaseUrl( entry );
+        if ( numberOfInteractionsToShowOnStringPage != null ) {
+            finalUrl = finalUrl.concat( addStringInteractionsShown( numberOfInteractionsToShowOnStringPage ) );
         }
-        return confidenceScoreAsDisplayedInString;
+        if ( requiredConfidenceOfScore != null ) {
+            finalUrl = finalUrl.concat( addStringRequiredConfidence( requiredConfidenceOfScore ) );
+        }
+
+        return finalUrl;
+    }
+
+    /**
+     * Get the default STRING url for for gemma, which sets the confidence level low.
+     * 
+     * @param entry Database entry representing protein protein interaction
+     * @return String formated url.
+     */
+    public String getStringProteinProteinInteractionLinkGemmaDefault( DatabaseEntry entry ) {
+
+        String finalUrl = getBaseUrl( entry );
+        if ( finalUrl != null && !finalUrl.isEmpty() ) {
+            finalUrl = finalUrl.concat( addStringRequiredConfidence( DEFAULTCONFIDENCE ) );
+        }
+        return finalUrl;
     }
 
 }

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -35,6 +36,7 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
     DatabaseEntryDao databaseEntryDao;
 
     @Test
+    @Transactional
     public void testCreateDatabaseEntry() {
         DatabaseEntry de = this.getTestPersistentDatabaseEntry();
         DatabaseEntry actualReturn = databaseEntryDao.create( de );
@@ -46,6 +48,7 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
      * find(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Test
+    @Transactional
     public void testFindDatabaseEntry() {
         DatabaseEntry de = this.getTestPersistentDatabaseEntry();
         databaseEntryDao.create( de );

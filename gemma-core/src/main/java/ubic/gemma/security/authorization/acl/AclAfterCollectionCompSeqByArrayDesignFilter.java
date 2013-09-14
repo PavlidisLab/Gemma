@@ -43,7 +43,7 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter extends
 
     public AclAfterCollectionCompSeqByArrayDesignFilter( AclService aclService, List<Permission> requirePermission ) {
         super( aclService, CONFIG_ATTRIBUTE, requirePermission );
-    }
+     }
 
     @Override
     public String getProcessConfigAttribute() {

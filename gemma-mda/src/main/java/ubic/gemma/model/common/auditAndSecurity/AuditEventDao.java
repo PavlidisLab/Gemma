@@ -34,25 +34,47 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface AuditEventDao extends BaseDao<AuditEvent> {
     /**
-     * @param a
-     * @param type
-     * @return
+     * @return events for the given auditable.
      */
-    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+    public List<AuditEvent> getEvents( Auditable auditable );
 
     /**
-     * @param a
-     * @param type
-     * @return
+     * Returns the last AuditEvent of the specified type from the given auditable.
      */
-    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
     /**
-     * @param a
-     * @param type
+     * Return a map of Auditables to AuditEvents for the given AuditEventType.
+     */
+    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
+            Class<? extends AuditEventType> type );
+
+    /**
+     * @param auditables
+     * @param types
      * @return
      */
-    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
+    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
+
+    /**
+     * @param events
+     * @return
+     */
+    public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events );
+
+    /**
+     * @param auditables
+     * @return map of Auditable to AuditEvent. NOTE: for EEs, this DOES look at the ADs.
+     */
+    public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables );
+
+    /**
+     * Get all of the most recent AuditEvents for the given auditables, where the events have types. Return value is a
+     * map of AuditEventType.classes -> Auditable -> AuditEven
+     */
+    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
+            Collection<? extends Auditable> auditables );
 
     /**
      * Get auditables that have been Created since the given date
@@ -69,32 +91,11 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     public Collection<Auditable> getUpdatedSinceDate( Date date );
 
     /**
-     * 
+     * @param a
+     * @param type
+     * @return
      */
-    public void thaw( AuditEvent auditEvent );
-
-    /**
-     * @return events for the given auditable.
-     */
-    public List<AuditEvent> getEvents( Auditable auditable );
-
-    /**
-     * Return a map of Auditables to AuditEvents for the given AuditEventType.
-     */
-    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
-            Class<? extends AuditEventType> type );
-
-    /**
-     * Returns the last AuditEvent of the specified type from the given auditable.
-     */
-    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
-
-    /**
-     * Get all of the most recent AuditEvents for the given auditables, where the events have types. Return value is a
-     * map of AuditEventType.classes -> Auditable -> AuditEven
-     */
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
-            Collection<? extends Auditable> auditables );
+    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
 
     // not implementing yet.
     //
@@ -119,23 +120,22 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     // Class<? extends AuditEventType> type, int limit );
 
     /**
-     * @param events
+     * @param a
+     * @param type
      * @return
      */
-    public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events );
+    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
     /**
-     * @param auditables
-     * @return map of Auditable to AuditEvent. NOTE: for EEs, this DOES look at the ADs.
-     */
-    public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables );
-
-    /**
-     * @param auditables
-     * @param types
+     * @param a
+     * @param type
      * @return
      */
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
+    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+
+    /**
+     * 
+     */
+    public void thaw( AuditEvent auditEvent );
 
 }

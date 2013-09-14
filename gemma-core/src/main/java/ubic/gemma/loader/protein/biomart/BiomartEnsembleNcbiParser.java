@@ -62,38 +62,13 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
     }
 
     /**
-     * Method to parse one biomart line, note that there is a many to many relationship between ensemble ids and entrez
-     * gene ids.
+     * Method that returns a particular BioMartEnsembleNcbi based on a peptide id.
      * 
-     * @return BioMartEnsembleNcbi Value object representing the line parsed
+     * @return boolean to indicate whether map contains particular peptide key.
      */
     @Override
-    public Ensembl2NcbiValueObject parseOneLine( String line ) {
-
-        int bioMartFieldsPerRow = this.getBioMartFieldsPerRow();
-        // header line from the bioMart headers then ignore it
-        if ( line.startsWith( this.bioMartHeaderFields[0] ) || line.isEmpty() ) {
-            return null;
-        }
-        // split the line into the attributes
-        String[] fields = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
-        // validate that correct format
-        if ( fields.length != bioMartFieldsPerRow ) {
-            /*
-             * I think we should just continue on. Previous behaviour was to throw an exception.
-             */
-            return null;
-        }
-        // create the object
-        try {
-            return createBioMartEnsembleNcbi( fields );
-
-        } catch ( NumberFormatException e ) {
-            throw new FileFormatException( e );
-        } catch ( FileFormatException e ) {
-            throw new RuntimeException( e );
-        }
-
+    public boolean containsKey( String key ) {
+        return results.containsKey( key );
     }
 
     /**
@@ -157,6 +132,25 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
     }
 
     /**
+     * Method that returns a particular BioMartEnsembleNcbi based on a peptide id.
+     * 
+     * @return BioMartEnsembleNcbi associated with that peptide id.
+     */
+    @Override
+    public Ensembl2NcbiValueObject get( String key ) {
+        return results.get( key );
+    }
+
+    /**
+     * Getter for biomart header file
+     * 
+     * @return
+     */
+    public String[] getBioMartFields() {
+        return bioMartHeaderFields;
+    }
+
+    /**
      * Based on what attributes were set on the original file then calculate how many columns should be in file.
      * 
      * @return Number of columns in file.
@@ -172,26 +166,6 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
     }
 
     /**
-     * Method that returns a particular BioMartEnsembleNcbi based on a peptide id.
-     * 
-     * @return boolean to indicate whether map contains particular peptide key.
-     */
-    @Override
-    public boolean containsKey( String key ) {
-        return results.containsKey( key );
-    }
-
-    /**
-     * Method that returns a particular BioMartEnsembleNcbi based on a peptide id.
-     * 
-     * @return BioMartEnsembleNcbi associated with that peptide id.
-     */
-    @Override
-    public Ensembl2NcbiValueObject get( String key ) {
-        return results.get( key );
-    }
-
-    /**
      * Getter for values in map that is BioMartEnsembleNcbi value objects associated with the parsing of this file
      * 
      * @return Collection of Strings representing the peptide ids in the map
@@ -199,6 +173,15 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
     @Override
     public Collection<String> getKeySet() {
         return results.keySet();
+    }
+
+    /**
+     * Returns full map of BioMartEnsembleNcbi objects keyed on peptide id.
+     * 
+     * @return
+     */
+    public Map<String, Ensembl2NcbiValueObject> getMap() {
+        return results;
     }
 
     /**
@@ -212,30 +195,38 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
     }
 
     /**
-     * Returns full map of BioMartEnsembleNcbi objects keyed on peptide id.
+     * Method to parse one biomart line, note that there is a many to many relationship between ensemble ids and entrez
+     * gene ids.
      * 
-     * @return
+     * @return BioMartEnsembleNcbi Value object representing the line parsed
      */
-    public Map<String, Ensembl2NcbiValueObject> getMap() {
-        return results;
-    }
+    @Override
+    public Ensembl2NcbiValueObject parseOneLine( String line ) {
 
-    /**
-     * Setter for the taxon that this file is for
-     * 
-     * @param taxon
-     */
-    public void setTaxon( Taxon taxon ) {
-        this.taxon = taxon;
-    }
+        int bioMartFieldsPerRow = this.getBioMartFieldsPerRow();
+        // header line from the bioMart headers then ignore it
+        if ( line.startsWith( this.bioMartHeaderFields[0] ) || line.isEmpty() ) {
+            return null;
+        }
+        // split the line into the attributes
+        String[] fields = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
+        // validate that correct format
+        if ( fields.length != bioMartFieldsPerRow ) {
+            /*
+             * I think we should just continue on. Previous behaviour was to throw an exception.
+             */
+            return null;
+        }
+        // create the object
+        try {
+            return createBioMartEnsembleNcbi( fields );
 
-    /**
-     * Getter for biomart header file
-     * 
-     * @return
-     */
-    public String[] getBioMartFields() {
-        return bioMartHeaderFields;
+        } catch ( NumberFormatException e ) {
+            throw new FileFormatException( e );
+        } catch ( FileFormatException e ) {
+            throw new RuntimeException( e );
+        }
+
     }
 
     /**
@@ -245,6 +236,15 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
      */
     public void setBioMartFields( String[] bioMartFields ) {
         this.bioMartHeaderFields = bioMartFields;
+    }
+
+    /**
+     * Setter for the taxon that this file is for
+     * 
+     * @param taxon
+     */
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
     }
 
 }

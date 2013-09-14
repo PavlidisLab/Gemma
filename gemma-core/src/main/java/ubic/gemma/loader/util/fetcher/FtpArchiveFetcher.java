@@ -62,6 +62,13 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         this.doDelete = doDelete;
     }
 
+    /**
+     * @param excludePattern the excludePattern to set
+     */
+    public void setExcludePattern( String excludePattern ) {
+        this.excludePattern = excludePattern;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -80,6 +87,42 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             log.info( "Cleaning up " + outputFile.getName() );
             outputFile.delete();
         }
+    }
+
+    @Override
+    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
+            String outputFileName ) {
+        Executors.newSingleThreadExecutor().execute( future );
+        try {
+            File outputFile = new File( outputFileName );
+            boolean ok = waitForDownload( future, expectedSize, outputFile );
+
+            if ( !ok ) {
+                // probably cancelled.
+                return null;
+            } else if ( future.get().booleanValue() ) {
+                log.info( "Unpacking " + outputFile );
+                unPack( outputFile );
+                cleanUp( outputFile );
+                if ( outputFile.isDirectory() ) return listFiles( seekFileName, outputFile, null );
+
+                return listFiles( seekFileName, outputFile.getParentFile(), null );
+            }
+        } catch ( ExecutionException e ) {
+            future.cancel( true );
+            throw new RuntimeException( "Couldn't fetch " + seekFileName + " from "
+                    + this.getNetDataSourceUtil().getHost(), e );
+        } catch ( InterruptedException e ) {
+            future.cancel( true );
+            throw new RuntimeException( "Interrupted: Couldn't fetch " + seekFileName + " from "
+                    + this.getNetDataSourceUtil().getHost(), e );
+        } catch ( IOException e ) {
+            future.cancel( true );
+            throw new RuntimeException( "IOException: Couldn't fetch " + seekFileName + " from "
+                    + this.getNetDataSourceUtil().getHost(), e );
+        }
+        future.cancel( true );
+        throw new RuntimeException( "Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost() );
     }
 
     /**
@@ -136,42 +179,6 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             listFiles( remoteFile, file, result );
         }
         return result;
-    }
-
-    @Override
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
-            String outputFileName ) {
-        Executors.newSingleThreadExecutor().execute( future );
-        try {
-            File outputFile = new File( outputFileName );
-            boolean ok = waitForDownload( future, expectedSize, outputFile );
-
-            if ( !ok ) {
-                // probably cancelled.
-                return null;
-            } else if ( future.get().booleanValue() ) {
-                log.info( "Unpacking " + outputFile );
-                unPack( outputFile );
-                cleanUp( outputFile );
-                if ( outputFile.isDirectory() ) return listFiles( seekFileName, outputFile, null );
-
-                return listFiles( seekFileName, outputFile.getParentFile(), null );
-            }
-        } catch ( ExecutionException e ) {
-            future.cancel( true );
-            throw new RuntimeException( "Couldn't fetch " + seekFileName + " from "
-                    + this.getNetDataSourceUtil().getHost(), e );
-        } catch ( InterruptedException e ) {
-            future.cancel( true );
-            throw new RuntimeException( "Interrupted: Couldn't fetch " + seekFileName + " from "
-                    + this.getNetDataSourceUtil().getHost(), e );
-        } catch ( IOException e ) {
-            future.cancel( true );
-            throw new RuntimeException( "IOException: Couldn't fetch " + seekFileName + " from "
-                    + this.getNetDataSourceUtil().getHost(), e );
-        }
-        future.cancel( true );
-        throw new RuntimeException( "Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost() );
     }
 
     /**
@@ -232,13 +239,6 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             }
             log.info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );
         }
-    }
-
-    /**
-     * @param excludePattern the excludePattern to set
-     */
-    public void setExcludePattern( String excludePattern ) {
-        this.excludePattern = excludePattern;
     }
 
 }

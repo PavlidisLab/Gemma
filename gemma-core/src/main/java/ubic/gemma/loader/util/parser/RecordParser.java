@@ -24,6 +24,24 @@ public abstract class RecordParser<T> implements Parser<T> {
 
     protected static final Log log = LogFactory.getLog( RecordParser.class );
 
+    @Override
+    public abstract Collection<T> getResults();
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see baseCode.io.reader.LineParser#parse(java.io.File)
+     */
+    @Override
+    public void parse( File file ) throws IOException {
+        if ( !file.exists() || !file.canRead() ) {
+            throw new IOException( "Could not read from file " + file.getPath() );
+        }
+        FileInputStream stream = new FileInputStream( file );
+        parse( stream );
+        stream.close();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -87,21 +105,6 @@ public abstract class RecordParser<T> implements Parser<T> {
     /*
      * (non-Javadoc)
      * 
-     * @see baseCode.io.reader.LineParser#parse(java.io.File)
-     */
-    @Override
-    public void parse( File file ) throws IOException {
-        if ( !file.exists() || !file.canRead() ) {
-            throw new IOException( "Could not read from file " + file.getPath() );
-        }
-        FileInputStream stream = new FileInputStream( file );
-        parse( stream );
-        stream.close();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.LineParser#pasre(java.lang.String)
      */
     @Override
@@ -111,23 +114,20 @@ public abstract class RecordParser<T> implements Parser<T> {
     }
 
     /**
-     * Add an object to the results collection.
-     * 
-     * @param obj
-     */
-    protected abstract void addResult( Object obj );
-
-    public void setRecordSeparator( String recordSeparator ) {
-        this.recordSeparator = recordSeparator;
-    }
-
-    /**
      * Handle the parsing of a single record from the input.
      * 
      * @param line
      */
     public abstract Object parseOneRecord( String record );
 
-    @Override
-    public abstract Collection<T> getResults();
+    public void setRecordSeparator( String recordSeparator ) {
+        this.recordSeparator = recordSeparator;
+    }
+
+    /**
+     * Add an object to the results collection.
+     * 
+     * @param obj
+     */
+    protected abstract void addResult( Object obj );
 }

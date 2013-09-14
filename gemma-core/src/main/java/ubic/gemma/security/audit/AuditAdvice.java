@@ -18,6 +18,13 @@
  */
 package ubic.gemma.security.audit;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
+import java.util.NoSuchElementException;
+
+import javax.annotation.PostConstruct;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
@@ -33,6 +40,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -45,14 +53,8 @@ import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.persistence.CrudUtilsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authorization.acl.AclAdvice;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.ReflectionUtil;
-
-import javax.annotation.PostConstruct;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.NoSuchElementException;
+import ubic.gemma.util.Settings;
 
 /**
  * Manage audit trails on objects.
@@ -66,36 +68,24 @@ public class AuditAdvice {
     // Note that we have a special logger configured for this class, so delete events get stored.
     private static Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
 
-    @Autowired
-    private CrudUtils crudUtils;
+    private boolean AUDIT_CREATE = true;
 
-    @Autowired
-    private UserManager userManager;
+    private boolean AUDIT_DELETE = true;
+
+    private boolean AUDIT_UPDATE = true;
 
     @Autowired
     private AuditHelper auditHelper;
 
     @Autowired
+    private CrudUtils crudUtils;
+    @Autowired
     private SessionFactory sessionFactory;
-
-    private boolean AUDIT_CREATE = true;
-    private boolean AUDIT_DELETE = true;
-    private boolean AUDIT_UPDATE = true;
-
-    @PostConstruct
-    protected void init() {
-
-        try {
-            AUDIT_UPDATE = Settings.getBoolean( "audit.update" );
-            AUDIT_DELETE = Settings.getBoolean( "audit.delete" );
-            AUDIT_CREATE = Settings.getBoolean( "audit.create" ) || AUDIT_UPDATE;
-        } catch ( NoSuchElementException e ) {
-            log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
-        }
-    }
+    @Autowired
+    private UserManager userManager;
 
     /**
-     * Entry point
+     * Entry point. This only takes action if the method involves Auditables.
      * 
      * @param pjp
      * @return
@@ -118,6 +108,7 @@ public class AuditAdvice {
         }
 
         assert user != null;
+
         if ( object instanceof Collection ) {
             for ( final Object o : ( Collection<?> ) object ) {
                 if ( Auditable.class.isAssignableFrom( o.getClass() ) ) {
@@ -127,6 +118,71 @@ public class AuditAdvice {
         } else if ( ( Auditable.class.isAssignableFrom( object.getClass() ) ) ) {
             process( methodName, ( Auditable ) object, user );
         }
+    }
+
+    /**
+     * @param object
+     * @param propertyName
+     * @return
+     */
+    protected boolean canSkipAssociationCheck( Object object, String propertyName ) {
+
+        /*
+         * If this is an expression experiment, don't go down the data vectors.
+         */
+        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() )
+                && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
+                        .equals( "processedExpressionDataVectors" ) ) ) {
+            log.trace( "Skipping vectors" );
+            return true;
+        }
+
+        /*
+         * Array designs...
+         */
+        if ( ArrayDesign.class.isAssignableFrom( object.getClass() )
+                && ( propertyName.equals( "compositeSequences" ) || propertyName.equals( "reporters" ) ) ) {
+            log.trace( "Skipping probes" );
+            return true;
+        }
+
+        return false;
+    }
+
+    @PostConstruct
+    protected void init() {
+
+        try {
+            AUDIT_UPDATE = Settings.getBoolean( "audit.update" );
+            AUDIT_DELETE = Settings.getBoolean( "audit.delete" );
+            AUDIT_CREATE = Settings.getBoolean( "audit.create" ) || AUDIT_UPDATE;
+        } catch ( NoSuchElementException e ) {
+            log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
+        }
+    }
+
+    /**
+     * For cases where don't have a cascade but the other end is auditable.
+     * <p>
+     * Implementation note. This is kind of inelegant, but the alternative is to check _every_ association, which will
+     * often not be reachable.
+     * 
+     * @param object we are checking
+     * @param property of the object
+     * @return true if the association should be followed.
+     * @see AclAdvice for similar code
+     */
+    protected boolean specialCaseForAssociationFollow( Object object, String property ) {
+
+        if ( BioAssay.class.isAssignableFrom( object.getClass() )
+                && ( property.equals( "samplesUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
+            return true;
+        } else if ( DesignElementDataVector.class.isAssignableFrom( object.getClass() )
+                && property.equals( "bioAssayDimension" ) ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -164,14 +220,6 @@ public class AuditAdvice {
         } catch ( UsernameNotFoundException e ) {
             log.warn( "No user, cannot add 'create' event" );
         }
-    }
-
-    /**
-     * @param auditable
-     * @return
-     */
-    private boolean isNullOrTransient( final Auditable auditable ) {
-        return auditable == null || auditable.getId() == null;
     }
 
     /**
@@ -250,6 +298,14 @@ public class AuditAdvice {
     }
 
     /**
+     * @param auditable
+     * @return
+     */
+    private boolean isNullOrTransient( final Auditable auditable ) {
+        return auditable == null || auditable.getId() == null;
+    }
+
+    /**
      * Check if the associated object needs to be 'create audited'. Example: gene products are created by cascade when
      * calling update on a gene.
      * 
@@ -277,11 +333,16 @@ public class AuditAdvice {
      * @param object
      */
     private void process( final String methodName, final Auditable auditable, User user ) {
+
+        // do this here, when we are sure to be in a transaction. But might be repetitive when working on a collection.
+        this.sessionFactory.getCurrentSession().setReadOnly( user, true );
+
         if ( log.isTraceEnabled() ) {
             log.trace( "***********  Start Audit of " + methodName + " on " + auditable + " *************" );
         }
         assert auditable != null : "Null entity passed to auditing [" + methodName + " on " + auditable + "]";
-        assert auditable.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + auditable + "]";
+        assert auditable.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + auditable
+                + "]";
 
         if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
             addCreateAuditEvent( auditable, user, "" );
@@ -401,59 +462,6 @@ public class AuditAdvice {
             // log.warn( "There were hibernate errors during association checking for " + object
             // + "; probably not critical." );
         }
-    }
-
-    /**
-     * @param object
-     * @param propertyName
-     * @return
-     */
-    private boolean canSkipAssociationCheck( Object object, String propertyName ) {
-
-        /*
-         * If this is an expression experiment, don't go down the data vectors.
-         */
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() )
-                && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
-                        .equals( "processedExpressionDataVectors" ) ) ) {
-            log.trace( "Skipping vectors" );
-            return true;
-        }
-
-        /*
-         * Array designs...
-         */
-        if ( ArrayDesign.class.isAssignableFrom( object.getClass() )
-                && ( propertyName.equals( "compositeSequences" ) || propertyName.equals( "reporters" ) ) ) {
-            log.trace( "Skipping probes" );
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * For cases where don't have a cascade but the other end is auditable.
-     * <p>
-     * Implementation note. This is kind of inelegant, but the alternative is to check _every_ association, which will
-     * often not be reachable.
-     * 
-     * @param object we are checking
-     * @param property of the object
-     * @return true if the association should be followed.
-     * @see AclAdvice for similar code
-     */
-    private boolean specialCaseForAssociationFollow( Object object, String property ) {
-
-        if ( BioAssay.class.isAssignableFrom( object.getClass() )
-                && ( property.equals( "samplesUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
-            return true;
-        } else if ( DesignElementDataVector.class.isAssignableFrom( object.getClass() )
-                && property.equals( "bioAssayDimension" ) ) {
-            return true;
-        }
-
-        return false;
     }
 
 }

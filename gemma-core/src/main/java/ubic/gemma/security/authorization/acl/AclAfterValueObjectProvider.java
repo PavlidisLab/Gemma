@@ -49,12 +49,14 @@ public class AclAfterValueObjectProvider extends
 
     private static Log log = LogFactory.getLog( AclAfterValueObjectProvider.class );
 
-    public AclAfterValueObjectProvider( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_VALUE_OBJECT_READ", requirePermission );
-    }
-
     @Autowired
     private SecurityService securityService;
+
+    public AclAfterValueObjectProvider( AclService aclService, List<Permission> requirePermission ) {
+        super( aclService, "AFTER_ACL_VALUE_OBJECT_READ", requirePermission );
+        this.setObjectIdentityRetrievalStrategy( new ValueObjectAwareIdentityRetrievalStrategyImpl() );
+
+    }
 
     @Override
     public Object decide( Authentication authentication, Object object, Collection<ConfigAttribute> config,

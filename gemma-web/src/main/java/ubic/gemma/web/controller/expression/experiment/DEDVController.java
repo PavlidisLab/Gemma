@@ -382,9 +382,6 @@ public class DEDVController {
                     + " ms (times <100ms not reported)." );
         }
 
-        // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required? yes, see
-        // GSE11859
-
         time = watch.getTime();
         watch.reset();
         watch.start();
@@ -419,7 +416,7 @@ public class DEDVController {
     public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long resultSetId, Double givenThreshold ) {
 
         if ( resultSetId == null ) {
-            throw new IllegalArgumentException( "ResultsetId cannot be null" );
+            throw new IllegalArgumentException( "Results    etId cannot be null" );
         }
 
         double threshold = DEFAULT_THRESHOLD;
@@ -433,8 +430,6 @@ public class DEDVController {
 
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
                 .sortVectorDataByDesign( dedvs );
-
-        // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts );
 
         return makeVisCollection( dedvs, null, null, layouts );
     }

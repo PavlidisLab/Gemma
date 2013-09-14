@@ -27,6 +27,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.PersonServiceBase {
 
+    @Override
+    public Person load( Long id ) {
+        return this.getPersonDao().load( id );
+    }
+
+    @Override
+    public void update( Person p ) {
+        this.getPersonDao().update( p );
+
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -43,6 +54,13 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected Collection<Person> handleFindByFullName( String name, String lastName ) {
         return this.getPersonDao().findByFullName( name, lastName );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleExpfindByName(java.lang.String,
+     * java.lang.String, java.lang.String)
+     */
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findOrCreate(java.lang.String, java.lang.String,
@@ -66,13 +84,6 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleExpfindByName(java.lang.String,
-     * java.lang.String, java.lang.String)
-     */
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleRemove(ubic.gemma.model.common.auditAndSecurity
      * .Person)
@@ -87,17 +98,6 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
      */
     protected void handleRemovePerson( ubic.gemma.model.common.auditAndSecurity.Person person ) {
         this.getPersonDao().remove( person );
-    }
-
-    @Override
-    public Person load( Long id ) {
-        return this.getPersonDao().load( id );
-    }
-
-    @Override
-    public void update( Person p ) {
-        this.getPersonDao().update( p );
-
     }
 
 }

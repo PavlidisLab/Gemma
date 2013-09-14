@@ -29,23 +29,23 @@ public class StatusServiceImpl implements StatusService {
     @Autowired
     StatusDao statusDao;
 
-//    @Override
-//    public void initializeStatus( Auditable auditable ) {
-//        if ( auditable.getStatus() != null ) return;
-//        this.statusDao.initializeStatus( auditable );
-//
-//    }
-//
-//    @Override
-//    public Status create() {
-//        return this.statusDao.create();
-//    }
-//
-//    @Override
-//    public void update( Status s ) {
-//        this.statusDao.update( s );      
-//    }
-    
+    // @Override
+    // public void initializeStatus( Auditable auditable ) {
+    // if ( auditable.getStatus() != null ) return;
+    // this.statusDao.initializeStatus( auditable );
+    //
+    // }
+    //
+    // @Override
+    // public Status create() {
+    // return this.statusDao.create();
+    // }
+    //
+    // @Override
+    // public void update( Status s ) {
+    // this.statusDao.update( s );
+    // }
+
     @Override
     public Status getStatus( Auditable auditable ) {
         return statusDao.load( auditable.getStatus().getId() );

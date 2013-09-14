@@ -33,7 +33,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import junit.framework.TestCase;
 import ubic.gemma.genome.gene.service.GeneServiceImpl;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;

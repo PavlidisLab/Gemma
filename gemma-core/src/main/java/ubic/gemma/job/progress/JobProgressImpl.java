@@ -15,10 +15,10 @@
  */
 package ubic.gemma.job.progress;
 
-import ubic.gemma.model.common.auditAndSecurity.JobInfo;
-
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 
 /**
  * Implementation of the JobProgress interface. Used by the client to add hooks for providing feedback to any users
@@ -35,17 +35,12 @@ public class JobProgressImpl implements JobProgress {
     protected String taskId;
     boolean forwardWhenDone = true;
 
-    @Override
-    public String toString() {
-        return "TaskID: " + jInfo.getTaskId();
-    }
-
     /**
      * The factory create method in ProgressManager is the advised way to create a JobProgress
      * 
      * @param description
      */
-    JobProgressImpl(JobInfo info, String description) {
+    JobProgressImpl( JobInfo info, String description ) {
         this.pData = new ConcurrentLinkedQueue<ProgressData>();
         this.pData.add( new ProgressData( info.getTaskId(), 0, description, false ) );
         this.jInfo = info;
@@ -53,21 +48,25 @@ public class JobProgressImpl implements JobProgress {
         this.taskId = info.getTaskId();
     }
 
+    @Override
+    public String toString() {
+        return "TaskID: " + jInfo.getTaskId();
+    }
+
     /**
      * @return Returns the pData, which can be cleaned out. (this isn't ideal..)
      */
-//    @Override
-//    public Queue<ProgressData> getProgressData() {
-//        return pData;
-//    }
-//
-//    @Override
-//    public String getUser() {
-//        if ( jInfo.getUser() == null ) return null;
-//
-//        return jInfo.getUser().getUserName();
-//    }
-
+    // @Override
+    // public Queue<ProgressData> getProgressData() {
+    // return pData;
+    // }
+    //
+    // @Override
+    // public String getUser() {
+    // if ( jInfo.getUser() == null ) return null;
+    //
+    // return jInfo.getUser().getUserName();
+    // }
 
     /**
      * Updates the progress job by a complete progressData. Used if more than the percent needs to be updates. Updating
@@ -75,66 +74,65 @@ public class JobProgressImpl implements JobProgress {
      * 
      * @param pd
      */
-//    @Override
-//    public void updateProgress( ProgressData pd ) {
-//        this.pData.add( pd );
-//        updateDescriptionHistory(pd.getDescription());
-//    }
-
+    // @Override
+    // public void updateProgress( ProgressData pd ) {
+    // this.pData.add( pd );
+    // updateDescriptionHistory(pd.getDescription());
+    // }
 
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.util.progress.JobProgress#updateProgress(java.lang.String)
      */
-//    @Override
-//    public void updateProgress( String newDescription ) {
-//        ProgressData d = new ProgressData( this.taskId, 0, newDescription, false );
-//        pData.add( d );
-//        updateDescriptionHistory( newDescription );
-//    }
+    // @Override
+    // public void updateProgress( String newDescription ) {
+    // ProgressData d = new ProgressData( this.taskId, 0, newDescription, false );
+    // pData.add( d );
+    // updateDescriptionHistory( newDescription );
+    // }
 
     /**
      * Signal completion
      */
-//    @Override
-//    public void done() {
-//        Calendar cal = new GregorianCalendar();
-//        jInfo.setEndTime( cal.getTime() );
-//        ProgressData d = new ProgressData( this.taskId, 100, "", true );
-//        pData.add( d );
-//    }
+    // @Override
+    // public void done() {
+    // Calendar cal = new GregorianCalendar();
+    // jInfo.setEndTime( cal.getTime() );
+    // ProgressData d = new ProgressData( this.taskId, 100, "", true );
+    // pData.add( d );
+    // }
 
-//    @Override
-//    public void failed( Throwable cause ) {
-//        Calendar cal = new GregorianCalendar();
-//        jInfo.setEndTime( cal.getTime() );
-//        ProgressData d = new ProgressData( this.taskId, 0, cause.getMessage(), true );
-//        d.setFailed( true );
-//        d.setDescription( cause.getMessage() );
-//        this.pData.add( d );
-//    }
+    // @Override
+    // public void failed( Throwable cause ) {
+    // Calendar cal = new GregorianCalendar();
+    // jInfo.setEndTime( cal.getTime() );
+    // ProgressData d = new ProgressData( this.taskId, 0, cause.getMessage(), true );
+    // d.setFailed( true );
+    // d.setDescription( cause.getMessage() );
+    // this.pData.add( d );
+    // }
 
-//    @Override
-//    public JobInfo getJobInfo() {
-//        return this.jInfo;
-//    }
+    // @Override
+    // public JobInfo getJobInfo() {
+    // return this.jInfo;
+    // }
 
     /**
      * @return the forwardingURL
      */
-//    @Override
-//    public String getForwardingURL() {
-//        return forwardingURL;
-//    }
+    // @Override
+    // public String getForwardingURL() {
+    // return forwardingURL;
+    // }
 
     /**
      * @param forwardingURL the forwardingURL to set
      */
-//    @Override
-//    public void setForwardingURL( String forwardingURL ) {
-//        this.forwardingURL = forwardingURL;
-//    }
+    // @Override
+    // public void setForwardingURL( String forwardingURL ) {
+    // this.forwardingURL = forwardingURL;
+    // }
 
     private void updateDescriptionHistory( String message ) {
         if ( this.jInfo.getMessages() == null )
@@ -143,19 +141,19 @@ public class JobProgressImpl implements JobProgress {
             this.jInfo.setMessages( this.jInfo.getMessages() + '\n' + message );
     }
 
-//    @Override
-//    public String getTaskId() {
-//        return this.taskId;
-//    }
+    // @Override
+    // public String getTaskId() {
+    // return this.taskId;
+    // }
 
-//    @Override
-//    public boolean forwardWhenDone() {
-//        return this.forwardWhenDone;
-//    }
+    // @Override
+    // public boolean forwardWhenDone() {
+    // return this.forwardWhenDone;
+    // }
 
-//    @Override
-//    public void setForwardWhenDone( boolean value ) {
-//        this.forwardWhenDone = value;
-//    }
+    // @Override
+    // public void setForwardWhenDone( boolean value ) {
+    // this.forwardWhenDone = value;
+    // }
 
 }

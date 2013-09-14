@@ -22,8 +22,6 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 
 /**
- *
- *
  * @author anton
  */
 public abstract class AbstractTask<T extends TaskResult, C extends TaskCommand> implements Task<T, C> {
@@ -32,16 +30,18 @@ public abstract class AbstractTask<T extends TaskResult, C extends TaskCommand> 
     public AbstractTask() {
     }
 
-    public AbstractTask(C taskCommand) {
+    public AbstractTask( C taskCommand ) {
         assert taskCommand != null;
         this.taskCommand = taskCommand;
     }
 
+    @Override
     public void setTaskCommand( C taskCommand ) {
         assert taskCommand != null;
         this.taskCommand = taskCommand;
     }
 
+    @Override
     public C getTaskCommand() {
         return this.taskCommand;
     }

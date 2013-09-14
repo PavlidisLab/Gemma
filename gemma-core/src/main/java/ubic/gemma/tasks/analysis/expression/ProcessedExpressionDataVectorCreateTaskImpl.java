@@ -14,9 +14,12 @@
  */
 package ubic.gemma.tasks.analysis.expression;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.job.TaskResult;
@@ -25,17 +28,15 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorSer
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.AbstractTask;
 
-import java.util.Collection;
-
 /**
  * @author Paul
  * @version $Id$
  */
 @Component
 @Scope("prototype")
-public class ProcessedExpressionDataVectorCreateTaskImpl
-        extends AbstractTask<TaskResult, ProcessedExpressionDataVectorCreateTaskCommand>
-        implements ProcessedExpressionDataVectorCreateTask {
+public class ProcessedExpressionDataVectorCreateTaskImpl extends
+        AbstractTask<TaskResult, ProcessedExpressionDataVectorCreateTaskCommand> implements
+        ProcessedExpressionDataVectorCreateTask {
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;

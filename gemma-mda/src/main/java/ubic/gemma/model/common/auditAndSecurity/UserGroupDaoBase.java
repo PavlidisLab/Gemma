@@ -56,11 +56,6 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
         return entities;
     }
 
-    @Override
-    public Collection<? extends UserGroup> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from UserGroupImpl where id in (:ids)", "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#findByUserGroupName(int, java.lang.String)
      */
@@ -95,6 +90,11 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
         return ( UserGroup ) result;
     }
 
+    @Override
+    public Collection<? extends UserGroup> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from UserGroupImpl where id in (:ids)", "ids", ids );
+    }
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#load(int, java.lang.Long)
      */
@@ -119,21 +119,6 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
                 ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.class );
 
         return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserGroupDao#remove(java.lang.Long)
-     */
-
-    @Override
-    public void remove( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "UserGroup.remove - 'id' can not be null" );
-        }
-        UserGroup entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
     }
 
     /**
@@ -170,7 +155,5 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements
                     }
                 } );
     }
-
-  
 
 }

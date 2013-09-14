@@ -102,12 +102,29 @@ public class DataUpdater {
     @Autowired
     private PreprocessorService preprocessorService;
 
+    /**
+     * @param ee
+     * @return
+     */
     public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
             throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
         }
         return addAffyExonArrayData( ee, ads.iterator().next() );
+    }
+
+    /**
+     * @param ee
+     * @param cdfFile
+     * @return
+     */
+    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName ) {
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" ); // TODO
+        }
+        return reprocessAffyThreePrimeArrayData( ee, cdfFileName, ads.iterator().next() );
     }
 
     /**
@@ -151,6 +168,39 @@ public class DataUpdater {
         }
 
         audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform, true );
+
+        postprocess( ee );
+        return ee;
+    }
+
+    /**
+     * @param ee
+     * @param cdfFile
+     * @param ad
+     * @return
+     */
+    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName,
+            ArrayDesign ad ) {
+        RawDataFetcher f = new RawDataFetcher();
+        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
+
+        if ( files.isEmpty() ) {
+            throw new RuntimeException( "Data was apparently not available" );
+        }
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
+
+        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
+
+        Collection<RawExpressionDataVector> vectors = apt.processThreeprimeArrayData( ee, cdfFileName, ad, files );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors were returned for " + ee );
+        }
+
+        ee = experimentService.replaceVectors( ee, ad, vectors );
+
+        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + ad, true );
 
         postprocess( ee );
         return ee;
@@ -607,7 +657,7 @@ public class DataUpdater {
     private QuantitationType makeQt( boolean preferred ) {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setScale( ScaleType.LINEAR );
+        qt.setScale( ScaleType.LINEAR ); // FIXME check this is right for 3' arrays.
         qt.setIsBackground( false );
         qt.setIsRatio( false );
         qt.setIsBackgroundSubtracted( true );

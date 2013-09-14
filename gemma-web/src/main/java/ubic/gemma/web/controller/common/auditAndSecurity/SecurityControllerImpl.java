@@ -54,6 +54,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
@@ -62,9 +63,7 @@ import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
- * Manages data-level security (ie. can make data private). Note: do not use parameterized collections as parameters for
- * ajax methods in this class! Type information is lost during proxy creation so DWR can't figure out what type of
- * collection the method should take. See bug 2756. Use arrays instead.
+ * Manages data-level security (ie. can make data private).
  * 
  * @author keshav
  * @version $Id$
@@ -469,8 +468,6 @@ public class SecurityControllerImpl implements SecurityController {
     public boolean removeUsersFromGroup( String[] userNames, String groupName ) {
         for ( String userName : userNames ) {
 
-        
-
             securityService.removeUserFromGroup( userName, groupName );
         }
         return true;
@@ -512,9 +509,13 @@ public class SecurityControllerImpl implements SecurityController {
             if ( settings.getOwner().isPrincipal() ) {
                 securityService.makeOwnedByUser( s, settings.getOwner().getAuthority() );
             } else {
-                log.warn( "Can't make user " + settings.getOwner() + " owner, not implemented" );
+                // this warning is not even worth issuing if we are not an administrator.
+                if ( SecurityServiceImpl.isUserAdmin() )
+                    log.warn( "Can't make groupauthority " + settings.getOwner().getAuthority()
+                            + " owner, not implemented" );
             }
         } catch ( AccessDeniedException e ) {
+            log.warn( "Non-administrators cannot change the owner of an entity" );
             // okay, only works if you are administrator.
         }
 

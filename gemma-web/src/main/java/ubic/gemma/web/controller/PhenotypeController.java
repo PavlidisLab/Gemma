@@ -123,7 +123,7 @@ public class PhenotypeController extends BaseController {
     }
 
     /**
-     * Returns mged category terms.
+     * Returns available efo category terms.
      * 
      * @return Collection<CharacteristicValueObject>
      */

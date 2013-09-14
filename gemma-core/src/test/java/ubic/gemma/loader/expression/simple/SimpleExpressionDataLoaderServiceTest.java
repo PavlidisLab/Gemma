@@ -80,6 +80,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( taxon );
+        metaData.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
@@ -90,7 +91,6 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         InputStream data = this.getClass().getResourceAsStream( "/data/testdata.txt" );
 
         ee = service.create( metaData, data );
-
         ee = eeService.thaw( ee );
 
         assertNotNull( ee );
@@ -117,6 +117,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         metaData.setTaxon( taxon );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setShortName( metaData.getName() );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );
@@ -155,6 +156,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         metaData.setTaxon( taxon );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setShortName( metaData.getName() );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );

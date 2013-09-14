@@ -14,6 +14,12 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -25,8 +31,6 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.BusinessKey;
-
-import java.util.*;
 
 /**
  * DAO Class: is able to create, update, remove, load, and find objects of type

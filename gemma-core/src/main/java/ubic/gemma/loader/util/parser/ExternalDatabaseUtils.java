@@ -39,9 +39,6 @@ public class ExternalDatabaseUtils {
 
     private static Log log = LogFactory.getLog( ExternalDatabaseUtils.class.getName() );
 
-    @Autowired
-    ExternalDatabaseDao externalDatabaseDao;
-
     /**
      * @return a transient instance of the Genbank database referece.
      */
@@ -50,30 +47,6 @@ public class ExternalDatabaseUtils {
         genBank.setType( DatabaseType.SEQUENCE );
         genBank.setName( "Genbank" );
         return genBank;
-    }
-
-    /**
-     * @param seekPersistent if true, searches the database for an existing persistent copy. If false, just returns a
-     *        transient instance.
-     * @return
-     */
-    public ExternalDatabase getGenbank( boolean seekPersistent ) {
-        if ( seekPersistent ) {
-            ExternalDatabase genBank = externalDatabaseDao.findByName( "Genbank" );
-            if ( genBank == null ) {
-                log.error( "Persistent Genbank not found" );
-                return getGenbank();
-            }
-            return genBank;
-        }
-        return getGenbank();
-    }
-
-    /**
-     * @param dao the dao to set
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
     }
 
     /**
@@ -95,6 +68,26 @@ public class ExternalDatabaseUtils {
         return dbEntry;
     }
 
+    @Autowired
+    ExternalDatabaseDao externalDatabaseDao;
+
+    /**
+     * @param seekPersistent if true, searches the database for an existing persistent copy. If false, just returns a
+     *        transient instance.
+     * @return
+     */
+    public ExternalDatabase getGenbank( boolean seekPersistent ) {
+        if ( seekPersistent ) {
+            ExternalDatabase genBank = externalDatabaseDao.findByName( "Genbank" );
+            if ( genBank == null ) {
+                log.error( "Persistent Genbank not found" );
+                return getGenbank();
+            }
+            return genBank;
+        }
+        return getGenbank();
+    }
+
     /**
      * @param accession
      * @param seekPersistentDb
@@ -107,6 +100,13 @@ public class ExternalDatabaseUtils {
         dbEntry.setExternalDatabase( this.getGenbank( seekPersistentDb ) );
 
         return dbEntry;
+    }
+
+    /**
+     * @param dao the dao to set
+     */
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
     }
 
 }

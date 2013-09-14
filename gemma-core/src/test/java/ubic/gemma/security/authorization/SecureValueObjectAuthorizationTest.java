@@ -41,31 +41,29 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author cmcdonald
- * 
  * @version $Id$
  */
 public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
-   
+
     @Autowired
     private UserManager userManager;
 
     @Autowired
     private SecurityService securityService;
-    
+
     @Autowired
     private ExpressionExperimentService eeService;
-    
-    String ownerUsername = RandomStringUtils.randomAlphabetic( 5 );
-    
-    String aDifferentUsername = RandomStringUtils.randomAlphabetic( 5 );
-    
-    Long ownersExpressionExperimentId;
-    String ownersExpressionExperimentName;
-    
-    Long publicExpressionExperimentId;
-    
-    ExpressionExperiment ee;
-    
+
+    private String ownerUsername = RandomStringUtils.randomAlphabetic( 5 );
+
+    private String aDifferentUsername = RandomStringUtils.randomAlphabetic( 5 );
+
+    private Long ownersExpressionExperimentId;
+
+    private Long publicExpressionExperimentId;
+
+    private ExpressionExperiment ee;
+
     private void makeUser( String username ) {
         try {
             this.userManager.loadUserByUsername( username );
@@ -77,57 +75,57 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
      */
     @Before
     public void setup() throws Exception {
-    	
-    	ExpressionExperiment publicEe = super.getTestPersistentBasicExpressionExperiment();
-    	
-    	publicExpressionExperimentId = publicEe.getId();
-    	
-    	ee = super.getTestPersistentBasicExpressionExperiment();
-    	
-    	ownersExpressionExperimentId = ee.getId();
-    	
-    	ownersExpressionExperimentName = ee.getName();
-    	
-        this.securityService.makePrivate( ee );
-        
-        makeUser(ownerUsername);
+
+        ExpressionExperiment publicEe = super.getTestPersistentBasicExpressionExperiment();
+        securityService.makePublic( publicEe );
+
+        publicExpressionExperimentId = publicEe.getId();
+
+        ee = super.getTestPersistentBasicExpressionExperiment();
+
+        ownersExpressionExperimentId = ee.getId();
+
+        // redundant.
+        // .securityService.makePrivate( ee );
+
+        makeUser( ownerUsername );
 
         this.securityService.makeOwnedByUser( ee, ownerUsername );
 
-        makeUser(aDifferentUsername);
+        makeUser( aDifferentUsername );
 
     }
-    
+
     @Test
     public void testSecuredExpressionExperimentValueObject() throws Exception {
-    	    	
-    	ArrayList<Long> eeIds = new ArrayList<Long>();
-    	
-    	eeIds.add(ownersExpressionExperimentId);
-    	eeIds.add(publicExpressionExperimentId);
-    	
-    	Collection<ExpressionExperimentValueObject> valueObjects;
-    	
-    	super.runAsUser(aDifferentUsername);    	
-    	    	
-    	valueObjects =  eeService.loadValueObjects(eeIds, true);
-    	
-    	assertEquals(1,valueObjects.size());
-    	
-    	super.runAsUser(ownerUsername);
-    	
-    	valueObjects =  eeService.loadValueObjects(eeIds, true);
-    	
-    	assertTrue(securityService.isViewableByUser(ee, ownerUsername));
-    	
-    	assertEquals(2,valueObjects.size());
-    	        
 
-    }  
+        ArrayList<Long> eeIds = new ArrayList<Long>();
 
-   
+        eeIds.add( ownersExpressionExperimentId );
+        eeIds.add( publicExpressionExperimentId );
+
+        Collection<ExpressionExperimentValueObject> valueObjects;
+
+        super.runAsUser( aDifferentUsername );
+
+        // should be able to see the ones which are
+        valueObjects = eeService.loadValueObjects( eeIds, true );
+
+        assertEquals( 1, valueObjects.size() );
+
+        super.runAsUser( ownerUsername );
+
+        valueObjects = eeService.loadValueObjects( eeIds, true );
+
+        assertTrue( securityService.isViewableByUser( ee, ownerUsername ) );
+
+        assertEquals( 2, valueObjects.size() );
+
+    }
+
 }

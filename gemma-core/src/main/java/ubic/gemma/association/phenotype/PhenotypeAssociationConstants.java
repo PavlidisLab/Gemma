@@ -25,5 +25,5 @@ public class PhenotypeAssociationConstants {
     public final static String TAXON_HUMAN = "human";
     public final static String TAXON_MOUSE = "mouse";
     public final static String TAXON_RAT = "rat";
-    public final static String[] TAXA_IN_USE = {TAXON_HUMAN, TAXON_MOUSE, TAXON_RAT};
+    public final static String[] TAXA_IN_USE = { TAXON_HUMAN, TAXON_MOUSE, TAXON_RAT };
 }

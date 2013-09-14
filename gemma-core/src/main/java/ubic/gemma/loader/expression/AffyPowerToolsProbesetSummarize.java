@@ -82,6 +82,79 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param ee
+     * @param cdfFileName e.g. HG_U95Av2.CDF. Path configured by - can be null, we will try to guess (?)
+     * @param targetPlatform
+     * @param files
+     * @return
+     */
+    public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee, String cdfFileName,
+            ArrayDesign targetPlatform, Collection<LocalFile> files ) {
+
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+
+        if ( bioAssays.isEmpty() ) {
+            throw new IllegalArgumentException( "Experiment had no assays" );
+        }
+
+        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+            throw new IllegalArgumentException( "Target design had no elements" );
+        }
+
+        List<String> celfiles = getCelFiles( files );
+        log.info( celfiles.size() + " cel files" );
+
+        String outputPath = getOutputFilePath( ee, "apt-output" );
+
+        String cmd = getThreePrimeSummarizationCommand( targetPlatform, cdfFileName, celfiles, outputPath );
+
+        log.info( "Running: " + cmd );
+
+        int exitVal = Integer.MIN_VALUE;
+
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+        try {
+            final Process run = Runtime.getRuntime().exec( cmd );
+            GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
+            GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
+            gscErr.start();
+            gscIn.start();
+
+            while ( exitVal == Integer.MIN_VALUE ) {
+                try {
+                    exitVal = run.exitValue();
+                } catch ( IllegalThreadStateException e ) {
+                    // okay, still
+                    // waiting.
+                }
+                Thread.sleep( AFFY_UPDATE_INTERVAL_MS );
+
+                synchronized ( outputPath ) {
+                    File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
+                    Long size = outputFile.length();
+
+                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+                    log.info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
+                            + " kb (" + minutes + " minutes elapsed)" );
+                }
+            }
+
+            overallWatch.stop();
+            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+            log.info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
+
+            return processExonArrayData( ee, outputPath + File.separator + METHOD + ".summary.txt", targetPlatform );
+
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * @param ee
      * @param targetPlatform target platform
      * @param files list of CEL files (any other files included will be ignored)
      * @return
@@ -266,9 +339,12 @@ public class AffyPowerToolsProbesetSummarize {
         return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
     }
 
-    private void checkFileReadable( String pgf ) {
-        if ( !new File( pgf ).canRead() ) {
-            throw new IllegalArgumentException( pgf + " could not be read" );
+    /**
+     * @param f
+     */
+    private void checkFileReadable( String f ) {
+        if ( !new File( f ).canRead() ) {
+            throw new IllegalArgumentException( f + " could not be read" );
         }
     }
 
@@ -354,7 +430,50 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * Like
+     * For 3' arrays. Run RMA with quantile normalization.
+     * 
+     * <pre>
+     * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
+     * /bigscratch/GSE123/*.CEL
+     * </pre>
+     * 
+     * @param targetPlatform
+     * @param cdfFileName e g. HG-U133A_2.cdf
+     * @param celfiles
+     * @param outputPath
+     * @return
+     */
+    private String getThreePrimeSummarizationCommand( ArrayDesign targetPlatform, String cdfFileName,
+            List<String> celfiles, String outputPath ) {
+        String toolPath = Settings.getString( "affy.power.tools.exec" );
+
+        /*
+         * locate the CDF file
+         */
+        String cdfPath = Settings.getString( "affy.power.tools.cdf.path" );
+        String cdfName;
+        if ( cdfFileName != null ) {
+            cdfName = cdfFileName;
+        } else {
+            String shortName = targetPlatform.getShortName();
+            // probably won't work ...
+            cdfName = shortName + ".cdf";
+        }
+
+        String cdfFullPath = cdfPath + File.separator + cdfName; // might be .cdf or .cdf.gz
+        checkFileReadable( cdfFullPath );
+
+        /*
+         * HG_U95C.CDF.gz, Mouse430_2.cdf.gz etc.
+         */
+
+        String cmd = toolPath + " -a " + METHOD + " -d " + cdfFullPath + " -o " + outputPath + " "
+                + StringUtils.join( celfiles, " " );
+        return cmd;
+    }
+
+    /**
+     * For exon arrays. Like
      * 
      * <pre>
      * apt-probeset-summarize -a rma -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf -m

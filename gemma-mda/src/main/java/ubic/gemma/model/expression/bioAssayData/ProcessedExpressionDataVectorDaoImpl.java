@@ -416,22 +416,33 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         Integer numvecsavailable = ee.getNumberOfDataVectors();
         if ( numvecsavailable == null || numvecsavailable == 0 ) {
-            log.info( "Experiment does not have any processed vectors" );
-            return result;
+            log.info( "Experiment does not have vector count populated." );
+            // cannot fix this here, because we're read-only.
         }
 
         Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment.id = :ee" );
-        q.setReadOnly( true );
-        q.setFlushMode( FlushMode.MANUAL );
         q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
         q.setMaxResults( limit );
-        if ( numvecsavailable > limit ) {
+        if ( numvecsavailable != null && numvecsavailable > limit ) {
             q.setFirstResult( new Random().nextInt( numvecsavailable - limit ) );
         }
+
+        // we should already be read-only, so this is probably pointless.
+        q.setReadOnly( true );
+
+        // and so this probably doesn't do anything useful.
+        q.setFlushMode( FlushMode.MANUAL );
+
         result = q.list();
         if ( timer.getTime() > 1000 )
             log.info( "Fetch " + limit + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms" );
+
+        if ( result.isEmpty() ) {
+            log.warn( "Experiment does not have any processed data vectors" );
+            return result;
+        }
+
         this.thaw( result ); // needed?
         return result;
     }

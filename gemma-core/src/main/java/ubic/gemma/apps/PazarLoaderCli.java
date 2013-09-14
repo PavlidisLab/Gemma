@@ -14,19 +14,28 @@
  */
 package ubic.gemma.apps;
 
+import java.io.File;
+
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
+
 import ubic.gemma.loader.pazar.PazarLoader;
 import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.util.AbstractCLIContextCLI;
-
-import java.io.File;
 
 /**
  * @author paul
  * @version $Id$
  */
 public class PazarLoaderCli extends AbstractCLIContextCLI {
+
+    public static void main( String[] args ) {
+        PazarLoaderCli c = new PazarLoaderCli();
+        Exception e = c.doWork( args );
+        if ( e != null ) {
+            log.fatal( e );
+        }
+    }
 
     private File file = null;
 
@@ -66,14 +75,6 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
             if ( !file.canRead() ) {
                 throw new IllegalArgumentException( "Cannot read from " + file );
             }
-        }
-    }
-
-    public static void main( String[] args ) {
-        PazarLoaderCli c = new PazarLoaderCli();
-        Exception e = c.doWork( args );
-        if ( e != null ) {
-            log.fatal( e );
         }
     }
 

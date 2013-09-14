@@ -28,12 +28,12 @@ public class SvdTaskCommand extends TaskCommand {
 
     private boolean postprocessOnly = false;
 
-    public boolean isPostprocessOnly() {
-        return postprocessOnly;
-    }
+    private ExpressionExperiment expressionExperiment = null;
 
-    public void setPostprocessOnly( boolean postprocessOnly ) {
-        this.postprocessOnly = postprocessOnly;
+    public SvdTaskCommand( ExpressionExperiment expressionExperiment ) {
+        super();
+        this.setMaxRuntime( 30 );
+        this.expressionExperiment = expressionExperiment;
     }
 
     public SvdTaskCommand( ExpressionExperiment expressionExperiment, boolean postprocessOnly ) {
@@ -46,20 +46,20 @@ public class SvdTaskCommand extends TaskCommand {
         return expressionExperiment;
     }
 
+    @Override
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+        return SvdTask.class;
+    }
+
+    public boolean isPostprocessOnly() {
+        return postprocessOnly;
+    }
+
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
     }
 
-    private ExpressionExperiment expressionExperiment = null;
-
-    public SvdTaskCommand( ExpressionExperiment expressionExperiment ) {
-        super();
-        this.setMaxRuntime( 30 );
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
-        return SvdTask.class;
+    public void setPostprocessOnly( boolean postprocessOnly ) {
+        this.postprocessOnly = postprocessOnly;
     }
 }

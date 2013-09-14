@@ -17,7 +17,6 @@ package ubic.gemma.security.authorization.acl;
 import org.aopalliance.intercept.MethodInvocation;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.CodeSignature;
-import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 
@@ -33,6 +32,8 @@ public class AclEntryVoter extends org.springframework.security.acls.AclEntryVot
 
     public AclEntryVoter( AclService aclService, String processConfigAttribute, Permission[] requirePermission ) {
         super( aclService, processConfigAttribute, requirePermission );
+        this.setObjectIdentityRetrievalStrategy( new ValueObjectAwareIdentityRetrievalStrategyImpl() );
+        this.setSidRetrievalStrategy( new AclSidRetrievalStrategyImpl() );
     }
 
     /*
@@ -68,8 +69,9 @@ public class AclEntryVoter extends org.springframework.security.acls.AclEntryVot
             }
         }
 
-        throw new AuthorizationServiceException( "Secure object: " + secureObject
-                + " did not provide any argument of type: " + getProcessDomainObjectClass() + " or SecuredChild" );
+        // voter will abstain.
+        return null;
+
     }
 
 }

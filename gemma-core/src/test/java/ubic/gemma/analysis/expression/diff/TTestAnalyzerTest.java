@@ -18,7 +18,8 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,10 +29,10 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.HitListSize;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -49,76 +50,6 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
     private DiffExAnalyzer analyzer;
-
-    /**
-     * Tests the t-test with an {@link ExpressionExperiment}.
-     */
-    @Test
-    public void testTTestWithExpressionExperiment() throws Exception {
-
-        if ( !connected ) {
-            log.warn( "Could not establish R connection.  Skipping test ..." );
-            return;
-        }
-
-        configureMocks();
-
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-        factors.add( super.experimentalFactorA_Area );
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
-        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
-        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
-        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
-
-        int numResults = resultSet.getResults().size();
-
-        assertEquals( numResults, NUM_DESIGN_ELEMENTS );
-
-        assertEquals( factorValueA2, resultSet.getBaselineGroup() );
-
-        Collection<HitListSize> hitListSizes = resultSet.getHitListSizes();
-        assertEquals( 3 * 5, hitListSizes.size() );
-        // for ( HitListSize hitListSize : hitListSizes ) {
-        // // TODO explicitly check these counts.
-        // log.info( hitListSize.getDirection() + " " + hitListSize.getThresholdQvalue() + " "
-        // + hitListSize.getNumberOfProbes() )
-        // + hitListSize.getNumberOfGenes());
-        // }
-
-        // check
-        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-            CompositeSequence probe = probeAnalysisResult.getProbe();
-
-            Double pvalue = probeAnalysisResult.getPvalue();
-
-            assertNotNull( pvalue );
-
-            Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-            Double stat = null;
-            if ( contrasts.isEmpty() ) {
-                continue;
-            }
-
-            stat = contrasts.iterator().next().getTstat();
-
-            log.debug( "probe: " + probe + "; p-value: " + pvalue );
-
-            if ( probe.getName().equals( "probe_0" ) ) {
-                assertEquals( 1.48e-13, pvalue, 1e-15 );
-                assertEquals( -277.4, stat, 0.1 );
-            } else if ( probe.getName().equals( "probe_4" ) ) {
-                assertEquals( 0.0001523, pvalue, 0.000001 );
-            } else if ( probe.getName().equals( "probe_17" ) ) {
-                assertEquals( 8.832e-12, pvalue, 1e-15 );
-            } else if ( probe.getName().equals( "probe_75" ) ) {
-                assertEquals( 0.2483, pvalue, 0.001 );
-            }
-        }
-    }
 
     /*
      * 
@@ -189,6 +120,76 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             } else if ( probe.getName().equals( "probe_94" ) ) {
                 assertEquals( 0.002717, pvalue, 0.0001 );
                 // assertEquals( 6.6087, stat, 0.001 );
+            }
+        }
+    }
+
+    /**
+     * Tests the t-test with an {@link ExpressionExperiment}.
+     */
+    @Test
+    public void testTTestWithExpressionExperiment() throws Exception {
+
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
+        configureMocks();
+
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        factors.add( super.experimentalFactorA_Area );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factors );
+        config.setQvalueThreshold( null );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+
+        int numResults = resultSet.getResults().size();
+
+        assertEquals( numResults, NUM_DESIGN_ELEMENTS );
+
+        assertEquals( factorValueA2, resultSet.getBaselineGroup() );
+
+        Collection<HitListSize> hitListSizes = resultSet.getHitListSizes();
+        assertEquals( 3 * 5, hitListSizes.size() );
+        // for ( HitListSize hitListSize : hitListSizes ) {
+        // // TODO explicitly check these counts.
+        // log.info( hitListSize.getDirection() + " " + hitListSize.getThresholdQvalue() + " "
+        // + hitListSize.getNumberOfProbes() )
+        // + hitListSize.getNumberOfGenes());
+        // }
+
+        // check
+        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
+            CompositeSequence probe = probeAnalysisResult.getProbe();
+
+            Double pvalue = probeAnalysisResult.getPvalue();
+
+            assertNotNull( pvalue );
+
+            Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
+            Double stat = null;
+            if ( contrasts.isEmpty() ) {
+                continue;
+            }
+
+            stat = contrasts.iterator().next().getTstat();
+
+            log.debug( "probe: " + probe + "; p-value: " + pvalue );
+
+            if ( probe.getName().equals( "probe_0" ) ) {
+                assertEquals( 1.48e-13, pvalue, 1e-15 );
+                assertEquals( -277.4, stat, 0.1 );
+            } else if ( probe.getName().equals( "probe_4" ) ) {
+                assertEquals( 0.0001523, pvalue, 0.000001 );
+            } else if ( probe.getName().equals( "probe_17" ) ) {
+                assertEquals( 8.832e-12, pvalue, 1e-15 );
+            } else if ( probe.getName().equals( "probe_75" ) ) {
+                assertEquals( 0.2483, pvalue, 0.001 );
             }
         }
     }

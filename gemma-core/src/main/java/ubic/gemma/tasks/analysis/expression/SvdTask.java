@@ -17,7 +17,5 @@ package ubic.gemma.tasks.analysis.expression;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
-
-public interface SvdTask extends Task<TaskResult, SvdTaskCommand>{
+public interface SvdTask extends Task<TaskResult, SvdTaskCommand> {
 }
-

@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -43,6 +44,59 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence> {
 
     private Map<String, BioSequence> results = new HashMap<String, BioSequence>();
+
+    @Override
+    public boolean containsKey( String key ) {
+        return results.containsKey( key );
+    }
+
+    @Override
+    public BioSequence get( String key ) {
+        return results.get( key );
+    }
+
+    @Override
+    public Collection<String> getKeySet() {
+        return results.keySet();
+    }
+
+    @Override
+    public Collection<BioSequence> getResults() {
+        return results.values();
+    }
+
+    @Override
+    public void parse( InputStream is ) throws IOException {
+
+        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        StopWatch timer = new StopWatch();
+        timer.start();
+        int nullLines = 0;
+        String line = null;
+        int linesParsed = 0;
+        while ( ( line = br.readLine() ) != null ) {
+
+            BioSequence newItem = parseOneLine( line );
+
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
+                String message = "Parsed " + linesParsed + " lines ";
+                log.info( message );
+                timer.reset();
+                timer.start();
+            }
+
+            if ( newItem == null ) {
+                nullLines++;
+                continue;
+            }
+
+        }
+        log.info( "Parsed " + linesParsed + " lines. "
+                + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
+
+        br.close();
+    }
 
     /*
      * (non-Javadoc)
@@ -120,39 +174,6 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         return seq;
     }
 
-    @Override
-    public void parse( InputStream is ) throws IOException {
-
-        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-        StopWatch timer = new StopWatch();
-        timer.start();
-        int nullLines = 0;
-        String line = null;
-        int linesParsed = 0;
-        while ( ( line = br.readLine() ) != null ) {
-
-            BioSequence newItem = parseOneLine( line );
-
-            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
-                String message = "Parsed " + linesParsed + " lines ";
-                log.info( message );
-                timer.reset();
-                timer.start();
-            }
-
-            if ( newItem == null ) {
-                nullLines++;
-                continue;
-            }
-
-        }
-        log.info( "Parsed " + linesParsed + " lines. "
-                + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
-
-        br.close();
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -164,27 +185,7 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
     }
 
     @Override
-    public BioSequence get( String key ) {
-        return results.get( key );
-    }
-
-    @Override
-    public Collection<BioSequence> getResults() {
-        return results.values();
-    }
-
-    @Override
     protected void put( String key, BioSequence value ) {
         results.put( key, value );
-    }
-
-    @Override
-    public boolean containsKey( String key ) {
-        return results.containsKey( key );
-    }
-
-    @Override
-    public Collection<String> getKeySet() {
-        return results.keySet();
     }
 }

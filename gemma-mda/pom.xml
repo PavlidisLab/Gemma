@@ -254,6 +254,7 @@
 						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
 							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
 							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
+							<fileset dir="src/main/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
 					</target>
 				</configuration>

@@ -56,27 +56,16 @@ public class NCBIGene2GOAssociationLoader {
     private AtomicBoolean consumerDone = new AtomicBoolean( false );
     private int count;
 
-    public void setParser( NCBIGene2GOAssociationParser parser ) {
-        this.parser = parser;
+    public int getCount() {
+        return count;
     }
 
-    protected void load( LocalFile ncbiFile ) {
+    public boolean isConsumerDone() {
+        return consumerDone.get();
+    }
 
-        final InputStream inputStream;
-        try {
-            inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() );
-        } catch ( IOException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        }
-
-        load( inputStream );
-
-        try {
-            inputStream.close();
-        } catch ( IOException e ) {
-            log.warn( e, e );
-        }
+    public boolean isProducerDone() {
+        return producerDone.get();
     }
 
     /**
@@ -124,6 +113,17 @@ public class NCBIGene2GOAssociationLoader {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void setParser( NCBIGene2GOAssociationParser parser ) {
+        this.parser = parser;
+    }
+
+    /**
+     * @param persisterHelper The persisterHelper to set.
+     */
+    public void setPersisterHelper( Persister persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
     /**
@@ -193,17 +193,6 @@ public class NCBIGene2GOAssociationLoader {
     }
 
     /**
-     * @param persisterHelper The persisterHelper to set.
-     */
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    private void setCount( int count ) {
-        this.count = count;
-    }
-
-    /**
      * @param entity
      * @return
      */
@@ -213,15 +202,26 @@ public class NCBIGene2GOAssociationLoader {
         return ( Gene2GOAssociation ) persisterHelper.persist( entity );
     }
 
-    public boolean isProducerDone() {
-        return producerDone.get();
+    protected void load( LocalFile ncbiFile ) {
+
+        final InputStream inputStream;
+        try {
+            inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() );
+        } catch ( IOException e ) {
+            log.error( e, e );
+            throw new RuntimeException( e );
+        }
+
+        load( inputStream );
+
+        try {
+            inputStream.close();
+        } catch ( IOException e ) {
+            log.warn( e, e );
+        }
     }
 
-    public boolean isConsumerDone() {
-        return consumerDone.get();
-    }
-
-    public int getCount() {
-        return count;
+    private void setCount( int count ) {
+        this.count = count;
     }
 }

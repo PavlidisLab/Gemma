@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.zip.GZIPInputStream;
 
@@ -40,6 +40,30 @@ public class TwoColorArrayLoessNormalizerTest {
     private static Log log = LogFactory.getLog( TwoColorArrayLoessNormalizerTest.class );
     private TwoColorArrayLoessNormalizer normalizer;
     private boolean connected = false;
+
+    /*
+     * @see TestCase#setUp()
+     */
+    @Before
+    public final void setUp() {
+        connected = false;
+        try {
+            normalizer = new TwoColorArrayLoessNormalizer();
+            connected = true;
+        } catch ( Exception e ) {
+            connected = false;
+        }
+
+    }
+
+    /*
+     * @see TestCase#tearDown()
+     */
+    @After
+    public void tearDown() {
+        if ( connected ) normalizer.cleanup();
+        normalizer = null;
+    }
 
     /*
      * Test method for 'ubic.gemma.model.analysis.preprocess.TwoColorArrayLoessNormalizer.normalize(DoubleMatrixNamed,
@@ -88,30 +112,6 @@ public class TwoColorArrayLoessNormalizerTest {
 
         assertEquals( 100, result.rows() );
         assertEquals( 4, result.columns() );
-    }
-
-    /*
-     * @see TestCase#setUp()
-     */
-    @Before
-    public final void setUp() {
-        connected = false;
-        try {
-            normalizer = new TwoColorArrayLoessNormalizer();
-            connected = true;
-        } catch ( Exception e ) {
-            connected = false;
-        }
-
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @After
-    public void tearDown() {
-        if ( connected ) normalizer.cleanup();
-        normalizer = null;
     }
 
 }

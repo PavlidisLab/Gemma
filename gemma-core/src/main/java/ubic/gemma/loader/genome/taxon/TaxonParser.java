@@ -33,7 +33,7 @@ import ubic.gemma.model.genome.Taxon;
  * @author pavlidis
  * @version $Id$
  */
-public class TaxonParser extends BasicLineMapParser<Integer,Taxon> {
+public class TaxonParser extends BasicLineMapParser<Integer, Taxon> {
 
     Map<Integer, Taxon> results = new HashMap<Integer, Taxon>();
 
@@ -49,8 +49,8 @@ public class TaxonParser extends BasicLineMapParser<Integer,Taxon> {
     }
 
     @Override
-    protected Integer getKey( Taxon newItem ) {
-        return newItem.getNcbiId();
+    public Collection<Integer> getKeySet() {
+        return results.keySet();
     }
 
     @Override
@@ -84,13 +84,13 @@ public class TaxonParser extends BasicLineMapParser<Integer,Taxon> {
     }
 
     @Override
+    protected Integer getKey( Taxon newItem ) {
+        return newItem.getNcbiId();
+    }
+
+    @Override
     protected void put( Integer key, Taxon value ) {
         results.put( key, value );
-    }
-    
-    @Override
-    public Collection<Integer> getKeySet() {
-        return results.keySet();
     }
 
 }

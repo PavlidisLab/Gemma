@@ -67,26 +67,28 @@ public class StringProteinLinksDetailedParserTest {
     }
 
     /**
-     * Test to make sure that a line can be parsed correctly to its constituent values. Also that the alpabetical
-     * sorting of the protein works so that the most alpabetically higer value gets stored in protein 1. Make sure that
-     * the proteins get stored in the same order. Test method for
-     * {@link ubic.gemma.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
-     * . *
+     * Test to ensure that a small file containing 100 lines can be parsed correctly. The file contains all one taxon.
+     * There are duplicate interactions in the file e.g. 10090.ENSMUSP00000000001 10090.ENSMUSP00000000153 0 0 0 0 0 900
+     * 27 902 10090.ENSMUSP00000000153 10090.ENSMUSP00000000001 0 0 0 0 0 900 27 902 are effectively the same and should
+     * be treated as one. protein.links.detailed.txt contains references but two are duplicates
      */
     @Test
-    public void testParseOneValidLine() {
-        String line = "10090.ENSMUSP00000000201 10090.ENSMUSP00000000153 707 0 10 2 3 0 0 222";
-
-        StringProteinProteinInteraction stringProteinProteinInteraction = parser.parseOneLine( line );
-        assertTrue( stringProteinProteinInteraction.getNcbiTaxonId().equals( 10090 ) );
-        assertEquals( "10090.ENSMUSP00000000153", stringProteinProteinInteraction.getProtein1() );
-        assertEquals( "10090.ENSMUSP00000000201", stringProteinProteinInteraction.getProtein2() );
-
-        byte[] arrayStored = stringProteinProteinInteraction.getEvidenceVector();
-        byte[] array = new byte[] { 1, 0, 1, 1, 1, 0, 0 };
-        assertArrayEquals( "Compare bit vector", array, arrayStored );
-        assertEquals( new Double( 222 ), stringProteinProteinInteraction.getCombined_score() );
-
+    public void testParseFileContainingOneTaxon() {
+        String fileName = "/data/loader/protein/string/protein.links.detailed.txt";
+        URL myurl = this.getClass().getResource( fileName );
+        try {
+            parser.parse( new File( myurl.getFile() ) );
+            Collection<StringProteinProteinInteraction> items = parser.getResults();
+            assertEquals( 23, items.size() );
+            for ( StringProteinProteinInteraction item : items ) {
+                assertTrue( item.getProtein1().startsWith( "10090.ENSMUSP" ) );
+                assertTrue( item.getProtein2().startsWith( "10090.ENSMUSP" ) );
+            }
+        } catch ( RuntimeException e ) {
+            fail();
+        } catch ( IOException e ) {
+            fail();
+        }
     }
 
     /**
@@ -103,7 +105,6 @@ public class StringProteinLinksDetailedParserTest {
             fail( "Should have gotten an exception" );
         } catch ( RuntimeException e ) {
             assert ( e.getMessage().startsWith( "Line + " + line + " is not in the right format:" ) );
-            e.printStackTrace();
         }
 
     }
@@ -128,24 +129,6 @@ public class StringProteinLinksDetailedParserTest {
     }
 
     /**
-     * Test to make sure that if taxon is not supported then null is returned. Test method for
-     * {@link ubic.gemma.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
-     * . *
-     */
-    @Test
-    public void testParseOneLineTaxonNotSupported() {
-        String line = "778.DVU0002 778.DVU0001 707 0 1 2 3 4 172 AAA";
-        try {
-            StringProteinProteinInteraction interaction = parser.parseOneLine( line );
-            assertNull( interaction );
-        } catch ( RuntimeException e ) {
-            e.printStackTrace();
-            fail();
-        }
-
-    }
-
-    /**
      * Test to make sure that if file is corrupt and the two taxon do not match throw error Test method for
      * {@link ubic.gemma.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
      * . *
@@ -164,28 +147,44 @@ public class StringProteinLinksDetailedParserTest {
     }
 
     /**
-     * Test to ensure that a small file containing 100 lines can be parsed correctly. The file contains all one taxon.
-     * There are duplicate interactions in the file e.g. 10090.ENSMUSP00000000001 10090.ENSMUSP00000000153 0 0 0 0 0 900
-     * 27 902 10090.ENSMUSP00000000153 10090.ENSMUSP00000000001 0 0 0 0 0 900 27 902 are effectively the same and should
-     * be treated as one. protein.links.detailed.txt contains references but two are duplicates
+     * Test to make sure that if taxon is not supported then null is returned. Test method for
+     * {@link ubic.gemma.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
+     * . *
      */
     @Test
-    public void testParseFileContainingOneTaxon() {
-        String fileName = "/data/loader/protein/string/protein.links.detailed.txt";
-        URL myurl = this.getClass().getResource( fileName );
+    public void testParseOneLineTaxonNotSupported() {
+        String line = "778.DVU0002 778.DVU0001 707 0 1 2 3 4 172 AAA";
         try {
-            parser.parse( new File( myurl.getFile() ) );
-            Collection<StringProteinProteinInteraction> items = parser.getResults();
-            assertEquals( 23, items.size() );
-            for ( StringProteinProteinInteraction item : items ) {
-                assertTrue( item.getProtein1().startsWith( "10090.ENSMUSP" ) );
-                assertTrue( item.getProtein2().startsWith( "10090.ENSMUSP" ) );
-            }
+            StringProteinProteinInteraction interaction = parser.parseOneLine( line );
+            assertNull( interaction );
         } catch ( RuntimeException e ) {
-            fail();
-        } catch ( IOException e ) {
+            e.printStackTrace();
             fail();
         }
+
+    }
+
+    /**
+     * Test to make sure that a line can be parsed correctly to its constituent values. Also that the alpabetical
+     * sorting of the protein works so that the most alpabetically higer value gets stored in protein 1. Make sure that
+     * the proteins get stored in the same order. Test method for
+     * {@link ubic.gemma.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
+     * . *
+     */
+    @Test
+    public void testParseOneValidLine() {
+        String line = "10090.ENSMUSP00000000201 10090.ENSMUSP00000000153 707 0 10 2 3 0 0 222";
+
+        StringProteinProteinInteraction stringProteinProteinInteraction = parser.parseOneLine( line );
+        assertTrue( stringProteinProteinInteraction.getNcbiTaxonId().equals( 10090 ) );
+        assertEquals( "10090.ENSMUSP00000000153", stringProteinProteinInteraction.getProtein1() );
+        assertEquals( "10090.ENSMUSP00000000201", stringProteinProteinInteraction.getProtein2() );
+
+        byte[] arrayStored = stringProteinProteinInteraction.getEvidenceVector();
+        byte[] array = new byte[] { 1, 0, 1, 1, 1, 0, 0 };
+        assertArrayEquals( "Compare bit vector", array, arrayStored );
+        assertEquals( new Double( 222 ), stringProteinProteinInteraction.getCombined_score() );
+
     }
 
     /*

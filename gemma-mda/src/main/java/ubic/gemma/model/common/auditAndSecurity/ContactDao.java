@@ -37,6 +37,8 @@ public interface ContactDao extends BaseDao<Contact> {
      */
     public Contact findByEmail( java.lang.String email );
 
+    public Collection<Contact> findByName( String name );
+
     /**
      * 
      */
@@ -47,7 +49,5 @@ public interface ContactDao extends BaseDao<Contact> {
      * @return
      */
     public Collection<Investigation> getInvestigations( Contact contact );
-
-    public Collection<Contact> findByName( String name );
 
 }

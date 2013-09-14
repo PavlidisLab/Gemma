@@ -21,11 +21,15 @@ package ubic.gemma.security.audit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Session;
@@ -221,7 +225,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         assertNotNull( events.get( 0 ).getId() );
 
-        user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
+        user.setEmail( RandomStringUtils.randomNumeric( 10 ) ); // change something.
         userService.update( user );
 
         events = auditTrailService.getEvents( user );
@@ -234,7 +238,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         assertEquals( AuditAction.UPDATE, events.get( events.size() - 1 ).getAction() );
         // third time.
-        user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
+        user.setEmail( RandomStringUtils.randomNumeric( 10 ) ); // change something.
         userService.update( user );
 
         events = auditTrailService.getEvents( user );
@@ -257,6 +261,92 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         assertNotNull( ee.getStatus().getId() );
         assertNotNull( ee.getStatus().getCreateDate() );
         assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
+    }
+
+    /**
+     * Torture test. Passes fine with a single thread.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testAuditFindOrCreateConcurrentTorture() throws Exception {
+        int numThreads = 4;
+        final int numExperimentsPerThread = 5;
+        final int numUpdates = 10;
+        final Random random = new Random();
+        final AtomicInteger c = new AtomicInteger( 0 );
+        final AtomicBoolean failed = new AtomicBoolean( false );
+        Collection<Thread> threads = new HashSet<Thread>();
+        for ( int i = 0; i < numThreads; i++ ) {
+
+            Thread.sleep( random.nextInt( 100 ) );
+
+            Thread k = new Thread( new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        for ( int j = 0; j < numExperimentsPerThread; j++ ) {
+                            log.debug( "Starting experiment " + j );
+                            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+                            ee.setDescription( "From test" );
+                            ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+                            ee = expressionExperimentService.findOrCreate( ee );
+
+                            assertNotNull( ee.getAuditTrail() );
+                            assertEquals( 1, ee.getAuditTrail().getEvents().size() );
+                            assertNotNull( ee.getStatus() );
+                            assertNotNull( ee.getStatus().getId() );
+                            assertNotNull( ee.getStatus().getCreateDate() );
+                            assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
+
+                            for ( int q = 0; q < numUpdates; q++ ) {
+                                Thread.sleep( random.nextInt( 5 ) );
+                                log.debug( "Update: experiment " + j );
+                                expressionExperimentService.update( ee );
+                                c.incrementAndGet();
+                            }
+                            log.debug( "Done with experiment " + j );
+                        }
+                    } catch ( Exception e ) {
+                        failed.set( true );
+                        log.error( "!!!!!!!!!!!!!!!!!!!!!! FAILED: " + e.getMessage() );
+                        log.debug( e, e );
+                        throw new RuntimeException( e );
+                    }
+                    log.debug( "Thread done." );
+                }
+            } );
+            threads.add( k );
+
+            k.start();
+        }
+
+        int waits = 0;
+        int maxWaits = 20;
+        int expectedEventCount = numThreads * numExperimentsPerThread * numUpdates;
+        while ( c.get() < expectedEventCount && !failed.get() ) {
+            Thread.sleep( 1000 );
+            log.info( "Waiting ..." );
+            if ( ++waits > maxWaits ) {
+                for ( Thread t : threads ) {
+                    if ( t.isAlive() ) t.interrupt();
+                }
+                fail( "Multithreaded failure: timed out." );
+            }
+        }
+
+        log.debug( " &&&&& DONE &&&&&" );
+
+        for ( Thread thread : threads ) {
+            if ( thread.isAlive() ) thread.interrupt();
+        }
+
+        if ( failed.get() || c.get() != expectedEventCount ) {
+            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock" );
+        } else {
+            log.info( "TORTURE TEST PASSED!" );
+        }
+
     }
 
     private void checkAuditTrail( Auditable c, Collection<Long> trailIds, Collection<Long> eventIds ) {

@@ -62,40 +62,6 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
     private Collection<Taxon> taxa = new ArrayList<Taxon>();
 
     /**
-     * Parse a string file line into an array representing the components, on successful validation create a
-     * StringProteinProteinInteraction value object.
-     * 
-     * @param The line to parse
-     * @return StringProteinProteinInteraction the value object.
-     */
-    @Override
-    public StringProteinProteinInteraction parseOneLine( String line ) {
-
-        // header line skip or empty line
-        if ( line.startsWith( "protein" ) || line.isEmpty() ) {
-            return null;
-        }
-
-        String[] fields = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
-
-        if ( fields.length != STRING_PROTEINPROTEININTERACTION_FIELDS_PER_ROW ) {
-            log.info( "check file format" );
-            throw new FileFormatException( "Line + " + line + " is not in the right format: has " + fields.length
-                    + " fields, expected " + STRING_PROTEINPROTEININTERACTION_FIELDS_PER_ROW );
-        }
-
-        try {
-            return createStringProteinProteinInteraction( fields );
-
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( e );
-        } catch ( FileFormatException e ) {
-            throw new RuntimeException( e );
-        }
-
-    }
-
-    /**
      * Typical line of string file is of the following format:
      * 
      * <pre>
@@ -175,6 +141,63 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
         return stringProteinProteinInteraction;
     }
 
+    @Override
+    public Collection<StringProteinProteinInteraction> getResults() {
+        return proteinProteinInteractions;
+    }
+
+    /**
+     * Getter for taxon that are to be selected for in the string file
+     * 
+     * @return taxon to be parsed
+     */
+    public Collection<Taxon> getTaxa() {
+        return taxa;
+    }
+
+    /**
+     * Parse a string file line into an array representing the components, on successful validation create a
+     * StringProteinProteinInteraction value object.
+     * 
+     * @param The line to parse
+     * @return StringProteinProteinInteraction the value object.
+     */
+    @Override
+    public StringProteinProteinInteraction parseOneLine( String line ) {
+
+        // header line skip or empty line
+        if ( line.startsWith( "protein" ) || line.isEmpty() ) {
+            return null;
+        }
+
+        String[] fields = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
+
+        if ( fields.length != STRING_PROTEINPROTEININTERACTION_FIELDS_PER_ROW ) {
+            log.info( "check file format" );
+            throw new FileFormatException( "Line + " + line + " is not in the right format: has " + fields.length
+                    + " fields, expected " + STRING_PROTEINPROTEININTERACTION_FIELDS_PER_ROW );
+        }
+
+        try {
+            return createStringProteinProteinInteraction( fields );
+
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( e );
+        } catch ( FileFormatException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * Setter for the taxon that are to be selected for in the string file
+     * 
+     * @param taxa to be parsed
+     */
+    public void setTaxa( Collection<Taxon> taxa ) {
+        this.taxa = taxa;
+    }
+
     /**
      * Method to add a StringProteinProteinInteraction the map objects.
      * 
@@ -183,11 +206,6 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
     @Override
     protected void addResult( StringProteinProteinInteraction obj ) {
         proteinProteinInteractions.add( obj );
-    }
-
-    @Override
-    public Collection<StringProteinProteinInteraction> getResults() {
-        return proteinProteinInteractions;
     }
 
     /**
@@ -203,24 +221,6 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
             if ( taxon.getSecondaryNcbiId() != null ) taxaNcibi.add( taxon.getSecondaryNcbiId() );
         }
         return taxaNcibi;
-    }
-
-    /**
-     * Getter for taxon that are to be selected for in the string file
-     * 
-     * @return taxon to be parsed
-     */
-    public Collection<Taxon> getTaxa() {
-        return taxa;
-    }
-
-    /**
-     * Setter for the taxon that are to be selected for in the string file
-     * 
-     * @param taxa to be parsed
-     */
-    public void setTaxa( Collection<Taxon> taxa ) {
-        this.taxa = taxa;
     }
 
 }

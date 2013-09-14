@@ -74,8 +74,6 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
 
             Contact c = Contact.Factory.newInstance();
             c.setName( "McKusick-Nathans Institute of Genetic Medicine" );
-            c.setAddress( "Johns Hopkins University" );
-            c.setURL( "http://www.hopkinsmedicine.org/igm/" );
             c = contactService.findOrCreate( c );
             toAdd.setDatabaseSupplier( c );
             toAdd.setDescription( "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human genes and genetic phenotypes. "

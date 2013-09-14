@@ -30,7 +30,6 @@ import ubic.gemma.model.common.Auditable;
 @Component
 public class AuditHelperImpl implements AuditHelper {
 
-    @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( AuditHelperImpl.class );
 
     @Autowired
@@ -57,9 +56,14 @@ public class AuditHelperImpl implements AuditHelper {
         auditEvent.setAction( AuditAction.CREATE );
         auditEvent.setNote( note );
         auditEvent.setPerformer( user );
-        this.statusDao.update( auditable, null );
-        AuditEvent a = this.auditTrailDao.addEvent( auditable, auditEvent );
-        return a;
+        try {
+            this.statusDao.update( auditable, null );
+            AuditEvent a = this.auditTrailDao.addEvent( auditable, auditEvent );
+            return a;
+        } catch ( Exception e ) {
+            log.warn( ">>>>>>> AUDIT ERROR >>>>>>>>  " + e.getMessage() );
+            throw e;
+        }
 
     }
 
@@ -76,8 +80,13 @@ public class AuditHelperImpl implements AuditHelper {
         auditEvent.setAction( AuditAction.UPDATE );
         auditEvent.setNote( note );
         auditEvent.setPerformer( user );
-        this.statusDao.update( auditable, null );
-        return this.auditTrailDao.addEvent( auditable, auditEvent );
+        try {
+            this.statusDao.update( auditable, null );
+            return this.auditTrailDao.addEvent( auditable, auditEvent );
+        } catch ( Exception e ) {
+            log.warn( ">>>>>>> AUDIT ERROR >>>>>>>>  " + e.getMessage() );
+            throw e;
+        }
     }
 
     /**

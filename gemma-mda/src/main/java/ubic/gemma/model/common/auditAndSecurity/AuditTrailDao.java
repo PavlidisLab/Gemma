@@ -39,9 +39,9 @@ public interface AuditTrailDao extends BaseDao<AuditTrail> {
      */
     public AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
 
-
     /**
      * get all entities of the class specified that have the event type specified in their audit trails
+     * 
      * @param entityClass
      * @param auditEventClass
      * @return

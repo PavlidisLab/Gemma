@@ -56,47 +56,20 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface ExpressionDataMatrix<T> {
 
     /**
-     * Return the expression experiment this matrix is holding data for.
+     * Total number of columns.
      * 
+     * @return int
+     */
+    public int columns();
+
+    /**
+     * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
+     * design.
+     * 
+     * @param el
      * @return
      */
-    public ExpressionExperiment getExpressionExperiment();
-
-    /**
-     * Return a row that 'came from' the given design element.
-     * 
-     * @param designElement
-     * @return
-     */
-    public T[] getRow( CompositeSequence designElement );
-
-    /**
-     * Access a single row of the matrix, by index. A complete row is returned.
-     * 
-     * @param index
-     * @return
-     */
-    public T[] getRow( Integer index );
-
-    /**
-     * Access a single column of the matrix.
-     * 
-     * @param bioAssay
-     * @return T[]
-     */
-    public T[] getColumn( BioAssay bioAssay );
-
-    public int getColumnIndex( BioMaterial bioMaterial );
-
-    public int getRowIndex( CompositeSequence designElement );
-
-    /**
-     * Access a single column of the matrix.
-     * 
-     * @param column index
-     * @return T[]
-     */
-    public T[] getColumn( Integer column );
+    public int columns( CompositeSequence el );
 
     /**
      * Access a single value of the matrix. Note that because there can be multiple bioassays per column and multiple
@@ -119,15 +92,6 @@ public interface ExpressionDataMatrix<T> {
     public T get( int row, int column );
 
     /**
-     * Set a value in the matrix, by index
-     * 
-     * @param row
-     * @param column
-     * @param value
-     */
-    public void set( int row, int column, T value );
-
-    /**
      * Access a submatrix
      * 
      * @param designElements
@@ -137,52 +101,11 @@ public interface ExpressionDataMatrix<T> {
     public T[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays );
 
     /**
-     * Access a submatrix
-     * 
-     * @param designElements
-     * @return T[][]
+     * @return The bioassaydimension that covers all the biomaterials in this matrix.
+     * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
+     *         used in the experiment.
      */
-    public T[][] getRows( List<CompositeSequence> designElements );
-
-    /**
-     * Access a submatrix slice by columns
-     * 
-     * @param bioAssays
-     * @return
-     */
-    public T[][] getColumns( List<BioAssay> bioAssays );
-
-    /**
-     * Access the entire matrix.
-     * 
-     * @return T[][]
-     */
-    public T[][] getRawMatrix();
-
-    /**
-     * @return list of elements representing the row 'labels'.
-     */
-    public List<ExpressionDataMatrixRowElement> getRowElements();
-
-    /**
-     * @param index
-     * @return BioMaterial. Note that if this represents a subsetted data set, the BioMaterial may be a lightweight
-     *         'fake'.
-     */
-    public BioMaterial getBioMaterialForColumn( int index );
-
-    /**
-     * @param index
-     * @return
-     */
-    public CompositeSequence getDesignElementForRow( int index );
-
-    /**
-     * @param index
-     * @return bioassays that contribute data to the column. There can be multiple bioassays if more than one array was
-     *         used in the study.
-     */
-    public Collection<BioAssay> getBioAssaysForColumn( int index );
+    public BioAssayDimension getBestBioAssayDimension();
 
     /**
      * Produce a BioAssayDimension representing the matrix columns for a specific row. The designelement argument is
@@ -196,25 +119,57 @@ public interface ExpressionDataMatrix<T> {
     public BioAssayDimension getBioAssayDimension( CompositeSequence designElement );
 
     /**
-     * Total number of columns.
-     * 
-     * @return int
+     * @param index
+     * @return bioassays that contribute data to the column. There can be multiple bioassays if more than one array was
+     *         used in the study.
      */
-    public int columns();
+    public Collection<BioAssay> getBioAssaysForColumn( int index );
 
     /**
-     * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
-     * design.
+     * @param index
+     * @return BioMaterial. Note that if this represents a subsetted data set, the BioMaterial may be a lightweight
+     *         'fake'.
+     */
+    public BioMaterial getBioMaterialForColumn( int index );
+
+    /**
+     * Access a single column of the matrix.
      * 
-     * @param el
+     * @param bioAssay
+     * @return T[]
+     */
+    public T[] getColumn( BioAssay bioAssay );
+
+    /**
+     * Access a single column of the matrix.
+     * 
+     * @param column index
+     * @return T[]
+     */
+    public T[] getColumn( Integer column );
+
+    public int getColumnIndex( BioMaterial bioMaterial );
+
+    /**
+     * Access a submatrix slice by columns
+     * 
+     * @param bioAssays
      * @return
      */
-    public int columns( CompositeSequence el );
+    public T[][] getColumns( List<BioAssay> bioAssays );
 
     /**
-     * @return int
+     * @param index
+     * @return
      */
-    public int rows();
+    public CompositeSequence getDesignElementForRow( int index );
+
+    /**
+     * Return the expression experiment this matrix is holding data for.
+     * 
+     * @return
+     */
+    public ExpressionExperiment getExpressionExperiment();
 
     /**
      * Return the quantitation types for this matrix. Often (usually) there will be just one.
@@ -224,10 +179,55 @@ public interface ExpressionDataMatrix<T> {
     public Collection<QuantitationType> getQuantitationTypes();
 
     /**
-     * @return The bioassaydimension that covers all the biomaterials in this matrix.
-     * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
-     *         used in the experiment.
+     * Access the entire matrix.
+     * 
+     * @return T[][]
      */
-    public BioAssayDimension getBestBioAssayDimension();
+    public T[][] getRawMatrix();
+
+    /**
+     * Return a row that 'came from' the given design element.
+     * 
+     * @param designElement
+     * @return
+     */
+    public T[] getRow( CompositeSequence designElement );
+
+    /**
+     * Access a single row of the matrix, by index. A complete row is returned.
+     * 
+     * @param index
+     * @return
+     */
+    public T[] getRow( Integer index );
+
+    /**
+     * @return list of elements representing the row 'labels'.
+     */
+    public List<ExpressionDataMatrixRowElement> getRowElements();
+
+    public int getRowIndex( CompositeSequence designElement );
+
+    /**
+     * Access a submatrix
+     * 
+     * @param designElements
+     * @return T[][]
+     */
+    public T[][] getRows( List<CompositeSequence> designElements );
+
+    /**
+     * @return int
+     */
+    public int rows();
+
+    /**
+     * Set a value in the matrix, by index
+     * 
+     * @param row
+     * @param column
+     * @param value
+     */
+    public void set( int row, int column, T value );
 
 }

@@ -32,7 +32,6 @@ import org.aspectj.lang.reflect.CodeSignature;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.vote.AbstractAclVoter;
-import org.springframework.security.acls.domain.SidRetrievalStrategyImpl;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.NotFoundException;
@@ -75,7 +74,7 @@ public class AclCollectionEntryVoter extends AbstractAclVoter {
     private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
     private String processConfigAttribute;
     private List<Permission> requirePermission;
-    private SidRetrievalStrategy sidRetrievalStrategy = new SidRetrievalStrategyImpl();
+    private SidRetrievalStrategy sidRetrievalStrategy = new AclSidRetrievalStrategyImpl();
 
     public AclCollectionEntryVoter( AclService aclService, String processConfigAttribute, Permission[] requirePermission ) {
 

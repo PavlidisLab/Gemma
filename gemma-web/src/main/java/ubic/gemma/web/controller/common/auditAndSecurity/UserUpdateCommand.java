@@ -75,14 +75,6 @@ public class UserUpdateCommand {
         return true;
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#getAddress()
-     */
-    public String getAddress() {
-        return this.user.getAddress();
-    }
-
     public Boolean getAdminUser() {
         return this.adminUser;
     }
@@ -124,14 +116,6 @@ public class UserUpdateCommand {
      */
     public Boolean getEnabled() {
         return this.user.getEnabled();
-    }
-
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#getFax()
-     */
-    public String getFax() {
-        return this.user.getFax();
     }
 
     /**
@@ -206,35 +190,11 @@ public class UserUpdateCommand {
 
     /**
      * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#getPhone()
-     */
-    public String getPhone() {
-        return this.user.getPhone();
-    }
-
-    /**
-     * @return
      * @see ubic.gemma.model.common.auditAndSecurity.User#getRoles()
      */
     public Collection<UserRole> getRoles() {
         roles = this.user.getRoles();
         return roles;
-    }
-
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#getTollFreePhone()
-     */
-    public String getTollFreePhone() {
-        return this.user.getTollFreePhone();
-    }
-
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#getURI()
-     */
-    public String getURL() {
-        return this.user.getURL();
     }
 
     /**
@@ -256,14 +216,6 @@ public class UserUpdateCommand {
         int result = 1;
         result = prime * result + ( ( user == null ) ? 0 : user.hashCode() );
         return result;
-    }
-
-    /**
-     * @param address
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#setAddress(java.lang.String)
-     */
-    public void setAddress( String address ) {
-        this.user.setAddress( address );
     }
 
     public void setAdminUser( Boolean adminUser ) {
@@ -307,14 +259,6 @@ public class UserUpdateCommand {
      */
     public void setEnabled( Boolean enabled ) {
         this.user.setEnabled( enabled );
-    }
-
-    /**
-     * @param fax
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#setFax(java.lang.String)
-     */
-    public void setFax( String fax ) {
-        this.user.setFax( fax );
     }
 
     /**
@@ -380,36 +324,12 @@ public class UserUpdateCommand {
     }
 
     /**
-     * @param phone
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#setPhone(java.lang.String)
-     */
-    public void setPhone( String phone ) {
-        this.user.setPhone( phone );
-    }
-
-    /**
      * @param roles
      * @see ubic.gemma.model.common.auditAndSecurity.User#setRoles(java.util.Collection)
      */
     public void setRoles( Collection<UserRole> roles ) {
         this.roles = roles;
         this.user.setRoles( this.roles );
-    }
-
-    /**
-     * @param tollFreePhone
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#setTollFreePhone(java.lang.String)
-     */
-    public void setTollFreePhone( String tollFreePhone ) {
-        this.user.setTollFreePhone( tollFreePhone );
-    }
-
-    /**
-     * @param URL
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#setURI(java.lang.String)
-     */
-    public void setURL( String URL ) {
-        this.user.setURL( URL );
     }
 
     /**
@@ -441,12 +361,7 @@ public class UserUpdateCommand {
         this.setEnabled( user.getEnabled() );
         this.setLastName( user.getLastName() );
         this.setName( user.getName() );
-        this.setURL( user.getURL() );
-        this.setAddress( user.getAddress() );
-        this.setPhone( user.getPhone() );
-        this.setTollFreePhone( user.getTollFreePhone() );
         this.setEmail( user.getEmail() );
-        this.setFax( user.getFax() );
         this.setName( user.getName() );
         this.setDescription( user.getDescription() );
         this.setRoles( user.getRoles() );

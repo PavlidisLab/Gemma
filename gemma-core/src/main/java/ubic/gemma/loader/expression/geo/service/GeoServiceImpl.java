@@ -54,7 +54,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.ExpressionExperimentPrePersistService;
-import ubic.gemma.security.SecurityService;
 
 /**
  * Non-interactive fetching, processing and persisting of GEO data.
@@ -78,9 +77,6 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private SecurityService securityService;
 
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
@@ -253,7 +249,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
             ee = persisterHelper.persist( ee, c );
-            securityService.makePrivate( ee ); // TODO make this optional?
+            // securityService.makePrivate( ee ); // this now happens in the AclAdvice.
             persistedResult.add( ee );
             log.debug( "Persisted " + seriesAccession );
 

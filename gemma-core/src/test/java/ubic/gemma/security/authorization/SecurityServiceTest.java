@@ -35,20 +35,14 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.BasePermission;
-import org.springframework.security.acls.domain.GrantedAuthoritySid;
- import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
-import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.MutableAcl;
-import org.springframework.security.acls.model.MutableAclService;
-import org.springframework.security.acls.model.NotFoundException;
-import org.springframework.security.acls.model.ObjectIdentity;
-import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclGrantedAuthoritySid;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclPrincipalSid;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -57,7 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.security.authorization.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
+import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -72,7 +66,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     private ArrayDesignService arrayDesignService;
 
     ArrayDesign arrayDesign;
-    String arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( 5 );
+    String arrayDesignName;
     String compositeSequenceName1 = "Design Element Bar1";
     String compositeSequenceName2 = "Design Element Bar2";
 
@@ -80,15 +74,10 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     private SecurityService securityService;
 
     @Autowired
-    private AclService aclService;
-
-    @Autowired
     private UserManager userManager;
 
     @Autowired
-    private MutableAclService mutableAclService;
-
-    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
+    private AclTestUtils aclTestUtils;
 
     /*
      * (non-Javadoc)
@@ -97,6 +86,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      */
     @Before
     public void setup() {
+        this.arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( 5 );
 
         // admin
         this.arrayDesign = ArrayDesign.Factory.newInstance();
@@ -123,78 +113,51 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         cs2.setArrayDesign( this.arrayDesign );
         this.arrayDesign.setCompositeSequences( col );
 
-        this.arrayDesign = this.arrayDesignService.findOrCreate( this.arrayDesign );
-
-    }
-
-    @Test
-    public void testUserCanEdit() {
-        Collection<String> editableBy = this.securityService.editableBy( this.arrayDesign );
-        assertTrue( editableBy.contains( "administrator" ) );
-        assertTrue( !editableBy.contains( "gemmaAgent" ) );
-
-        assertTrue( this.securityService.isEditableByUser( this.arrayDesign, "administrator" ) );
-    }
-
-    @Test
-    public void testUserCanRead() {
-        Collection<String> us = this.securityService.readableBy( this.arrayDesign );
-        assertTrue( us.contains( "administrator" ) );
-        assertTrue( us.contains( "gemmaAgent" ) );
-
-        assertTrue( this.securityService.isViewableByUser( this.arrayDesign, "administrator" ) );
-        assertTrue( this.securityService.isViewableByUser( this.arrayDesign, "gemmaAgent" ) );
-    }
-
-    @Test
-    public void testSetOwner() {
-        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
-        this.securityService.makePrivate( ee );
-
-        String username = "first_" + randomName();
-        makeUser( username );
-
-        this.securityService.setOwner( ee, username );
-
-        Sid owner = this.securityService.getOwner( ee );
-        assertTrue( owner instanceof PrincipalSid );
-        assertEquals( username, ( ( PrincipalSid ) owner ).getPrincipal() );
+        this.arrayDesign = this.arrayDesignService.create( this.arrayDesign );
 
     }
 
     /**
+     * Tests that the same ACE can not be added twice to a securable object.
+     * 
      * @throws Exception
      */
     @Test
-    public void testMakeExpressionExperimentPrivate() throws Exception {
-
+    public void testDuplicateAcesNotAddedOnPrivateExpressionExperiment() throws Exception {
+        // make private experiment
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
-
         this.securityService.makePrivate( ee );
+        // add user and add the user to the group
+        String username = "salmonid" + randomName();
+        String groupName = "fish" + randomName();
+        makeUser( username );
+        this.securityService.makeOwnedByUser( ee, username );
+        assertTrue( this.securityService.isEditableByUser( ee, username ) );
+        this.runAsUser( username );
 
-        assertTrue( "ExpressionExperiment not private, acl was: " + getAcl( ee ), this.securityService.isPrivate( ee ) );
+        this.securityService.createGroup( groupName );
 
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assertTrue( "BioAssay not private, acl was: " + getAcl( ba ), this.securityService.isPrivate( ba ) );
-        }
+        MutableAcl acl = aclTestUtils.getAcl( ee );
+        int numberOfAces = acl.getEntries().size();
 
-        this.securityService.makePublic( ee );
+        this.securityService.makeReadableByGroup( ee, groupName );
+        MutableAcl aclAfterReadableAdded = aclTestUtils.getAcl( ee );
+        assertEquals( numberOfAces + 1, aclAfterReadableAdded.getEntries().size() );
 
-        assertTrue( "ExpressionExperiment private, acl was: " + getAcl( ee ), this.securityService.isPublic( ee ) );
+        this.securityService.makeWriteableByGroup( ee, groupName );
+        MutableAcl aclAfterWritableAdded = aclTestUtils.getAcl( ee );
+        assertEquals( numberOfAces + 2, aclAfterWritableAdded.getEntries().size() );
 
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assertTrue( "BioAssay not public, acl was: " + getAcl( ba ), this.securityService.isPublic( ba ) );
-        }
+        // this time the acl there and should not be added again
+        this.securityService.makeReadableByGroup( ee, groupName );
+        MutableAcl aclAfterReadableAddedAgain = aclTestUtils.getAcl( ee );
+        assertEquals( numberOfAces + 2, aclAfterReadableAddedAgain.getEntries().size() );
 
-    }
+        // check writable too
+        this.securityService.makeWriteableByGroup( ee, groupName );
+        MutableAcl aclAfterWritableAddedAgain = aclTestUtils.getAcl( ee );
+        assertEquals( numberOfAces + 2, aclAfterWritableAddedAgain.getEntries().size() );
 
-    private void makeUser( String username ) {
-        try {
-            this.userManager.loadUserByUsername( username );
-        } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
-        }
     }
 
     @Test
@@ -260,6 +223,37 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     }
 
     /**
+     * @throws Exception
+     */
+    @Test
+    public void testMakeExpressionExperimentPrivate() throws Exception {
+
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
+
+        for ( int i = 0; i < 5; i++ ) {
+            this.securityService.makePrivate( ee );
+
+            assertTrue( "ExpressionExperiment not private, acl was: " + aclTestUtils.getAcl( ee ),
+                    this.securityService.isPrivate( ee ) );
+
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                assertTrue( "BioAssay not private, acl of ee was: " + aclTestUtils.getAcl( ee )
+                        + "\nacl of bioassay was: " + aclTestUtils.getAcl( ba ), this.securityService.isPrivate( ba ) );
+            }
+
+            this.securityService.makePublic( ee );
+
+            assertTrue( "ExpressionExperiment still private, acl was: " + aclTestUtils.getAcl( ee ),
+                    this.securityService.isPublic( ee ) );
+
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                assertTrue( "BioAssay not public, acl of ee was: " + aclTestUtils.getAcl( ee ),
+                        this.securityService.isPublic( ba ) );
+            }
+        }
+    }
+
+    /**
      * Tests changing object level security on the ArrayDesign from public to private WITHOUT the correct permission
      * (You need to be administrator).
      * 
@@ -278,59 +272,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         } catch ( AccessDeniedException e ) {
             // ok.
         }
-    }
-
-    private MutableAcl getAcl( Securable s ) {
-        ObjectIdentity oi = this.objectIdentityRetrievalStrategy.getObjectIdentity( s );
-
-        try {
-            return ( MutableAcl ) this.aclService.readAclById( oi );
-        } catch ( NotFoundException e ) {
-            return null;
-        }
-    }
-
-    /**
-     * Tests that the same ACL can not be added to a securable object.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testDuplicateAcesNotAddedOnPrivateExpressionExperiment() throws Exception {
-        // make private experiment
-        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
-        this.securityService.makePrivate( ee );
-        // add user and add the user to the group
-        String username = "salmonid" + randomName();
-        String groupName = "fish" + randomName();
-        makeUser( username );
-        this.securityService.makeOwnedByUser( ee, username );
-        assertTrue( this.securityService.isEditableByUser( ee, username ) );
-        this.runAsUser( username );
-
-        this.securityService.createGroup( groupName );
-
-        MutableAcl acl = getAcl( ee );
-        int numberOfAces = acl.getEntries().size();
-
-        this.securityService.makeReadableByGroup( ee, groupName );
-        MutableAcl aclAfterReadableAdded = getAcl( ee );
-        assertEquals( numberOfAces + 1, aclAfterReadableAdded.getEntries().size() );
-
-        this.securityService.makeWriteableByGroup( ee, groupName );
-        MutableAcl aclAfterWritableAdded = getAcl( ee );
-        assertEquals( numberOfAces + 2, aclAfterWritableAdded.getEntries().size() );
-
-        // this time the acl there and should not be added again
-        this.securityService.makeReadableByGroup( ee, groupName );
-        MutableAcl aclAfterReadableAddedAgain = getAcl( ee );
-        assertEquals( numberOfAces + 2, aclAfterReadableAddedAgain.getEntries().size() );
-
-        // check writable too
-        this.securityService.makeWriteableByGroup( ee, groupName );
-        MutableAcl aclAfterWritableAddedAgain = getAcl( ee );
-        assertEquals( numberOfAces + 2, aclAfterWritableAddedAgain.getEntries().size() );
-
     }
 
     /**
@@ -355,36 +296,37 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.securityService.createGroup( groupName );
 
         // get the basic acls
-        MutableAcl acl = getAcl( ee );
+        MutableAcl acl = aclTestUtils.getAcl( ee );
         int numberOfAces = acl.getEntries().size();
 
-        // make readable by group add first acl read for grouo and check added
+        // make readable by group add first ACE read for group and check added
         this.securityService.makeReadableByGroup( ee, groupName );
-        MutableAcl aclAfterReadableAdded = getAcl( ee );
+        MutableAcl aclAfterReadableAdded = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces + 1, aclAfterReadableAdded.getEntries().size() );
 
-        // force the addition of duplicate ACL read, fish group on the same experiment
+        // force the addition of duplicate ACE read, fish group on the same experiment. Note that in the current
+        // implementation this only adds one - we already avoid duplicates.
         List<GrantedAuthority> groupAuthorities = this.userManager.findGroupAuthorities( groupName );
         GrantedAuthority ga = groupAuthorities.get( 0 );
         aclAfterReadableAdded.insertAce( aclAfterReadableAdded.getEntries().size(), BasePermission.READ,
-                new GrantedAuthoritySid( this.userManager.getRolePrefix() + ga ), true );
-        this.mutableAclService.updateAcl( aclAfterReadableAdded );
-        MutableAcl aclAfterReadableAddedDuplicate = getAcl( ee );
-        assertEquals( numberOfAces + 2, aclAfterReadableAddedDuplicate.getEntries().size() );
+                new AclGrantedAuthoritySid( this.userManager.getRolePrefix() + ga ), true );
+        this.aclTestUtils.update( aclAfterReadableAdded );
+        MutableAcl aclAfterReadableAddedDuplicate = aclTestUtils.getAcl( ee );
+        assertEquals( numberOfAces + 1, aclAfterReadableAddedDuplicate.getEntries().size() );
 
-        // delete the acl now and check removed both
+        // delete the ace now and check removed permission completely.
         this.securityService.makeUnreadableByGroup( ee, groupName );
-        MutableAcl aclAfterReadableAddedDuplicateRemoval = getAcl( ee );
+        MutableAcl aclAfterReadableAddedDuplicateRemoval = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces, aclAfterReadableAddedDuplicateRemoval.getEntries().size() );
         List<AccessControlEntry> entriesAfterDelete = aclAfterReadableAddedDuplicateRemoval.getEntries();
         assertEquals( numberOfAces, entriesAfterDelete.size() );
 
-        // also check that the right acls check the principals
+        // also check that the right ACE check the principals
         Collection<String> principals = new ArrayList<String>();
-        principals.add( "GrantedAuthoritySid[GROUP_ADMIN]" );
-        principals.add( "GrantedAuthoritySid[GROUP_AGENT]" );
-        principals.add( "PrincipalSid[salmonid]" );
-        principals.add( "PrincipalSid[salmonid]" );
+        principals.add( "AclGrantedAuthoritySid[GROUP_ADMIN]" );
+        principals.add( "AclGrantedAuthoritySid[GROUP_AGENT]" );
+        principals.add( "AclPrincipalSid[salmonid]" );
+        principals.add( "AclPrincipalSid[salmonid]" );
 
         for ( AccessControlEntry accessControl : entriesAfterDelete ) {
             Sid sid = accessControl.getSid();
@@ -395,6 +337,22 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         // clean up the groups
         this.userManager.deleteGroup( groupName );
         // userManager.deleteUser( username );
+    }
+
+    @Test
+    public void testSetOwner() {
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
+        this.securityService.makePrivate( ee );
+
+        String username = "first_" + randomName();
+        makeUser( username );
+
+        this.securityService.setOwner( ee, username );
+
+        Sid owner = this.securityService.getOwner( ee );
+        assertTrue( owner instanceof AclPrincipalSid );
+        assertEquals( username, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+
     }
 
     /**
@@ -421,5 +379,33 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         }
 
+    }
+
+    @Test
+    public void testUserCanEdit() {
+        Collection<String> editableBy = this.securityService.editableBy( this.arrayDesign );
+        assertTrue( editableBy.contains( "administrator" ) );
+        assertTrue( !editableBy.contains( "gemmaAgent" ) );
+
+        assertTrue( this.securityService.isEditableByUser( this.arrayDesign, "administrator" ) );
+    }
+
+    @Test
+    public void testUserCanRead() {
+        Collection<String> us = this.securityService.readableBy( this.arrayDesign );
+        assertTrue( us.contains( "administrator" ) );
+        assertTrue( us.contains( "gemmaAgent" ) );
+
+        assertTrue( this.securityService.isViewableByUser( this.arrayDesign, "administrator" ) );
+        assertTrue( this.securityService.isViewableByUser( this.arrayDesign, "gemmaAgent" ) );
+    }
+
+    private void makeUser( String username ) {
+        try {
+            this.userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
+                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+        }
     }
 }

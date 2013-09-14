@@ -18,10 +18,13 @@
  */
 package ubic.gemma.persistence;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
+import ubic.gemma.util.EntityUtils;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
@@ -64,7 +67,12 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     public Collection<? extends T> create( Collection<? extends T> entities ) {
         nullCheck( entities );
         if ( entities.isEmpty() ) return entities;
-        this.getHibernateTemplate().saveOrUpdateAll( entities );
+        int i = 0;
+        for ( T t : entities ) {
+            this.create( t );
+            if ( ++i % 100 == 0 ) this.getSessionFactory().getCurrentSession().flush();
+        }
+
         return entities;
     }
 
@@ -76,7 +84,10 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     @Override
     public T create( T entity ) {
         nullCheck( entity );
-        this.getHibernateTemplate().save( entity );
+        Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
+        assert EntityUtils.getId( entity ) != null;
+        assert id.equals( EntityUtils.getId( entity ) );
+
         return entity;
     }
 
@@ -88,8 +99,9 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     @Override
     public Collection<T> load( Collection<Long> ids ) {
         if ( ids.isEmpty() ) return new HashSet<T>();
-        return this.getHibernateTemplate().findByNamedParam(
-                "from   " + elementClass.getSimpleName() + " where id in (:ids)", "ids", ids );
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from   " + elementClass.getSimpleName() + " where id in (:ids)" )
+                .setParameterList( "ids", ids ).list();
     }
 
     /*
@@ -100,7 +112,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     @Override
     public T load( Long id ) {
         nullCheck( id );
-        T entity = this.getHibernateTemplate().get( elementClass, id );
+        T entity = ( T ) this.getSessionFactory().getCurrentSession().load( elementClass, id );
         return entity;
     }
 
@@ -175,7 +187,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * @param entity
      */
     private void nullCheck( Object entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Argument cannot be null" );
+        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
     }
 
 }

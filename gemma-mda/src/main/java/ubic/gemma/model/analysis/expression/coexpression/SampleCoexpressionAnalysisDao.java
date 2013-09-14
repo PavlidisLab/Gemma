@@ -36,8 +36,9 @@ public interface SampleCoexpressionAnalysisDao extends BaseDao<SampleCoexpressio
      * @param matrix
      * @param bad
      * @param ee
+     * @return 
      */
-    public void create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad, ExpressionExperiment ee );
+    public SampleCoexpressionAnalysis create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad, ExpressionExperiment ee );
 
     /**
      * @param ee

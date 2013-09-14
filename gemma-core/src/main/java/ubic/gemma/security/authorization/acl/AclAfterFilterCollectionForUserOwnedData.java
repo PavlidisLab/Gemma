@@ -49,6 +49,8 @@ public class AclAfterFilterCollectionForUserOwnedData extends AbstractAclProvide
 
     public AclAfterFilterCollectionForUserOwnedData( AclService aclService, List<Permission> requirePermission ) {
         super( aclService, "AFTER_ACL_FILTER_USER_OWNED_DATA", requirePermission );
+        this.setObjectIdentityRetrievalStrategy( new ValueObjectAwareIdentityRetrievalStrategyImpl() );
+
     }
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -112,7 +114,9 @@ public class AclAfterFilterCollectionForUserOwnedData extends AbstractAclProvide
                 }
 
                 /*
-                 * Adapted from ubic.gemma.security.authorization.acl.AclAfterFilterCollectionForMyData.decide(Authentication, Object, Collection<ConfigAttribute>, Object)
+                 * Adapted from
+                 * ubic.gemma.security.authorization.acl.AclAfterFilterCollectionForMyData.decide(Authentication,
+                 * Object, Collection<ConfigAttribute>, Object)
                  */
                 Map<Securable, Boolean> ownership = securityService.areOwnedByCurrentUser( securablesToFilter );
 

@@ -18,6 +18,16 @@
  */
 package ubic.gemma.job.grid.util;
 
+import java.util.Enumeration;
+
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +35,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.SessionCallback;
 import org.springframework.stereotype.Component;
-import ubic.gemma.util.Settings;
 
-import javax.jms.*;
-import java.util.Enumeration;
+import ubic.gemma.util.Settings;
 
 /**
  * TODO
@@ -40,11 +48,6 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
     @Autowired(required = false)
     @Qualifier("amqJmsTemplate")
     private JmsTemplate jmsTemplate;
-
-    @Override
-    public boolean isRemoteTasksEnabled() {
-        return Settings.isRemoteTasksEnabled();
-    }
 
     @Override
     public boolean canServiceRemoteTasks() {
@@ -65,12 +68,6 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
     }
 
     @Override
-    public int getTaskSubmissionQueueLength() throws JMSException {
-        MapMessage reply = sendTaskSubmissionQueueDiagnosticMessage();
-        return ( int ) reply.getLong( "enqueueCount" );
-    }
-
-    @Override
     public String getTaskSubmissionQueueDiagnosticMessage() throws JMSException {
         MapMessage reply = sendTaskSubmissionQueueDiagnosticMessage();
 
@@ -83,6 +80,17 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
         }
 
         return message;
+    }
+
+    @Override
+    public int getTaskSubmissionQueueLength() throws JMSException {
+        MapMessage reply = sendTaskSubmissionQueueDiagnosticMessage();
+        return ( int ) reply.getLong( "enqueueCount" );
+    }
+
+    @Override
+    public boolean isRemoteTasksEnabled() {
+        return Settings.isRemoteTasksEnabled();
     }
 
     private MapMessage sendTaskSubmissionQueueDiagnosticMessage() {

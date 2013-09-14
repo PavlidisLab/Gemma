@@ -125,6 +125,11 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
      */
     public static OntologyTerm getTermForId( String goId ) {
         if ( uri2Term == null ) return null;
+
+        if ( !uri2Term.containsKey( toUri( goId ) ) ) {
+            log.warn( "GOID " + goId + " not recognized?" );
+        }
+
         return uri2Term.get( toUri( goId ) );
     }
 
@@ -988,6 +993,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
      * 
      */
     private synchronized void initializeGeneOntology() {
+        if ( running.get() ) return;
 
         Thread loadThread = new Thread( new Runnable() {
             @Override
@@ -1003,24 +1009,13 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
                     log.info( "Gene Ontology loaded, total of " + uri2Term.size() + " items in " + loadTime.getTime()
                             / 1000 + "s" );
-                    // log.info( "Gene Ontology Molecular Function loaded, total of " + uri2Term.size() + " items in "
-                    // + loadTime.getTime() / 1000 + "s" );
-                    //
-                    // loadTermsInNameSpace( BP_URL );
-                    // log.info( "Gene Ontology Biological Process loaded, total of " + uri2Term.size() + " items in "
-                    // + loadTime.getTime() / 1000 + "s" );
-                    //
-                    // loadTermsInNameSpace( CC_URL );
-                    // log.info( "Gene Ontology Cellular Component loaded, total of " + uri2Term.size() + " items in "
-                    // + loadTime.getTime() / 1000 + "s" );
-
                     ready.set( true );
                     running.set( false );
 
                     log.info( "Done loading GO" );
                     loadTime.stop();
                 } catch ( Throwable e ) {
-                    if ( log != null ) log.error( e, e );// log call can break hot deploy
+                    if ( log != null ) log.error( e, e );
                     ready.set( false );
                     running.set( false );
                 }
@@ -1028,7 +1023,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
         } );
 
-        if ( running.get() ) return;
         loadThread.start();
 
     }

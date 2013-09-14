@@ -19,11 +19,23 @@
 
 package ubic.gemma.search;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.InputStream;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -40,11 +52,6 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.tasks.maintenance.IndexerTask;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.testing.BaseSpringContextTest;
-
-import java.io.InputStream;
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 /**
  * @author kelsey
@@ -189,45 +196,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     }
 
-    @Test
-    public void testSearchByBibRefId() {
-
-        String id;
-        if ( ee.getPrimaryPublication() == null ) {
-            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
-            BibliographicReference bibref = fetcher.retrieveByHTTP( 21878914 );
-            bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
-            ee.setPrimaryPublication( bibref );
-            eeService.update( ee );
-            id = "21878914";
-        } else {
-            id = ee.getPrimaryPublication().getPubAccession().getAccession();
-        }
-
-        log.info( "indexing ..." );
-
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexBibRef( true );
-
-        indexerTask.setTaskCommand( c );
-        indexerTask.execute();
-
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.noSearches();
-        settings.setQuery( id );
-        settings.setSearchExperiments( true );
-        settings.setUseCharacteristics( false );
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
-                return;
-            }
-        }
-
-        fail( "Didn't get expected result from search" );
-    }
-
     /**
      * Tests that general search terms are resolved to their proper ontology terms and objects tagged with those terms
      * are found, -- requires LARQ index.
@@ -277,6 +245,75 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     }
 
+    @Test
+    public void testSearchByBibRefId() {
+
+        String id;
+        if ( ee.getPrimaryPublication() == null ) {
+            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+            BibliographicReference bibref = fetcher.retrieveByHTTP( 21878914 );
+            bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
+            ee.setPrimaryPublication( bibref );
+            eeService.update( ee );
+            id = "21878914";
+        } else {
+            id = ee.getPrimaryPublication().getPubAccession().getAccession();
+        }
+
+        log.info( "indexing ..." );
+
+        IndexerTaskCommand c = new IndexerTaskCommand();
+        c.setIndexBibRef( true );
+
+        indexerTask.setTaskCommand( c );
+        indexerTask.execute();
+
+        SearchSettings settings = SearchSettings.Factory.newInstance();
+        settings.noSearches();
+        settings.setQuery( id );
+        settings.setSearchExperiments( true );
+        settings.setUseCharacteristics( false );
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                return;
+            }
+        }
+
+        fail( "Didn't get expected result from search" );
+    }
+
+    @Test
+    public void testSearchForUpdatedQueryResults() {
+
+        // test out the dao a bit
+        UserQuery userQuery = userQueryService.load( thePastUserQuery.getId() );
+
+        assertNotNull( userQuery );
+
+        Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
+        assertTrue( !found.isEmpty() );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                return;
+            }
+        }
+
+        fail( "Didn't get expected result from search" );
+    }
+
+    @Test
+    public void testSearchForUpdatedQueryResultsNoResults() {
+        // test out the dao a bit
+        UserQuery userQuery = userQueryService.load( theFutureUserQuery.getId() );
+
+        Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
+        assertTrue( found.isEmpty() );
+
+    }
+
     /**
      * Test we find EE tagged with a child term that matches the given uri.
      */
@@ -317,36 +354,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
             }
         }
         fail( "Didn't get expected result from search" );
-    }
-
-    @Test
-    public void testSearchForUpdatedQueryResults() {
-
-        // test out the dao a bit
-        UserQuery userQuery = userQueryService.load( thePastUserQuery.getId() );
-
-        assertNotNull( userQuery );
-
-        Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
-        assertTrue( !found.isEmpty() );
-
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
-                return;
-            }
-        }
-
-        fail( "Didn't get expected result from search" );
-    }
-
-    @Test
-    public void testSearchForUpdatedQueryResultsNoResults() {
-        // test out the dao a bit
-        UserQuery userQuery = userQueryService.load( theFutureUserQuery.getId() );
-
-        Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
-        assertTrue( found.isEmpty() );
-
     }
 
 }

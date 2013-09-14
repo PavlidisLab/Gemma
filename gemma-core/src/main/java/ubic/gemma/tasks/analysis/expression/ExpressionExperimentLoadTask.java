@@ -21,6 +21,5 @@ package ubic.gemma.tasks.analysis.expression;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
-
-public interface ExpressionExperimentLoadTask extends Task<TaskResult, ExpressionExperimentLoadTaskCommand> {}
-
+public interface ExpressionExperimentLoadTask extends Task<TaskResult, ExpressionExperimentLoadTaskCommand> {
+}

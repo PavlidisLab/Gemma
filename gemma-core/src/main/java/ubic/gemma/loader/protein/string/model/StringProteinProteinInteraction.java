@@ -64,6 +64,16 @@ public class StringProteinProteinInteraction implements Serializable {
     }
 
     /**
+     * For a given evidence add the score
+     * 
+     * @param evidenceCode What type of evidence there is for this interaction
+     * @param score If greater than 0 then evidence for that factor
+     */
+    public void addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum evidenceCode, Integer score ) {
+        mapEvidenceCodeScores.put( evidenceCode, score );
+    }
+
+    /**
      * Two StringProteinProteinInteraction are equal if they have the same combination of proteins either one or two can
      * be reversed.
      */
@@ -92,87 +102,12 @@ public class StringProteinProteinInteraction implements Serializable {
     }
 
     /**
-     * Create a hash of the two proteins; this method is called when using HashSet as in the parser.
-     */
-    @Override
-    public int hashCode() {
-        int hash = 0;
-
-        if ( protein1 == null || protein2 == null ) {
-            return hash;
-        }
-        hash = protein1.concat( protein2 ).hashCode();
-        return hash;
-    }
-
-    /**
-     * @return the protein1
-     */
-    public String getProtein1() {
-        return protein1;
-    }
-
-    /**
-     * @param protein1 the protein1 to set
-     */
-    public void setProtein1( String protein1 ) {
-        this.protein1 = protein1;
-    }
-
-    /**
-     * @return the protein2
-     */
-    public String getProtein2() {
-        return protein2;
-    }
-
-    /**
-     * @param protein2 the protein2 to set
-     */
-    public void setProtein2( String protein2 ) {
-        this.protein2 = protein2;
-    }
-
-    /**
      * The total score for this interaction.
      * 
      * @return the combined_score
      */
     public Double getCombined_score() {
         return combined_score;
-    }
-
-    /**
-     * Total score of the interaction
-     * 
-     * @param combined_score the combined_score to set
-     */
-    public void setCombined_score( Double combined_score ) {
-        this.combined_score = combined_score;
-    }
-
-    /**
-     * @return NCBI id of the taxon in this interaction that is the taxon of the two genes
-     */
-    public Integer getNcbiTaxonId() {
-        return ncbiTaxonId;
-    }
-
-    /**
-     * @param ncbiTaxonId NCBI id of the taxon in this interaction that is the taxon of the two genes
-     */
-    public void setNcbiTaxonId( Integer ncbiTaxonId ) {
-        this.ncbiTaxonId = ncbiTaxonId;
-    }
-
-    /**
-     * For a given evidence add the score
-     * 
-     * @param evidenceCode What type of evidence there is for this interaction
-     * @param score If greater than 0 then evidence for that factor
-     */
-    public void addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum evidenceCode, Integer score ) {
-        mapEvidenceCodeScores.put( evidenceCode, score );
     }
 
     /**
@@ -192,6 +127,71 @@ public class StringProteinProteinInteraction implements Serializable {
             }
         }
         return evidenceVector;
+    }
+
+    /**
+     * @return NCBI id of the taxon in this interaction that is the taxon of the two genes
+     */
+    public Integer getNcbiTaxonId() {
+        return ncbiTaxonId;
+    }
+
+    /**
+     * @return the protein1
+     */
+    public String getProtein1() {
+        return protein1;
+    }
+
+    /**
+     * @return the protein2
+     */
+    public String getProtein2() {
+        return protein2;
+    }
+
+    /**
+     * Create a hash of the two proteins; this method is called when using HashSet as in the parser.
+     */
+    @Override
+    public int hashCode() {
+        int hash = 0;
+
+        if ( protein1 == null || protein2 == null ) {
+            return hash;
+        }
+        hash = protein1.concat( protein2 ).hashCode();
+        return hash;
+    }
+
+    /**
+     * Total score of the interaction
+     * 
+     * @param combined_score the combined_score to set
+     */
+    public void setCombined_score( Double combined_score ) {
+        this.combined_score = combined_score;
+    }
+
+    /**
+     * @param ncbiTaxonId NCBI id of the taxon in this interaction that is the taxon of the two genes
+     */
+    public void setNcbiTaxonId( Integer ncbiTaxonId ) {
+        this.ncbiTaxonId = ncbiTaxonId;
+    }
+
+    /**
+     * @param protein1 the protein1 to set
+     */
+    public void setProtein1( String protein1 ) {
+        this.protein1 = protein1;
+    }
+
+    /**
+     * @param protein2 the protein2 to set
+     */
+    public void setProtein2( String protein2 ) {
+        this.protein2 = protein2;
     }
 
 }

@@ -236,12 +236,6 @@ public class BusinessKey {
         if ( StringUtils.isNotBlank( contact.getName() ) )
             queryObject.add( Restrictions.eq( "name", contact.getName() ) );
 
-        if ( StringUtils.isNotBlank( contact.getAddress() ) )
-            queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
-
-        if ( StringUtils.isNotBlank( contact.getPhone() ) )
-            queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );
-
     }
 
     /**
@@ -351,12 +345,6 @@ public class BusinessKey {
 
         if ( StringUtils.isNotBlank( contact.getName() ) )
             queryObject.add( Restrictions.eq( "lastName", contact.getFullName() ) );
-
-        if ( StringUtils.isNotBlank( contact.getAddress() ) )
-            queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
-
-        if ( StringUtils.isNotBlank( contact.getPhone() ) )
-            queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );
 
     }
 
@@ -561,8 +549,7 @@ public class BusinessKey {
      */
     public static void checkKey( Contact contact ) {
         if ( contact == null
-                || ( StringUtils.isBlank( contact.getName() ) && StringUtils.isBlank( contact.getAddress() )
-                        && StringUtils.isBlank( contact.getEmail() ) && StringUtils.isBlank( contact.getPhone() ) ) ) {
+                || ( StringUtils.isBlank( contact.getName() ) && StringUtils.isBlank( contact.getEmail() ) ) ) {
             throw new IllegalArgumentException( "Contact must have at least some information filled in!" );
         }
     }

@@ -19,6 +19,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.AbstractTask;

@@ -193,6 +193,15 @@ public class NCBIGeneInfo {
         return this.description;
     }
 
+    /**
+     * @return The NCBI gene ID that was 'discontinued' for the gene that matches this symbol and taxon. These
+     *         correspond to the lines in gene_history that have a '-' in the second column. But because we are matching
+     *         only on the symbol+taxon, we have to be a bit careful using it.
+     */
+    public String getDiscontinuedId() {
+        return discontinuedIdForGene;
+    }
+
     public String getEnsemblId() {
         return ensemblId;
     }
@@ -288,6 +297,14 @@ public class NCBIGeneInfo {
         this.description = description;
     }
 
+    public void setDiscontinuedId( String discontinuedIdForGene ) {
+        if ( StringUtils.isNotBlank( this.discontinuedIdForGene ) ) {
+            this.discontinuedIdForGene = this.discontinuedIdForGene + "," + discontinuedIdForGene;
+        } else {
+            this.discontinuedIdForGene = discontinuedIdForGene;
+        }
+    }
+
     public void setEnsemblId( String ensemblId ) {
         this.ensemblId = ensemblId;
 
@@ -343,15 +360,6 @@ public class NCBIGeneInfo {
     }
 
     /**
-     * @return The NCBI gene ID that was 'discontinued' for the gene that matches this symbol and taxon. These
-     *         correspond to the lines in gene_history that have a '-' in the second column. But because we are matching
-     *         only on the symbol+taxon, we have to be a bit careful using it.
-     */
-    public String getDiscontinuedId() {
-        return discontinuedIdForGene;
-    }
-
-    /**
      * @param symbolIsFromAuthority The symbolIsFromAuthority to set.
      */
     public void setSymbolIsFromAuthority( boolean symbolIsFromAuthority ) {
@@ -363,14 +371,6 @@ public class NCBIGeneInfo {
      */
     public void setTaxId( int taxId ) {
         this.taxId = taxId;
-    }
-
-    public void setDiscontinuedId( String discontinuedIdForGene ) {
-        if ( StringUtils.isNotBlank( this.discontinuedIdForGene ) ) {
-            this.discontinuedIdForGene = this.discontinuedIdForGene + "," + discontinuedIdForGene;
-        } else {
-            this.discontinuedIdForGene = discontinuedIdForGene;
-        }
     }
 
 }

@@ -47,11 +47,13 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
  */
 public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider {
 
+    protected static final Log logger = LogFactory.getLog( AclAfterInvocationMapFilteringProvider.class );
+
     public AclAfterInvocationMapFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
         super( aclService, "AFTER_ACL_MAP_READ", requirePermission );
-    }
+        this.setObjectIdentityRetrievalStrategy( new ValueObjectAwareIdentityRetrievalStrategyImpl() );
 
-    protected static final Log logger = LogFactory.getLog( AclAfterInvocationMapFilteringProvider.class );
+    }
 
     /*
      * (non-Javadoc)

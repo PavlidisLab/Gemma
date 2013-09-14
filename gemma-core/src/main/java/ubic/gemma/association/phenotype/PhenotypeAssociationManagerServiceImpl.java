@@ -34,7 +34,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -55,6 +54,7 @@ import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.model.common.auditAndSecurity.acl.AclPrincipalSid;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -1500,8 +1500,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( currentUserIsOwner || isPublic || isShared || SecurityServiceImpl.isUserAdmin() ) {
 
+            /*
+             * FIXME WARNING it is not guaranteed that owner is a PrincipalSid.
+             */
             currentUserHasWritePermission = this.securityService.isEditable( p );
-            owner = ( ( PrincipalSid ) this.securityService.getOwner( p ) ).getPrincipal();
+            owner = ( ( AclPrincipalSid ) this.securityService.getOwner( p ) ).getPrincipal();
         }
 
         evidenceValueObject.setEvidenceSecurityValueObject( new EvidenceSecurityValueObject(

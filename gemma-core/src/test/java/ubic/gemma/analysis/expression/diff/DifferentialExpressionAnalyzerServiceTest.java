@@ -55,6 +55,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.security.authorization.acl.AclTestUtils;
 
 /**
  * @author keshav, paul
@@ -126,6 +127,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     }
 
+    @Autowired
+    private AclTestUtils aclTestUtils;
+
     /**
      * @throws Exception
      */
@@ -146,6 +150,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.thawFully( analyses.iterator()
                 .next() );
+
+        aclTestUtils.checkHasAcl( analysis );
+        aclTestUtils.checkLacksAces( analysis );
+        aclTestUtils.checkHasAclParent( analysis, ee );
+
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
             assertTrue( !rs.getResults().isEmpty() );
             assertEquals( 99, rs.getResults().size() );

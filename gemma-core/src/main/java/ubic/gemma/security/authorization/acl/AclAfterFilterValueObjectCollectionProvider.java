@@ -63,6 +63,8 @@ public class AclAfterFilterValueObjectCollectionProvider extends AbstractAclProv
      */
     public AclAfterFilterValueObjectCollectionProvider( AclService aclService, List<Permission> requirePermission ) {
         super( aclService, "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ", requirePermission );
+        this.setObjectIdentityRetrievalStrategy( new ValueObjectAwareIdentityRetrievalStrategyImpl() );
+
     }
 
     @Autowired

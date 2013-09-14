@@ -47,40 +47,32 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         super.setSessionFactory( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.StatusDao#update(ubic.gemma.model.common.Auditable,
-     * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
-     */
     @Override
-    public void update( Auditable a, AuditEventType auditEventType ) {
-
-        // note that according to the docs, HibernateProxyHelper is being "phased out".
-        a = ( Auditable ) this.getSessionFactory().getCurrentSession()
-                .get( HibernateProxyHelper.getClassWithoutInitializingProxy( a ), a.getId() );
-
+    public Status create() {
+        Status s = Status.Factory.newInstance();
         Date now = new Date();
-        if ( a.getStatus() == null ) {
-            a.setStatus( create() );
-        } else {
-            Hibernate.initialize( a.getStatus() );
-            this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() );
-            a.getStatus().setLastUpdateDate( now );
-            this.update( a.getStatus() );
-        }
+        s.setCreateDate( now );
+        s.setLastUpdateDate( now );
+        s.setTroubled( false );
+        s.setValidated( false );
+        return this.create( s );
+    }
 
-        if ( auditEventType != null ) {
-            Class<? extends AuditEventType> eventClass = auditEventType.getClass();
-            if ( TroubleStatusFlagEvent.class.isAssignableFrom( eventClass ) ) {
-                this.setTroubled( a, true );
-            } else if ( OKStatusFlagEvent.class.isAssignableFrom( eventClass ) ) {
-                this.setTroubled( a, false );
-            } else if ( ValidatedFlagEvent.class.isAssignableFrom( eventClass ) ) {
-                this.setValidated( a, true );
-            }
-        }
+    @Override
+    public void initializeStatus( Auditable d ) {
+        Status s = create();
+        d.setStatus( s );
+        this.getHibernateTemplate().update( d );
 
+    }
+
+    @Override
+    public Status load( Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "StatusDaoImpl.load - 'id' can not be null" );
+        }
+        final Object entity = this.getHibernateTemplate().get( StatusImpl.class, id );
+        return ( Status ) entity;
     }
 
     /*
@@ -115,32 +107,40 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         this.update( a.getStatus() );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.StatusDao#update(ubic.gemma.model.common.Auditable,
+     * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
+     */
     @Override
-    public Status create() {
-        Status s = Status.Factory.newInstance();
+    public void update( Auditable a, AuditEventType auditEventType ) {
+
+        // note that according to the docs, HibernateProxyHelper is being "phased out".
+        a = ( Auditable ) this.getSessionFactory().getCurrentSession()
+                .get( HibernateProxyHelper.getClassWithoutInitializingProxy( a ), a.getId() );
+
         Date now = new Date();
-        s.setCreateDate( now );
-        s.setLastUpdateDate( now );
-        s.setTroubled( false );
-        s.setValidated( false );
-        return this.create( s );
-    }
-
-    @Override
-    public void initializeStatus( Auditable d ) {
-        Status s = create();
-        d.setStatus( s );
-        this.getHibernateTemplate().update( d );
-
-    }
-
-    @Override
-    public Status load( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "StatusDaoImpl.load - 'id' can not be null" );
+        if ( a.getStatus() == null ) {
+            a.setStatus( create() );
+        } else {
+            Hibernate.initialize( a.getStatus() );
+            this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() );
+            a.getStatus().setLastUpdateDate( now );
+            this.update( a.getStatus() );
         }
-        final Object entity = this.getHibernateTemplate().get( StatusImpl.class, id );
-        return ( Status ) entity;
+
+        if ( auditEventType != null ) {
+            Class<? extends AuditEventType> eventClass = auditEventType.getClass();
+            if ( TroubleStatusFlagEvent.class.isAssignableFrom( eventClass ) ) {
+                this.setTroubled( a, true );
+            } else if ( OKStatusFlagEvent.class.isAssignableFrom( eventClass ) ) {
+                this.setTroubled( a, false );
+            } else if ( ValidatedFlagEvent.class.isAssignableFrom( eventClass ) ) {
+                this.setValidated( a, true );
+            }
+        }
+
     }
 
 }

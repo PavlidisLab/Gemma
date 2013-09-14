@@ -46,7 +46,7 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = ee;
         this.filterConfig = fg;
         this.linkAnalysisConfig = lac;
-        this.remoteOnly =  Settings.getBoolean( "gemma.grid.gridonly.coexp" );
+        this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.coexp" );
     }
 
     /**
@@ -56,8 +56,11 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
         return this.expressionExperiment;
     }
 
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
+    /**
+     * @return
+     */
+    public FilterConfig getFilterConfig() {
+        return this.filterConfig;
     }
 
     /**
@@ -67,16 +70,13 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
         return this.linkAnalysisConfig;
     }
 
-    /**
-     * @return
-     */
-    public FilterConfig getFilterConfig() {
-        return this.filterConfig;
+    @Override
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+        return LinkAnalysisTask.class;
     }
 
-    @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
-        return LinkAnalysisTask.class;
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
 }

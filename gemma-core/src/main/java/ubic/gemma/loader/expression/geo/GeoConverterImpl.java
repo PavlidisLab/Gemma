@@ -886,17 +886,8 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private Person convertContact( GeoContact contact ) {
         Person result = Person.Factory.newInstance();
-
-        /*
-         * Note: removed address conversion. We don't normally get that info from GEO nor do we need it.
-         */
-
-        result.setPhone( contact.getPhone() );
         result.setName( contact.getName() );
         result.setEmail( contact.getEmail() );
-        result.setFax( contact.getFax() );
-        result.setURL( contact.getWebLink() );
-
         return result;
     }
 

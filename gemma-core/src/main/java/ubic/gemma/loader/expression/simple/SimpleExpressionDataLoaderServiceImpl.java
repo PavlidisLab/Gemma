@@ -273,6 +273,8 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         experiment = persisterHelper.persist( experiment, persisterHelper.prepare( experiment ) );
 
+        assert experiment.getShortName() != null;
+
         try {
             preprocessorService.process( experiment );
         } catch ( PreprocessingException e ) {

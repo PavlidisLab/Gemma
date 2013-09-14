@@ -44,9 +44,22 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
     }
 
     @Override
+    public int compareTo( ExpressionDataMatrixRowElement o ) {
+        return o.getDesignElement().getName().compareTo( this.getDesignElement().getName() );
+    }
+
+    @Override
     public boolean equals( Object obj ) {
         if ( !( obj instanceof ExpressionDataMatrixRowElement ) ) return false;
         return this.index.equals( ( ( ExpressionDataMatrixRowElement ) obj ).getIndex() );
+    }
+
+    public CompositeSequence getDesignElement() {
+        return designElement;
+    }
+
+    public Integer getIndex() {
+        return index;
     }
 
     @Override
@@ -54,21 +67,8 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
         return index.hashCode();
     }
 
-    @Override
-    public String toString() {
-        return designElement.getName() + " " + designElement.getId();
-    }
-
-    public CompositeSequence getDesignElement() {
-        return designElement;
-    }
-
     public void setDesignElement( CompositeSequence designElement ) {
         this.designElement = designElement;
-    }
-
-    public Integer getIndex() {
-        return index;
     }
 
     public void setIndex( Integer index ) {
@@ -76,8 +76,8 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
     }
 
     @Override
-    public int compareTo( ExpressionDataMatrixRowElement o ) {
-        return o.getDesignElement().getName().compareTo( this.getDesignElement().getName() );
+    public String toString() {
+        return designElement.getName() + " " + designElement.getId();
     }
 
 }

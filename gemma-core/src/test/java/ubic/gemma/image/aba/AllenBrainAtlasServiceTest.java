@@ -41,37 +41,6 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
     private AllenBrainAtlasService abaService = null;
 
     /**
-     * Not all ABA genes have the only the first letter capatalized
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testGetGeneCapitals() throws Exception {
-        AbaGene gene = null;
-
-        try {
-            gene = abaService.getGene( "BC004044" );
-        } catch ( IOException e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
-                log.warn( "Server error from Allen Atlas: skipping test" );
-                return;
-            }
-        }
-        assertNotNull( gene );
-
-        try {
-            gene = abaService.getGene( "grin1" );
-        } catch ( IOException e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
-                log.warn( "Server error from Allen Atlas: skipping test" );
-                return;
-            }
-        }
-
-        assertNotNull( gene );
-    }
-
-    /**
      * @throws Exception
      */
     @Test
@@ -112,6 +81,37 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
         grin1.setImageSeries( representativeSaggitalImages );
 
         // log.info( grin1 );
+    }
+
+    /**
+     * Not all ABA genes have the only the first letter capatalized
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testGetGeneCapitals() throws Exception {
+        AbaGene gene = null;
+
+        try {
+            gene = abaService.getGene( "BC004044" );
+        } catch ( IOException e ) {
+            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
+                log.warn( "Server error from Allen Atlas: skipping test" );
+                return;
+            }
+        }
+        assertNotNull( gene );
+
+        try {
+            gene = abaService.getGene( "grin1" );
+        } catch ( IOException e ) {
+            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
+                log.warn( "Server error from Allen Atlas: skipping test" );
+                return;
+            }
+        }
+
+        assertNotNull( gene );
     }
 
 }

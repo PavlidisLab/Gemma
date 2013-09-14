@@ -56,11 +56,6 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
         return entities;
     }
 
-    @Override
-    public Collection<? extends Contact> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ContactImpl where id in (:ids)", "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#create(int transform,
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
@@ -103,6 +98,11 @@ public abstract class ContactDaoBase extends HibernateDaoSupport implements
         }
 
         return ( Contact ) result;
+    }
+
+    @Override
+    public Collection<? extends Contact> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ContactImpl where id in (:ids)", "ids", ids );
     }
 
     /**

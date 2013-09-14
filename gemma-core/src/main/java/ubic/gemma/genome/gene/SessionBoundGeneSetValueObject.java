@@ -1,4 +1,3 @@
-
 /*
  * The Gemma project
  * 
@@ -24,6 +23,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.session.GemmaSessionBackedValueObject;
+
 /**
  * TODO Document Me
  * 
@@ -43,13 +43,19 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
         this.setModified( false );
     }
 
-    /**
-     * @param modified the modified to set
-     */
     @Override
-    public void setModified( boolean modified ) {
-        this.modified = modified;
+    public boolean equals( GemmaSessionBackedValueObject ervo ) {
+        if ( ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() ) ) {
+            return true;
+        }
+        return false;
     }
+
+    @Override
+    public Collection<Long> getMemberIds() {
+        return this.getGeneIds();
+    }
+
     /**
      * @return the modified
      */
@@ -58,16 +64,12 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
         return modified;
     }
 
+    /**
+     * @param modified the modified to set
+     */
     @Override
-    public boolean equals( GemmaSessionBackedValueObject ervo ) {
-        if(ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() )){
-            return true;
-        }
-       return false;
+    public void setModified( boolean modified ) {
+        this.modified = modified;
     }
-    @Override
-    public Collection<Long> getMemberIds() {
-        return this.getGeneIds();
-    } 
 
 }
