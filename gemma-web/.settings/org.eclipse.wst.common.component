@@ -14,7 +14,10 @@
         <dependent-module archiveName="baseCode-1.0.15-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/baseCode/baseCode">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-      <property name="java-output-path" value="/gemma-web/target/classes"/>
+        <dependent-module archiveName="GEOMMTx-1.2-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/GEOMMTx/GEOMMTx">
+            <dependency-type>uses</dependency-type>
+        </dependent-module> 
+      <property name="java-output-path" value="/gemma-web/target/Gemma/WEB-INF/classes"/>
       <property name="context-root" value="Gemma"/>
    </wb-module>
 </project-modules>
