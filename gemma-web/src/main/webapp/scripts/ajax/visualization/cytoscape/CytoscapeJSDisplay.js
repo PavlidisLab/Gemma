@@ -73,29 +73,25 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
     	ownerRef.cy.on('done', function(e){
     		
     		//make elements selectable
-    		ownerRef.cy.elements().selectify();//.show();
+    		
+    		ownerRef.cy.elements().selectify();//.show();    		
     		ownerRef.cy.panningEnabled(true);
     		ownerRef.fireEvent('selection_available');
 	    	
 	    });
     	
     	ownerRef.cy.on('layoutstop', function(e){
-    		ownerRef.filter();    		
     		ownerRef.ready = true;    		
+    		ownerRef.nodeDegreeEmphasize(true);    		
     		ownerRef.fireEvent('layout_complete');
 	    });
     },
     
     applyDefaultGraphStyle: function(isNodeDegreeEmphasis){
     	
-    	if (isNodeDegreeEmphasis){
-         	Gemma.applyCytoscapeJSNodeDegreeEmphasisStyle(this.cy); 
-         	this.filter();
-         }else{
-         	Gemma.applyCytoscapeJSDefaultStyle(this.cy);
-         	this.filter();
-         }
-    	
+    	this.cy.elements().toggleClass( 'emphasis' , isNodeDegreeEmphasis);    	
+    	this.cy.elements().toggleClass( 'basic' , !isNodeDegreeEmphasis);    	
+    	this.filter();
     },
     
     nodeDegreeEmphasize: function (isNodeDegreeEmphasis) {
@@ -180,7 +176,11 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
         this.cy.layout(Gemma.CytoscapejsSettings.arborLayout);
         
     },
-
+    
+    zoomToFit: function () {
+        if (!this.ready) {return;}        
+        this.cy.fit();        
+    },
     
     /**
      * @public

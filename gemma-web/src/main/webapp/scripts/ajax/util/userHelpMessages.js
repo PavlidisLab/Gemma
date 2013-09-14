@@ -288,6 +288,7 @@ Gemma.HelpText.WidgetDefaults = {
       clearGeneListOverlayText : 'Clear Gene List Overlay',
       stringencySpinnerTT : 'Add/remove genes with more/less dataset support that confirms coexpression',
       widgetHelpTT : 'Click here for documentation on how to use this visualizer.',
+      zoomToFitText : 'Re-centre graph',
       refreshLayoutText : 'Refresh Layout',
       nodeDegreeEmphasisText : 'Specificity Emphasis',
       nodeDegreeEmphasisTT : 'Specificity is represented by the darkness of a gene node. The higher the specificity of a gene is'

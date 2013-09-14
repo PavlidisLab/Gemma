@@ -26,6 +26,13 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
 
         this.visualOptionsMenu = new Ext.menu.Menu({
             items: [
+                 {
+                    itemId: 'zoomToFitButton',
+                    text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.zoomToFitText,
+                    handler: function () {
+                    	display.zoomToFit();
+                    }
+                },
                 {
                     itemId: 'refreshLayoutButton',
                     text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutText,
