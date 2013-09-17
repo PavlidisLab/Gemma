@@ -20,6 +20,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 	visualization.cytoscape({
 
 		showOverlay : false,
+		fit: false,
 
 		style : cytoscape.stylesheet().selector('node.emphasis').css({
 			'content' : 'data(name)',
@@ -56,6 +57,25 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 
 			// node color
 			'background-color' : Gemma.CytoscapeSettings.nodeColor,
+			// 'background-opacity':'data(nodeDegreeOpacity)',
+			'text-valign' : 'top',
+			'visibility' : 'hidden'
+		}).selector('node.overlay').css({
+			'content' : 'data(name)',
+			// the text color
+			'color' : Gemma.CytoscapeSettings.nodeColorOverlay,
+			'font-family' : Gemma.CytoscapeSettings.labelFontName,
+			'font-size' : Gemma.CytoscapeSettings.labelFontSize,
+
+			'text-valign' : 'center',
+
+			'width' : Gemma.CytoscapeSettings.nodeSize,
+			'height' : Gemma.CytoscapeSettings.nodeSize,
+			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
+			'border-width' : 'mapData(queryflag,0,1,0,3)',
+
+			// node color
+			'background-color' : Gemma.CytoscapeSettings.nodeColorOverlay,
 			// 'background-opacity':'data(nodeDegreeOpacity)',
 			'text-valign' : 'top',
 			'visibility' : 'hidden'

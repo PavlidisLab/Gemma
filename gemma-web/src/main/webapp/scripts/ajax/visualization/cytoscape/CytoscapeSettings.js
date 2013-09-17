@@ -146,7 +146,10 @@ Gemma.CytoscapejsSettings = {
 			    repulsion: 10,
 			    //stiffness:100,
 			    //gravity: false,
-			    friction:0.2
+			    friction:0.2,
+			    
+			    simulationBounds: [0, 0, 10000, 10000],
+			    fit: false
 			    //dt:0.2
 		
 			    /*nodeMass: function(data){

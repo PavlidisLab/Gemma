@@ -225,8 +225,6 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
      */
     applyGeneListOverlay: function () {
         if (!this.ready) {return;}
-        
-        this.applyDefaultGraphStyle(this.emphasized);
 
         var overlayIds = this.coexDisplaySettings.getOverlayGeneIds();
         
@@ -237,12 +235,14 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
         
         var nodesToOverlay = this.cy.filter(nodeOverlayFunction);
         
-        var props = {};
+        this.cy.nodes().toggleClass( 'overlay' , false);
         
-        props.color = Gemma.CytoscapeSettings.nodeColorOverlay;
+        if (nodesToOverlay.length > 0){
+        	nodesToOverlay.toggleClass('overlay', true);
+        }
+    	
+    	this.applyDefaultGraphStyle(this.emphasized);
         
-        nodesToOverlay.css('color',  Gemma.CytoscapeSettings.nodeColorOverlay);
-        nodesToOverlay.css('background-color',  Gemma.CytoscapeSettings.nodeColorOverlay);
     },
 
     /**
