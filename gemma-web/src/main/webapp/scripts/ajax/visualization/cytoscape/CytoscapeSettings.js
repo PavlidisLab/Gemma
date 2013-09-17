@@ -27,7 +27,7 @@ Gemma.CytoscapeSettings = {
    labelFontColorFade : "#BDBDBD",
    labelGlowStrength : 100,
    labelFontWeight : "bold",
-   labelFontSize : 11,
+   labelFontSize : 150,
 
    labelFontSizeBigger : 18,
    labelFontSizeBiggest : 25,
@@ -39,10 +39,11 @@ Gemma.CytoscapeSettings = {
    nodeColor : "#969696",
    nodeColorFade : "#FFF7FB",
    nodeColorOverlay : "#000099",
-   defaultNodeBorderWidth : 0,
-   queryNodeBorderWidth : 5,
-   nodeSize : 15,
-   queryNodeSize : 20,
+   borderWidth : 'mapData(queryflag,0,1,0,25)',
+   edgeWidth: 'mapData(support,2,100,10,30)',
+     
+   nodeSize : 200,
+   queryNodeSize : 200,
 
    nodeQueryColorTrue : "#E41A1C",
    nodeQueryColorFalse : "#6BAED6",
@@ -140,17 +141,17 @@ Gemma.CytoscapejsSettings = {
 			    liveUpdate: false,
 			    
 			    //edgeLength:100,
-			    nodeMass: 2,
+			    nodeMass: 20,
 			    
 			    maxSimulationTime: 6000,
-			    repulsion: 10,
+			    repulsion: 100,
 			    //stiffness:100,
 			    //gravity: false,
 			    friction:0.2,
-			    
+			    fit: false,
 			    simulationBounds: [0, 0, 10000, 10000],
-			    fit: false
-			    //dt:0.2
+			    
+			    padding: [ 0, 0, 0, 0 ]
 		
 			    /*nodeMass: function(data){
 			    	

@@ -20,7 +20,6 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 	visualization.cytoscape({
 
 		showOverlay : false,
-		fit: false,
 
 		style : cytoscape.stylesheet().selector('node.emphasis').css({
 			'content' : 'data(name)',
@@ -34,7 +33,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,3)',
+			'border-width' : Gemma.CytoscapeSettings.borderWidth,
 
 			// node color
 			'background-color' : '#000000',
@@ -53,7 +52,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,3)',
+			'border-width' : Gemma.CytoscapeSettings.borderWidth,
 
 			// node color
 			'background-color' : Gemma.CytoscapeSettings.nodeColor,
@@ -72,7 +71,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,3)',
+			'border-width' : Gemma.CytoscapeSettings.borderWidth,
 
 			// node color
 			'background-color' : Gemma.CytoscapeSettings.nodeColorOverlay,
@@ -85,10 +84,11 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'target-arrow-color' : '#000',
 			'text-outline-color' : '#000'
 		}).selector('edge.emphasis').css({
-			'width' : 'mapData(support,2,100,1,3)',
+			'width' : Gemma.CytoscapeSettings.edgeWidth,
 			'opacity' : 'data(nodeDegreeOpacity)'
 		}).selector('edge.basic').css({
-			'width' : 'mapData(support,2,100,1,3)'
+			'width' : Gemma.CytoscapeSettings.edgeWidth,
+			'opacity' : 1
 		}).selector("edge[supportSign='positive']").css({
 			'line-color' : Gemma.CytoscapeSettings.supportColorPositive
 		}).selector("edge[supportSign='negative']").css({

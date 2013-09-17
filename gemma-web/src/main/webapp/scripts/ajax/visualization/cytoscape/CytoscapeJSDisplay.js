@@ -84,6 +84,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
     		ownerRef.ready = true;    		
     		ownerRef.nodeDegreeEmphasize(true);    		
     		ownerRef.fireEvent('layout_complete');
+    		ownerRef.zoomToFit();
 	    });
     },
     
@@ -137,6 +138,11 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
          var nodesToShow = this.cy.filter(nodeShowFunction);
          
          nodesToHide.hide();
+         
+         //make sure you can't select hidden nodes         
+         nodesToHide.unselectify();
+         
+         nodesToShow.selectify();
          nodesToShow.show();
          
          var edgeShowFunction = function(i, element){        	      	
@@ -153,6 +159,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
          var edgesToShow = this.cy.filter(edgeShowFunction);
          
          edgesToHide.hide();
+      
          edgesToShow.show();
          
      },
@@ -179,7 +186,8 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
     
     zoomToFit: function () {
         if (!this.ready) {return;}        
-        this.cy.fit();        
+        this.cy.fit();   
+        //this.cy.zoom(2);
     },
     
     /**
