@@ -136,7 +136,10 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
          var nodesToHide = this.cy.filter(nodeHideFunction);
          var nodesToShow = this.cy.filter(nodeShowFunction);
          
-         nodesToHide.hide();
+         nodesToHide.hide();         
+         nodesToHide.unselectify();
+         
+         nodesToShow.selectify();
          nodesToShow.show();
          
          var edgeShowFunction = function(i, element){        	      	
