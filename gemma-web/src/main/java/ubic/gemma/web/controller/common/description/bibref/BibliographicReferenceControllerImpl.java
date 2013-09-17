@@ -60,9 +60,8 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @author keshav
  * @version $Id$
  */
-@RequestMapping("/bibRef")
 @Controller
-public class BibliographicReferenceControllerImpl extends BaseController{
+public class BibliographicReferenceControllerImpl extends BaseController implements BibliographicReferenceController {
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;
@@ -83,8 +82,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#add(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    
-    @RequestMapping("/bibRefAdd.html")
+    @Override    
     public ModelAndView add( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" ); // FIXME: allow use of the primary key as well.
 
@@ -117,7 +115,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#browse(ubic.gemma.web.remote
      * .ListBatchCommand)
      */
-    
+    @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch ) {
 
         Integer count = this.bibliographicReferenceService.count();
@@ -160,8 +158,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#delete(javax.servlet.http
      * .HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    
-    @RequestMapping("/deleteBibRef.html")
+    @Override    
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "acc" );
 
@@ -180,7 +177,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
         return doDelete( request, bibRef );
     }
 
-   
+    @Override
     public BibliographicReferenceValueObject load( Long id ) {
 
         Collection<Long> ids = new ArrayList<Long>();
@@ -200,7 +197,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#showAllForExperiments(javax
      * .servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    
+    @Override
     public Collection<BibliographicReferenceValueObject> loadAllForExperiments() {
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
                 .getAllExperimentLinkedReferences();
@@ -211,7 +208,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
         return bibRefVOs;
     }
 
-    
+    @Override
     public BibliographicReferenceValueObject loadFromPubmedID( String pubMedID ) {
         return bibliographicReferenceService.findVOByExternalId( pubMedID );
     }
@@ -226,7 +223,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * }
      */
 
-    
+    @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids ) {
 
         Collection<BibliographicReferenceValueObject> bibRefs = bibliographicReferenceService
@@ -244,7 +241,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#search(ubic.gemma.web.remote
      * .ListBatchCommand)
      */
-    
+    @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
         List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( settings );
 
@@ -260,8 +257,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#searchBibRefs(javax.servlet
      * .http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    
-    @RequestMapping("/searchBibRefs.html")
+    @Override   
     public ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "bibRefList" );
     }
@@ -284,8 +280,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#show(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    
-    @RequestMapping("/bibRefView.html")
+    @Override    
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" );
         String gemmaId = request.getParameter( "id" );
@@ -326,8 +321,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#showAllForExperiments(javax
      * .servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    
-    @RequestMapping("/showAllEeBibRefs.html")
+    @Override    
     public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
                 .getAllExperimentLinkedReferences();
@@ -355,7 +349,7 @@ public class BibliographicReferenceControllerImpl extends BaseController{
      * 
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#update(java.lang.Long)
      */
-    
+    @Override
     public BibliographicReference update( Long id, String pubMedId ) {
         BibliographicReference bibRef = bibliographicReferenceService.load( id );
         if ( bibRef == null ) {

@@ -19,7 +19,6 @@ import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -32,8 +31,7 @@ import ubic.gemma.web.remote.ListBatchCommand;
 /**
  * @version $Id$
  */
-
-//TODO probably delete later
+@RequestMapping("/bibRef")
 public interface BibliographicReferenceController {
 
     /*
@@ -49,6 +47,7 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
+	@RequestMapping("/bibRefAdd.html")
     public abstract ModelAndView add( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -64,6 +63,7 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
+    @RequestMapping("/deleteBibRef.html")
     public abstract ModelAndView delete( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -110,6 +110,7 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
+    @RequestMapping("/searchBibRefs.html")
     public abstract ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -117,6 +118,7 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
+    @RequestMapping("/bibRefView.html")
     public abstract ModelAndView show( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -124,6 +126,7 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
+    @RequestMapping("/showAllEeBibRefs.html")
     public abstract ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response );
 
     /**
