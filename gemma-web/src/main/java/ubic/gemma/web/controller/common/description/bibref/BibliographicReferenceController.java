@@ -19,6 +19,8 @@ import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -30,6 +32,8 @@ import ubic.gemma.web.remote.ListBatchCommand;
 /**
  * @version $Id$
  */
+
+//TODO probably delete later
 public interface BibliographicReferenceController {
 
     /*
