@@ -322,7 +322,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
         ee = expressionExperimentService.thawLite( ee );
-        Collection<BioMaterialValueObject> result = new HashSet<BioMaterialValueObject>();
+        Collection<BioMaterialValueObject> result = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             BioMaterial sample = assay.getSampleUsed();
             BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
@@ -343,17 +343,23 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
 
-        Collection<ExperimentalFactorValueObject> result = new HashSet<ExperimentalFactorValueObject>();
+        Collection<ExperimentalFactorValueObject> result = new HashSet<>();
         Long designId = null;
-        if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperiment" ) ) {
+        if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperiment" )
+                || e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperimentImpl" ) ) {
             ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
             designId = ee.getExperimentalDesign().getId();
-        } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" ) ) {
+        } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" )
+                || e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesignImpl" ) ) {
             designId = e.getId();
         } else {
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
         }
-        ExperimentalDesign ed = this.experimentalDesignService.load( designId );
+
+        // ugly fix for bug 3746
+        ExperimentalDesign ed = expressionExperimentService.thawLite(
+                experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.load( designId ) ) )
+                .getExperimentalDesign();
 
         for ( ExperimentalFactor factor : ed.getExperimentalFactors() ) {
             result.add( new ExperimentalFactorValueObject( factor ) );
@@ -372,10 +378,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     @Override
     public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
         // FIXME I'm not sure why this keeps getting called with empty fields.
-        if ( e == null || e.getId() == null ) return new HashSet<FactorValueValueObject>();
+        if ( e == null || e.getId() == null ) return new HashSet<>();
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
 
-        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
+        Collection<FactorValueValueObject> result = new HashSet<>();
         for ( FactorValue value : ef.getFactorValues() ) {
             Characteristic efCategory = value.getExperimentalFactor().getCategory();
             if ( efCategory == null ) {
@@ -396,7 +402,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
      */
     @Override
     public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
-        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
+        Collection<FactorValueValueObject> result = new HashSet<>();
         if ( e == null || e.getId() == null ) return result;
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
 

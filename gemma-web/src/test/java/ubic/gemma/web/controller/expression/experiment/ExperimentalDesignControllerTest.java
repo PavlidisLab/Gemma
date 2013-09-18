@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collection;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,8 +34,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * @author Kiran Keshav
@@ -75,6 +78,17 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         assertNotNull( m.get( "expressionExperiment" ) );
 
         assertEquals( mav.getViewName(), "experimentalDesign.detail" );
+
+    }
+
+    @Test
+    public void testGetExperimentalFactors() throws Exception {
+
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
+
+        Collection<ExperimentalFactorValueObject> experimentalFactors = experimentalDesignController
+                .getExperimentalFactors( new EntityDelegator( ee.getExperimentalDesign() ) );
+        assertTrue( !experimentalFactors.isEmpty() );
 
     }
 }
