@@ -87,7 +87,7 @@ public class AclServiceImpl implements AclService, InitializingBean {
 
         // Need to retrieve the current principal, in order to know who "owns" this ACL (can be changed later on)
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        AclPrincipalSid sid = new AclPrincipalSid( ( String ) auth.getPrincipal() );
+        AclPrincipalSid sid = new AclPrincipalSid( auth );
 
         // Create the acl_object_identity row
         objectIdentity = createObjectIdentity( objectIdentity, sid );
