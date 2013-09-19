@@ -55,14 +55,6 @@ public abstract class ExperimentalDesignServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#findByName(java.lang.String)
-     */
-    @Override
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findByName( final java.lang.String name ) {
-        return this.handleFindByName( name );
-    }
-
-    /**
      * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
     @Override
@@ -130,11 +122,6 @@ public abstract class ExperimentalDesignServiceBase implements
      */
     protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleFind(
             ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleFindByName( java.lang.String name );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)}

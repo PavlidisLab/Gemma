@@ -46,12 +46,6 @@ public interface ExperimentalDesignService {
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExperimentalDesign findByName( String name );
-
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
     public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign );
 

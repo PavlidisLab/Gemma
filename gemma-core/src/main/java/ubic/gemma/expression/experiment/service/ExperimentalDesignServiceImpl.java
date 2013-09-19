@@ -59,11 +59,6 @@ public class ExperimentalDesignServiceImpl extends
     }
 
     @Override
-    protected ExperimentalDesign handleFindByName( String name ) {
-        return this.getExperimentalDesignDao().findByName( name );
-    }
-
-    @Override
     protected ExperimentalDesign handleFindOrCreate( ExperimentalDesign experimentalDesign ) {
         return this.getExperimentalDesignDao().findOrCreate( experimentalDesign );
     }
