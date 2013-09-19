@@ -47,7 +47,7 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
                 .getSessionFactory()
                 .getCurrentSession()
                 .createQuery(
-                        "select ed from ExperimentalDesignImpl ed join fetch ed.experimentalFactors ef join fetch ef.factorValues fv left join fetch fv.characteristics c where ed.id=:id" )
+                        "select ed from ExperimentalDesignImpl ed join fetch ed.experimentalFactors ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ed.id=:id" )
                 .setParameter( "id", id ).uniqueResult();
     }
 
@@ -113,18 +113,6 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
         }
 
         return ( ExperimentalDesign ) result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalDesignDao#findByName(int, java.lang.String)
-     */
-
-    @Override
-    public ExperimentalDesign findByName( final java.lang.String name ) {
-        return this
-                .findByName(
-                        "from ubic.gemma.model.expression.experiment.ExperimentalDesign as experimentalDesign where experimentalDesign.name = :name",
-                        name );
     }
 
     /**

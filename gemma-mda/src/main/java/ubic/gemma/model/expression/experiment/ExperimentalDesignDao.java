@@ -32,11 +32,6 @@ public interface ExperimentalDesignDao extends BaseDao<ExperimentalDesign> {
     /**
      * 
      */
-    public ExperimentalDesign findByName( java.lang.String name );
-
-    /**
-     * 
-     */
     public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign );
 
     /**
