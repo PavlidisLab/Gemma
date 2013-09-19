@@ -45,6 +45,16 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
+    public FactorValue load( Long id ) {
+        return ( FactorValue ) this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select fv from FactorValueImpl fv left join fetch fv.characteristics c left join fetch fv.measurement m left join fetch fv.experimentalFactor ef where fv.id=:id" )
+                .setParameter( "id", id ).uniqueResult();
+    }
+
     /*
      * (non-Javadoc)
      * 

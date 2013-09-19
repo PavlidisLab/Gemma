@@ -34,6 +34,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -110,4 +111,33 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         assertTrue( !fvs.isEmpty() );
 
     }
+
+    @Test
+    public void testCreateExperimentalFactor() throws Exception {
+
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
+
+        ee = eeService.thawLite( ee );
+
+        ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject();
+        evvo.setCategory( "foo" );
+        experimentalDesignController.createExperimentalFactor( new EntityDelegator( ee.getExperimentalDesign() ), evvo );
+
+    }
+
+    @Test
+    public void testAddCharacteristicToFactorValue() throws Exception {
+
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
+
+        ee = eeService.thawLite( ee );
+
+        EntityDelegator e = new EntityDelegator( ee.getExperimentalDesign().getExperimentalFactors().iterator().next()
+                .getFactorValues().iterator().next() );
+
+        experimentalDesignController.createFactorValueCharacteristic( e,
+                VocabCharacteristic.Factory.newInstance( "foo", "bar", null, null, "foo", "bar", null, "foo", "bar" ) );
+
+    }
+
 }

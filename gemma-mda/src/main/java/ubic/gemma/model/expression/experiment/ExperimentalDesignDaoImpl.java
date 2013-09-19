@@ -41,6 +41,16 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
 
     private static Log log = LogFactory.getLog( ExperimentalDesignDaoImpl.class.getName() );
 
+    @Override
+    public ExperimentalDesign load( Long id ) {
+        return ( ExperimentalDesign ) this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select ed from ExperimentalDesignImpl ed join fetch ed.experimentalFactors ef join fetch ef.factorValues fv left join fetch fv.characteristics c where ed.id=:id" )
+                .setParameter( "id", id ).uniqueResult();
+    }
+
     @Autowired
     public ExperimentalDesignDaoImpl( SessionFactory sessionFactory ) {
         super( ExperimentalDesignImpl.class );
