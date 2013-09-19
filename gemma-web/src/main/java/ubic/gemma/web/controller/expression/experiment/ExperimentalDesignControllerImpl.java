@@ -185,7 +185,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( e == null || e.getId() == null ) return;
         ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
 
-        Collection<Characteristic> chars = new HashSet<Characteristic>();
+        Collection<Characteristic> chars = new HashSet<>();
         for ( FactorValue fv : ef.getFactorValues() ) {
             for ( Characteristic c : fv.getCharacteristics() ) {
                 chars.add( createTemplateCharacteristic( c ) );
@@ -248,7 +248,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         if ( e == null || e.getId() == null ) return;
 
-        Collection<Long> efCol = new LinkedList<Long>();
+        Collection<Long> efCol = new LinkedList<>();
         Collections.addAll( efCol, efIds );
 
         Collection<ExperimentalFactor> toDelete = experimentalFactorService.load( efCol );
@@ -298,7 +298,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     public void deleteFactorValues( EntityDelegator e, Long[] fvIds ) {
 
         if ( e == null || e.getId() == null ) return;
-        Collection<Long> fvCol = new LinkedList<Long>();
+        Collection<Long> fvCol = new LinkedList<>();
         Collections.addAll( fvCol, fvIds );
 
         for ( Long fvId : fvCol ) {
@@ -380,6 +380,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         // FIXME I'm not sure why this keeps getting called with empty fields.
         if ( e == null || e.getId() == null ) return new HashSet<>();
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
+        if ( ef == null ) return new HashSet<>();
 
         Collection<FactorValueValueObject> result = new HashSet<>();
         for ( FactorValue value : ef.getFactorValues() ) {
@@ -404,7 +405,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
         Collection<FactorValueValueObject> result = new HashSet<>();
         if ( e == null || e.getId() == null ) return result;
+
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
+        if ( ef == null ) return result;
 
         for ( FactorValue value : ef.getFactorValues() ) {
             if ( value.getCharacteristics().size() > 0 ) {
@@ -515,7 +518,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 /*
                  * Check for unused factorValues
                  */
-                Collection<FactorValue> usedFactorValues = new HashSet<FactorValue>();
+                Collection<FactorValue> usedFactorValues = new HashSet<>();
                 for ( BioAssay ba : ee.getBioAssays() ) {
                     BioMaterial biomat = ba.getSampleUsed();
                     for ( FactorValue fv : biomat.getFactorValues() ) {
@@ -524,7 +527,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                         }
                     }
                 }
-                Collection<FactorValue> toDelete = new HashSet<FactorValue>();
+                Collection<FactorValue> toDelete = new HashSet<>();
                 for ( FactorValue fv : ef.getFactorValues() ) {
                     if ( !usedFactorValues.contains( fv ) ) {
                         /*

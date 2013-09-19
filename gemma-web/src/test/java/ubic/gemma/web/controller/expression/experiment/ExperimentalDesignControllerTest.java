@@ -33,9 +33,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.remote.EntityDelegator;
 
@@ -47,6 +49,9 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private ExperimentalDesignController experimentalDesignController;
+
+    @Autowired
+    private ExpressionExperimentService eeService;
 
     /**
      * Tests showing an experimentalDesign which is implemented in
@@ -89,6 +94,20 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         Collection<ExperimentalFactorValueObject> experimentalFactors = experimentalDesignController
                 .getExperimentalFactors( new EntityDelegator( ee.getExperimentalDesign() ) );
         assertTrue( !experimentalFactors.isEmpty() );
+
+    }
+
+    @Test
+    public void testGetExperimentalFactorValues() throws Exception {
+
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
+
+        ee = eeService.thawLite( ee );
+
+        Collection<FactorValueValueObject> fvs = experimentalDesignController
+                .getFactorValuesWithCharacteristics( new EntityDelegator( ee.getExperimentalDesign()
+                        .getExperimentalFactors().iterator().next() ) );
+        assertTrue( !fvs.isEmpty() );
 
     }
 }

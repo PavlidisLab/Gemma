@@ -57,7 +57,8 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
     @Override
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
         try {
-            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalDesign.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession()
+                    .createCriteria( ExperimentalDesign.class );
 
             queryObject.add( Restrictions.eq( "name", experimentalDesign.getName() ) );
 
@@ -85,12 +86,12 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
      */
 
     public ExperimentalDesign find( final String queryString, final ExperimentalDesign experimentalDesign ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        java.util.List<String> argNames = new java.util.ArrayList<>();
+        java.util.List<Object> args = new java.util.ArrayList<>();
         args.add( experimentalDesign );
         argNames.add( "experimentalDesign" );
-        Set<ExperimentalDesign> results = new LinkedHashSet<ExperimentalDesign>( this.getHibernateTemplate()
-                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Set<ExperimentalDesign> results = new LinkedHashSet<>( this.getHibernateTemplate().findByNamedParam(
+                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -122,12 +123,12 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
      */
 
     public ExperimentalDesign findByName( final java.lang.String queryString, final java.lang.String name ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        java.util.List<String> argNames = new java.util.ArrayList<>();
+        java.util.List<Object> args = new java.util.ArrayList<>();
         args.add( name );
         argNames.add( "name" );
-        java.util.Set<ExperimentalDesign> results = new LinkedHashSet<ExperimentalDesign>( this.getHibernateTemplate()
-                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<ExperimentalDesign> results = new LinkedHashSet<>( this.getHibernateTemplate().findByNamedParam(
+                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {
@@ -168,12 +169,12 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
 
     public ExperimentalDesign findOrCreate( final java.lang.String queryString,
             final ExperimentalDesign experimentalDesign ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        java.util.List<String> argNames = new java.util.ArrayList<>();
+        java.util.List<Object> args = new java.util.ArrayList<>();
         args.add( experimentalDesign );
         argNames.add( "experimentalDesign" );
-        Set<ExperimentalDesign> results = new LinkedHashSet<ExperimentalDesign>( this.getHibernateTemplate()
-                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Set<ExperimentalDesign> results = new LinkedHashSet<>( this.getHibernateTemplate().findByNamedParam(
+                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
 
         if ( results.size() > 1 ) {

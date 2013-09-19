@@ -48,6 +48,16 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
+    public ExperimentalFactor load( Long id ) {
+        return ( ExperimentalFactor ) this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select ef from ExperimentalFactorImpl ef join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
+                .setParameter( "id", id ).uniqueResult();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -114,7 +124,7 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
 
-            Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
+            Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<>();
             for ( FactorValue factorValue : bm.getFactorValues() ) {
                 if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
                     factorValuesToRemoveFromBioMaterial.add( factorValue );

@@ -43,6 +43,8 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
         FactorValue that = ( FactorValue ) object;
         if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
 
+        if ( that.getId() != null ) return false;
+
         /*
          * at this point, we know we have two FactorValues, at least one of which is transient, so we have to look at
          * the fields; pain in butt
@@ -54,6 +56,8 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
 
     @Override
     public int hashCode() {
+        if ( this.getId() != null ) return this.getId().hashCode();
+
         HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() )
                 .append( this.getExperimentalFactor() ).append( this.getMeasurement() );
         if ( this.getCharacteristics() != null ) {
