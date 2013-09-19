@@ -185,6 +185,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( e == null || e.getId() == null ) return;
         ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
 
+        if ( ef == null ) {
+            return;
+        }
+
         Collection<Characteristic> chars = new HashSet<>();
         for ( FactorValue fv : ef.getFactorValues() ) {
             for ( Characteristic c : fv.getCharacteristics() ) {
