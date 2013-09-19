@@ -216,7 +216,7 @@ public class OntologyServiceImpl implements OntologyService {
     @Autowired
     private ExpressionExperimentService eeService;
 
-    private Collection<AbstractOntologyService> ontologyServices = new ArrayList<AbstractOntologyService>();
+    private Collection<AbstractOntologyService> ontologyServices = new ArrayList<>();
 
     @Autowired
     private SearchService searchService;
@@ -261,7 +261,7 @@ public class OntologyServiceImpl implements OntologyService {
         String queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
         if ( StringUtils.isBlank( queryString ) ) {
             log.warn( "The query was not valid (ended up being empty): " + givenQueryString );
-            return new HashSet<Characteristic>();
+            return new HashSet<>();
         }
 
         if ( log.isDebugEnabled() ) {
@@ -269,11 +269,11 @@ public class OntologyServiceImpl implements OntologyService {
         }
 
         Collection<? extends OntologyResource> results;
-        Collection<Characteristic> searchResults = new HashSet<Characteristic>();
+        Collection<Characteristic> searchResults = new HashSet<>();
 
-        Collection<String> foundValues = new HashSet<String>();
+        Collection<String> foundValues = new HashSet<>();
 
-        Collection<Characteristic> previouslyUsedInSystem = new HashSet<Characteristic>();
+        Collection<Characteristic> previouslyUsedInSystem = new HashSet<>();
 
         // this should be very fast.
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
@@ -350,15 +350,15 @@ public class OntologyServiceImpl implements OntologyService {
         String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
 
         if ( searchQuery == null || searchQuery.length() < 3 ) {
-            return new HashSet<CharacteristicValueObject>();
+            return new HashSet<>();
         }
 
         // this will do like %search%
         Collection<CharacteristicValueObject> characteristicsFromDatabase = CharacteristicValueObject
                 .characteristic2CharacteristicVO( this.characteristicService.findByValue( "%" + searchQuery ) );
 
-        Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri = new HashMap<String, CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> characteristicFromDatabaseFreeText = new HashSet<CharacteristicValueObject>();
+        Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri = new HashMap<>();
+        Collection<CharacteristicValueObject> characteristicFromDatabaseFreeText = new HashSet<>();
 
         for ( CharacteristicValueObject characteristicInDatabase : characteristicsFromDatabase ) {
 
@@ -381,10 +381,10 @@ public class OntologyServiceImpl implements OntologyService {
         // order to show the the term: 1-exactMatch, 2-startWith, 3-substring and 4- no rule
         // order to show values for each List : 1-From database with Uri, 2- from Ontology, 3- from from database with
         // no Uri
-        Collection<CharacteristicValueObject> characteristicsWithExactMatch = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> characteristicsStartWithQuery = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> characteristicsSubstring = new ArrayList<CharacteristicValueObject>();
-        Collection<CharacteristicValueObject> characteristicsNoRuleFound = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> characteristicsWithExactMatch = new ArrayList<>();
+        Collection<CharacteristicValueObject> characteristicsStartWithQuery = new ArrayList<>();
+        Collection<CharacteristicValueObject> characteristicsSubstring = new ArrayList<>();
+        Collection<CharacteristicValueObject> characteristicsNoRuleFound = new ArrayList<>();
 
         // from the database with a uri
         putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseWithValueUri.values(),
@@ -398,7 +398,7 @@ public class OntologyServiceImpl implements OntologyService {
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
 
-        List<CharacteristicValueObject> allCharactersticsFound = new ArrayList<CharacteristicValueObject>();
+        List<CharacteristicValueObject> allCharactersticsFound = new ArrayList<>();
         allCharactersticsFound.addAll( characteristicsWithExactMatch );
         allCharactersticsFound.addAll( characteristicsStartWithQuery );
         allCharactersticsFound.addAll( characteristicsSubstring );
@@ -421,7 +421,7 @@ public class OntologyServiceImpl implements OntologyService {
     public Collection<OntologyIndividual> findIndividuals( String givenSearch ) {
 
         String query = OntologySearch.stripInvalidCharacters( givenSearch );
-        Collection<OntologyIndividual> results = new HashSet<OntologyIndividual>();
+        Collection<OntologyIndividual> results = new HashSet<>();
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
             Collection<OntologyIndividual> found = ontology.findIndividuals( query );
@@ -440,7 +440,7 @@ public class OntologyServiceImpl implements OntologyService {
     public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
 
         String query = OntologySearch.stripInvalidCharacters( search );
-        Collection<VocabCharacteristic> results = new HashSet<VocabCharacteristic>();
+        Collection<VocabCharacteristic> results = new HashSet<>();
 
         if ( StringUtils.isBlank( query ) ) {
             return results;
@@ -464,7 +464,7 @@ public class OntologyServiceImpl implements OntologyService {
 
         String query = OntologySearch.stripInvalidCharacters( search );
 
-        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> results = new HashSet<>();
 
         if ( StringUtils.isBlank( query ) ) {
             return results;
@@ -504,33 +504,37 @@ public class OntologyServiceImpl implements OntologyService {
             // FIXME perhaps use this. But would want to update it periodically. e.g. cache that expires.
             // Collection<String> usedUris = characteristicService.getUsedCategories();
 
-            categoryterms = new HashSet<OntologyTerm>();
-            try {
-                BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) );
-                String line;
-                while ( ( line = reader.readLine() ) != null ) {
-                    if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) ) continue;
-                    String[] f = StringUtils.split( line, '\t' );
-                    if ( f.length < 2 ) {
-                        continue;
-                    }
-                    OntologyTerm t = getTerm( f[0] );
-                    if ( t == null ) {
-                        // this is not great. We might want to let it expire and redo it later if the ontology becomes
-                        // available. Inference will not be available.
-                        log.info( "Ontology needed is not loaded? Using light-weight placeholder for " + f[0] );
-                        t = new OntologyTermSimple( f[0], f[1] );
-                    }
+            categoryterms = new HashSet<>();
+            synchronized ( categoryterms ) {
+                try {
+                    BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) );
+                    String line;
+                    while ( ( line = reader.readLine() ) != null ) {
+                        if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) ) continue;
+                        String[] f = StringUtils.split( line, '\t' );
+                        if ( f.length < 2 ) {
+                            continue;
+                        }
+                        OntologyTerm t = getTerm( f[0] );
+                        if ( t == null ) {
+                            // this is not great. We might want to let it expire and redo it later if the ontology
+                            // becomes
+                            // available. Inference will not be available.
+                            log.info( "Ontology needed is not loaded? Using light-weight placeholder for " + f[0] );
+                            t = new OntologyTermSimple( f[0], f[1] );
+                        }
 
-                    categoryterms.add( t );
+                        categoryterms.add( t );
+                    }
+                    reader.close();
+
+                } catch ( IOException ioe ) {
+                    log.error( "Error reading from term list '" + termUrl + "'; returning general term list", ioe );
+                    categoryterms = null;
                 }
-                reader.close();
 
-            } catch ( IOException ioe ) {
-                log.error( "Error reading from term list '" + termUrl + "'; returning general term list", ioe );
+                categoryterms = Collections.unmodifiableCollection( categoryterms );
             }
-
-            categoryterms = Collections.unmodifiableCollection( categoryterms );
         }
         return categoryterms;
 
@@ -718,12 +722,12 @@ public class OntologyServiceImpl implements OntologyService {
         log.debug( "Vocab Characteristic: " + vc );
 
         vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
-        Set<Characteristic> chars = new HashSet<Characteristic>();
+        Set<Characteristic> chars = new HashSet<>();
         chars.add( vc );
 
         Collection<Characteristic> current = bm.getCharacteristics();
         if ( current == null )
-            current = new HashSet<Characteristic>( chars );
+            current = new HashSet<>( chars );
         else
             current.addAll( chars );
 
@@ -806,7 +810,7 @@ public class OntologyServiceImpl implements OntologyService {
      */
     private Collection<VocabCharacteristic> convert( final Collection<OntologyResource> resources ) {
 
-        Collection<VocabCharacteristic> converted = new HashSet<VocabCharacteristic>();
+        Collection<VocabCharacteristic> converted = new HashSet<>();
 
         if ( ( resources == null ) || ( resources.isEmpty() ) ) return converted;
 
@@ -846,7 +850,7 @@ public class OntologyServiceImpl implements OntologyService {
     private Collection<VocabCharacteristic> filter( final Collection<? extends OntologyResource> terms,
             final String filter ) {
 
-        Collection<VocabCharacteristic> filtered = new HashSet<VocabCharacteristic>();
+        Collection<VocabCharacteristic> filtered = new HashSet<>();
 
         if ( ( terms == null ) || ( terms.isEmpty() ) ) return filtered;
 
@@ -883,10 +887,10 @@ public class OntologyServiceImpl implements OntologyService {
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
             boolean useNeuroCartaOntology, Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) {
 
-        Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
 
         // in neurocarta we dont need to search all Ontologies
-        Collection<AbstractOntologyService> ontologyServicesToUse = new HashSet<AbstractOntologyService>();
+        Collection<AbstractOntologyService> ontologyServicesToUse = new HashSet<>();
 
         if ( useNeuroCartaOntology ) {
             ontologyServicesToUse.add( this.nifstdOntologyService );
@@ -1024,9 +1028,9 @@ public class OntologyServiceImpl implements OntologyService {
          * should be preserved.
          */
 
-        List<Characteristic> sortedResultsExact = new ArrayList<Characteristic>();
-        List<Characteristic> sortedResultsStartsWith = new ArrayList<Characteristic>();
-        List<Characteristic> sortedResultsBottom = new ArrayList<Characteristic>();
+        List<Characteristic> sortedResultsExact = new ArrayList<>();
+        List<Characteristic> sortedResultsStartsWith = new ArrayList<>();
+        List<Characteristic> sortedResultsBottom = new ArrayList<>();
 
         for ( Characteristic characteristic : alreadyUsedResults ) {
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) ) {
@@ -1055,7 +1059,7 @@ public class OntologyServiceImpl implements OntologyService {
         sort( sortedResultsStartsWith );
         sort( sortedResultsBottom );
 
-        List<Characteristic> sortedTerms = new ArrayList<Characteristic>( foundValues.size() );
+        List<Characteristic> sortedTerms = new ArrayList<>( foundValues.size() );
         sortedTerms.addAll( sortedResultsExact );
         sortedTerms.addAll( sortedResultsStartsWith );
         sortedTerms.addAll( sortedResultsBottom );
