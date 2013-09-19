@@ -91,6 +91,7 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.util.Settings;
 
 /**
  * High Level Service used to add Candidate Gene Management System capabilities
@@ -1008,7 +1009,31 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence() {
-        return ExternalDatabaseValueObject.fromEntity( this.associationService.findExternalDatabasesWithEvidence() );
+
+        Collection<ExternalDatabaseValueObject> exDatabases = ExternalDatabaseValueObject
+                .fromEntity( this.associationService.findExternalDatabasesWithEvidence() );
+
+        // id of databases we want to exclude in the filter
+        String excludedDefaultDatabases = Settings.getString( "gemma.neurocarta.exluded_database_id" );
+
+        if ( excludedDefaultDatabases != null ) {
+            Collection<String> excludedDatabaseId = Arrays.asList( excludedDefaultDatabases.split( "," ) );
+
+            for ( ExternalDatabaseValueObject databaseVO : exDatabases ) {
+                if ( excludedDatabaseId.contains( databaseVO.getId().toString() ) ) {
+                    databaseVO.setChecked( true );
+                }
+            }
+        }
+
+        // so manual curation will be put at the end
+        ArrayList<ExternalDatabaseValueObject> exDatabasesAsList = new ArrayList<ExternalDatabaseValueObject>(
+                exDatabases );
+        // add manual curation type
+        ExternalDatabaseValueObject manualEvidence = new ExternalDatabaseValueObject( 1L, "Manual Curation", false );
+        exDatabasesAsList.add( manualEvidence );
+
+        return exDatabasesAsList;
     }
 
     /** For a given Ontology Term, count the occurence of the term + children in the database */
