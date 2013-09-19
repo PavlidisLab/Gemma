@@ -3,146 +3,169 @@ Ext.namespace('Gemma');
 
 Gemma.ExternalDatabaseGrid = Ext.extend(Ext.grid.GridPanel, {
 
-      initComponent : function() {
+			initComponent : function() {
 
-         var checkboxSelectionModel = new Ext.grid.CheckboxSelectionModel({
+				var checkboxSelectionModel = new Ext.grid.CheckboxSelectionModel({
 
-               singleSelect : false,
+							singleSelect : false,
 
-               listeners : {
-                  rowdeselect : function(selectionModel, rowIndex, record) {
-                     // I must defer changing the field isChecked. Otherwise,
-                     // other events such as cellclick will not be fired.
-                     Ext.defer(function() {
-                           record.set('isChecked', false);
-                        }, 500);
-                  },
-                  rowselect : function(selectionModel, rowIndex, record) {
-                     // I must defer changing the field isChecked. Otherwise,
-                     // other events such as cellclick will not be fired.
-                     Ext.defer(function() {
-                           record.set('isChecked', true);
-                        }, 500);
-                  },
-                  scope : this
-               }
-            });
+							listeners : {
+								rowdeselect : function(selectionModel, rowIndex, record) {
+									// I must defer changing the field isChecked. Otherwise,
+									// other events such as cellclick will not be fired.
+									Ext.defer(function() {
+												record.set('isChecked', false);
+											}, 500);
+								},
+								rowselect : function(selectionModel, rowIndex, record) {
+									// I must defer changing the field isChecked. Otherwise,
+									// other events such as cellclick will not be fired.
+									Ext.defer(function() {
+												record.set('isChecked', true);
+											}, 500);
+								},
+								scope : this
+							}
 
-         var store = new Ext.data.Store({
-               autoLoad : true,
+						});
 
-               proxy : new Ext.data.DWRProxy(PhenotypeController.findExternalDatabaseName),
+				var store = new Ext.data.Store({
+							autoLoad : true,
 
-               reader : new Ext.data.JsonReader({
-                     fields : ['id', {
-                           name : 'name',
-                           sortType : Ext.data.SortTypes.asUCString
-                        }]
-                  }),
-            });
+							proxy : new Ext.data.DWRProxy(PhenotypeController.findExternalDatabaseName),
 
-         Ext.apply(this, {
+							reader : new Ext.data.JsonReader({
+										fields : ['id', 'checked', {
+													name : 'name',
+													sortType : Ext.data.SortTypes.asUCString
+												}]
+									})
+						});
 
-               collapsed : false,
-               collapsible : true,
-               fieldLabel : 'Data source',
-               title : 'Select',
-               listeners : {
-                  render : function(grid) {
-                     // this to hide the column header
-                     //  grid.getView().el.select('.x-grid3-header').setStyle('display', 'none');
-                  },
+				var mydata = [[1, 'false', 'Manual Curation']];
+				store.loadData(mydata, false);
 
-                  collapse : function(p) {
-                     Ext.getCmp('filterMenu').doLayout();
-                  },
+				Ext.apply(this, {
 
-                  expand : function(p) {
-                     Ext.getCmp('filterMenu').doLayout();
-                  }
-               },
+							collapsed : false,
+							collapsible : true,
+							fieldLabel : 'Exclude Data source',
+							title : 'Select',
 
-               bodyBorder : false,
-               viewConfig : {
-                  forceFit : true
-               },
-               height : 280,
-               width : 250,
-               loadMask : true,
-               record : Ext.data.Record.create([{
-                     name : "id",
-                     type : "int"
-                  }, {
-                     name : "name",
-                     type : "string"
-                  }, {
-                     name : "isChecked",
-                     type : "boolean"
-                  }]),
-               store : store,
-               columns : [checkboxSelectionModel, {
-                     header : "Check all",
-                     dataIndex : "name",
-                     width : 0.25
-                  }],
-               sm : checkboxSelectionModel
+							bodyBorder : false,
+							viewConfig : {
+								forceFit : true
+							},
+							height : 280,
+							width : 250,
+							loadMask : true,
+							record : Ext.data.Record.create([{
+										name : "id",
+										type : "int"
+									}, {
+										name : "name",
+										type : "string"
+									}, {
+										name : "isChecked",
+										type : "boolean"
+									}]),
+							store : store,
+							columns : [checkboxSelectionModel, {
+										header : "Exclude all",
+										dataIndex : "name",
+										width : 0.25
+									}],
+							sm : checkboxSelectionModel,
 
-            });
-         Gemma.AuditTrailGrid.superclass.initComponent.call(this);
-      },
+							listeners : {
+								render : function(grid) {
+									// this to hide the column header
+									// grid.getView().el.select('.x-grid3-header').setStyle('display', 'none');
+								},
 
-      // get all id of selected database
-      getChosenDatabasesId : function() {
+								collapse : function(p) {
+									Ext.getCmp('filterMenu').doLayout();
+								},
 
-         var arr = [];
+								expand : function(p) {
+									Ext.getCmp('filterMenu').doLayout();
+								}
 
-         this.store.each(function(rec) {
-               if (rec.data.isChecked) {
-                  arr.push(rec.data.id);
-               }
-            });
-         return arr;
-      },
+								,
+								afterrender : function() {
+									var me = this;
 
-      // get all names of selected database
-      getChosenDatabasesName : function() {
+									var data = me.getStore().data.items;
+									var recs = [];
+									Ext.each(data, function(item, index) {
 
-         var result = '';
+												if (item.data.checked == true) {
 
-         this.store.each(function(rec) {
-               if (rec.data.isChecked) {
-                  result = result + " " + rec.data.name;
-               }
-            });
-         return result;
-      },
-      
-  	deselectAll : function() {
-		var sModel = this.getSelectionModel();
-		sModel.clearSelections();
-	}
+													recs.push(index);
+												} else {
 
-   });
+												}
 
+												me.getSelectionModel().selectRows(recs);
+											});
+								}
+
+							}
+
+						});
+				Gemma.AuditTrailGrid.superclass.initComponent.call(this);
+			},
+
+			// get all id of selected database
+			getChosenDatabasesId : function() {
+
+				var arr = [];
+
+				this.store.each(function(rec) {
+							if (rec.data.isChecked) {
+								arr.push(rec.data.id);
+							}
+						});
+				return arr;
+			},
+
+			// get all names of selected database
+			getChosenDatabasesName : function() {
+
+				var result = 'excluding:';
+
+				this.store.each(function(rec) {
+							if (rec.data.isChecked) {
+								result = result + " " + rec.data.name;
+							}
+						});
+				return result;
+			},
+
+			deselectAll : function() {
+				var sModel = this.getSelectionModel();
+				sModel.clearSelections();
+			}
+
+		});
 
 // solution for getSelectionModel().clearSelections() not deselect all CheckboxSelectionModel
 Ext.override(Ext.grid.CheckboxSelectionModel, {
-	initEvents: function() {
-		Ext.grid.CheckboxSelectionModel.superclass.initEvents.call(this);
-		this.grid.on('render', function(){
-			var view = this.grid.getView();
-			view.mainBody.on('mousedown', this.onMouseDown, this);
-			Ext.fly(view.innerHd).on('mousedown', this.onHdMouseDown, this);
-		}, this);
-		
-		this.on('selectionchange', function() { // beim Ändern der Auswahl Anpassungen vornehmen
-			// Header-Checkbox de/aktivieren je nach Auswahl (nur aktivieren, wenn alle Zeilen markiert sind)
-			var hd = Ext.fly(this.grid.getView().innerHd).child('div.x-grid3-hd-checker');
-			if (this.getCount() < this.grid.getStore().getCount() || this.getCount() <= 0) {
-				hd.removeClass('x-grid3-hd-checker-on');
-			} else {
-				hd.addClass('x-grid3-hd-checker-on');
+			initEvents : function() {
+				Ext.grid.CheckboxSelectionModel.superclass.initEvents.call(this);
+				this.grid.on('render', function() {
+							var view = this.grid.getView();
+							view.mainBody.on('mousedown', this.onMouseDown, this);
+							Ext.fly(view.innerHd).on('mousedown', this.onHdMouseDown, this);
+						}, this);
+
+				this.on('selectionchange', function() { 
+							var hd = Ext.fly(this.grid.getView().innerHd).child('div.x-grid3-hd-checker');
+							if (this.getCount() < this.grid.getStore().getCount() || this.getCount() <= 0) {
+								hd.removeClass('x-grid3-hd-checker-on');
+							} else {
+								hd.addClass('x-grid3-hd-checker-on');
+							}
+						}, this);
 			}
-		}, this);
-	}
-});
+		});
