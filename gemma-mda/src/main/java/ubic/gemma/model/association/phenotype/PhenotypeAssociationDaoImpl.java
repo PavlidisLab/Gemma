@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
@@ -146,21 +147,48 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             Collection<Long> externalDatabaseIds ) {
 
         String findByExternalDatabase = "";
+        boolean excludeManualCuration = false;
+        boolean excludeExternalDatabase = false;
+        Collection<PhenotypeAssociation> manualCuration = new HashSet<PhenotypeAssociation>();
+        Collection<PhenotypeAssociation> evidenceWithSource = new HashSet<PhenotypeAssociation>();
 
         if ( externalDatabaseIds != null && !externalDatabaseIds.isEmpty() ) {
             String ids = "";
 
             for ( Long id : externalDatabaseIds ) {
-                ids = ids + id + ",";
-            }
-            ids = ids.substring( 0, ids.length() - 1 );
 
-            findByExternalDatabase = " and p.evidenceSource.externalDatabase.id in (" + ids + ")";
+                // 1 is Manual Curation excluded
+                if ( id.equals( 1L ) ) {
+                    excludeManualCuration = true;
+                } else {
+                    // an External Database excluded
+                    excludeExternalDatabase = true;
+                    ids = ids + id + ",";
+                }
+            }
+
+            ids = StringUtils.removeEnd( ids, "," );
+
+            if ( !excludeManualCuration ) {
+                // get all manual curated evidence (the ones with no external source)
+                manualCuration = this.getHibernateTemplate().find(
+                        "select distinct p from PhenotypeAssociationImpl as p where p.gene.id=" + geneId
+                                + "and p.evidenceSource is null" );
+            }
+
+            // if we need to exclude some evidence with an external source
+            if ( excludeExternalDatabase ) {
+                findByExternalDatabase = " and p.evidenceSource.externalDatabase.id not in (" + ids + ")";
+            }
         }
 
-        return this.getHibernateTemplate().find(
+        evidenceWithSource = this.getHibernateTemplate().find(
                 "select distinct p from PhenotypeAssociationImpl as p where p.gene.id=" + geneId
                         + findByExternalDatabase );
+
+        evidenceWithSource.addAll( manualCuration );
+
+        return evidenceWithSource;
     }
 
     @Override
@@ -229,7 +257,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Collection<ExternalDatabase> externalDatabasesNames = this.getHibernateTemplate().find(
                 "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociationImpl as p" );
-
         return externalDatabasesNames;
     }
 
@@ -367,17 +394,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return externalDatabaseStatisticsValueObject;
     }
-    
+
     /** find statistics all evidences */
     @Override
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence() {
 
         Long numEvidence = ( Long ) this.getHibernateTemplate()
-                .find( "select count (p) from PhenotypeAssociationImpl as p" )
-                .iterator().next();
+                .find( "select count (p) from PhenotypeAssociationImpl as p" ).iterator().next();
 
-        Long numGenes = ( Long ) this
-                .getHibernateTemplate()
+        Long numGenes = ( Long ) this.getHibernateTemplate()
                 .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p" )
                 .iterator().next();
 
@@ -386,9 +411,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .find( "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c" )
                 .iterator().next();
 
-        Collection<String> publicationsLiterature = this
-                .getHibernateTemplate()
-                .find( "select distinct l.citation.pubAccession.accession from LiteratureEvidenceImpl as l" );
+        Collection<String> publicationsLiterature = this.getHibernateTemplate().find(
+                "select distinct l.citation.pubAccession.accession from LiteratureEvidenceImpl as l" );
 
         // find all primary pubmed for ExperimentalEvidence
         Collection<String> publicationsExperimentalPrimary = this
@@ -402,17 +426,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Set<String> publications = new HashSet<String>();
         publications.addAll( publicationsLiterature );
-        System.out.println(publicationsLiterature.size());
         publications.addAll( publicationsExperimentalPrimary );
-        System.out.println(publicationsExperimentalPrimary.size());
         publications.addAll( publicationsExperimentalSecondary );
-        System.out.println(publicationsExperimentalSecondary.size());
 
         Long numPublications = new Long( publications.size() );
 
         ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
-                "Total (unique)", "", "", numEvidence, numGenes,
-                numPhenotypes, numPublications, null );
+                "Total (unique)", "", "", numEvidence, numGenes, numPhenotypes, numPublications, null );
 
         return externalDatabaseStatisticsValueObject;
     }
@@ -686,17 +706,35 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         String externalDatabaseSqlQuery = "";
         String listIds = "";
+        Boolean excludeManualCuration = false;
+        Boolean excludeExternalDatabase = false;
 
         if ( externalDatabaseIds != null && !externalDatabaseIds.isEmpty() ) {
 
             for ( Long id : externalDatabaseIds ) {
-                listIds = listIds + id + ",";
-            }
-            listIds = listIds.substring( 0, listIds.length() - 1 );
 
-            externalDatabaseSqlQuery = keyWord
-                    + " PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK in(SELECT id FROM DATABASE_ENTRY where external_database_fk in ("
-                    + listIds + "))" + " ";
+                if ( id.equals( 1L ) ) {
+                    excludeManualCuration = true;
+                } else {
+                    listIds = listIds + id + ",";
+                    excludeExternalDatabase = true;
+                }
+            }
+
+            listIds = StringUtils.removeEnd( listIds, "," );
+
+            if ( excludeManualCuration && excludeExternalDatabase ) {
+                externalDatabaseSqlQuery = keyWord
+                        + " PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK in (SELECT id FROM DATABASE_ENTRY where external_database_fk not in ("
+                        + listIds + ")) ";
+            } else if ( excludeExternalDatabase ) {
+                externalDatabaseSqlQuery = keyWord
+                        + " (PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK is null or PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK not in (SELECT id FROM DATABASE_ENTRY where external_database_fk in ("
+                        + listIds + "))) ";
+            } else if ( excludeManualCuration ) {
+                externalDatabaseSqlQuery = keyWord + " PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK is not null";
+            }
+
         }
         return externalDatabaseSqlQuery;
 

@@ -27,6 +27,15 @@ public class ExternalDatabaseValueObject implements Comparable<ExternalDatabaseV
 
     private String name;
     private Long id;
+    private boolean checked = false;
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked( boolean checked ) {
+        this.checked = checked;
+    }
 
     public String getName() {
         return name;
@@ -42,6 +51,17 @@ public class ExternalDatabaseValueObject implements Comparable<ExternalDatabaseV
 
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public ExternalDatabaseValueObject() {
+        super();
+    }
+
+    public ExternalDatabaseValueObject( Long id, String name, boolean checked ) {
+        super();
+        this.name = name;
+        this.id = id;
+        this.checked = checked;
     }
 
     public static ExternalDatabaseValueObject fromEntity( ExternalDatabase ed ) {
@@ -82,7 +102,7 @@ public class ExternalDatabaseValueObject implements Comparable<ExternalDatabaseV
         } else if ( !name.equals( other.name ) ) return false;
         return true;
     }
-  
+
     @Override
     public int compareTo( ExternalDatabaseValueObject externalDatabaseValueObject ) {
         return this.getName().toLowerCase().compareTo( externalDatabaseValueObject.getName().toLowerCase() );
