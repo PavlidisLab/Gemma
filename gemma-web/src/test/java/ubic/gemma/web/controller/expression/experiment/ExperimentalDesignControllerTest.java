@@ -36,6 +36,8 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -50,6 +52,9 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private ExperimentalDesignController experimentalDesignController;
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -132,11 +137,18 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ee = eeService.thawLite( ee );
 
-        EntityDelegator e = new EntityDelegator( ee.getExperimentalDesign().getExperimentalFactors().iterator().next()
-                .getFactorValues().iterator().next() );
+        ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
+        EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );
 
         experimentalDesignController.createFactorValueCharacteristic( e,
                 VocabCharacteristic.Factory.newInstance( "foo", "bar", null, null, "foo", "bar", null, "foo", "bar" ) );
+        assertEquals( 2, ef.getFactorValues().size() );
+        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
+        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
+        experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
+
+        ef = experimentalFactorService.load( ef.getId() );
+        assertEquals( 5, ef.getFactorValues().size() );
 
     }
 
