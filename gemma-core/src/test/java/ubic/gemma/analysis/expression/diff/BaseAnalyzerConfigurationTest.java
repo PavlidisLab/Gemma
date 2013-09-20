@@ -190,7 +190,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA1.setExperimentalFactor( experimentalFactorA_Area );
 
         factorValueA2 = FactorValue.Factory.newInstance();
-        factorValueA2.setValue( "amygdala" ); // this will automatically be set as the baseline
+        factorValueA2.setIsBaseline( true );
+        factorValueA2.setValue( "amygdala" );
         factorValueA2.setId( 1002L );
         Characteristic characteristicA2 = Characteristic.Factory.newInstance();
         characteristicA2.setValue( factorValueA2.getValue() );
