@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-cascade="none">
+   <class name="ubic.gemma.model.association.PazarAssociationImpl" table="PAZAR_ASSOCIATION" dynamic-insert="false" dynamic-update="false">
+      <cache usage="read-write" />
+      <id name="id" type="java.lang.Long" unsaved-value="null">
+         <column name="ID" sql-type="BIGINT"/>
+         <generator class="native">
+         </generator>
+      </id>
+      <many-to-one name="databaseEntry" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="false" fetch="select">
+         <column name="DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+      </many-to-one>
+      <many-to-one name="secondGene" class="ubic.gemma.model.genome.GeneImpl"  lazy="proxy" fetch="select">
+         <column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT"/>
+      </many-to-one>
+      <many-to-one name="firstGene" class="ubic.gemma.model.genome.GeneImpl"  lazy="proxy" fetch="select">
+         <column name="FIRST_GENE_FK" not-null="true" sql-type="BIGINT"/>
+      </many-to-one>
+      <many-to-one name="sourceAnalysis" class="ubic.gemma.model.analysis.Analysis"  lazy="proxy" fetch="select">
+         <column name="SOURCE_ANALYSIS_FK" not-null="false" sql-type="BIGINT"/>
+      </many-to-one>
+      <property name="pazarTfId" type="java.lang.String">
+         <column name="PAZAR_TF_ID" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="pazarTargetGeneId" type="java.lang.String">
+         <column name="PAZAR_TARGET_GENE_ID" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+   </class>
+</hibernate-mapping>

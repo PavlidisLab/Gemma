@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-cascade="none">
+   <class name="ubic.gemma.model.genome.biosequence.BioSequenceImpl" table="BIO_SEQUENCE" dynamic-insert="false" dynamic-update="false">
+      <cache usage="read-write" />
+      <id name="id" type="java.lang.Long" unsaved-value="null">
+         <column name="ID" sql-type="BIGINT"/>
+         <generator class="native">
+         </generator>
+      </id>
+      <property name="name" type="java.lang.String">
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="length" type="java.lang.Long">
+         <column name="LENGTH" not-null="false" unique="false" sql-type="BIGINT"/>
+      </property>
+      <property name="sequence" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <column name="SEQUENCE" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="isApproximateLength" type="java.lang.Boolean">
+         <column name="IS_APPROXIMATE_LENGTH" not-null="false" unique="false" sql-type="TINYINT"/>
+      </property>
+      <property name="isCircular" type="java.lang.Boolean">
+         <column name="IS_CIRCULAR" not-null="false" unique="false" sql-type="TINYINT"/>
+      </property>
+      <property name="polymerType" type="ubic.gemma.model.genome.biosequence.PolymerTypeEnum">
+         <column name="POLYMER_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="type" type="ubic.gemma.model.genome.biosequence.SequenceTypeEnum">
+         <column name="TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="fractionRepeats" type="java.lang.Double">
+         <column name="FRACTION_REPEATS" not-null="false" unique="false" sql-type="DOUBLE"/>
+      </property>
+      <many-to-one name="sequenceDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="proxy" fetch="select">
+         <column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+      </many-to-one>
+      <many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="false" fetch="select">
+         <column name="TAXON_FK" not-null="true" sql-type="BIGINT"/>
+      </many-to-one>
+      <set name="bioSequence2GeneProduct" order-by="BIO_SEQUENCE_FK" lazy="true" fetch="select" inverse="true">
+         <cache usage="read-write" />
+         <key foreign-key="BIO_SEQUENCE2_GENE_PRODUCT_BIO_SEQUENCE_FKC">
+            <column name="BIO_SEQUENCE_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.association.BioSequence2GeneProduct"/>
+      </set>
+   </class>
+</hibernate-mapping>

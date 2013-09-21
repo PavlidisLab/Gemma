@@ -1,0 +1,84 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2012 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package ubic.gemma.model;
+
+import java.io.Serializable;
+
+/**
+ * FIXME only used once, probably should move? Mimics SecuredValueObject.
+ * 
+ * @author frances
+ * @version $Id$
+ */
+public class BaseValueObject implements Serializable {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -5290562301261202171L;
+
+    private Object valueObject;
+
+    private boolean errorFound;
+
+    private boolean accessDenied;
+    private boolean userNotLoggedIn;
+    private boolean objectAlreadyRemoved;
+
+    public Object getValueObject() {
+        return this.valueObject;
+    }
+
+    public boolean isAccessDenied() {
+        return this.accessDenied;
+    }
+
+    public boolean isErrorFound() {
+        return this.errorFound;
+    }
+
+    public boolean isObjectAlreadyRemoved() {
+        return this.objectAlreadyRemoved;
+    }
+
+    public boolean isUserNotLoggedIn() {
+        return this.userNotLoggedIn;
+    }
+
+    public void setAccessDenied( boolean accessDenied ) {
+        this.accessDenied = accessDenied;
+    }
+
+    public void setErrorFound( boolean errorFound ) {
+        this.errorFound = errorFound;
+    }
+
+    public void setObjectAlreadyRemoved( boolean objectAlreadyRemoved ) {
+        this.objectAlreadyRemoved = objectAlreadyRemoved;
+    }
+
+    public void setUserNotLoggedIn( boolean userNotLoggedIn ) {
+        this.userNotLoggedIn = userNotLoggedIn;
+    }
+
+    public void setValueObject( Object valueObject ) {
+        this.valueObject = valueObject;
+    }
+}

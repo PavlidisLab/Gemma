@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-cascade="none">
+   <class name="ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult"  table="SEQUENCE_SIMILARITY_SEARCH_RESULT" dynamic-insert="false" dynamic-update="false">
+      <cache usage="read-write" />
+      <id name="id" type="java.lang.Long" unsaved-value="null">
+         <column name="ID" sql-type="BIGINT"/>
+         <generator class="native">
+         </generator>
+      </id>
+      <discriminator column="class" type="string"/>
+      <many-to-one name="querySequence" class="ubic.gemma.model.genome.biosequence.BioSequenceImpl"  lazy="proxy" fetch="select">
+         <column name="QUERY_SEQUENCE_FK" not-null="true" sql-type="BIGINT"/>
+      </many-to-one>
+      <many-to-one name="targetSequence" class="ubic.gemma.model.genome.biosequence.BioSequenceImpl"  lazy="proxy" fetch="select">
+         <column name="TARGET_SEQUENCE_FK" not-null="false" sql-type="BIGINT"/>
+      </many-to-one>
+      <many-to-one name="targetChromosome" class="ubic.gemma.model.genome.ChromosomeImpl"  lazy="proxy" fetch="select">
+         <column name="TARGET_CHROMOSOME_FK" not-null="false" sql-type="BIGINT"/>
+      </many-to-one>
+      <many-to-one name="searchedDatabase" class="ubic.gemma.model.common.description.ExternalDatabaseImpl"  lazy="proxy" fetch="select">
+         <column name="SEARCHED_DATABASE_FK" not-null="false" sql-type="BIGINT"/>
+      </many-to-one>
+      <many-to-one name="targetAlignedRegion" class="ubic.gemma.model.genome.PhysicalLocationImpl"  cascade="all" lazy="false" fetch="select">
+         <column name="TARGET_ALIGNED_REGION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+      </many-to-one>
+      <subclass name="ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl" discriminator-value="BlatResultImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+         <property name="matches" type="java.lang.Integer">
+            <column name="MATCHES" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="mismatches" type="java.lang.Integer">
+            <column name="MISMATCHES" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="repMatches" type="java.lang.Integer">
+            <column name="REP_MATCHES" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="ns" type="java.lang.Integer">
+            <column name="NS" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="queryGapBases" type="java.lang.Integer">
+            <column name="QUERY_GAP_BASES" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="queryGapCount" type="java.lang.Integer">
+            <column name="QUERY_GAP_COUNT" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="targetGapBases" type="java.lang.Integer">
+            <column name="TARGET_GAP_BASES" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="targetGapCount" type="java.lang.Integer">
+            <column name="TARGET_GAP_COUNT" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="strand" type="java.lang.String">
+            <column name="STRAND" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         </property>
+         <property name="queryStart" type="java.lang.Integer">
+            <column name="QUERY_START" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="queryEnd" type="java.lang.Integer">
+            <column name="QUERY_END" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="targetStart" type="java.lang.Long">
+            <column name="TARGET_START" not-null="false" unique="false" sql-type="BIGINT"/>
+         </property>
+         <property name="targetEnd" type="java.lang.Long">
+            <column name="TARGET_END" not-null="false" unique="false" sql-type="BIGINT"/>
+         </property>
+         <property name="blockCount" type="java.lang.Integer">
+            <column name="BLOCK_COUNT" not-null="false" unique="false" sql-type="INTEGER"/>
+         </property>
+         <property name="blockSizes" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+            <column name="BLOCK_SIZES" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         </property>
+         <property name="queryStarts" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+            <column name="QUERY_STARTS" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         </property>
+         <property name="targetStarts" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+            <column name="TARGET_STARTS" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         </property>
+      </subclass>
+     
+   </class>
+</hibernate-mapping>

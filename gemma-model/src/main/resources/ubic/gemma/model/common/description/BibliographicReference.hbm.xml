@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-cascade="none">
+   <class name="ubic.gemma.model.common.description.BibliographicReferenceImpl" table="BIBLIOGRAPHIC_REFERENCE" dynamic-insert="false" dynamic-update="false">
+      <cache usage="read-write" />
+      <id name="id" type="java.lang.Long" unsaved-value="null">
+         <column name="ID" sql-type="BIGINT"/>
+         <generator class="native">
+         </generator>
+      </id>
+      <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
+         <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+      </many-to-one>
+      <many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl"  cascade="all" lazy="proxy" fetch="select">
+         <column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+      </many-to-one>
+      <property name="name" type="java.lang.String">
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="authorList" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <column name="AUTHOR_LIST" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="title" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <column name="TITLE" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="publisher" type="java.lang.String">
+         <column name="PUBLISHER" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="editor" type="java.lang.String">
+         <column name="EDITOR" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="volume" type="java.lang.String">
+         <column name="VOLUME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="issue" type="java.lang.String">
+         <column name="ISSUE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="pages" type="java.lang.String">
+         <column name="PAGES" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="publication" type="java.lang.String">
+         <column name="PUBLICATION" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="fullTextUri" type="java.lang.String">
+         <column name="FULL_TEXT_URI" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="abstractText" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <column name="ABSTRACT_TEXT" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="citation" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <column name="CITATION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <property name="publicationDate" type="java.util.Date">
+         <column name="PUBLICATION_DATE" not-null="false" unique="false" sql-type="DATETIME"/>
+      </property>
+      <property name="annotatedAbstract" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <column name="ANNOTATED_ABSTRACT" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
+      <many-to-one name="pubAccession" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="proxy" fetch="select">
+         <column name="PUB_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+      </many-to-one>
+      <many-to-one name="fullTextPdf" class="ubic.gemma.model.common.description.LocalFileImpl"  cascade="none" lazy="proxy" fetch="select">
+         <column name="FULL_TEXT_PDF_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+      </many-to-one>
+      <set name="annotations" order-by="BIBLIOGRAPHIC_REFERENCE_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+         <cache usage="read-write" />
+         <key foreign-key="CHARACTERISTIC_BIBLIOGRAPHIC_REFERENCE_FKC">
+            <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
+      </set>
+      <set name="meshTerms" order-by="MESH_BIB_REF_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+         <cache usage="read-write" />
+         <key foreign-key="MEDICAL_SUBJECT_HEADING_MESH_BIB_REF_FKC">
+            <column name="MESH_BIB_REF_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeadingImpl"/>
+      </set>
+      <set name="publicationTypes" order-by="BIBLIOGRAPHIC_REFERENCE_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+         <cache usage="read-write" />
+         <key foreign-key="PUBLICATION_TYPE_BIBLIOGRAPHIC_REFERENCE_FKC">
+            <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.common.description.PublicationTypeImpl"/>
+      </set>
+      <set name="keywords" order-by="KEYWORD_BIB_REF_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+         <cache usage="read-write" />
+         <key foreign-key="KEYWORD_KEYWORD_BIB_REF_FKC">
+            <column name="KEYWORD_BIB_REF_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.common.description.KeywordImpl"/>
+      </set>
+      <set name="chemicals" order-by="BIBLIOGRAPHIC_REFERENCE_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+         <cache usage="read-write" />
+         <key foreign-key="COMPOUND_BIBLIOGRAPHIC_REFERENCE_FKC">
+            <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.expression.biomaterial.CompoundImpl"/>
+      </set>
+   </class>
+</hibernate-mapping>

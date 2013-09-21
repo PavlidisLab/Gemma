@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-cascade="none">
+   <class name="ubic.gemma.model.analysis.AnalysisResultSet" table="ANALYSIS_RESULT_SET" dynamic-insert="false" dynamic-update="false">
+      <cache usage="read-write" />
+      <id name="id" type="java.lang.Long" unsaved-value="null">
+         <column name="ID" sql-type="BIGINT"/>
+         <generator class="native">
+         </generator>
+      </id>
+      <discriminator column="class" type="string"/>
+      <subclass name="ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet"   dynamic-insert="false" dynamic-update="false" abstract="true">
+         <set name="experimentalFactors" table="EXPERIMENTAL_FACTORS2FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS" order-by="EXPERIMENTAL_FACTORS_FK" lazy="true" fetch="select" inverse="false">
+            <key foreign-key="EXPERIMENTAL_FACTOR_FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS_C">
+               <column name="FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS_FK" sql-type="BIGINT"/>
+            </key>
+            <many-to-many class="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" >
+               <column name="EXPERIMENTAL_FACTORS_FK" sql-type="BIGINT"/>
+            </many-to-many>
+         </set>
+         <subclass name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl" discriminator-value="ExpressionAnalysisResultSetImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+            <property name="numberOfProbesTested" type="java.lang.Integer">
+               <column name="NUMBER_OF_PROBES_TESTED" not-null="false" unique="false" sql-type="INTEGER"/>
+            </property>
+            <property name="numberOfGenesTested" type="java.lang.Integer">
+               <column name="NUMBER_OF_GENES_TESTED" not-null="false" unique="false" sql-type="INTEGER"/>
+            </property>
+            <property name="qvalueThresholdForStorage" type="java.lang.Double">
+               <column name="QVALUE_THRESHOLD_FOR_STORAGE" not-null="false" unique="false" sql-type="DOUBLE"/>
+            </property>
+            <many-to-one name="baselineGroup" class="ubic.gemma.model.expression.experiment.FactorValueImpl"  lazy="proxy" fetch="select">
+               <column name="BASELINE_GROUP_FK" not-null="false" sql-type="BIGINT"/>
+            </many-to-one>
+            <set name="results" order-by="RESULT_SET_FK" lazy="true" fetch="select" inverse="true" cascade="all">
+               <cache usage="read-write" />
+               <key foreign-key="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_RESULT_SET_FKC">
+                  <column name="RESULT_SET_FK" sql-type="BIGINT"/>
+               </key>
+               <one-to-many class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl"/>
+            </set>
+            <many-to-one name="analysis" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" cascade="none"  lazy="proxy" fetch="select">
+               <column name="ANALYSIS_FK" not-null="false" sql-type="BIGINT"/>
+            </many-to-one>
+            <many-to-one name="pvalueDistribution" class="ubic.gemma.model.analysis.expression.diff.PvalueDistributionImpl"  cascade="all" lazy="proxy" fetch="select">
+               <column name="PVALUE_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+            </many-to-one>
+            <set name="hitListSizes" order-by="RESULT_SET_FK" lazy="false" fetch="select" inverse="false" cascade="all">
+               <cache usage="read-write" />
+               <key foreign-key="HIT_LIST_SIZE_RESULT_SET_FKC">
+                  <column name="RESULT_SET_FK" sql-type="BIGINT"/>
+               </key>
+               <one-to-many class="ubic.gemma.model.analysis.expression.diff.HitListSizeImpl"/>
+            </set>
+         </subclass>
+      </subclass>
+   </class>
+</hibernate-mapping>

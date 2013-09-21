@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-cascade="none">
+   <class name="ubic.gemma.model.association.Gene2GOAssociationImpl" table="GENE2GO_ASSOCIATION" dynamic-insert="false" dynamic-update="false">
+      <cache usage="read-write" />
+      <id name="id" type="java.lang.Long" unsaved-value="null">
+         <column name="ID" sql-type="BIGINT"/>
+         <generator class="native">
+         </generator>
+      </id>
+      <many-to-one name="gene" class="ubic.gemma.model.genome.GeneImpl"  lazy="proxy" fetch="select">
+         <column name="GENE_FK" not-null="true" sql-type="BIGINT"/>
+      </many-to-one>
+      <many-to-one name="ontologyEntry" class="ubic.gemma.model.common.description.VocabCharacteristicImpl"  cascade="all" lazy="false" fetch="join">
+         <column name="ONTOLOGY_ENTRY_FK" not-null="true" sql-type="BIGINT" unique="true"/>
+      </many-to-one>
+      <many-to-one name="sourceAnalysis" class="ubic.gemma.model.analysis.Analysis"  lazy="proxy" fetch="select">
+         <column name="SOURCE_ANALYSIS_FK" not-null="false" sql-type="BIGINT"/>
+      </many-to-one>
+      <property name="evidenceCode" type="ubic.gemma.model.association.GOEvidenceCodeEnum">
+         <column name="EVIDENCE_CODE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+      </property>
+   </class>
+</hibernate-mapping>
