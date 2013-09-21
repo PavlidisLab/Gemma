@@ -54,36 +54,6 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements Gene2Gen
     }
 
     /**
-     * @see Gene2GeneProteinAssociationService#create(Gene2GeneProteinAssociation)
-     */
-    @Override
-    @Transactional
-    public Gene2GeneProteinAssociation createOrUpdate( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        try {
-            return this.handleCreateOrUpdate( gene2GeneProteinAssociation );
-        } catch ( Throwable th ) {
-            throw new Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'Gene2GeneProteinAssociationServiceBase.createOrUpdate(Gene2GeneProteinAssociation)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see Gene2GeneProteinAssociationService#update(Gene2GeneProteinAssociation)
-     */
-    @Override
-    @Transactional
-    public void update( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        try {
-            this.handleUpdate( gene2GeneProteinAssociation );
-        } catch ( Throwable th ) {
-            throw new Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'Gene2GeneProteinAssociationServiceBase.create(Gene2GeneProteinAssociation)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see Gene2GeneProteinAssociationService#find(Gene2GeneProteinAssociation)
      */
     @Override
@@ -198,17 +168,6 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements Gene2Gen
      */
     protected abstract Gene2GeneProteinAssociation handleCreate( Gene2GeneProteinAssociation gene2GeneProteinAssociation )
             throws Exception;
-
-    /**
-     * Performs the core logic for {@link #createOUpdate(Gene2GeneProteinAssociation)}
-     */
-    protected abstract Gene2GeneProteinAssociation handleCreateOrUpdate(
-            Gene2GeneProteinAssociation gene2GeneProteinAssociation ) throws Exception;
-
-    /**
-     * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}
-     */
-    protected abstract void handleUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) throws Exception;
 
     /**
      * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}

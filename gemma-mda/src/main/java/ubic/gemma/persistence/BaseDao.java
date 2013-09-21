@@ -30,6 +30,13 @@ public interface BaseDao<T> {
 
     public Collection<? extends T> create( Collection<? extends T> entities );
 
+    /**
+     * Create an object. If the entity type is immutable, this may also delete any existing entities identified by an
+     * appropriate 'find' method.
+     * 
+     * @param entity
+     * @return
+     */
     public T create( T entity );
 
     public Collection<? extends T> load( Collection<Long> ids );
@@ -50,10 +57,25 @@ public interface BaseDao<T> {
      */
     public void remove( Long id );
 
+    /**
+     * Remove a persistent instance
+     * 
+     * @param entity
+     */
     public void remove( T entity );
 
+    /**
+     * Update the entities. Not supported if the entities are immutable.
+     * 
+     * @param entities
+     */
     public void update( Collection<? extends T> entities );
 
+    /**
+     * Update the entity. Not supported if the entity is immutable.
+     * 
+     * @param entities
+     */
     public void update( T entity );
 
 }

@@ -76,9 +76,7 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         Collection<Chromosome> hits = this.find( name, taxon );
 
         if ( hits == null || hits.isEmpty() ) {
-            Chromosome c = Chromosome.Factory.newInstance();
-            c.setName( name );
-            c.setTaxon( taxon );
+            Chromosome c = Chromosome.Factory.newInstance( name, taxon );
 
             return create( c );
         }

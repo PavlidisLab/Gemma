@@ -71,18 +71,11 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GeneProteinAssociation.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( Iterator<? extends Gene2GeneProteinAssociation> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+
+        for ( Iterator<? extends Gene2GeneProteinAssociation> entityIterator = entities.iterator(); entityIterator
+                .hasNext(); ) {
+            create( entityIterator.next() );
+        }
         return entities;
     }
 
@@ -97,39 +90,13 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
             throw new IllegalArgumentException(
                     "Gene2GeneProteinAssociation.create - 'Gene2GeneProteinAssociation' can not be null" );
         }
+
+        Gene2GeneProteinAssociation old = this.find( gene2GeneProteinAssociation );
+        if ( old != null ) {
+            this.remove( old );
+        }
+
         this.getHibernateTemplate().save( gene2GeneProteinAssociation );
-
-        return gene2GeneProteinAssociation;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#createOrUpdate(java.lang.Object)
-     */
-    @Override
-    public Gene2GeneProteinAssociation createOrUpdate( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        if ( gene2GeneProteinAssociation == null ) {
-            throw new IllegalArgumentException(
-                    "Gene2GeneProteinAssociation.createOrUpdate - 'Gene2GeneProteinAssociation' can not be null" );
-        }
-        Gene2GeneProteinAssociation gene2GeneProteinAssociationExisting = this.find( gene2GeneProteinAssociation );
-        // does not exist in db there are no two genes with interaction stored
-        if ( gene2GeneProteinAssociationExisting == null ) {
-            this.create( gene2GeneProteinAssociation );
-        } else {
-            // check if this is really an update such that the confidence score, evidence vector or the url has changed
-            // as such update other wise just
-            // return the record from the db.
-            gene2GeneProteinAssociationExisting.setConfidenceScore( gene2GeneProteinAssociation.getConfidenceScore() );
-            gene2GeneProteinAssociationExisting.getDatabaseEntry().setAccession(
-                    gene2GeneProteinAssociation.getDatabaseEntry().getAccession() );
-            gene2GeneProteinAssociationExisting.getDatabaseEntry().setUri(
-                    gene2GeneProteinAssociation.getDatabaseEntry().getUri() );
-            gene2GeneProteinAssociationExisting.setEvidenceVector( gene2GeneProteinAssociation.getEvidenceVector() );
-            this.update( gene2GeneProteinAssociationExisting );
-            log.debug( "Existing record updating with id " + gene2GeneProteinAssociationExisting.getId() );
-        }
 
         return gene2GeneProteinAssociation;
     }
@@ -213,18 +180,12 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene2GeneProteinAssociation.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( Iterator<? extends Gene2GeneProteinAssociation> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+
+        for ( Iterator<? extends Gene2GeneProteinAssociation> entityIterator = entities.iterator(); entityIterator
+                .hasNext(); ) {
+            update( entityIterator.next() );
+        }
+
     }
 
     /*
@@ -251,7 +212,8 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
     public Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
 
         try {
-            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Gene2GeneProteinAssociation.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession()
+                    .createCriteria( Gene2GeneProteinAssociation.class );
             // have to have gene 1 and gene 2 there
             BusinessKey.checkKey( gene2GeneProteinAssociation );
 
@@ -290,7 +252,8 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
     @Override
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene ) {
         String queryStr = "from Gene2GeneProteinAssociationImpl where :gene = firstGene.id or :gene = secondGene.id";
-        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryStr ).setLong( "gene", gene.getId() );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryStr )
+                .setLong( "gene", gene.getId() );
         return queryObject.list();
     }
 

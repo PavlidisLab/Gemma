@@ -1,182 +1,180 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- $Id$ -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
-   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
- 
-   <!-- Automatically retry certain failed operations in transactions. FIXME use @Transactional to identify -->
-   <aop:config>
-      <aop:pointcut id="retryable" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethodWithArg()" />
-      <aop:advisor pointcut-ref="retryable" advice-ref="retryAdvice" order="2" />
-   </aop:config>
 
-   <bean id="retryAdvice" class="org.springframework.retry.interceptor.RetryOperationsInterceptor">
-      <property name="retryOperations">
-         <bean id="retryTemplate" class="org.springframework.retry.support.RetryTemplate">
-            <property name="backOffPolicy">
-               <bean id="backOffPolicy" class="org.springframework.retry.backoff.ExponentialBackOffPolicy" />
-            </property>
-            <property name="retryPolicy">
-               <bean id="retryPolicy" class="ubic.gemma.persistence.retry.RetryPolicy">
-                  <constructor-arg name="maxAttempts" value="${gemma.transaction.maxretries}" />
-                  <constructor-arg name="retryableExceptions">
-                     <map>
-                        <!-- FIXME we probably don't need all of these. -->
-                        <entry key="org.hibernate.exception.LockAcquisitionException" value="true" />
-                        <entry key="org.springframework.dao.PessimisticLockingFailureException" value="true" />
-                        <entry key="org.springframework.dao.OptimisticLockingFailureException" value="true" />
-                     </map>
-                  </constructor-arg>
-               </bean>
-            </property>
-            <property name="listeners">
-               <list>
-                  <ref bean="retryLogger" />
-               </list>
-            </property>
-         </bean>
-      </property>
-   </bean>
+	<!-- Automatically retry certain failed operations in transactions. FIXME use @Transactional to identify -->
+	<aop:config>
+		<aop:pointcut id="retryable" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethodWithArg()" />
+		<aop:advisor pointcut-ref="retryable" advice-ref="retryAdvice" order="2" />
+	</aop:config>
 
-   <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager" lazy-init="true">
-      <property name="sessionFactory" ref="sessionFactory" />
-   </bean>
- 
-   <tx:annotation-driven order="3"  />
+	<bean id="retryAdvice" class="org.springframework.retry.interceptor.RetryOperationsInterceptor">
+		<property name="retryOperations">
+			<bean id="retryTemplate" class="org.springframework.retry.support.RetryTemplate">
+				<property name="backOffPolicy">
+					<bean id="backOffPolicy" class="org.springframework.retry.backoff.ExponentialBackOffPolicy" />
+				</property>
+				<property name="retryPolicy">
+					<bean id="retryPolicy" class="ubic.gemma.persistence.retry.RetryPolicy">
+						<constructor-arg name="maxAttempts" value="${gemma.transaction.maxretries}" />
+						<constructor-arg name="retryableExceptions">
+							<map>
+								<!-- FIXME we probably don't need all of these. -->
+								<entry key="org.hibernate.exception.LockAcquisitionException" value="true" />
+								<entry key="org.springframework.dao.PessimisticLockingFailureException" value="true" />
+								<entry key="org.springframework.dao.OptimisticLockingFailureException" value="true" />
+							</map>
+						</constructor-arg>
+					</bean>
+				</property>
+				<property name="listeners">
+					<list>
+						<ref bean="retryLogger" />
+					</list>
+				</property>
+			</bean>
+		</property>
+	</bean>
 
-   <!-- Hibernate SessionFactory -->
-   <bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean"  lazy-init="true">
-      <property name="dataSource">
-         <ref bean="dataSource" />
-      </property>
-      <property name="mappingLocations">
-         <list>
-            <value>classpath:gemma/gsec/model/AclEntry.hbm.xml</value>
-            <value>classpath:gemma/gsec/model/AclObjectIdentity.hbm.xml</value>
-            <value>classpath:gemma/gsec/model/AclSid.hbm.xml</value> 
-            <value>classpath:ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/gene/GeneAlias.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/gene/Multifunctionality.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/CytogeneticLocation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/PhysicalLocation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/ChromosomeFeature.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/Chromosome.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/Taxon.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/description/DatabaseEntry.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/description/ExternalDatabase.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/description/LocalFile.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/description/FileFormat.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/description/BibliographicReference.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/description/Characteristic.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/description/PublicationType.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/GroupAuthority.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserRole.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserQuery.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml</value> 
-            <value>classpath:ubic/gemma/model/common/measurement/Measurement.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/measurement/Unit.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/Status.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/search/SearchSettings.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvalue.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/diff/PvalueDistribution.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/arrayDesign/AlternateName.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/bioAssayData/MeanVarianceRelation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/expression/biomaterial/Compound.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/Gene2GOAssociation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/MouseProbeCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/HumanProbeCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/RatProbeCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/OtherProbeCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/UserProbeCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/MouseGeneCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/HumanGeneCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/coexpression/GeneCoexpressionNodeDegree.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/GeneHomology.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/pca/ProbeLoading.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/coexpression/CoexpressionProbe.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/Investigation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/coexpression/SampleCoexpressionMatrix.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/analysis/expression/diff/GeneDifferentialExpressionMetaAnalysisResult.hbm.xml
-            </value>
-            <value>classpath:ubic/gemma/model/genome/gene/GeneSet.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
-         </list>
-      </property>
-      <property name="hibernateProperties">
-         <props>
-            <prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>
-            <prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
-            <!-- <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop> -->
-            <prop key="hibernate.max_fetch_depth">${gemma.hibernate.max_fetch_depth}</prop>
-            <prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
-            <prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_fetch_size}</prop>
-            <prop key="hibernate.jdbc.batch_size">${gemma.hibernate.jdbc_batch_size}</prop>
-            <prop key="hibernate.jdbc.batch_versioned_data">true</prop>
-            <prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
-            <prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
-            <prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
-            <prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}
-            </prop>
-            <prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
-            <prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
-            <prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
-            <prop key="hibernate.use_sql_comments">${gemma.hibernate.use_sql_comments}</prop>
-            <prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop> 
-         </props>
-      </property>
+	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager" lazy-init="true">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
 
-      <!-- We have a annotation-configured ubic.gemma.persistence.ExternalCacheRegionFactory -->
-      <!-- <property name="cacheProvider"> <ref bean="externalCacheProvider" /> </property> -->
-      <property name="cacheRegionFactory">
-         <ref bean="externalCacheRegionFactory" />
-      </property>
-      <!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
-   </bean>
+	<tx:annotation-driven order="3" />
 
-   <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"  lazy-init="true">
-      <property name="configLocation" ref="cacheConfigResource" />
-   </bean>
+	<!-- Hibernate SessionFactory -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean" lazy-init="true">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="mappingLocations">
+			<list>
+				<value>classpath:gemma/gsec/model/AclEntry.hbm.xml</value>
+				<value>classpath:gemma/gsec/model/AclObjectIdentity.hbm.xml</value>
+				<value>classpath:gemma/gsec/model/AclSid.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/gene/GeneAlias.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/gene/Multifunctionality.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/CytogeneticLocation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/PhysicalLocation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/ChromosomeFeature.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/Chromosome.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/Taxon.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/DatabaseEntry.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/ExternalDatabase.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/LocalFile.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/FileFormat.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/BibliographicReference.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/Characteristic.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/description/PublicationType.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/GroupAuthority.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserRole.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserQuery.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/measurement/Measurement.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/measurement/Unit.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Status.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/search/SearchSettings.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvalue.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/PvalueDistribution.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/arrayDesign/AlternateName.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/MeanVarianceRelation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/biomaterial/Compound.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/Gene2GOAssociation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/MouseProbeCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/HumanProbeCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/RatProbeCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/OtherProbeCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/UserProbeCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/MouseGeneCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/HumanGeneCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/GeneCoexpressionNodeDegree.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/ProbeLoading.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/CoexpressionProbe.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/Investigation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/SampleCoexpressionMatrix.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/GeneDifferentialExpressionMetaAnalysisResult.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/genome/gene/GeneSet.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>
+				<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
+				<!-- <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop> -->
+				<prop key="hibernate.max_fetch_depth">${gemma.hibernate.max_fetch_depth}</prop>
+				<prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
+				<prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_fetch_size}</prop>
+				<prop key="hibernate.jdbc.batch_size">${gemma.hibernate.jdbc_batch_size}</prop>
+				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
+				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
+				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
+				<prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
+				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}
+				</prop>
+				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
+				<prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop>
+				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
+				<prop key="hibernate.use_sql_comments">${gemma.hibernate.use_sql_comments}</prop>
+				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
+			</props>
+		</property>
 
-   <!-- so the file can be found even if it is inside the gemma-mda jar file -->
-   <bean id="cacheConfigResource" class="org.springframework.core.io.ClassPathResource">
-      <constructor-arg name="path" value="${gemma.ehcache.configfile.name}" />
-   </bean>
+		<!-- We have a annotation-configured ubic.gemma.persistence.ExternalCacheRegionFactory -->
+		<!-- <property name="cacheProvider"> <ref bean="externalCacheProvider" /> </property> -->
+		<property name="cacheRegionFactory">
+			<ref bean="externalCacheRegionFactory" />
+		</property>
+		<!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
+	</bean>
+
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" lazy-init="true">
+		<property name="configLocation" ref="cacheConfigResource" />
+	</bean>
+
+	<!-- so the file can be found even if it is inside the gemma-mda jar file -->
+	<bean id="cacheConfigResource" class="org.springframework.core.io.ClassPathResource">
+		<constructor-arg name="path" value="${gemma.ehcache.configfile.name}" />
+	</bean>
 
 </beans>

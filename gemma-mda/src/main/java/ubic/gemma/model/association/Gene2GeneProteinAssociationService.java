@@ -24,80 +24,54 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.genome.Gene;
 
-
 /**
  * Service class for Gene2GeneProteinAssociation classes.
  * 
  * @author ldonnison
  * @version $Id$
  */
-public interface Gene2GeneProteinAssociationService{
+public interface Gene2GeneProteinAssociationService {
 
     /**
      * Create a gene2geneProteinAssociation
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public Gene2GeneProteinAssociation create( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-    
-    
-    /**
-     * Create or update a gene2geneProteinAssociation
-     */
-    @Secured( { "GROUP_ADMIN" })
-    public Gene2GeneProteinAssociation createOrUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-    
-    
-    
-    
-    /**
-     * Update the gene2geneProteinAssociation
-     * @param o
-     */
-    @Secured( { "GROUP_ADMIN" })
-    public void update( Gene2GeneProteinAssociation o );
-    
-    
+
     /**
      * Find a gene2geneProteinAssociation
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-    
-    
+
     /**
      * Load all gene2geneProteinAssociation
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public Collection<Gene2GeneProteinAssociation> loadAll(  );
-    
-    
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public Collection<Gene2GeneProteinAssociation> loadAll();
+
     /**
-     *Delete all gene2geneProteinAssociation
+     * Delete all gene2geneProteinAssociation
      */
-    @Secured( { "GROUP_ADMIN" })
-    public void deleteAll(  Collection<Gene2GeneProteinAssociation> gene2GeneProteinAssociation );
-    
-    
+    @Secured({ "GROUP_ADMIN" })
+    public void deleteAll( Collection<Gene2GeneProteinAssociation> gene2GeneProteinAssociation );
+
     /**
      * delete the given gene2geneProteinAssociation
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void delete( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-    
-    
-    
+
     /**
      * Does a 'thaw' of a Gene2GeneProteinAssociation
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public void thaw(Gene2GeneProteinAssociation association );
-
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public void thaw( Gene2GeneProteinAssociation association );
 
     /**
      * Finds Gene2GeneProteinAssociation for a given gene
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene );    
-    
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene );
 
 }

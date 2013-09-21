@@ -57,13 +57,4 @@ public interface Gene2GeneProteinAssociationDao extends BaseDao<Gene2GeneProtein
      */
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene );
 
-    /**
-     * Given a Gene2GeneProteinAssociation check if it already exists by checking if for those two genes in an
-     * interaction exists in db. If the interaction exists then issue an update.
-     * 
-     * @param gene2GeneProteinAssociation Gene2GeneProteinAssociation to be created or updated
-     * @return gene2GeneProteinAssociation Created or updated Gene2GeneProteinAssociation
-     */
-    public Gene2GeneProteinAssociation createOrUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-
 }

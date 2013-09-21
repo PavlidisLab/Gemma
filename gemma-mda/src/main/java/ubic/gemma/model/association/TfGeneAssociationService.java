@@ -26,10 +26,10 @@ import ubic.gemma.model.genome.Gene;
  */
 public interface TfGeneAssociationService {
 
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public Collection<? extends TfGeneAssociation> create( Collection<? extends TfGeneAssociation> entities );
 
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public TfGeneAssociation create( TfGeneAssociation entity );
 
     public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene );
@@ -42,22 +42,16 @@ public interface TfGeneAssociationService {
 
     public Collection<? extends TfGeneAssociation> loadAll();
 
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void remove( Collection<? extends TfGeneAssociation> entities );
 
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void remove( Long id );
 
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void remove( TfGeneAssociation entity );
 
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void removeAll();
-
-    @Secured( { "GROUP_ADMIN" })
-    public void update( Collection<? extends TfGeneAssociation> entities );
-
-    @Secured( { "GROUP_ADMIN" })
-    public void update( TfGeneAssociation entity );
 
 }

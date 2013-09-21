@@ -22,16 +22,6 @@ public class Gene2GeneProteinAssociationServiceImpl extends
     }
 
     @Override
-    protected Gene2GeneProteinAssociation handleCreateOrUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        return this.gene2GeneProteinAssociationDao().createOrUpdate( gene2GeneProteinAssociation );
-    }
-
-    @Override
-    protected void handleUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        this.gene2GeneProteinAssociationDao().update( gene2GeneProteinAssociation );
-    }
-
-    @Override
     protected Gene2GeneProteinAssociation handleFind( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         return this.gene2GeneProteinAssociationDao().find( gene2GeneProteinAssociation );
     }

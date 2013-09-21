@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,7 +85,8 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
              * This assumes that nobody else in this session has modified this audit trail.
              */
             if ( trail.getId() != null )
-                trail = this.getHibernateTemplate().get( AuditTrailImpl.class, trail.getId() );
+                trail = ( AuditTrail ) this.getSessionFactory().getCurrentSession()
+                        .get( AuditTrailImpl.class, trail.getId() );
             // }
 
         }

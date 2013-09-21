@@ -87,7 +87,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             throw super.convertHibernateAccessException( ex );
         }
     }
-
+   
     /*
      * (non-Javadoc)
      * 

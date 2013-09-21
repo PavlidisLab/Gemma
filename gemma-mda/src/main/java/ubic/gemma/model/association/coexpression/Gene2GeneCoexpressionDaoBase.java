@@ -197,21 +197,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      */
     @Override
     public void update( final java.util.Collection<? extends Gene2GeneCoexpression> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene2GeneCoexpression.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Gene2GeneCoexpression> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
 
     /**
@@ -219,11 +205,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      */
     @Override
     public void update( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2GeneCoexpression ) {
-        if ( gene2GeneCoexpression == null ) {
-            throw new IllegalArgumentException(
-                    "Gene2GeneCoexpression.update - 'gene2GeneCoexpression' can not be null" );
-        }
-        this.getHibernateTemplate().update( gene2GeneCoexpression );
+        throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
 
     /**

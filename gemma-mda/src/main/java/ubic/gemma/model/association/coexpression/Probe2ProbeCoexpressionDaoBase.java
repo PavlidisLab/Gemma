@@ -19,7 +19,6 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -29,10 +28,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression</code>.
- * </p>
  * 
  * @version $Id$
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression
@@ -181,32 +178,14 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.association.RelationshipDao#update(Collection)
      */
     public void update( final Collection<? extends Probe2ProbeCoexpression> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Probe2ProbeCoexpression.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( Iterator<? extends Probe2ProbeCoexpression> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
 
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#update(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)
      */
     public void update( Probe2ProbeCoexpression probe2ProbeCoexpression ) {
-        if ( probe2ProbeCoexpression == null ) {
-            throw new IllegalArgumentException(
-                    "Probe2ProbeCoexpression.update - 'probe2ProbeCoexpression' can not be null" );
-        }
-        this.getHibernateTemplate().update( probe2ProbeCoexpression );
+        throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
 
     /**

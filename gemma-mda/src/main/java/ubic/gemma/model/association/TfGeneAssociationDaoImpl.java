@@ -43,18 +43,12 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
         if ( entities == null ) {
             throw new IllegalArgumentException( "TfGeneAssociation - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends TfGeneAssociation> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+
+        for ( java.util.Iterator<? extends TfGeneAssociation> entityIterator = entities.iterator(); entityIterator
+                .hasNext(); ) {
+            create( entityIterator.next() );
+        }
+
         return entities;
     }
 
@@ -155,15 +149,12 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
 
     @Override
     public void update( Collection<? extends TfGeneAssociation> entities ) {
-        for ( java.util.Iterator<? extends TfGeneAssociation> entityIterator = entities.iterator(); entityIterator
-                .hasNext(); ) {
-            update( entityIterator.next() );
-        }
+        throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
 
     @Override
     public void update( TfGeneAssociation entity ) {
-        this.getHibernateTemplate().update( entity );
+        throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
 
 }

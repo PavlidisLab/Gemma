@@ -21,6 +21,7 @@ package ubic.gemma.persistence;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -135,9 +136,12 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     protected Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
         if ( association == null ) return null;
         if ( !isTransient( association ) ) return association;
-
-        association.setGene( persistGene( association.getGene() ) );
-        return gene2GoAssociationDao.findOrCreate( association );
+        try {
+            FieldUtils.writeField( association, "gene", persistGene( association.getGene() ), true );
+        } catch ( IllegalAccessException e ) {
+            e.printStackTrace();
+        }
+        return gene2GoAssociationDao.create( association );
     }
 
     private TfGeneAssociation persistTfGeneAssociation( TfGeneAssociation entity ) {
@@ -194,7 +198,8 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         if ( gene2GeneProteinAssociation == null ) return null;
         if ( !isTransient( gene2GeneProteinAssociation ) ) return gene2GeneProteinAssociation;
 
-        return gene2GeneProteinAssociationDao.createOrUpdate( gene2GeneProteinAssociation );
+        // Deletes any old existing one.
+        return gene2GeneProteinAssociationDao.create( gene2GeneProteinAssociation );
     }
 
 }

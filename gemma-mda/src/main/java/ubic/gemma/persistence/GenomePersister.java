@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -947,8 +948,11 @@ abstract public class GenomePersister extends CommonPersister {
         if ( seenChromosomes.containsKey( key ) ) {
             return seenChromosomes.get( key );
         }
-
-        chromosome.setTaxon( persistTaxon( ct ) );
+        try {
+            FieldUtils.writeField( chromosome, "taxon", persistTaxon( ct ), true );
+        } catch ( IllegalAccessException e ) {
+            e.printStackTrace();
+        }
 
         chromosome = chromosomeDao.findOrCreate( chromosome.getName(), ct );
 

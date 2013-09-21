@@ -21,16 +21,12 @@ package ubic.gemma.model.association;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.association.Gene2GeneProteinAssocation</code>.
- * </p>
  * 
  * @see ubic.gemma.model.association.Gene2GeneProteinAssocation
  */
 public abstract class Gene2GeneProteinAssociationDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.association.Gene2GeneProteinAssociationDao {
-
-    
+        Gene2GeneProteinAssociationDao {
 
 }

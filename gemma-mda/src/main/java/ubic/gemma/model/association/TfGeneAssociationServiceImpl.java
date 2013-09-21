@@ -91,18 +91,6 @@ public class TfGeneAssociationServiceImpl implements TfGeneAssociationService {
 
     @Override
     @Transactional
-    public void update( Collection<? extends TfGeneAssociation> entities ) {
-        tfGeneAssociationDao.update( entities );
-    }
-
-    @Override
-    @Transactional
-    public void update( TfGeneAssociation entity ) {
-        tfGeneAssociationDao.update( entity );
-    }
-
-    @Override
-    @Transactional
     public void removeAll() {
         tfGeneAssociationDao.removeAll();
     }
