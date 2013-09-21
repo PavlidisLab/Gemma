@@ -18,6 +18,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao;
@@ -30,8 +31,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisD
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService
  */
 @Service
-public class ExpressionExperimentSubSetServiceImpl extends
-        ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceBase {
+public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentSubSetServiceBase {
 
     @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
@@ -78,11 +78,13 @@ public class ExpressionExperimentSubSetServiceImpl extends
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
         return this.getExpressionExperimentSubSetDao().find( entity );
     }
 
     @Override
+    @Transactional
     public void delete( ExpressionExperimentSubSet entity ) {
         this.handleDelete( entity );
     }

@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -29,10 +30,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService
  */
 @Service
-public class DesignElementDataVectorServiceImpl extends
-        ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase {
+public class DesignElementDataVectorServiceImpl extends DesignElementDataVectorServiceBase {
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
         return this.getRawExpressionDataVectorDao().find( bioAssayDimension );
     }

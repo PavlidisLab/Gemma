@@ -27,6 +27,7 @@ import java.util.Map;
 import net.sf.ehcache.Element;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
@@ -38,7 +39,28 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  */
 @Service
-public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
+public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase {
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes ) {
+        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<Gene, Collection<VocabCharacteristic>>();
+
+        Collection<Gene> needToFind = new HashSet<Gene>();
+        for ( Gene gene : genes ) {
+            Element element = this.gene2goCache.get( gene );
+
+            if ( element != null )
+                result.put( gene, ( Collection<VocabCharacteristic> ) element.getValue() );
+            else
+                needToFind.add( gene );
+        }
+
+        result.putAll( this.getGene2GOAssociationDao().findByGenes( needToFind ) );
+
+        return result;
+
+    }
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
@@ -83,26 +105,6 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
         this.gene2goCache.put( new Element( gene, re ) );
 
         return re;
-
-    }
-
-    @Override
-    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes ) {
-        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<Gene, Collection<VocabCharacteristic>>();
-
-        Collection<Gene> needToFind = new HashSet<Gene>();
-        for ( Gene gene : genes ) {
-            Element element = this.gene2goCache.get( gene );
-
-            if ( element != null )
-                result.put( gene, ( Collection<VocabCharacteristic> ) element.getValue() );
-            else
-                needToFind.add( gene );
-        }
-
-        result.putAll( this.getGene2GOAssociationDao().findByGenes( needToFind ) );
-
-        return result;
 
     }
 

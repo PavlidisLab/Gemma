@@ -21,6 +21,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -57,6 +58,7 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
      * ubic.basecode.dataStructure.matrix.DoubleMatrix, ubic.gemma.model.expression.bioAssayData.BioAssayDimension, int)
      */
     @Override
+    @Transactional
     public PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
             double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad,
             int numComponentsToStore, int numLoadingsToStore ) {
@@ -126,6 +128,7 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
      * .experiment.ExpressionExperiment, int, int)
      */
     @Override
+    @Transactional(readOnly = true)
     public List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count ) {
         PrincipalComponentAnalysis pca = loadForExperiment( ee );
         if ( pca == null ) {
@@ -140,11 +143,13 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PrincipalComponentAnalysis loadForExperiment( ExpressionExperiment ee ) {
         return this.principalComponentAnalysisDao.findByExperiment( ee );
     }
 
     @Override
+    @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
         while ( this.loadForExperiment( ee ) != null ) {
             this.principalComponentAnalysisDao.remove( this.loadForExperiment( ee ) );

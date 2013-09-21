@@ -18,6 +18,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.genome.Gene;
 
@@ -47,51 +48,61 @@ public class TfGeneAssociationServiceImpl implements TfGeneAssociationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<? extends TfGeneAssociation> findByTf( Gene tf ) {
         return tfGeneAssociationDao.findByTf( tf );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<? extends TfGeneAssociation> load( Collection<Long> ids ) {
         return tfGeneAssociationDao.load( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TfGeneAssociation load( Long id ) {
         return tfGeneAssociationDao.load( id );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<? extends TfGeneAssociation> loadAll() {
         return tfGeneAssociationDao.loadAll();
     }
 
     @Override
+    @Transactional
     public void remove( Collection<? extends TfGeneAssociation> entities ) {
         tfGeneAssociationDao.remove( entities );
     }
 
     @Override
+    @Transactional
     public void remove( Long id ) {
         tfGeneAssociationDao.remove( id );
     }
 
     @Override
+    @Transactional
     public void remove( TfGeneAssociation entity ) {
         tfGeneAssociationDao.remove( entity );
     }
 
     @Override
+    @Transactional
     public void update( Collection<? extends TfGeneAssociation> entities ) {
         tfGeneAssociationDao.update( entities );
     }
 
     @Override
+    @Transactional
     public void update( TfGeneAssociation entity ) {
         tfGeneAssociationDao.update( entity );
     }
 
     @Override
+    @Transactional
     public void removeAll() {
         tfGeneAssociationDao.removeAll();
     }

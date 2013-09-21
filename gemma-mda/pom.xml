@@ -14,6 +14,12 @@
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
+			<groupId>gemma</groupId>
+			<artifactId>gemma-model</artifactId>
+			<version>1.8-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
 			<version>1.0.15-SNAPSHOT</version>
@@ -58,7 +64,12 @@
 		<dependency>
 			<groupId>org.springframework.retry</groupId>
 			<artifactId>spring-retry</artifactId>
-			<version>1.0.1.RELEASE</version>
+			<version>1.0.2.RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aspects</artifactId>
+			<version>${spring.version}</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -114,167 +125,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.andromda.maven.plugins</groupId>
-				<artifactId>andromda-maven-plugin</artifactId>
-				<version>3.3</version>
-				<executions>
-					<execution>
-						<configuration>
-							<buildSourceDirectory>target/generated-sources</buildSourceDirectory>
-							<configurationUri>file:${project.basedir}/src/main/conf/andromda.xml</configurationUri>
-							<lastModifiedCheck>true</lastModifiedCheck>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile-datatype</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile-webservice</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile-service</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile-process</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile-meta</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile-xml</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile-persistence</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.profiles.uml2</groupId>
-						<artifactId>andromda-profile-presentation</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-						<type>xml.zip</type>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.cartridges</groupId>
-						<artifactId>andromda-spring-cartridge</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.cartridges</groupId>
-						<artifactId>andromda-hibernate-cartridge</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.cartridges</groupId>
-						<artifactId>andromda-webservice-cartridge</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.cartridges</groupId>
-						<artifactId>andromda-java-cartridge</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.cartridges</groupId>
-						<artifactId>andromda-jsf-cartridge</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.translationlibraries</groupId>
-						<artifactId>andromda-ocl-validation-library</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-					</dependency>
-					<dependency>
-						<groupId>org.andromda.translationlibraries</groupId>
-						<artifactId>andromda-ocl-query-library</artifactId>
-						<version>3.3</version>
-						<scope>compile</scope>
-					</dependency>
-				</dependencies>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
-				<configuration>
-					<target>
-						<echo message="******* Building DDL file *******" />
-						<taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
-							<classpath>
-								<path refid="maven.dependency.classpath" />
-							</classpath>
-						</taskdef>
-						<mkdir dir="target/schema" />
-						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
-							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
-							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
-							<fileset dir="src/main/resources" includes="**/*.hbm.xml" />
-						</schemaexport>
-					</target>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>org.hibernate</groupId>
-						<artifactId>hibernate</artifactId>
-						<version>3.2.6.ga</version>
-						<type>jar</type>
-					</dependency>
-				</dependencies>
-			</plugin>
+
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -286,19 +137,6 @@
 					<configuration>
 						<lifecycleMappingMetadata>
 							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>org.andromda.maven.plugins</groupId>
-										<artifactId>andromda-maven-plugin</artifactId>
-										<versionRange>[3.3,)</versionRange>
-										<goals>
-											<goal>run</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore></ignore>
-									</action>
-								</pluginExecution>
 								<pluginExecution>
 									<pluginExecutionFilter>
 										<groupId>org.apache.maven.plugins</groupId>
@@ -320,36 +158,10 @@
 		</pluginManagement>
 	</build>
 	<repositories>
-		<repository>
-			<id>andromda-snapshot</id>
-			<name>AndroMDA</name>
-			<url>http://galaxy.andromda.org/maven2</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
+
 	</repositories>
 	<pluginRepositories>
-		<pluginRepository>
-			<id>andromda-plugins</id>
-			<name>AndroMDA</name>
-			<url>http://galaxy.andromda.org/maven2</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</pluginRepository>
+
 	</pluginRepositories>
 	<profiles>
 		<profile>
@@ -362,6 +174,40 @@
 			</activation>
 			<build>
 				<plugins>
+					<plugin>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<version>2.8</version>
+						<executions>
+							<execution>
+								<phase>process-resources</phase>
+								<goals>
+									<goal>unpack</goal>
+								</goals>
+								<configuration>
+									<artifactItems>
+										<artifactItem>
+											<groupId>pavlab</groupId>
+											<artifactId>gemma-gsec</artifactId>
+											<version>0.0.1-SNAPSHOT</version>
+											<type>jar</type>
+											<overWrite>true</overWrite>
+											<outputDirectory>${project.build.directory}/schema</outputDirectory>
+											<includes>**/*.sql</includes>
+										</artifactItem>
+										<artifactItem>
+											<groupId>gemma</groupId>
+											<artifactId>gemma-model</artifactId>
+											<version>1.8-SNAPSHOT</version>
+											<type>jar</type>
+											<overWrite>true</overWrite>
+											<outputDirectory>${project.build.directory}/schema</outputDirectory>
+											<includes>**/*.sql</includes>
+										</artifactItem>
+									</artifactItems>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>sql-maven-plugin</artifactId>
@@ -408,13 +254,16 @@
 									<url>${gemma.testdb.build.url}</url>
 									<srcFiles>
 										<srcFile>target/schema/gemma-ddl.sql</srcFile>
+										<srcFile>target/schema/gsec-acl-ddl.sql</srcFile>
+										<srcFile>src/main/resources/sql/init-acls.sql</srcFile>
 										<scrFile>src/main/resources/sql/init-indices.sql</scrFile>
 										<srcFile>src/main/resources/sql/init-entities.sql</srcFile>
-										<srcFile>src/main/resources/sql/init-acls.sql</srcFile>
+										<scrFile>target/schema/sql/init-acl-indices.sql</scrFile>
 									</srcFiles>
 									<onError>abort</onError>
 								</configuration>
 							</execution>
+
 							<execution>
 								<id>install-triggers</id>
 								<phase>test-compile</phase>
@@ -435,20 +284,7 @@
 				</plugins>
 			</build>
 		</profile>
-		<profile>
-			<id>andromda</id>
-			<activation>
-				<property>
-					<name>andromda</name>
-					<value>true</value>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<!-- todo when maven fixes bugs in properties/activation, put andromda here. -->
-				</plugins>
-			</build>
-		</profile>
+
 		<profile>
 			<id>db.build</id>
 			<activation>
@@ -532,4 +368,18 @@
 			</build>
 		</profile>
 	</profiles>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context-support</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>

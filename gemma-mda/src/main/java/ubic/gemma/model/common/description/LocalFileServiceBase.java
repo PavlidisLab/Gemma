@@ -21,6 +21,7 @@ package ubic.gemma.model.common.description;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -39,6 +40,7 @@ public abstract class LocalFileServiceBase implements LocalFileService {
      * @see LocalFileService#copyFile(LocalFile, LocalFile)
      */
     @Override
+    @Transactional
     public LocalFile copyFile( final LocalFile sourceFile, final LocalFile targetFile ) throws IOException {
         return this.handleCopyFile( sourceFile, targetFile );
 
@@ -48,6 +50,7 @@ public abstract class LocalFileServiceBase implements LocalFileService {
      * @see LocalFileService#deleteFile(LocalFile)
      */
     @Override
+    @Transactional
     public void deleteFile( final LocalFile localFile ) throws IOException {
         this.handleDeleteFile( localFile );
 
@@ -57,6 +60,7 @@ public abstract class LocalFileServiceBase implements LocalFileService {
      * @see LocalFileService#find(LocalFile)
      */
     @Override
+    @Transactional(readOnly = true)
     public LocalFile find( final LocalFile localFile ) {
         return this.handleFind( localFile );
 
@@ -66,6 +70,7 @@ public abstract class LocalFileServiceBase implements LocalFileService {
      * @see LocalFileService#findByPath(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public LocalFile findByPath( final java.lang.String path ) {
         return this.handleFindByPath( path );
 
@@ -75,6 +80,7 @@ public abstract class LocalFileServiceBase implements LocalFileService {
      * @see LocalFileService#findOrCreate(LocalFile)
      */
     @Override
+    @Transactional
     public LocalFile findOrCreate( final LocalFile localFile ) {
         return this.handleFindOrCreate( localFile );
 
@@ -84,6 +90,7 @@ public abstract class LocalFileServiceBase implements LocalFileService {
      * @see LocalFileService#save(LocalFile)
      */
     @Override
+    @Transactional
     public LocalFile save( final LocalFile localFile ) {
         return this.handleSave( localFile );
 
@@ -100,6 +107,7 @@ public abstract class LocalFileServiceBase implements LocalFileService {
      * @see LocalFileService#update(LocalFile)
      */
     @Override
+    @Transactional
     public void update( final LocalFile localFile ) {
         this.handleUpdate( localFile );
     }

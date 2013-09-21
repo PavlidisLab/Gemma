@@ -17,6 +17,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 
@@ -28,17 +29,13 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 @Service
 public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase {
 
-    @Override
-    public Collection<ExperimentalFactor> create( Collection<ExperimentalFactor> factors ) {
-        return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().create( factors );
-    }
-
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#load(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExperimentalFactor> load( Collection<Long> ids ) {
         return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().load( ids );
     }

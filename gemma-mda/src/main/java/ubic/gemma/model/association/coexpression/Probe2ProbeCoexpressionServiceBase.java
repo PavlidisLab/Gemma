@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -48,6 +49,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.lang.Integer countLinks( final Long expressionExperiment ) {
         return this.handleCountLinks( expressionExperiment );
     }
@@ -56,6 +58,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#create(java.util.List)
      */
     @Override
+    @Transactional
     public java.util.Collection<? extends Probe2ProbeCoexpression> create(
             final Collection<? extends Probe2ProbeCoexpression> p2pExpressions ) {
         return this.handleCreate( p2pExpressions );
@@ -63,12 +66,14 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
     }
 
     @Override
+    @Transactional
     public void delete( final java.util.Collection<? extends Probe2ProbeCoexpression> p2pExpressions ) {
         this.handleRemove( p2pExpressions );
 
     }
 
     @Override
+    @Transactional
     public void delete( Probe2ProbeCoexpression p2p ) {
         this.handleRemove( p2p );
 
@@ -78,6 +83,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
+    @Transactional
     public void deleteLinks( final ubic.gemma.model.expression.experiment.ExpressionExperiment ee ) {
         this.handleDeleteLinks( ee );
 
@@ -95,6 +101,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      *      java.util.Collection, boolean)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( final Gene gene,
             final Collection<? extends BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
         return this.handleGetExpressionExperimentsLinkTestedIn( gene, expressionExperiments, filterNonSpecific );
@@ -106,6 +113,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      *      java.util.Collection, boolean)
      */
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn( final Collection<Long> geneIds,
             final Collection<? extends BioAssaySet> experiments, final boolean filterNonSpecific ) {
         return this.handleGetExpressionExperimentsTestedIn( geneIds, experiments, filterNonSpecific );
@@ -117,6 +125,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      *      boolean)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Long> getGenesTestedBy(
             final ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment,
             final boolean filterNonSpecific ) {
@@ -129,6 +138,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      *      java.lang.String, boolean)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProbeLink> getProbeCoExpression( final ExpressionExperiment expressionExperiment,
             final java.lang.String taxon, final boolean useWorkingTable ) {
         return this.handleGetProbeCoExpression( expressionExperiment, taxon, useWorkingTable );
@@ -140,6 +150,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      *      java.lang.String, boolean)
      */
     @Override
+    @Transactional
     public void prepareForShuffling( final java.util.Collection<BioAssaySet> ees, final java.lang.String taxon,
             final boolean filterNonSpecific ) {
         this.handlePrepareForShuffling( ees, taxon, filterNonSpecific );

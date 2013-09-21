@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -37,6 +38,7 @@ public abstract class CompoundServiceBase implements CompoundService {
      * @see CompoundService#find(Compound)
      */
     @Override
+    @Transactional(readOnly = true)
     public Compound find( final Compound compound ) {
         return this.handleFind( compound );
 
@@ -46,6 +48,7 @@ public abstract class CompoundServiceBase implements CompoundService {
      * @see CompoundService#findOrCreate(Compound)
      */
     @Override
+    @Transactional
     public Compound findOrCreate( final Compound compound ) {
         return this.handleFindOrCreate( compound );
 
@@ -55,6 +58,7 @@ public abstract class CompoundServiceBase implements CompoundService {
      * @see CompoundService#remove(Compound)
      */
     @Override
+    @Transactional
     public void remove( final Compound compound ) {
         this.handleRemove( compound );
 
@@ -71,6 +75,7 @@ public abstract class CompoundServiceBase implements CompoundService {
      * @see CompoundService#update(Compound)
      */
     @Override
+    @Transactional
     public void update( final Compound compound ) {
         this.handleUpdate( compound );
 

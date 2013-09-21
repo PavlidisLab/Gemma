@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author paul
@@ -40,6 +41,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#create(java.util.Collection)
      */
     @Override
+    @Transactional
     public Collection<Unit> create( Collection<Unit> entities ) {
         return ( Collection<Unit> ) unitDao.create( entities );
     }
@@ -50,6 +52,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#create(ubic.gemma.model.common.measurement.Unit)
      */
     @Override
+    @Transactional
     public Unit create( Unit unit ) {
         return unitDao.create( unit );
     }
@@ -60,6 +63,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#find(ubic.gemma.model.common.measurement.Unit)
      */
     @Override
+    @Transactional(readOnly = true)
     public Unit find( Unit unit ) {
         return unitDao.find( unit );
     }
@@ -70,6 +74,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#findOrCreate(ubic.gemma.model.common.measurement.Unit)
      */
     @Override
+    @Transactional
     public Unit findOrCreate( Unit unit ) {
         return unitDao.findOrCreate( unit );
     }
@@ -87,6 +92,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public Unit load( Long id ) {
         return unitDao.load( id );
     }
@@ -96,6 +102,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Unit> loadAll() {
         return ( Collection<Unit> ) unitDao.loadAll();
     }
@@ -105,6 +112,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#remove(java.util.Collection)
      */
     @Override
+    @Transactional
     public void remove( Collection<Unit> entities ) {
         unitDao.remove( entities );
     }
@@ -114,6 +122,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#remove(java.lang.Long)
      */
     @Override
+    @Transactional
     public void remove( Long id ) {
         unitDao.remove( id );
     }
@@ -123,6 +132,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#remove(ubic.gemma.model.common.measurement.Unit)
      */
     @Override
+    @Transactional
     public void remove( Unit unit ) {
         unitDao.remove( unit );
     }
@@ -139,6 +149,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#update(java.util.Collection)
      */
     @Override
+    @Transactional
     public void update( Collection<Unit> entities ) {
         unitDao.update( entities );
     }
@@ -148,6 +159,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#update(ubic.gemma.model.common.measurement.Unit)
      */
     @Override
+    @Transactional
     public void update( Unit unit ) {
         unitDao.update( unit );
     }

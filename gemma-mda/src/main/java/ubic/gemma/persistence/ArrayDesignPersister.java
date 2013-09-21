@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -56,6 +57,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
+    @Transactional
     public Object persist( Object entity ) {
         Object result;
 
@@ -74,6 +76,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override
+    @Transactional
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         return super.persistOrUpdate( entity );

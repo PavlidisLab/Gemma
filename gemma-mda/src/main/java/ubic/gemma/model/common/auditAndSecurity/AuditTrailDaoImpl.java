@@ -18,9 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Calendar;
+import java.lang.reflect.Field;
 import java.util.Collection;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,13 +53,18 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
             throw new IllegalArgumentException( "auditEvent was missing a required field" );
         }
 
-        if ( auditEvent.getDate() == null ) {
-            auditEvent.setDate( Calendar.getInstance().getTime() );
-        }
+        assert auditEvent.getDate() != null;
 
         if ( auditEvent.getPerformer() == null ) {
             User user = getUser(); // could be null, if anonymous.
-            auditEvent.setPerformer( user );
+            Field f = FieldUtils.getField( AuditEventImpl.class, "performer", true );
+            assert f != null;
+            try {
+                f.set( auditEvent, user );
+            } catch ( IllegalArgumentException | IllegalAccessException e ) {
+                // shouldn't happen, but just in case...
+                throw new RuntimeException( e );
+            }
         }
 
         AuditTrail trail = auditable.getAuditTrail();
@@ -239,6 +245,7 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
 
         assert results.size() == 1;
         Object result = results.iterator().next();
+        this.getSessionFactory().getCurrentSession().setReadOnly( result, true );
         return ( User ) result;
     }
 

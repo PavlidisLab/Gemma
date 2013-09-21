@@ -37,8 +37,7 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#createFromValueObject(ubic.gemma.model.common.description.DatabaseEntry)
      */
-    protected ubic.gemma.model.common.description.DatabaseEntry handleCreate(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
+    protected DatabaseEntry handleCreate( DatabaseEntry databaseEntry ) {
         return this.getDatabaseEntryDao().create( databaseEntry );
     }
 
@@ -46,8 +45,7 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
      * @see ubic.gemma.model.common.description.DatabaseEntryService#find(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Override
-    protected ubic.gemma.model.common.description.DatabaseEntry handleFind(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
+    protected DatabaseEntry handleFind( DatabaseEntry databaseEntry ) {
         return this.getDatabaseEntryDao().find( databaseEntry );
     }
 
@@ -55,7 +53,7 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
      * @see ubic.gemma.model.common.description.DatabaseEntryService#remove(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
+    protected void handleRemove( DatabaseEntry databaseEntry ) {
         this.getDatabaseEntryDao().remove( databaseEntry );
     }
 

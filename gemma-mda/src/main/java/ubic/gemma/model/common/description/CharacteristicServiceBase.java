@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service base class for <code>ubic.gemma.model.common.description.CharacteristicService</code>, provides access to all
@@ -35,6 +36,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#create(ubic.gemma.model.common.description.Characteristic)
      */
     @Override
+    @Transactional
     public Characteristic create( final Characteristic c ) {
         return this.handleCreate( c );
     }
@@ -43,6 +45,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#delete(java.lang.Long)
      */
     @Override
+    @Transactional
     public void delete( final java.lang.Long id ) {
         this.handleDelete( id );
     }
@@ -51,6 +54,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#delete(ubic.gemma.model.common.description.Characteristic)
      */
     @Override
+    @Transactional
     public void delete( final Characteristic c ) {
         this.handleDelete( c );
     }
@@ -59,6 +63,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#findByUri(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<Characteristic> findByUri( final java.lang.String searchString ) {
         return this.handleFindByUri( searchString );
     }
@@ -67,6 +72,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#findByUri(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<Characteristic> findByUri( final java.util.Collection<String> uris ) {
         return this.handleFindByUri( uris );
     }
@@ -75,6 +81,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<Characteristic> findByValue( final java.lang.String search ) {
         return this.handleFindByValue( search );
     }
@@ -83,6 +90,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#getParents(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Characteristic, Object> getParents( final java.util.Collection<Characteristic> characteristics ) {
         return this.handleGetParents( characteristics );
 
@@ -92,6 +100,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.common.description.Characteristic load( final java.lang.Long id ) {
         return this.handleLoad( id );
     }
@@ -107,6 +116,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.CharacteristicService#update(ubic.gemma.model.common.description.Characteristic)
      */
     @Override
+    @Transactional
     public void update( final ubic.gemma.model.common.description.Characteristic c ) {
         this.handleUpdate( c );
     }

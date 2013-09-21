@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author keshav
@@ -36,6 +37,7 @@ public class ProtocolServiceImpl implements ProtocolService {
     private ProtocolDao protocolDao;
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Protocol> loadAll() {
         return ( Collection<Protocol> ) this.protocolDao.loadAll();
     }
@@ -44,6 +46,7 @@ public class ProtocolServiceImpl implements ProtocolService {
      * @see ubic.gemma.model.common.protocol.ProtocolService#find(ubic.gemma.model.common.protocol.Protocol)
      */
     @Override
+    @Transactional(readOnly = true)
     public Protocol find( final Protocol protocol ) {
         try {
             return this.protocolDao.find( protocol );
@@ -58,6 +61,7 @@ public class ProtocolServiceImpl implements ProtocolService {
      * @see ubic.gemma.model.common.protocol.ProtocolService#findOrCreate(ubic.gemma.model.common.protocol.Protocol)
      */
     @Override
+    @Transactional
     public Protocol findOrCreate( final Protocol protocol ) {
         try {
             return this.protocolDao.findOrCreate( protocol );
@@ -72,6 +76,7 @@ public class ProtocolServiceImpl implements ProtocolService {
      * @see ubic.gemma.model.common.protocol.ProtocolService#remove(ubic.gemma.model.common.protocol.Protocol)
      */
     @Override
+    @Transactional
     public void remove( final ubic.gemma.model.common.protocol.Protocol protocol ) {
         try {
             this.protocolDao.remove( protocol );
@@ -93,6 +98,7 @@ public class ProtocolServiceImpl implements ProtocolService {
      * @see ubic.gemma.model.common.protocol.ProtocolService#update(ubic.gemma.model.common.protocol.Protocol)
      */
     @Override
+    @Transactional
     public void update( final ubic.gemma.model.common.protocol.Protocol protocol ) {
         try {
             this.protocolDao.update( protocol );

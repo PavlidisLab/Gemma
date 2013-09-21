@@ -20,6 +20,7 @@ package ubic.gemma.model.genome;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author paul
@@ -27,7 +28,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class PhysicalLocationServiceImpl implements PhysicalLocationService {
-    
+
     @Autowired
     private PhysicalLocationDao physicalLocationDao;
 
@@ -40,6 +41,7 @@ public class PhysicalLocationServiceImpl implements PhysicalLocationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( PhysicalLocation physicalLocation ) {
         this.getPhysicalLocationDao().thaw( physicalLocation );
 

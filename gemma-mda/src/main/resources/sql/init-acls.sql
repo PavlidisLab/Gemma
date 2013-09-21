@@ -1,5 +1,4 @@
 -- The table for this are now created from our hibernate config for ACLs.
-alter table ACLOBJECTIDENTITY add unique key acloid (OBJECT_CLASS,OBJECT_ID);
 
 -- Base SIDs we'll need these (not all used by this script; the others would be inserted automagically when needed, but this
 -- gives them predictable ids). Principal names must match init-entities script

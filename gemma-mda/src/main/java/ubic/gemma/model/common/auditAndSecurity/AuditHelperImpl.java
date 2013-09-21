@@ -51,11 +51,7 @@ public class AuditHelperImpl implements AuditHelper {
         assert auditable.getAuditTrail() != null;
         assert auditable.getAuditTrail().getEvents().size() == 0;
 
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.CREATE );
-        auditEvent.setNote( note );
-        auditEvent.setPerformer( user );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, note, null, user, null );
         try {
             this.statusDao.update( auditable, null );
             AuditEvent a = this.auditTrailDao.addEvent( auditable, auditEvent );
@@ -75,11 +71,7 @@ public class AuditHelperImpl implements AuditHelper {
      */
     @Override
     public AuditEvent addUpdateAuditEvent( Auditable auditable, String note, User user ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setNote( note );
-        auditEvent.setPerformer( user );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, user, null );
         try {
             this.statusDao.update( auditable, null );
             return this.auditTrailDao.addEvent( auditable, auditEvent );

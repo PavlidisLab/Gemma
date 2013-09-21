@@ -19,6 +19,7 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -38,6 +39,7 @@ public abstract class BlatAssociationServiceBase implements
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
      */
     @Override
+    @Transactional
     public ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation create(
             final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
         try {
@@ -53,6 +55,7 @@ public abstract class BlatAssociationServiceBase implements
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<BlatAssociation> find( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         try {
             return this.handleFind( bioSequence );
@@ -67,6 +70,7 @@ public abstract class BlatAssociationServiceBase implements
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.Gene)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<BlatAssociation> find( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFind( gene );
@@ -88,6 +92,7 @@ public abstract class BlatAssociationServiceBase implements
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#thaw(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public void thaw( final java.util.Collection<BlatAssociation> blatAssociations ) {
         try {
             this.handleThaw( blatAssociations );
@@ -102,6 +107,7 @@ public abstract class BlatAssociationServiceBase implements
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
      */
     @Override
+    @Transactional(readOnly = true)
     public void thaw( final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
         try {
             this.handleThaw( blatAssociation );
@@ -116,6 +122,7 @@ public abstract class BlatAssociationServiceBase implements
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#update(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
      */
     @Override
+    @Transactional
     public void update( final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
         try {
             this.handleUpdate( blatAssociation );

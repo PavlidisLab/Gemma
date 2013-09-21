@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 
@@ -41,18 +42,10 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#create(ubic.gemma.model.expression.experiment.ExperimentalFactor)
-     */
-    @Override
-    public ExperimentalFactor create( final ExperimentalFactor experimentalFactor ) {
-        return this.handleCreate( experimentalFactor );
-
-    }
-
-    /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#delete(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
+    @Transactional
     public void delete( final ExperimentalFactor experimentalFactor ) {
         this.handleDelete( experimentalFactor );
 
@@ -62,6 +55,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#find(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
+    @Transactional(readOnly = true)
     public ExperimentalFactor find( final ExperimentalFactor experimentalFactor ) {
         return this.handleFind( experimentalFactor );
 
@@ -71,6 +65,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
+    @Transactional
     public ExperimentalFactor findOrCreate( final ExperimentalFactor experimentalFactor ) {
         return this.handleFindOrCreate( experimentalFactor );
 
@@ -80,6 +75,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public ExperimentalFactor load( final java.lang.Long id ) {
         return this.handleLoad( id );
 
@@ -89,6 +85,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExperimentalFactor> loadAll() {
         return this.handleLoadAll();
 
@@ -98,6 +95,7 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#update(ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
+    @Transactional
     public void update( final ExperimentalFactor experimentalFactor ) {
         this.handleUpdate( experimentalFactor );
 

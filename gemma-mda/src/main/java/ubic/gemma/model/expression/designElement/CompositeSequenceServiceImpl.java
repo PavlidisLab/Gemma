@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -40,8 +41,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @see ubic.gemma.model.expression.designElement.CompositeSequenceService
  */
 @Service
-public class CompositeSequenceServiceImpl extends
-        ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase {
+public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
 
     Log log = LogFactory.getLog( this.getClass() );
 
@@ -294,6 +294,7 @@ public class CompositeSequenceServiceImpl extends
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CompositeSequence thaw( CompositeSequence compositeSequence ) {
         return this.getCompositeSequenceDao().thaw( compositeSequence );
     }

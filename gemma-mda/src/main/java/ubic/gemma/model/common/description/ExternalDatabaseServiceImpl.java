@@ -34,7 +34,7 @@ public class ExternalDatabaseServiceImpl extends ubic.gemma.model.common.descrip
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#find(java.lang.String)
      */
     @Override
-    protected ubic.gemma.model.common.description.ExternalDatabase handleFind( java.lang.String name ) {
+    protected ExternalDatabase handleFind( java.lang.String name ) {
         return this.getExternalDatabaseDao().findByName( name );
     }
 

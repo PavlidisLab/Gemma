@@ -34,7 +34,7 @@ import ubic.gemma.util.BusinessKey;
  * @see ubic.gemma.model.common.auditAndSecurity.Contact
  */
 @Repository
-public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.ContactDaoBase {
+public class ContactDaoImpl extends ContactDaoBase {
 
     @Autowired
     public ContactDaoImpl( SessionFactory sessionFactory ) {
@@ -71,12 +71,6 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
         }
         return ( Contact ) result;
 
-    }
-
-    @Override
-    public Collection<Contact> findByName( String name ) {
-        return this.getHibernateTemplate()
-                .findByNamedParam( "from ContactImpl c where c.name like :d", "d", name + "%" );
     }
 
     /*

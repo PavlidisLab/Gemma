@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author pavlidis
@@ -36,11 +37,13 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
      * .BioAssayDimension)
      */
     @Override
+    @Transactional(readOnly = true)
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().thaw( bioAssayDimension );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().thawLite( bioAssayDimension );
     }
@@ -61,8 +64,7 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @Override
-    protected ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleFindOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
+    protected BioAssayDimension handleFindOrCreate( BioAssayDimension bioAssayDimension ) {
         return this.getBioAssayDimensionDao().findOrCreate( bioAssayDimension );
     }
 

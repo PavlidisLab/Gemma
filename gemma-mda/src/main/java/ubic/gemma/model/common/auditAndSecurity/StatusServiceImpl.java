@@ -16,6 +16,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.Auditable;
 
@@ -29,24 +30,8 @@ public class StatusServiceImpl implements StatusService {
     @Autowired
     StatusDao statusDao;
 
-    // @Override
-    // public void initializeStatus( Auditable auditable ) {
-    // if ( auditable.getStatus() != null ) return;
-    // this.statusDao.initializeStatus( auditable );
-    //
-    // }
-    //
-    // @Override
-    // public Status create() {
-    // return this.statusDao.create();
-    // }
-    //
-    // @Override
-    // public void update( Status s ) {
-    // this.statusDao.update( s );
-    // }
-
     @Override
+    @Transactional(readOnly = true)
     public Status getStatus( Auditable auditable ) {
         return statusDao.load( auditable.getStatus().getId() );
     }

@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,12 +38,14 @@ import ubic.gemma.model.genome.Gene;
 public class Probe2ProbeCoexpressionServiceImpl extends Probe2ProbeCoexpressionServiceBase {
 
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ProbeLink> getProbeCoExpression( ExpressionExperiment expressionExperiment,
             java.lang.String taxon ) {
         return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, false );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
             ExpressionExperiment ee, String taxon ) {
         return this.getProbe2ProbeCoexpressionDao()

@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,11 +28,6 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity.ContactServiceBase {
-
-    @Override
-    public Collection<Contact> findByName( String name ) {
-        return this.getContactDao().findByName( name );
-    }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactService#createFromValueObject(ubic.gemma.model.common.auditAndSecurity.Contact)

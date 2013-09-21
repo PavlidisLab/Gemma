@@ -589,7 +589,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         List<?> assocs = this
                 .getHibernateTemplate()
                 .findByNamedParam(
-                        "select ba from BioSequence2GeneProductImpl ba join ba.geneProduct gp join gp.gene g where g.id in (:g)",
+                        "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g.id in (:g)",
                         "g", EntityUtils.getIds( entities ) );
         if ( !assocs.isEmpty() ) this.getHibernateTemplate().deleteAll( assocs );
 
@@ -606,7 +606,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
         // remove associations
         List<?> assocs = this.getHibernateTemplate().findByNamedParam(
-                "select ba from BioSequence2GeneProductImpl ba join ba.geneProduct gp join gp.gene g where g=:g ", "g",
+                "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g=:g ", "g",
                 gene );
         if ( !assocs.isEmpty() ) this.getHibernateTemplate().deleteAll( assocs );
 
@@ -901,7 +901,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected long handleGetCompositeSequenceCountById( long id ) {
-        final String queryString = "select count(distinct cs) from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl"
+        final String queryString = "select count(distinct cs) from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct"
                 + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
                 + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         List<?> r = getHibernateTemplate().findByNamedParam( queryString, "id", id );
@@ -917,7 +917,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     protected Collection<CompositeSequence> handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
         Collection<CompositeSequence> compSeq = null;
-        final String queryString = "select distinct cs from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl"
+        final String queryString = "select distinct cs from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct"
                 + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
                 + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
                 + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
@@ -942,7 +942,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected Collection<CompositeSequence> handleGetCompositeSequencesById( long id ) {
-        final String queryString = "select distinct cs from GeneImpl as gene  inner join gene.products as gp, BioSequence2GeneProductImpl "
+        final String queryString = "select distinct cs from GeneImpl as gene  inner join gene.products as gp, BioSequence2GeneProduct "
                 + " as bs2gp , CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
                 + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
@@ -1050,7 +1050,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 .findByNamedParam(
                         "select distinct g from GeneImpl g "
                                 + "left join fetch g.aliases left join fetch g.accessions acc"
-                                + " left join fetch acc.externalDatabase left join fetch g.products gp " 
+                                + " left join fetch acc.externalDatabase left join fetch g.products gp "
                                 + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
                                 + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
                                 + " left join fetch g.taxon t left join fetch t.externalDatabase left join fetch g.multifunctionality "
@@ -1325,9 +1325,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return
      */
     private String getP2PClassName( Gene givenG ) {
-        if ( false ) // TODO - provide means of determining if we should use the 'UserProbeCoExpressionImpl'
-            return "UserProbeCoExpressionImpl";
-        else if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
+        // if ( false ) // TODO - provide means of determining if we should use the 'UserProbeCoExpressionImpl'
+        // return "UserProbeCoExpressionImpl";
+        // else
+
+        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
             return "HumanProbeCoExpressionImpl";
         else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
             return "MouseProbeCoExpressionImpl";

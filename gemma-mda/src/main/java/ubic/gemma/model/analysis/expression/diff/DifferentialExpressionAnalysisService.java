@@ -127,13 +127,6 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
             Collection<? extends BioAssaySet> expressionExperiments );
 
     /**
-     * @param resultSetIds
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionAnalysisResultSet> getResultSets( Collection<Long> resultSetIds );
-
-    /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })

@@ -19,27 +19,27 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService</code>,
- * provides access to all services and entities referenced by this service.
+ * Spring Service base class for <code>BioAssayDimensionService</code>, provides access to all services and entities
+ * referenced by this service.
  * </p>
  * 
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService
  */
-public abstract class BioAssayDimensionServiceBase implements
-        ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService {
+public abstract class BioAssayDimensionServiceBase implements BioAssayDimensionService {
 
     @Autowired
-    private ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao;
+    private BioAssayDimensionDao bioAssayDimensionDao;
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
+     * @see BioAssayDimensionService#create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @Override
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension create(
-            final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
+    @Transactional
+    public BioAssayDimension create( final BioAssayDimension bioAssayDimension ) {
         return this.handleCreate( bioAssayDimension );
     }
 
@@ -47,15 +47,16 @@ public abstract class BioAssayDimensionServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @Override
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
-            final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
+    @Transactional
+    public BioAssayDimension findOrCreate( final BioAssayDimension bioAssayDimension ) {
         return this.handleFindOrCreate( bioAssayDimension );
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#load(java.lang.Long)
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension load( final java.lang.Long id ) {
+    @Transactional(readOnly = true)
+    public BioAssayDimension load( final java.lang.Long id ) {
         return this.handleLoad( id );
     }
 
@@ -63,6 +64,7 @@ public abstract class BioAssayDimensionServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#remove(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @Override
+    @Transactional
     public void remove( final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         this.handleRemove( bioAssayDimension );
     }
@@ -70,50 +72,48 @@ public abstract class BioAssayDimensionServiceBase implements
     /**
      * Sets the reference to <code>bioAssayDimension</code>'s DAO.
      */
-    public void setBioAssayDimensionDao(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao bioAssayDimensionDao ) {
+    public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
         this.bioAssayDimensionDao = bioAssayDimensionDao;
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#update(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
+     * @see BioAssayDimensionService#update(BioAssayDimension)
      */
-    public void update( final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
+    @Transactional
+    public void update( final BioAssayDimension bioAssayDimension ) {
         this.handleUpdate( bioAssayDimension );
     }
 
     /**
      * Gets the reference to <code>bioAssayDimension</code>'s DAO.
      */
-    protected ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao getBioAssayDimensionDao() {
+    protected BioAssayDimensionDao getBioAssayDimensionDao() {
         return this.bioAssayDimensionDao;
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     * Performs the core logic for {@link #create(BioAssayDimension)}
      */
-    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    protected abstract BioAssayDimension handleCreate( BioAssayDimension bioAssayDimension );
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     * Performs the core logic for {@link #findOrCreate(BioAssayDimension)}
      */
-    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleFindOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    protected abstract BioAssayDimension handleFindOrCreate( BioAssayDimension bioAssayDimension );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleLoad( java.lang.Long id );
+    protected abstract BioAssayDimension handleLoad( java.lang.Long id );
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     * Performs the core logic for {@link #remove(BioAssayDimension)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    protected abstract void handleRemove( BioAssayDimension bioAssayDimension );
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
+     * Performs the core logic for {@link #update(BioAssayDimension)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    protected abstract void handleUpdate( BioAssayDimension bioAssayDimension );
 
 }

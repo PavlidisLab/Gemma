@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
@@ -39,7 +40,7 @@ import ubic.gemma.model.expression.experiment.FactorValueImpl;
  * @version $Id$
  */
 @Service
-public class CharacteristicServiceImpl extends ubic.gemma.model.common.description.CharacteristicServiceBase {
+public class CharacteristicServiceImpl extends CharacteristicServiceBase {
 
     /**
      * Classes examined when getting the "parents" of characteristics.
@@ -49,21 +50,25 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
             PhenotypeAssociationImpl.class, TreatmentImpl.class };
 
     @Override
+    @Transactional(readOnly = true)
     public List<Characteristic> browse( Integer start, Integer limit ) {
         return this.getCharacteristicDao().browse( start, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending ) {
         return this.getCharacteristicDao().browse( start, limit, sortField, descending );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Integer count() {
         return this.getCharacteristicDao().count();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
             Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();

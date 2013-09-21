@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -38,6 +39,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * .gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
+    @Transactional
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
         return this.getProcessedExpressionDataVectorDao().createProcessedDataVectors( expressionExperiment );
     }
@@ -50,6 +52,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * .Collection, java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<Long> genes ) {
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
@@ -63,6 +66,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * .model.expression.experiment.ExpressionExperiment)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment ) {
         return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( expressionExperiment );
     }
@@ -75,6 +79,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * .Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit ) {
         return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit );
     }
@@ -87,6 +92,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * .util.Collection, java.util.Collection, boolean)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences ) {
 
@@ -102,10 +108,12 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * .model.expression.experiment.ExpressionExperiment)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
         return this.getProcessedExpressionDataVectorDao().getProcessedVectors( expressionExperiment );
     }
 
+    @Transactional(readOnly = true)
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors(
             ExpressionExperiment expressionExperiment, int limit ) {
         return this.getProcessedExpressionDataVectorDao().getProcessedVectors( expressionExperiment, limit );
@@ -116,29 +124,34 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
         return processedExpressionDataVectorDao.getRanks( expressionExperiments, genes, method );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method ) {
         return processedExpressionDataVectorDao.getRanks( expressionExperiment, genes, method );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
         return processedExpressionDataVectorDao.getRanks( expressionExperiment, method );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> eeCol, Collection<Gene> genes ) {
         return this.getProcessedExpressionDataVectorDao().getRanksByProbe( eeCol, genes );
     }
 
     @Override
+    @Transactional
     public void removeProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
         this.getProcessedExpressionDataVectorDao().removeProcessedDataVectors( expressionExperiment );
 
@@ -154,6 +167,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#thaw(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public void thaw( Collection<ProcessedExpressionDataVector> vectors ) {
         this.getProcessedExpressionDataVectorDao().thaw( vectors );
 
@@ -165,6 +179,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#update(java.util.Collection)
      */
     @Override
+    @Transactional
     public void update( Collection<ProcessedExpressionDataVector> dedvs ) {
         this.getProcessedExpressionDataVectorDao().update( dedvs );
 

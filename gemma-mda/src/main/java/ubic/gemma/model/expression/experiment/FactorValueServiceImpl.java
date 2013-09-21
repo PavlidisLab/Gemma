@@ -17,6 +17,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author pavlidis
@@ -28,11 +29,7 @@ import org.springframework.stereotype.Service;
 public class FactorValueServiceImpl extends FactorValueServiceBase {
 
     @Override
-    public Collection<FactorValue> create( Collection<FactorValue> fvs ) {
-        return ( Collection<FactorValue> ) this.getFactorValueDao().create( fvs );
-    }
-
-    @Override
+    @Transactional(readOnly = true)
     public Collection<FactorValue> findByValue( String valuePrefix ) {
         return this.getFactorValueDao().findByValue( valuePrefix );
     }

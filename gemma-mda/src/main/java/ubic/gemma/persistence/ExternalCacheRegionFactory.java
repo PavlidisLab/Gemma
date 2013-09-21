@@ -30,6 +30,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,6 +41,7 @@ import org.springframework.stereotype.Component;
  * @version $Id$
  */
 @Component
+@Lazy(value = true)
 public class ExternalCacheRegionFactory extends EhCacheRegionFactory implements ApplicationContextAware,
         InitializingBean {
 

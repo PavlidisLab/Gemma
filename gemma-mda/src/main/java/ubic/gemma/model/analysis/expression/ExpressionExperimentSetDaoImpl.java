@@ -361,11 +361,9 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      */
     protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
             throws Exception {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
-                        "eeset", expressionExperimentSet );
+        return this.getHibernateTemplate().findByNamedParam(
+                "select a from ExpressionAnalysis a join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
+                "eeset", expressionExperimentSet );
     }
 
     /**

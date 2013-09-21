@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -102,6 +103,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @return
      */
     @Override
+    @Transactional
     public ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache cachedArrays ) {
 
         if ( ee == null ) return null;
@@ -345,7 +347,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( rawDataFile != null ) {
             if ( isTransient( rawDataFile ) ) {
                 rawDataFile.setId( null ); // in case of retry.
-                bioAssay.setRawDataFile( persistLocalFile( rawDataFile, false ) );
+                // rawfile is unique for bioassay.
+                bioAssay.setRawDataFile( persistLocalFile( rawDataFile, true ) );
             } else {
                 // resynch.
                 this.localFileDao.update( rawDataFile );

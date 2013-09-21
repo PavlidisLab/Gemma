@@ -30,8 +30,7 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
  * 
  * @see ubic.gemma.model.common.auditAndSecurity.Contact
  */
-public abstract class ContactDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.common.auditAndSecurity.ContactDao {
+public abstract class ContactDaoBase extends HibernateDaoSupport implements ContactDao {
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.ContactDao#create(int, java.util.Collection)

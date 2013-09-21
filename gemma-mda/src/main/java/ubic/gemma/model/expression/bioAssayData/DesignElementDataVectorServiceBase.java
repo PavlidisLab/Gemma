@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
@@ -36,15 +37,16 @@ public abstract class DesignElementDataVectorServiceBase implements
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService {
 
     @Autowired
-    private ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDao rawExpressionDataVectorDao;
+    private RawExpressionDataVectorDao rawExpressionDataVectorDao;
 
     @Autowired
-    private ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
+    private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#countAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.lang.Integer countAll() {
         return this.handleCountAll();
     }
@@ -53,6 +55,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#create(java.util.Collection)
      */
     @Override
+    @Transactional
     public java.util.Collection<? extends DesignElementDataVector> create(
             final java.util.Collection<? extends DesignElementDataVector> vectors ) {
         return this.handleCreate( vectors );
@@ -63,6 +66,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<? extends DesignElementDataVector> find(
             final java.util.Collection<QuantitationType> quantitationTypes ) {
         return this.handleFind( quantitationTypes );
@@ -73,6 +77,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<? extends DesignElementDataVector> find(
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         return this.handleFind( quantitationType );
@@ -84,6 +89,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<? extends DesignElementDataVector> find(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
@@ -102,6 +108,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public DesignElementDataVector load( final java.lang.Long id ) {
         return this.handleLoad( id );
 
@@ -111,6 +118,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#remove(java.util.Collection)
      */
     @Override
+    @Transactional
     public void remove( final java.util.Collection<? extends DesignElementDataVector> vectors ) {
         this.handleRemove( vectors );
 
@@ -120,6 +128,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#remove(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)
      */
     @Override
+    @Transactional
     public void remove( final ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector designElementDataVector ) {
         this.handleRemove( designElementDataVector );
 
@@ -129,6 +138,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#removeDataForCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     @Override
+    @Transactional
     public void removeDataForCompositeSequence(
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         this.handleRemoveDataForCompositeSequence( compositeSequence );
@@ -139,6 +149,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#removeDataForQuantitationType(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
+    @Transactional
     public void removeDataForQuantitationType(
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         this.handleRemoveDataForQuantitationType( quantitationType );
@@ -165,6 +176,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @return
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(java.util.Collection)
      */
+    @Transactional(readOnly = true)
     @Override
     public void thaw( final java.util.Collection<? extends DesignElementDataVector> designElementDataVectors ) {
         this.handleThaw( designElementDataVectors );
@@ -174,6 +186,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#update(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)
      */
     @Override
+    @Transactional
     public void update( final DesignElementDataVector dedv ) {
         this.handleUpdate( dedv );
 
@@ -183,6 +196,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#update(java.util.Collection)
      */
     @Override
+    @Transactional
     public void update( final java.util.Collection<? extends DesignElementDataVector> dedvs ) {
         this.handleUpdate( dedvs );
     }
@@ -190,7 +204,7 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * Gets the reference to <code>designElementDataVector</code>'s DAO.
      */
-    protected ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDao getRawExpressionDataVectorDao() {
+    protected RawExpressionDataVectorDao getRawExpressionDataVectorDao() {
         return this.rawExpressionDataVectorDao;
     }
 

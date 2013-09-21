@@ -217,7 +217,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      */
     @Override
     protected Collection<Gene> handleGetGenesByAccession( String search ) {
-        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp"
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp"
                 + " inner join bs2gp.bioSequence bs "
                 + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct " + " and de.accession = :search ";
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
@@ -231,7 +231,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     @Override
     protected Collection<Gene> handleGetGenesByName( String search ) {
         Collection<Gene> genes = null;
-        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp where gp=bs2gp.geneProduct "
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
                 + " and bs2gp.bioSequence.name like :search ";
         try {
             org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );

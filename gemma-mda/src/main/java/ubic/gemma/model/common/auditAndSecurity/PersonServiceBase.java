@@ -21,6 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -39,6 +40,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#create(ubic.gemma.model.common.auditAndSecurity.Person)
      */
     @Override
+    @Transactional
     public Person create( final Person person ) {
         return this.handleCreate( person );
 
@@ -48,6 +50,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findByFullName(java.lang.String, java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Person> findByFullName( final java.lang.String name, final java.lang.String lastName ) {
         return this.handleFindByFullName( name, lastName );
 
@@ -57,6 +60,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)
      */
     @Override
+    @Transactional
     public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
             final ubic.gemma.model.common.auditAndSecurity.Person person ) {
         return this.handleFindOrCreate( person );
@@ -67,6 +71,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<Person> loadAll() {
         return this.handleLoadAll();
 
@@ -76,7 +81,8 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#remove(ubic.gemma.model.common.auditAndSecurity.Person)
      */
     @Override
-    public void remove( final ubic.gemma.model.common.auditAndSecurity.Person person ) {
+    @Transactional
+    public void remove( final Person person ) {
         this.handleRemove( person );
 
     }
@@ -84,14 +90,14 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * Sets the reference to <code>person</code>'s DAO.
      */
-    public void setPersonDao( ubic.gemma.model.common.auditAndSecurity.PersonDao personDao ) {
+    public void setPersonDao( PersonDao personDao ) {
         this.personDao = personDao;
     }
 
     /**
      * Gets the reference to <code>person</code>'s DAO.
      */
-    protected ubic.gemma.model.common.auditAndSecurity.PersonDao getPersonDao() {
+    protected PersonDao getPersonDao() {
         return this.personDao;
     }
 
@@ -110,8 +116,7 @@ public abstract class PersonServiceBase implements ubic.gemma.model.common.audit
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)}
      */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.Person handleFindOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Person person );
+    protected abstract Person handleFindOrCreate( Person person );
 
     /**
      * Performs the core logic for {@link #loadAll()}

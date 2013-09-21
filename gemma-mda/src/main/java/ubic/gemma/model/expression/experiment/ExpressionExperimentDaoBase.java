@@ -523,35 +523,22 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         target.setShortName( source.getShortName() );
     }
 
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(Collection)
-     */
     @Override
     public void update( final Collection<? extends ExpressionExperiment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNewSession( new HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( Iterator<? extends ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
-                        .hasNext(); ) {
-                    update( entityIterator.next() );
-                }
-                return null;
-            }
-        } );
+        for ( ExpressionExperiment e : entities ) {
+            update( e );
+        }
     }
 
-    /**
-     * @see ExpressionExperimentDao#update(ExpressionExperiment)
-     */
     @Override
     public void update( ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.update - 'expressionExperiment' can not be null" );
         }
-        this.getHibernateTemplate().update( expressionExperiment );
+        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
     }
 
     /**

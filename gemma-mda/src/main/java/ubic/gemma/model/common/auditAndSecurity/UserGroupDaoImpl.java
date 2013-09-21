@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import gemma.gsec.AuthorityConstants;
+
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -27,7 +29,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.util.AuthorityConstants;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup

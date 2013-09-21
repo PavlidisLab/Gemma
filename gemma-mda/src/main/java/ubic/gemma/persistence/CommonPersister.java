@@ -233,7 +233,8 @@ abstract public class CommonPersister extends AbstractPersister {
         for ( AuditEvent event : entity.getEvents() ) {
             if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed
                                            // any more
-            event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
+            // event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
+            assert event.getPerformer() != null && !isTransient( event.getPerformer() );
         }
 
         // events are persisted by composition.

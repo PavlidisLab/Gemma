@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -38,29 +39,28 @@ import java.util.Map;
 public class DifferentialExpressionResultServiceImpl extends DifferentialExpressionResultServiceBase {
 
     @Override
+    @Transactional(readOnly = true)
     public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
         return this.getDifferentialExpressionResultDao().countNumberOfDifferentiallyExpressedProbes( resultSetId,
                 threshold );
     }
 
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
-            Collection<BioAssaySet> experimentsAnalyzed, double threshold ) {
-        return this.getDifferentialExpressionResultDao().find( experimentsAnalyzed, threshold, null );
-    }
-
     @Override
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
+    @Transactional(readOnly = true)
+    public Map<BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
             Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( experimentsAnalyzed, threshold, limit );
 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene ) {
         return this.getDifferentialExpressionResultDao().find( gene );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene,
             Collection<BioAssaySet> experimentsAnalyzed ) {
         return this.getDifferentialExpressionResultDao().find( gene, experimentsAnalyzed );
@@ -70,12 +70,14 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      * 
      */
     @Override
-    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
-            Gene gene, Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit ) {
+    @Transactional(readOnly = true)
+    public java.util.Map<BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find( Gene gene,
+            Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( gene, experimentsAnalyzed, threshold, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( gene, threshold, limit );
     }
@@ -88,6 +90,7 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      * java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds ) {
         return this.getDifferentialExpressionResultDao().findDifferentialExpressionAnalysisResultIdsInResultSet(
@@ -95,12 +98,14 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
             Collection<Long> arrayDesignIds, Integer limit ) {
         return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, arrayDesignIds, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet,
             Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults ) {
         return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn,
@@ -108,54 +113,64 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().findInResultSets( resultsAnalyzed, threshold, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs ) {
         return this.getDifferentialExpressionResultDao().getAnalysis( rs );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
         return ( Collection<DifferentialExpressionAnalysisResult> ) this.getDifferentialExpressionResultDao()
                 .load( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadAnalysisResultSet( Long analysisResultSetId ) {
         return this.getExpressionAnalysisResultSetDao().load( analysisResultSetId );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids ) {
         return this.getDifferentialExpressionResultDao().loadContrastDetailsForResults( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Histogram loadPvalueDistribution( Long resultSetId ) {
         return this.getDifferentialExpressionResultDao().loadPvalueDistribution( resultSetId );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( Collection<DifferentialExpressionAnalysisResult> results ) {
         this.getDifferentialExpressionResultDao().thaw( results );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( DifferentialExpressionAnalysisResult result ) {
         this.getDifferentialExpressionResultDao().thaw( result );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thawLite( ExpressionAnalysisResultSet resultSet ) {
         this.getExpressionAnalysisResultSetDao().thawLite( resultSet );
 
     }
 
     @Override
+    @Transactional
     public void update( ExpressionAnalysisResultSet resultSet ) {
         this.getExpressionAnalysisResultSetDao().update( resultSet );
     }

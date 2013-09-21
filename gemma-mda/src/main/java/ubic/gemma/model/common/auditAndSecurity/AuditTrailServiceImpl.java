@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -61,6 +62,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see AuditTrailService#addComment(Auditable, String, String)
      */
     @Override
+    @Transactional
     public void addComment( final Auditable auditable, final String comment, final String detail ) {
         AuditEventType type = new CommentedEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
@@ -70,6 +72,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see AuditTrailService#addOkFlag(Auditable, String, String)
      */
     @Override
+    @Transactional
     public void addOkFlag( final Auditable auditable, final String comment, final String detail ) {
         // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
         // should only be used to reverse "trouble".
@@ -81,6 +84,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see AuditTrailService#addTroubleFlag(Auditable, String, String)
      */
     @Override
+    @Transactional
     public void addTroubleFlag( final Auditable auditable, final String comment, final String detail ) {
         AuditEventType type = new TroubleStatusFlagEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
@@ -90,12 +94,10 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
      */
     @Override
+    @Transactional
     public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType, final String note ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( auditEventType );
-        auditEvent.setNote( note );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, null,
+                auditEventType );
         this.statusDao.update( auditable, auditEventType );
         return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
@@ -104,14 +106,11 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String, String)
      */
     @Override
+    @Transactional
     public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
             final String note, final String detail ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( auditEventType );
-        auditEvent.setNote( note );
-        auditEvent.setDetail( detail );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, detail, null,
+                auditEventType );
         this.statusDao.update( auditable, auditEventType );
         return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
@@ -123,6 +122,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * java.lang.Class, java.lang.String, java.lang.String)
      */
     @Override
+    @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
             String detail ) {
 
@@ -143,11 +143,9 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see AuditTrailService#addUpdateEvent(Auditable, String)
      */
     @Override
+    @Transactional
     public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setNote( note );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, null, null );
         this.statusDao.update( auditable, null );
         return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
@@ -157,6 +155,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      *      java.lang.String, java.lang.String)
      */
     @Override
+    @Transactional
     public void addValidatedFlag( final Auditable auditable, final String comment, final String detail ) {
         AuditEventType type = new ValidatedFlagEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
@@ -166,6 +165,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#create(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
      */
     @Override
+    @Transactional
     public AuditTrail create( final AuditTrail auditTrail ) {
         return this.auditTrailDao.create( auditTrail );
     }
@@ -177,12 +177,14 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * java.lang.Class)
      */
     @Override
+    @Transactional(readOnly = true)
     public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
             Class<? extends AuditEventType> auditEventClass ) {
         return ( List<? extends Auditable> ) this.auditTrailDao.getEntitiesWithEvent( entityClass, auditEventClass );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AuditEvent> getEvents( Auditable ad ) {
         return this.auditEventDao.getEvents( ad );
     }
@@ -191,6 +193,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastTroubleEvent(ubic.gemma.model.common.Auditable)
      */
     @Override
+    @Transactional(readOnly = true)
     public AuditEvent getLastTroubleEvent( final Auditable auditable ) {
         AuditEvent troubleEvent = this.auditEventDao.getLastEvent( auditable, TroubleStatusFlagEventImpl.class );
         if ( troubleEvent == null ) {
@@ -207,6 +210,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastValidationEvent(Auditable)
      */
     @Override
+    @Transactional(readOnly = true)
     public AuditEvent getLastValidationEvent( final Auditable auditable ) {
         return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );
     }

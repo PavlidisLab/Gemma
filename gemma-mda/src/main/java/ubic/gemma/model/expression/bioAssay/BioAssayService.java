@@ -33,9 +33,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 public interface BioAssayService {
 
     /**
-     * <p>
      * Associates a bioMaterial with a specified bioAssay.
-     * </p>
      */
     @PreAuthorize("hasPermission(#bioAssay, 'write') or hasPermission(#bioAssay, 'administration')")
     public void addBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
@@ -49,9 +47,7 @@ public interface BioAssayService {
     public BioAssay create( BioAssay bioAssay );
 
     /**
-     * <p>
      * Locate all BioAssayDimensions in which the selected BioAssay occurs
-     * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );

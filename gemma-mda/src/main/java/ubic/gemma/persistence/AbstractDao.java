@@ -87,7 +87,6 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
         Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
         assert EntityUtils.getId( entity ) != null;
         assert id.equals( EntityUtils.getId( entity ) );
-
         return entity;
     }
 

@@ -22,6 +22,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.StatusDao;
@@ -52,6 +54,7 @@ public class PersisterHelper extends RelationshipPersister {
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(ubic.gemma.model.genome.Gene)
      */
     @Override
+    @Transactional
     public Object persist( Object entity ) {
 
         try {

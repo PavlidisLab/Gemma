@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import gemma.gsec.AuthorityConstants;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -29,7 +31,6 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -55,7 +56,7 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     @Override
     public void changePassword( User user, String password ) {
         user.setPassword( password );
-        this.getHibernateTemplate().update( user );
+        this.getSessionFactory().getCurrentSession().update( user );
     }
 
     @Override
@@ -74,7 +75,7 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         if ( user == null ) {
             throw new IllegalArgumentException( "User.create - 'user' can not be null" );
         }
-        this.getHibernateTemplate().save( user );
+        this.getSessionFactory().getCurrentSession().save( user );
         return user;
     }
 
@@ -89,6 +90,11 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         return this.findByEmail( "from UserImpl c where c.email = :email", email );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#findByUserName(java.lang.String)
+     */
     @Override
     public User findByUserName( final String userName ) {
         Session session = this.getSessionFactory().getCurrentSession();
@@ -101,7 +107,9 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         } else if ( users.size() > 1 ) {
             throw new IllegalStateException( "Multiple users with name=" + userName );
         }
-        return users.get( 0 );
+        User u = users.get( 0 );
+        session.setReadOnly( u, true ); // TESTING
+        return u;
     }
 
     @Override
@@ -172,12 +180,13 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
 
     @Override
     public void update( final Collection<? extends User> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "User.update - 'entities' can not be null" );
-        }
-        for ( User user : entities ) {
-            update( user );
-        }
+        // if ( entities == null ) {
+        // throw new IllegalArgumentException( "User.update - 'entities' can not be null" );
+        // }
+        // for ( User user : entities ) {
+        // update( user );
+        // }
+        throw new UnsupportedOperationException( "Cannot update users in bulk" );
     }
 
     @Override

@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 import java.util.Collection;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -29,7 +30,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService
  */
 @Service
-public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase {
+public class BlatResultServiceImpl extends BlatResultServiceBase {
 
     /*
      * (non-Javadoc)
@@ -37,6 +38,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public BlatResult load( Long id ) {
         return this.getBlatResultDao().load( id );
     }
@@ -49,6 +51,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * )
      */
     @Override
+    @Transactional(readOnly = true)
     public BlatResult thaw( BlatResult blatResult ) {
         return this.getBlatResultDao().thaw( blatResult );
     }
@@ -59,6 +62,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#thaw(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<BlatResult> thaw( Collection<BlatResult> blatResults ) {
         return this.getBlatResultDao().thaw( blatResults );
     }
@@ -67,8 +71,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     @Override
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
+    protected BlatResult handleCreate( BlatResult blatResult ) {
         return this.getBlatResultDao().create( blatResult );
     }
 

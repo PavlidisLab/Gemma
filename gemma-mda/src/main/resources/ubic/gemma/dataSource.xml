@@ -43,5 +43,19 @@
          <value>SELECT 1</value>
       </property>
    </bean>
+   
+   
+   <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+      <property name="host">
+         <value>${mail.host}</value>
+      </property>
+      <property name="username">
+         <value>${mail.username}</value>
+      </property>
+      <property name="password">
+         <value>${mail.password}</value>
+      </property>
+   </bean>
+
 
 </beans>

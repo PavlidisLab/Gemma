@@ -150,7 +150,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
-        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProductImpl ba, GeneProductImpl gp, GeneImpl gene  "
+        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, GeneImpl gene  "
                 + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
         return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
@@ -163,7 +163,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
-        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProductImpl ba, GeneProductImpl gp, GeneImpl gene  "
+        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, GeneImpl gene  "
                 + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
         return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "gene", "arrayDesign" },
                 new Object[] { gene, arrayDesign } );
@@ -707,7 +707,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             return;
         }
 
-        final String queryString = "select cs,bas from CompositeSequenceImpl cs, BioSequence2GeneProductImpl bas inner join cs.biologicalCharacteristic bs "
+        final String queryString = "select cs,bas from CompositeSequenceImpl cs, BioSequence2GeneProduct bas inner join cs.biologicalCharacteristic bs "
                 + "inner join fetch bas.geneProduct gp inner join fetch gp.gene gene "
                 + "where bas.bioSequence=bs and cs in (:cs)";
         List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, "cs", batch );

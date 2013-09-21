@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -28,8 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * 
  * @see ubic.gemma.model.common.description.ExternalDatabaseService
  */
-public abstract class ExternalDatabaseServiceBase implements
-        ubic.gemma.model.common.description.ExternalDatabaseService {
+public abstract class ExternalDatabaseServiceBase implements ExternalDatabaseService {
 
     @Autowired
     private ubic.gemma.model.common.description.ExternalDatabaseDao externalDatabaseDao;
@@ -38,6 +38,7 @@ public abstract class ExternalDatabaseServiceBase implements
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#find(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.common.description.ExternalDatabase find( final java.lang.String name ) {
         return this.handleFind( name );
 
@@ -47,8 +48,8 @@ public abstract class ExternalDatabaseServiceBase implements
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)
      */
     @Override
-    public ubic.gemma.model.common.description.ExternalDatabase findOrCreate(
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+    @Transactional
+    public ExternalDatabase findOrCreate( final ExternalDatabase externalDatabase ) {
         return this.handleFindOrCreate( externalDatabase );
 
     }
@@ -57,6 +58,7 @@ public abstract class ExternalDatabaseServiceBase implements
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ExternalDatabase> loadAll() {
         return this.handleLoadAll();
 
@@ -66,6 +68,7 @@ public abstract class ExternalDatabaseServiceBase implements
      * @see ubic.gemma.model.common.description.ExternalDatabaseService#remove(ubic.gemma.model.common.description.ExternalDatabase)
      */
     @Override
+    @Transactional
     public void remove( final ExternalDatabase externalDatabase ) {
         this.handleRemove( externalDatabase );
 

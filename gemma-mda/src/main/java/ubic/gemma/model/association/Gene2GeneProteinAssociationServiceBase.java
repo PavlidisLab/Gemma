@@ -21,6 +21,7 @@ package ubic.gemma.model.association;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.genome.Gene;
 
@@ -30,231 +31,216 @@ import ubic.gemma.model.genome.Gene;
  * provides access to all services and entities referenced by this service.
  * </p>
  * 
- * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService
+ * @see Gene2GeneProteinAssociationService
  */
-public abstract class Gene2GeneProteinAssociationServiceBase implements
-        ubic.gemma.model.association.Gene2GeneProteinAssociationService {
+public abstract class Gene2GeneProteinAssociationServiceBase implements Gene2GeneProteinAssociationService {
 
     @Autowired
-    private ubic.gemma.model.association.Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao;
+    private Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao;
 
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#create(ubic.gemma.model.association.Gene2GeneProteinAssociation)
+     * @see Gene2GeneProteinAssociationService#create(Gene2GeneProteinAssociation)
      */
     @Override
-    public ubic.gemma.model.association.Gene2GeneProteinAssociation create(
-            final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+    @Transactional
+    public Gene2GeneProteinAssociation create( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
             return this.handleCreate( gene2GeneProteinAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.create(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.create(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
     }
-    
+
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#create(ubic.gemma.model.association.Gene2GeneProteinAssociation)
+     * @see Gene2GeneProteinAssociationService#create(Gene2GeneProteinAssociation)
      */
     @Override
-    public ubic.gemma.model.association.Gene2GeneProteinAssociation createOrUpdate(
-            final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+    @Transactional
+    public Gene2GeneProteinAssociation createOrUpdate( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
             return this.handleCreateOrUpdate( gene2GeneProteinAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.createOrUpdate(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.createOrUpdate(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
     }
-    
-    
-    
 
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#update(ubic.gemma.model.association.Gene2GeneProteinAssociation)
+     * @see Gene2GeneProteinAssociationService#update(Gene2GeneProteinAssociation)
      */
     @Override
-    public void update( final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+    @Transactional
+    public void update( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
             this.handleUpdate( gene2GeneProteinAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.create(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.create(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#find(ubic.gemma.model.association.Gene2GeneProteinAssociation)
+     * @see Gene2GeneProteinAssociationService#find(Gene2GeneProteinAssociation)
      */
     @Override
-    public Gene2GeneProteinAssociation find(
-            final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+    @Transactional(readOnly = true)
+    public Gene2GeneProteinAssociation find( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
             return this.handleFind( gene2GeneProteinAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.find(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.find(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
 
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#loadAll()
+     * @see Gene2GeneProteinAssociationService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene2GeneProteinAssociation> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.loadAll(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.loadAll(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
 
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleDeleteAll()
+     * @see Gene2GeneProteinAssociationService#handleDeleteAll()
      */
     @Override
+    @Transactional
     public void deleteAll( Collection<Gene2GeneProteinAssociation> associations ) {
         try {
             this.handleDeleteAll( associations );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.deleteAll(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.deleteAll(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
 
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleDelete()
+     * @see Gene2GeneProteinAssociationService#handleDelete()
      */
     @Override
+    @Transactional
     public void delete( Gene2GeneProteinAssociation association ) {
         try {
             this.handleDelete( association );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.deleteAll(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.deleteAll(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
 
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleThaw()
+     * @see Gene2GeneProteinAssociationService#handleThaw()
      */
     @Override
+    @Transactional(readOnly = true)
     public void thaw( Gene2GeneProteinAssociation association ) {
         try {
             this.handleThaw( association );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.thaw(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.thaw(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
 
     }
-    
+
     /**
-     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleThaw()
+     * @see Gene2GeneProteinAssociationService#handleThaw()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene ) {
         try {
             return this.handleFindProteinInteractionsForGene( gene );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.findProteinInteractionsForGene(ubic.gemma.model.association.Gene)' --> "
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.findProteinInteractionsForGene(Gene)' --> "
                             + th, th );
         }
 
-    }       
-    
-    
+    }
 
     /**
      * Sets the reference to <code>gene2GeneProteinAssociation</code>'s DAO.
      */
-    public void setGene2GeneProteinAssociationDao(
-            ubic.gemma.model.association.Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao ) {
+    public void setGene2GeneProteinAssociationDao( Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao ) {
         this.gene2GeneProteinAssociationDao = gene2GeneProteinAssociationDao;
     }
 
     /**
      * Gets the reference to <code>gene2GeneProteinAssociation</code>'s DAO.
      */
-    protected ubic.gemma.model.association.Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao() {
+    protected Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao() {
         return this.gene2GeneProteinAssociationDao;
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
+     * Performs the core logic for {@link #create(Gene2GeneProteinAssociation)}
      */
-    protected abstract ubic.gemma.model.association.Gene2GeneProteinAssociation handleCreate(
-            ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation )
-            throws java.lang.Exception;
-    
-    
-    /**
-     * Performs the core logic for {@link #createOUpdate(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
-     */
-    protected abstract ubic.gemma.model.association.Gene2GeneProteinAssociation handleCreateOrUpdate(
-            ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation )
-            throws java.lang.Exception;        
+    protected abstract Gene2GeneProteinAssociation handleCreate( Gene2GeneProteinAssociation gene2GeneProteinAssociation )
+            throws Exception;
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
+     * Performs the core logic for {@link #createOUpdate(Gene2GeneProteinAssociation)}
      */
-    protected abstract void handleUpdate(
-            ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation )
-            throws java.lang.Exception;
+    protected abstract Gene2GeneProteinAssociation handleCreateOrUpdate(
+            Gene2GeneProteinAssociation gene2GeneProteinAssociation ) throws Exception;
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
+     * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}
      */
-    protected abstract Gene2GeneProteinAssociation handleFind(
-            ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) throws Exception;
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
+     * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}
      */
-    protected abstract Collection<Gene2GeneProteinAssociation> handleLoadAll() throws java.lang.Exception;
-    
-    
-    
+    protected abstract Gene2GeneProteinAssociation handleFind( Gene2GeneProteinAssociation gene2GeneProteinAssociation )
+            throws Exception;
+
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
+     * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}
      */
-    protected abstract  void handleDeleteAll( Collection<Gene2GeneProteinAssociation> associations )  throws java.lang.Exception;
-    
-    
+    protected abstract Collection<Gene2GeneProteinAssociation> handleLoadAll() throws Exception;
+
     /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
+     * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}
      */
-    protected abstract  void handleDelete( Gene2GeneProteinAssociation associations )  throws java.lang.Exception;
-    
-    
+    protected abstract void handleDeleteAll( Collection<Gene2GeneProteinAssociation> associations ) throws Exception;
+
     /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
+     * Performs the core logic for {@link #delete(Gene2GeneProteinAssociation)}
      */
-    protected abstract  void handleThaw( Gene2GeneProteinAssociation associations )  throws java.lang.Exception;
-    
+    protected abstract void handleDelete( Gene2GeneProteinAssociation associations ) throws Exception;
+
+    /**
+     * Performs the core logic for {@link #thaw(Gene2GeneProteinAssociation)}
+     */
+    protected abstract void handleThaw( Gene2GeneProteinAssociation associations ) throws Exception;
+
     /**
      * 
-      Performs the core logic for {@link #findProteinInteractionsForGene(ubic.gemma.model.genome.Gene)}
-      */
-    protected abstract Collection<Gene2GeneProteinAssociation> handleFindProteinInteractionsForGene( Gene gene ) throws java.lang.Exception;
-    
-    
-    
-
-    
+     Performs the core logic for {@link #findProteinInteractionsForGene(ubic.gemma.model.genome.Gene)}
+     */
+    protected abstract Collection<Gene2GeneProteinAssociation> handleFindProteinInteractionsForGene( Gene gene )
+            throws Exception;
 
 }

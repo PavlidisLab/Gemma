@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -39,7 +40,7 @@ public class GeneCoexpressionAnalysisServiceImpl implements
         ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService {
 
     @Autowired
-    private ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
+    private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 
     /*
      * (non-Javadoc)
@@ -47,6 +48,7 @@ public class GeneCoexpressionAnalysisServiceImpl implements
      * @see ubic.gemma.model.analysis.AnalysisService#loadMyAnalyses()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneCoexpressionAnalysis> loadMyAnalyses() {
         return loadEnabled();
     }
@@ -64,6 +66,7 @@ public class GeneCoexpressionAnalysisServiceImpl implements
      * @see ubic.gemma.model.analysis.AnalysisService#loadMySharedAnalyses()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneCoexpressionAnalysis> loadMySharedAnalyses() {
         return loadEnabled();
     }
@@ -74,22 +77,26 @@ public class GeneCoexpressionAnalysisServiceImpl implements
      * )
      */
     @Override
+    @Transactional
     public GeneCoexpressionAnalysis create( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().create( analysis );
     }
 
     @Override
+    @Transactional
     public void delete( GeneCoexpressionAnalysis toDelete ) {
         this.getGeneCoexpressionAnalysisDao().remove( toDelete );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneCoexpressionAnalysis> findByInvestigation( Investigation investigation ) {
         return this.getGeneCoexpressionAnalysisDao().findByInvestigation( investigation );
     }
 
     @SuppressWarnings("unchecked")
     @Override
+    @Transactional(readOnly = true)
     public Map<Investigation, Collection<GeneCoexpressionAnalysis>> findByInvestigations(
             Collection<? extends Investigation> investigations ) {
         return this.getGeneCoexpressionAnalysisDao()
@@ -97,6 +104,7 @@ public class GeneCoexpressionAnalysisServiceImpl implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneCoexpressionAnalysis> findByName( String name ) {
         return this.getGeneCoexpressionAnalysisDao().findByName( name );
     }
@@ -109,6 +117,7 @@ public class GeneCoexpressionAnalysisServiceImpl implements
      * .Taxon)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneCoexpressionAnalysis> findByParentTaxon( Taxon taxon ) {
         return this.getGeneCoexpressionAnalysisDao().findByParentTaxon( taxon );
     }
@@ -120,12 +129,14 @@ public class GeneCoexpressionAnalysisServiceImpl implements
      * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneCoexpressionAnalysis> findByTaxon( Taxon taxon ) {
         return this.getGeneCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
     @SuppressWarnings("unchecked")
     @Override
+    @Transactional(readOnly = true)
     public GeneCoexpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
 
         Map<Investigation, Collection<GeneCoexpressionAnalysis>> anas = this.getGeneCoexpressionAnalysisDao()
@@ -154,16 +165,19 @@ public class GeneCoexpressionAnalysisServiceImpl implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().getDatasetsAnalyzed( analysis );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public int getNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().getNumDatasetsAnalyzed( analysis );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GeneCoexpressionAnalysis load( Long id ) {
         return this.getGeneCoexpressionAnalysisDao().load( id );
     }
@@ -174,17 +188,20 @@ public class GeneCoexpressionAnalysisServiceImpl implements
      * @see ubic.gemma.model.analysis.AnalysisServiceImpl#handleLoadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneCoexpressionAnalysis> loadAll() {
         return ( Collection<GeneCoexpressionAnalysis> ) this.getGeneCoexpressionAnalysisDao().loadAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         this.getGeneCoexpressionAnalysisDao().thaw( geneCoexpressionAnalysis );
 
     }
 
     @Override
+    @Transactional
     public void update( GeneCoexpressionAnalysis geneCoExpressionAnalysis ) {
         this.getGeneCoexpressionAnalysisDao().update( geneCoExpressionAnalysis );
     }
@@ -192,6 +209,7 @@ public class GeneCoexpressionAnalysisServiceImpl implements
     /**
      * @return
      */
+    @Transactional(readOnly = true)
     private Collection<GeneCoexpressionAnalysis> loadEnabled() {
         Collection<GeneCoexpressionAnalysis> all = ( Collection<GeneCoexpressionAnalysis> ) this
                 .getGeneCoexpressionAnalysisDao().loadAll();
@@ -206,6 +224,7 @@ public class GeneCoexpressionAnalysisServiceImpl implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GeneCoexpressionAnalysis findCurrent( Taxon taxon ) {
         Collection<GeneCoexpressionAnalysis> analyses = null;
         if ( taxon.getIsSpecies() ) {

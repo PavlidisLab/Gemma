@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
@@ -45,6 +46,7 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#getExperimentalFactors(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
             final Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
         return this.handleGetExperimentalFactors( differentialExpressionAnalysisResults );
@@ -54,6 +56,7 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExperimentalFactor> getExperimentalFactors(
             final DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
         return this.handleGetExperimentalFactors( differentialExpressionAnalysisResult );
@@ -79,6 +82,7 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
      * @see diff.DifferentialExpressionResultService#thaw(ExpressionAnalysisResultSet)
      */
     @Override
+    @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet thaw( final ExpressionAnalysisResultSet resultSet ) {
         return this.handleThaw( resultSet );
 

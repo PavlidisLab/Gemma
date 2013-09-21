@@ -126,7 +126,7 @@ public class CommonQueries {
     public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
 
         final String csQueryString = "select distinct cs from GeneImpl as gene"
-                + " join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
+                + " join gene.products gp, BioSequence2GeneProduct ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence.id=cs.biologicalCharacteristic.id and ba.geneProduct.id = gp.id and gene.id = :gene ";
 
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
@@ -211,7 +211,7 @@ public class CommonQueries {
         StopWatch timer = new StopWatch();
         timer.start();
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
+                + " inner join gene.products gp, BioSequence2GeneProduct ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
                 + " and gene in (:genes) and cs.arrayDesign in (:ads) ";
 
@@ -251,7 +251,7 @@ public class CommonQueries {
         StopWatch timer = new StopWatch();
         timer.start();
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
+                + " inner join gene.products gp, BioSequence2GeneProduct ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
                 + " and gene in (:genes)  ";
 

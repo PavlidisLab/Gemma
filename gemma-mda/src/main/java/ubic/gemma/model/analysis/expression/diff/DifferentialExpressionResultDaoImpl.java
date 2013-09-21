@@ -70,21 +70,21 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             + " dear.PROBE_FK IN (:probe_ids) ";
 
     private static final String fetchResultsByExperimentsQuery = "select distinct e, r"
-            + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
+            + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProduct bs2gp"
             + " inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "left join p.biologicalCharacteristic bs left join bs2gp.geneProduct gp left join gp.gene g"
             + " where bs2gp.bioSequence=bs and e in (:experimentsAnalyzed) and r.correctedPvalue < :threshold order by r.correctedPvalue";
 
     private static final String fetchResultsByGene = "select distinct e, r"
-            + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
+            + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProduct bs2gp"
             + " inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe  p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and g=:gene"; // no order by clause, we add it later
 
     private static final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
-            + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
+            + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProduct bs2gp"
             + " inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"

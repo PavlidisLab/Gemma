@@ -18,46 +18,48 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * <p>
- * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService</code>,
- * provides access to all services and entities referenced by this service.
- * </p>
+ * Spring Service base class for <code>ExpressionExperimentSubSetService</code>, provides access to all services and
+ * entities referenced by this service.
  * 
- * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService
+ * @see ExpressionExperimentSubSetService
  */
-public abstract class ExpressionExperimentSubSetServiceBase implements
-        ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService {
+public abstract class ExpressionExperimentSubSetServiceBase implements ExpressionExperimentSubSetService {
 
     @Autowired
-    private ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
+    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
+     * @see ExpressionExperimentSubSetService#create(ExpressionExperimentSubSet)
      */
     @Override
-    public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet create(
-            final ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
+    @Transactional
+    public ExpressionExperimentSubSet create( final ExpressionExperimentSubSet expressionExperimentSubSet ) {
         return this.handleCreate( expressionExperimentSubSet );
 
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#load(java.lang.Long)
+     * @see ExpressionExperimentSubSetService#load(Long)
      */
     @Override
-    public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet load( final java.lang.Long id ) {
+    @Transactional(readOnly = true)
+    public ExpressionExperimentSubSet load( final Long id ) {
         return this.handleLoad( id );
 
     }
 
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#loadAll()
+     * @see ExpressionExperimentSubSetService#loadAll()
      */
     @Override
-    public java.util.Collection<ExpressionExperimentSubSet> loadAll() {
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSubSet> loadAll() {
         return this.handleLoadAll();
 
     }
@@ -65,28 +67,26 @@ public abstract class ExpressionExperimentSubSetServiceBase implements
     /**
      * Sets the reference to <code>expressionExperimentSubSet</code>'s DAO.
      */
-    public void setExpressionExperimentSubSetDao(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao expressionExperimentSubSetDao ) {
+    public void setExpressionExperimentSubSetDao( ExpressionExperimentSubSetDao expressionExperimentSubSetDao ) {
         this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
     }
 
     /**
      * Gets the reference to <code>expressionExperimentSubSet</code>'s DAO.
      */
-    protected ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao getExpressionExperimentSubSetDao() {
+    protected ExpressionExperimentSubSetDao getExpressionExperimentSubSetDao() {
         return this.expressionExperimentSubSetDao;
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)}
+     * Performs the core logic for {@link #create(ExpressionExperimentSubSet)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleCreate(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet );
+    protected abstract ExpressionExperimentSubSet handleCreate( ExpressionExperimentSubSet expressionExperimentSubSet );
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
+     * Performs the core logic for {@link #load(Long)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet handleLoad( java.lang.Long id );
+    protected abstract ExpressionExperimentSubSet handleLoad( Long id );
 
     /**
      * Performs the core logic for {@link #loadAll()}

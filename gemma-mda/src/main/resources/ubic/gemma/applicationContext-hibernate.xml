@@ -5,15 +5,8 @@
    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
-
-
-   <!-- Make all "serviceMethod"s transactional. See http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch10s05.html#transaction-declarative-txadvice-settings -->
-   <aop:config>
-      <aop:pointcut id="serviceMethod" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
-      <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" order="3" />
-   </aop:config>
-
-   <!-- Automatically retry certain failed operations in transactions. -->
+ 
+   <!-- Automatically retry certain failed operations in transactions. FIXME use @Transactional to identify -->
    <aop:config>
       <aop:pointcut id="retryable" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethodWithArg()" />
       <aop:advisor pointcut-ref="retryable" advice-ref="retryAdvice" order="2" />
@@ -47,43 +40,22 @@
       </property>
    </bean>
 
-   <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+   <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager" lazy-init="true">
       <property name="sessionFactory" ref="sessionFactory" />
    </bean>
-
-   <!-- Mostly we are using the pointcut, but this is useful for fine-tuning. -->
-   <!-- warning, may not be a good idea to mix strategies -->
-   <tx:annotation-driven order="3" />
-
-   <tx:advice id="txAdvice">
-      <!-- Make some methods read-only -->
-      <tx:attributes>
-         <tx:method name="get*" read-only="true" />
-         <tx:method name="browse*" read-only="true" />
-         <tx:method name="find*" read-only="true" />
-         <tx:method name="search*" read-only="true" />
-         <tx:method name="load*" read-only="true" />
-         <tx:method name="thaw*" read-only="true" />
-         <tx:method name="is*" read-only="true" />
-         <tx:method name="are*" read-only="true" />
-         <tx:method name="count*" read-only="true" />
-         <tx:method name="has*" read-only="true" />
-         <tx:method name="lack*" read-only="true" />
-         <tx:method name="retain*" read-only="true" />
-         <tx:method name="convert*" read-only="true" />
-         <tx:method name="findOrCreate" read-only="false" />
-         <!-- all other methods use the default transaction settings -->
-         <tx:method name="*" />
-      </tx:attributes>
-   </tx:advice>
+ 
+   <tx:annotation-driven order="3"  />
 
    <!-- Hibernate SessionFactory -->
-   <bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+   <bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean"  lazy-init="true">
       <property name="dataSource">
          <ref bean="dataSource" />
       </property>
       <property name="mappingLocations">
          <list>
+            <value>classpath:gemma/gsec/model/AclEntry.hbm.xml</value>
+            <value>classpath:gemma/gsec/model/AclObjectIdentity.hbm.xml</value>
+            <value>classpath:gemma/gsec/model/AclSid.hbm.xml</value> 
             <value>classpath:ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml</value>
             <value>classpath:ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml</value>
             <value>classpath:ubic/gemma/model/genome/gene/GeneAlias.hbm.xml</value>
@@ -104,9 +76,6 @@
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/GroupAuthority.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/AclEntry.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/AclObjectIdentity.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/AclSid.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserRole.hbm.xml</value>
@@ -115,7 +84,6 @@
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/measurement/Measurement.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/measurement/Unit.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/protocol/Parameterizable.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml</value>
@@ -202,7 +170,7 @@
       <!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
    </bean>
 
-   <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+   <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"  lazy-init="true">
       <property name="configLocation" ref="cacheConfigResource" />
    </bean>
 

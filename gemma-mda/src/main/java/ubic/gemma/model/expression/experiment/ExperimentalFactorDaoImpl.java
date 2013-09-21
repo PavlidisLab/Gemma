@@ -54,7 +54,7 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
                 .getSessionFactory()
                 .getCurrentSession()
                 .createQuery(
-                        "select ef from ExperimentalFactorImpl ef join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
+                        "select ef from ExperimentalFactorImpl ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
                 .setParameter( "id", id ).uniqueResult();
     }
 

@@ -37,7 +37,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.analysis.Direction;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -703,7 +702,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     private void populateWhichFactorValuesUsed( DifferentialExpressionAnalysisValueObject avo, BioAssaySet bioAssaySet ) {
         ExperimentalFactorValueObject subsetFactor = avo.getSubsetFactor();
 
-        for ( BioAssay ba : ( Collection<BioAssay> ) bioAssaySet.getBioAssays() ) {
+        for ( BioAssay ba : bioAssaySet.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
 
             for ( FactorValue fv : bm.getFactorValues() ) {
@@ -716,8 +715,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
                 String expFactorId = experimentalFactorId.toString();
                 if ( !avo.getFactorValuesUsed().containsKey( experimentalFactorId ) ) {
-                    avo.getFactorValuesUsed().put( expFactorId,
-                            new HashSet<FactorValueValueObject>() );
+                    avo.getFactorValuesUsed().put( expFactorId, new HashSet<FactorValueValueObject>() );
                 }
 
                 avo.getFactorValuesUsed().get( expFactorId ).add( new FactorValueValueObject( fv ) );

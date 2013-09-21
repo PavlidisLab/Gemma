@@ -135,7 +135,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
             throw new IllegalArgumentException( "Gene2GeneCoexpression.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionImpl.class, id );
+                ubic.gemma.model.association.coexpression.Gene2GeneCoexpression.class, id );
         return ( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression ) entity;
     }
 
@@ -145,7 +145,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     @Override
     public java.util.Collection<? extends Gene2GeneCoexpression> loadAll() {
         return this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionImpl.class );
+                ubic.gemma.model.association.coexpression.Gene2GeneCoexpression.class );
     }
 
     /**

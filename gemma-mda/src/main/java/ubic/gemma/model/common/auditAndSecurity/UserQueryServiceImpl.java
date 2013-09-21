@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Paul
@@ -33,44 +34,52 @@ import org.springframework.stereotype.Service;
 public class UserQueryServiceImpl implements UserQueryService {
 
     @Autowired
-    UserQueryDao userQueryDao;
+    private UserQueryDao userQueryDao;
 
     @Override
+    @Transactional
     public UserQuery create( UserQuery userQuery ) {
         return userQueryDao.create( userQuery );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<UserQuery> findByUser( User user ) {
         return userQueryDao.findByUser( user );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserQuery findMostRecentForUser( User user ) {
         return userQueryDao.findMostRecentForUser( user );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserQuery load( Long id ) {
         return userQueryDao.load( id );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<UserQuery> loadAll() {
         return ( Collection<UserQuery> ) userQueryDao.loadAll();
     }
 
     @Override
+    @Transactional
     public void remove( UserQuery userQuery ) {
         userQueryDao.remove( userQuery );
     }
 
     @Override
+    @Transactional
     public void removeAllForUser( User user ) {
         userQueryDao.removeAllForUser( user );
     }
 
     @Override
+    @Transactional
     public void removeOldForUser( User user, Date staleDate ) {
         userQueryDao.removeOldForUser( user, staleDate );
     }

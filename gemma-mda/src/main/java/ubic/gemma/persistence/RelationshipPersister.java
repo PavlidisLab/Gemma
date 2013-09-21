@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
@@ -73,6 +74,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
+    @Transactional
     public Object persist( Object entity ) {
         if ( entity == null ) return null;
 
@@ -99,6 +101,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override
+    @Transactional
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         return super.persistOrUpdate( entity );

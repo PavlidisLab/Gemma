@@ -19,6 +19,7 @@
 package ubic.gemma.model.genome.gene;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequenceDao;
@@ -51,6 +52,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
      * @see ubic.gemma.model.genome.gene.GeneProductService#countAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.lang.Integer countAll() {
         return this.handleCountAll();
 
@@ -60,6 +62,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
      * @see ubic.gemma.model.genome.gene.GeneProductService#create(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
+    @Transactional
     public ubic.gemma.model.genome.gene.GeneProduct create( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return this.handleCreate( geneProduct );
 
@@ -69,7 +72,8 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
      * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
-    public void delete( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
+    @Transactional
+    public void delete( final GeneProduct geneProduct ) {
         this.handleDelete( geneProduct );
 
     }
@@ -78,7 +82,8 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
      * @see ubic.gemma.model.genome.gene.GeneProductService#find(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
-    public ubic.gemma.model.genome.gene.GeneProduct find( final ubic.gemma.model.genome.gene.GeneProduct gProduct ) {
+    @Transactional(readOnly = true)
+    public GeneProduct find( final GeneProduct gProduct ) {
         return this.handleFind( gProduct );
 
     }
@@ -87,8 +92,8 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
      * @see ubic.gemma.model.genome.gene.GeneProductService#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
-    public ubic.gemma.model.genome.gene.GeneProduct findOrCreate(
-            final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
+    @Transactional
+    public GeneProduct findOrCreate( final GeneProduct geneProduct ) {
         return this.handleFindOrCreate( geneProduct );
 
     }

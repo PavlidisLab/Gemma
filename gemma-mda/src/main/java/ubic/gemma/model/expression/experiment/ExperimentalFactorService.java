@@ -38,19 +38,6 @@ public interface ExperimentalFactorService {
     public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
 
     /**
-     * @param factors
-     * @return
-     */
-    @Secured({ "GROUP_USER" })
-    public Collection<ExperimentalFactor> create( Collection<ExperimentalFactor> factors );
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public ExperimentalFactor create( ExperimentalFactor experimentalFactor );
-
-    /**
      * Delete the factor, its associated factor values and all differential expression analyses in which it is used.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

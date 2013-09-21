@@ -17,6 +17,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.Collection;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author pavlidis
@@ -28,11 +29,13 @@ import org.springframework.stereotype.Service;
 public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.PersonServiceBase {
 
     @Override
+    @Transactional(readOnly = true)
     public Person load( Long id ) {
         return this.getPersonDao().load( id );
     }
 
     @Override
+    @Transactional
     public void update( Person p ) {
         this.getPersonDao().update( p );
 

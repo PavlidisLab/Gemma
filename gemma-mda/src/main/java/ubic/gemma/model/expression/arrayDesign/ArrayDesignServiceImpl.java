@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
@@ -42,7 +43,13 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
 @Service
-public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
+public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
+
+    @Override
+    @Transactional
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes ) {
+        this.getArrayDesignDao().addProbes( arrayDesign, newprobes );
+    }
 
     /*
      * (non-Javadoc)
@@ -50,6 +57,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByManufacturer(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByManufacturer( String searchString ) {
         return this.getArrayDesignDao().findByManufacturer( searchString );
     }
@@ -60,8 +68,21 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
         return this.getArrayDesignDao().findByTaxon( taxon );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign ) {
+        return this.getArrayDesignDao().loadAlignments( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign ) {
+        return this.getArrayDesignDao().getBioSequences( arrayDesign );
     }
 
     /*
@@ -70,6 +91,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getPerTaxonCount()
      */
     @Override
+    @Transactional(readOnly = true)
     public Map<Taxon, Integer> getPerTaxonCount() {
         return this.getArrayDesignDao().getPerTaxonCount();
     }
@@ -80,6 +102,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thawLite(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
         return this.getArrayDesignDao().thawLite( arrayDesigns );
     }
@@ -703,21 +726,6 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             }
 
         }
-    }
-
-    @Override
-    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().getBioSequences( arrayDesign );
-    }
-
-    @Override
-    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes ) {
-        this.getArrayDesignDao().addProbes( arrayDesign, newprobes );
-    }
-
-    @Override
-    public Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().loadAlignments( arrayDesign );
     }
 
 }

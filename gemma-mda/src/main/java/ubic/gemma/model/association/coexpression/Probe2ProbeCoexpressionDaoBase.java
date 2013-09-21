@@ -127,7 +127,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
         if ( id == null ) {
             throw new IllegalArgumentException( "Probe2ProbeCoexpression.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get( Probe2ProbeCoexpressionImpl.class, id );
+        final Object entity = this.getHibernateTemplate().get( Probe2ProbeCoexpression.class, id );
         return ( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression ) entity;
     }
 

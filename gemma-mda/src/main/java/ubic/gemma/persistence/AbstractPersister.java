@@ -32,6 +32,7 @@ import org.hibernate.classic.Session;
 import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
@@ -67,6 +68,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
      * @see ubic.gemma.persistence.Persister#isTransient(java.lang.Object)
      */
     @Override
+    @Transactional
     public boolean isTransient( Object entity ) {
         if ( entity == null ) return true;
         Long id = EntityUtils.getId( entity );
@@ -128,6 +130,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)
      */
     @Override
+    @Transactional
     public Collection<?> persist( Collection<?> col ) {
         if ( col == null || col.size() == 0 ) return col;
 

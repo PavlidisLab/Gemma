@@ -24,6 +24,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
@@ -32,14 +33,12 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.arrayDesign.ArrayDesignService</code>, provides
  * access to all services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
-public abstract class ArrayDesignServiceBase implements ubic.gemma.model.expression.arrayDesign.ArrayDesignService {
+public abstract class ArrayDesignServiceBase implements ArrayDesignService {
 
     Log log = LogFactory.getLog( this.getClass() );
 
@@ -53,19 +52,18 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-
         return this.handleCompositeSequenceWithoutBioSequences( arrayDesign );
-
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    @Transactional(readOnly = true)
+    public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( final ArrayDesign arrayDesign ) {
 
         return this.handleCompositeSequenceWithoutBlatResults( arrayDesign );
 
@@ -75,8 +73,8 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutGenes(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    @Transactional(readOnly = true)
+    public Collection<CompositeSequence> compositeSequenceWithoutGenes( final ArrayDesign arrayDesign ) {
 
         return this.handleCompositeSequenceWithoutGenes( arrayDesign );
 
@@ -86,6 +84,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#countAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.lang.Integer countAll() {
 
         return this.handleCountAll();
@@ -96,8 +95,8 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#create(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign create(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    @Transactional
+    public ArrayDesign create( final ArrayDesign arrayDesign ) {
 
         return this.handleCreate( arrayDesign );
 
@@ -107,6 +106,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional
     public void deleteAlignmentData( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         this.handleDeleteAlignmentData( arrayDesign );
@@ -117,6 +117,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#deleteGeneProductAssociations(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional
     public void deleteGeneProductAssociations( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         this.handleDeleteGeneProductAssociations( arrayDesign );
@@ -127,8 +128,8 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign find(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    @Transactional(readOnly = true)
+    public ArrayDesign find( final ArrayDesign arrayDesign ) {
 
         return this.handleFind( arrayDesign );
 
@@ -138,6 +139,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByAlternateName(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ArrayDesign> findByAlternateName( final java.lang.String queryString ) {
 
         return this.handleFindByAlternateName( queryString );
@@ -148,6 +150,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByName(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByName( final java.lang.String name ) {
 
         return this.handleFindByName( name );
@@ -158,6 +161,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByShortName(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( final java.lang.String shortName ) {
 
         return this.handleFindByShortName( shortName );
@@ -168,8 +172,8 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    @Transactional
+    public ArrayDesign findOrCreate( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         return this.handleFindOrCreate( arrayDesign );
 
@@ -179,6 +183,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllAssociatedBioAssays(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<BioAssay> getAllAssociatedBioAssays( final java.lang.Long id ) {
 
         return this.handleGetAllAssociatedBioAssays( id );
@@ -196,6 +201,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.lang.Integer getCompositeSequenceCount(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
@@ -207,6 +213,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getExpressionExperiments(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
@@ -218,6 +225,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastAnnotationFile(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, AuditEvent> getLastAnnotationFile( final java.util.Collection<Long> ids ) {
 
         return this.handleGetLastAnnotationFile( ids );
@@ -228,6 +236,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastGeneMapping(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, AuditEvent> getLastGeneMapping( final java.util.Collection<Long> ids ) {
 
         return this.handleGetLastGeneMapping( ids );
@@ -238,6 +247,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastRepeatAnalysis(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, AuditEvent> getLastRepeatAnalysis( final java.util.Collection<Long> ids ) {
 
         return this.handleGetLastRepeatAnalysis( ids );
@@ -248,6 +258,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastSequenceAnalysis(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, AuditEvent> getLastSequenceAnalysis( final java.util.Collection<Long> ids ) {
 
         return this.handleGetLastSequenceAnalysis( ids );
@@ -268,6 +279,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastTroubleEvent(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, AuditEvent> getLastTroubleEvent( final java.util.Collection<Long> ids ) {
 
         return this.handleGetLastTroubleEvent( ids );
@@ -278,6 +290,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastValidationEvent(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, AuditEvent> getLastValidationEvent( final java.util.Collection<Long> ids ) {
 
         return this.handleGetLastValidationEvent( ids );
@@ -288,6 +301,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxa(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ubic.gemma.model.genome.Taxon> getTaxa( final java.lang.Long id ) {
 
         return this.handleGetTaxa( id );
@@ -298,6 +312,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxon(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.genome.Taxon getTaxon( final java.lang.Long id ) {
 
         return this.handleGetTaxon( id );
@@ -308,6 +323,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMerged(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, Boolean> isMerged( final java.util.Collection<Long> ids ) {
 
         return this.handleIsMerged( ids );
@@ -318,6 +334,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMergee(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, Boolean> isMergee( final java.util.Collection<Long> ids ) {
 
         return this.handleIsMergee( ids );
@@ -328,6 +345,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isSubsumed(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, Boolean> isSubsumed( final java.util.Collection<Long> ids ) {
 
         return this.handleIsSubsumed( ids );
@@ -338,6 +356,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isSubsumer(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Map<Long, Boolean> isSubsumer( final java.util.Collection<Long> ids ) {
 
         return this.handleIsSubsumer( ids );
@@ -348,6 +367,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#load(long)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign load( final long id ) {
 
         return this.handleLoad( id );
@@ -358,6 +378,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ArrayDesign> loadAll() {
 
         return this.handleLoadAll();
@@ -368,6 +389,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadAllValueObjects()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects() {
 
         return this.handleLoadAllValueObjects();
@@ -378,6 +400,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getCompositeSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<CompositeSequence> getCompositeSequences(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
@@ -389,6 +412,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadMultiple(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ArrayDesign> loadMultiple( final java.util.Collection<Long> ids ) {
 
         return this.handleLoadMultiple( ids );
@@ -399,6 +423,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadValueObjects(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public ArrayDesignValueObject loadValueObject( final Long id ) {
 
         Collection<Long> ids = new ArrayList<Long>();
@@ -420,6 +445,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadValueObjects(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ArrayDesignValueObject> loadValueObjects( final java.util.Collection<Long> ids ) {
 
         return this.handleLoadValueObjects( ids );
@@ -430,6 +456,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBioSequences()
      */
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithBioSequences() {
 
         return this.handleNumAllCompositeSequenceWithBioSequences();
@@ -440,6 +467,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBioSequences(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithBioSequences( final java.util.Collection<Long> ids ) {
 
         return this.handleNumAllCompositeSequenceWithBioSequences( ids );
@@ -450,6 +478,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBlatResults()
      */
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithBlatResults() {
 
         return this.handleNumAllCompositeSequenceWithBlatResults();
@@ -460,8 +489,8 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBlatResults(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithBlatResults( final java.util.Collection<Long> ids ) {
-
         return this.handleNumAllCompositeSequenceWithBlatResults( ids );
 
     }
@@ -470,6 +499,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithGenes()
      */
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithGenes() {
 
         return this.handleNumAllCompositeSequenceWithGenes();
@@ -480,6 +510,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithGenes(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public long numAllCompositeSequenceWithGenes( final java.util.Collection<Long> ids ) {
 
         return this.handleNumAllCompositeSequenceWithGenes( ids );
@@ -490,6 +521,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllGenes()
      */
     @Override
+    @Transactional(readOnly = true)
     public long numAllGenes() {
 
         return this.handleNumAllGenes();
@@ -500,6 +532,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllGenes(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public long numAllGenes( final java.util.Collection<Long> ids ) {
 
         return this.handleNumAllGenes( ids );
@@ -510,6 +543,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public long numBioSequences( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         return this.handleNumBioSequences( arrayDesign );
@@ -520,6 +554,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public long numBlatResults( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         return this.handleNumBlatResults( arrayDesign );
@@ -530,6 +565,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public long numCompositeSequenceWithBioSequences(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
@@ -541,6 +577,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numCompositeSequenceWithBlatResults(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public long numCompositeSequenceWithBlatResults(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
@@ -572,16 +609,16 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#remove(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional
     public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-
         this.handleRemove( arrayDesign );
-
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#removeBiologicalCharacteristics(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional
     public void removeBiologicalCharacteristics( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         this.handleRemoveBiologicalCharacteristics( arrayDesign );
@@ -606,6 +643,7 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public ArrayDesign thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         return this.handleThaw( arrayDesign );
@@ -616,20 +654,18 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional(readOnly = true)
     public ArrayDesign thawLite( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-
         return this.handleThawLite( arrayDesign );
-
     }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#update(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional
     public void update( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-
         this.handleUpdate( arrayDesign );
-
     }
 
     /**
@@ -637,18 +673,15 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    public java.lang.Boolean updateSubsumingStatus(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer,
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee ) {
-
+    @Transactional
+    public Boolean updateSubsumingStatus( final ArrayDesign candidateSubsumer, final ArrayDesign candidateSubsumee ) {
         return this.handleUpdateSubsumingStatus( candidateSubsumer, candidateSubsumee );
-
     }
 
     /**
      * Gets the reference to <code>arrayDesign</code>'s DAO.
      */
-    protected ubic.gemma.model.expression.arrayDesign.ArrayDesignDao getArrayDesignDao() {
+    protected ArrayDesignDao getArrayDesignDao() {
         return this.arrayDesignDao;
     }
 

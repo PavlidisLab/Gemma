@@ -32,7 +32,6 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.velocity.VelocityEngineUtils;
 
-
 /**
  * @author pavlidis
  * @author Matt Raible
@@ -77,7 +76,7 @@ public class MailEngineImpl implements MailEngine {
             mailSender.send( msg );
         } catch ( MailException ex ) {
             // log it and go on
-            log.error( ex.getMessage() );
+            log.error( ex.getMessage(), ex );
             log.debug( ex, ex );
         }
     }

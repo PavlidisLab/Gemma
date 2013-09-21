@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author paul
@@ -41,6 +42,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * )
      */
     @Override
+    @Transactional
     public JobInfo create( JobInfo entity ) {
         return jobInfoDao.create( entity );
     }
@@ -65,6 +67,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#load(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<? extends JobInfo> load( Collection<Long> ids ) {
         return jobInfoDao.load( ids );
     }
@@ -75,6 +78,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public JobInfo load( Long id ) {
         return jobInfoDao.load( id );
     }
@@ -85,6 +89,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#remove(java.util.Collection)
      */
     @Override
+    @Transactional
     public void remove( Collection<? extends JobInfo> entities ) {
         jobInfoDao.remove( entities );
     }
@@ -95,6 +100,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#remove(java.lang.Long)
      */
     @Override
+    @Transactional
     public void remove( Long id ) {
         jobInfoDao.remove( id );
     }
@@ -107,6 +113,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      * )
      */
     @Override
+    @Transactional
     public void update( JobInfo entity ) {
         jobInfoDao.update( entity );
     }

@@ -19,6 +19,7 @@
 package ubic.gemma.model.genome;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -37,6 +38,7 @@ public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.C
      * @see ubic.gemma.model.genome.ChromosomeService#findOrCreate(ubic.gemma.model.genome.Chromosome)
      */
     @Override
+    @Transactional
     public ubic.gemma.model.genome.Chromosome findOrCreate( final String name, final Taxon taxon ) {
 
         return this.handleFindOrCreate( name, taxon );

@@ -10,6 +10,7 @@
        or @Controller). We exclude ubic.gemma.web here, it is brought in by gemma-servlet.xml. -->
    <context:component-scan base-package="ubic.gemma" name-generator="ubic.gemma.util.BeanNameGenerator">
       <context:exclude-filter type="regex" expression="ubic\.gemma\.web\..*" />
-   </context:component-scan>
-
+   </context:component-scan> 
+   
+ 
 </beans>

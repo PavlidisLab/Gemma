@@ -37,6 +37,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
@@ -102,6 +103,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
      * @see ubic.gemma.persistence.TableMaintenenceUtilI#updateGene2CsEntries()
      */
     @Override
+    @Transactional
     public void updateGene2CsEntries() {
 
         log.debug( "Running Gene2CS status check" );

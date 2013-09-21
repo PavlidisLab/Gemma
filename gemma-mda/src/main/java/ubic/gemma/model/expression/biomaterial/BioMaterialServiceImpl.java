@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
@@ -42,16 +43,19 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     private static Logger log = LoggerFactory.getLogger( BioMaterialServiceImpl.class );
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         return this.getBioMaterialDao().findByExperiment( experiment );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
         return this.getBioMaterialDao().findByFactorValue( fv );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment getExpressionExperiment( Long id ) {
         return this.getBioMaterialDao().getExpressionExperiment( id );
     }
@@ -64,6 +68,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * )
      */
     @Override
+    @Transactional(readOnly = true)
     public void thaw( BioMaterial bioMaterial ) {
         this.getBioMaterialDao().thaw( bioMaterial );
     }
@@ -74,6 +79,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
         return this.getBioMaterialDao().thaw( bioMaterials );
     }
@@ -172,7 +178,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#updateBioMaterials(java.util.Collection)
      */
     @Override
-    public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
+    @Transactional   public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioMaterialValueObject bioMaterialValueObject : valueObjects ) {
@@ -188,7 +194,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      * @param bmvo
      * @return
      */
-    private BioMaterial update( BioMaterialValueObject bmvo ) {
+  private BioMaterial update( BioMaterialValueObject bmvo ) {
         BioMaterial bm = load( bmvo.getId() );
 
         Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();

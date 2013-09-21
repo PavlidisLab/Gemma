@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.model.expression.experiment.FactorValueDao;
@@ -46,8 +47,8 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#copy(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
-    public ubic.gemma.model.expression.biomaterial.BioMaterial copy(
-            final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
+    @Transactional(readOnly = true)
+    public BioMaterial copy( final BioMaterial bioMaterial ) {
 
         return this.handleCopy( bioMaterial );
     }
@@ -56,6 +57,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#countAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.lang.Integer countAll() {
 
         return this.handleCountAll();
@@ -66,6 +68,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#create(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
+    @Transactional
     public ubic.gemma.model.expression.biomaterial.BioMaterial create(
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
 
@@ -77,8 +80,8 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
-    public ubic.gemma.model.expression.biomaterial.BioMaterial findOrCreate(
-            final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
+    @Transactional
+    public BioMaterial findOrCreate( final BioMaterial bioMaterial ) {
 
         return this.handleFindOrCreate( bioMaterial );
     }
@@ -87,6 +90,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.expression.biomaterial.BioMaterial load( final java.lang.Long id ) {
 
         return this.handleLoad( id );
@@ -96,6 +100,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<BioMaterial> loadAll() {
 
         return this.handleLoadAll();
@@ -105,6 +110,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadMultiple(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<BioMaterial> loadMultiple( final java.util.Collection<Long> ids ) {
 
         return this.handleLoadMultiple( ids );
@@ -114,6 +120,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
+    @Transactional
     public void remove( final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
 
         this.handleRemove( bioMaterial );
@@ -130,7 +137,8 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#update(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
-    public void update( final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
+    @Transactional
+    public void update( final BioMaterial bioMaterial ) {
         this.handleUpdate( bioMaterial );
 
     }
@@ -138,7 +146,7 @@ public abstract class BioMaterialServiceBase implements ubic.gemma.model.express
     /**
      * Gets the reference to <code>bioMaterial</code>'s DAO.
      */
-    protected ubic.gemma.model.expression.biomaterial.BioMaterialDao getBioMaterialDao() {
+    protected BioMaterialDao getBioMaterialDao() {
         return this.bioMaterialDao;
     }
 

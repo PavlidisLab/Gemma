@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.Auditable;
 
@@ -41,6 +42,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      * @see AuditEventService#getNewSinceDate(Date)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Auditable> getNewSinceDate( final Date date ) {
         return this.handleGetNewSinceDate( date );
     }
@@ -49,6 +51,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      * @see AuditEventService#getUpdatedSinceDate(Date)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Auditable> getUpdatedSinceDate( final Date date ) {
         return this.handleGetUpdatedSinceDate( date );
     }

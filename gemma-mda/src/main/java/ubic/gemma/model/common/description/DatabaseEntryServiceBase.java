@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -37,28 +38,28 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
      * @see ubic.gemma.model.common.description.DatabaseEntryService#countAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.lang.Integer countAll() {
         return this.handleCountAll();
-
     }
 
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#find(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.common.description.DatabaseEntry find(
             final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         return this.handleFind( databaseEntry );
-
     }
 
     /**
      * @see ubic.gemma.model.common.description.DatabaseEntryService#remove(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Override
+    @Transactional
     public void remove( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         this.handleRemove( databaseEntry );
-
     }
 
     /**
@@ -72,6 +73,7 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
      * @see ubic.gemma.model.common.description.DatabaseEntryService#update(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Override
+    @Transactional
     public void update( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
         this.handleUpdate( databaseEntry );
 
@@ -80,7 +82,7 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     /**
      * Gets the reference to <code>databaseEntry</code>'s DAO.
      */
-    protected ubic.gemma.model.common.description.DatabaseEntryDao getDatabaseEntryDao() {
+    protected DatabaseEntryDao getDatabaseEntryDao() {
         return this.databaseEntryDao;
     }
 
@@ -92,17 +94,16 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     /**
      * Performs the core logic for {@link #find(ubic.gemma.model.common.description.DatabaseEntry)}
      */
-    protected abstract ubic.gemma.model.common.description.DatabaseEntry handleFind(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    protected abstract DatabaseEntry handleFind( DatabaseEntry databaseEntry );
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.DatabaseEntry)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    protected abstract void handleRemove( DatabaseEntry databaseEntry );
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.common.description.DatabaseEntry)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    protected abstract void handleUpdate( DatabaseEntry databaseEntry );
 
 }

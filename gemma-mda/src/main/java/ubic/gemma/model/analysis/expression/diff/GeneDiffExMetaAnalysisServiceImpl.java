@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.Investigation;
@@ -42,17 +43,20 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
 
     @Override
+    @Transactional
     public GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis ) {
         return geneDiffExMetaAnalysisDao.create( analysis );
     }
 
     @Override
+    @Transactional
     public void delete( GeneDifferentialExpressionMetaAnalysis toDelete ) {
         geneDiffExMetaAnalysisDao.remove( toDelete );
 
     }
 
     @Override
+    @Transactional
     public BaseValueObject delete( Long id ) {
         GeneDifferentialExpressionMetaAnalysis metaAnalysis = load( id );
 
@@ -69,32 +73,38 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigation( Investigation investigation ) {
         return geneDiffExMetaAnalysisDao.findByInvestigation( investigation );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Investigation, Collection<GeneDifferentialExpressionMetaAnalysis>> findByInvestigations(
             Collection<? extends Investigation> investigations ) {
         return geneDiffExMetaAnalysisDao.findByInvestigations( investigations );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name ) {
         return geneDiffExMetaAnalysisDao.findByName( name );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon ) {
         return geneDiffExMetaAnalysisDao.findByParentTaxon( taxon );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon ) {
         return geneDiffExMetaAnalysisDao.findByTaxon( taxon );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GeneDifferentialExpressionMetaAnalysis findByUniqueInvestigations(
             Collection<? extends Investigation> investigations ) {
         if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
@@ -107,53 +117,63 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
             long analysisId ) {
         return this.geneDiffExMetaAnalysisDao.findIncludedResultSetsInfoById( analysisId );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
             Collection<Long> metaAnalysisIds ) {
         return this.geneDiffExMetaAnalysisDao.findMetaAnalyses( metaAnalysisIds );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId ) {
         return this.geneDiffExMetaAnalysisDao.findResultsById( analysisId );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GeneDifferentialExpressionMetaAnalysis load( Long id ) {
         return geneDiffExMetaAnalysisDao.load( id );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> loadAll() {
         return ( Collection<GeneDifferentialExpressionMetaAnalysis> ) geneDiffExMetaAnalysisDao.loadAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> loadMyAnalyses() {
         return this.loadAll();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Collection<GeneDifferentialExpressionMetaAnalysis> loadMySharedAnalyses() {
         return this.loadAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
         return this.geneDiffExMetaAnalysisDao.loadWithResultId( idResult );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult ) {
         return this.geneDiffExMetaAnalysisDao.loadResult( idResult );
     }
 
     @Override
+    @Transactional
     public void update( GeneDifferentialExpressionMetaAnalysis analysis ) {
         geneDiffExMetaAnalysisDao.update( analysis );
 

@@ -88,41 +88,41 @@ public class SpringContextUtil {
         return paths;
     }
 
-    /**
-     * @param testing If true, it will get a test configured-BeanFactory
-     * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
-     * @param isWebApp If true, configuration specific to the web application will be included.
-     * @return BeanFactory or null if no context could be created.
-     */
-    public static BeanFactory getApplicationContext( boolean testing, boolean isWebApp ) {
-        return getApplicationContext( testing, isWebApp, new String[] {} );
-    }
+    // /**
+    // * @param testing If true, it will get a test configured-BeanFactory
+    // * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
+    // * @param isWebApp If true, configuration specific to the web application will be included.
+    // * @return BeanFactory or null if no context could be created.
+    // */
+    // public static BeanFactory getApplicationContext( boolean testing, boolean isWebApp ) {
+    // return getApplicationContext( testing, isWebApp, new String[] {} );
+    // }
 
-    /**
-     * @param additionalConfigurationPaths
-     * @return a minimally-configured standard BeanFactory: no Compass, no Web config, but with the additional
-     *         configuration paths.
-     */
-    public static BeanFactory getApplicationContext( String[] additionalConfigurationPaths ) {
-        return getApplicationContext( false, false, additionalConfigurationPaths );
-    }
+    // /**
+    // * @param additionalConfigurationPaths
+    // * @return a minimally-configured standard BeanFactory: no Compass, no Web config, but with the additional
+    // * configuration paths.
+    // */
+    // public static BeanFactory getApplicationContext( String[] additionalConfigurationPaths ) {
+    // return getApplicationContext( false, false, additionalConfigurationPaths );
+    // }
 
-    /**
-     * @return a minimally-configured standard BeanFactory: no Web config.
-     * @see getApplicationContext( boolean testing, boolean compassOn , boolean isWebApp)
-     */
-    public static BeanFactory getApplicationContext() {
-        return getApplicationContext( false, false );
-    }
+    // /**
+    // * @return a minimally-configured standard BeanFactory: no Web config.
+    // * @see getApplicationContext( boolean testing, boolean compassOn , boolean isWebApp)
+    // */
+    // public static BeanFactory getApplicationContext() {
+    // return getApplicationContext( false, false );
+    // }
 
-    /**
-     * Find the configuration file locations. The files must be in your class path for this to work.
-     * 
-     * @return
-     */
-    public static String[] getConfigLocations() {
-        return getConfigLocations( false, true );
-    }
+    // /**
+    // * Find the configuration file locations. The files must be in your class path for this to work.
+    // *
+    // * @return
+    // */
+    // public static String[] getConfigLocations() {
+    // return getConfigLocations( false, true );
+    // }
 
     /**
      * Find the configuration file locations. The files must be in your class path for this to work.
@@ -160,6 +160,7 @@ public class SpringContextUtil {
          * Note that the order here matters, somewhat - in some environments, configuring beans in schedule fails if
          * search is not listed first (?).
          */
+        paths.add( "classpath*:gemma/gsec/acl/security-bean-baseconfig.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-security.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-hibernate.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-serviceBeans.xml" );

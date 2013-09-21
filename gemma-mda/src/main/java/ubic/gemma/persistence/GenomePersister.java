@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -43,8 +44,6 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao;
-import ubic.gemma.model.genome.sequenceAnalysis.BlastResult;
-import ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -80,9 +79,6 @@ abstract public class GenomePersister extends CommonPersister {
     protected BlatResultDao blatResultDao;
 
     @Autowired
-    protected BlastResultDao blastResultDao;
-
-    @Autowired
     protected AnnotationAssociationDao annotationAssociationDao;
 
     protected Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
@@ -97,6 +93,7 @@ abstract public class GenomePersister extends CommonPersister {
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
+    @Transactional
     public Object persist( Object entity ) {
         if ( entity instanceof Gene ) {
             return persistGene( ( Gene ) entity );
@@ -907,22 +904,6 @@ abstract public class GenomePersister extends CommonPersister {
      * NOTE this method is not a regular 'persist' method: It does not use findOrCreate! A new result is made every
      * time.
      * 
-     * @param blastResult
-     * @return
-     */
-    private BlastResult persistBlastResult( BlastResult blastResult ) {
-        if ( !isTransient( blastResult ) ) return blastResult;
-        blastResult.setQuerySequence( persistBioSequence( blastResult.getQuerySequence() ) );
-        blastResult.setTargetChromosome( persistChromosome( blastResult.getTargetChromosome(), null ) );
-        if ( blastResult.getTargetAlignedRegion() != null )
-            blastResult.getTargetAlignedRegion().setChromosome( blastResult.getTargetChromosome() );
-        return blastResultDao.create( blastResult );
-    }
-
-    /**
-     * NOTE this method is not a regular 'persist' method: It does not use findOrCreate! A new result is made every
-     * time.
-     * 
      * @param blatResult
      * @return
      */
@@ -998,11 +979,9 @@ abstract public class GenomePersister extends CommonPersister {
     private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult( SequenceSimilaritySearchResult result ) {
         if ( result instanceof BlatResult ) {
             return persistBlatResult( ( BlatResult ) result );
-        } else if ( result instanceof BlastResult ) {
-            return persistBlastResult( ( BlastResult ) result );
-        } else {
-            throw new UnsupportedOperationException( "Don't know how to persist a " + result.getClass().getName() );
         }
+        throw new UnsupportedOperationException( "Don't know how to persist a " + result.getClass().getName() );
+
     }
 
     /**

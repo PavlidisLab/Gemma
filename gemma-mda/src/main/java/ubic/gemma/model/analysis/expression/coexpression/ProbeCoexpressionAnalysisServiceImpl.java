@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -39,18 +40,20 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
         ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService {
 
     @Autowired
-    private ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
+    private ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
 
-    public ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao getProbeCoexpressionAnalysisDao() {
+    public ProbeCoexpressionAnalysisDao getProbeCoexpressionAnalysisDao() {
         return probeCoexpressionAnalysisDao;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
         return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
     }
 
     @Override
+    @Transactional
     public void update( ProbeCoexpressionAnalysis o ) {
         this.getProbeCoexpressionAnalysisDao().update( o );
     }
@@ -59,23 +62,27 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
      * @see ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysisService#createFromValueObject(ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysis)
      */
     @Override
+    @Transactional
     public ProbeCoexpressionAnalysis create(
             ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) {
         return this.getProbeCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
     }
 
     @Override
+    @Transactional
     public void delete( ProbeCoexpressionAnalysis toDelete ) {
         this.getProbeCoexpressionAnalysisDao().remove( toDelete );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProbeCoexpressionAnalysis> findByInvestigation( Investigation investigation ) {
         return this.getProbeCoexpressionAnalysisDao().findByInvestigation( investigation );
     }
 
     @SuppressWarnings("unchecked")
     @Override
+    @Transactional(readOnly = true)
     public Map<Investigation, Collection<ProbeCoexpressionAnalysis>> findByInvestigations(
             Collection<? extends Investigation> investigations ) {
         return this.getProbeCoexpressionAnalysisDao().findByInvestigations(
@@ -83,21 +90,25 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProbeCoexpressionAnalysis> findByName( String name ) {
         return this.getProbeCoexpressionAnalysisDao().findByName( name );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProbeCoexpressionAnalysis> findByParentTaxon( Taxon taxon ) {
         return this.getProbeCoexpressionAnalysisDao().findByParentTaxon( taxon );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProbeCoexpressionAnalysis> findByTaxon( Taxon taxon ) {
         return this.getProbeCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProbeCoexpressionAnalysis load( Long id ) {
         return this.getProbeCoexpressionAnalysisDao().load( id );
     }
@@ -106,21 +117,25 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProbeCoexpressionAnalysis> loadAll() {
         return ( Collection<ProbeCoexpressionAnalysis> ) this.getProbeCoexpressionAnalysisDao().loadAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProbeCoexpressionAnalysis> loadMyAnalyses() {
         return loadAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ProbeCoexpressionAnalysis> loadMySharedAnalyses() {
         return loadAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProbeCoexpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
         if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
             return null;

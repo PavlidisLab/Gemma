@@ -1052,7 +1052,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
         // this query is polymorphic, id gets the annotation associations
         final String queryString = "select ba from CompositeSequenceImpl  cs "
-                + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProductImpl ba "
+                + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProduct ba "
                 + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
         List<?> blatAssociations = getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign );
         if ( !blatAssociations.isEmpty() ) {
@@ -1394,7 +1394,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      */
     protected long handleNumAllCompositeSequenceWithGenes() {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
+                + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
@@ -1410,7 +1410,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             throw new IllegalArgumentException();
         }
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp"
+                + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp"
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
                 + "bs2gp.geneProduct=gp and ar.id in (:ids)";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
@@ -1423,7 +1423,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      */
     protected long handleNumAllGenes() {
         final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
+                + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
@@ -1433,7 +1433,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             throw new IllegalArgumentException();
         }
         final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
+                + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
                 + "bs2gp.geneProduct=gp  and ar.id in (:ids)";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
@@ -1447,7 +1447,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     protected long handleNumBlatResults( ArrayDesign arrayDesign ) {
         final String queryString = "select count (distinct bs2gp) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BioSequence2GeneProductImpl as bs2gp "
+                + " , BioSequence2GeneProduct as bs2gp "
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
@@ -1472,14 +1472,14 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     protected long handleNumCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
+                + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     protected long handleNumGenes( ArrayDesign arrayDesign ) {
         final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
+                + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }

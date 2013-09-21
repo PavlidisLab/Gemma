@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.measurement;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -37,6 +38,7 @@ public abstract class MeasurementServiceBase implements ubic.gemma.model.common.
      * @see ubic.gemma.model.common.measurement.MeasurementService#create(ubic.gemma.model.common.measurement.Measurement)
      */
     @Override
+    @Transactional
     public Measurement create( final Measurement measurement ) {
         return this.handleCreate( measurement );
 
@@ -59,7 +61,6 @@ public abstract class MeasurementServiceBase implements ubic.gemma.model.common.
     /**
      * Performs the core logic for {@link #create(ubic.gemma.model.common.measurement.Measurement)}
      */
-    protected abstract ubic.gemma.model.common.measurement.Measurement handleCreate(
-            ubic.gemma.model.common.measurement.Measurement measurement );
+    protected abstract Measurement handleCreate( Measurement measurement );
 
 }
