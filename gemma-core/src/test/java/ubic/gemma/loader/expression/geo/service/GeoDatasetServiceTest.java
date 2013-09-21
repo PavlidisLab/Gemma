@@ -52,8 +52,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask;
-import ubic.gemma.testing.AclTestUtils;
 
 /**
  * Test full procedure of loading GEO data, focus on corner cases. Tests deletion of data sets as well.

@@ -47,7 +47,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.security.authentication.UserService;
-import ubic.gemma.testing.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

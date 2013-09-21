@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.testing.AclTestUtils;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.remote.EntityDelegator;
 
@@ -59,8 +58,6 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
-    @Autowired
-    private AclTestUtils aclTestUtils;
 
     /**
      * Tests showing an experimentalDesign which is implemented in
@@ -92,7 +89,6 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         assertNotNull( m.get( "expressionExperiment" ) );
 
         assertEquals( mav.getViewName(), "experimentalDesign.detail" );
-        aclTestUtils.checkEEAcls( ee );
     }
 
     @Test
@@ -103,7 +99,6 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         Collection<ExperimentalFactorValueObject> experimentalFactors = experimentalDesignController
                 .getExperimentalFactors( new EntityDelegator( ee.getExperimentalDesign() ) );
         assertTrue( !experimentalFactors.isEmpty() );
-        aclTestUtils.checkEEAcls( ee );
     }
 
     @Test
@@ -117,7 +112,6 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
                 .getFactorValuesWithCharacteristics( new EntityDelegator( ee.getExperimentalDesign()
                         .getExperimentalFactors().iterator().next() ) );
         assertTrue( !fvs.isEmpty() );
-        aclTestUtils.checkEEAcls( ee );
     }
 
     @Test
@@ -130,7 +124,6 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject();
         evvo.setCategory( "foo" );
         experimentalDesignController.createExperimentalFactor( new EntityDelegator( ee.getExperimentalDesign() ), evvo );
-        aclTestUtils.checkEEAcls( ee );
 
     }
 
@@ -159,7 +152,6 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ef = experimentalFactorService.load( ef.getId() );
         assertEquals( 5, ef.getFactorValues().size() );
-        aclTestUtils.checkEEAcls( ee );
     }
 
 }
