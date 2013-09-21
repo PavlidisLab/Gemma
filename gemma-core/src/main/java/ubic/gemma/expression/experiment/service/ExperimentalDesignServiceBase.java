@@ -19,56 +19,38 @@
 package ubic.gemma.expression.experiment.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalDesignService</code>, provides
  * access to all services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService
  */
-public abstract class ExperimentalDesignServiceBase implements
-        ubic.gemma.expression.experiment.service.ExperimentalDesignService {
+public abstract class ExperimentalDesignServiceBase implements ExperimentalDesignService {
 
     @Autowired
-    private ubic.gemma.model.expression.experiment.ExperimentalDesignDao experimentalDesignDao;
-
-    /**
-     * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#create(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    @Override
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign create(
-            final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
-        return this.handleCreate( experimentalDesign );
-    }
+    private ExperimentalDesignDao experimentalDesignDao;
 
     /**
      * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#find(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
     @Override
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign find(
-            final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
+    @Transactional(readOnly = true)
+    public ExperimentalDesign find( final ExperimentalDesign experimentalDesign ) {
         return this.handleFind( experimentalDesign );
-    }
-
-    /**
-     * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    @Override
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign findOrCreate(
-            final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
-        return this.handleFindOrCreate( experimentalDesign );
     }
 
     /**
      * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
     @Override
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment(
-            final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
+    @Transactional(readOnly = true)
+    public ExpressionExperiment getExpressionExperiment( final ExperimentalDesign experimentalDesign ) {
         return this.handleGetExpressionExperiment( experimentalDesign );
     }
 
@@ -76,7 +58,8 @@ public abstract class ExperimentalDesignServiceBase implements
      * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#load(java.lang.Long)
      */
     @Override
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign load( final java.lang.Long id ) {
+    @Transactional(readOnly = true)
+    public ExperimentalDesign load( final java.lang.Long id ) {
         return this.handleLoad( id );
     }
 
@@ -84,6 +67,7 @@ public abstract class ExperimentalDesignServiceBase implements
      * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ExperimentalDesign> loadAll() {
         return this.handleLoadAll();
     }
@@ -91,8 +75,7 @@ public abstract class ExperimentalDesignServiceBase implements
     /**
      * Sets the reference to <code>experimentalDesign</code>'s DAO.
      */
-    public void setExperimentalDesignDao(
-            ubic.gemma.model.expression.experiment.ExperimentalDesignDao experimentalDesignDao ) {
+    public void setExperimentalDesignDao( ExperimentalDesignDao experimentalDesignDao ) {
         this.experimentalDesignDao = experimentalDesignDao;
     }
 
@@ -100,46 +83,37 @@ public abstract class ExperimentalDesignServiceBase implements
      * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#update(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
     @Override
-    public void update( final ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
+    @Transactional
+    public void update( final ExperimentalDesign experimentalDesign ) {
         this.handleUpdate( experimentalDesign );
     }
 
     /**
      * Gets the reference to <code>experimentalDesign</code>'s DAO.
      */
-    protected ubic.gemma.model.expression.experiment.ExperimentalDesignDao getExperimentalDesignDao() {
+    protected ExperimentalDesignDao getExperimentalDesignDao() {
         return this.experimentalDesignDao;
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
-     */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
-
-    /**
      * Performs the core logic for {@link #find(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleFind(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    protected abstract ExperimentalDesign handleFind( ExperimentalDesign experimentalDesign );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleFindOrCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    protected abstract ExperimentalDesign handleFindOrCreate( ExperimentalDesign experimentalDesign );
 
     /**
-     * Performs the core logic for
-     * {@link #getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
+     * Performs the core logic for {@link #getExpressionExperiment(ExperimentalDesign)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExpressionExperiment handleGetExpressionExperiment(
-            ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    protected abstract ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign experimentalDesign );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.expression.experiment.ExperimentalDesign handleLoad( java.lang.Long id );
+    protected abstract ExperimentalDesign handleLoad( java.lang.Long id );
 
     /**
      * Performs the core logic for {@link #loadAll()}
@@ -147,8 +121,8 @@ public abstract class ExperimentalDesignServiceBase implements
     protected abstract java.util.Collection<ExperimentalDesign> handleLoadAll();
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
+     * Performs the core logic for {@link #update(ExperimentalDesign)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign );
+    protected abstract void handleUpdate( ExperimentalDesign experimentalDesign );
 
 }

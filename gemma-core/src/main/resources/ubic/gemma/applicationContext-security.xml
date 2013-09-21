@@ -10,8 +10,7 @@
 
    <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
  
-   <!--  <ctx:component-scan base-package="ubic.gemma.security.authorization.acl" />-->
-
+ 
    <!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager 
       so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
    <s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma">
@@ -65,7 +64,7 @@
       <property name="decisionVoters">
          <list>
             <bean class="org.springframework.security.web.access.expression.WebExpressionVoter" />
-            <ref local="roleHierarchyVoter" />
+            <ref bean="roleHierarchyVoter" />
             <bean class="org.springframework.security.access.vote.AuthenticatedVoter" /> <!-- so we can use 'IS_AUTHENTICATED_ANONYMOUSLY in security (as opposed to ROLE_ANONYMOUS) -->
          </list>
       </property>
@@ -92,26 +91,14 @@
    <!-- declared separately so we can use it direclty. -->
    <bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
 
-   <bean id="aclCache" class="ubic.gemma.model.common.auditAndSecurity.acl.AclCache">
-      <constructor-arg>
-         <bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
-            <property name="cacheManager" ref="cacheManager" />
-            <property name="cacheName" value="aclCache" /> 
-            <property name="overflowToDisk" value="false" />
-            <property name="maxElementsInMemory" value="20000" />
-            <property name="timeToLive" value="3600" /> 
-            <property name="timeToIdle" value="3600" />
-         </bean>
-      </constructor-arg>
-   </bean> 
-
+ 
    <!--- global method security configuration -->
 
    <s:global-method-security run-as-manager-ref="runAsManager" secured-annotations="enabled"
       pre-post-annotations="enabled" access-decision-manager-ref="accessDecisionManager" order="1">
       <s:expression-handler ref="securityExpressionHandler" />
 
-      <!-- these filters are declared below -->
+      <!-- these filters are declared here or in the security-bean-baseconfig.xml -->
       <s:after-invocation-provider ref="afterAclReadQuiet" />
       <s:after-invocation-provider ref="afterAclRead" />
       <s:after-invocation-provider ref="afterAclCollectionRead" />
@@ -125,149 +112,8 @@
       <s:after-invocation-provider ref="afterAclMapRead" />
       <s:after-invocation-provider ref="afterAclMapValuesRead" />
       <s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->
-   </s:global-method-security>
-
-   <!-- needed for the use of @Pre... and @Post... -->
-   <bean id="securityExpressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
-      <property name="roleHierarchy" ref="roleHierarchy" />
-      <property name="permissionEvaluator">
-         <bean class="org.springframework.security.acls.AclPermissionEvaluator">
-            <constructor-arg>
-               <ref bean="aclService" />
-            </constructor-arg>
-            <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-            <property name="objectIdentityRetrievalStrategy" >
-               <!-- customized to use the AclObjectIdentity we declare instead of the ObjectIdentityImpl -->
-               <bean class="ubic.gemma.security.authorization.acl.ValueObjectAwareIdentityRetrievalStrategyImpl" />
-            </property>
-         </bean>
-      </property>
-   </bean>
-
-   <!-- ===================== VOTING ==================== -->
-
-   <!-- Decide whether the user has access to a particular resource, method, or data -->
-   <bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
-      <property name="allowIfAllAbstainDecisions" value="false" />
-      <property name="decisionVoters">
-         <list>
-            <ref local="securableEditVoter" />
-            <ref local="securableReadVoter" />
-            <ref local="roleHierarchyVoter" />
-            <bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
-            <!-- needed for the use of @Pre.. -->
-            <bean class="org.springframework.security.access.prepost.PreInvocationAuthorizationAdviceVoter">
-               <constructor-arg>
-                  <bean class="org.springframework.security.access.expression.method.ExpressionBasedPreInvocationAdvice">
-                     <property name="expressionHandler" ref="securityExpressionHandler" />
-                  </bean>
-               </constructor-arg>
-            </bean>
-            <ref local="securableCollectionReadVoter" />
-         </list>
-      </property>
-   </bean> 
-
-   <!-- role-based voting, in which roles inherit from each other. GROUP_ADMIN has all the rights of GROUP_USER for example. -->
-   <bean id="roleHierarchyVoter" class="org.springframework.security.access.vote.RoleHierarchyVoter">
-      <constructor-arg>
-         <ref local="roleHierarchy" />
-      </constructor-arg>
-      <property name="rolePrefix" value="GROUP_" />
-   </bean>
-
-   <!-- Customized to use the roleHierarchy and our AclSids (otherwise we wouldn't need to declare this) -->
-   <bean id="sidRetrievalStrategy" class="ubic.gemma.security.authorization.acl.AclSidRetrievalStrategyImpl">
-      <constructor-arg>
-         <ref local="roleHierarchy" />
-      </constructor-arg>
-   </bean>
-    
-   <!-- Voter that can be applied to any method that takes a securable as an argument (NOT on the return value, this is checked 
-      before the call) -->
-   <bean id="securableEditVoter" class="ubic.gemma.security.authorization.acl.AclEntryVoter">
-      <constructor-arg ref="aclService" />
-      <constructor-arg value="ACL_SECURABLE_EDIT" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE" />
-         </list>
-      </constructor-arg>
-      
-      <property name="objectIdentityRetrievalStrategy" >
-         <!-- customized to use the AclObjectIdentity we declare instead of the ObjectIdentityImpl -->
-         <bean class="ubic.gemma.security.authorization.acl.ValueObjectAwareIdentityRetrievalStrategyImpl" />
-      </property>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-      <property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
-   </bean>
-
-   <bean id="securableReadVoter" class="ubic.gemma.security.authorization.acl.AclEntryVoter">
-      <constructor-arg ref="aclService" />
-      <constructor-arg value="ACL_SECURABLE_READ" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-      <property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
-   </bean>
-
-   <bean id="securableCollectionReadVoter" class="ubic.gemma.security.authorization.acl.AclCollectionEntryVoter">
-      <constructor-arg ref="aclService" />
-      <constructor-arg value="ACL_SECURABLE_COLLECTION_READ" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-      <property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
-   </bean>
-
-   <!-- Check: 'GROUP_RUN_AS_' guys are so we can allow some exposed methods to be run by users with lower privileges - such 
-      as servers or certain user operations that need to happen when users are logging in or signing up. Note that IS_AUTHENTICATED_ANONYMOUSLY 
-      is not recognized by the role voter, but it is by other uses of this hierarchy. -->
-   <bean id="roleHierarchy" class="org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl">
-      <property name="hierarchy">
-         <value>[CDATA[
-				GROUP_ADMIN > GROUP_USER
-				GROUP_RUN_AS_ADMIN >
-				GROUP_ADMIN
-				GROUP_USER > GROUP_ANONYMOUS
-				GROUP_RUN_AS_USER >
-				GROUP_USER
-				GROUP_ADMIN > GROUP_AGENT
-				GROUP_AGENT > GROUP_ANONYMOUS
-				GROUP_ANONYMOUS >
-				IS_AUTHENTICATED_ANONYMOUSLY
-				]]
-         </value>
-      </property>
-   </bean>
-
-
-   <!-- ACL configuration. This controls how/who can modify ACLs -->
-   <bean id="aclAuthorizationStrategy" class="ubic.gemma.security.authorization.acl.AclAuthorizationStrategyImpl">
-      <constructor-arg>
-         <list>
-            <bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
-               <constructor-arg value="GROUP_ADMIN" /> <!-- change acl ownership -->
-            </bean>
-            <bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
-               <constructor-arg value="GROUP_ADMIN" /> <!-- change acl auditing -->
-            </bean>
-            <bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
-               <constructor-arg value="GROUP_ADMIN" /> <!-- change acl details -->
-            </bean>
-         </list>
-      </constructor-arg>   
-   </bean>
-    
+   </s:global-method-security> 
+   
    <!-- Aspect that adds ACLs for new entities, and deletes them for deleted entities. -->
    <aop:config>
       <aop:aspect id="aclAspect" ref="aclAdvice" order="4">
@@ -284,81 +130,7 @@
       </aop:aspect>
    </aop:config> 
  
-   <!-- All our filters -->
-
-   <!-- After reading an object filter. Throws an exception when access is denied (AFTER_ACL_READ) -->
-   <bean id="afterAclRead" class="org.springframework.security.acls.afterinvocation.AclEntryAfterInvocationProvider">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-      <property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
-      <property name="objectIdentityRetrievalStrategy" >
-         <!-- customized to use the AclObjectIdentity we declare instead of the ObjectIdentityImpl -->
-         <bean class="ubic.gemma.security.authorization.acl.ValueObjectAwareIdentityRetrievalStrategyImpl" />
-      </property>
-   </bean>
-
-   <!-- After reading an object filter: but return null rather than throwing an exception. (AFTER_ACL_READ_QUIET) -->
-   <bean id="afterAclReadQuiet" class="ubic.gemma.security.authorization.acl.AclEntryAfterInvocationQuietProvider">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-      <property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
-   </bean>
-
-   <!-- after reading a collection filter: remove unallowed objects -->
-   <bean id="afterAclCollectionRead" class="org.springframework.security.acls.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-      <property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
-      <property name="objectIdentityRetrievalStrategy" >
-         <!-- customized to use the AclObjectIdentity we declare instead of the ObjectIdentityImpl -->
-         <bean class="ubic.gemma.security.authorization.acl.ValueObjectAwareIdentityRetrievalStrategyImpl" />
-      </property>
-   </bean>
-
-   <!-- after reading a map: filter by keys (securable) and also values, if they are securable -->
-   <bean id="afterAclMapRead" class="ubic.gemma.security.authorization.acl.AclAfterInvocationMapFilteringProvider">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-      <property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
-   </bean>
-
-   <!-- after reading a map: filter by values -->
-   <bean id="afterAclMapValuesRead" class="ubic.gemma.security.authorization.acl.AclAfterInvocationMapValueFilteringProvider">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-      <property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
-   </bean>
-
+   <!--  filters (gemma-specific) -->
 
    <!-- After reading collection of composite sequences -->
    <bean id="afterAclArrayDesignCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionCompSeqByArrayDesignFilter">
@@ -384,72 +156,6 @@
       <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
    </bean>
 
-   <!-- special filter that returns only Non-public data that user can edit -->
-   <bean id="afterAclMyDataRead" class="ubic.gemma.security.authorization.acl.AclAfterFilterCollectionForMyData">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-   </bean>
-
-   <!-- special filter that returns only Non-public data that user can read -->
-   <bean id="afterAclMyPrivateDataRead" class="ubic.gemma.security.authorization.acl.AclAfterFilterCollectionForMyPrivateData">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-   </bean>
-
-   <!-- special filter that returns all data user owns -->
-   <bean id="afterAclAllMyData" class="ubic.gemma.security.authorization.acl.AclAfterFilterCollectionForUserOwnedData">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-   </bean>
-
-   <bean id="afterAclValueObjectCollection" class="ubic.gemma.security.authorization.acl.AclAfterFilterValueObjectCollectionProvider">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-   </bean>
-
-   <bean id="afterAclValueObject" class="ubic.gemma.security.authorization.acl.AclAfterValueObjectProvider">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-   </bean>
-
-   <!-- needed for the use of @Post.. -->
-   <bean id="postInvocationAdviceProvider" class="org.springframework.security.access.prepost.PostInvocationAdviceProvider">
-      <constructor-arg>
-         <bean class="org.springframework.security.access.expression.method.ExpressionBasedPostInvocationAdvice">
-            <constructor-arg ref="securityExpressionHandler" />
-         </bean>
-      </constructor-arg>
-   </bean>
 
 
 </beans>

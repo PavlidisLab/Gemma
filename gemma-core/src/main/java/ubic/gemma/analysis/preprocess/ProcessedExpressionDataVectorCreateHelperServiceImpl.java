@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
@@ -96,6 +97,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
      * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
+    @Transactional
     public Collection<ProcessedExpressionDataVector> createProcessedExpressionData( ExpressionExperiment ee ) {
         ee = processedDataService.createProcessedDataVectors( ee );
         ee = this.eeService.thawLite( ee );
@@ -200,6 +202,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
      * @return ExpressionDataDoubleMatrix
      */
     @Override
+    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
@@ -271,6 +274,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
      * @return expression ranks based on computed intensities
      */
     @Override
+    @Transactional
     public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee ) {
 
         Collection<ProcessedExpressionDataVector> processedVectors = this.processedDataService
@@ -298,6 +302,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     }
 
     @Override
+    @Transactional
     public void reorderByDesign( Long eeId ) {
         ExpressionExperiment ee = eeDao.load( eeId );
 

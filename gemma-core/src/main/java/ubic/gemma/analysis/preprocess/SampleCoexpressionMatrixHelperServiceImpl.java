@@ -16,6 +16,7 @@ package ubic.gemma.analysis.preprocess;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
@@ -34,17 +35,20 @@ public class SampleCoexpressionMatrixHelperServiceImpl implements SampleCoexpres
     private SampleCoexpressionAnalysisDao sampleCoexpressionMatrixDao;
 
     @Override
+    @Transactional(readOnly = true)
     public DoubleMatrix<BioAssay, BioAssay> load( ExpressionExperiment ee ) {
         return this.sampleCoexpressionMatrixDao.load( ee );
     }
 
     @Override
+    @Transactional
     public void create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad, ExpressionExperiment ee ) {
         this.sampleCoexpressionMatrixDao.create( matrix, bad, ee );
 
     }
 
     @Override
+    @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
         this.sampleCoexpressionMatrixDao.removeForExperiment( ee );
     }

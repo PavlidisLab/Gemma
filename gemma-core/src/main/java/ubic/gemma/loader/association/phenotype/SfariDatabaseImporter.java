@@ -28,7 +28,7 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
     public static String SCORE_HEADER = "Score";
     public static String SCORE_DETAILS_HEADER = "Score Details";
     public static String DESCRIPTION_SCORE_HEADER = "Evidence";
-    
+
     // gene Id ---> score
     private HashMap<String, ScoreValueObject> gene2Score = new HashMap<String, ScoreValueObject>();
     // gene Id ---> description
@@ -65,7 +65,6 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
 
     private void processSfariScoreFile() throws Exception {
 
-        @SuppressWarnings("resource")
         BufferedReader brGeneScore = new BufferedReader( new FileReader( geneScore ) );
 
         // read headers
@@ -139,7 +138,6 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
         brGeneScore.close();
     }
 
-    @SuppressWarnings("resource")
     private void processSfariGeneFile() throws Exception {
 
         // the results

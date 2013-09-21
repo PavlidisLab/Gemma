@@ -18,6 +18,16 @@
  */
 package ubic.gemma.security;
 
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.SecurityService;
+import gemma.gsec.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
+import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
+import gemma.gsec.acl.domain.AclPrincipalSid;
+import gemma.gsec.acl.domain.AclService;
+import gemma.gsec.model.Securable;
+import gemma.gsec.model.SecureValueObject;
+import gemma.gsec.util.SecurityUtil;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,26 +54,17 @@ import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.acls.model.SidRetrievalStrategy;
-import org.springframework.security.authentication.AuthenticationTrustResolver;
-import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.SecureValueObject;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclGrantedAuthoritySid;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclPrincipalSid;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclService;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.security.authorization.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
-import ubic.gemma.util.AuthorityConstants;
 
 /**
  * Methods for changing security on objects, creating and modifying groups, checking security on objects.
@@ -72,74 +73,9 @@ import ubic.gemma.util.AuthorityConstants;
  * @author paul
  * @version $Id$
  */
-
 @Service
+@Transactional
 public class SecurityServiceImpl implements SecurityService {
-
-    private static AuthenticationTrustResolver authenticationTrustResolver = new AuthenticationTrustResolverImpl();
-
-    public static boolean isRunningAsAdmin() {
-
-        Collection<GrantedAuthority> authorities = getAuthentication().getAuthorities();
-        assert authorities != null;
-        for ( GrantedAuthority authority : authorities ) {
-            if ( authority.getAuthority().equals( AuthorityConstants.RUN_AS_ADMIN_AUTHORITY ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Returns true if the current user has admin authority.
-     * 
-     * @return true if the current user has admin authority
-     */
-    public static boolean isUserAdmin() {
-
-        if ( !isUserLoggedIn() ) {
-            return false;
-        }
-
-        Collection<GrantedAuthority> authorities = getAuthentication().getAuthorities();
-        assert authorities != null;
-        for ( GrantedAuthority authority : authorities ) {
-            if ( authority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @return
-     */
-    public static boolean isUserAnonymous() {
-        return authenticationTrustResolver.isAnonymous( getAuthentication() )
-                || getAuthentication().getPrincipal().equals( "anonymousUser" );
-    }
-
-    /**
-     * Returns true if the user is non-anonymous.
-     * 
-     * @return
-     */
-    public static boolean isUserLoggedIn() {
-        return !isUserAnonymous();
-    }
-
-    /**
-     * Returns the Authentication object from the SecurityContextHolder.
-     * 
-     * @return Authentication
-     */
-    private static Authentication getAuthentication() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if ( authentication == null ) throw new RuntimeException( "Null authentication object" );
-
-        return authentication;
-    }
 
     @Autowired
     private AclService aclService;
@@ -227,7 +163,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         String currentUsername = userManager.getCurrentUsername();
 
-        boolean isAdmin = isUserAdmin();
+        boolean isAdmin = SecurityUtil.isUserAdmin();
 
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
@@ -501,7 +437,7 @@ public class SecurityServiceImpl implements SecurityService {
     public String getGroupAuthorityNameFromGroupName( String groupName ) {
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
-        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
+        if ( !groups.contains( groupName ) && !SecurityUtil.isUserAdmin() ) {
             throw new AccessDeniedException( "User doesn't have access to that group" );
         }
 
@@ -776,7 +712,7 @@ public class SecurityServiceImpl implements SecurityService {
     @Secured("ACL_SECURABLE_READ")
     public boolean isEditable( Securable s ) {
 
-        if ( !isUserLoggedIn() ) {
+        if ( !SecurityUtil.isUserLoggedIn() ) {
             return false;
         }
 
@@ -855,7 +791,7 @@ public class SecurityServiceImpl implements SecurityService {
              * owner.
              */
             if ( owner instanceof AclGrantedAuthoritySid
-                    && isUserAdmin()
+                    && SecurityUtil.isUserAdmin()
                     && ( ( AclGrantedAuthoritySid ) owner ).getGrantedAuthority().equals(
                             AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
                 return true;
@@ -873,7 +809,7 @@ public class SecurityServiceImpl implements SecurityService {
                  * owner. Note that the intention is that usually the owner would be a GrantedAuthority (see last case,
                  * below), not a Principal, but this hasn't always been instituted.
                  */
-                if ( isUserAdmin() ) {
+                if ( SecurityUtil.isUserAdmin() ) {
                     Collection<GrantedAuthority> authorities = userManager.loadUserByUsername( ownerName )
                             .getAuthorities();
                     for ( GrantedAuthority grantedAuthority : authorities ) {
@@ -1171,7 +1107,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
-        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
+        if ( !groups.contains( groupName ) && !SecurityUtil.isUserAdmin() ) {
             throw new AccessDeniedException( "User doesn't have access to that group" );
         }
 
@@ -1236,7 +1172,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
-        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
+        if ( !groups.contains( groupName ) && !SecurityUtil.isUserAdmin() ) {
             throw new AccessDeniedException( "User doesn't have access to that group" );
         }
 

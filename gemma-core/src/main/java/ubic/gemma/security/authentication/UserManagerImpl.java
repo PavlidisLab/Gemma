@@ -40,11 +40,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.util.AuthorityConstants;
+
+import gemma.gsec.AuthorityConstants;
 
 import java.util.*;
 
@@ -55,6 +58,7 @@ import java.util.*;
  * @version $Id$
  */
 @Service
+@Transactional
 public class UserManagerImpl implements UserManager {
 
     protected final Log logger = LogFactory.getLog( getClass() );

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.expression.coexpression;
 
+import gemma.gsec.SecurityService;
 import hep.aida.bin.QuantileBin1D;
 
 import java.util.ArrayList;
@@ -69,7 +70,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 import cern.colt.list.DoubleArrayList;

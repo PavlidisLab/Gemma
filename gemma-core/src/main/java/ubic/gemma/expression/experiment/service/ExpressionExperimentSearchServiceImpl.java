@@ -18,6 +18,8 @@
  */
 package ubic.gemma.expression.experiment.service;
 
+import gemma.gsec.SecurityService;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,7 +48,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.EntityUtils;
 
 /**

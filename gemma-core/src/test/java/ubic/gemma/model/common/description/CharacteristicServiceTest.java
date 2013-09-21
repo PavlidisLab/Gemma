@@ -30,14 +30,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -51,31 +48,23 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    CharacteristicService characteristicService;
+    private CharacteristicService characteristicService;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    BioMaterialService bmService;
+    private BioMaterialService bmService;
 
     @Autowired
-    ExperimentalDesignService edService;
+    private FactorValueService fvService;
 
-    @Autowired
-    ExperimentalFactorService efService;
-
-    @Autowired
-    FactorValueService fvService;
-
-    static ExpressionExperiment ee;
-    static Characteristic eeChar1;
-    static Characteristic eeChar2;
-    static BioMaterial bm;
-    static Characteristic bmChar;
-    static FactorValue fv;
-    static Characteristic fvChar;
-    static boolean setupDone = false;
+    private ExpressionExperiment ee;
+    private Characteristic eeChar1;
+    private Characteristic eeChar2;
+    private BioMaterial bm;
+    private FactorValue fv;
+    private boolean setupDone = false;
 
     /**
      * @exception Exception
@@ -94,22 +83,20 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
             BioAssay ba = ee.getBioAssays().toArray( new BioAssay[0] )[0];
             bm = ba.getSampleUsed();
             bm.setCharacteristics( getTestPersistentCharacteristics( 1 ) );
-            bmChar = bm.getCharacteristics().toArray( new Characteristic[0] )[0];
             bmService.update( bm );
 
-            ExperimentalDesign ed = ee.getExperimentalDesign();
-            ed.setExperimentalFactors( testHelper.getExperimentalFactors( ed ) );
-            efService.create( ed.getExperimentalFactors() );
-            edService.update( ed );
+            for ( ExperimentalFactor ef : testHelper.getExperimentalFactors( ee.getExperimentalDesign() ) ) {
+                eeService.addFactor( ee, ef );
+            }
 
-            ExperimentalFactor ef = ed.getExperimentalFactors().toArray( new ExperimentalFactor[0] )[0];
-            ef.setFactorValues( testHelper.getFactorValues( ef ) );
-            fvService.create( ef.getFactorValues() );
-            efService.update( ef );
+            ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
-            fv = ef.getFactorValues().toArray( new FactorValue[0] )[0];
+            for ( FactorValue f : testHelper.getFactorValues( ef ) ) {
+                eeService.addFactorValue( ee, f );
+            }
+
+            fv = ef.getFactorValues().iterator().next();
             fv.setCharacteristics( getTestPersistentCharacteristics( 1 ) );
-            fvChar = fv.getCharacteristics().toArray( new Characteristic[0] )[0];
             fvService.update( fv );
         }
 

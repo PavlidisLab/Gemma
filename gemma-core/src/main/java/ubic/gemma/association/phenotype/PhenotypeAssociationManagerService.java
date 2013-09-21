@@ -18,8 +18,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.SortedSet;
 
-import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;

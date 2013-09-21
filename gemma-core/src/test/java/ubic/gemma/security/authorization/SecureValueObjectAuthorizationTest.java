@@ -21,6 +21,8 @@ package ubic.gemma.security.authorization;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import gemma.gsec.SecurityService;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -34,7 +36,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;

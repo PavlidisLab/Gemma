@@ -14,13 +14,14 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * A "probe" (Affymetrix); for other types of arrays, there is no practical distinction between compositesequences and
  * reporters, and all analysis would take place at the level of CompositeSequences.
  */
-public class Reporter extends ubic.gemma.model.common.DescribableImpl {
+public class Reporter extends Describable {
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -118,28 +119,6 @@ public class Reporter extends ubic.gemma.model.common.DescribableImpl {
     }
 
     /**
-     * This entity does not have any identifiers but since it extends the <code>DesignElementImpl</code> class it will
-     * simply delegate the call up there.
-     * 
-     * @see DesignElement#equals(Object)
-     */
-    @Override
-    public boolean equals( Object object ) {
-        return super.equals( object );
-    }
-
-    /**
-     * This entity does not have any identifiers but since it extends the <code>DesignElementImpl</code> class it will
-     * simply delegate the call up there.
-     * 
-     * @see DesignElement#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    /**
      * Constructs new instances of {@link Reporter}.
      */
     public static final class Factory {
@@ -150,35 +129,6 @@ public class Reporter extends ubic.gemma.model.common.DescribableImpl {
             return new Reporter();
         }
 
-        /**
-         * Constructs a new instance of {@link Reporter}, taking all required and/or read-only properties as arguments.
-         */
-        public static Reporter newInstance( CompositeSequence compositeSequence ) {
-            final Reporter entity = new Reporter();
-            entity.setCompositeSequence( compositeSequence );
-            return entity;
-        }
-
-        /**
-         * Constructs a new instance of {@link Reporter}, taking all possible properties (except the identifier(s))as
-         * arguments.
-         */
-        public static Reporter newInstance( java.lang.Integer row, java.lang.Integer col,
-                java.lang.Long startInBioChar, java.lang.String strand, java.lang.String name,
-                java.lang.String description, CompositeSequence compositeSequence,
-                ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic ) {
-            final Reporter entity = new Reporter();
-            entity.setRow( row );
-            entity.setCol( col );
-            entity.setStartInBioChar( startInBioChar );
-            entity.setStrand( strand );
-            entity.setName( name );
-            entity.setDescription( description );
-            entity.setCompositeSequence( compositeSequence );
-            entity.setImmobilizedCharacteristic( immobilizedCharacteristic );
-            return entity;
-        }
     }
 
-    // HibernateEntity.vsl merge-point
 }

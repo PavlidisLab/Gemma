@@ -78,11 +78,11 @@ import ubic.gemma.util.CompassUtils;
  * @author pavlidis
  * @version $Id$
  */
-@ContextConfiguration(locations = { "classpath*:ubic/gemma/testDataSource.xml",
+@ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-component-scan.xml",
+        "classpath*:ubic/gemma/testDataSource.xml", "classpath*:ubic/gemma/applicationContext-hibernate.xml",
+        "classpath*:gemma/gsec/acl/security-bean-baseconfig.xml",
         "classpath*:ubic/gemma/applicationContext-security.xml", "classpath*:ubic/gemma/applicationContext-search.xml",
-        "classpath*:ubic/gemma/applicationContext-hibernate.xml",
-        "classpath*:ubic/gemma/applicationContext-component-scan.xml", "classpath*:ubic/gemma/testContext-jms.xml",
-        "classpath*:ubic/gemma/applicationContext-serviceBeans.xml",
+        "classpath*:ubic/gemma/testContext-jms.xml", "classpath*:ubic/gemma/applicationContext-serviceBeans.xml",
         "classpath*:ubic/gemma/applicationContext-schedule.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
@@ -112,20 +112,12 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Autowired
     protected TaxonService taxonService;
 
-    private AuthenticationTestingUtil authenticationTestingUtil;
-
     @Autowired
     protected PersistentDummyObjectHelper testHelper;
 
-    private String sqlScriptEncoding;
+    private AuthenticationTestingUtil authenticationTestingUtil;
 
-    /**
-     * @param commonName e.g. mouse,human,rat
-     * @return
-     */
-    public Taxon getTaxon( String commonName ) {
-        return this.taxonService.findByCommonName( commonName );
-    }
+    private String sqlScriptEncoding;
 
     /**
      * @throws Exception
@@ -145,20 +137,28 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
-     * Run as a regular user.
-     * 
-     * @param userName
+     * @param commonName e.g. mouse,human,rat
+     * @return
      */
-    protected final void runAsUser( String userName ) {
-        authenticationTestingUtil.switchToUser( this.applicationContext, userName );
+    public Taxon getTaxon( String commonName ) {
+        return this.taxonService.findByCommonName( commonName );
+    }
+
+    public Gene getTestPeristentGene( Taxon taxon ) {
+        return testHelper.getTestPeristentGene( taxon );
+    }
+
+    public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
+        return testHelper.getTestPersistentBioSequence2GeneProducts( bioSequence );
     }
 
     /**
-     * Elevate to administrative privileges (tests normally run this way, this can be used to set it back if you called
-     * runAsUser). This gets called before each test, no need to run it yourself otherwise.
+     * Convenience shortcut for RandomStringUtils.randomAlphabetic( 10 ) (or something similar to that)
+     * 
+     * @return
      */
-    protected final void runAsAdmin() {
-        authenticationTestingUtil.grantAdminAuthority( this.applicationContext );
+    public String randomName() {
+        return RandomStringUtils.randomAlphabetic( 10 );
     }
 
     /**
@@ -187,15 +187,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
-    }
-
-    /**
-     * Convenience shortcut for RandomStringUtils.randomAlphabetic( 10 ) (or something similar to that)
-     * 
-     * @return
-     */
-    public String randomName() {
-        return RandomStringUtils.randomAlphabetic( 10 );
     }
 
     protected void addTestAnalyses( ExpressionExperiment ee ) {
@@ -240,6 +231,14 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
+     * @param t
+     * @return
+     */
+    protected <T> T getBean( Class<T> t ) {
+        return this.applicationContext.getBean( t );
+    }
+
+    /**
      * Convenience method to obtain instance of any bean by name. Use this only when necessary, you should wire your
      * tests by injection instead.
      * 
@@ -257,22 +256,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
-     * @param t
-     * @return
-     */
-    protected <T> T getBean( Class<T> t ) {
-        return this.applicationContext.getBean( t );
-    }
-
-    /**
      * @return
      */
     protected Gene getTestPeristentGene() {
         return testHelper.getTestPeristentGene();
-    }
-
-    public Gene getTestPeristentGene( Taxon taxon ) {
-        return testHelper.getTestPeristentGene( taxon );
     }
 
     /**
@@ -286,10 +273,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, true );
-    }
-
-    public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
-        return testHelper.getTestPersistentBioSequence2GeneProducts( bioSequence );
     }
 
     /**
@@ -450,24 +433,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
-     * Change the number of elements created in collections (basically controls the size of test data sets). This
-     * needn't be called unless the test needs larger data sets. FCall {@link resetTestCollectionSize} after you are
-     * done.
-     * 
-     * @param size
-     */
-    protected void setTestCollectionSize( int size ) {
-        testHelper.setTestElementCollectionSize( size );
-    }
-
-    /**
-     * Restore to default.
-     */
-    protected void resetTestCollectionSize() {
-        testHelper.resetTestElementCollectionSize();
-    }
-
-    /**
      * Get a database entry from a fictitious database.
      * 
      * @return
@@ -553,9 +518,53 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestPersistentQuantitationType();
     }
 
+    /**
+     * Restore to default.
+     */
+    protected void resetTestCollectionSize() {
+        testHelper.resetTestElementCollectionSize();
+    }
+
+    /**
+     * Elevate to administrative privileges (tests normally run this way, this can be used to set it back if you called
+     * runAsUser). This gets called before each test, no need to run it yourself otherwise.
+     */
+    protected final void runAsAdmin() {
+        authenticationTestingUtil.grantAdminAuthority( this.applicationContext );
+    }
+
+    /**
+     * Run as a regular user.
+     * 
+     * @param userName
+     */
+    protected final void runAsUser( String userName ) {
+        authenticationTestingUtil.switchToUser( this.applicationContext, userName );
+    }
+
+    /**
+     * Change the number of elements created in collections (basically controls the size of test data sets). This
+     * needn't be called unless the test needs larger data sets. FCall {@link resetTestCollectionSize} after you are
+     * done.
+     * 
+     * @param size
+     */
+    protected void setTestCollectionSize( int size ) {
+        testHelper.setTestElementCollectionSize( size );
+    }
+
 }
 
 final class AuthenticationTestingUtil {
+
+    /**
+     * @param token
+     */
+    private static void putTokenInContext( AbstractAuthenticationToken token ) {
+        SecurityContextHolder.getContext().setAuthentication( token );
+    }
+
+    private UserManager userManager;
 
     /**
      * @param userManager the userManager to set
@@ -563,8 +572,6 @@ final class AuthenticationTestingUtil {
     public void setUserManager( UserManager userManager ) {
         this.userManager = userManager;
     }
-
-    private UserManager userManager;
 
     /**
      * Grant authority to a test user, with admin privileges, and put the token in the context. This means your tests
@@ -600,12 +607,5 @@ final class AuthenticationTestingUtil {
         token.setAuthenticated( true );
 
         putTokenInContext( token );
-    }
-
-    /**
-     * @param token
-     */
-    private static void putTokenInContext( AbstractAuthenticationToken token ) {
-        SecurityContextHolder.getContext().setAuthentication( token );
     }
 }

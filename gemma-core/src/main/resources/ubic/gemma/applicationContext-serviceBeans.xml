@@ -8,7 +8,6 @@
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
    <!-- Configured here because autowiring doesn't work with static fields. -->
-   <!--<bean id="progressManager" class="ubic.gemma.job.progress.ProgressManager">-->
    <!--<property name="userManager" ref="userManager" />-->
    <!--<property name="jobInfoService" ref="jobInfoService" />-->
    <!--</bean>-->
@@ -63,18 +62,6 @@
       <property name="ignoreResourceNotFound" value="false" />
    </bean>
 
-
-   <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
-      <property name="host">
-         <value>${mail.host}</value>
-      </property>
-      <property name="username">
-         <value>${mail.username}</value>
-      </property>
-      <property name="password">
-         <value>${mail.password}</value>
-      </property>
-   </bean>
 
 
    <!-- Configure Velocity for sending e-mail -->

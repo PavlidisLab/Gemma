@@ -42,6 +42,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -78,6 +79,7 @@ public class FactorValueDeletionImpl implements FactorValueDeletion {
      * .FactorValue)
      */
     @Override
+    @Transactional
     public void deleteFactorValues( Collection<Long> fvIds ) {
 
         Collection<FactorValue> fvsToDelete = new ArrayList<FactorValue>();

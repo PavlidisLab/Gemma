@@ -18,6 +18,8 @@
  */
 package ubic.gemma.apps;
 
+import gemma.gsec.SecurityService;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,7 +50,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.GeneOntologyService;
-import ubic.gemma.security.SecurityService;
 
 /**
  * Given an array design creates a Gene Ontology Annotation file

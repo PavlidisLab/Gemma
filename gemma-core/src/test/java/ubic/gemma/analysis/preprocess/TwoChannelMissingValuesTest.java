@@ -58,13 +58,13 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     GeoConverter gc = new GeoConverterImpl();
 
     @Autowired
-    TwoChannelMissingValues tcmv;
+    private TwoChannelMissingValues tcmv;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    DesignElementDataVectorService dedvService;
+    private DesignElementDataVectorService dedvService;
 
     @Before
     public void setUp() throws Exception {

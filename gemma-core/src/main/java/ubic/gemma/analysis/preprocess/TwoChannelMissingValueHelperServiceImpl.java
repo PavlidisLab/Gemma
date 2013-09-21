@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -55,12 +56,12 @@ public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissin
      * .ExpressionExperiment, java.util.Collection)
      */
     @Override
+    @Transactional
     public Collection<RawExpressionDataVector> persist( ExpressionExperiment source,
             Collection<RawExpressionDataVector> results ) {
 
         source = expressionExperimentService.load( source.getId() );
         log.info( "Persisting " + results.size() + " vectors ... " );
-        // results = ( Collection<RawExpressionDataVector> ) designElementDataVectorService.create( results );
         source.getRawExpressionDataVectors().addAll( results );
         expressionExperimentService.update( source ); // this is needed to get the QT filled in properly.
         auditTrailService.addUpdateEvent( source, MissingValueAnalysisEvent.Factory.newInstance(),

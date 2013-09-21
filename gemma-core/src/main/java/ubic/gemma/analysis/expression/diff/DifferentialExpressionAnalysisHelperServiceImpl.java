@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
@@ -52,6 +53,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     private Persister persisterHelper = null;
 
     @Override
+    @Transactional
     public DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity ) {
         entity.setProtocol( ( Protocol ) persisterHelper.persist( entity.getProtocol() ) );
 
@@ -74,11 +76,10 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      * .expression.diff.DifferentialExpressionAnalysis, java.util.Collection)
      */
     @Override
+    @Transactional
     public void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets ) {
-
         entity.getResultSets().addAll( resultSets );
         differentialExpressionAnalysisDao.update( entity ); // could be sped up.
-
     }
 
     /*
@@ -89,6 +90,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
      * .expression.diff.ExpressionAnalysisResultSet)
      */
     @Override
+    @Transactional
     public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs ) {
         return this.expressionAnalysisResultSetDao.create( rs );
     }

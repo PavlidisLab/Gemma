@@ -272,10 +272,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         factor.setType( FactorType.CATEGORICAL );
         factor.setName( ee.getShortName() + " design" );
         factor.setExperimentalDesign( ee.getExperimentalDesign() );
-        factor = experimentalFactorService.create( factor );
-
-        ee.getExperimentalDesign().getExperimentalFactors().add( factor );
-        eeService.update( ee );
+        factor = eeService.addFactor( ee, factor );
 
         FactorValue fv1 = FactorValue.Factory.newInstance();
         FactorValue fv2 = FactorValue.Factory.newInstance();
@@ -285,13 +282,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         fv2.setIsBaseline( true );
         fv2.setExperimentalFactor( factor );
 
-        fv1 = factorValueService.create( fv1 );
-        fv2 = factorValueService.create( fv2 );
-
-        factor.getFactorValues().add( fv1 );
-        factor.getFactorValues().add( fv2 );
-
-        experimentalFactorService.update( factor );
+        eeService.addFactorValue( ee, fv1 );
+        eeService.addFactorValue( ee, fv2 );
 
         List<BioAssay> basInOrder = new ArrayList<BioAssay>( ee.getBioAssays() );
 
@@ -324,6 +316,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             i++;
         }
 
+        factor = this.experimentalFactorService.load( factor.getId() );
         assertEquals( 2, factor.getFactorValues().size() );
 
         /*

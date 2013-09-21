@@ -18,6 +18,8 @@
  */
 package ubic.gemma.apps;
 
+import gemma.gsec.SecurityService;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.SecurityService;
 
 /**
  * A command line interface to the {@link DifferentialExpressionAnalysis}.

@@ -20,6 +20,8 @@ package ubic.gemma.security.authorization.acl;
 
 import static org.junit.Assert.assertNotNull;
 
+import gemma.gsec.SecurityService;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -36,7 +38,6 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;

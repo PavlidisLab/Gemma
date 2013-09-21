@@ -22,7 +22,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.model.analysis.Direction;
+import ubic.gemma.model.analysis.expression.diff.Direction;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;

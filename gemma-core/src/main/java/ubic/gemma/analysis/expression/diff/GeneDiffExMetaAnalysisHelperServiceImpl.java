@@ -19,6 +19,8 @@
 
 package ubic.gemma.analysis.expression.diff;
 
+import gemma.gsec.SecurityService;
+
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -36,7 +38,6 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.security.SecurityService;
 
 /**
  * TODO Document Me

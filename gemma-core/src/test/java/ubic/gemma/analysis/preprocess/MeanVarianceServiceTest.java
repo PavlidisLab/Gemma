@@ -16,6 +16,7 @@ package ubic.gemma.analysis.preprocess;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -50,6 +51,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.security.authorization.acl.AclTestUtils;
 
 /**
  * @author ptan
@@ -81,6 +83,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    private AclTestUtils aclTestUtils;
 
     private static ByteArrayConverter bac = new ByteArrayConverter();
 
@@ -183,6 +188,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         des.setTechnologyType( TechnologyType.TWOCOLOR );
         arrayDesignService.update( des );
 
+        aclTestUtils.checkHasAcl( des );
+
         // check that ArrayDesign is the right TechnologyType
         aas = eeService.getArrayDesignsUsed( ee );
         assertEquals( 1, aas.size() );
@@ -190,6 +197,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         assertEquals( TechnologyType.TWOCOLOR, des.getTechnologyType() );
 
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
+
+        aclTestUtils.checkEEAcls( ee );
 
         assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
 
@@ -330,7 +339,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             eeService.delete( ee );
         }
 
-        assertTrue( eeService.findByShortName( "GSE29006" ) == null );
+        assertNull( eeService.findByShortName( "GSE29006" ) );
 
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false, false );

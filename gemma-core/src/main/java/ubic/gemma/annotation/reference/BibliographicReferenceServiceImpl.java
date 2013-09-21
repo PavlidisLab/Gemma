@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -57,6 +58,7 @@ public class BibliographicReferenceServiceImpl extends
      * java.lang.Integer)
      */
     @Override
+    @Transactional(readOnly = true)
     public List<BibliographicReference> browse( Integer start, Integer limit ) {
         return this.getBibliographicReferenceDao().browse( start, limit );
     }
@@ -68,6 +70,7 @@ public class BibliographicReferenceServiceImpl extends
      * java.lang.Integer, java.lang.String, boolean)
      */
     @Override
+    @Transactional(readOnly = true)
     public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         return this.getBibliographicReferenceDao().browse( start, limit, orderField, descending );
     }
@@ -78,6 +81,7 @@ public class BibliographicReferenceServiceImpl extends
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#count()
      */
     @Override
+    @Transactional(readOnly = true)
     public Integer count() {
         return this.getBibliographicReferenceDao().count();
     }
@@ -86,6 +90,7 @@ public class BibliographicReferenceServiceImpl extends
      * 
      */
     @Override
+    @Transactional(readOnly = true)
     public BibliographicReference findByExternalId( DatabaseEntry accession ) {
         return this.getBibliographicReferenceDao().findByExternalId( accession );
     }
@@ -97,6 +102,7 @@ public class BibliographicReferenceServiceImpl extends
      * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibRef ) {
         Collection<BibliographicReference> records = new ArrayList<BibliographicReference>();
         records.add( bibRef );
@@ -115,6 +121,7 @@ public class BibliographicReferenceServiceImpl extends
      * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records ) {
         return this.getBibliographicReferenceDao().getRelatedExperiments( records );
@@ -128,6 +135,7 @@ public class BibliographicReferenceServiceImpl extends
      * SearchSettingsValueObject)
      */
     @Override
+    @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
         SearchSettings ss = SearchSettingsImpl.bibliographicReferenceSearch( settings.getQuery() );
 
@@ -160,6 +168,7 @@ public class BibliographicReferenceServiceImpl extends
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#search(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) {
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search(
                 SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
@@ -182,6 +191,7 @@ public class BibliographicReferenceServiceImpl extends
      * BibliographicReference)
      */
     @Override
+    @Transactional(readOnly = true)
     public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
         return this.getBibliographicReferenceDao().thaw( bibliographicReference );
     }
@@ -195,6 +205,7 @@ public class BibliographicReferenceServiceImpl extends
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#thaw(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
         return this.getBibliographicReferenceDao().thaw( bibliographicReferences );
     }

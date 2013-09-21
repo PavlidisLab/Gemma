@@ -18,6 +18,9 @@
  */
 package ubic.gemma.security.audit;
 
+import gemma.gsec.util.CrudUtils;
+import gemma.gsec.util.CrudUtilsImpl;
+
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -49,8 +52,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.CrudUtils;
-import ubic.gemma.persistence.CrudUtilsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authorization.acl.AclAdvice;
 import ubic.gemma.util.ReflectionUtil;

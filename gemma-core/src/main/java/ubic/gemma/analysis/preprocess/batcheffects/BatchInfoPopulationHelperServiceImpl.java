@@ -32,9 +32,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -57,17 +59,6 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 @Service
 public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulationHelperService {
 
-    private static Log log = LogFactory.getLog( BatchInfoPopulationHelperServiceImpl.class );
-
-    @Autowired
-    private FactorValueService factorValueService = null;
-
-    @Autowired
-    private BioMaterialService bioMaterialService = null;
-
-    @Autowired
-    private ExperimentalFactorService experimentalFactorService = null;
-
     /**
      * How many hours do we allow to pass between samples, before we consider them to be a separate batch (if they are
      * not run on the same day). This 'slack' is necessary to allow for the possibility that all the hybridizations were
@@ -78,11 +69,19 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      */
     protected static final int MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH = 8;
 
+    private static Log log = LogFactory.getLog( BatchInfoPopulationHelperServiceImpl.class );
+
     @Autowired
-    BioAssayService bioAssayService;
+    private BioAssayService bioAssayService;
+
+    @Autowired
+    private BioMaterialService bioMaterialService = null;
 
     @Autowired
     private ExperimentalDesignService experimentalDesignService;
+
+    @Autowired
+    private ExpressionExperimentService experimentService;
 
     /**
      * @param ee
@@ -90,6 +89,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * @return
      */
     @Override
+    @Transactional
     public ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
 
         /*
@@ -130,12 +130,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                  * persist
                  */
                 fv.setCharacteristics( chars );
-                factorValueService.create( fv );
-
-                ef.getFactorValues().add( fv );
-
-                experimentalFactorService.update( ef );
-
+                experimentService.addFactorValue( ee, fv );
                 for ( Date d : datesToBatch.get( batchId ) ) {
                     d2fv.put( d, fv );
                 }
@@ -322,14 +317,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             throw new IllegalStateException( "No experimental design for " + ee );
         }
 
-        experimentalFactorService.create( factor );
-
-        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
-        ed.getExperimentalFactors().add( factor );
-
-        experimentalDesignService.update( ed );
-
-        return factor;
+        return this.experimentService.addFactor( ee, factor );
 
     }
 

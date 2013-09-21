@@ -52,6 +52,28 @@ import ubic.gemma.util.monitor.Monitored;
  */
 public interface ExpressionExperimentService {
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
+
+    // @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    // public void addFactors( ExpressionExperiment ee, Collection<ExperimentalFactor> factors );
+
+    /**
+     * @param ee
+     * @param fv must already have the experimental factor filled in
+     * @return
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv );
+
+    // /**
+    // * @param ee
+    // * @param fvs
+    // * @return
+    // */
+    // @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    // public void addFactorValues( ExpressionExperiment ee, Collection<FactorValue> fvs );
+
     /**
      * Used when we want to add data for a quantitation type. Does not delete any existing vectors.
      * 

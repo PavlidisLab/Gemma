@@ -14,7 +14,7 @@
  */
 package ubic.gemma.apps;
 
-import ubic.gemma.security.SecurityService;
+import gemma.gsec.SecurityService;
 
 /**
  * Make data sets public. You must be the owner of the experiment to do this.

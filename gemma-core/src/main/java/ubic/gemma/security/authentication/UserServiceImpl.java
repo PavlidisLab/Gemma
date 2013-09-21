@@ -14,6 +14,12 @@
  */
 package ubic.gemma.security.authentication;
 
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.SecurityService;
+import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
+import gemma.gsec.acl.domain.AclService;
+import gemma.gsec.util.SecurityUtil;
+
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +27,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -28,11 +35,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.UserGroupDao;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclGrantedAuthoritySid;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclService;
-import ubic.gemma.security.SecurityService;
-import ubic.gemma.security.SecurityServiceImpl;
-import ubic.gemma.util.AuthorityConstants;
 
 /**
  * @see ubic.gemma.security.authentication.UserService
@@ -40,6 +42,7 @@ import ubic.gemma.util.AuthorityConstants;
  * @version $Id$
  */
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -133,8 +136,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException( "Cannot delete that group, it is required for system operation." );
         }
 
-        if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) )
-                && !SecurityServiceImpl.isUserAdmin() ) {
+        if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) ) && !SecurityUtil.isUserAdmin() ) {
             throw new AccessDeniedException( "Only administrator or owner of a group can delete it" );
         }
 

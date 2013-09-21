@@ -18,6 +18,9 @@
  */
 package ubic.gemma.security.authorization.acl;
 
+import gemma.gsec.acl.BaseAclAdvice;
+import gemma.gsec.model.Securable;
+
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -35,8 +38,7 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
+import ubic.gemma.model.common.auditAndSecurity.StatusImpl;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.description.LocalFile;
@@ -44,7 +46,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.SecurityServiceImpl;
+import ubic.gemma.util.SystemArchitectureAspect;
 
 /**
  * For permissions modification to be triggered, the method name must match certain patterns, which include "create", or
@@ -59,11 +61,22 @@ public class AclAdvice extends BaseAclAdvice {
 
     private static Log log = LogFactory.getLog( AclAdvice.class );
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.acl.BaseAclAdvice#canSkipAclCheck(java.lang.Object)
+     */
     @Override
     protected boolean canSkipAclCheck( Object object ) {
-        return AuditTrail.class.isAssignableFrom( object.getClass() );
+        return AuditTrail.class.isAssignableFrom( object.getClass() )
+                || StatusImpl.class.isAssignableFrom( object.getClass() );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.acl.BaseAclAdvice#canSkipAssociationCheck(java.lang.Object, java.lang.String)
+     */
     @Override
     protected boolean canSkipAssociationCheck( Object object, String propertyName ) {
 
@@ -90,8 +103,21 @@ public class AclAdvice extends BaseAclAdvice {
         return false;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * gemma.gsec.acl.BaseAclAdvice#createOrUpdateAclSpecialCases(org.springframework.security.acls.model.MutableAcl,
+     * org.springframework.security.acls.model.Acl, org.springframework.security.acls.model.Sid,
+     * gemma.gsec.model.Securable)
+     */
     @Override
     protected void createOrUpdateAclSpecialCases( MutableAcl acl, Acl parentAcl, Sid sid, Securable object ) {
+
+        /*
+         * FIXME this might not be necessary.
+         */
+
         // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
         // If aclParent is passed to this method we overwrite it.
         if ( SingleExperimentAnalysis.class.isAssignableFrom( object.getClass() ) ) {
@@ -116,21 +142,11 @@ public class AclAdvice extends BaseAclAdvice {
 
     }
 
-    @Override
-    protected boolean currentUserIsAdmin() {
-        return SecurityServiceImpl.isUserAdmin();
-    }
-
-    @Override
-    protected boolean currentUserIsAnonymous() {
-        return SecurityServiceImpl.isUserAnonymous();
-    }
-
-    @Override
-    protected boolean currentUserIsRunningAsAdmin() {
-        return SecurityServiceImpl.isRunningAsAdmin();
-    }
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.acl.BaseAclAdvice#getUserGroupGrantedAuthority(gemma.gsec.model.Securable)
+     */
     @Override
     protected GrantedAuthority getUserGroupGrantedAuthority( Securable object ) {
         Collection<GroupAuthority> authorities = ( ( UserGroup ) object ).getAuthorities();
@@ -139,6 +155,11 @@ public class AclAdvice extends BaseAclAdvice {
         return ga;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.acl.BaseAclAdvice#getUserName(gemma.gsec.model.Securable)
+     */
     @Override
     protected String getUserName( Securable user ) {
         return ( ( User ) user ).getUserName();
@@ -147,41 +168,43 @@ public class AclAdvice extends BaseAclAdvice {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.security.authorization.acl.BaseAclAdvice#locateParentAcl(ubic.gemma.model.common.auditAndSecurity.
-     * Securable)
+     * @see gemma.gsec.acl.BaseAclAdvice#objectIsUser(gemma.gsec.model.Securable)
      */
-    @Override
-    protected Acl locateParentAcl( SecuredChild s ) {
-        if ( s instanceof SingleExperimentAnalysis ) {
-            BioAssaySet e = ( ( SingleExperimentAnalysis ) s ).getExperimentAnalyzed();
-            return this.getAclService().readAclById( this.makeObjectIdentity( e ) );
-        }
-        return null;
-    }
-
     @Override
     protected boolean objectIsUser( Securable object ) {
         return User.class.isAssignableFrom( object.getClass() );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.acl.BaseAclAdvice#objectIsUserGroup(gemma.gsec.model.Securable)
+     */
     @Override
     protected boolean objectIsUserGroup( Securable object ) {
         return UserGroup.class.isAssignableFrom( object.getClass() );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.acl.BaseAclAdvice#specialCaseForAssociationFollow(java.lang.Object, java.lang.String)
+     */
     @Override
     protected boolean specialCaseForAssociationFollow( Object object, String property ) {
-
         if ( BioAssay.class.isAssignableFrom( object.getClass() )
                 && ( property.equals( "sampleUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
             return true;
         }
-
         return false;
-
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.acl.BaseAclAdvice#specialCaseToAllowRemovingAcesFromChild(gemma.gsec.model.Securable,
+     * org.springframework.security.acls.model.Acl)
+     */
     @Override
     protected boolean specialCaseToAllowRemovingAcesFromChild( Securable object, Acl parentAcl ) {
 
@@ -191,7 +214,7 @@ public class AclAdvice extends BaseAclAdvice {
 
             /*
              * Localfiles are not SecuredChild - but they can be children of an experiment, so we have to let them be
-             * deleted. Otherwise we end up
+             * deleted. Otherwise we end up with cruft.
              */
             if ( LocalFile.class.isAssignableFrom( object.getClass() )
                     && Investigation.class.isAssignableFrom( parentClassType ) ) {
@@ -205,11 +228,15 @@ public class AclAdvice extends BaseAclAdvice {
         return false;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.acl.BaseAclAdvice#specialCaseToKeepPrivateOnCreation(java.lang.Class)
+     */
     @Override
     protected boolean specialCaseToKeepPrivateOnCreation( Class<? extends Securable> clazz ) {
 
-        if ( SecuredChild.class.isAssignableFrom( clazz ) ) {
-            // covers SingleExperimentAnalysis
+        if ( super.specialCaseToKeepPrivateOnCreation( clazz ) ) {
             return true;
         }
 

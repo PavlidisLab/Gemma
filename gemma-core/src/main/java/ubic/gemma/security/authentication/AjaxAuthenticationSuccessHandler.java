@@ -14,6 +14,8 @@
  */
 package ubic.gemma.security.authentication;
 
+import gemma.gsec.util.SecurityUtil;
+
 import java.io.IOException;
 
 import javax.servlet.ServletException;
@@ -25,8 +27,7 @@ import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
-import ubic.gemma.security.SecurityServiceImpl;
-import ubic.gemma.util.JSONUtil;
+ import ubic.gemma.util.JSONUtil;
 
 /**
  * Strategy used to handle a successful user authentication if it is a ajax style login (ajaxLoginTrue parameter = true)
@@ -64,8 +65,8 @@ public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
             super.onAuthenticationSuccess( request, response, authentication );
             authentication.getName();
 
-            jsonText = "{success:true,user:\'" + authentication.getName() + "\',isAdmin:"
-                    + SecurityServiceImpl.isUserAdmin() + "}";
+            jsonText = "{success:true,user:\'" + authentication.getName() + "\',isAdmin:" + SecurityUtil.isUserAdmin()
+                    + "}";
             jsonUtil.writeToResponse( jsonText );
         } else {
 

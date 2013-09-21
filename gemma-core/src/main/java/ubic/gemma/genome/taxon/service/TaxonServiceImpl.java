@@ -30,12 +30,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonDao;
+import ubic.gemma.model.genome.TaxonValueObject;
 
 /**
  * @author keshav
@@ -70,11 +71,13 @@ public class TaxonServiceImpl implements TaxonService {
     };
 
     @Override
+    @Transactional(readOnly = true)
     public TaxonValueObject loadValueObject( Long id ) {
         return TaxonValueObject.fromEntity( load( id ) );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> loadAllValueObjects() {
         Collection<TaxonValueObject> result = new ArrayList<TaxonValueObject>();
         for ( Taxon tax : loadAll() ) {
@@ -88,6 +91,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return Taxon that are species. (only returns usable taxa)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaSpecies() {
         SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
@@ -102,6 +106,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return Taxon that are on NeuroCarta evidence
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithEvidence() {
 
         SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
@@ -117,6 +122,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Taxon> loadAllTaxaWithGenes() {
         SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
@@ -131,6 +137,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithGenes() {
         SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
@@ -145,6 +152,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return collection of taxa that have expression experiments available.
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithDatasets() {
         Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
@@ -162,6 +170,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @return List of taxa with array designs in gemma
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithArrays() {
         Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
@@ -178,7 +187,8 @@ public class TaxonServiceImpl implements TaxonService {
      * @see ubic.gemma.genome.taxon.service.TaxonService#find(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    public ubic.gemma.model.genome.Taxon find( final ubic.gemma.model.genome.Taxon taxon ) {
+    @Transactional(readOnly = true)
+    public Taxon find( final Taxon taxon ) {
         try {
             return this.getTaxonDao().find( taxon );
         } catch ( Throwable th ) {
@@ -192,7 +202,8 @@ public class TaxonServiceImpl implements TaxonService {
      * @see ubic.gemma.genome.taxon.service.TaxonService#findByAbbreviation(java.lang.String)
      */
     @Override
-    public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String abbreviation ) {
+    @Transactional(readOnly = true)
+    public Taxon findByAbbreviation( final String abbreviation ) {
         try {
             return this.getTaxonDao().findByAbbreviation( abbreviation );
         } catch ( Throwable th ) {
@@ -220,7 +231,8 @@ public class TaxonServiceImpl implements TaxonService {
      * @see ubic.gemma.genome.taxon.service.TaxonService#findByScientificName(java.lang.String)
      */
     @Override
-    public ubic.gemma.model.genome.Taxon findByScientificName( final java.lang.String scientificName ) {
+    @Transactional(readOnly = true)
+    public Taxon findByScientificName( final String scientificName ) {
         try {
             return this.getTaxonDao().findByScientificName( scientificName );
         } catch ( Throwable th ) {
@@ -234,6 +246,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @see ubic.gemma.genome.taxon.service.TaxonService#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ubic.gemma.model.genome.Taxon> findChildTaxaByParent( Taxon parentTaxa ) {
         try {
             return this.getTaxonDao().findChildTaxaByParent( parentTaxa );
@@ -248,6 +261,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @see ubic.gemma.genome.taxon.service.TaxonService#findOrCreate(ubic.gemma.model.genome.Taxon)
      */
     @Override
+    @Transactional
     public ubic.gemma.model.genome.Taxon findOrCreate( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.getTaxonDao().findOrCreate( taxon );
@@ -262,6 +276,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @see ubic.gemma.genome.taxon.service.TaxonService#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.genome.Taxon load( final java.lang.Long id ) {
         try {
             return this.getTaxonDao().load( id );
@@ -275,6 +290,7 @@ public class TaxonServiceImpl implements TaxonService {
      * @see ubic.gemma.genome.taxon.service.TaxonService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<Taxon> loadAll() {
         try {
             return ( Collection<Taxon> ) this.getTaxonDao().loadAll();
@@ -288,6 +304,7 @@ public class TaxonServiceImpl implements TaxonService {
      * Taxon that are on NeuroCarta evidence
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<Taxon> loadTaxonWithEvidence() {
         try {
             return this.getTaxonDao().findTaxonUsedInEvidence();
@@ -301,7 +318,8 @@ public class TaxonServiceImpl implements TaxonService {
      * @see ubic.gemma.genome.taxon.service.TaxonService#remove(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    public void remove( final ubic.gemma.model.genome.Taxon taxon ) {
+    @Transactional(readOnly = true)
+    public void remove( final Taxon taxon ) {
         try {
             this.getTaxonDao().remove( taxon );
         } catch ( Throwable th ) {
@@ -311,17 +329,11 @@ public class TaxonServiceImpl implements TaxonService {
         }
     }
 
-    // /**
-    // * Sets the reference to <code>taxon</code>'s DAO.
-    // */
-    // public void setTaxonDao( ubic.gemma.model.genome.TaxonDao taxonDao ) {
-    // this.taxonDao = taxonDao;
-    // }
-
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#update(ubic.gemma.model.genome.Taxon)
      */
     @Override
+    @Transactional
     public void update( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             this.getTaxonDao().update( taxon );
@@ -336,6 +348,7 @@ public class TaxonServiceImpl implements TaxonService {
      * thaws taxon
      */
     @Override
+    @Transactional(readOnly = true)
     public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             this.getTaxonDao().thaw( taxon );

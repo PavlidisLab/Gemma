@@ -66,25 +66,25 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     // private static final String PREFRONTAL_CORTEX_URI = "http://purl.org/obo/owl/FMA#FMA_224850";
     @Autowired
-    CharacteristicService characteristicService;
+    private CharacteristicService characteristicService;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    GeneService geneService;
+    private GeneService geneService;
 
     @Autowired
-    SearchService searchService;
+    private SearchService searchService;
 
     @Autowired
-    OntologyService ontologyService;
+    private OntologyService ontologyService;
 
     @Autowired
-    IndexerTask indexerTask;
+    private IndexerTask indexerTask;
 
     @Autowired
-    UserQueryService userQueryService;
+    private UserQueryService userQueryService;
 
     private ExpressionExperiment ee;
     private Gene gene;

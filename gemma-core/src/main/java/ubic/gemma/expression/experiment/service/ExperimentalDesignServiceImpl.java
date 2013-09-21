@@ -21,6 +21,7 @@ package ubic.gemma.expression.experiment.service;
 import java.util.Collection;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -32,20 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService
  */
 @Service
-public class ExperimentalDesignServiceImpl extends
-        ubic.gemma.expression.experiment.service.ExperimentalDesignServiceBase {
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase#handleCreate(ubic.gemma.model.expression
-     * .experiment.ExperimentalDesign)
-     */
-    @Override
-    protected ExperimentalDesign handleCreate( ExperimentalDesign experimentalDesign ) {
-        return this.getExperimentalDesignDao().create( experimentalDesign );
-    }
+public class ExperimentalDesignServiceImpl extends ExperimentalDesignServiceBase {
 
     /*
      * (non-Javadoc)

@@ -20,6 +20,7 @@ package ubic.gemma.util;
 
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * General-purpose pointcuts to recognize CRUD operations etc.
@@ -38,7 +39,7 @@ public class SystemArchitectureAspect {
     /**
      * Methods that create new objects in the persistent store
      */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && ( execution(* save(..)) || execution(* create*(..)) || execution(* findOrCreate(..)) || execution(* persist*(..))   )")
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.daoMethod() && ( execution(* save(..)) || execution(* create*(..)) || execution(* findOrCreate(..)) || execution(* persist*(..)) || execution(* add*(..))   )")
     public void creator() {//
     }
 
@@ -82,10 +83,18 @@ public class SystemArchitectureAspect {
     }
 
     /**
-     * Create, delete or update methods - with the exception of @Services flagged as @Infrastructure
+     * Create, delete or update methods - with the exception of @Services flagged as @Infrastructure TODO can remove
+     * that, probably.
      */
-    @Pointcut("!@target(ubic.gemma.model.common.auditAndSecurity.Infrastructure) &&(ubic.gemma.util.SystemArchitectureAspect.creator() || ubic.gemma.util.SystemArchitectureAspect.updater() || ubic.gemma.util.SystemArchitectureAspect.deleter())")
+    @Pointcut(" ubic.gemma.util.SystemArchitectureAspect.creator() || ubic.gemma.util.SystemArchitectureAspect.updater() || ubic.gemma.util.SystemArchitectureAspect.deleter( )")
     public void modifier() {//
+    }
+
+    /**
+     * Methods which are marked as @Transactional
+     */
+    @Pointcut("@target(org.springframework.transaction.annotation.Transactional) && execution(public * ubic.gemma..*.*(..))")
+    public void transactional() {
     }
 
     /**

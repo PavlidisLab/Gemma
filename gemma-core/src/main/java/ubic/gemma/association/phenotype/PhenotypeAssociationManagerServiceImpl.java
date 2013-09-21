@@ -18,6 +18,10 @@
  */
 package ubic.gemma.association.phenotype;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.acl.domain.AclPrincipalSid;
+import gemma.gsec.util.SecurityUtil;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,7 +47,6 @@ import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
@@ -54,12 +57,12 @@ import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclPrincipalSid;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
+import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
@@ -88,8 +91,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueO
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.SecurityService;
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.Settings;
 
@@ -212,11 +213,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         final Collection<EvidenceValueObject> evidenceValueObjects;
 
-        if ( SecurityServiceImpl.isUserLoggedIn() ) {
+        if ( SecurityUtil.isUserLoggedIn() ) {
             final Set<Long> paIds;
 
             if ( userName == null ) {
-                if ( SecurityServiceImpl.isUserAdmin() ) {
+                if ( SecurityUtil.isUserAdmin() ) {
                     paIds = null;
                 } else {
                     paIds = this.associationService.findPrivateEvidenceId( this.userManager.getCurrentUsername(),
@@ -340,7 +341,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         String userName = "";
         Collection<String> groups = new HashSet<String>();
 
-        if ( SecurityServiceImpl.isUserLoggedIn() ) {
+        if ( SecurityUtil.isUserLoggedIn() ) {
 
             userName = this.userManager.getCurrentUsername();
             groups = this.userManager.findAllGroups();
@@ -348,7 +349,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<GeneEvidenceValueObject> genesPhenotypeHelperObject = this.associationService
                 .findGeneWithPhenotypes( possibleChildrenPhenotypes, taxon, userName, groups,
-                        SecurityServiceImpl.isUserAdmin(), showOnlyEditable, externalDatabaseIds );
+                        SecurityUtil.isUserAdmin(), showOnlyEditable, externalDatabaseIds );
 
         return filterGenesWithPhenotypes( genesPhenotypeHelperObject, phenotypesWithChildren );
     }
@@ -376,14 +377,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         String userName = "";
         Collection<String> groups = new HashSet<String>();
 
-        if ( SecurityServiceImpl.isUserLoggedIn() ) {
+        if ( SecurityUtil.isUserLoggedIn() ) {
 
             userName = this.userManager.getCurrentUsername();
             groups = this.userManager.findAllGroups();
         }
 
         Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = this.associationService.findGeneWithPhenotypes(
-                possibleChildrenPhenotypes, taxon, userName, groups, SecurityServiceImpl.isUserAdmin(), false, null );
+                possibleChildrenPhenotypes, taxon, userName, groups, SecurityUtil.isUserAdmin(), false, null );
 
         return filterGenesWithPhenotypes( geneEvidenceValueObjects, phenotypesWithChildren );
     }
@@ -1102,7 +1103,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // public phenotypes + private phenotypes (what the user can see)
         Set<String> allPhenotypesGenesAssociations = new HashSet<String>();
 
-        boolean isUserLoggedIn = SecurityServiceImpl.isUserLoggedIn();
+        boolean isUserLoggedIn = SecurityUtil.isUserLoggedIn();
         String userName = "";
         Collection<String> groups = new HashSet<String>();
         boolean isAdmin = false;
@@ -1112,7 +1113,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             // groups the user belong to
             groups = this.userManager.findGroupsForUser( userName );
 
-            isAdmin = SecurityServiceImpl.isUserAdmin();
+            isAdmin = SecurityUtil.isUserAdmin();
 
             // show only my annotation was chosen
             if ( showOnlyEditable ) {
@@ -1523,7 +1524,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Boolean isShared = this.securityService.isShared( p );
         Boolean currentUserIsOwner = this.securityService.isOwnedByCurrentUser( p );
 
-        if ( currentUserIsOwner || isPublic || isShared || SecurityServiceImpl.isUserAdmin() ) {
+        if ( currentUserIsOwner || isPublic || isShared || SecurityUtil.isUserAdmin() ) {
 
             /*
              * FIXME WARNING it is not guaranteed that owner is a PrincipalSid.

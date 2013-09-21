@@ -68,6 +68,7 @@ import cern.jet.stat.Descriptive;
  * @version $Id$
  */
 public class DataUpdaterTest extends AbstractGeoServiceTest {
+
     @Autowired
     private GeoService geoService;
 

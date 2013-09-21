@@ -18,6 +18,8 @@
  */
 package ubic.gemma.expression.experiment.service;
 
+import gemma.gsec.SecurityService;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -37,7 +40,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.security.SecurityService;
 
 /**
  * @version $Id$
@@ -68,6 +70,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .expression.experiment.ExpressionExperimentSetValueObject)
      */
     @Override
+    @Transactional
     public ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo ) {
 
         /*
@@ -140,6 +143,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
     @Override
+    @Transactional
     public void deleteDatabaseEntity( ExpressionExperimentSetValueObject eesvo ) {
         try {
             delete( load( eesvo.getId() ) );
@@ -149,11 +153,13 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
         return this.getExpressionExperimentSetDao().find( bioAssaySet );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Long> findIds( BioAssaySet bioAssaySet ) {
         Collection<Long> ids = new ArrayList<Long>();
         Collection<ExpressionExperimentSet> eesets = this.getExpressionExperimentSetDao().find( bioAssaySet );
@@ -165,11 +171,13 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
         return this.getExpressionExperimentSetDao().getExperimentsInSet( id );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
 
         return this.getExpressionExperimentSetDao().getExperimentValueObjectsInSet( id );
@@ -210,6 +218,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @return true if the set was automatically generated, false otherwise
      */
     @Override
+    @Transactional(readOnly = true)
     public boolean isAutomaticallyGenerated( String experimentSetDescription ) {
         String regexDesc = String.format(
                 ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, ".*" );
@@ -222,21 +231,25 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#load(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> load( Collection<Long> ids ) {
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().load( ids );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects() {
         return this.getExpressionExperimentSetDao().loadAllValueObjects();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
@@ -247,6 +260,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadMySets()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> loadMySets() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
@@ -257,21 +271,25 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadMySetValueObjects()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects() {
         return this.getExpressionExperimentSetDao().loadAllValueObjects();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> loadMySharedSets() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionExperimentSetValueObject loadValueObject( Long id ) {
         return this.getExpressionExperimentSetDao().loadValueObject( id );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds ) {
         return this.getExpressionExperimentSetDao().loadValueObjects( eeSetIds );
     }
@@ -284,6 +302,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .ExpressionExperimentSet)
      */
     @Override
+    @Transactional(readOnly = true)
     public void thaw( ExpressionExperimentSet expressionExperimentSet ) {
         this.getExpressionExperimentSetDao().thaw( expressionExperimentSet );
     }
@@ -292,6 +311,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
+    @Transactional
     public void update( final ExpressionExperimentSet expressionExperimentSet ) {
         if ( expressionExperimentSet == null ) {
             throw new IllegalArgumentException( "Cannot update null set" );
@@ -334,6 +354,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @return expressionExperimentSet if a usable old one exists.
      */
     @Override
+    @Transactional
     public ExpressionExperimentSet updateAutomaticallyGeneratedExperimentSet(
             Collection<ExpressionExperiment> expressionExperiments, Taxon taxon ) {
         Collection<ExpressionExperimentSet> oldEESets = findByName( getMasterSetName( taxon ) );
@@ -383,6 +404,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
     @Override
+    @Transactional
     public void updateDatabaseEntity( ExpressionExperimentSetValueObject eesvo ) {
         try {
             ExpressionExperimentSet eeset = expressionExperimentValueObjectHelper.convertToEntity( eesvo );
@@ -403,6 +425,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @return error message or null if no errors
      */
     @Override
+    @Transactional
     public String updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds ) {
 
         String msg = null;
@@ -460,6 +483,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * .expression.experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
     @Override
+    @Transactional
     public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO ) {
 
         Long groupId = eeSetVO.getId();

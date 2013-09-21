@@ -114,8 +114,8 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * For each factor, try to figure out which one should be treated as baseline using some heuristics. If more than
-     * one is viable, only the first one encountered will be marked as baseline.
+     * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
+     * heuristically, and if all else fails we choose arbitrarily.
      * 
      * @param factors
      * @return
@@ -125,9 +125,13 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * @param samplesUsed
+     * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
+     * heuristically, and if all else fails we choose arbitrarily.
+     * 
+     * @param samplesUsed These are used to make sure we don't bother using factorvalues as baselines if they are not
+     *        used by any of the samples. This is important for subsets. If null, this is ignored.
      * @param factors
-     * @return
+     * @return map of factors to the baseline factorvalue for that factor.
      */
     public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( List<BioMaterial> samplesUsed,
             Collection<ExperimentalFactor> factors ) {

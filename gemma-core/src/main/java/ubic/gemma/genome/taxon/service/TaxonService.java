@@ -22,8 +22,8 @@ import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 
 /**
  * @author kelsey

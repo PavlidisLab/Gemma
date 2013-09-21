@@ -18,6 +18,8 @@
  */
 package ubic.gemma.security.authorization.acl;
 
+import gemma.gsec.acl.afterinvocation.ByAssociationFilteringProvider;
+
 import java.util.List;
 
 import org.springframework.security.access.AfterInvocationProvider;

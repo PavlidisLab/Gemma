@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
@@ -98,6 +99,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * .ExpressionExperiment, java.io.InputStream)
      */
     @Override
+    @Transactional
     public void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException {
         this.importDesign( experiment, is, false );
     }
@@ -110,6 +112,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * .ExpressionExperiment, java.io.InputStream, boolean)
      */
     @Override
+    @Transactional
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
         this.efoService = this.ontologyService.getExperimentalFactorOntologyService();
 
@@ -158,6 +161,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         // build up the composite: create experimental factor then add the experimental value
         addExperimentalFactorsToExperimentalDesign( experimentalDesign, experimentalFactorLines, headerFields,
                 factorValueLines );
+
+        assert !experimentalDesign.getExperimentalFactors().isEmpty();
+        assert !experiment.getExperimentalDesign().getExperimentalFactors().isEmpty();
 
         experimentalDesignService.update( experimentalDesign );
 
@@ -257,7 +263,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 // here is was the update
                 log.debug( "Added experimental factor value " + experimentalFactorFromFile + " to experimental design "
                         + experimentalDesign );
-
+                assert !experimentalDesign.getExperimentalFactors().isEmpty();
             }
         }
 

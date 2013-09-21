@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.report;
 
+import gemma.gsec.SecurityService;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -56,7 +58,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.Settings;
 
 /**

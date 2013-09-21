@@ -19,6 +19,8 @@
 
 package ubic.gemma.genome.gene;
 
+import gemma.gsec.SecurityService;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +36,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.EntityUtils;
 
 /**

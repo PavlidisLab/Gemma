@@ -18,6 +18,9 @@
  */
 package ubic.gemma.genome.gene.service;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.util.SecurityUtil;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -58,8 +61,6 @@ import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.SecurityService;
-import ubic.gemma.security.SecurityServiceImpl;
 
 /**
  * Service for searching genes (and gene sets)
@@ -279,7 +280,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      */
     private void setUserOwnedForGeneSets( Collection<SearchResultDisplayObject> geneSets,
             Map<Long, Boolean> isSetOwnedByUser ) {
-        if ( SecurityServiceImpl.isUserLoggedIn() ) {
+        if ( SecurityUtil.isUserLoggedIn() ) {
             for ( SearchResultDisplayObject srdo : geneSets ) {
                 Long id = ( srdo.getResultValueObject() instanceof DatabaseBackedGeneSetValueObject ) ? ( ( GeneSetValueObject ) srdo
                         .getResultValueObject() ).getId() : new Long( -1 );
@@ -698,13 +699,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         // get all public sets (if user is admin, these were already loaded with geneSetService.loadMySets() )
         // filtered by security.
         Collection<GeneSet> sets = new ArrayList<GeneSet>();
-        if ( promptPublicSets && !SecurityServiceImpl.isUserLoggedIn() ) {
+        if ( promptPublicSets && !SecurityUtil.isUserLoggedIn() ) {
             try {
                 sets = geneSetService.loadAll( taxon );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
-        } else if ( SecurityServiceImpl.isUserLoggedIn() ) {
+        } else if ( SecurityUtil.isUserLoggedIn() ) {
             /*
              * actually, loadMyGeneSets and loadAll point to the same method (they just use different spring security
              * filters)

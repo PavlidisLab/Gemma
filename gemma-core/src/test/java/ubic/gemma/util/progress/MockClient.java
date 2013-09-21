@@ -49,20 +49,12 @@ public class MockClient implements Observer {
         long elapsed = 0;
         boolean done = false;
 
-        // boolean ok = ProgressManager.addToNotification( taskId, mc );
-
         try {
             Thread.sleep( 2000 );
         } catch ( InterruptedException e1 ) {
             //
         }
 
-        // if ( !ok ) {
-        // throw new IllegalStateException( "No task " + taskId );
-        // maybe it's already done.
-        // return mc.getProgressData();
-        // }
-        //
         while ( !done && !( TIMEOUT < elapsed ) ) {
             if ( mc.getProgressData() != null ) {
                 done = mc.getProgressData().isDone();

@@ -34,20 +34,8 @@ public interface ExperimentalDesignService {
     /**
      * 
      */
-    @Secured({ "GROUP_USER" })
-    public ExperimentalDesign create( ExperimentalDesign experimentalDesign );
-
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign );
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign );
 
     /**
      * Gets the expression experiment for the specified experimental design object

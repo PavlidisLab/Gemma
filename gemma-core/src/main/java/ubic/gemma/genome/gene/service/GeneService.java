@@ -243,7 +243,7 @@ public interface GeneService {
      * @param id
      * @return
      */
-    public Gene load( long id );
+    public Gene load( Long id );
 
     /**
      * @return
@@ -285,7 +285,7 @@ public interface GeneService {
      * @return
      */
     public GeneValueObject loadValueObject( Long id );
-    
+
     /**
      * @param ids
      * @return

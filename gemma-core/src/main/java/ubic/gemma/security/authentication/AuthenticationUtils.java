@@ -18,6 +18,8 @@
  */
 package ubic.gemma.security.authentication;
 
+import gemma.gsec.AuthorityConstants;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +32,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import ubic.gemma.util.AuthorityConstants;
 
 /**
  * Common methods for authenticating users.

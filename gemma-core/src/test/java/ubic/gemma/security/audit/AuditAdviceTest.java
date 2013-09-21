@@ -270,7 +270,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
      */
     @Test
     public void testAuditFindOrCreateConcurrentTorture() throws Exception {
-        int numThreads = 4;
+        int numThreads = 14; // too high and we run out of connections, which is not what we're testing.
         final int numExperimentsPerThread = 5;
         final int numUpdates = 10;
         final Random random = new Random();
@@ -289,6 +289,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
                             log.debug( "Starting experiment " + j );
                             ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
                             ee.setDescription( "From test" );
+                            ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
                             ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
                             ee = expressionExperimentService.findOrCreate( ee );
 
@@ -342,7 +343,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         }
 
         if ( failed.get() || c.get() != expectedEventCount ) {
-            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock" );
+            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock?" );
         } else {
             log.info( "TORTURE TEST PASSED!" );
         }

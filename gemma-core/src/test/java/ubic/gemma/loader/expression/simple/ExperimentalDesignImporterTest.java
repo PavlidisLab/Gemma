@@ -145,7 +145,6 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         experimentalDesignImporter.importDesign( ee, is, true );
 
         ee = eeService.thawLite( ee );
-
         assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
     }
@@ -183,6 +182,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
             BioMaterial bm = ba.getSampleUsed();
             bms.add( bm );
         }
+        this.aclTestUtils.checkEEAcls( ee );
 
         checkResults( bms );
     }

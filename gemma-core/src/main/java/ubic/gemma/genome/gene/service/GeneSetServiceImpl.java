@@ -18,6 +18,8 @@
  */
 package ubic.gemma.genome.gene.service;
 
+import gemma.gsec.SecurityService;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,13 +30,14 @@ import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetDao;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
@@ -42,7 +45,6 @@ import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
-import ubic.gemma.security.SecurityService;
 
 /**
  * Service for managing gene sets
@@ -79,6 +81,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
     @Override
+    @Transactional
     public Collection<GeneSet> create( Collection<GeneSet> sets ) {
         return ( Collection<GeneSet> ) this.geneSetDao.create( sets );
     }
@@ -89,6 +92,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
+    @Transactional
     public GeneSet create( GeneSet geneset ) {
         return this.geneSetDao.create( geneset );
     }
@@ -98,6 +102,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return
      */
     @Override
+    @Transactional
     public GeneSetValueObject createDatabaseEntity( GeneSetValueObject geneSetVo ) {
         GeneSet newGeneSet = GeneSet.Factory.newInstance();
         newGeneSet.setName( geneSetVo.getName() );
@@ -139,6 +144,7 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     @Override
+    @Transactional
     public void deleteDatabaseEntities( Collection<DatabaseBackedGeneSetValueObject> vos ) {
         for ( DatabaseBackedGeneSetValueObject geneSetValueObject : vos ) {
             deleteDatabaseEntity( geneSetValueObject );
@@ -146,6 +152,7 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     @Override
+    @Transactional
     public void deleteDatabaseEntity( DatabaseBackedGeneSetValueObject geneSetVO ) {
         GeneSet gset = load( geneSetVO.getId() );
         if ( gset != null ) remove( gset );
@@ -157,6 +164,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> findByGene( Gene gene ) {
         return this.geneSetDao.findByGene( gene );
     }
@@ -166,6 +174,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> findByName( String name ) {
         return this.geneSetDao.findByName( name );
     }
@@ -176,6 +185,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> findByName( String name, Taxon taxon ) {
         return this.geneSetDao.findByName( name, taxon );
     }
@@ -187,6 +197,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return collection of geneSetValueObject
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
 
         Gene gene = geneService.load( geneId );
@@ -204,6 +215,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return collection of GeneSetValueObjects that match name query
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
 
         if ( StringUtils.isBlank( query ) ) {
@@ -256,6 +268,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
 
         Collection<GeneValueObject> results = null;
@@ -275,6 +288,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.genome.gene.service.GeneSetService#getSize(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public int getSize( Long groupId ) {
         return this.geneSetDao.getGeneCount( groupId );
     }
@@ -287,6 +301,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return the taxon or null if the gene set param was null
      */
     @Override
+    @Transactional(readOnly = true)
     public Taxon getTaxon( GeneSet geneSet ) {
         if ( geneSet == null ) return null;
         Taxon tmpTax = null;
@@ -306,6 +321,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return the taxon or null if the gene set param was null
      */
     @Override
+    @Transactional(readOnly = true)
     public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO ) {
 
         if ( geneSetVO == null ) return null;
@@ -336,6 +352,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly ) {
 
         Taxon tax = null;
@@ -379,6 +396,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly,
             Long taxonId ) {
         Collection<GeneSet> geneSets = getUsersGeneGroups( privateOnly, taxonId, false );
@@ -386,12 +404,14 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DatabaseBackedGeneSetValueObject getValueObject( Long id ) {
         GeneSet geneSet = load( id );
         return geneSetValueObjectHelper.convertToValueObject( geneSet );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> ids ) {
         Collection<DatabaseBackedGeneSetValueObject> vos = new ArrayList<DatabaseBackedGeneSetValueObject>();
         for ( Long id : ids ) {
@@ -406,6 +426,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> load( Collection<Long> ids ) {
         return ( Collection<GeneSet> ) this.geneSetDao.load( ids );
 
@@ -417,6 +438,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public GeneSet load( Long id ) {
         return this.geneSetDao.load( id );
     }
@@ -427,6 +449,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> loadAll() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
     }
@@ -437,6 +460,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll(ubic.gemma.model.genome.Taxon)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> loadAll( Taxon tax ) {
         return this.geneSetDao.loadAll( tax );
     }
@@ -447,6 +471,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets();
     }
@@ -457,16 +482,19 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets(ubic.gemma.model.genome.Taxon)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets( tax );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> loadMySharedGeneSets() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets( tax );
     }
@@ -477,6 +505,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
      */
     @Override
+    @Transactional
     public void remove( Collection<GeneSet> sets ) {
         this.geneSetDao.remove( sets );
     }
@@ -487,6 +516,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
+    @Transactional
     public void remove( GeneSet geneset ) {
         this.geneSetDao.remove( geneset );
     }
@@ -501,6 +531,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(java.util.Collection)
      */
     @Override
+    @Transactional
     public void update( Collection<GeneSet> sets ) {
         this.geneSetDao.update( sets );
 
@@ -512,6 +543,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
+    @Transactional
     public void update( GeneSet geneset ) {
         this.geneSetDao.update( geneset );
 
@@ -525,6 +557,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return value objects for the updated entities
      */
     @Override
+    @Transactional
     public Collection<DatabaseBackedGeneSetValueObject> updateDatabaseEntity(
             Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
 
@@ -597,6 +630,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @param geneIds
      */
     @Override
+    @Transactional
     public String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds ) {
 
         String msg = null;
@@ -657,6 +691,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @return value objects for the updated entities
      */
     @Override
+    @Transactional
     public DatabaseBackedGeneSetValueObject updateDatabaseEntityNameDesc( DatabaseBackedGeneSetValueObject geneSetVO ) {
 
         Long groupId = geneSetVO.getId();

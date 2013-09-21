@@ -201,6 +201,11 @@ public class ExperimentalDesignUtils {
             }
         }
 
+        /*
+         * TODO: for OrganismPart (etc) we should allow there to be no baseline but use the global mean as the reference
+         * point.
+         */
+
         return baselineConditions;
     }
 

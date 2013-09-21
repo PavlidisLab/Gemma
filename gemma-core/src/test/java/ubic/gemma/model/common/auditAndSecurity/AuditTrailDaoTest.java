@@ -68,25 +68,13 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
         auditTrail = AuditTrail.Factory.newInstance();
 
-        auditEvent0 = AuditEvent.Factory.newInstance();
-        auditEvent0.setDate( new Date() );
-        auditEvent0.setNote( "ccccc" );
-        auditEvent0.setAction( AuditAction.CREATE );
+        auditEvent0 = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, "ccccc", null, null, null );
 
-        auditEvent1 = AuditEvent.Factory.newInstance();
-        auditEvent1.setDate( new Date() );
-        auditEvent1.setNote( "ddddd" );
-        auditEvent1.setAction( AuditAction.CREATE );
+        auditEvent1 = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, "ddddd", null, null, null );
 
-        auditEvent2 = AuditEvent.Factory.newInstance();
-        auditEvent2.setDate( new Date() );
-        auditEvent2.setNote( "aaaaa" );
-        auditEvent2.setAction( AuditAction.CREATE );
+        auditEvent2 = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, "aaaaa", null, null, null );
 
-        auditEvent3 = AuditEvent.Factory.newInstance();
-        auditEvent3.setDate( new Date() );
-        auditEvent3.setNote( "bbbbb" );
-        auditEvent3.setAction( AuditAction.CREATE );
+        auditEvent3 = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, "bbbbb", null, null, null );
 
         auditTrail.addEvent( auditEvent0 );
         auditTrail.addEvent( auditEvent1 );

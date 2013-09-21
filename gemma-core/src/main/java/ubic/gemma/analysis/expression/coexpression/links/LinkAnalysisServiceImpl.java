@@ -63,8 +63,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.util.TaxonUtility;
+
+import gemma.gsec.util.SecurityUtil;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -761,7 +762,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     }
 
-
     /**
      * @param p2v
      * @param la
@@ -777,9 +777,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         Taxon taxon = la.getTaxon();
         Creator c;
 
-        if ( SecurityServiceImpl.isUserAnonymous() ) {
+        if ( SecurityUtil.isUserAnonymous() ) {
             throw new IllegalStateException( "Can't run link analysis anonymously" );
-        } else if ( !SecurityServiceImpl.isUserAdmin() ) {
+        } else if ( !SecurityUtil.isUserAdmin() ) {
             log.info( "Creating coexpression analysis for user's data" );
             c = new Creator( UserProbeCoExpression.Factory.class, la.getExpressionExperiment() );
         } else if ( TaxonUtility.isMouse( taxon ) ) {

@@ -72,7 +72,7 @@ public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulat
      * ubic.gemma.analysis.service.SampleRemoveService#unmarkAsMissing(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     @Override
-    public void unmarkAsMissing( Collection<BioAssay> bioAssays ) {
+  public void unmarkAsMissing( Collection<BioAssay> bioAssays ) {
         if ( bioAssays.isEmpty() ) return;
 
         for ( BioAssay bioAssay : bioAssays ) {

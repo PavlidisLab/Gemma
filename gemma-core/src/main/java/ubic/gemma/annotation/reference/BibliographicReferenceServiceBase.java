@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
@@ -58,6 +59,7 @@ public abstract class BibliographicReferenceServiceBase implements
      *      ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
+    @Transactional
     public void addPDF( final ubic.gemma.model.common.description.LocalFile pdfFile,
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         try {
@@ -73,6 +75,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#create(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
+    @Transactional
     public ubic.gemma.model.common.description.BibliographicReference create(
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         try {
@@ -88,6 +91,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#find(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.common.description.BibliographicReference find(
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         try {
@@ -103,6 +107,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findByExternalId(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.common.description.BibliographicReference findByExternalId( final java.lang.String id ) {
         try {
             return this.handleFindByExternalId( id );
@@ -118,6 +123,7 @@ public abstract class BibliographicReferenceServiceBase implements
      *      java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.common.description.BibliographicReference findByExternalId( final java.lang.String id,
             final java.lang.String databaseName ) {
         try {
@@ -133,6 +139,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findOrCreate(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
+    @Transactional
     public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
             final ubic.gemma.model.common.description.BibliographicReference BibliographicReference ) {
         try {
@@ -148,6 +155,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findVOByExternalId(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public BibliographicReferenceValueObject findVOByExternalId( final java.lang.String id ) {
         try {
             BibliographicReference bibref = this.handleFindByExternalId( id );
@@ -169,6 +177,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#getAllExperimentLinkedReferences()
      */
     @Override
+    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
         try {
             return this.handleGetAllExperimentLinkedReferences();
@@ -183,6 +192,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         try {
@@ -198,6 +208,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#load(java.lang.Long)
      */
     @Override
+    @Transactional(readOnly = true)
     public ubic.gemma.model.common.description.BibliographicReference load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -212,6 +223,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#loadMultiple(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<BibliographicReference> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
@@ -226,6 +238,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#loadMultiple(java.util.Collection)
      */
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects(
             final java.util.Collection<Long> ids ) {
         try {
@@ -241,6 +254,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#remove(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
+    @Transactional
     public void remove( final ubic.gemma.model.common.description.BibliographicReference BibliographicReference ) {
         try {
             this.handleRemove( BibliographicReference );
@@ -277,6 +291,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#update(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
+    @Transactional
     public void update( final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         try {
             this.handleUpdate( bibliographicReference );
@@ -360,8 +375,7 @@ public abstract class BibliographicReferenceServiceBase implements
      * {@link #getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)}
      */
     protected abstract java.util.Collection<ExpressionExperiment> handleGetRelatedExperiments(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception;
+            BibliographicReference bibliographicReference ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}

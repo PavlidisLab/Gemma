@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -35,8 +34,10 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.tasks.AbstractTask;
+
+import gemma.gsec.SecurityService;
+import gemma.gsec.model.Securable;
 
 import java.util.Collection;
 import java.util.HashSet;

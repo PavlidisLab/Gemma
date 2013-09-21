@@ -1,31 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-	<!--  This is an appplication context configuration used for testing only -->
+<!--  This is an appplication context configuration used for testing only -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans 
-          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
-          http://www.springframework.org/schema/context 
-          http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+   xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans 
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+   http://www.springframework.org/schema/context 
+   http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
-	<context:component-scan base-package="ubic.gemma.testing" />
+   <context:component-scan base-package="ubic.gemma.testing" />
 
-	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-		<property name="driverClassName">
-			<value>com.mysql.jdbc.Driver</value>
-		</property>
-		<property name="username">
-			<value>${gemma.testdb.user}</value>
-		</property>
-		<property name="password">
-			<value>${gemma.testdb.password}</value>
-		</property>
-		<property name="url">
-			<value>${gemma.testdb.url}</value>
-		</property>
-		<property name="maxActive">
-			<value>10</value>
-		</property>		
-	</bean>
+   <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+      <property name="driverClassName">
+         <value>com.mysql.jdbc.Driver</value>
+      </property>
+      <property name="username">
+         <value>${gemma.testdb.user}</value>
+      </property>
+      <property name="password">
+         <value>${gemma.testdb.password}</value>
+      </property>
+      <property name="url">
+         <value>${gemma.testdb.url}</value>
+      </property>
+      <property name="maxActive">
+         <value>20</value>
+      </property>		
+   </bean>
+   
+   
+   <bean id="mailSender" class="ubic.gemma.util.DummyMailSender"/>
 </beans>

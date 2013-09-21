@@ -156,7 +156,7 @@ public class DifferentialExpressionAnalysisUtil {
          */
         boolean replicatesok = false;
         Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
-        for ( BioAssay ba : ( Collection<BioAssay> ) expressionExperiment.getBioAssays() ) {
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             for ( FactorValue fv : bm.getFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
@@ -453,7 +453,7 @@ public class DifferentialExpressionAnalysisUtil {
         List<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
         /* look for 1 bioassay/matrix column and 1 biomaterial/bioassay */
-        for ( BioAssay assay : ( Collection<BioAssay> ) ee.getBioAssays() ) {
+        for ( BioAssay assay : ee.getBioAssays() ) {
             BioMaterial material = assay.getSampleUsed();
             biomaterials.add( material );
         }

@@ -21,6 +21,9 @@ package ubic.gemma.security.authorization.acl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import gemma.gsec.SecurityService;
+import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclService;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,15 +38,14 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclObjectIdentity;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclService;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.security.SecurityService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -121,6 +123,32 @@ public class AclAdviceTest extends BaseSpringContextTest {
     public void testExpressionExperimentAcls() throws Exception {
 
         ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
+
+        aclTestUtils.checkEEAcls( ee );
+
+        /*
+         * Make public, and then add a factor and factorvalue.
+         */
+        securityService.makePublic( ee );
+
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        VocabCharacteristic cat = VocabCharacteristic.Factory.newInstance();
+        cat.setCategory( "foo" );
+        cat.setCategoryUri( "bar" );
+        ef.setName( "TESTING ACLS" );
+        ef.setCategory( cat );
+        ef.setType( FactorType.CATEGORICAL );
+        ef = expressionExperimentService.addFactor( ee, ef );
+
+        aclTestUtils.checkEEAcls( ee );
+
+        FactorValue fv = FactorValue.Factory.newInstance( ef );
+        fv.setValue( "ack" );
+        fv = FactorValue.Factory.newInstance( ef );
+        fv.setValue( "adddck" );
+        expressionExperimentService.addFactorValue( ee, fv );
+
+        securityService.makePrivate( ee );
 
         aclTestUtils.checkEEAcls( ee );
 

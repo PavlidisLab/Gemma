@@ -88,11 +88,9 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
      * @param arrayDesign
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( new Date() );
-        auditEvent.setAction( AuditAction.UPDATE );
-        auditEvent.setEventType( new ArrayDesignMergeEventImpl() );
-        auditEvent.setNote( note );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, null,
+                new ArrayDesignMergeEventImpl() );
+
         arrayDesign.getAuditTrail().addEvent( auditEvent );
     }
 }

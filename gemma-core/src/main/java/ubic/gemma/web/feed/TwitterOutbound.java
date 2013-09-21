@@ -18,6 +18,9 @@
  */
 package ubic.gemma.web.feed;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.model.Securable;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -38,9 +41,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.Settings;
 
 /**

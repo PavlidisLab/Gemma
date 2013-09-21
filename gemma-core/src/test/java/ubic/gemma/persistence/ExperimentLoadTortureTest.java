@@ -50,8 +50,8 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
          */
         getTestPersistentCompleteExpressionExperiment( false );
 
-        int numThreads = 4;
-        final int numExperimentsPerThread = 3;
+        int numThreads = 10;
+        final int numExperimentsPerThread = 5;
 
         final AtomicInteger c = new AtomicInteger( 0 );
 
@@ -68,7 +68,7 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
                     for ( int j = 0; j < numExperimentsPerThread; j++ ) {
 
                         try {
-                            Thread.sleep( random.nextInt( 1000 ) );
+                            Thread.sleep( random.nextInt( 500 ) );
                             log.info( "Thread " + t + " experiment " + j );
 
                             results.put( getTestPersistentCompleteExpressionExperiment( false ), 1 );
@@ -102,15 +102,10 @@ public class ExperimentLoadTortureTest extends BaseSpringContextTest {
 
         Thread.sleep( 1000 );
 
-        /*
-         * This test passes like 4/5 times.
-         */
         if ( results.size() != numThreads * numExperimentsPerThread ) {
-            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock" );
+            fail( "Multithreaded loading failure: check logs for failure to recover from deadlock (or other database error)" );
         } else {
             log.info( "TORTURE TEST PASSED!" );
         }
-        // assertEquals( "Multithreaded loading failure: check logs for deadlock", numThreads * numExperimentsPerThread,
-        // results.size() );
     }
 }
