@@ -16,7 +16,7 @@
 		<url>http://www.chibi.ubc.ca/</url>
 	</organization>
 	<modules>
-
+		<module>gemma-model</module>
 		<module>gemma-mda</module>
 		<module>gemma-core</module>
 		<module>gemma-web</module>
@@ -172,12 +172,7 @@
 			<version>${spring.version}</version>
 			<type>jar</type>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-			<version>${spring.version}</version>
-			<type>jar</type>
-		</dependency>
+	 
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jdbc</artifactId>
@@ -237,24 +232,7 @@
 			<artifactId>xbean-spring</artifactId>
 			<version>3.11.1</version>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-core</artifactId>
-			<version>${spring.security.version}</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-config</artifactId>
-			<version>${spring.security.version}</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-acl</artifactId>
-			<version>${spring.security.version}</version>
-			<type>jar</type>
-		</dependency>
+		 
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-web</artifactId>
@@ -293,7 +271,7 @@
 			<version>1.2.14</version>
 			<type>jar</type>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.6.6</version>
@@ -304,7 +282,7 @@
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.6.6</version>
 			<type>jar</type>
-		</dependency>
+		</dependency>-->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
