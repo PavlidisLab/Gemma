@@ -572,7 +572,7 @@
    </cache>
 
    <cache name="ubic.gemma.model.common.description.CharacteristicImpl" maxElementsOnDisk="10000"
-      maxElementsInMemory="100000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
+      maxElementsInMemory="200000" eternal="false" timeToIdleSeconds="6000" timeToLiveSeconds="6000" overflowToDisk="false">
       <terracotta>
          <nonstop timeoutMillis="3000">
             <timeoutBehavior type="noop" />
@@ -668,16 +668,7 @@
             <timeoutBehavior type="noop" />
          </nonstop>
       </terracotta>
-   </cache>
-
-   <cache name="ubic.gemma.model.common.auditAndSecurity.OrganizationImpl" maxElementsOnDisk="10000"
-      maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-      <terracotta>
-         <nonstop timeoutMillis="3000">
-            <timeoutBehavior type="noop" />
-         </nonstop>
-      </terracotta>
-   </cache>
+   </cache> 
 
    <cache name="ubic.gemma.model.common.auditAndSecurity.PersonImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
       eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
@@ -725,7 +716,7 @@
    </cache>
 
    <cache name="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl" maxElementsOnDisk="10000"
-      maxElementsInMemory="100000" eternal="true" overflowToDisk="false">
+      maxElementsInMemory="200000" eternal="true" overflowToDisk="false">
       <terracotta>
          <nonstop timeoutMillis="3000">
             <timeoutBehavior type="noop" />

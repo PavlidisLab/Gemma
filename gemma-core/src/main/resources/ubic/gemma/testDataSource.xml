@@ -30,5 +30,5 @@
    </bean>
    
    
-   <bean id="mailSender" class="ubic.gemma.util.DummyMailSender"/>
+   <bean id="mailSender" class="ubic.gemma.testing.DummyMailSender"/>
 </beans>
