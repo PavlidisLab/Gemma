@@ -1,7 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <%@ page language="java" isErrorPage="true"%>
-<%--     This line causes an error in some versions of tomcat (versions previous to tomcat 5.5  --%>
 
 <title><fmt:message key="errorPage.title" /></title>
 <link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
@@ -47,7 +46,9 @@
 		</p>
 
 		<security:authorize access="hasRole('GROUP_ADMIN')">
-			<Gemma:exception exception="${requestScope['javax.servlet.error.exception']}" />
+		Sorry, exception not available
+		<%-- this is causing stackoverflow errors ... no idea why, since upgrading to spring 3.2 from 3.0.7 --%>
+			<%-- <Gemma:exception exception="${requestScope['javax.servlet.error.exception']}" />    --%>
 		</security:authorize>
 	</c:when>
 

@@ -29,7 +29,7 @@
         <many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="proxy" fetch="select">
             <column name="TAXON_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <set name="experiments" table="EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS" order-by="EXPERIMENTS_FK" lazy="true" fetch="select" inverse="false">
+        <set name="experiments" table="EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS"  lazy="true" fetch="select" inverse="false">
             <key foreign-key="BIO_ASSAY_SET_EXPRESSION_EXPERIMENT_SETS_FKC">
                 <column name="EXPRESSION_EXPERIMENT_SETS_FK" sql-type="BIGINT"/>
             </key>

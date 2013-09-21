@@ -38,7 +38,7 @@
             <property name="qvalueThresholdForStorage" type="java.lang.Double">
                <column name="QVALUE_THRESHOLD_FOR_STORAGE" not-null="false" unique="false" sql-type="DOUBLE"/>
             </property>
-            <set name="resultSetsIncluded" table="META_ANALYSES2RESULT_SETS_INCLUDED" order-by="RESULT_SETS_INCLUDED_FK" lazy="true" fetch="select" inverse="false">
+            <set name="resultSetsIncluded" table="META_ANALYSES2RESULT_SETS_INCLUDED"  lazy="true" fetch="select" inverse="false">
                <key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_META_ANALYSES_FKC">
                   <column name="META_ANALYSES_FK" sql-type="BIGINT"/>
                </key>
@@ -46,7 +46,7 @@
                   <column name="RESULT_SETS_INCLUDED_FK" sql-type="BIGINT"/>
                </many-to-many>
             </set>
-            <set name="results" order-by="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+            <set name="results" lazy="true" fetch="select" inverse="false" cascade="all">
                <cache usage="read-write" />
                <key foreign-key="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT_GENE_DIFFC">
                   <column name="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_FK" sql-type="BIGINT"/>
@@ -65,7 +65,7 @@
                <property name="numberOfLinks" type="java.lang.Integer">
                   <column name="NUMBER_OF_LINKS" not-null="false" unique="false" sql-type="INTEGER"/>
                </property>
-               <set name="probesUsed" order-by="PROBE_COEXPRESSION_ANALYSIS_FK" lazy="false" fetch="select" inverse="false" cascade="all">
+               <set name="probesUsed" lazy="false" fetch="select" inverse="false" cascade="all">
                   <cache usage="read-write" />
                   <key foreign-key="COEXPRESSION_PROBE_PROBE_COEXPRESSION_ANALYSIS_FKC">
                      <column name="PROBE_COEXPRESSION_ANALYSIS_FK" sql-type="BIGINT"/>
@@ -82,7 +82,7 @@
                <many-to-one name="subsetFactorValue" class="ubic.gemma.model.expression.experiment.FactorValueImpl"  lazy="proxy" fetch="select">
                   <column name="SUBSET_FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT"/>
                </many-to-one>
-               <set name="resultSets" order-by="ANALYSIS_FK" lazy="true" fetch="select" inverse="true" cascade="all">
+               <set name="resultSets" lazy="true" fetch="select" inverse="true" cascade="all">
                   <cache usage="read-write" />
                   <key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_ANALYSIS_FKC">
                      <column name="ANALYSIS_FK" sql-type="BIGINT"/>
@@ -100,21 +100,21 @@
                <many-to-one name="bioAssayDimension" class="ubic.gemma.model.expression.bioAssayData.BioAssayDimensionImpl"  lazy="false" fetch="select">
                   <column name="BIO_ASSAY_DIMENSION_FK" not-null="false" sql-type="BIGINT"/>
                </many-to-one>
-               <set name="probeLoadings" order-by="PRINCIPAL_COMPONENT_ANALYSIS_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+               <set name="probeLoadings" lazy="true" fetch="select" inverse="false" cascade="all">
                   <cache usage="read-write" />
                   <key foreign-key="PROBE_LOADING_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
                      <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
                   </key>
                   <one-to-many class="ubic.gemma.model.analysis.expression.pca.ProbeLoadingImpl"/>
                </set>
-               <set name="eigenValues" order-by="PRINCIPAL_COMPONENT_ANALYSIS_FK" lazy="false" fetch="select" inverse="false" cascade="all">
+               <set name="eigenValues" lazy="false" fetch="select" inverse="false" cascade="all">
                   <cache usage="read-write" />
                   <key foreign-key="EIGENVALUE_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
                      <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
                   </key>
                   <one-to-many class="ubic.gemma.model.analysis.expression.pca.EigenvalueImpl"/>
                </set>
-               <set name="eigenVectors" order-by="PRINCIPAL_COMPONENT_ANALYSIS_FK" lazy="false" fetch="select" inverse="false" cascade="all">
+               <set name="eigenVectors" lazy="false" fetch="select" inverse="false" cascade="all">
                   <cache usage="read-write" />
                   <key foreign-key="EIGENVECTOR_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
                      <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>

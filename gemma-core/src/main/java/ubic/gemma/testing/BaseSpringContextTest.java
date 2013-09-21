@@ -18,7 +18,10 @@
  */
 package ubic.gemma.testing;
 
+import gemma.gsec.AuthorityConstants;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -35,19 +38,19 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.TestingAuthenticationProvider;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.test.jdbc.SimpleJdbcTestUtils;
+import org.springframework.test.jdbc.JdbcTestUtils;
 
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -107,7 +110,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setteer)
      */
-    protected SimpleJdbcTemplate simpleJdbcTemplate;
+    protected JdbcTemplate simpleJdbcTemplate;
 
     @Autowired
     protected TaxonService taxonService;
@@ -166,7 +169,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     @Autowired
     public void setDataSource( DataSource dataSource ) {
-        this.simpleJdbcTemplate = new SimpleJdbcTemplate( dataSource );
+        this.simpleJdbcTemplate = new JdbcTemplate( dataSource );
     }
 
     /**
@@ -200,7 +203,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return the number of rows in the table
      */
     protected int countRowsInTable( String tableName ) {
-        return SimpleJdbcTestUtils.countRowsInTable( this.simpleJdbcTemplate, tableName );
+        return JdbcTestUtils.countRowsInTable( this.simpleJdbcTemplate, tableName );
     }
 
     /**
@@ -210,7 +213,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return the total number of rows deleted from all specified tables
      */
     protected int deleteFromTables( String... names ) {
-        return SimpleJdbcTestUtils.deleteFromTables( this.simpleJdbcTemplate, names );
+        return JdbcTestUtils.deleteFromTables( this.simpleJdbcTemplate, names );
     }
 
     /**
@@ -226,8 +229,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected void executeSqlScript( String sqlResourcePath, boolean continueOnError ) throws DataAccessException {
 
         Resource resource = this.applicationContext.getResource( sqlResourcePath );
-        SimpleJdbcTestUtils.executeSqlScript( this.simpleJdbcTemplate, new EncodedResource( resource,
-                this.sqlScriptEncoding ), continueOnError );
+        JdbcTestUtils.executeSqlScript( this.simpleJdbcTemplate,
+                new EncodedResource( resource, this.sqlScriptEncoding ), continueOnError );
     }
 
     /**
@@ -583,7 +586,8 @@ final class AuthenticationTestingUtil {
 
         // Grant all roles to test user.
         TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "administrator",
-                new GrantedAuthority[] { new GrantedAuthorityImpl( "GROUP_ADMIN" ) } );
+                Arrays.asList( new GrantedAuthority[] { new SimpleGrantedAuthority(
+                        AuthorityConstants.ADMIN_GROUP_AUTHORITY ) } ) );
 
         token.setAuthenticated( true );
 

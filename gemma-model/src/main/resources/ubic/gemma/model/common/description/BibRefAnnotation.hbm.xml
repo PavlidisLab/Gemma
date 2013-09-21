@@ -19,7 +19,7 @@
          <column name="IS_MAJOR_TOPIC" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
       <subclass name="ubic.gemma.model.common.description.MedicalSubjectHeadingImpl" discriminator-value="MedicalSubjectHeadingImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         <set name="qualifiers" order-by="QUALIFIES_FK" lazy="false" fetch="select" inverse="false" cascade="all">
+         <set name="qualifiers" lazy="false" fetch="select" inverse="false" cascade="all">
             <cache usage="read-write" />
             <key foreign-key="MEDICAL_SUBJECT_HEADING_QUALIFIES_FKC">
                <column name="QUALIFIES_FK" sql-type="BIGINT"/>

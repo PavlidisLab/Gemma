@@ -33,7 +33,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -305,7 +305,7 @@ public class UserManagerImpl implements UserManager {
 
         List<GrantedAuthority> result = new ArrayList<GrantedAuthority>();
         for ( GroupAuthority ga : group.getAuthorities() ) {
-            result.add( new GrantedAuthorityImpl( ga.getAuthority() ) );
+            result.add( new SimpleGrantedAuthority( ga.getAuthority() ) );
         }
 
         return result;
@@ -601,7 +601,7 @@ public class UserManagerImpl implements UserManager {
         List<GrantedAuthority> result = new ArrayList<GrantedAuthority>();
         for ( GroupAuthority ga : authorities ) {
             String roleName = getRolePrefix() + ga.getAuthority();
-            result.add( new GrantedAuthorityImpl( roleName ) );
+            result.add( new SimpleGrantedAuthority( roleName ) );
         }
 
         return result;

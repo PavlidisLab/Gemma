@@ -64,9 +64,8 @@ public class ManualAuthenticationServiceImpl implements ApplicationContextAware,
      */
     @Override
     public void afterPropertiesSet() {
-
-        AnonymousAuthenticationProvider aap = new AnonymousAuthenticationProvider();
-        aap.setKey( AuthenticationUtils.ANONYMOUS_AUTHENTICATION_KEY );
+        AnonymousAuthenticationProvider aap = new AnonymousAuthenticationProvider(
+                AuthenticationUtils.ANONYMOUS_AUTHENTICATION_KEY );
         aap.setMessageSource( messageSource );
 
         ( ( ProviderManager ) this.authenticationManager ).getProviders().add( aap );

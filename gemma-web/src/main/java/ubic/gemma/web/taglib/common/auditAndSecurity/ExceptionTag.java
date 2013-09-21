@@ -80,7 +80,10 @@ public class ExceptionTag extends TagSupport {
 
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
-            throw new JspException( "Exception tag threw an exception: " + ex.getMessage(), ex );
+            /*
+             * Avoid stack overflow...
+             */
+            log.error( "Exception tag threw an exception: " + ex.getMessage(), ex );
         }
         return SKIP_BODY;
     }

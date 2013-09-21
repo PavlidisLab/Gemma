@@ -205,9 +205,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         // we only mock 1 method of the class in this case, the other methods of the object behave normally
         PhenotypeAssoOntologyHelper phenotypeAssoOntologyHelperMocked = EasyMock
-                .createMock( PhenotypeAssoOntologyHelperImpl.class,
+                .createMockBuilder( PhenotypeAssoOntologyHelperImpl.class )
+                .addMockedMethods(
                         new Method[] { PhenotypeAssoOntologyHelperImpl.class.getMethod( "findOntologyTermByUri",
-                                String.class ) } );
+                                String.class ) } ).createMock();
 
         org.easymock.EasyMock.expect( phenotypeAssoOntologyHelperMocked.findOntologyTermByUri( "testUri" ) )
                 .andReturn( mockedOntoloyTerm ).anyTimes();

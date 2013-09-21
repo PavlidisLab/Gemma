@@ -27,8 +27,8 @@
       <property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <set name="characteristics" order-by="INVESTIGATION_FK" lazy="true" fetch="select" inverse="false" cascade="all">
-         <cache usage="read-write" />
+      <set name="characteristics" lazy="true" fetch="select" inverse="false" cascade="all">
+         <!--  <cache usage="read-write" /> -->
          <key foreign-key="CHARACTERISTIC_INVESTIGATION_FKC">
             <column name="INVESTIGATION_FK" sql-type="BIGINT"/>
          </key>
@@ -40,7 +40,7 @@
       <many-to-one name="primaryPublication" class="ubic.gemma.model.common.description.BibliographicReferenceImpl"  lazy="proxy" fetch="select">
          <column name="PRIMARY_PUBLICATION_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <set name="otherRelevantPublications" table="RELEVANT_PUBLICATIONS" order-by="OTHER_RELEVANT_PUBLICATIONS_FK" lazy="true" fetch="select" inverse="false">
+      <set name="otherRelevantPublications" table="RELEVANT_PUBLICATIONS" lazy="true" fetch="select" inverse="false">
          <key foreign-key="BIBLIOGRAPHIC_REFERENCE_INVESTIGATIONS_FKC">
             <column name="INVESTIGATIONS_FK" sql-type="BIGINT"/>
          </key>
@@ -48,7 +48,7 @@
             <column name="OTHER_RELEVANT_PUBLICATIONS_FK" sql-type="BIGINT"/>
          </many-to-many>
       </set>
-      <set name="investigators" table="INVESTIGATORS" order-by="INVESTIGATORS_FK" lazy="true" fetch="select" inverse="false">
+      <set name="investigators" table="INVESTIGATORS" lazy="true" fetch="select" inverse="false">
          <key foreign-key="CONTACT_INVESTIGATION_FKC">
             <column name="INVESTIGATION_FK" sql-type="BIGINT"/>
          </key>
@@ -70,7 +70,7 @@
             <property name="numberOfDataVectors" type="java.lang.Integer">
                <column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER"/>
             </property>
-            <set name="quantitationTypes" order-by="EXPRESSION_EXPERIMENT_FK" lazy="true" fetch="select" inverse="false">
+            <set name="quantitationTypes" lazy="true" fetch="select" inverse="false">
                <cache usage="read-write" />
                <key foreign-key="QUANTITATION_TYPE_EXPRESSION_EXPERIMENT_FKC">
                   <column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
@@ -86,7 +86,7 @@
             <many-to-one name="rawDataFile" class="ubic.gemma.model.common.description.LocalFileImpl"  cascade="all" lazy="proxy" fetch="select">
                <column name="RAW_DATA_FILE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
             </many-to-one>
-            <set name="bioAssays" order-by="EXPRESSION_EXPERIMENT_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+            <set name="bioAssays" lazy="true" fetch="select" inverse="false" cascade="all">
                <cache usage="read-write" />
                <key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_FKC">
                   <column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
@@ -96,14 +96,14 @@
             <many-to-one name="meanVarianceRelation" class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelationImpl"  cascade="all" lazy="proxy" fetch="select">
                <column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
             </many-to-one>
-            <set name="rawExpressionDataVectors" order-by="EXPRESSION_EXPERIMENT_FK" lazy="true" fetch="select" inverse="true" cascade="all">
+            <set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all">
                <cache usage="read-write" />
                <key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
                   <column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
                </key>
                <one-to-many class="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorImpl"/>
             </set>
-            <set name="processedExpressionDataVectors" order-by="EXPRESSION_EXPERIMENT_FK" lazy="true" fetch="select" inverse="true" cascade="all">
+            <set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all">
                <cache usage="read-write" />
                <key foreign-key="PROCESSED_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
                   <column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
@@ -115,7 +115,7 @@
             <many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" cascade="none"  lazy="false" fetch="select">
                <column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT"/>
             </many-to-one>
-            <set name="bioAssays" table="BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET" order-by="BIO_ASSAYS_FK" lazy="true" fetch="select" inverse="false">
+            <set name="bioAssays" table="BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET" lazy="true" fetch="select" inverse="false">
                <key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_SUB_SET_FKC">
                   <column name="EXPRESSION_EXPERIMENT_SUB_SET_FK" sql-type="BIGINT"/>
                </key>

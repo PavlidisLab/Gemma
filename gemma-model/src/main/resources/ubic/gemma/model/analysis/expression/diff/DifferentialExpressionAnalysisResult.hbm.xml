@@ -26,7 +26,7 @@
         <property name="correctedPValueBin" type="java.lang.Integer">
             <column name="CORRECTED_P_VALUE_BIN" not-null="false" unique="false" sql-type="INTEGER"/>
         </property>
-        <set name="contrasts" order-by="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+        <set name="contrasts" lazy="true" fetch="select" inverse="false" cascade="all">
             <cache usage="read-write" />
             <key foreign-key="CONTRAST_RESULT_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FKC">
                 <column name="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK" sql-type="BIGINT"/>

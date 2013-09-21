@@ -14,7 +14,7 @@
         <property name="activityDate" type="java.util.Date">
             <column name="ACTIVITY_DATE" not-null="false" unique="false" sql-type="DATETIME"/>
         </property>
-        <set name="performers" table="PERFORMERS" order-by="PERFORMERS_FK" lazy="true" fetch="select" inverse="false">
+        <set name="performers" table="PERFORMERS" lazy="true" fetch="select" inverse="false">
             <key foreign-key="PERSON_PROTOCOL_APPLICATIONS_FKC">
                 <column name="PROTOCOL_APPLICATIONS_FK" sql-type="BIGINT"/>
             </key>

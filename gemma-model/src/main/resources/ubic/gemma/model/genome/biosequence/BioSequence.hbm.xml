@@ -44,7 +44,7 @@
       <many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="false" fetch="select">
          <column name="TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
-      <set name="bioSequence2GeneProduct" order-by="BIO_SEQUENCE_FK" lazy="true" fetch="select" inverse="true">
+      <set name="bioSequence2GeneProduct" lazy="true" fetch="select" inverse="true">
          <cache usage="read-write" />
          <key foreign-key="BIO_SEQUENCE2_GENE_PRODUCT_BIO_SEQUENCE_FKC">
             <column name="BIO_SEQUENCE_FK" sql-type="BIGINT"/>

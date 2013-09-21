@@ -146,7 +146,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                     }
                 }
             }
-            return new DefaultMultipartHttpServletRequest( request, multipartFiles, multipartParams );
+            return new DefaultMultipartHttpServletRequest( request, multipartFiles, multipartParams, null );
         } catch ( FileUploadBase.SizeLimitExceededException ex ) {
             /*
              * Don't throw an exception - we want to return JSON.

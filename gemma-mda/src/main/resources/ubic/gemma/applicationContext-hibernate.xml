@@ -2,9 +2,9 @@
 <!-- $Id$ -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
-   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
-   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
  
    <!-- Automatically retry certain failed operations in transactions. FIXME use @Transactional to identify -->
    <aop:config>
@@ -81,7 +81,7 @@
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserRole.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserQuery.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml</value>
-            <value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml</value>
+            <value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml</value> 
             <value>classpath:ubic/gemma/model/common/measurement/Measurement.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/measurement/Unit.hbm.xml</value>
             <value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml</value>

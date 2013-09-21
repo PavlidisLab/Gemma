@@ -24,6 +24,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.MergedContextConfiguration;
 import org.springframework.test.context.support.AbstractContextLoader;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
@@ -60,6 +61,18 @@ public class WebContextLoader extends AbstractContextLoader {
     @Override
     protected String getResourceSuffix() {
         return "-context.xml";
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.test.context.SmartContextLoader#loadContext(org.springframework.test.context.
+     * MergedContextConfiguration)
+     */
+    @Override
+    public ApplicationContext loadContext( MergedContextConfiguration arg0 ) throws Exception {
+        String[] locations = arg0.getLocations();
+        return this.loadContext( locations );
     }
 
 }

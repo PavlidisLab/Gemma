@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.zip.GZIPInputStream;
 
 import org.junit.After;
 import org.junit.Before;
@@ -59,12 +60,14 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
     private Taxon testTaxon;
 
-    private String[] goTerms = new String[] { "GO_0001726", "GO_0007049", "GO_0016874", "GO_0005759", "GO_0071681" };
+    // private String[] goTerms = new String[] { "GO_0001726", "GO_0007049", "GO_0016874", "GO_0005759", "GO_0071681" };
+
+    private String[] goTerms = new String[] { "GO_0047500", "GO_0051530", "GO_0051724", "GO_0004118", "GO_0005324" };
 
     @After
     public void tearDown() {
         gene2GoService.removeAll();
-        Collection<Gene> genes = geneService.loadAll();
+        Collection<Gene> genes = geneService.loadAll( testTaxon );
         for ( Gene gene : genes ) {
             try {
                 geneService.remove( gene );
@@ -82,27 +85,18 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     public void setUp() throws Exception {
 
         if ( !goService.isRunning() ) {
-            goService.init( true );
+
+            goService.shutDown();
         }
 
-        int millis = 10000;
-        int c = 0;
-        while ( !goService.isReady() ) {
-
-            Thread.sleep( millis );
-            log.info( "Waiting for GO to load" );
-            if ( ++c > 20 ) {
-                fail( "GO loading timeout after " + c * millis / 1000.0 + "s" );
-            }
-        }
+        goService.loadTermsInNameSpace( new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/ontology/molecular-function.test.owl.gz" ) ) );
 
         testTaxon = taxonService.findOrCreate( Taxon.Factory.newInstance( "foobly", "doobly", "bar", "fo", "fo", 9999,
-                true, true  ) );
-
-        log.info( "Cleaning ..." );
+                true, true ) );
 
         gene2GoService.removeAll();
-        Collection<Gene> oldgenes = geneService.loadAll();
+        Collection<Gene> oldgenes = geneService.loadAll( testTaxon );
         for ( Gene gene : oldgenes ) {
             try {
                 geneService.remove( gene );
@@ -110,8 +104,6 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
             }
         }
-
-        log.info( "Creating new genes  ..." );
 
         /*
          * Create genes
@@ -137,7 +129,6 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
                 gene2GoService.create( g2Go1 );
             }
         }
-        log.info( "Done with setup" );
     }
 
     @Test
@@ -145,24 +136,24 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         log.info( "Updating multifunctionality" );
         s.updateMultifunctionality( testTaxon );
 
-        log.info( "Checking results" );
-
         Collection<Gene> genes = geneService.loadAll( testTaxon );
 
         genes = geneService.thawLite( genes );
 
         assertEquals( 120, genes.size() );
 
+        boolean found = false;
         for ( Gene gene : genes ) {
             Multifunctionality mf = gene.getMultifunctionality();
             if ( mf == null ) continue;
-
-            if ( mf.getNumGoTerms() == 25 ) {
-                assertEquals( 0.7458, mf.getRank(), 0.001 );
+            if ( mf.getNumGoTerms() == 5 ) {
+                assertEquals( 0.913, mf.getRank(), 0.001 );
+                found = true;
             }
 
         }
 
+        assertTrue( found );
     }
 
 }

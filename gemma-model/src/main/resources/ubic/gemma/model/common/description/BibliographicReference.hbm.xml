@@ -68,35 +68,35 @@
       <many-to-one name="fullTextPdf" class="ubic.gemma.model.common.description.LocalFileImpl"  cascade="none" lazy="proxy" fetch="select">
          <column name="FULL_TEXT_PDF_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <set name="annotations" order-by="BIBLIOGRAPHIC_REFERENCE_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+      <set name="annotations" lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="CHARACTERISTIC_BIBLIOGRAPHIC_REFERENCE_FKC">
             <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
          </key>
          <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
       </set>
-      <set name="meshTerms" order-by="MESH_BIB_REF_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+      <set name="meshTerms" lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="MEDICAL_SUBJECT_HEADING_MESH_BIB_REF_FKC">
             <column name="MESH_BIB_REF_FK" sql-type="BIGINT"/>
          </key>
          <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeadingImpl"/>
       </set>
-      <set name="publicationTypes" order-by="BIBLIOGRAPHIC_REFERENCE_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+      <set name="publicationTypes" lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="PUBLICATION_TYPE_BIBLIOGRAPHIC_REFERENCE_FKC">
             <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
          </key>
          <one-to-many class="ubic.gemma.model.common.description.PublicationTypeImpl"/>
       </set>
-      <set name="keywords" order-by="KEYWORD_BIB_REF_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+      <set name="keywords" lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="KEYWORD_KEYWORD_BIB_REF_FKC">
             <column name="KEYWORD_BIB_REF_FK" sql-type="BIGINT"/>
          </key>
          <one-to-many class="ubic.gemma.model.common.description.KeywordImpl"/>
       </set>
-      <set name="chemicals" order-by="BIBLIOGRAPHIC_REFERENCE_FK" lazy="true" fetch="select" inverse="false" cascade="all">
+      <set name="chemicals" lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="COMPOUND_BIBLIOGRAPHIC_REFERENCE_FKC">
             <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>

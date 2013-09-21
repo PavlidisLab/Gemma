@@ -38,7 +38,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * This is required solely for exposing auditables to remote services would try to marshall the abstract class Auditable.
+ * This is required solely for exposing auditables to remote services would try to marshall the abstract class
+ * Auditable.
  * 
  * @author pavlidis
  * @version $Id$
@@ -98,6 +99,8 @@ public class AuditController {
 
     /**
      * AJAX
+     * <p>
+     * FIXME this relies on the exact class name being available from the EntityDelegator.
      * 
      * @param e
      * @return

@@ -42,7 +42,7 @@
         <many-to-one name="gene" class="ubic.gemma.model.genome.GeneImpl" cascade="none"  lazy="false" fetch="select">
             <column name="GENE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <set name="phenotypes" order-by="PHENOTYPE_ASSOCIATION_FK" lazy="false" fetch="select" inverse="false" cascade="all">
+        <set name="phenotypes" lazy="false" fetch="select" inverse="false" cascade="all">
             <cache usage="read-write" />
             <key foreign-key="CHARACTERISTIC_PHENOTYPE_ASSOCIATION_FKC">
                 <column name="PHENOTYPE_ASSOCIATION_FK" sql-type="BIGINT"/>

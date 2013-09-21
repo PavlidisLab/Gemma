@@ -776,6 +776,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         Collection<OntologyResource> terms = OntologyLoader.initialize( null, model );
         this.indices.add( OntologyIndexer.indexOntology( "GeneOntology", model ) );
         addTerms( terms );
+        ready.set( true );
     }
 
     @Override

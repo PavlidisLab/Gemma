@@ -57,7 +57,7 @@ import org.springframework.security.acls.model.SidRetrievalStrategy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -287,7 +287,7 @@ public class SecurityServiceImpl implements SecurityService {
                 + RandomStringUtils.randomAlphanumeric( 32 ).toUpperCase();
 
         List<GrantedAuthority> auths = new ArrayList<GrantedAuthority>();
-        auths.add( new GrantedAuthorityImpl( groupAuthority ) );
+        auths.add( new SimpleGrantedAuthority( groupAuthority ) );
 
         this.userManager.createGroup( groupName, auths );
         addUserToGroup( userManager.getCurrentUsername(), groupName );
@@ -810,7 +810,7 @@ public class SecurityServiceImpl implements SecurityService {
                  * below), not a Principal, but this hasn't always been instituted.
                  */
                 if ( SecurityUtil.isUserAdmin() ) {
-                    Collection<GrantedAuthority> authorities = userManager.loadUserByUsername( ownerName )
+                    Collection<? extends GrantedAuthority> authorities = userManager.loadUserByUsername( ownerName )
                             .getAuthorities();
                     for ( GrantedAuthority grantedAuthority : authorities ) {
                         if ( grantedAuthority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
@@ -852,7 +852,7 @@ public class SecurityServiceImpl implements SecurityService {
         List<Permission> perms = new Vector<Permission>();
         perms.add( BasePermission.READ );
 
-        Sid anonSid = new AclGrantedAuthoritySid( new GrantedAuthorityImpl(
+        Sid anonSid = new AclGrantedAuthoritySid( new SimpleGrantedAuthority(
                 AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) );
 
         List<Sid> sids = new Vector<Sid>();
@@ -1080,7 +1080,7 @@ public class SecurityServiceImpl implements SecurityService {
         }
 
         acl.insertAce( acl.getEntries().size(), BasePermission.READ, new AclGrantedAuthoritySid(
-                new GrantedAuthorityImpl( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ), true );
+                new SimpleGrantedAuthority( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ), true );
 
         aclService.updateAcl( acl );
 
@@ -1349,7 +1349,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         List<Sid> sids = new ArrayList<Sid>();
         for ( GrantedAuthority a : auths ) {
-            AclGrantedAuthoritySid sid = new AclGrantedAuthoritySid( new GrantedAuthorityImpl(
+            AclGrantedAuthoritySid sid = new AclGrantedAuthoritySid( new SimpleGrantedAuthority(
                     userManager.getRolePrefix() + a.getAuthority() ) );
             sids.add( sid );
         }
@@ -1380,7 +1380,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         List<Sid> sids = new ArrayList<Sid>();
         for ( GrantedAuthority a : auths ) {
-            AclGrantedAuthoritySid sid = new AclGrantedAuthoritySid( new GrantedAuthorityImpl(
+            AclGrantedAuthoritySid sid = new AclGrantedAuthoritySid( new SimpleGrantedAuthority(
                     userManager.getRolePrefix() + a.getAuthority() ) );
             sids.add( sid );
         }

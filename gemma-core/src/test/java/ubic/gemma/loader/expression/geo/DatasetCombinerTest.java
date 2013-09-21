@@ -43,6 +43,7 @@ public class DatasetCombinerTest {
 
     private static Log log = LogFactory.getLog( DatasetCombinerTest.class.getName() );
     Collection<GeoDataset> gds;
+    private boolean skipSlowTests = true;
 
     @Test
     public void testFindGSE267() {
@@ -77,6 +78,7 @@ public class DatasetCombinerTest {
      */
     @Test
     public void testFindGSE13() throws Exception {
+        if ( this.skipSlowTests ) return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -124,6 +126,8 @@ public class DatasetCombinerTest {
      */
     @Test
     public void testFindGSE3193() throws Exception {
+        if ( this.skipSlowTests ) return;
+
         GeoFamilyParser parser = new GeoFamilyParser();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -157,6 +161,7 @@ public class DatasetCombinerTest {
      */
     @Test
     public void testFindGSE469() throws Exception {
+        if ( this.skipSlowTests ) return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -197,6 +202,7 @@ public class DatasetCombinerTest {
 
     @Test
     public void testFindGSE493() throws Exception {
+        if ( this.skipSlowTests ) return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -325,6 +331,7 @@ public class DatasetCombinerTest {
      */
     @Test
     public void testFindGSE91() throws Exception {
+        if ( this.skipSlowTests ) return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -459,6 +466,7 @@ public class DatasetCombinerTest {
      */
     @Test
     public void testGSE465() throws Exception {
+        if ( this.skipSlowTests ) return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(

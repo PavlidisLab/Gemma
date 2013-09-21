@@ -31,7 +31,7 @@ import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.analysis.Investigation;
@@ -151,7 +151,7 @@ public class AclAdvice extends BaseAclAdvice {
     protected GrantedAuthority getUserGroupGrantedAuthority( Securable object ) {
         Collection<GroupAuthority> authorities = ( ( UserGroup ) object ).getAuthorities();
         assert authorities.size() == 1;
-        GrantedAuthority ga = new GrantedAuthorityImpl( authorities.iterator().next().getAuthority() );
+        GrantedAuthority ga = new SimpleGrantedAuthority( authorities.iterator().next().getAuthority() );
         return ga;
     }
 

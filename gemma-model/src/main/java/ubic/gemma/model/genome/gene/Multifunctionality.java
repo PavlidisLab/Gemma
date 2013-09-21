@@ -36,6 +36,11 @@ public abstract class Multifunctionality implements java.io.Serializable {
 
     }
 
+    @Override
+    public String toString() {
+        return String.format( "terms=%d score=%.2f rank=%.3f", this.numGoTerms, this.score, this.rank );
+    }
+
     private Double score;
 
     private Double rank;

@@ -29,9 +29,8 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 
 /**
  * Common methods for authenticating users.
@@ -56,7 +55,7 @@ public class AuthenticationUtils {
         /*
          * "GROUP_ANONYMOUS" is defined in applicationContext-springSecurity.
          */
-        gas.add( new GrantedAuthorityImpl( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) );
+        gas.add( new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) );
 
         /*
          * "anonymousUser" is defined in org.springframework.security.config.http.AuthenticationConfigBuilder (but is

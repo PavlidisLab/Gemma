@@ -28,14 +28,14 @@ import gemma.gsec.model.Securable;
 public abstract class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.model.SecuredChild {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation}.
+     * Constructs new instances of {@link MeanVarianceRelation}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation}.
+         * Constructs a new instance of {@link MeanVarianceRelation}.
          */
-        public static ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation newInstance() {
-            return new ubic.gemma.model.expression.bioAssayData.MeanVarianceRelationImpl();
+        public static MeanVarianceRelation newInstance() {
+            return new MeanVarianceRelationImpl();
         }
 
     }
@@ -47,7 +47,7 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation#getSecurityOwner()
+     * @see MeanVarianceRelation#getSecurityOwner()
      */
     @Override
     public gemma.gsec.model.Securable getSecurityOwner() {

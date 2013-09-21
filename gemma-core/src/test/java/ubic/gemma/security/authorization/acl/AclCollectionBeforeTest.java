@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.test.annotation.ExpectedException;
 
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -91,8 +90,7 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
 
     }
 
-    @Test
-    @ExpectedException(AccessDeniedException.class)
+    @Test(expected = AccessDeniedException.class)
     public final void testAclCollectionEntryVoter() {
         securityService.makePrivate( one );
 

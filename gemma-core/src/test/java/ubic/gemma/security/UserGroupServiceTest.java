@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
 
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthorityImpl;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -90,7 +91,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     public void testCreateUserGroup() {
 
         List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
-        authos.add( new GrantedAuthorityImpl( "GROUP_TESTING" ) );
+        authos.add( new SimpleGrantedAuthority( "GROUP_TESTING" ) );
         this.userManager.createGroup( this.groupName, authos );
 
         List<GrantedAuthority> findGroupAuthorities = this.userManager.findGroupAuthorities( this.groupName );
@@ -109,7 +110,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
 
         runAsAdmin();
         List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
-        authos.add( new GrantedAuthorityImpl( "GROUP_TESTING" ) );
+        authos.add( new SimpleGrantedAuthority( "GROUP_TESTING" ) );
         this.userManager.createGroup( this.groupName, authos );
 
         // add another user to group
@@ -138,7 +139,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     @Test
     public void testUpdateUserGroup() {
         List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
-        authos.add( new GrantedAuthorityImpl( "GROUP_TESTING" ) );
+        authos.add( new SimpleGrantedAuthority( "GROUP_TESTING" ) );
         this.userManager.createGroup( this.groupName, authos );
 
         List<GrantedAuthority> findGroupAuthorities = this.userManager.findGroupAuthorities( this.groupName );
@@ -185,7 +186,8 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
          * Can they elevate the group authority?
          */
         try {
-            this.userManager.addGroupAuthority( this.groupName, new GrantedAuthorityImpl( "GROUP_ADMIN" ) );
+            this.userManager.addGroupAuthority( this.groupName, new SimpleGrantedAuthority(
+                    AuthorityConstants.ADMIN_GROUP_AUTHORITY ) );
             fail( "Should have gotten access denied when user tried to make group ADMIN" );
         } catch ( AccessDeniedException ok ) {
             // expected behaviour

@@ -40,41 +40,22 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     @Autowired
     private OntologyService os;
 
-    /** 
-     */
     @Test
-    public final void testFindExactMatch() throws Exception {
-        if ( !os.getSequenceOntologyService().isOntologyLoaded() ) {
-            os.getSequenceOntologyService().startInitializationThread( true );
-            int c = 0;
-            while ( !os.getSequenceOntologyService().isOntologyLoaded() ) {
-                Thread.sleep( 10000 );
-                log.info( "Waiting for Ontology to load" );
-                if ( ++c > 20 ) {
-                    fail( "Ontology load timeout" );
-                }
-            }
-        }
-        os.getSequenceOntologyService().index( true );
-        Collection<Characteristic> name = os.findExactTerm( "RNA", null, null );
-        for ( Characteristic characteristic : name ) {
-            log.info( characteristic );
-        }
-        assertTrue( name.size() > 0 );
-    }
+    public void test() throws Exception {
 
-    @Test
-    public void testObsolete() throws Exception {
-        os.getDiseaseOntologyService().startInitializationThread( true );
+        os.getDiseaseOntologyService().loadTermsInNameSpace(
+                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
         int c = 0;
-
         while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
-            Thread.sleep( 10000 );
+            Thread.sleep( 1000 );
             log.info( "Waiting for DiseaseOntology to load" );
             if ( ++c > 20 ) {
                 fail( "Ontology load timeout" );
             }
         }
+        Collection<Characteristic> name = os.findExactTerm( "diarrhea", null, null );
+
+        assertTrue( name.size() > 0 );
 
         OntologyTerm t1 = os.getTerm( "http://purl.obolibrary.org/obo/DOID_0050001" );
         assertNotNull( t1 );

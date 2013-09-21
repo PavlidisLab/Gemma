@@ -20,7 +20,6 @@ package ubic.gemma.util;
 
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * General-purpose pointcuts to recognize CRUD operations etc.

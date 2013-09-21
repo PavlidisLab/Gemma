@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.ExpectedException;
 
 import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -98,8 +97,7 @@ public class SchedulerSecurityTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    @Test
-    @ExpectedException(InvocationTargetException.class)
+    @Test(expected = InvocationTargetException.class)
     public void runUnauthorizedMethodOnSchedule() throws Exception {
 
         String jobName = "testJobDetail";

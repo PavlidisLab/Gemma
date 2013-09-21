@@ -21,6 +21,7 @@ package ubic.gemma.web.util.upload;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.multipart.support.AbstractMultipartHttpServletRequest;
 
 /**
@@ -55,6 +56,18 @@ public class FailedMultipartHttpServletRequest extends AbstractMultipartHttpServ
      */
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    @Override
+    public HttpHeaders getMultipartHeaders( String arg0 ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getMultipartContentType( String arg0 ) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

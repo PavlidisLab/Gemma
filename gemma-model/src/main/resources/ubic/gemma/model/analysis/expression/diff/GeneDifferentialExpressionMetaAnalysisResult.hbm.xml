@@ -32,7 +32,7 @@
         <many-to-one name="gene" class="ubic.gemma.model.genome.GeneImpl"  lazy="proxy" fetch="select">
             <column name="GENE_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
-        <set name="resultsUsed" table="METAANALYSES2RESULTS_USED" order-by="RESULTS_USED_FK" lazy="true" fetch="select" inverse="false">
+        <set name="resultsUsed" table="METAANALYSES2RESULTS_USED" lazy="true" fetch="select" inverse="false">
             <key foreign-key="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_METAANALYSES_FKC">
                 <column name="METAANALYSES_FK" sql-type="BIGINT"/>
             </key>

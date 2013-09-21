@@ -19,36 +19,34 @@
 package ubic.gemma.model.common.description;
 
 /**
- * 
+ * @deprecated as far as I know, not used (we save it for pubmed refs, but we don't read it?). if we need it we can
+ *             store it as a component of the bibliographic reference.
  */
+@Deprecated
 public abstract class PublicationType implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.PublicationType}.
+     * Constructs new instances of {@link PublicationType}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.PublicationType}.
+         * Constructs a new instance of {@link PublicationType}.
          */
-        public static ubic.gemma.model.common.description.PublicationType newInstance() {
-            return new ubic.gemma.model.common.description.PublicationTypeImpl();
+        public static PublicationType newInstance() {
+            return new PublicationTypeImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.PublicationType}, taking all possible
-         * properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link PublicationType}, taking all possible properties (except the
+         * identifier(s))as arguments.
          */
-        public static ubic.gemma.model.common.description.PublicationType newInstance( String type ) {
-            final ubic.gemma.model.common.description.PublicationType entity = new ubic.gemma.model.common.description.PublicationTypeImpl();
+        public static PublicationType newInstance( String type ) {
+            final PublicationType entity = new PublicationTypeImpl();
             entity.setType( type );
             return entity;
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7595420409756817052L;
     private String type;
 
     private Long id;

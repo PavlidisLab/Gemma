@@ -67,6 +67,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     private ByteArrayConverter bac = new ByteArrayConverter();
 
+    private boolean skipSlowTests = true;
+
     private static boolean doneSetup = false;
 
     @Before
@@ -240,6 +242,10 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @Test
     public void testConvertGSE18Stress() throws Exception {
+        if ( this.skipSlowTests ) {
+            return;
+        }
+
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse18short/GSE18.soft.gz" ) );
 
