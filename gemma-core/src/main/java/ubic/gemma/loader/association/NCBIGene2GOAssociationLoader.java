@@ -52,7 +52,7 @@ public class NCBIGene2GOAssociationLoader {
 
     private NCBIGene2GOAssociationParser parser = null;
 
-    AtomicBoolean producerDone = new AtomicBoolean( false );
+    private AtomicBoolean producerDone = new AtomicBoolean( false );
     private AtomicBoolean consumerDone = new AtomicBoolean( false );
     private int count;
 

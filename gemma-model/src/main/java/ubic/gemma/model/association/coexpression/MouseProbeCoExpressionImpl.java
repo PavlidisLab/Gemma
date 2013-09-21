@@ -25,7 +25,7 @@ package ubic.gemma.model.association.coexpression;
 /**
  * @see ubic.gemma.model.association.coexpression.MouseProbeCoExpression
  */
-public class MouseProbeCoExpressionImpl extends ubic.gemma.model.association.coexpression.MouseProbeCoExpression {
+public class MouseProbeCoExpressionImpl extends MouseProbeCoExpression {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

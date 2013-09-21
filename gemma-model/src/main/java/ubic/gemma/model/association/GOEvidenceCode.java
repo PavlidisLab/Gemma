@@ -6,132 +6,17 @@
 package ubic.gemma.model.association;
 
 /**
+ * This enumeration was originally based on GO, but is used for all entities that have evidenciary aspects; Thus it has
+ * been expanded to include: Terms from RGD&#160;(rat genome database)
+ * <ul>
+ * <li>IED = Inferred from experimental data
+ * <li>IAGP = Inferred from association of genotype and phenotype
+ * <li>IPM = Inferred from phenotype manipulation
+ * <li>QTM = Quantitative Trait Measurement
+ * </ul>
  * <p>
- * <html>
- * </p>
- * <p>
- * <head>
- * </p>
- * <p>
- * <style>
- * </p>
- * <p>
- * p {padding:0px; margin:0px;}
- * </p>
- * <p>
- * </style>
- * </p>
- * <p>
- * </head>
- * </p>
- * <p>
- * <body>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * This enumeration was originally based on GO, but is used for all
- * </p>
- * <p>
- * entities that have evidenciary aspects; Thus it has been expanded to
- * </p>
- * <p>
- * include:
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * &lt;p&gt;
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * Terms from RGD&#160;(rat genome database)
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * &lt;ul&gt;
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * &lt;li&gt;IED = Inferred from experimental data
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * &lt;li&gt;IAGP = Inferred from association of genotype and phenotype
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * &lt;li&gt;IPM = Inferred from phenotype manipulation
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * &lt;li&gt;QTM = Quantitative Trait Measurement
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * &lt;/ul&gt;
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * <p>
- * </p>
- * <p>
- * &lt;p&gt;And our own custom code &quot;IIA&quot; which means Inferred from Imported
- * </p>
- * <p>
- * Annotation to distinguish IEAs that we ourselves have computed.&lt;/p&gt;
- * </p>
- * <p>
- * </p>
- * </p>
- * <p>
- * </body>
- * </p>
- * <p>
- * </html>
- * </p>
+ * And our own custom code IIA which means Inferred from Imported Annotation to distinguish IEAs that we ourselves have
+ * computed
  */
 public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEvidenceCode> {
     /**
@@ -220,19 +105,14 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
     public static final GOEvidenceCode ISM = new GOEvidenceCode( "ISM" );
 
     /**
-     * <p>
      * Inferred from Genomic Context; This evidence code can be used whenever information about the genomic context of a
      * gene product forms part of the evidence for a particular annotation. Genomic context includes, but is not limited
      * to, such things as identity of the genes neighboring the gene product in question (i.e. synteny), operon
-     * structure, and phylogenetic or other whole genome analysis.
-     * </p>
-     * <p>
-     * "We recommend making an entry in the with/from column when using this evidence code. In cases where operon
-     * structure or synteny are the compelling evidence, include identifier(s) for the neighboring genes in the
-     * with/from column. In casees where metabolic reconstruction is the compelling evidence, and there is an identifier
-     * for the pathway or system, that should be entered in the with/from column. When multiple entries are placed in
-     * the with/from field, they are separated by pipes."
-     * </p>
+     * structure, and phylogenetic or other whole genome analysis. "We recommend making an entry in the with/from column
+     * when using this evidence code. In cases where operon structure or synteny are the compelling evidence, include
+     * identifier(s) for the neighboring genes in the with/from column. In casees where metabolic reconstruction is the
+     * compelling evidence, and there is an identifier for the pathway or system, that should be entered in the
+     * with/from column. When multiple entries are placed in the with/from field, they are separated by pipes."
      */
     public static final GOEvidenceCode IGC = new GOEvidenceCode( "IGC" );
 
@@ -242,78 +122,58 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
     public static final GOEvidenceCode ISO = new GOEvidenceCode( "ISO" );
 
     /**
-     * <p>
      * Added by Gemma: Inferred from Imported Annotation. To be distinguished from IEA or IC, represents annotations
      * that were present in imported data, and which have unknown evidence in the original source (though generally put
      * there manually).
-     * </p>
      */
     public static final GOEvidenceCode IIA = new GOEvidenceCode( "IIA" );
 
     /**
-     * <p>
      * A type of phylogenetic evidence whereby an aspect of a descendent is inferred through the characterization of an
      * aspect of a ancestral gene.
-     * </p>
      */
     public static final GOEvidenceCode IBA = new GOEvidenceCode( "IBA" );
 
     /**
-     * <p>
      * A type of phylogenetic evidence whereby an aspect of an ancestral gene is inferred through the characterization
      * of an aspect of a descendant gene.
-     * </p>
      */
     public static final GOEvidenceCode IBD = new GOEvidenceCode( "IBD" );
 
     /**
-     * <p>
      * A type of phylogenetic evidence characterized by the loss of key sequence residues. Annotating with this evidence
      * codes implies a NOT annotation. This evidence code is also referred to as IMR (inferred from Missing Residues).
-     * </p>
      */
     public static final GOEvidenceCode IKR = new GOEvidenceCode( "IKR" );
 
     /**
-     * <p>
      * Inferred from Rapid Divergence. A type of phylogenetic evidence characterized by rapid divergence from ancestral
      * sequence. Annotating with this evidence codes implies a NOT annotation.
-     * </p>
      */
     public static final GOEvidenceCode IRD = new GOEvidenceCode( "IRD" );
 
     /**
-     * <p>
      * Inferred from Missing Residues. Represents a NOT association. IMR is a synonym of IKR.
-     * </p>
      */
     public static final GOEvidenceCode IMR = new GOEvidenceCode( "IMR" );
 
     /**
-     * <p>
      * Inferred from experimental data (RGD code)
-     * </p>
      */
     public static final GOEvidenceCode IED = new GOEvidenceCode( "IED" );
 
     /**
-     * <p>
      * Inferred from association of genotype and phenotype (RGD code)
-     * </p>
      */
     public static final GOEvidenceCode IAGP = new GOEvidenceCode( "IAGP" );
 
     /**
-     * <p>
      * Inferred from phenotype manipulation (RGD code)
-     * </p>
      */
     public static final GOEvidenceCode IPM = new GOEvidenceCode( "IPM" );
 
     /**
-     * <p>
      * Quantitative Trait Measurement (RGD code)
-     * </p>
      */
     public static final GOEvidenceCode QTM = new GOEvidenceCode( "QTM" );
 
@@ -550,14 +410,11 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
 
     /**
      * This method allows the deserialization of an instance of this enumeration type to return the actual instance that
-     * will be the singleton for the JVM in which the current thread is running.
-     * <p>
-     * Doing this will allow users to safely use the equality operator <code>==</code> for enumerations because a
-     * regular deserialized object is always a newly constructed instance and will therefore never be an existing
-     * reference; it is this <code>readResolve()</code> method which will intercept the deserialization process in order
-     * to return the proper singleton reference.
-     * <p>
-     * This method is documented here: <a
+     * will be the singleton for the JVM in which the current thread is running. Doing this will allow users to safely
+     * use the equality operator <code>==</code> for enumerations because a regular deserialized object is always a
+     * newly constructed instance and will therefore never be an existing reference; it is this
+     * <code>readResolve()</code> method which will intercept the deserialization process in order to return the proper
+     * singleton reference. This method is documented here: <a
      * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>
      */

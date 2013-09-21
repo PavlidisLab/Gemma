@@ -18,35 +18,46 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
+import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+
 /**
  * Per-dataset level coexpression data for data loaded by users.
  */
 public abstract class UserProbeCoExpression extends Probe2ProbeCoexpression {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.coexpression.UserProbeCoExpression}.
+     * Constructs new instances of {@link UserProbeCoExpression}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.coexpression.UserProbeCoExpression}.
+         * Constructs a new instance of {@link UserProbeCoExpression}.
          */
-        public static ubic.gemma.model.association.coexpression.UserProbeCoExpression newInstance() {
-            return new ubic.gemma.model.association.coexpression.UserProbeCoExpressionImpl();
+        public static UserProbeCoExpression newInstance() {
+            return new UserProbeCoExpressionImpl();
         }
 
-    }
+        public static UserProbeCoExpression newInstance( Analysis sourceAnalysis, Double score,
+                BioAssaySet expressionBioAssaySet, ProcessedExpressionDataVector firstVector,
+                ProcessedExpressionDataVector secondVector ) {
+            final UserProbeCoExpression entity = new UserProbeCoExpressionImpl();
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -2699434159847328511L;
+            try {
+                FieldUtils.writeField( entity, "expressionBioAssaySet", expressionBioAssaySet, true );
+                FieldUtils.writeField( entity, "secondVector", secondVector, true );
+                FieldUtils.writeField( entity, "score", score, true );
+                FieldUtils.writeField( entity, "firstVector", firstVector, true );
+                FieldUtils.writeField( entity, "sourceAnalysis", sourceAnalysis, true );
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public UserProbeCoExpression() {
+            } catch ( IllegalAccessException e ) {
+                System.err.println( e );
+            }
+
+            return entity;
+        }
     }
 
 }

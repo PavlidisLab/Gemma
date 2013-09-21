@@ -38,10 +38,10 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
 
-    NCBIGene2GOAssociationLoader gene2GOAssLoader = null;
+    private NCBIGene2GOAssociationLoader gene2GOAssLoader = null;
 
     @Autowired
-    Gene2GOAssociationService gene2GOAssociationService;
+    private Gene2GOAssociationService gene2GOAssociationService;
 
     /**
      * Configure parser and loader. Injecting the parser and loader with their dependencies.

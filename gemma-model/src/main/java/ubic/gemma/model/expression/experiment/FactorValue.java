@@ -55,23 +55,14 @@ public abstract class FactorValue implements Serializable, gemma.gsec.model.Secu
 
     private ExpressionExperiment securityOwner = null;
 
-    @Override
-    public Securable getSecurityOwner() {
-        return securityOwner;
-    }
-
-    public void setSecurityOwner( ExpressionExperiment ee ) {
-        this.securityOwner = ee;
-    }
-
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -3783172994360698631L;
+
     private String value;
 
     private Boolean isBaseline;
-
     private Long id;
 
     private ExperimentalFactor experimentalFactor;
@@ -146,6 +137,11 @@ public abstract class FactorValue implements Serializable, gemma.gsec.model.Secu
         return this.measurement;
     }
 
+    @Override
+    public Securable getSecurityOwner() {
+        return securityOwner;
+    }
+
     /**
      * 
      */
@@ -182,6 +178,10 @@ public abstract class FactorValue implements Serializable, gemma.gsec.model.Secu
 
     public void setMeasurement( ubic.gemma.model.common.measurement.Measurement measurement ) {
         this.measurement = measurement;
+    }
+
+    public void setSecurityOwner( ExpressionExperiment ee ) {
+        this.securityOwner = ee;
     }
 
     public void setValue( String value ) {

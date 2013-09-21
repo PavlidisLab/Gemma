@@ -18,20 +18,36 @@
  */
 package ubic.gemma.model.association;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * 
  */
-public abstract class Gene2GeneProteinAssociation extends ubic.gemma.model.association.Gene2GeneAssociation {
+public abstract class Gene2GeneProteinAssociation extends Gene2GeneAssociation {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.association.Gene2GeneProteinAssociation}.
      */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.Gene2GeneProteinAssociation}.
-         */
-        public static ubic.gemma.model.association.Gene2GeneProteinAssociation newInstance() {
-            return new ubic.gemma.model.association.Gene2GeneProteinAssociationImpl();
+
+        public static Gene2GeneProteinAssociation newInstance( Gene firstGene, Gene secondGene,
+                DatabaseEntry databaseEntry, byte[] evidenceVector, Double confidenceScore ) {
+            Gene2GeneProteinAssociation entity = new Gene2GeneProteinAssociationImpl();
+
+            try {
+                FieldUtils.writeField( entity, "secondGene", secondGene, true );
+                FieldUtils.writeField( entity, "firstGene", firstGene, true );
+                FieldUtils.writeField( entity, "databaseEntry", databaseEntry, true );
+                FieldUtils.writeField( entity, "evidenceVector", evidenceVector, true );
+                FieldUtils.writeField( entity, "confidenceScore", confidenceScore, true );
+
+            } catch ( IllegalAccessException e ) {
+                System.err.println( e );
+            }
+            return entity;
         }
 
     }
@@ -40,11 +56,11 @@ public abstract class Gene2GeneProteinAssociation extends ubic.gemma.model.assoc
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 8142881537025422087L;
-    private Double confidenceScore;
+    final private Double confidenceScore = null;
 
-    private byte[] evidenceVector;
+    final private byte[] evidenceVector = null;
 
-    private ubic.gemma.model.common.description.DatabaseEntry databaseEntry;
+    final private DatabaseEntry databaseEntry = null;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -64,7 +80,7 @@ public abstract class Gene2GeneProteinAssociation extends ubic.gemma.model.assoc
     /**
      * 
      */
-    public ubic.gemma.model.common.description.DatabaseEntry getDatabaseEntry() {
+    public DatabaseEntry getDatabaseEntry() {
         return this.databaseEntry;
     }
 
@@ -73,18 +89,6 @@ public abstract class Gene2GeneProteinAssociation extends ubic.gemma.model.assoc
      */
     public byte[] getEvidenceVector() {
         return this.evidenceVector;
-    }
-
-    public void setConfidenceScore( Double confidenceScore ) {
-        this.confidenceScore = confidenceScore;
-    }
-
-    public void setDatabaseEntry( ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
-        this.databaseEntry = databaseEntry;
-    }
-
-    public void setEvidenceVector( byte[] evidenceVector ) {
-        this.evidenceVector = evidenceVector;
     }
 
 }

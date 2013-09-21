@@ -19,6 +19,10 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+
+import ubic.gemma.model.expression.biomaterial.Compound;
 
 /** 
  */
@@ -63,7 +67,7 @@ public abstract class BibliographicReference extends ubic.gemma.model.common.Aud
 
     private String citation;
 
-    private java.util.Date publicationDate;
+    private Date publicationDate;
 
     private String annotatedAbstract;
 
@@ -71,23 +75,15 @@ public abstract class BibliographicReference extends ubic.gemma.model.common.Aud
 
     private LocalFile fullTextPdf;
 
-    private Collection<Characteristic> annotations = new java.util.HashSet<>();
+    private Collection<Characteristic> annotations = new HashSet<>();
 
-    private Collection<MedicalSubjectHeading> meshTerms = new java.util.HashSet<>();
+    private Collection<MedicalSubjectHeading> meshTerms = new HashSet<>();
 
-    private Collection<PublicationType> publicationTypes = new java.util.HashSet<>();
+    private Collection<PublicationType> publicationTypes = new HashSet<>();
 
-    private Collection<Keyword> keywords = new java.util.HashSet<Keyword>();
+    private Collection<Keyword> keywords = new HashSet<Keyword>();
 
-    private Collection<ubic.gemma.model.expression.biomaterial.Compound> chemicals = new java.util.HashSet<>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BibliographicReference() {
-    }
+    private Collection<Compound> chemicals = new HashSet<>();
 
     /**
      * 
@@ -97,9 +93,7 @@ public abstract class BibliographicReference extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * <p>
-     * A version of the abstrace with inserted markup (e.g., abbreviation expansions, part-of-speech)
-     * </p>
+     * A version of the abstract with inserted markup (e.g., abbreviation expansions, part-of-speech)
      */
     public String getAnnotatedAbstract() {
         return this.annotatedAbstract;
@@ -122,16 +116,12 @@ public abstract class BibliographicReference extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public Collection<ubic.gemma.model.expression.biomaterial.Compound> getChemicals() {
+    public Collection<Compound> getChemicals() {
         return this.chemicals;
     }
 
     /**
-     * <p>
-     * <p>
      * The citation as a pre-composed string
-     * </p>
-     * </p>
      */
     public String getCitation() {
         return this.citation;
@@ -152,9 +142,7 @@ public abstract class BibliographicReference extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * <p>
      * URI of the full text on the publisher's web site.
-     * </p>
      */
     public String getFullTextUri() {
         return this.fullTextUri;
@@ -205,7 +193,7 @@ public abstract class BibliographicReference extends ubic.gemma.model.common.Aud
     /**
      * 
      */
-    public java.util.Date getPublicationDate() {
+    public Date getPublicationDate() {
         return this.publicationDate;
     }
 
@@ -297,7 +285,7 @@ public abstract class BibliographicReference extends ubic.gemma.model.common.Aud
         this.publication = publication;
     }
 
-    public void setPublicationDate( java.util.Date publicationDate ) {
+    public void setPublicationDate( Date publicationDate ) {
         this.publicationDate = publicationDate;
     }
 

@@ -18,47 +18,48 @@
  */
 package ubic.gemma.model.association;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * 
  */
-public abstract class Gene2GOAssociation extends ubic.gemma.model.association.Gene2OntologyEntryAssociationImpl {
+public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationImpl {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.association.Gene2GOAssociation}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.Gene2GOAssociation}.
+         * Constructs a new instance of {@link ubic.gemma.model.association.Gene2GOAssociation}, taking all possible
+         * properties (except the identifier(s))as arguments.
          */
-        public static ubic.gemma.model.association.Gene2GOAssociation newInstance() {
-            return new ubic.gemma.model.association.Gene2GOAssociationImpl();
+        public static Gene2GOAssociation newInstance( Gene gene, VocabCharacteristic ontologyEntry,
+                GOEvidenceCode evidenceCode ) {
+            final Gene2GOAssociation entity = new ubic.gemma.model.association.Gene2GOAssociationImpl();
+
+            try {
+                FieldUtils.writeField( entity, "gene", gene, true );
+                FieldUtils.writeField( entity, "ontologyEntry", ontologyEntry, true );
+                FieldUtils.writeField( entity, "evidenceCode", evidenceCode, true );
+            } catch ( IllegalAccessException e ) {
+                e.printStackTrace();
+            }
+
+            return entity;
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -710930089869830248L;
-    private ubic.gemma.model.association.GOEvidenceCode evidenceCode;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Gene2GOAssociation() {
-    }
+    private final GOEvidenceCode evidenceCode = null;
 
     /**
      * 
      */
-    public ubic.gemma.model.association.GOEvidenceCode getEvidenceCode() {
+    public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
-    }
-
-    public void setEvidenceCode( ubic.gemma.model.association.GOEvidenceCode evidenceCode ) {
-        this.evidenceCode = evidenceCode;
     }
 
 }

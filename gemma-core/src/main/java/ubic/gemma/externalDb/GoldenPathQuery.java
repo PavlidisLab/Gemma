@@ -109,7 +109,6 @@ public class GoldenPathQuery extends GoldenPath {
         result.setTargetGapCount( rs.getInt( "tNumInsert" ) );
         result.setTargetGapBases( rs.getInt( "tBaseInsert" ) );
         result.setStrand( rs.getString( "strand" ) );
-        result.setTargetChromosome( Chromosome.Factory.newInstance() );
         result.setQueryStart( rs.getInt( "qStart" ) );
         result.setQueryEnd( rs.getInt( "qEnd" ) );
         result.setTargetStart( rs.getLong( "tStart" ) );
@@ -131,19 +130,14 @@ public class GoldenPathQuery extends GoldenPath {
                 chrom = chrom.substring( 0, chrom.indexOf( ".fa" ) );
             }
         }
-        result.getTargetChromosome().setName( chrom );
-        result.getTargetChromosome().setSequence( BioSequence.Factory.newInstance() );
+
+        result.setTargetChromosome( Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(),
+                getTaxon() ) );
         result.getTargetChromosome().getSequence().setName( chrom );
         result.getTargetChromosome().getSequence().setLength( rs.getLong( "tSize" ) );
+        result.getTargetChromosome().getSequence().setTaxon( getTaxon() );
+        result.setSearchedDatabase( getSearchedDatabase() );
 
-        if ( getTaxon() != null ) {
-            result.getTargetChromosome().setTaxon( getTaxon() );
-            result.getTargetChromosome().getSequence().setTaxon( getTaxon() );
-        }
-
-        if ( getSearchedDatabase() != null ) {
-            result.setSearchedDatabase( getSearchedDatabase() );
-        }
         return result;
     }
 

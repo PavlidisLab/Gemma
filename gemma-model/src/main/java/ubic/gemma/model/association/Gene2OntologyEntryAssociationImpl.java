@@ -25,8 +25,7 @@ package ubic.gemma.model.association;
 /**
  * @see ubic.gemma.model.association.Gene2OntologyEntryAssociation
  */
-public abstract class Gene2OntologyEntryAssociationImpl extends
-        ubic.gemma.model.association.Gene2OntologyEntryAssociation {
+public abstract class Gene2OntologyEntryAssociationImpl extends Gene2OntologyEntryAssociation {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

@@ -148,7 +148,7 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @return
      */
     private static List<Long> convertBitVector( List<Long> positionToIDMap, byte[] bitvector ) {
-        List<Long> ids = new ArrayList<Long>(positionToIDMap.size());
+        List<Long> ids = new ArrayList<Long>( positionToIDMap.size() );
         boolean[] asBools = BitUtil.asBools( bitvector );
         assert asBools.length >= positionToIDMap.size(); // padding at the end.
         for ( int i = 0; i < positionToIDMap.size(); i++ ) {
@@ -693,18 +693,32 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
     /**
      * @param taxon
+     * @param supportVector
+     * @param d
+     * @param i
+     * @param secondGene
+     * @param firstGene
+     * @param analysis
+     * @param specificityVector
+     * @param testedInVector
      * @return
      */
-    private Gene2GeneCoexpression getNewGGCOInstance( Taxon taxon ) {
+    private Gene2GeneCoexpression getNewGGCOInstance( Taxon taxon, byte[] testedInVector, byte[] specificityVector,
+            GeneCoexpressionAnalysis analysis, Gene firstGene, Gene secondGene, int support, double score,
+            byte[] supportVector ) {
         Gene2GeneCoexpression g2gCoexpression;
         if ( taxon.getCommonName().equalsIgnoreCase( "mouse" ) )
-            g2gCoexpression = MouseGeneCoExpression.Factory.newInstance();
+            g2gCoexpression = MouseGeneCoExpression.Factory.newInstance( analysis, secondGene, firstGene, score,
+                    support, testedInVector, supportVector, specificityVector );
         else if ( taxon.getCommonName().equalsIgnoreCase( "rat" ) )
-            g2gCoexpression = RatGeneCoExpression.Factory.newInstance();
+            g2gCoexpression = RatGeneCoExpression.Factory.newInstance( analysis, secondGene, firstGene, score, support,
+                    testedInVector, supportVector, specificityVector );
         else if ( taxon.getCommonName().equalsIgnoreCase( "human" ) )
-            g2gCoexpression = HumanGeneCoExpression.Factory.newInstance();
+            g2gCoexpression = HumanGeneCoExpression.Factory.newInstance( analysis, secondGene, firstGene, score,
+                    support, testedInVector, supportVector, specificityVector );
         else
-            g2gCoexpression = OtherGeneCoExpression.Factory.newInstance();
+            g2gCoexpression = OtherGeneCoExpression.Factory.newInstance( analysis, secondGene, firstGene, score,
+                    support, testedInVector, supportVector, specificityVector );
         return g2gCoexpression;
     }
 
@@ -768,19 +782,23 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
              * filtered later.
              */
             if ( co.getNegativeLinkSupport() >= stringency ) {
-                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
-                g2gCoexpression.setDatasetsTestedVector( testedInVector );
-                g2gCoexpression.setSpecificityVector( specificityVector );
-                g2gCoexpression.setSourceAnalysis( analysis );
-                g2gCoexpression.setFirstGene( firstGene );
-                g2gCoexpression.setSecondGene( secondGene );
-
                 Collection<Long> contributing2NegativeLinks = co.getEEContributing2NegativeLinks();
                 assert contributing2NegativeLinks.size() == co.getNegativeLinkSupport();
                 byte[] supportVector = computeSupportingDatasetVector( contributing2NegativeLinks, eeIdOrder );
-                g2gCoexpression.setNumDataSets( co.getNegativeLinkSupport() );
-                g2gCoexpression.setEffect( co.getNegativeScore() );
-                g2gCoexpression.setDatasetsSupportingVector( supportVector );
+
+                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon, testedInVector, specificityVector,
+                        analysis, firstGene, secondGene, co.getNegativeLinkSupport(), co.getNegativeScore(),
+                        supportVector );
+
+                // g2gCoexpression.setDatasetsTestedVector( testedInVector );
+                // g2gCoexpression.setSpecificityVector( specificityVector );
+                // g2gCoexpression.setSourceAnalysis( analysis );
+                // g2gCoexpression.setFirstGene( firstGene );
+                // g2gCoexpression.setSecondGene( secondGene );
+
+                // g2gCoexpression.setNumDataSets( co.getNegativeLinkSupport() );
+                // g2gCoexpression.setEffect( co.getNegativeScore() );
+                // g2gCoexpression.setDatasetsSupportingVector( supportVector );
 
                 batch.add( g2gCoexpression );
                 if ( batch.size() == BATCH_SIZE ) {
@@ -790,19 +808,25 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             }
 
             if ( co.getPositiveLinkSupport() >= stringency ) {
-                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
-                g2gCoexpression.setDatasetsTestedVector( testedInVector );
-                g2gCoexpression.setSpecificityVector( specificityVector );
-                g2gCoexpression.setSourceAnalysis( analysis );
-                g2gCoexpression.setFirstGene( firstGene );
-                g2gCoexpression.setSecondGene( secondGene );
 
                 Collection<Long> contributing2PositiveLinks = co.getEEContributing2PositiveLinks();
                 assert contributing2PositiveLinks.size() == co.getPositiveLinkSupport();
                 byte[] supportVector = computeSupportingDatasetVector( contributing2PositiveLinks, eeIdOrder );
-                g2gCoexpression.setNumDataSets( co.getPositiveLinkSupport() );
-                g2gCoexpression.setEffect( co.getPositiveScore() );
-                g2gCoexpression.setDatasetsSupportingVector( supportVector );
+
+                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon, testedInVector, specificityVector,
+                        analysis, firstGene, secondGene, co.getPositiveLinkSupport(), co.getPositiveScore(),
+                        supportVector );
+
+                // g2gCoexpression.setDatasetsTestedVector( testedInVector );
+                // g2gCoexpression.setSpecificityVector( specificityVector );
+                // g2gCoexpression.setSourceAnalysis( analysis );
+                // g2gCoexpression.setFirstGene( firstGene );
+                // g2gCoexpression.setSecondGene( secondGene );
+
+                // g2gCoexpression.setNumDataSets( co.getPositiveLinkSupport() );
+                // g2gCoexpression.setEffect( co.getPositiveScore() );
+                // g2gCoexpression.setDatasetsSupportingVector( supportVector );
+
                 batch.add( g2gCoexpression );
                 if ( batch.size() == BATCH_SIZE ) {
                     all.addAll( this.gene2GeneCoexpressionService.create( batch ) );

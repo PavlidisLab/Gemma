@@ -18,8 +18,23 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.ObjectArrayList;
+import gemma.gsec.util.SecurityUtil;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.commons.lang3.StringUtils;
@@ -30,8 +45,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 import ubic.basecode.dataStructure.Link;
-import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Rank;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
@@ -42,11 +57,18 @@ import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.association.coexpression.*;
+import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
+import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
+import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
+import ubic.gemma.model.association.coexpression.UserProbeCoExpression;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
@@ -64,16 +86,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.TaxonUtility;
-
-import gemma.gsec.util.SecurityUtil;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.text.NumberFormat;
-import java.util.*;
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.ObjectArrayList;
 
 /**
  * Running link analyses through the spring context; will persist the results if the configuration says so. See
@@ -87,17 +101,17 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private static class Creator {
 
-        Method m;
-        private Object[] arg;
+        Method factorymethod;
         private Class<?> clazz;
         private BioAssaySet ebas;
 
         Creator( Class<?> clazz, BioAssaySet experiment ) {
             this.ebas = experiment;
             this.clazz = clazz;
-            this.arg = new Object[] {};
+
             try {
-                m = clazz.getMethod( "newInstance", new Class[] {} );
+                factorymethod = clazz.getMethod( "newInstance", new Class[] { Analysis.class, Double.class,
+                        BioAssaySet.class, ProcessedExpressionDataVector.class, ProcessedExpressionDataVector.class } );
             } catch ( SecurityException e ) {
                 throw new RuntimeException( e );
             } catch ( NoSuchMethodException e ) {
@@ -105,11 +119,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             }
         }
 
-        public Probe2ProbeCoexpression create() {
+        public Probe2ProbeCoexpression create( double w, ProbeCoexpressionAnalysis analysisObj,
+                ProcessedExpressionDataVector v1, ProcessedExpressionDataVector v2 ) {
             Probe2ProbeCoexpression result = null;
             try {
-                result = ( Probe2ProbeCoexpression ) m.invoke( clazz, arg );
-                result.setExpressionBioAssaySet( ebas );
+                result = ( Probe2ProbeCoexpression ) factorymethod.invoke( clazz, new Object[] { analysisObj, w, ebas,
+                        v1, v2 } );
                 return result;
             } catch ( IllegalArgumentException e ) {
                 throw new RuntimeException( e );
@@ -524,14 +539,14 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @param c helper class
      * @param metric e.g. Pearson Correlation
      * @param analysisObj
+     * @param v2
+     * @param v1
      * @return
      */
     private Probe2ProbeCoexpression initCoexp( int numColumns, double w, Creator c, QuantitationType metric,
-            ProbeCoexpressionAnalysis analysisObj ) {
-        Probe2ProbeCoexpression ppCoexpression = c.create();
-        ppCoexpression.setScore( w );
-        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
-        ppCoexpression.setSourceAnalysis( analysisObj );
+            ProbeCoexpressionAnalysis analysisObj, ProcessedExpressionDataVector v1, ProcessedExpressionDataVector v2 ) {
+        Probe2ProbeCoexpression ppCoexpression = c.create( w, analysisObj, v1, v2 );
+
         return ppCoexpression;
     }
 
@@ -595,10 +610,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             ProcessedExpressionDataVector v1, ProcessedExpressionDataVector v2, QuantitationType metric,
             ProbeCoexpressionAnalysis analysisObj, Creator c ) {
 
-        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric, analysisObj );
-
-        ppCoexpression.setFirstVector( v1 );
-        ppCoexpression.setSecondVector( v2 );
+        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric, analysisObj, v1, v2 );
 
         p2plinks.add( ppCoexpression );
 

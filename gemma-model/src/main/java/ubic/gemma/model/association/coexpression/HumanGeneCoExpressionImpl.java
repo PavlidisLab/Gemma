@@ -23,9 +23,9 @@
 package ubic.gemma.model.association.coexpression;
 
 /**
- * @see ubic.gemma.model.association.coexpression.HumanGeneCoExpression
+ * @see HumanGeneCoExpression
  */
-public class HumanGeneCoExpressionImpl extends ubic.gemma.model.association.coexpression.HumanGeneCoExpression {
+public class HumanGeneCoExpressionImpl extends HumanGeneCoExpression {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

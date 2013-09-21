@@ -20,21 +20,22 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
 
+import ubic.gemma.model.analysis.SingleExperimentAnalysisImpl;
+
 /**
  * A coexpression analysis at the level of probes
  */
-public abstract class ProbeCoexpressionAnalysis extends ubic.gemma.model.analysis.SingleExperimentAnalysisImpl {
+public abstract class ProbeCoexpressionAnalysis extends SingleExperimentAnalysisImpl {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis}.
+     * Constructs new instances of {@link ProbeCoexpressionAnalysis}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis}.
+         * Constructs a new instance of {@link ProbeCoexpressionAnalysis}.
          */
-        public static ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis newInstance() {
-            return new ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl();
+        public static ProbeCoexpressionAnalysis newInstance() {
+            return new ProbeCoexpressionAnalysisImpl();
         }
 
     }
@@ -65,7 +66,7 @@ public abstract class ProbeCoexpressionAnalysis extends ubic.gemma.model.analysi
     /**
      * Probes that were not filtered based on initial filtering criteria. Not all probes used have links retained.
      */
-    public Collection<ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe> getProbesUsed() {
+    public Collection<CoexpressionProbe> getProbesUsed() {
         return this.probesUsed;
     }
 
@@ -73,8 +74,7 @@ public abstract class ProbeCoexpressionAnalysis extends ubic.gemma.model.analysi
         this.numberOfLinks = numberOfLinks;
     }
 
-    public void setProbesUsed(
-            Collection<ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe> probesUsed ) {
+    public void setProbesUsed( Collection<CoexpressionProbe> probesUsed ) {
         this.probesUsed = probesUsed;
     }
 

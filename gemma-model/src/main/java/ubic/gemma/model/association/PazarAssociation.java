@@ -18,38 +18,49 @@
  */
 package ubic.gemma.model.association;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
+import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * A TF - target association from Pazar (www.pazar.info)
  */
-public abstract class PazarAssociation extends ubic.gemma.model.association.TfGeneAssociationImpl {
+public abstract class PazarAssociation extends TfGeneAssociation {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.PazarAssociation}.
+     * Constructs new instances of {@link PazarAssociation}.
      */
     public static final class Factory {
+
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.PazarAssociation}.
+         * Constructs a new instance of {@link PazarAssociation}, taking all possible properties (except the
+         * identifier(s))as arguments.
          */
-        public static ubic.gemma.model.association.PazarAssociation newInstance() {
-            return new ubic.gemma.model.association.PazarAssociationImpl();
+        public static PazarAssociation newInstance( Analysis sourceAnalysis, Gene secondGene, Gene firstGene,
+                DatabaseEntry databaseEntry, java.lang.String pazarTfId, java.lang.String pazarTargetGeneId ) {
+            final PazarAssociation entity = new PazarAssociationImpl();
+
+            try {
+                FieldUtils.writeField( entity, "sourceAnalysis", sourceAnalysis, true );
+                FieldUtils.writeField( entity, "secondGene", secondGene, true );
+                FieldUtils.writeField( entity, "firstGene", firstGene, true );
+                FieldUtils.writeField( entity, "databaseEntry", databaseEntry, true );
+                FieldUtils.writeField( entity, "pazarTfId", pazarTfId, true );
+                FieldUtils.writeField( entity, "pazarTargetGeneId", pazarTargetGeneId, true );
+
+            } catch ( IllegalAccessException e ) {
+                System.err.println( e );
+            }
+            return entity;
+
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -2964682249206683908L;
-    private String pazarTfId;
+    final private String pazarTfId = null;
 
-    private String pazarTargetGeneId;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public PazarAssociation() {
-    }
+    final private String pazarTargetGeneId = null;
 
     /**
      * 
@@ -63,14 +74,6 @@ public abstract class PazarAssociation extends ubic.gemma.model.association.TfGe
      */
     public String getPazarTfId() {
         return this.pazarTfId;
-    }
-
-    public void setPazarTargetGeneId( String pazarTargetGeneId ) {
-        this.pazarTargetGeneId = pazarTargetGeneId;
-    }
-
-    public void setPazarTfId( String pazarTfId ) {
-        this.pazarTfId = pazarTfId;
     }
 
 }

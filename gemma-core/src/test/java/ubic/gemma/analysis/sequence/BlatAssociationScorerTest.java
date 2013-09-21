@@ -60,9 +60,7 @@ public class BlatAssociationScorerTest {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "human" );
 
-        Chromosome chr = Chromosome.Factory.newInstance();
-        chr.setName( name );
-        chr.setTaxon( taxon );
+        Chromosome chr = Chromosome.Factory.newInstance(name, taxon);
         blatResult.setTargetChromosome( chr );
 
         return blatResult;

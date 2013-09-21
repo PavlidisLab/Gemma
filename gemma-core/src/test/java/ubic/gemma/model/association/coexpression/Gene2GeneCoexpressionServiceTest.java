@@ -91,20 +91,8 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         secondGene.setName( "test_gene2geneCoexpression2" );
         secondGene = geneS.create( secondGene );
 
-        Gene2GeneCoexpression g2gCoexpression = MouseGeneCoExpression.Factory.newInstance();
-        g2gCoexpression.setSourceAnalysis( analysis );
-        g2gCoexpression.setFirstGene( firstGene );
-        g2gCoexpression.setSecondGene( secondGene );
-        g2gCoexpression.setNumDataSets( 3 );
-
-        /*
-         * This is just filler
-         */
-        g2gCoexpression.setEffect( 0.9 );
-        g2gCoexpression.setPvalue( 0.0001 );
-        g2gCoexpression.setDatasetsSupportingVector( new byte[] { 2, 3, 8 } );
-        g2gCoexpression.setDatasetsTestedVector( new byte[] { 2, 9, 8 } );
-        g2gCoexpression.setSpecificityVector( new byte[] { 2, 3, 8 } );
+        Gene2GeneCoexpression g2gCoexpression = MouseGeneCoExpression.Factory.newInstance( analysis, secondGene,
+                firstGene, 0.9, 3, new byte[] { 2, 3, 8 }, new byte[] { 2, 9, 8 }, new byte[] { 2, 3, 8 } );
 
         g2gCoexpressionS.create( g2gCoexpression );
     }

@@ -18,52 +18,45 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.io.Serializable;
+
+import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+
 /**
  * Represents the correlation of two datavectors.
  */
-public abstract class Probe2ProbeCoexpression extends ubic.gemma.model.association.Relationship {
+public abstract class Probe2ProbeCoexpression implements Serializable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5767420332087241608L;
+    final private BioAssaySet expressionBioAssaySet = null;
 
-    private Double score;
-    private Double pvalue;
+    final private ProcessedExpressionDataVector firstVector = null;
 
-    private ubic.gemma.model.expression.experiment.BioAssaySet expressionBioAssaySet;
+    final private Long id = null;
 
-    private ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector secondVector;
+    final private Double score = null;
 
-    private ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector firstVector;
+    final private ProcessedExpressionDataVector secondVector = null;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Probe2ProbeCoexpression() {
-    }
+    final private Analysis sourceAnalysis = null;
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.BioAssaySet getExpressionBioAssaySet() {
+    public BioAssaySet getExpressionBioAssaySet() {
         return this.expressionBioAssaySet;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector getFirstVector() {
+    public ProcessedExpressionDataVector getFirstVector() {
         return this.firstVector;
     }
 
-    /**
-     * 
-     */
-    public Double getPvalue() {
-        return this.pvalue;
+    public Long getId() {
+        return id;
     }
 
     /**
@@ -76,28 +69,12 @@ public abstract class Probe2ProbeCoexpression extends ubic.gemma.model.associati
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector getSecondVector() {
+    public ProcessedExpressionDataVector getSecondVector() {
         return this.secondVector;
     }
 
-    public void setExpressionBioAssaySet( ubic.gemma.model.expression.experiment.BioAssaySet expressionBioAssaySet ) {
-        this.expressionBioAssaySet = expressionBioAssaySet;
-    }
-
-    public void setFirstVector( ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector firstVector ) {
-        this.firstVector = firstVector;
-    }
-
-    public void setPvalue( Double pvalue ) {
-        this.pvalue = pvalue;
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
-    }
-
-    public void setSecondVector( ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector secondVector ) {
-        this.secondVector = secondVector;
+    public Analysis getSourceAnalysis() {
+        return sourceAnalysis;
     }
 
 }

@@ -138,7 +138,7 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
             result.setTargetGapBases( Integer.parseInt( f[TGAPBASES_FIELD] ) );
             result.setTargetGapCount( Integer.parseInt( f[TGAPCOUNT_FIELD] ) );
             result.setStrand( f[STRAND_FIELD] );
-            result.setTargetChromosome( Chromosome.Factory.newInstance() );
+
             result.setQueryStart( Integer.parseInt( f[QSTART_FIELD] ) );
             result.setQueryEnd( Integer.parseInt( f[QEND_FIELD] ) );
             result.setTargetStart( Long.parseLong( f[TSTART_FIELD] ) );
@@ -161,19 +161,14 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
                     chrom = chrom.substring( 0, chrom.indexOf( ".fa" ) );
                 }
             }
-            result.getTargetChromosome().setName( chrom );
-            result.getTargetChromosome().setSequence( BioSequence.Factory.newInstance() );
-            result.getTargetChromosome().getSequence().setName( chrom );
-            result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[TSIZE_FIELD] ) );
-
             if ( scoreThreshold > 0.0 && result.score() < scoreThreshold ) {
                 return null;
             }
-
-            if ( taxon != null ) {
-                result.getTargetChromosome().setTaxon( taxon );
-                result.getTargetChromosome().getSequence().setTaxon( taxon );
-            }
+            result.setTargetChromosome( Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(),
+                    taxon ) );
+            result.getTargetChromosome().getSequence().setName( chrom );
+            result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[TSIZE_FIELD] ) );
+            result.getTargetChromosome().getSequence().setTaxon( taxon );
 
             if ( searchedDatabase != null ) {
                 result.setSearchedDatabase( searchedDatabase );

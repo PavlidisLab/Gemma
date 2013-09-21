@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -120,12 +121,10 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
              * Add up to 5 GO terms. Parents mean more will be added.
              */
             for ( int j = 0; j <= Math.floor( i / 20 ); j++ ) {
-                Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance();
                 VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
                 oe.setValueUri( GeneOntologyService.BASE_GO_URI + goTerms[j] );
                 oe.setValue( goTerms[j] );
-                g2Go1.setOntologyEntry( oe );
-                g2Go1.setGene( gene );
+                Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance( gene, oe, GOEvidenceCode.EXP );
                 gene2GoService.create( g2Go1 );
             }
         }

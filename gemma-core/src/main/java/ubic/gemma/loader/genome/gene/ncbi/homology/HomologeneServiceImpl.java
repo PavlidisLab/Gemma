@@ -70,7 +70,7 @@ public class HomologeneServiceImpl implements HomologeneService {
 
     // a collection of gene
     // IDs
-    private Map<Long, Long> gene2Group = new ConcurrentHashMap<Long, Long>();
+    private final Map<Long, Long> gene2Group = new ConcurrentHashMap<Long, Long>();
 
     @Autowired
     private GeneService geneService;

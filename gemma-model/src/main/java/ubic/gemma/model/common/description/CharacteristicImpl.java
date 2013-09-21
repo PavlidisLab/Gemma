@@ -26,7 +26,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * @author pavlidis
  * @version $Id$
  */
-public class CharacteristicImpl extends ubic.gemma.model.common.description.Characteristic {
+public class CharacteristicImpl extends Characteristic {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

@@ -19,8 +19,8 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import gemma.gsec.model.Securable;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * 
@@ -42,26 +42,14 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
 
     private Securable securityOwner;
 
-    public void setSecurityOwner( ExpressionExperiment ee ) {
-        this.securityOwner = ee;
-    }
-
-    /**
-     * @see MeanVarianceRelation#getSecurityOwner()
-     */
-    @Override
-    public gemma.gsec.model.Securable getSecurityOwner() {
-        return this.securityOwner;
-    }
-
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1442923993171126882L;
+
     private byte[] means;
 
     private byte[] variances;
-
     private byte[] lowessX;
 
     private byte[] lowessY;
@@ -125,6 +113,14 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
     }
 
     /**
+     * @see MeanVarianceRelation#getSecurityOwner()
+     */
+    @Override
+    public gemma.gsec.model.Securable getSecurityOwner() {
+        return this.securityOwner;
+    }
+
+    /**
      * 
      */
     public byte[] getVariances() {
@@ -156,6 +152,10 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
 
     public void setMeans( byte[] means ) {
         this.means = means;
+    }
+
+    public void setSecurityOwner( ExpressionExperiment ee ) {
+        this.securityOwner = ee;
     }
 
     public void setVariances( byte[] variances ) {

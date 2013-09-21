@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +59,7 @@ public class GeneServiceImplTest {
     private Taxon t = null;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
 
         geneDaoMock = createMock( GeneDao.class );
         svc = new GeneServiceImpl();
@@ -88,10 +89,8 @@ public class GeneServiceImplTest {
         g3.setId( ( long ) 1234 );
 
         // For testing need to add physical locations to the gene products of a given gene.
-        Chromosome chromosome = Chromosome.Factory.newInstance();
-        chromosome.setId( ( long ) 54321 );
-        chromosome.setName( "fakeChromosome" );
-        chromosome.setTaxon( t );
+        Chromosome chromosome = Chromosome.Factory.newInstance( "fakeChromosome", t );
+        FieldUtils.writeField( chromosome, "id", 54321l, true );
 
         // Gene product 1 (Min=100 max=200)
         PhysicalLocation ploc1 = PhysicalLocation.Factory.newInstance();
@@ -143,10 +142,9 @@ public class GeneServiceImplTest {
         gp4.setId( ( long ) 3456 );
 
         // Gene Product 5 (right strand wrong chromosome should get regected, min 20 max 220)
-        Chromosome wrongChromosome = Chromosome.Factory.newInstance();
-        wrongChromosome.setId( ( long ) 43215 );
-        wrongChromosome.setName( "wrongFakeChromosome" );
-        wrongChromosome.setTaxon( t );
+
+        Chromosome wrongChromosome = Chromosome.Factory.newInstance( "wrongFakeChromosome", t );
+        FieldUtils.writeField( chromosome, "id", 43215L, true );
 
         PhysicalLocation ploc5 = PhysicalLocation.Factory.newInstance();
         ploc5.setChromosome( wrongChromosome );

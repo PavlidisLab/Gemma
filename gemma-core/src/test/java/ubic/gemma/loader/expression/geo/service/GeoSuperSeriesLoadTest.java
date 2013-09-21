@@ -36,60 +36,103 @@ import ubic.gemma.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
+ * This test can fail if there is already data in the system.
+ * 
  * @author paul
  * @version $Id$
  */
-public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
+public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
 
     @Autowired
-    protected GeoService geoService;
+    private GeoService geoService;
 
     @Autowired
-    ArrayDesignMergeService adms;
+    private ArrayDesignMergeService adms;
 
     @Autowired
-    VectorMergingService vms;
+    private ArrayDesignService adService;
 
     @Autowired
-    ExpressionExperimentPlatformSwitchService eepss;
+    private VectorMergingService vms;
 
     @Autowired
-    ExpressionExperimentService ees;
+    private ExpressionExperimentPlatformSwitchService eepss;
 
-    ExpressionExperiment ee;
+    @Autowired
+    private ExpressionExperimentService ees;
+
+    private ExpressionExperiment ee;
 
     @After
     public void tearDown() {
         if ( ee != null ) {
             try {
-                ees.delete( ee );
+                removeOldData( ee );
             } catch ( Exception e ) {
 
             }
         }
-    }
 
-    @Test
-    public void testFetchAndLoadSuperSeries() throws Exception {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                getTestFileBasePath( "GSE11897SuperSeriesShort" ) ) );
-        try {
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE11897", false, true, false, false, true, false );
-            assertEquals( 1, results.size() );
-            ee = results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            ee = ( ExpressionExperiment ) e.getData();
+        // this is somewhat overkill...
+        for ( ExpressionExperiment ee4 : ees.loadAll() ) {
+            ees.delete( ee4 );
+        }
+
+        for ( ArrayDesign a : adService.loadAll() ) {
+            try {
+                a = adService.thawLite( a );
+                for ( ArrayDesign b : a.getSubsumedArrayDesigns() ) {
+                    adService.remove( b );
+                }
+
+                adService.remove( a );
+            } catch ( Exception e ) {
+
+            }
         }
 
     }
+
+    /**
+     * @param ee2
+     */
+    private void removeOldData( ExpressionExperiment ee2 ) {
+
+        Collection<ArrayDesign> arrayDesignsUsed = ees.getArrayDesignsUsed( ee2 );
+        ees.delete( ee2 );
+
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            for ( ExpressionExperiment ee3 : adService.getExpressionExperiments( ad ) ) {
+                removeOldData( ee3 );
+            }
+            for ( ArrayDesign aa : ad.getMergees() ) {
+                adService.remove( aa );
+            }
+            adService.remove( ad );
+        }
+    }
+
+    // @Test
+    // public void testFetchAndLoadSuperSeries() throws Exception {
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+    // getTestFileBasePath( "GSE11897SuperSeriesShort" ) ) );
+    // try {
+    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+    // "GSE11897", false, true, false, false, true, false );
+    // assertEquals( 1, results.size() );
+    // ee = results.iterator().next();
+    // } catch ( AlreadyExistsInSystemException e ) {
+    // ee = ( ExpressionExperiment ) e.getData();
+    // }
+    //
+    // }
 
     /**
      * See bug 2064. GSE14618 is a superseries of GSE14613 and GSE14615
@@ -100,6 +143,9 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
     public void testFetchAndLoadSuperSeriesB() throws Exception {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
                 getTestFileBasePath( "gse14618superser" ) ) );
+
+        ee = ees.findByShortName( "GSE14618" );
+        tearDown();
 
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                 "GSE14618", false, true, false, false, true, false );

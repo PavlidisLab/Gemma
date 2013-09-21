@@ -26,6 +26,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.context.SecurityContext;
@@ -265,8 +266,9 @@ public class StringProteinInteractionLoader {
                     continue;
                 }
 
-                gene2GeneProteinAssociation.setFirstGene( geneOne );
-                gene2GeneProteinAssociation.setSecondGene( geneTwo );
+                FieldUtils.writeField( gene2GeneProteinAssociation, "firstGene", geneOne, true );
+                FieldUtils.writeField( gene2GeneProteinAssociation, "secondGene", geneTwo, true );
+
                 persisterHelper.persist( gene2GeneProteinAssociation );
 
                 if ( ++loadedGeneCount % 1000 == 0 ) {

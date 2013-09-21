@@ -62,6 +62,11 @@ public abstract class BioMaterial extends ubic.gemma.model.common.Auditable impl
     private ubic.gemma.model.common.description.DatabaseEntry externalAccession;
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -7892217074183258185L;
+
+    /**
      * No-arg constructor added to satisfy javabean contract
      * 
      * @author Paul
@@ -84,11 +89,9 @@ public abstract class BioMaterial extends ubic.gemma.model.common.Auditable impl
     }
 
     /**
-  
      * An optional external refernce for this BioMaterial. In many cases this is the same as the accession for the
      * related BioAssay. We store the information here to help make the data easier to trace. Note that more than one
-     * BioMaterial may reference a given external accession.
-     * </p>
+     * BioMaterial may reference a given external accession. </p>
      */
     public ubic.gemma.model.common.description.DatabaseEntry getExternalAccession() {
         return this.externalAccession;
@@ -100,11 +103,6 @@ public abstract class BioMaterial extends ubic.gemma.model.common.Auditable impl
     public Collection<ubic.gemma.model.expression.experiment.FactorValue> getFactorValues() {
         return this.factorValues;
     }
-
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -7892217074183258185L;
 
     @Override
     public Securable getSecurityOwner() {

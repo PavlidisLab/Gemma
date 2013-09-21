@@ -656,8 +656,8 @@ public class PersistentDummyObjectHelper {
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
         BlatResult br = BlatResult.Factory.newInstance();
 
-        Chromosome chromosome = Chromosome.Factory.newInstance( "X", this.getTestPersistentTaxon() );
-        chromosome.setSequence( getTestPersistentBioSequence() );
+        Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, getTestPersistentBioSequence(),
+                this.getTestPersistentTaxon() );
         chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
         br.setTargetChromosome( chromosome );
         br.setQuerySequence( querySequence );

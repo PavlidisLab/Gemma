@@ -18,56 +18,53 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
+import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.genome.Gene;
+
 /**
  * 
  */
-public abstract class HumanGeneCoExpression extends ubic.gemma.model.association.coexpression.Gene2GeneCoexpression {
+public abstract class HumanGeneCoExpression extends Gene2GeneCoexpression {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.coexpression.HumanGeneCoExpression}.
+     * Constructs new instances of {@link HumanGeneCoExpression}.
      */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.coexpression.HumanGeneCoExpression}.
-         */
-        public static ubic.gemma.model.association.coexpression.HumanGeneCoExpression newInstance() {
-            return new ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl();
-        }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.coexpression.HumanGeneCoExpression}, taking
-         * all possible properties (except the identifier(s))as arguments.
+         * @param sourceAnalysis
+         * @param secondGene
+         * @param firstGene
+         * @param effect
+         * @param numDataSets
+         * @param datasetsTestedVector
+         * @param datasetsSupportingVector
+         * @param specificityVector
+         * @return
          */
-        public static ubic.gemma.model.association.coexpression.HumanGeneCoExpression newInstance(
-                ubic.gemma.model.analysis.Analysis sourceAnalysis, ubic.gemma.model.genome.Gene secondGene,
-                ubic.gemma.model.genome.Gene firstGene, Double pvalue, Double effect, Integer numDataSets,
-                byte[] datasetsTestedVector, byte[] datasetsSupportingVector, byte[] specificityVector ) {
-            final ubic.gemma.model.association.coexpression.HumanGeneCoExpression entity = new ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl();
-            entity.setSourceAnalysis( sourceAnalysis );
-            entity.setSecondGene( secondGene );
-            entity.setFirstGene( firstGene );
-            entity.setPvalue( pvalue );
-            entity.setEffect( effect );
-            entity.setNumDataSets( numDataSets );
-            entity.setDatasetsTestedVector( datasetsTestedVector );
-            entity.setDatasetsSupportingVector( datasetsSupportingVector );
-            entity.setSpecificityVector( specificityVector );
+        public static HumanGeneCoExpression newInstance( Analysis sourceAnalysis, Gene secondGene, Gene firstGene,
+                Double effect, Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector,
+                byte[] specificityVector ) {
+            final HumanGeneCoExpression entity = new HumanGeneCoExpressionImpl();
+            try {
+                FieldUtils.writeField( entity, "sourceAnalysis", sourceAnalysis, true );
+                FieldUtils.writeField( entity, "secondGene", secondGene, true );
+                FieldUtils.writeField( entity, "firstGene", firstGene, true );
+                FieldUtils.writeField( entity, "effect", effect, true );
+                FieldUtils.writeField( entity, "numDataSets", numDataSets, true );
+                FieldUtils.writeField( entity, "datasetsTestedVector", datasetsTestedVector, true );
+                FieldUtils.writeField( entity, "datasetsSupportingVector", datasetsSupportingVector, true );
+                FieldUtils.writeField( entity, "specificityVector", specificityVector, true );
+
+            } catch ( IllegalAccessException e ) {
+                System.err.println( e );
+            }
+
             return entity;
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1143581426457333084L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public HumanGeneCoExpression() {
     }
 
 }

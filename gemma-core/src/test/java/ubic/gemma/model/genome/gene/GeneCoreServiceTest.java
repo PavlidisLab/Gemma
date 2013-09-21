@@ -41,85 +41,83 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class GeneCoreServiceTest extends BaseSpringContextTest {
 
-	@Autowired
-	private GeneService geneDao = null;
+    @Autowired
+    private GeneService geneDao = null;
 
-	@Autowired
-	private GeneCoreService geneCoreService = null;
+    @Autowired
+    private GeneCoreService geneCoreService = null;
 
-	@Test
-	public void testLoadGeneDetails() throws Exception {
-		Gene gene = Gene.Factory.newInstance();
+    @Test
+    public void testLoadGeneDetails() throws Exception {
+        Gene gene = Gene.Factory.newInstance();
 
-		Integer id = Integer.parseInt(RandomStringUtils.randomNumeric(5));
-		gene.setNcbiGeneId(id);
-		gene.setName("test_genedao");
-		gene.setOfficialName("test_genedao");
-		gene.setOfficialSymbol("test_genedao");
+        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        gene.setNcbiGeneId( id );
+        gene.setName( "test_genedao" );
+        gene.setOfficialName( "test_genedao" );
+        gene.setOfficialSymbol( "test_genedao" );
 
-		Taxon human = taxonService.findByCommonName("human");
-		gene.setTaxon(human);
-		PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
-		Chromosome chromosome = Chromosome.Factory.newInstance("X", human);
-		chromosome.setSequence(getTestPersistentBioSequence());
-		chromosome = (Chromosome) persisterHelper.persist(chromosome);
-		pl1.setChromosome(chromosome);
-		pl1.setNucleotide(10000010L);
-		pl1.setNucleotideLength(1001);
-		pl1.setStrand("-");
-		gene.setPhysicalLocation(pl1);
+        Taxon human = taxonService.findByCommonName( "human" );
+        gene.setTaxon( human );
+        PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
+        Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, getTestPersistentBioSequence(), human );
+        chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
+        pl1.setChromosome( chromosome );
+        pl1.setNucleotide( 10000010L );
+        pl1.setNucleotideLength( 1001 );
+        pl1.setStrand( "-" );
+        gene.setPhysicalLocation( pl1 );
 
-		gene = geneDao.create(gene);
-		Long idWeWant = gene.getId();
+        gene = geneDao.create( gene );
+        Long idWeWant = gene.getId();
 
-		gene.setId(null);
-		Gene g = geneDao.find(gene);
-		assertNotNull(g);
-		assertEquals(idWeWant, g.getId());
+        gene.setId( null );
+        Gene g = geneDao.find( gene );
+        assertNotNull( g );
+        assertEquals( idWeWant, g.getId() );
 
-		GeneValueObject gvo = geneCoreService.loadGeneDetails(idWeWant);
+        GeneValueObject gvo = geneCoreService.loadGeneDetails( idWeWant );
 
-		assertEquals(gvo.getName(), g.getName());
+        assertEquals( gvo.getName(), g.getName() );
 
-		geneDao.remove(g);
+        geneDao.remove( g );
 
-	}
+    }
 
-	@Test
-	public void testSearchGenes() throws Exception {
-		Gene gene = Gene.Factory.newInstance();
+    @Test
+    public void testSearchGenes() throws Exception {
+        Gene gene = Gene.Factory.newInstance();
 
-		Integer id = Integer.parseInt(RandomStringUtils.randomNumeric(5));
-		gene.setNcbiGeneId(id);
-		gene.setName("test_search");
-		gene.setOfficialName("test_search");
-		gene.setOfficialSymbol("test_search");
+        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
+        gene.setNcbiGeneId( id );
+        gene.setName( "test_search" );
+        gene.setOfficialName( "test_search" );
+        gene.setOfficialSymbol( "test_search" );
 
-		Taxon human = taxonService.findByCommonName("human");
-		gene.setTaxon(human);
-		PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
-		Chromosome chromosome = Chromosome.Factory.newInstance("X", human);
-		chromosome.setSequence(getTestPersistentBioSequence());
-		chromosome = (Chromosome) persisterHelper.persist(chromosome);
-		pl1.setChromosome(chromosome);
-		pl1.setNucleotide(10000010L);
-		pl1.setNucleotideLength(1001);
-		pl1.setStrand("-");
-		gene.setPhysicalLocation(pl1);
+        Taxon human = taxonService.findByCommonName( "human" );
+        gene.setTaxon( human );
+        PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
+        Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, getTestPersistentBioSequence(), human );
 
-		gene = geneDao.create(gene);
+        chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
+        pl1.setChromosome( chromosome );
+        pl1.setNucleotide( 10000010L );
+        pl1.setNucleotideLength( 1001 );
+        pl1.setStrand( "-" );
+        gene.setPhysicalLocation( pl1 );
 
-		Collection<GeneValueObject> searchResults = geneCoreService
-				.searchGenes("test_search", 1l);
+        gene = geneDao.create( gene );
 
-		assertNotNull(searchResults);
+        Collection<GeneValueObject> searchResults = geneCoreService.searchGenes( "test_search", 1l );
 
-		GeneValueObject gvo = searchResults.iterator().next();
+        assertNotNull( searchResults );
 
-		assertNotNull(gvo);
+        GeneValueObject gvo = searchResults.iterator().next();
 
-		geneDao.remove(gene);
+        assertNotNull( gvo );
 
-	}
+        geneDao.remove( gene );
+
+    }
 
 }

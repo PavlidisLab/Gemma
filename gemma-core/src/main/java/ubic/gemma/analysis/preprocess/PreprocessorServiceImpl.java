@@ -118,27 +118,29 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             // // refresh into context.
             ee = expressionExperimentService.thawLite( ee );
 
-            processForSampleCorrelation( ee );
-            processForMeanVarianceRelation( ee );
-
-            processForPca( ee );
-
             /*
-             * Redo old diff ex analyses
+             * Redo any old diff ex analyses
              */
             Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
                     .findByInvestigation( ee );
 
             if ( !oldAnalyses.isEmpty() ) {
+
                 log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
                 Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
                 for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+                    try {
+                        results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+                    } catch ( Exception e ) {
+                        log.error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
+                    }
                 }
+
             }
 
-            // Alternatively, delete all the old analyses.
-            // analyzerService.deleteAnalyses( ee );
+            processForSampleCorrelation( ee );
+            processForMeanVarianceRelation( ee );
+            processForPca( ee );
         } catch ( Exception e ) {
             throw new PreprocessingException( e );
         }
@@ -175,7 +177,11 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * @param eeId
      */
     private void processForMeanVarianceRelation( ExpressionExperiment ee ) {
-        meanVarianceService.findOrCreate( ee );
+        try {
+            meanVarianceService.findOrCreate( ee );
+        } catch ( Exception e ) {
+            log.error( "Could not compute mean-variance relation: " + e.getMessage() );
+        }
     }
 
     /**
@@ -207,7 +213,11 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * @param ee
      */
     private void processForPca( ExpressionExperiment ee ) {
-        svdService.svd( ee );
+        try {
+            svdService.svd( ee );
+        } catch ( Exception e ) {
+            log.error( "SVD could not be performed: " + e.getMessage() );
+        }
     }
 
     /**
@@ -216,7 +226,11 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * @param ee
      */
     private void processForSampleCorrelation( ExpressionExperiment ee ) {
-        sampleCoexpressionMatrixService.findOrCreate( ee );
+        try {
+            sampleCoexpressionMatrixService.findOrCreate( ee );
+        } catch ( Exception e ) {
+            log.error( "SampleCorrelation could not be computed: " + e.getMessage() );
+        }
     }
 
     /**

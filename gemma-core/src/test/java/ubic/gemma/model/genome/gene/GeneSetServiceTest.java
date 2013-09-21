@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.genome.gene.service.GeneSetService;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -148,20 +149,18 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @Test
     public void testFindByGoId() {
 
-        Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance();
         VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + GOTERM_INDB );
         oe.setValue( GOTERM_INDB );
-        g2Go1.setOntologyEntry( oe );
-        g2Go1.setGene( g );
+        Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance( g, oe, GOEvidenceCode.EXP );
+
         gene2GoService.create( g2Go1 );
 
-        Gene2GOAssociation g2Go2 = Gene2GOAssociation.Factory.newInstance();
         oe = VocabCharacteristic.Factory.newInstance();
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + GOTERM_INDB );
         oe.setValue( GOTERM_INDB );
-        g2Go2.setOntologyEntry( oe );
-        g2Go2.setGene( g3 );
+        Gene2GOAssociation g2Go2 = Gene2GOAssociation.Factory.newInstance( g3, oe, GOEvidenceCode.EXP );
+
         gene2GoService.create( g2Go2 );
 
         GeneSet gset = this.geneSetSearch.findByGoId( GOTERM_QUERY, g3.getTaxon() );

@@ -31,5 +31,4 @@ public class MeanVarianceRelationImpl extends ubic.gemma.model.expression.bioAss
      */
     private static final long serialVersionUID = -1442923993171126882L;
 
-  
 }

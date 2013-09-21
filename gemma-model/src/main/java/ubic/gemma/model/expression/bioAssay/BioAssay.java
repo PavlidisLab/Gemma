@@ -18,11 +18,11 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import gemma.gsec.model.Securable;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-
-import gemma.gsec.model.Securable;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.description.DatabaseEntry;

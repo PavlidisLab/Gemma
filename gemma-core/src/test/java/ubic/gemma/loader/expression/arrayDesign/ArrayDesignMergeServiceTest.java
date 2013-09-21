@@ -54,6 +54,10 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
                 "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ),
                 "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ), false );
 
+        ad1 = arrayDesignService.thawLite( arrayDesignService.load( ad1.getId() ) );
+        ad2 = arrayDesignService.thawLite( arrayDesignService.load( ad2.getId() ) );
+        ad3 = arrayDesignService.thawLite( arrayDesignService.load( ad3.getId() ) );
+
         /*
          * merged contains all three.
          */

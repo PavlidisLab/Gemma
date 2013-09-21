@@ -147,14 +147,11 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
             for ( Gene geneProtein1 : genesForProteinOne ) {
                 for ( Gene geneProtein2 : genesForProteinTwo ) {
                     Gene2GeneProteinAssociation gene2GeneProteinAssociation = Gene2GeneProteinAssociation.Factory
-                            .newInstance();
-                    gene2GeneProteinAssociation.setDatabaseEntry( this
-                            .getDataBaseEntry( stringProteinProteinInteraction ) );
-                    gene2GeneProteinAssociation
-                            .setConfidenceScore( stringProteinProteinInteraction.getCombined_score() );
-                    gene2GeneProteinAssociation.setEvidenceVector( stringProteinProteinInteraction.getEvidenceVector() );
-                    gene2GeneProteinAssociation.setFirstGene( geneProtein1 );
-                    gene2GeneProteinAssociation.setSecondGene( geneProtein2 );
+                            .newInstance( geneProtein1, geneProtein2, 
+                                    this.getDataBaseEntry( stringProteinProteinInteraction ),
+                                    stringProteinProteinInteraction.getEvidenceVector(),
+                                    stringProteinProteinInteraction.getCombined_score() );
+
                     gene2GeneProteinAssociations.add( gene2GeneProteinAssociation );
                 }
             }

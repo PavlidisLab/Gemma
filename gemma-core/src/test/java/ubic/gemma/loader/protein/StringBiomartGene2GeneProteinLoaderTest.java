@@ -126,14 +126,10 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         genesRat.add( makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "123445" ) );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
-                .newInstance();
-        existingGene2GeneProteinAssociationOne.setFirstGene( geneRatOne );
-        existingGene2GeneProteinAssociationOne.setSecondGene( geneRatThree );
+                .newInstance( geneRatOne, geneRatThree, null, null, null );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationTwo = Gene2GeneProteinAssociation.Factory
-                .newInstance();
-        existingGene2GeneProteinAssociationTwo.setFirstGene( geneRatOne );
-        existingGene2GeneProteinAssociationTwo.setSecondGene( geneRatTwo );
+                .newInstance( geneRatOne, geneRatTwo, null, null, null );
 
         geneAssociationRat = new ArrayList<Gene2GeneProteinAssociation>();
         geneAssociationRat.add( existingGene2GeneProteinAssociationTwo );
@@ -154,14 +150,10 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         genesZebra.add( geneZebraThree );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
-                .newInstance();
-        existingGene2GeneProteinAssociationOne.setFirstGene( geneZebraOne );
-        existingGene2GeneProteinAssociationOne.setSecondGene( geneZebraThree );
+                .newInstance( geneZebraOne, geneZebraThree, null, null, null );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationTwo = Gene2GeneProteinAssociation.Factory
-                .newInstance();
-        existingGene2GeneProteinAssociationTwo.setFirstGene( geneZebraOne );
-        existingGene2GeneProteinAssociationTwo.setSecondGene( geneZebraTwo );
+                .newInstance( geneZebraOne, geneZebraTwo, null, null, null );
 
         geneAssociationZebra = new ArrayList<Gene2GeneProteinAssociation>();
         geneAssociationZebra.add( existingGene2GeneProteinAssociationTwo );

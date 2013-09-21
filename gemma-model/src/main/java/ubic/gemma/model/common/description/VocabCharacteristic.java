@@ -43,21 +43,9 @@ public abstract class VocabCharacteristic extends ubic.gemma.model.common.descri
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1790433503062970331L;
     private String valueUri;
 
     private String categoryUri;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public VocabCharacteristic() {
-    }
 
     /**
      * The URI of the class that this is an instance of. Will only be different from the termUri when the class is

@@ -18,36 +18,21 @@
  */
 package ubic.gemma.model.association;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
+
 /**
  * An association between a DNA-binding protein gene and a putative target gene. By convention, the first gene is the
  * TF, the second gene is the target.
  */
-public abstract class TfGeneAssociation extends ubic.gemma.model.association.Gene2GeneAssociation {
+public abstract class TfGeneAssociation extends Gene2GeneAssociation {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4563819092987249428L;
-
-    private ubic.gemma.model.common.description.DatabaseEntry databaseEntry;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public TfGeneAssociation() {
-    }
+    final private DatabaseEntry databaseEntry = null;
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.DatabaseEntry getDatabaseEntry() {
+    public DatabaseEntry getDatabaseEntry() {
         return this.databaseEntry;
-    }
-
-    public void setDatabaseEntry( ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
-        this.databaseEntry = databaseEntry;
     }
 
 }

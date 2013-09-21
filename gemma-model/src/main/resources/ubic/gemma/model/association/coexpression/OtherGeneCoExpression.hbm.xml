@@ -4,39 +4,39 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.association.coexpression.OtherGeneCoExpressionImpl" table="OTHER_GENE_CO_EXPRESSION" dynamic-insert="false" dynamic-update="false">
-      <cache usage="read-write" />
-      <id name="id" type="java.lang.Long" unsaved-value="null">
-         <column name="ID" sql-type="BIGINT"/>
-         <generator class="native">
-         </generator>
-      </id>
-      <property name="pvalue" type="java.lang.Double">
-         <column name="PVALUE" not-null="false" unique="false" sql-type="DOUBLE"/>
-      </property>
-      <property name="effect" type="java.lang.Double">
-         <column name="EFFECT" not-null="false" unique="false" sql-type="DOUBLE"/>
-      </property>
-      <property name="numDataSets" type="java.lang.Integer">
-         <column name="NUM_DATA_SETS" not-null="false" unique="false" sql-type="INTEGER"/>
-      </property>
-      <property name="datasetsTestedVector" type="byte[]">
-         <column name="DATASETS_TESTED_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
-      </property>
-      <property name="datasetsSupportingVector" type="byte[]">
-         <column name="DATASETS_SUPPORTING_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
-      </property>
-      <property name="specificityVector" type="byte[]">
-         <column name="SPECIFICITY_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
-      </property>
-      <many-to-one name="secondGene" class="ubic.gemma.model.genome.GeneImpl"  lazy="proxy" fetch="select">
-         <column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT"/>
-      </many-to-one>
-      <many-to-one name="firstGene" class="ubic.gemma.model.genome.GeneImpl"  lazy="proxy" fetch="select">
-         <column name="FIRST_GENE_FK" not-null="true" sql-type="BIGINT"/>
-      </many-to-one>
-      <many-to-one name="sourceAnalysis" class="ubic.gemma.model.analysis.Analysis"  lazy="proxy" fetch="select">
-         <column name="SOURCE_ANALYSIS_FK" not-null="false" sql-type="BIGINT"/>
-      </many-to-one>
-   </class>
+	<class name="ubic.gemma.model.association.coexpression.OtherGeneCoExpressionImpl" table="OTHER_GENE_CO_EXPRESSION"
+		dynamic-insert="false" dynamic-update="false" mutable="false">
+		<cache usage="read-write" />
+		<id access="field" name="id" type="java.lang.Long" unsaved-value="null">
+			<column name="ID" sql-type="BIGINT" />
+			<generator class="native">
+			</generator>
+		</id>
+
+		<property access="field" name="effect" type="java.lang.Double">
+			<column name="EFFECT" not-null="false" unique="false" sql-type="DOUBLE" />
+		</property>
+		<property access="field" name="numDataSets" type="java.lang.Integer">
+			<column name="NUM_DATA_SETS" not-null="false" unique="false" sql-type="INTEGER" />
+		</property>
+		<property access="field" name="datasetsTestedVector" type="byte[]">
+			<column name="DATASETS_TESTED_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB" />
+		</property>
+		<property access="field" name="datasetsSupportingVector" type="byte[]">
+			<column name="DATASETS_SUPPORTING_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB" />
+		</property>
+		<property access="field" name="specificityVector" type="byte[]">
+			<column name="SPECIFICITY_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB" />
+		</property>
+		<many-to-one access="field" name="secondGene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select">
+			<column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT" />
+		</many-to-one>
+		<many-to-one access="field" name="firstGene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select">
+			<column name="FIRST_GENE_FK" not-null="true" sql-type="BIGINT" />
+		</many-to-one>
+		<many-to-one access="field" name="sourceAnalysis" class="ubic.gemma.model.analysis.Analysis" lazy="proxy"
+			fetch="select">
+			<column name="SOURCE_ANALYSIS_FK" not-null="false" sql-type="BIGINT" />
+		</many-to-one>
+	</class>
 </hibernate-mapping>

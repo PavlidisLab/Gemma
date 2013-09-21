@@ -173,8 +173,6 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
             return null;
         }
 
-        Gene2GOAssociation g2GOAss = Gene2GOAssociation.Factory.newInstance();
-
         Gene gene = Gene.Factory.newInstance();
         gene.setNcbiGeneId( Integer.parseInt( values[GENE_ID] ) );
 
@@ -186,9 +184,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
         // g2GOAss.setSource( ncbiGeneDb );
 
-        g2GOAss.setGene( gene );
-        g2GOAss.setOntologyEntry( oe );
-
+        GOEvidenceCode evcode = null;
         String evidenceCode = values[EVIDENCE_CODE];
 
         if ( !( StringUtils.isBlank( evidenceCode ) || evidenceCode.equals( "-" ) ) ) {
@@ -197,8 +193,10 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
                 return null;
             }
 
-            g2GOAss.setEvidenceCode( GOEvidenceCode.fromString( evidenceCode ) );
+            evcode = GOEvidenceCode.fromString( evidenceCode );
+
         }
+        Gene2GOAssociation g2GOAss = Gene2GOAssociation.Factory.newInstance( gene, oe, evcode );
 
         try {
             queue.put( g2GOAss );

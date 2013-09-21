@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.model.association.GOEvidenceCode;
+
 /**
  * Instances of this are used to describe other entities. This base class is just a characteristic that is simply a
  * 'tag' of free text.
@@ -56,15 +58,11 @@ public abstract class Characteristic extends ubic.gemma.model.common.Auditable {
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 4317228624899157443L;
     private String value;
 
     private String category;
 
-    private ubic.gemma.model.association.GOEvidenceCode evidenceCode;
+    private GOEvidenceCode evidenceCode;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -84,7 +82,7 @@ public abstract class Characteristic extends ubic.gemma.model.common.Auditable {
     /**
      * 
      */
-    public ubic.gemma.model.association.GOEvidenceCode getEvidenceCode() {
+    public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
     }
 
@@ -99,7 +97,7 @@ public abstract class Characteristic extends ubic.gemma.model.common.Auditable {
         this.category = category;
     }
 
-    public void setEvidenceCode( ubic.gemma.model.association.GOEvidenceCode evidenceCode ) {
+    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
         this.evidenceCode = evidenceCode;
     }
 

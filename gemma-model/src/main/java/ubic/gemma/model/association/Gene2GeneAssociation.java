@@ -18,47 +18,38 @@
  */
 package ubic.gemma.model.association;
 
+import java.io.Serializable;
+
+import ubic.gemma.model.genome.Gene;
+
 /**
- * 
+ * Entity representing a relationship between two genes. This abstract class is immutable, and it is recommended that
+ * subclasses be immutable as well.
  */
-public abstract class Gene2GeneAssociation extends ubic.gemma.model.association.Relationship {
+public abstract class Gene2GeneAssociation implements Serializable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4065373891743627781L;
+    final private Gene firstGene = null;
 
-    private ubic.gemma.model.genome.Gene secondGene;
-    private ubic.gemma.model.genome.Gene firstGene;
+    final private Long id = null;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Gene2GeneAssociation() {
-    }
+    final private Gene secondGene = null;
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.Gene getFirstGene() {
+    public Gene getFirstGene() {
         return this.firstGene;
     }
 
+    public Long getId() {
+        return id;
+    }
+
     /**
      * 
      */
-    public ubic.gemma.model.genome.Gene getSecondGene() {
+    public Gene getSecondGene() {
         return this.secondGene;
-    }
-
-    public void setFirstGene( ubic.gemma.model.genome.Gene firstGene ) {
-        this.firstGene = firstGene;
-    }
-
-    public void setSecondGene( ubic.gemma.model.genome.Gene secondGene ) {
-        this.secondGene = secondGene;
     }
 
 }

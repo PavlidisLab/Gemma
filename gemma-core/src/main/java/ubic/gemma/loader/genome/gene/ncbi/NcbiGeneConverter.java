@@ -24,6 +24,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -132,9 +133,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         gene.setTaxon( t );
 
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        Chromosome chrom = Chromosome.Factory.newInstance();
-        chrom.setTaxon( t );
-        chrom.setName( info.getChromosome() );
+        Chromosome chrom = Chromosome.Factory.newInstance( info.getChromosome(), t );
         pl.setChromosome( chrom );
 
         CytogeneticLocation cl = CytogeneticLocation.Factory.newInstance();
@@ -290,7 +289,12 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         dbe.setAccession( acc.getGenomicNucleotideAccession() );
         dbe.setAccessionVersion( acc.getGenomicNucleotideAccessionVersion() );
         chromSeq.setSequenceDatabaseEntry( dbe );
-        chrom.setSequence( chromSeq );
+        try {
+            FieldUtils.writeField( chrom, "sequence", chromSeq, true  );
+        } catch ( IllegalAccessException e ) {
+            e.printStackTrace();
+        }
+
     }
 
     public Gene convert( NcbiGeneData data ) {

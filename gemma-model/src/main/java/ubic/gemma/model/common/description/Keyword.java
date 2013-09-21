@@ -30,23 +30,9 @@ public abstract class Keyword extends ubic.gemma.model.common.description.BibRef
         /**
          * Constructs a new instance of {@link ubic.gemma.model.common.description.Keyword}.
          */
-        public static ubic.gemma.model.common.description.Keyword newInstance() {
-            return new ubic.gemma.model.common.description.KeywordImpl();
+        public static Keyword newInstance() {
+            return new KeywordImpl();
         }
-
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -5325471383383289887L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Keyword() {
     }
 
 }

@@ -17,59 +17,11 @@ package ubic.gemma.model.common.description;
 import java.util.Collection;
 import java.util.TreeSet;
 
-
 /**
  * @author Paul
  * @version $Id$
  */
 public class ExternalDatabaseValueObject implements Comparable<ExternalDatabaseValueObject> {
-
-    private String name;
-    private Long id;
-    private boolean checked = false;
-
-    public boolean isChecked() {
-        return checked;
-    }
-
-    public void setChecked( boolean checked ) {
-        this.checked = checked;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public ExternalDatabaseValueObject() {
-        super();
-    }
-
-    public ExternalDatabaseValueObject( Long id, String name, boolean checked ) {
-        super();
-        this.name = name;
-        this.id = id;
-        this.checked = checked;
-    }
-
-    public static ExternalDatabaseValueObject fromEntity( ExternalDatabase ed ) {
-        if ( ed == null ) return null;
-        ExternalDatabaseValueObject vo = new ExternalDatabaseValueObject();
-        vo.setName( ed.getName() );
-        vo.setId( ed.getId() );
-        return vo;
-    }
 
     public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {
         if ( eds == null ) return null;
@@ -82,12 +34,34 @@ public class ExternalDatabaseValueObject implements Comparable<ExternalDatabaseV
         return externalDatabaseValueObjects;
     }
 
+    public static ExternalDatabaseValueObject fromEntity( ExternalDatabase ed ) {
+        if ( ed == null ) return null;
+        ExternalDatabaseValueObject vo = new ExternalDatabaseValueObject();
+        vo.setName( ed.getName() );
+        vo.setId( ed.getId() );
+        return vo;
+    }
+
+    private String name;
+
+    private Long id;
+
+    private boolean checked = false;
+
+    public ExternalDatabaseValueObject() {
+        super();
+    }
+
+    public ExternalDatabaseValueObject( Long id, String name, boolean checked ) {
+        super();
+        this.name = name;
+        this.id = id;
+        this.checked = checked;
+    }
+
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        return result;
+    public int compareTo( ExternalDatabaseValueObject externalDatabaseValueObject ) {
+        return this.getName().toLowerCase().compareTo( externalDatabaseValueObject.getName().toLowerCase() );
     }
 
     @Override
@@ -102,8 +76,35 @@ public class ExternalDatabaseValueObject implements Comparable<ExternalDatabaseV
         return true;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     @Override
-    public int compareTo( ExternalDatabaseValueObject externalDatabaseValueObject ) {
-        return this.getName().toLowerCase().compareTo( externalDatabaseValueObject.getName().toLowerCase() );
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+        return result;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked( boolean checked ) {
+        this.checked = checked;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
     }
 }

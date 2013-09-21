@@ -95,11 +95,13 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         // appear more than once per array design.
         Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
 
-        makeBioSeqMap( globalBsMap, arrayDesign );
+        ArrayDesign thawed = makeBioSeqMap( globalBsMap, arrayDesign );
 
         log.info( globalBsMap.keySet().size() + " sequences in first array design." );
         // Now check the other designs, add slots for additional probes if necessary.
+        Collection<ArrayDesign> thawedothers = new HashSet<>();
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
+
             if ( otherArrayDesign.getMergedInto() != null ) {
                 throw new IllegalArgumentException( "Sorry, can't merge an array design that is already a mergee ("
                         + otherArrayDesign + ")" );
@@ -111,12 +113,12 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
             }
 
             log.info( "Examining " + otherArrayDesign );
-            makeBioSeqMap( globalBsMap, otherArrayDesign );
+            thawedothers.add( makeBioSeqMap( globalBsMap, otherArrayDesign ) );
 
             log.info( globalBsMap.keySet().size() + " unique sequences encountered in total so far" );
         }
 
-        return createMerged( arrayDesign, otherArrayDesigns, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, add );
+        return createMerged( thawed, thawedothers, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, add );
     }
 
     /**
@@ -216,8 +218,10 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
      * 
      * @param globalBsMap Map that tells us, in effect, how many probes to make for the sequence. Modified by this.
      * @param arrayDesign
+     * @return
      */
-    private void makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap, ArrayDesign arrayDesign ) {
+    private ArrayDesign makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap,
+            ArrayDesign arrayDesign ) {
         Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
         arrayDesign = this.arrayDesignService.thaw( arrayDesign );
         int count = 0;
@@ -252,7 +256,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         if ( ++count % 10000 == 0 ) {
             log.info( "Processed " + count + " probes" );
         }
-
+        return arrayDesign;
     }
 
     /**

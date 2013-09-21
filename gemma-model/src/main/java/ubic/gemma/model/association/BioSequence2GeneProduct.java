@@ -18,30 +18,46 @@
  */
 package ubic.gemma.model.association;
 
+import java.io.Serializable;
+
+import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
+
 /**
  * An association between a BioSequence and a Gene Product. This class is abstract and is variously subclassed with
  * BlatAssocation in order to capture the scores and other parameters that document why we think there is a connection
  * between a given sequence and a gene product.
  */
-public abstract class BioSequence2GeneProduct extends ubic.gemma.model.association.Relationship {
+public abstract class BioSequence2GeneProduct implements Serializable {
+
+    public static long getSerialversionuid() {
+        return serialVersionUID;
+    }
+
+    private Long id = null;
+
+    private Analysis sourceAnalysis = null;
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 2445048138750980972L;
 
-    private Integer overlap;
-    private Double score;
+    private Integer overlap = null;
 
-    private Long threePrimeDistance;
+    private Double score = null;
 
-    private ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod;
+    private Long threePrimeDistance = null;
 
-    private Double specificity;
+    private ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod = null;
 
-    private ubic.gemma.model.genome.biosequence.BioSequence bioSequence;
+    private Double specificity = null;
 
-    private ubic.gemma.model.genome.gene.GeneProduct geneProduct;
+    private BioSequence bioSequence = null;
+
+    private GeneProduct geneProduct = null;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -54,7 +70,7 @@ public abstract class BioSequence2GeneProduct extends ubic.gemma.model.associati
     /**
      * 
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence getBioSequence() {
+    public BioSequence getBioSequence() {
         return this.bioSequence;
     }
 
@@ -62,8 +78,12 @@ public abstract class BioSequence2GeneProduct extends ubic.gemma.model.associati
      * A collection of GeneProducts that this BioSequence2GeneProduct corresponds to. A BioSequence can align to one or
      * more GeneProducts.
      */
-    public ubic.gemma.model.genome.gene.GeneProduct getGeneProduct() {
+    public GeneProduct getGeneProduct() {
         return this.geneProduct;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     /**
@@ -80,6 +100,10 @@ public abstract class BioSequence2GeneProduct extends ubic.gemma.model.associati
      */
     public Double getScore() {
         return this.score;
+    }
+
+    public Analysis getSourceAnalysis() {
+        return sourceAnalysis;
     }
 
     /**
@@ -102,16 +126,20 @@ public abstract class BioSequence2GeneProduct extends ubic.gemma.model.associati
     /**
      * Specifies the method used to measure the distance from the threePrimeEnd.
      */
-    public ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod getThreePrimeDistanceMeasurementMethod() {
+    public ThreePrimeDistanceMethod getThreePrimeDistanceMeasurementMethod() {
         return this.threePrimeDistanceMeasurementMethod;
     }
 
-    public void setBioSequence( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public void setBioSequence( BioSequence bioSequence ) {
         this.bioSequence = bioSequence;
     }
 
-    public void setGeneProduct( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
+    public void setGeneProduct( GeneProduct geneProduct ) {
         this.geneProduct = geneProduct;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     public void setOverlap( Integer overlap ) {
@@ -122,6 +150,10 @@ public abstract class BioSequence2GeneProduct extends ubic.gemma.model.associati
         this.score = score;
     }
 
+    public void setSourceAnalysis( Analysis sourceAnalysis ) {
+        this.sourceAnalysis = sourceAnalysis;
+    }
+
     public void setSpecificity( Double specificity ) {
         this.specificity = specificity;
     }
@@ -130,8 +162,7 @@ public abstract class BioSequence2GeneProduct extends ubic.gemma.model.associati
         this.threePrimeDistance = threePrimeDistance;
     }
 
-    public void setThreePrimeDistanceMeasurementMethod(
-            ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod ) {
+    public void setThreePrimeDistanceMeasurementMethod( ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod ) {
         this.threePrimeDistanceMeasurementMethod = threePrimeDistanceMeasurementMethod;
     }
 

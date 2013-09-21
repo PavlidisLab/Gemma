@@ -18,34 +18,25 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.association.Gene2GeneAssociation;
+
 /**
  * 
  */
-public abstract class Gene2GeneCoexpression extends ubic.gemma.model.association.Gene2GeneAssociation {
+public abstract class Gene2GeneCoexpression extends Gene2GeneAssociation {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6751728444824889104L;
+    final private byte[] datasetsSupportingVector = null;
 
-    private Double pvalue;
-    private Double effect;
+    final private byte[] datasetsTestedVector = null;
 
-    private Integer numDataSets;
+    final private Double effect = null;
 
-    private byte[] datasetsTestedVector;
+    final private Integer numDataSets = null;
 
-    private byte[] datasetsSupportingVector;
+    private final Analysis sourceAnalysis = null;
 
-    private byte[] specificityVector;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Gene2GeneCoexpression() {
-    }
+    final private byte[] specificityVector = null;
 
     /**
      * 
@@ -75,11 +66,8 @@ public abstract class Gene2GeneCoexpression extends ubic.gemma.model.association
         return this.numDataSets;
     }
 
-    /**
-     * 
-     */
-    public Double getPvalue() {
-        return this.pvalue;
+    public Analysis getSourceAnalysis() {
+        return sourceAnalysis;
     }
 
     /**
@@ -88,30 +76,6 @@ public abstract class Gene2GeneCoexpression extends ubic.gemma.model.association
      */
     public byte[] getSpecificityVector() {
         return this.specificityVector;
-    }
-
-    public void setDatasetsSupportingVector( byte[] datasetsSupportingVector ) {
-        this.datasetsSupportingVector = datasetsSupportingVector;
-    }
-
-    public void setDatasetsTestedVector( byte[] datasetsTestedVector ) {
-        this.datasetsTestedVector = datasetsTestedVector;
-    }
-
-    public void setEffect( Double effect ) {
-        this.effect = effect;
-    }
-
-    public void setNumDataSets( Integer numDataSets ) {
-        this.numDataSets = numDataSets;
-    }
-
-    public void setPvalue( Double pvalue ) {
-        this.pvalue = pvalue;
-    }
-
-    public void setSpecificityVector( byte[] specificityVector ) {
-        this.specificityVector = specificityVector;
     }
 
 }

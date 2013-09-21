@@ -18,35 +18,50 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 /**
  * 
  */
-public abstract class OtherGeneCoExpression extends ubic.gemma.model.association.coexpression.Gene2GeneCoexpression {
+public abstract class OtherGeneCoExpression extends Gene2GeneCoexpression {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.coexpression.OtherGeneCoExpression}.
+     * Constructs new instances of {@link OtherGeneCoExpression}.
      */
     public static final class Factory {
+
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.coexpression.OtherGeneCoExpression}.
+         * @param sourceAnalysis
+         * @param secondGene
+         * @param firstGene
+         * @param effect
+         * @param numDataSets
+         * @param datasetsTestedVector
+         * @param datasetsSupportingVector
+         * @param specificityVector
+         * @return
          */
-        public static ubic.gemma.model.association.coexpression.OtherGeneCoExpression newInstance() {
-            return new ubic.gemma.model.association.coexpression.OtherGeneCoExpressionImpl();
+        public static OtherGeneCoExpression newInstance( ubic.gemma.model.analysis.Analysis sourceAnalysis,
+                ubic.gemma.model.genome.Gene secondGene, ubic.gemma.model.genome.Gene firstGene, Double effect,
+                Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector,
+                byte[] specificityVector ) {
+            final OtherGeneCoExpression entity = new OtherGeneCoExpressionImpl();
+            try {
+                FieldUtils.writeField( entity, "sourceAnalysis", sourceAnalysis, true );
+                FieldUtils.writeField( entity, "secondGene", secondGene, true );
+                FieldUtils.writeField( entity, "firstGene", firstGene, true );
+                FieldUtils.writeField( entity, "effect", effect, true );
+                FieldUtils.writeField( entity, "numDataSets", numDataSets, true );
+                FieldUtils.writeField( entity, "datasetsTestedVector", datasetsTestedVector, true );
+                FieldUtils.writeField( entity, "datasetsSupportingVector", datasetsSupportingVector, true );
+                FieldUtils.writeField( entity, "specificityVector", specificityVector, true );
+
+            } catch ( IllegalAccessException e ) {
+                System.err.println( e );
+            }
+
+            return entity;
         }
-
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -2419886942835022490L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public OtherGeneCoExpression() {
     }
 
 }

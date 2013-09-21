@@ -113,9 +113,7 @@ public class GeneImplTest extends TestCase {
         bTax.setScientificName( "Barioobius foobarius" );
         bTax.setIsSpecies( true );
         bTax.setIsGenesUsable( true );
-        Chromosome c = Chromosome.Factory.newInstance();
-        c.setName( "X" );
-        c.setTaxon( aTax );
+        Chromosome c = Chromosome.Factory.newInstance( "X", aTax );
 
         aLoc = PhysicalLocation.Factory.newInstance();
         aLoc.setChromosome( c );
@@ -125,5 +123,4 @@ public class GeneImplTest extends TestCase {
         bLoc.setChromosome( c );
         bLoc.setNucleotide( 20L );
     }
-
 }

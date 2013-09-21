@@ -18,45 +18,58 @@
  */
 package ubic.gemma.model.genome;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
 /**
- * 
+ * Immutable representation of a chromosome
  */
 public abstract class Chromosome implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.Chromosome}.
+     * Constructs new instances of {@link Chromosome}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.Chromosome}.
+         * Constructs a new instance of {@link Chromosome}.
          */
-        public static ubic.gemma.model.genome.Chromosome newInstance() {
-            return new ubic.gemma.model.genome.ChromosomeImpl();
+        public static Chromosome newInstance() {
+            return new ChromosomeImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.Chromosome}, taking all possible properties
-         * (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link Chromosome}, taking all possible properties (except the identifier(s))as
+         * arguments.
          */
-        public static ubic.gemma.model.genome.Chromosome newInstance( String name,
-                ubic.gemma.model.common.description.ExternalDatabase assemblyDatabase,
-                ubic.gemma.model.genome.biosequence.BioSequence sequence, ubic.gemma.model.genome.Taxon taxon ) {
-            final ubic.gemma.model.genome.Chromosome entity = new ubic.gemma.model.genome.ChromosomeImpl();
-            entity.setName( name );
-            entity.setAssemblyDatabase( assemblyDatabase );
-            entity.setSequence( sequence );
-            entity.setTaxon( taxon );
+        public static Chromosome newInstance( String name, ExternalDatabase assemblyDatabase, BioSequence sequence,
+                ubic.gemma.model.genome.Taxon taxon ) {
+            final Chromosome entity = new ChromosomeImpl();
+            try {
+                if ( name != null ) FieldUtils.writeField( entity, "name", name, true );
+                if ( assemblyDatabase != null )
+                    FieldUtils.writeField( entity, "assemblyDatabase", assemblyDatabase, true );
+                if ( sequence != null ) FieldUtils.writeField( entity, "sequence", sequence, true );
+                if ( taxon != null ) FieldUtils.writeField( entity, "taxon", taxon, true );
+            } catch ( IllegalAccessException e ) {
+                e.printStackTrace();
+            }
             return entity;
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.Chromosome}, taking all required and/or read-only
-         * properties as arguments.
+         * Constructs a new instance of {@link Chromosome}, taking all required and/or read-only properties as
+         * arguments.
          */
-        public static ubic.gemma.model.genome.Chromosome newInstance( String name, ubic.gemma.model.genome.Taxon taxon ) {
-            final ubic.gemma.model.genome.Chromosome entity = new ubic.gemma.model.genome.ChromosomeImpl();
-            entity.setName( name );
-            entity.setTaxon( taxon );
+        public static Chromosome newInstance( String name, ubic.gemma.model.genome.Taxon taxon ) {
+            final Chromosome entity = new ChromosomeImpl();
+            try {
+                if ( name != null ) FieldUtils.writeField( entity, "name", name, true );
+                if ( taxon != null ) FieldUtils.writeField( entity, "taxon", taxon, true );
+            } catch ( IllegalAccessException e ) {
+                e.printStackTrace();
+            }
             return entity;
         }
     }
@@ -65,15 +78,15 @@ public abstract class Chromosome implements java.io.Serializable {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -8353766718193697363L;
-    private String name;
+    final private String name = null;
 
-    private Long id;
+    final private Long id = null;
 
-    private ubic.gemma.model.common.description.ExternalDatabase assemblyDatabase;
+    final private ExternalDatabase assemblyDatabase = null;
 
-    private ubic.gemma.model.genome.biosequence.BioSequence sequence;
+    final private BioSequence sequence = null;
 
-    private ubic.gemma.model.genome.Taxon taxon;
+    final private Taxon taxon = null;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -83,10 +96,6 @@ public abstract class Chromosome implements java.io.Serializable {
     public Chromosome() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an Chromosome instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -96,20 +105,18 @@ public abstract class Chromosome implements java.io.Serializable {
             return false;
         }
         final Chromosome that = ( Chromosome ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
+
+        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+            return this.getTaxon().equals( that.getTaxon() ) && this.getName().equals( that.getName() );
         }
+
         return true;
     }
 
     /**
-     * <p>
-     * <p>
      * The database where we have the assesmbly of the chromosome, such as the GoldenPath.
-     * </p>
-     * </p>
      */
-    public ubic.gemma.model.common.description.ExternalDatabase getAssemblyDatabase() {
+    public ExternalDatabase getAssemblyDatabase() {
         return this.assemblyDatabase;
     }
 
@@ -128,13 +135,10 @@ public abstract class Chromosome implements java.io.Serializable {
     }
 
     /**
-     * <p>
-     * <p>
-     * The sequence of the chromosome.
-     * </p>
-     * </p>
+     * The sequence of the chromosome. This is typically going to be just a reference to the sequence in an external
+     * database.
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence getSequence() {
+    public BioSequence getSequence() {
         return this.sequence;
     }
 
@@ -145,35 +149,24 @@ public abstract class Chromosome implements java.io.Serializable {
         return this.taxon;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        assert this.getName() != null;
+        assert this.getTaxon() != null;
+
+        hashCode = 29
+                * hashCode
+                + ( this.getId() == null ? this.getName().hashCode() + this.getTaxon().hashCode() : this.getId()
+                        .hashCode() );
 
         return hashCode;
     }
 
-    public void setAssemblyDatabase( ubic.gemma.model.common.description.ExternalDatabase assemblyDatabase ) {
-        this.assemblyDatabase = assemblyDatabase;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setSequence( ubic.gemma.model.genome.biosequence.BioSequence sequence ) {
-        this.sequence = sequence;
-    }
-
-    public void setTaxon( ubic.gemma.model.genome.Taxon taxon ) {
-        this.taxon = taxon;
+    @Override
+    public String toString() {
+        return this.getTaxon().getScientificName() + " Chromosome " + this.getName();
     }
 
 }

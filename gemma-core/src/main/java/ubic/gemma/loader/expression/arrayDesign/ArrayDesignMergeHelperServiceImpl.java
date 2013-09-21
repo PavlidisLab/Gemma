@@ -19,6 +19,7 @@ import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -46,6 +47,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
      * java.util.Collection)
      */
     @Override
+    @Transactional
     public ArrayDesign persistMerging( ArrayDesign result, ArrayDesign arrayDesign,
             Collection<ArrayDesign> otherArrayDesigns, boolean mergeWithExisting,
             Collection<CompositeSequence> newProbes ) {
@@ -90,7 +92,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
     private void audit( ArrayDesign arrayDesign, String note ) {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, null,
                 new ArrayDesignMergeEventImpl() );
-
         arrayDesign.getAuditTrail().addEvent( auditEvent );
     }
+
 }

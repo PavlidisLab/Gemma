@@ -24,7 +24,9 @@ package ubic.gemma.model.common.description;
 
 /**
  * @see ubic.gemma.model.common.description.PublicationType
+ * @deprecated
  */
+@Deprecated
 public class PublicationTypeImpl extends ubic.gemma.model.common.description.PublicationType {
     /**
      * The serial version UID of this class. Needed for serialization.

@@ -18,46 +18,36 @@
  */
 package ubic.gemma.model.association;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
+
 /**
  * An association between a BioSequence and a GeneProduct based on external database identifiers.
  */
-public abstract class ReferenceAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
+public abstract class ReferenceAssociation extends BioSequence2GeneProduct {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.ReferenceAssociation}.
+     * Constructs new instances of {@link ReferenceAssociation}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.ReferenceAssociation}.
+         * Constructs a new instance of {@link ReferenceAssociation}.
          */
-        public static ubic.gemma.model.association.ReferenceAssociation newInstance() {
-            return new ubic.gemma.model.association.ReferenceAssociationImpl();
+        public static ReferenceAssociation newInstance() {
+            return new ReferenceAssociationImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1476215275010160696L;
-    private ubic.gemma.model.common.description.DatabaseEntry referencedDatabaseEntry;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ReferenceAssociation() {
-    }
+    private DatabaseEntry referencedDatabaseEntry;
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.DatabaseEntry getReferencedDatabaseEntry() {
+    public DatabaseEntry getReferencedDatabaseEntry() {
         return this.referencedDatabaseEntry;
     }
 
-    public void setReferencedDatabaseEntry( ubic.gemma.model.common.description.DatabaseEntry referencedDatabaseEntry ) {
+    public void setReferencedDatabaseEntry( DatabaseEntry referencedDatabaseEntry ) {
         this.referencedDatabaseEntry = referencedDatabaseEntry;
     }
 

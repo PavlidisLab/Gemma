@@ -91,9 +91,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     @After
     public void after() {
         try {
-
             eeService.delete( ee );
-
         } catch ( Exception e ) {
 
         }
@@ -114,7 +112,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         ee = ( ExpressionExperiment ) results.iterator().next();
 
-        qt = createOrUpdateQt( ee, ScaleType.LINEAR );
+        qt = createOrUpdateQt( ScaleType.LINEAR );
         qt.setIsNormalized( true );
         quantitationTypeService.update( qt );
 
@@ -173,7 +171,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         ee = ( ExpressionExperiment ) results.iterator().next();
 
-        qt = createOrUpdateQt( ee, ScaleType.LOG2 );
+        qt = createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
         quantitationTypeService.update( qt );
 
@@ -232,7 +230,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     }
 
-    private QuantitationType createOrUpdateQt( ExpressionExperiment ee, ScaleType scale ) throws Exception {
+    private QuantitationType createOrUpdateQt( ScaleType scale ) throws Exception {
 
         Collection<QuantitationType> qtList = eeService.getPreferredQuantitationType( ee );
         if ( qtList.size() == 0 ) {
@@ -271,7 +269,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         ee = ( ExpressionExperiment ) results.iterator().next();
 
-        qt = createOrUpdateQt( ee, ScaleType.LOG2 );
+        qt = createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
         quantitationTypeService.update( qt );
 
@@ -333,7 +331,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // so it doesn't look for soft files
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
-        ExpressionExperiment ee = eeService.findByShortName( "GSE29006" );
+        ee = eeService.findByShortName( "GSE29006" );
         if ( ee != null ) {
             eeService.delete( ee );
         }
@@ -349,7 +347,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.thaw( ee );
 
-        qt = createOrUpdateQt( ee, ScaleType.COUNT );
+        qt = createOrUpdateQt( ScaleType.COUNT );
 
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();

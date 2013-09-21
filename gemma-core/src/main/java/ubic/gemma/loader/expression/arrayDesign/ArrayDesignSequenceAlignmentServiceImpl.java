@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -207,7 +208,11 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             }
 
             result.setSearchedDatabase( searchedDatabase );
-            result.getTargetChromosome().setTaxon( taxon );
+            try {
+                FieldUtils.writeField( result.getTargetChromosome(), "taxon", taxon, true  );
+            } catch ( IllegalAccessException e ) {
+                e.printStackTrace();
+            }
             result.getTargetChromosome().getSequence().setTaxon( taxon );
 
         }
@@ -426,7 +431,11 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             assert br.getQuerySequence().getName() != null;
             Taxon taxon = br.getQuerySequence().getTaxon();
             assert taxon != null;
-            br.getTargetChromosome().setTaxon( taxon );
+            try {
+                FieldUtils.writeField( br.getTargetChromosome(), "taxon", taxon , true );
+            } catch ( IllegalAccessException e ) {
+                e.printStackTrace();
+            }
             br.getTargetChromosome().getSequence().setTaxon( taxon );
 
             PhysicalLocation pl = br.getTargetAlignedRegion();

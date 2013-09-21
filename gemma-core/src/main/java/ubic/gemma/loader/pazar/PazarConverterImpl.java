@@ -62,7 +62,6 @@ public class PazarConverterImpl implements PazarConverter {
      */
     @Override
     public PazarAssociation convert( PazarRecord sourceDomainObject ) {
-        PazarAssociation a = PazarAssociation.Factory.newInstance();
 
         String targetAcc = sourceDomainObject.getTargetGeneAcc();
         Gene targetGene = null;
@@ -88,10 +87,8 @@ public class PazarConverterImpl implements PazarConverter {
             log.warn( "Failed to map a gene: " + tfAcc );
             return null;
         }
-        a.setPazarTargetGeneId( sourceDomainObject.getPazarTargetGeneId() );
-        a.setPazarTfId( sourceDomainObject.getPazarTfId() );
-        a.setFirstGene( tfGene );
-        a.setSecondGene( targetGene );
+        PazarAssociation a = PazarAssociation.Factory.newInstance( null, targetGene, tfGene, null,
+                sourceDomainObject.getPazarTfId(), sourceDomainObject.getPazarTargetGeneId() );
 
         return a;
     }

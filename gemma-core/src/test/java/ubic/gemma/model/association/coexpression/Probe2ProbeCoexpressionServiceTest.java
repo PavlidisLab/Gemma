@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis; 
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -63,7 +63,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
     public void setup() {
 
         ee = this.getTestPersistentCompleteExpressionExperiment( false );
- 
+
         Collection<ProcessedExpressionDataVector> dvs = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
 
@@ -83,26 +83,22 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
         this.secondProbeId = dvl.get( 1 ).getDesignElement().getId();
 
         assertNotNull( this.firstProbeId );
+        assertTrue( !this.firstProbeId.equals( secondProbeId ) );
 
         Collection<Probe2ProbeCoexpression> coll = new HashSet<Probe2ProbeCoexpression>();
 
         for ( int i = 0, j = dvs.size(); i < j - 1; i += 2 ) {
-            Probe2ProbeCoexpression ppc = MouseProbeCoExpression.Factory.newInstance();
-            ppc.setFirstVector( dvl.get( i ) );
-            ppc.setSecondVector( dvl.get( i + 1 ) );
+            Probe2ProbeCoexpression ppc = MouseProbeCoExpression.Factory.newInstance( analysis, 0.5, ee, dvl.get( i ),
+                    dvl.get( i + 1 ) );
 
             assertNotNull( ppc.getFirstVector().getDesignElement().getId() );
- 
-            ppc.setScore( 0.0 );
-            ppc.setPvalue( 0.2 );
-            ppc.setExpressionBioAssaySet( ee );
-            ppc.setSourceAnalysis( analysis );
 
             coll.add( ppc );
 
         }
 
-        ppcs.create( coll );
+        coll = ( Collection<Probe2ProbeCoexpression> ) ppcs.create( coll );
+        assertEquals( 6, coll.size() );
     }
 
     @Test
