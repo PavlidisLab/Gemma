@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.security.authorization.acl.AclTestUtils;
+import ubic.gemma.testing.AclTestUtils;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.remote.EntityDelegator;
 

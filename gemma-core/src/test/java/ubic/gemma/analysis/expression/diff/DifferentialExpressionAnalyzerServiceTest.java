@@ -55,7 +55,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.authorization.acl.AclTestUtils;
+import ubic.gemma.testing.AclTestUtils;
 
 /**
  * @author keshav, paul

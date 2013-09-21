@@ -1,4 +1,4 @@
-package ubic.gemma.security.authorization.acl;
+package ubic.gemma.testing;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

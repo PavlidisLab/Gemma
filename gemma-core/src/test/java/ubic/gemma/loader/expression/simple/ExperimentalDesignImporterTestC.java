@@ -53,7 +53,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.security.authorization.acl.AclTestUtils;
+import ubic.gemma.testing.AclTestUtils;
 
 /**
  * @author paul
