@@ -11,6 +11,12 @@
         <dependent-module archiveName="gemma-mda-1.8-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gemma-mda/gemma-mda">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="gemma-model-1.8-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gemma-model/gemma-model">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="gemma-gsec-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gsec/gsec">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <dependent-module archiveName="baseCode-1.0.15-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/baseCode/baseCode">
             <dependency-type>uses</dependency-type>
         </dependent-module>

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import gemma.gsec.SecurityService;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -60,7 +62,6 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
@@ -186,7 +187,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
 
         if ( ef == null ) {
-            return;
+            throw new EntityNotFoundException( "Experimental factor with ID=" + e.getId()
+                    + " could not be accessed for editing" );
         }
 
         Collection<Characteristic> chars = new HashSet<>();
@@ -207,12 +209,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setExperimentalFactor( ef );
         fv.setCharacteristics( chars );
-        factorValueService.create( fv ); // until the larger problem is fixed...
 
-        if ( ef.getFactorValues() == null ) ef.setFactorValues( new HashSet<FactorValue>() );
-        ef.getFactorValues().add( fv );
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
 
-        experimentalFactorService.update( ef );
+        expressionExperimentService.addFactorValue( ee, fv );
     }
 
     /*
@@ -359,7 +359,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         } else {
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
         }
-
         // ugly fix for bug 3746
         ExperimentalDesign ed = expressionExperimentService.thawLite(
                 experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.load( designId ) ) )
@@ -409,7 +408,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
         Collection<FactorValueValueObject> result = new HashSet<>();
         if ( e == null || e.getId() == null ) return result;
-
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
         if ( ef == null ) return result;
 

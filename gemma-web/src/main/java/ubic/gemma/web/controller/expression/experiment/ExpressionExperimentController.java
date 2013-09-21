@@ -18,6 +18,10 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.model.Securable;
+import gemma.gsec.util.SecurityUtil;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -71,7 +75,6 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
@@ -106,8 +109,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.SecurityService;
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
@@ -330,7 +331,7 @@ public class ExpressionExperimentController {
         List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch );
 
         // if user is not admin, remove troubled experiments
-        if ( !SecurityServiceImpl.isUserAdmin() ) {
+        if ( !SecurityUtil.isUserAdmin() ) {
             records = removeTroubledExperimentVOs( records );
         }
 
@@ -356,7 +357,7 @@ public class ExpressionExperimentController {
         // getExpressionExperimentValueObjects( recordsSubset ) );
 
         // if admin, want to show why experiment is troubled
-        if ( SecurityServiceImpl.isUserAdmin() ) {
+        if ( SecurityUtil.isUserAdmin() ) {
             expressionExperimentReportService.getEventInformation( recordsSubset );
         }
 
@@ -388,7 +389,7 @@ public class ExpressionExperimentController {
         List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch, taxon );
 
         // if user is not admin, remove troubled experiments
-        if ( !SecurityServiceImpl.isUserAdmin() ) {
+        if ( !SecurityUtil.isUserAdmin() ) {
             records = removeTroubledExperimentVOs( records );
         }
 
@@ -411,7 +412,7 @@ public class ExpressionExperimentController {
         // getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
 
         // if admin, want to show if experiment is troubled
-        if ( SecurityServiceImpl.isUserAdmin() ) {
+        if ( SecurityUtil.isUserAdmin() ) {
             expressionExperimentReportService.getEventInformation( recordsSubset );
         }
 
@@ -442,7 +443,7 @@ public class ExpressionExperimentController {
         List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch, noDupIds );
 
         // if user is not admin, remove troubled experiments
-        if ( !SecurityServiceImpl.isUserAdmin() ) {
+        if ( !SecurityUtil.isUserAdmin() ) {
             records = removeTroubledExperimentVOs( records );
         }
 
@@ -459,7 +460,7 @@ public class ExpressionExperimentController {
         // getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
 
         // if admin, want to show if experiment is troubled
-        if ( SecurityServiceImpl.isUserAdmin() ) {
+        if ( SecurityUtil.isUserAdmin() ) {
             expressionExperimentReportService.getEventInformation( recordsSubset );
         }
 
@@ -1098,9 +1099,9 @@ public class ExpressionExperimentController {
 
         boolean filterDataByUser = false;
 
-        if ( SecurityServiceImpl.isUserAdmin() ) {
+        if ( SecurityUtil.isUserAdmin() ) {
             /* proceed, just being transparent */
-        } else if ( SecurityServiceImpl.isUserLoggedIn() ) {
+        } else if ( SecurityUtil.isUserLoggedIn() ) {
             filterDataByUser = true;
         } else {
             /* Anonymous */

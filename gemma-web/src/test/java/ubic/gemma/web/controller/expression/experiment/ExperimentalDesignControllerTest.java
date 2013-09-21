@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.remote.EntityDelegator;
 
@@ -58,6 +59,8 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
+    @Autowired
+    private AclTestUtils aclTestUtils;
 
     /**
      * Tests showing an experimentalDesign which is implemented in
@@ -89,24 +92,24 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         assertNotNull( m.get( "expressionExperiment" ) );
 
         assertEquals( mav.getViewName(), "experimentalDesign.detail" );
-
+        aclTestUtils.checkEEAcls( ee );
     }
 
     @Test
     public void testGetExperimentalFactors() throws Exception {
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly.
 
         Collection<ExperimentalFactorValueObject> experimentalFactors = experimentalDesignController
                 .getExperimentalFactors( new EntityDelegator( ee.getExperimentalDesign() ) );
         assertTrue( !experimentalFactors.isEmpty() );
-
+        aclTestUtils.checkEEAcls( ee );
     }
 
     @Test
     public void testGetExperimentalFactorValues() throws Exception {
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = eeService.thawLite( ee );
 
@@ -114,42 +117,49 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
                 .getFactorValuesWithCharacteristics( new EntityDelegator( ee.getExperimentalDesign()
                         .getExperimentalFactors().iterator().next() ) );
         assertTrue( !fvs.isEmpty() );
-
+        aclTestUtils.checkEEAcls( ee );
     }
 
     @Test
     public void testCreateExperimentalFactor() throws Exception {
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = eeService.thawLite( ee );
 
         ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject();
         evvo.setCategory( "foo" );
         experimentalDesignController.createExperimentalFactor( new EntityDelegator( ee.getExperimentalDesign() ), evvo );
+        aclTestUtils.checkEEAcls( ee );
 
     }
 
     @Test
     public void testAddCharacteristicToFactorValue() throws Exception {
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = eeService.thawLite( ee );
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );
 
-        experimentalDesignController.createFactorValueCharacteristic( e,
-                VocabCharacteristic.Factory.newInstance( "foo", "bar", null, null, "foo", "bar", null, "foo", "bar" ) );
+        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+        vc.setValue( "foo" );
+        vc.setCategory( "bar" );
+        vc.setCategoryUri( "bar" );
+        vc.setValueUri( "foo" );
+        experimentalDesignController.createFactorValueCharacteristic( e, vc );
         assertEquals( 2, ef.getFactorValues().size() );
+
+        // new empty
         experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
         experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
         experimentalDesignController.createFactorValue( new EntityDelegator( ef ) );
 
         ef = experimentalFactorService.load( ef.getId() );
         assertEquals( 5, ef.getFactorValues().size() );
-
+        aclTestUtils.checkEEAcls( ee );
     }
 
 }

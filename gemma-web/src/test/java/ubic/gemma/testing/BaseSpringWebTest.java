@@ -18,25 +18,21 @@
  */
 package ubic.gemma.testing;
 
-import org.junit.Before;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
- * Class to extend for tests of controllers et al that need a spring context. Provides convenience methods for dealing
+ * Class to extend for tests of controllers et al. that need a spring context. Provides convenience methods for dealing
  * with mock requests and responses. Also provides a safe port to send email on for testing (for example, using
  * dumbster)
  * 
  * @author pavlidis
  * @version $Id$
- * @see com.dumbster.smtp.SimpleSmtpServer
  */
 @ContextConfiguration(loader = WebContextLoader.class, locations = { "classpath*:WEB-INF/gemma-servlet.xml" }, inheritLocations = true)
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
-    protected static final int MAIL_PORT = 2525;
+    protected static final int MAIL_PORT = 2527;
 
     public MockHttpServletRequest newGet( String url ) {
         return new MockHttpServletRequest( "GET", url );
@@ -49,18 +45,4 @@ public abstract class BaseSpringWebTest extends BaseSpringContextTest {
         return new MockHttpServletRequest( "POST", url );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
-     */
-    @Before
-    public final void setupWebTest() {
-        // change the port on the mailSender so it doesn't conflict with an
-        // existing SMTP server on localhost
-        JavaMailSenderImpl mailSender = ( JavaMailSenderImpl ) getBean( JavaMailSender.class );
-        assert mailSender != null;
-        mailSender.setPort( MAIL_PORT );
-        mailSender.setHost( "localhost" );
-    }
 }

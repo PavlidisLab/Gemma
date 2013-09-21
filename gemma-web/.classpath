@@ -42,5 +42,15 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/gemma-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/gemma-mda"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GEOMMTx"/>
+	<classpathentry excluding="**" kind="src" output="target/test-classes" path="target/Gemma/WEB-INF">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry excluding="**" kind="src" output="target/test-classes" path="src/main/webapp/WEB-INF">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

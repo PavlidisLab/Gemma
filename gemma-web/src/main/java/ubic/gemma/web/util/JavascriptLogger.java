@@ -19,13 +19,14 @@
 
 package ubic.gemma.web.util;
 
+import gemma.gsec.util.SecurityUtil;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.Settings;
 
@@ -158,8 +159,7 @@ public class JavascriptLogger {
         }
 
         if ( user != null ) {
-            name = user.getUserName() + " (id: " + user.getId() + ") (admin: " + SecurityServiceImpl.isUserAdmin()
-                    + ")";
+            name = user.getUserName() + " (id: " + user.getId() + ") (admin: " + SecurityUtil.isUserAdmin() + ")";
         }
 
         return "error[" + errorMessage + "] jsFile[" + url + ":ln" + line + "]" + " page[" + href + "] browser["

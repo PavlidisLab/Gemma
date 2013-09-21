@@ -18,6 +18,11 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.SecurityService;
+import gemma.gsec.model.Securable;
+import gemma.gsec.util.SecurityUtil;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,15 +54,11 @@ import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.Describable;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.security.SecurityService;
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.Settings;
 import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -510,7 +511,7 @@ public class SecurityControllerImpl implements SecurityController {
                 securityService.makeOwnedByUser( s, settings.getOwner().getAuthority() );
             } else {
                 // this warning is not even worth issuing if we are not an administrator.
-                if ( SecurityServiceImpl.isUserAdmin() )
+                if ( SecurityUtil.isUserAdmin() )
                     log.warn( "Can't make groupauthority " + settings.getOwner().getAuthority()
                             + " owner, not implemented" );
             }

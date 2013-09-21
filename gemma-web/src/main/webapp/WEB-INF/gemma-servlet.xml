@@ -4,27 +4,30 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop"
    xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
-   
+   xmlns:mvc="http://www.springframework.org/schema/mvc"
    xsi:schemaLocation="http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
    http://www.springframework.org/schema/context 
    http://www.springframework.org/schema/context/spring-context-3.0.xsd 
    
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
-   http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd">
+   http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd
+   http://www.springframework.org/schema/mvc
+   http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
 
    <context:component-scan base-package="ubic.gemma.web" name-generator="ubic.gemma.util.BeanNameGenerator" />
 
    <aop:aspectj-autoproxy />
 
    <!-- Mapping URLS to controllers -->
-
+   
+ 
    <!-- This is provided by spring by default, but this declaration is needed because we define other mappers, and to allow 
       configuration of the interceptor; otherwise this would be configured by default. -->
    <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
       <property name="order" value="1" />
-   </bean>
-
+   </bean> 
+   
    <!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
    <bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping">
       <property name="order" value="2" />
@@ -32,7 +35,7 @@
 
    <!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
    <bean id="viewNameTranslator" class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator" />
-
+ 
    <!-- explicit mappings of patterns to urls -->
    <bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
       <property name="order" value="3" />
@@ -41,7 +44,7 @@
          <props>
             <prop key="/dwr/**/*">dwrController</prop>
             <prop key="/uploadFile.html">fileUploadController</prop>
-            <prop key="/bibRef/*">bibliographicReferenceController</prop>
+            <prop key="/bibRef/*">bibliographicReferenceController</prop> 
             <prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
             <prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
             <prop key="/bioMaterial/*">bioMaterialController</prop>
@@ -61,6 +64,7 @@
          </props>
       </property>
    </bean>
+   
    <!-- default mapping, as a fallback. Avoid using. -->
    <bean id="beanNameUrlHandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
       <property name="order" value="4" />

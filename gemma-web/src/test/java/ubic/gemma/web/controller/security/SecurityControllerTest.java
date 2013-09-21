@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import gemma.gsec.SecurityService;
+
 import java.util.Date;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -31,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringWebTest;

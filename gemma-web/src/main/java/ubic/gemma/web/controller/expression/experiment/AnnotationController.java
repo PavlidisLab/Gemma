@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import gemma.gsec.util.SecurityUtil;
+
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -40,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.tasks.analysis.expression.AutoTaggerTaskCommand;
 
 /**
@@ -132,7 +133,7 @@ public class AnnotationController {
      * AJAX Note that this completely scraps the indices, and runs asynchronously.
      */
     public void reinitializeOntologyIndices() {
-        if ( !SecurityServiceImpl.isRunningAsAdmin() ) {
+        if ( !SecurityUtil.isRunningAsAdmin() ) {
             log.warn( "Attempt to run ontology re-indexing as non-admin." );
             return;
         }

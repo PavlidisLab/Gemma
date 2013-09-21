@@ -52,6 +52,18 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
     // ----------------------------------------------------------- Constructors
 
     /**
+     * The property which supplies the option label visible to the end user.
+     */
+    private String label = null;
+
+    /**
+     * The property which supplies the value returned to the server.
+     */
+    private String value = null;
+
+    // ------------------------------------------------------------- Properties
+
+    /**
      * Default constructor.
      */
     public LabelValue() {
@@ -69,36 +81,6 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
         this.value = value;
     }
 
-    // ------------------------------------------------------------- Properties
-
-    /**
-     * The property which supplies the option label visible to the end user.
-     */
-    private String label = null;
-
-    public String getLabel() {
-        return this.label;
-    }
-
-    public void setLabel( String label ) {
-        this.label = label;
-    }
-
-    /**
-     * The property which supplies the value returned to the server.
-     */
-    private String value = null;
-
-    public String getValue() {
-        return this.value;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    // --------------------------------------------------------- Public Methods
-
     /**
      * Compare LabelValueBeans based on the label, because that's the human viewable part of the object.
      * 
@@ -111,19 +93,6 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
         String otherLabel = o.getLabel();
 
         return this.getLabel().compareTo( otherLabel );
-    }
-
-    /**
-     * Return a string representation of this object.
-     */
-    @Override
-    public String toString() {
-        StringBuffer sb = new StringBuffer( "LabelValue[" );
-        sb.append( this.label );
-        sb.append( ", " );
-        sb.append( this.value );
-        sb.append( "]" );
-        return ( sb.toString() );
     }
 
     /**
@@ -155,6 +124,16 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
 
     }
 
+    public String getLabel() {
+        return this.label;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+
+    // --------------------------------------------------------- Public Methods
+
     /**
      * The hash code is based on the object's value.
      * 
@@ -163,5 +142,26 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
     @Override
     public int hashCode() {
         return ( this.getValue() == null ) ? 17 : this.getValue().hashCode();
+    }
+
+    public void setLabel( String label ) {
+        this.label = label;
+    }
+
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
+    /**
+     * Return a string representation of this object.
+     */
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer( "LabelValue[" );
+        sb.append( this.label );
+        sb.append( ", " );
+        sb.append( this.value );
+        sb.append( "]" );
+        return ( sb.toString() );
     }
 }

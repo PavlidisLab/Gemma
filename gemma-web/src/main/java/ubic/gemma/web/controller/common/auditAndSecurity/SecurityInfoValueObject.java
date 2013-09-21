@@ -18,10 +18,11 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import gemma.gsec.model.Securable;
+
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 /**
  * Carries extensive security information about an entity.

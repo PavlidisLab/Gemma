@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
+import gemma.gsec.SecurityService;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -34,10 +36,9 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.genome.gene.service.GeneSetService;
-import ubic.gemma.model.TaxonValueObject;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.persistence.SessionListManager;
 
 /**

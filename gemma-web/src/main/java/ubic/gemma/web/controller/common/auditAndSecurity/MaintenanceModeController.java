@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import gemma.gsec.util.SecurityUtil;
+
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +32,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.Constants;
 
@@ -65,7 +66,7 @@ public class MaintenanceModeController {
 
         // check that the user is admin!
 
-        boolean isAdmin = SecurityServiceImpl.isUserAdmin();
+        boolean isAdmin = SecurityUtil.isUserAdmin();
 
         if ( !isAdmin ) {
             throw new AccessDeniedException( "Attempt by non-admin to alter system maintenance mode status!" );

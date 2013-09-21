@@ -364,7 +364,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
                   html : '<span style="color:#CCF; "ext:qtip="Not microarray data">' + 'NA' + '</span>&nbsp;'
                });
             return panel;
-         };
+         }
 
          // If present, display the date and info. If batch information exists without date, display 'Provided'.
          // If no batch information, display 'Needed' with button for GEO and ArrayExpress data. Otherwise, NA.

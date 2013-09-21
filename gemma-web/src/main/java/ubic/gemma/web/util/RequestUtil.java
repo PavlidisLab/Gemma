@@ -52,17 +52,6 @@ public class RequestUtil {
     private transient static Log log = LogFactory.getLog( RequestUtil.class );
 
     /**
-     * Creates query String from request body parameters
-     */
-    public static String getRequestParameters( HttpServletRequest aRequest ) {
-        // set the ALGORIGTHM as defined for the application
-        // ALGORITHM = (String) aRequest.getAttribute(Constants.ENC_ALGORITHM);
-        Map<String, Object> m = aRequest.getParameterMap();
-
-        return createQueryStringFromMap( m, "&" ).toString();
-    }
-
-    /**
      * Builds a query string from a given map of parameters
      * 
      * @param m A map of parameters
@@ -97,48 +86,83 @@ public class RequestUtil {
     }
 
     /**
-     * Appends new key and value pair to query string
+     * Convenience method for deleting a cookie by name
      * 
-     * @param key parameter name
-     * @param value value of parameter
-     * @param queryString existing query string
-     * @param ampersand string to use for ampersand (e.g. "&" or "&amp;")
-     * @return query string (with no leading "?")
+     * @param response the current web response
+     * @param cookie the cookie to delete
+     * @param path the path on which the cookie was set (i.e. /appfuse)
      */
-    private static StringBuffer append( Object key, Object value, StringBuffer queryString, String ampersand ) {
-        if ( queryString.length() > 0 ) {
-            queryString.append( ampersand );
+    public static void deleteCookie( HttpServletResponse response, Cookie cookie, String path ) {
+        if ( cookie != null ) {
+            // Delete the cookie by setting its maximum age to zero
+            cookie.setMaxAge( 0 );
+            cookie.setPath( path );
+            response.addCookie( cookie );
         }
-
-        try {
-            queryString.append( URLEncoder.encode( key.toString(), "UTF-8" ) );
-            queryString.append( "=" );
-            queryString.append( URLEncoder.encode( value.toString(), "UTF-8" ) );
-        } catch ( UnsupportedEncodingException e ) {
-            // won't happen since we're hard-coding UTF-8
-        }
-        return queryString;
     }
 
     /**
-     * Stores request attributes in session
-     * 
-     * @param aRequest the current request
+     * Convenience method to get the application's URL based on request variables. NOTE: this is pretty useless if
+     * running behind a proxy.
      */
-    public static void stowRequestAttributes( HttpServletRequest aRequest ) {
-        if ( aRequest.getSession().getAttribute( STOWED_REQUEST_ATTRIBS ) != null ) {
-            return;
+    public static String getAppURL( HttpServletRequest request ) {
+        StringBuffer url = new StringBuffer();
+        int port = request.getServerPort();
+        if ( port < 0 ) {
+            port = 80; // Work around java.net.URL bug
+        }
+        String scheme = request.getScheme();
+        url.append( scheme );
+        url.append( "://" );
+        url.append( request.getServerName() );
+        if ( ( scheme.equals( "http" ) && ( port != 80 ) ) || ( scheme.equals( "https" ) && ( port != 443 ) ) ) {
+            url.append( ':' );
+            url.append( port );
+        }
+        url.append( request.getContextPath() );
+        return url.toString();
+    }
+
+    /**
+     * Convenience method to get a cookie by name
+     * 
+     * @param request the current request
+     * @param name the name of the cookie to find
+     * @return the cookie (if found), null if not found
+     */
+    public static Cookie getCookie( HttpServletRequest request, String name ) {
+        Cookie[] cookies = request.getCookies();
+        Cookie returnCookie = null;
+
+        if ( cookies == null ) {
+            return returnCookie;
         }
 
-        Enumeration<String> e = aRequest.getAttributeNames();
-        Map<String, Object> map = new HashMap<String, Object>();
+        for ( int i = 0; i < cookies.length; i++ ) {
+            Cookie thisCookie = cookies[i];
 
-        while ( e.hasMoreElements() ) {
-            String name = e.nextElement();
-            map.put( name, aRequest.getAttribute( name ) );
+            if ( thisCookie.getName().equals( name ) ) {
+                // cookies with no value do me no good!
+                if ( !thisCookie.getValue().equals( "" ) ) {
+                    returnCookie = thisCookie;
+
+                    break;
+                }
+            }
         }
 
-        aRequest.getSession().setAttribute( STOWED_REQUEST_ATTRIBS, map );
+        return returnCookie;
+    }
+
+    /**
+     * Creates query String from request body parameters
+     */
+    public static String getRequestParameters( HttpServletRequest aRequest ) {
+        // set the ALGORIGTHM as defined for the application
+        // ALGORITHM = (String) aRequest.getAttribute(Constants.ENC_ALGORITHM);
+        Map<String, Object> m = aRequest.getParameterMap();
+
+        return createQueryStringFromMap( m, "&" ).toString();
     }
 
     /**
@@ -185,71 +209,47 @@ public class RequestUtil {
     }
 
     /**
-     * Convenience method to get a cookie by name
+     * Stores request attributes in session
      * 
-     * @param request the current request
-     * @param name the name of the cookie to find
-     * @return the cookie (if found), null if not found
+     * @param aRequest the current request
      */
-    public static Cookie getCookie( HttpServletRequest request, String name ) {
-        Cookie[] cookies = request.getCookies();
-        Cookie returnCookie = null;
-
-        if ( cookies == null ) {
-            return returnCookie;
+    public static void stowRequestAttributes( HttpServletRequest aRequest ) {
+        if ( aRequest.getSession().getAttribute( STOWED_REQUEST_ATTRIBS ) != null ) {
+            return;
         }
 
-        for ( int i = 0; i < cookies.length; i++ ) {
-            Cookie thisCookie = cookies[i];
+        Enumeration<String> e = aRequest.getAttributeNames();
+        Map<String, Object> map = new HashMap<String, Object>();
 
-            if ( thisCookie.getName().equals( name ) ) {
-                // cookies with no value do me no good!
-                if ( !thisCookie.getValue().equals( "" ) ) {
-                    returnCookie = thisCookie;
-
-                    break;
-                }
-            }
+        while ( e.hasMoreElements() ) {
+            String name = e.nextElement();
+            map.put( name, aRequest.getAttribute( name ) );
         }
 
-        return returnCookie;
+        aRequest.getSession().setAttribute( STOWED_REQUEST_ATTRIBS, map );
     }
 
     /**
-     * Convenience method for deleting a cookie by name
+     * Appends new key and value pair to query string
      * 
-     * @param response the current web response
-     * @param cookie the cookie to delete
-     * @param path the path on which the cookie was set (i.e. /appfuse)
+     * @param key parameter name
+     * @param value value of parameter
+     * @param queryString existing query string
+     * @param ampersand string to use for ampersand (e.g. "&" or "&amp;")
+     * @return query string (with no leading "?")
      */
-    public static void deleteCookie( HttpServletResponse response, Cookie cookie, String path ) {
-        if ( cookie != null ) {
-            // Delete the cookie by setting its maximum age to zero
-            cookie.setMaxAge( 0 );
-            cookie.setPath( path );
-            response.addCookie( cookie );
+    private static StringBuffer append( Object key, Object value, StringBuffer queryString, String ampersand ) {
+        if ( queryString.length() > 0 ) {
+            queryString.append( ampersand );
         }
-    }
 
-    /**
-     * Convenience method to get the application's URL based on request variables. NOTE: this is pretty useless if
-     * running behind a proxy.
-     */
-    public static String getAppURL( HttpServletRequest request ) {
-        StringBuffer url = new StringBuffer();
-        int port = request.getServerPort();
-        if ( port < 0 ) {
-            port = 80; // Work around java.net.URL bug
+        try {
+            queryString.append( URLEncoder.encode( key.toString(), "UTF-8" ) );
+            queryString.append( "=" );
+            queryString.append( URLEncoder.encode( value.toString(), "UTF-8" ) );
+        } catch ( UnsupportedEncodingException e ) {
+            // won't happen since we're hard-coding UTF-8
         }
-        String scheme = request.getScheme();
-        url.append( scheme );
-        url.append( "://" );
-        url.append( request.getServerName() );
-        if ( ( scheme.equals( "http" ) && ( port != 80 ) ) || ( scheme.equals( "https" ) && ( port != 443 ) ) ) {
-            url.append( ':' );
-            url.append( port );
-        }
-        url.append( request.getContextPath() );
-        return url.toString();
+        return queryString;
     }
 }

@@ -36,7 +36,7 @@ import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.model.TaxonValueObject;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResultDisplayObject;

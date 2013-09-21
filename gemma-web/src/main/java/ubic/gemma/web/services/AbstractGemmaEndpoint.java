@@ -388,6 +388,11 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
                 OutputFormat format = new OutputFormat( document );
                 format.setIndenting( true );
                 // to generate a file output use fileoutputstream
+
+                /*
+                 * "It is recommended that new applications use the DOM Level 3 LSSerializer or JAXP's Transformation
+                 * API for XML (TrAX) for serializing XML"
+                 */
                 XMLSerializer serializer = new XMLSerializer( out, null );
                 serializer.serialize( responseWrapper );
                 out.close();

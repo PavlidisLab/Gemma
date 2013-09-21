@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import gemma.gsec.util.SecurityUtil;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +37,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.LoginDetailsValueObject;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
@@ -59,6 +60,8 @@ public class SignupController extends BaseController {
     @Autowired
     private UserManager userManager;
 
+    private RecaptchaTester recaptchaTester = new DefaultRecaptchaTester();
+
     @RequestMapping(value = "/ajaxLoginCheck.html")
     public void ajaxLoginCheck( HttpServletRequest request, HttpServletResponse response ) throws Exception {
 
@@ -71,7 +74,7 @@ public class SignupController extends BaseController {
 
             if ( userManager.loggedIn() ) {
                 userName = userManager.getCurrentUsername();
-                jsonText = "{success:true,user:\'" + userName + "\',isAdmin:" + SecurityServiceImpl.isUserAdmin() + "}";
+                jsonText = "{success:true,user:\'" + userName + "\',isAdmin:" + SecurityUtil.isUserAdmin() + "}";
             } else {
                 jsonText = "{success:false}";
             }
@@ -170,7 +173,7 @@ public class SignupController extends BaseController {
 
         if ( StringUtils.isNotBlank( recatpchaPvtKey ) ) {
 
-            boolean valid = validateCaptcha( request, recatpchaPvtKey );
+            boolean valid = recaptchaTester.validateCaptcha( request, recatpchaPvtKey );
 
             if ( !valid ) {
                 jsonText = "{success:false,message:'Captcha was not entered correctly.'}";
@@ -269,12 +272,24 @@ public class SignupController extends BaseController {
 
     }
 
+    public void setRecaptchaTester( RecaptchaTester recaptchaTester ) {
+        this.recaptchaTester = recaptchaTester;
+
+    }
+}
+
+interface RecaptchaTester {
+    public boolean validateCaptcha( HttpServletRequest request, String recatpchaPvtKey );
+}
+
+class DefaultRecaptchaTester implements RecaptchaTester {
     /**
      * @param request
      * @param recatpchaPvtKey
      * @return
      */
-    private boolean validateCaptcha( HttpServletRequest request, String recatpchaPvtKey ) {
+    @Override
+    public boolean validateCaptcha( HttpServletRequest request, String recatpchaPvtKey ) {
         String rcChallenge = request.getParameter( "recaptcha_challenge_field" );
         String rcResponse = request.getParameter( "recaptcha_response_field" );
 

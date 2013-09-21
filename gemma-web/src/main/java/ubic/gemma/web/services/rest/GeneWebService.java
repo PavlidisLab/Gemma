@@ -70,13 +70,9 @@ public class GeneWebService {
     @GET
     @Path("/find-gene-details")
     @Produces(MediaType.APPLICATION_JSON)
-    // public GeneDetailsValueObject findGeneDetails(@QueryParam("geneId") Long geneId) {
-    // return geneCoreService.loadGeneDetails( geneId );
-    // }
     public Collection<GeneValueObject> findGeneDetails( @QueryParam("geneId") Long geneId ) {
-        ArrayList<GeneValueObject> valueObjects = new ArrayList<GeneValueObject>( 1 ); // Contain only 1 element.
+        ArrayList<GeneValueObject> valueObjects = new ArrayList<>( 1 ); // Contain only 1 element.
         valueObjects.add( geneCoreService.loadGeneDetails( geneId ) );
-
         return valueObjects;
     }
 

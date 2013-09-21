@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.util;
 
-import ubic.gemma.model.TaxonValueObject;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;

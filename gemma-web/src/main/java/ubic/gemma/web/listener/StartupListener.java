@@ -71,7 +71,7 @@ public class StartupListener extends ContextLoaderListener {
      */
     @Override
     public void contextInitialized( ServletContextEvent event ) {
-        log.info( "Initializing application context..." );
+        log.info( "Initializing Gemma web context ..." );
         StopWatch sw = new StopWatch();
         sw.start();
 
@@ -104,7 +104,7 @@ public class StartupListener extends ContextLoaderListener {
         sw.stop();
 
         double time = sw.getTime() / 1000.00;
-        log.info( "Initialization of Gemma Spring context in " + time + " s " );
+        log.info( "Initialization of Gemma Spring web context in " + time + " s " );
     }
 
     /**

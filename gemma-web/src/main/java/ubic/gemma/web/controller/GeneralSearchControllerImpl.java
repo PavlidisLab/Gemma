@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller;
 
+import gemma.gsec.util.SecurityUtil;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -73,7 +75,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
@@ -330,14 +331,14 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ),
                     settings );
 
-            if ( !SecurityServiceImpl.isUserAdmin() ) {
+            if ( !SecurityUtil.isUserAdmin() ) {
                 auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
             }
 
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
             vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
 
-            if ( !SecurityServiceImpl.isUserAdmin() ) {
+            if ( !SecurityUtil.isUserAdmin() ) {
                 auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
             }
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {

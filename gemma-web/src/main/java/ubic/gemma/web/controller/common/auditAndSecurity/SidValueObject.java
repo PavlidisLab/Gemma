@@ -18,12 +18,13 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
+import gemma.gsec.acl.domain.AclPrincipalSid;
+
 import java.io.Serializable;
 
 import org.springframework.security.acls.model.Sid;
 
-import ubic.gemma.model.common.auditAndSecurity.acl.AclGrantedAuthoritySid;
-import ubic.gemma.model.common.auditAndSecurity.acl.AclPrincipalSid;
 
 /**
  * @author paul

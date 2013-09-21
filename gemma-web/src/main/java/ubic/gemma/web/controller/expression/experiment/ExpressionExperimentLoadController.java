@@ -32,8 +32,7 @@ import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 
 /**
  * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX,
- * either in the webapp or in a javaspaces grid. The choice depends on how the system and client is configured. In
- * either case the job runs in its own thread, firing a JobProgress that the client can monitor.
+ * either in the webapp or in a javaspaces grid. The choice depends on how the system and client is configured.
  * 
  * @author pavlidis
  * @author keshav

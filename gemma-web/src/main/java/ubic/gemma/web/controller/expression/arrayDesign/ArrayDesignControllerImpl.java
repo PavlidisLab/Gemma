@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import gemma.gsec.util.SecurityUtil;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -73,7 +75,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.EntityUtils;
@@ -197,7 +198,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
 
-        if ( !SecurityServiceImpl.isUserAdmin() ) {
+        if ( !SecurityUtil.isUserAdmin() ) {
             auditableUtil.removeTroubledArrayDesigns( valueObjects );
         }
         int count = valueObjects.size();
@@ -508,7 +509,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( arrayDesignIds, true, true );
 
-        if ( SecurityServiceImpl.isUserAdmin() ) {
+        if ( SecurityUtil.isUserAdmin() ) {
             arrayDesignReportService.fillEventInformation( valueObjects );
         } else {
             auditableUtil.removeTroubledArrayDesigns( valueObjects );

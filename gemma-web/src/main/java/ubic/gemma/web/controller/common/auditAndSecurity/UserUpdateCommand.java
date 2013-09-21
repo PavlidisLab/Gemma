@@ -128,7 +128,7 @@ public class UserUpdateCommand {
 
     /**
      * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Securable#getId()
+     * @see gemma.gsec.model.Securable#getId()
      */
     public Long getId() {
         return this.user.getId();
@@ -263,7 +263,7 @@ public class UserUpdateCommand {
 
     /**
      * @param id
-     * @see ubic.gemma.model.common.auditAndSecurity.Securable#setId(java.lang.Long)
+     * @see gemma.gsec.model.Securable#setId(java.lang.Long)
      */
     public void setId( Long id ) {
         this.user.setId( id );
