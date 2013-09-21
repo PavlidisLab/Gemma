@@ -1,128 +1,191 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-
-<hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl" table="AUDIT_EVENT_TYPE" dynamic-insert="false" dynamic-update="false" mutable="false">
-      <cache usage="read-only" />
-      <id name="id" type="java.lang.Long" unsaved-value="null" access="field">
-         <column name="ID" sql-type="BIGINT"/>
-         <generator class="native">
-         </generator>
-      </id>
-      <discriminator column="class" type="string"/>
-      <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl" discriminator-value="ArrayDesignAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="true">
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEventImpl" discriminator-value="ArrayDesignSequenceAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl" discriminator-value="ArrayDesignGeneMappingEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEventImpl" discriminator-value="AnnotationBasedGeneMappingEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEventImpl" discriminator-value="AlignmentBasedGeneMappingEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEventImpl" discriminator-value="ArrayDesignSequenceUpdateEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEventImpl" discriminator-value="ArrayDesignAnnotationFileEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEventImpl" discriminator-value="ArrayDesignProbeRenamingEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl" discriminator-value="ArrayDesignMergeEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEventImpl" discriminator-value="ArrayDesignSubsumeCheckEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEventImpl" discriminator-value="ArrayDesignRepeatAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEventImpl" discriminator-value="ArrayDesignSequenceRemoveEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-      </subclass>
-      <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl" discriminator-value="ExpressionExperimentAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="true">
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEventImpl" discriminator-value="MissingValueAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEventImpl" discriminator-value="FailedMissingValueAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEventImpl" discriminator-value="LinkAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEventImpl" discriminator-value="TooSmallDatasetLinkAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEventImpl" discriminator-value="FailedLinkAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEventImpl" discriminator-value="ProcessedVectorComputationEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEventImpl" discriminator-value="RankComputationEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEventImpl" discriminator-value="FailedProcessedVectorComputationEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdateImpl" discriminator-value="BioMaterialMappingUpdateImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEventImpl" discriminator-value="ExpressionExperimentPlatformSwitchEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEventImpl" discriminator-value="SampleRemovalEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEventImpl" discriminator-value="DifferentialExpressionAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEventImpl" discriminator-value="FailedDifferentialExpressionAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEventImpl" discriminator-value="ExpressionExperimentVectorMergeEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEventImpl" discriminator-value="BatchInformationFetchingEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEventImpl" discriminator-value="FailedBatchInformationFetchingEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-               <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEventImpl" discriminator-value="FailedBatchInformationMissingEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-               </subclass>
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEventImpl" discriminator-value="PCAAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEventImpl" discriminator-value="FailedPCAAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierAnalysisEventImpl" discriminator-value="OutlierAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="true">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierFoundAnalysisEventImpl" discriminator-value="OutlierFoundAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEventImpl" discriminator-value="OutliersNotFoundAnalysisEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl" discriminator-value="DataReplacedEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEventImpl" discriminator-value="DataAddedEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEventImpl" discriminator-value="SampleRemovalReversionEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-      </subclass>
-      <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl" discriminator-value="CommentedEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-      </subclass>
-      <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEventImpl" discriminator-value="StatusFlagEventImpl" dynamic-insert="false" dynamic-update="false" abstract="true">
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl" discriminator-value="TroubleStatusFlagEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTroubleImpl" discriminator-value="CoexpressionTroubleImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTroubleImpl" discriminator-value="DifferentialExpressionTroubleImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTroubleImpl" discriminator-value="OutlierSampleTroubleImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTroubleImpl" discriminator-value="ExperimentalDesignTroubleImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTroubleImpl" discriminator-value="SampleLayoutTroubleImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl" discriminator-value="OKStatusFlagEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl" discriminator-value="ValidatedFlagEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotationsImpl" discriminator-value="ValidatedAnnotationsImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedExperimentalDesignImpl" discriminator-value="ValidatedExperimentalDesignImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedPreprocessingImpl" discriminator-value="ValidatedPreprocessingImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedQualityControlImpl" discriminator-value="ValidatedQualityControlImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            </subclass>
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.InvalidatedEventImpl" discriminator-value="InvalidatedEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-      </subclass>
-      <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEventImpl" discriminator-value="AnnotationEventImpl" dynamic-insert="false" dynamic-update="false" abstract="true">
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEventImpl" discriminator-value="AutomatedAnnotationEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEventImpl" discriminator-value="ManualAnnotationEventImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         </subclass>
-      </subclass>
-   </class>
+                                   "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+ <class mutable="false"
+  name="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl" table="AUDIT_EVENT_TYPE">
+  <cache include="all" usage="read-write"/>
+  <id access="field" name="id" type="java.lang.Long">
+   <column name="ID" sql-type="BIGINT"/>
+   <generator class="native"/>
+  </id>
+  <discriminator column="class" force="false" insert="true" not-null="true"/>
+  <subclass abstract="true"
+   discriminator-value="ArrayDesignAnalysisEventImpl"
+   name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl" select-before-update="false">
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignSequenceAnalysisEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignGeneMappingEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="AnnotationBasedGeneMappingEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEventImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="AlignmentBasedGeneMappingEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEventImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignSequenceUpdateEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignAnnotationFileEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignProbeRenamingEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignMergeEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignSubsumeCheckEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignRepeatAnalysisEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ArrayDesignSequenceRemoveEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEventImpl" select-before-update="false"/>
+  </subclass>
+  <subclass abstract="true"
+   discriminator-value="ExpressionExperimentAnalysisEventImpl"
+   name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl" select-before-update="false">
+   <subclass abstract="false"
+    discriminator-value="MissingValueAnalysisEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="FailedMissingValueAnalysisEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEventImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="false"
+    discriminator-value="LinkAnalysisEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="TooSmallDatasetLinkAnalysisEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEventImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="FailedLinkAnalysisEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEventImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="false"
+    discriminator-value="ProcessedVectorComputationEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="RankComputationEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEventImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="FailedProcessedVectorComputationEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEventImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="false"
+    discriminator-value="BioMaterialMappingUpdateImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdateImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ExpressionExperimentPlatformSwitchEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="SampleRemovalEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="DifferentialExpressionAnalysisEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="FailedDifferentialExpressionAnalysisEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEventImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="false"
+    discriminator-value="ExpressionExperimentVectorMergeEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="BatchInformationFetchingEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="FailedBatchInformationFetchingEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEventImpl" select-before-update="false">
+     <subclass abstract="false"
+      discriminator-value="FailedBatchInformationMissingEventImpl"
+      name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEventImpl" select-before-update="false"/>
+    </subclass>
+   </subclass>
+   <subclass abstract="false" discriminator-value="PCAAnalysisEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="FailedPCAAnalysisEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEventImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="true"
+    discriminator-value="OutlierAnalysisEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierAnalysisEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="OutlierFoundAnalysisEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierFoundAnalysisEventImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="OutliersNotFoundAnalysisEventImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEventImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="false"
+    discriminator-value="DataReplacedEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl" select-before-update="false"/>
+   <subclass abstract="false" discriminator-value="DataAddedEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="SampleRemovalReversionEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEventImpl" select-before-update="false"/>
+  </subclass>
+  <subclass abstract="false" discriminator-value="CommentedEventImpl"
+   name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl" select-before-update="false"/>
+  <subclass abstract="true" discriminator-value="StatusFlagEventImpl"
+   name="ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEventImpl" select-before-update="false">
+   <subclass abstract="false"
+    discriminator-value="TroubleStatusFlagEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="CoexpressionTroubleImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTroubleImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="DifferentialExpressionTroubleImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTroubleImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="OutlierSampleTroubleImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTroubleImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="ExperimentalDesignTroubleImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTroubleImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="SampleLayoutTroubleImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTroubleImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="false"
+    discriminator-value="OKStatusFlagEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ValidatedFlagEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl" select-before-update="false">
+    <subclass abstract="false"
+     discriminator-value="ValidatedAnnotationsImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotationsImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="ValidatedExperimentalDesignImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedExperimentalDesignImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="ValidatedPreprocessingImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedPreprocessingImpl" select-before-update="false"/>
+    <subclass abstract="false"
+     discriminator-value="ValidatedQualityControlImpl"
+     name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedQualityControlImpl" select-before-update="false"/>
+   </subclass>
+   <subclass abstract="false" discriminator-value="InvalidatedEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.InvalidatedEventImpl" select-before-update="false"/>
+  </subclass>
+  <subclass abstract="true" discriminator-value="AnnotationEventImpl"
+   name="ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEventImpl" select-before-update="false">
+   <subclass abstract="false"
+    discriminator-value="AutomatedAnnotationEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEventImpl" select-before-update="false"/>
+   <subclass abstract="false"
+    discriminator-value="ManualAnnotationEventImpl"
+    name="ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEventImpl" select-before-update="false"/>
+  </subclass>
+ </class>
 </hibernate-mapping>

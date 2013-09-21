@@ -1,34 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-
-<hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl" table="AUDIT_EVENT" dynamic-insert="false" dynamic-update="false"  mutable="false" >
-      <cache usage="read-only" />
-      <id name="id" type="java.lang.Long" unsaved-value="null" access="field">
-         <column name="ID" sql-type="BIGINT"/>
-         <generator class="native">
-         </generator>
-      </id>
-      <property name="date" type="java.util.Date"  access="field">
-         <column name="DATE" not-null="true" unique="false" sql-type="DATETIME"/>
-      </property>
-      <property name="action" type="ubic.gemma.model.common.auditAndSecurity.AuditActionEnum" access="field">
-         <column name="ACTION" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-      </property>
-      <property name="note" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType" access="field">
-         <column name="NOTE" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
-      </property>
-      <property name="detail" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType" access="field">
-         <column name="DETAIL" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
-      </property>
-      <many-to-one name="performer" class="ubic.gemma.model.common.auditAndSecurity.UserImpl"  lazy="false" fetch="select" access="field">
-         <column name="PERFORMER_FK" not-null="false" sql-type="BIGINT"/>
-      </many-to-one>
-      <many-to-one name="eventType" class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl"  cascade="all" lazy="false" fetch="select" access="field">
-         <!-- we cannot use component mapping here because of the polymorphism of auditeventtypes see HHH1152 -->
-         <column name="EVENT_TYPE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
-   </class>
+                                   "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+ <class mutable="false"
+  name="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl" table="AUDIT_EVENT">
+  <cache include="all" usage="read-write"/>
+  <id access="field" name="id" type="java.lang.Long">
+   <column name="ID" sql-type="BIGINT"/>
+   <generator class="native"/>
+  </id>
+  <property access="field" generated="never" lazy="false" name="date" type="java.util.Date">
+   <column name="DATE" not-null="true" sql-type="DATETIME"/>
+  </property>
+  <property access="field" generated="never" lazy="false" name="action" type="ubic.gemma.model.common.auditAndSecurity.AuditActionEnum">
+   <column name="ACTION" not-null="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+  </property>
+  <property access="field" generated="never" lazy="false" name="note" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+   <column name="NOTE" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+  </property>
+  <property access="field" generated="never" lazy="false" name="detail" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+   <column name="DETAIL" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+  </property>
+  <many-to-one access="field"
+   class="ubic.gemma.model.common.auditAndSecurity.UserImpl"
+   fetch="select" lazy="false" name="performer">
+   <column name="PERFORMER_FK" not-null="false" sql-type="BIGINT"/>
+  </many-to-one>
+  <many-to-one access="field" cascade="all"
+   class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl"
+   fetch="select" lazy="false" name="eventType">
+   <!-- we cannot use component mapping here because of the polymorphism of auditeventtypes see HHH1152 -->
+   <column name="EVENT_TYPE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+  </many-to-one>
+ </class>
 </hibernate-mapping>
