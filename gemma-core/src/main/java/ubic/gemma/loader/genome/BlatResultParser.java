@@ -73,6 +73,17 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
     private static final int TSTARTS_FIELD = 20;
 
     /**
+     * @param queryName
+     * @return
+     */
+    public static String cleanUpQueryName( String queryName ) {
+        queryName = queryName.replace( "target:", "" );
+        queryName = queryName.replaceFirst( ";$", "" );
+        queryName = queryName.replaceAll( SequenceWriter.SPACE_REPLACEMENT, " " );
+        return queryName;
+    }
+
+    /**
      * Reference to the taxon for that was searched.
      */
     private Taxon taxon;
@@ -81,17 +92,27 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
      * Reference to the sequence database that was searched.
      */
     private ExternalDatabase searchedDatabase = null;
-
     private Collection<BlatResult> results = new ArrayList<BlatResult>();
+
     private double scoreThreshold = 0.0;
 
+    @Override
+    public Collection<BlatResult> getResults() {
+        return results;
+    }
+
     /**
-     * Define a threshold, below which results are ignored. By default all results are read in.
-     * 
-     * @param score
+     * @return the searchedDatabase
      */
-    public void setScoreThreshold( double score ) {
-        this.scoreThreshold = score;
+    public ExternalDatabase getSearchedDatabase() {
+        return this.searchedDatabase;
+    }
+
+    /**
+     * @return the taxon
+     */
+    public Taxon getTaxon() {
+        return this.taxon;
     }
 
     /*
@@ -185,42 +206,20 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
         }
     }
 
-    private PhysicalLocation makePhysicalLocation( BlatResult blatResult ) {
-        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        pl.setChromosome( blatResult.getTargetChromosome() );
-        pl.setNucleotide( blatResult.getTargetStart() );
-        pl.setNucleotideLength( ( int ) ( blatResult.getTargetEnd() - pl.getNucleotide() ) );
-        pl.setStrand( blatResult.getStrand() );
-        return pl;
+    /**
+     * Define a threshold, below which results are ignored. By default all results are read in.
+     * 
+     * @param score
+     */
+    public void setScoreThreshold( double score ) {
+        this.scoreThreshold = score;
     }
 
     /**
-     * @param queryName
-     * @return
+     * @param searchedDatabase the searchedDatabase to set
      */
-    public static String cleanUpQueryName( String queryName ) {
-        queryName = queryName.replace( "target:", "" );
-        queryName = queryName.replaceFirst( ";$", "" );
-        queryName = queryName.replaceAll( SequenceWriter.SPACE_REPLACEMENT, " " );
-        return queryName;
-    }
-
-    @Override
-    protected void addResult( BlatResult obj ) {
-        results.add( obj );
-
-    }
-
-    @Override
-    public Collection<BlatResult> getResults() {
-        return results;
-    }
-
-    /**
-     * @return the taxon
-     */
-    public Taxon getTaxon() {
-        return this.taxon;
+    public void setSearchedDatabase( ExternalDatabase searchedDatabase ) {
+        this.searchedDatabase = searchedDatabase;
     }
 
     /**
@@ -230,17 +229,18 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
         this.taxon = taxon;
     }
 
-    /**
-     * @return the searchedDatabase
-     */
-    public ExternalDatabase getSearchedDatabase() {
-        return this.searchedDatabase;
+    @Override
+    protected void addResult( BlatResult obj ) {
+        results.add( obj );
+
     }
 
-    /**
-     * @param searchedDatabase the searchedDatabase to set
-     */
-    public void setSearchedDatabase( ExternalDatabase searchedDatabase ) {
-        this.searchedDatabase = searchedDatabase;
+    private PhysicalLocation makePhysicalLocation( BlatResult blatResult ) {
+        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+        pl.setChromosome( blatResult.getTargetChromosome() );
+        pl.setNucleotide( blatResult.getTargetStart() );
+        pl.setNucleotideLength( ( int ) ( blatResult.getTargetEnd() - pl.getNucleotide() ) );
+        pl.setStrand( blatResult.getStrand() );
+        return pl;
     }
 }

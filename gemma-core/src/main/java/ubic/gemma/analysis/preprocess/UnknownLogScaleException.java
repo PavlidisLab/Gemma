@@ -47,18 +47,18 @@ public class UnknownLogScaleException extends UnsupportedOperationException {
     }
 
     /**
-     * @param cause
-     */
-    public UnknownLogScaleException( Throwable cause ) {
-        super( cause );
-    }
-
-    /**
      * @param message
      * @param cause
      */
     public UnknownLogScaleException( String message, Throwable cause ) {
         super( message, cause );
+    }
+
+    /**
+     * @param cause
+     */
+    public UnknownLogScaleException( Throwable cause ) {
+        super( cause );
     }
 
 }

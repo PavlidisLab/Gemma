@@ -112,89 +112,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     }
 
     /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
-    }
-
-    /**
-     * @param ad
-     * @param builder
-     * @return
-     */
-    private Collection<ProcessedExpressionDataVector> computeRanks(
-            Collection<ProcessedExpressionDataVector> processedDataVectors, ExpressionDataDoubleMatrix intensities ) {
-
-        DoubleArrayList ranksByMean = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.mean );
-        assert ranksByMean != null;
-        DoubleArrayList ranksByMax = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.max );
-        assert ranksByMax != null;
-
-        for ( ProcessedExpressionDataVector vector : processedDataVectors ) {
-            CompositeSequence de = vector.getDesignElement();
-            if ( intensities.getRow( de ) == null ) {
-                log.warn( "No intensity value for " + de + ", rank for vector will be null" );
-                vector.setRankByMean( null );
-                vector.setRankByMax( null );
-                continue;
-            }
-            Integer i = intensities.getRowIndex( de );
-            assert i != null;
-            double rankByMean = ranksByMean.get( i ) / ranksByMean.size();
-            double rankByMax = ranksByMax.get( i ) / ranksByMax.size();
-            vector.setRankByMean( rankByMean );
-            vector.setRankByMax( rankByMax );
-        }
-
-        return processedDataVectors;
-    }
-
-    /**
-     * @param intensities
-     * @return
-     */
-    private DoubleArrayList getRanks( ExpressionDataDoubleMatrix intensities,
-            ProcessedExpressionDataVectorDao.RankMethod method ) {
-        log.debug( "Getting ranks" );
-        assert intensities != null;
-        DoubleArrayList result = new DoubleArrayList( intensities.rows() );
-
-        for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
-            double[] rowObj = ArrayUtils.toPrimitive( intensities.getRow( de.getDesignElement() ) );
-            double valueForRank = Double.MIN_VALUE;
-            if ( rowObj != null ) {
-                DoubleArrayList row = new DoubleArrayList( rowObj );
-                switch ( method ) {
-                    case max:
-                        valueForRank = DescriptiveWithMissing.max( row );
-                        break;
-                    case mean:
-                        valueForRank = DescriptiveWithMissing.mean( row );
-                        break;
-                }
-
-            }
-            result.add( valueForRank );
-        }
-
-        return Rank.rankTransform( result );
-    }
-
-    /**
-     * Masking is done even if the array design is not two-color, so the decision whether to mask or not must be done
-     * elsewhere.
-     * 
-     * @param inMatrix The matrix to be masked
-     * @param missingValues
-     * @param missingValueMatrix The matrix used as a mask.
-     */
-    private void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
-        if ( missingValues != null ) ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValues );
-    }
-
-    /**
      * Computes expression intensities depending on which ArrayDesign TechnologyType is used.
      * 
      * @param ee
@@ -202,7 +119,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
      * @return ExpressionDataDoubleMatrix
      */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
@@ -267,38 +183,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         assert intensities != null;
 
         return intensities;
-    }
-
-    /**
-     * @param ee
-     * @return expression ranks based on computed intensities
-     */
-    @Override
-    @Transactional
-    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee ) {
-
-        Collection<ProcessedExpressionDataVector> processedVectors = this.processedDataService
-                .getProcessedDataVectors( ee );
-        StopWatch timer = new StopWatch();
-        timer.start();
-        ExpressionDataDoubleMatrix intensities = loadIntensities( ee, processedVectors );
-
-        if ( intensities == null ) {
-            return processedVectors;
-        }
-
-        log.info( "Load intensities: " + timer.getTime() + "ms" );
-
-        Collection<ProcessedExpressionDataVector> updatedVectors = computeRanks( processedVectors, intensities );
-        if ( updatedVectors == null ) {
-            log.info( "Could not get preferred data vectors, not updating ranks data" );
-            return processedVectors;
-        }
-
-        log.info( "Updating ranks data for " + updatedVectors.size() + " vectors ..." );
-        this.processedDataService.update( updatedVectors );
-        log.info( "Done" );
-        return updatedVectors;
     }
 
     @Override
@@ -444,6 +328,46 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     }
 
     /**
+     * @param ee
+     * @return expression ranks based on computed intensities
+     */
+    @Override
+    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee ) {
+
+        Collection<ProcessedExpressionDataVector> processedVectors = this.processedDataService
+                .getProcessedDataVectors( ee );
+        processedDataService.thaw( processedVectors );
+        StopWatch timer = new StopWatch();
+        timer.start();
+        ExpressionDataDoubleMatrix intensities = loadIntensities( ee, processedVectors );
+
+        if ( intensities == null ) {
+            return processedVectors;
+        }
+
+        log.info( "Load intensities: " + timer.getTime() + "ms" );
+
+        Collection<ProcessedExpressionDataVector> updatedVectors = computeRanks( processedVectors, intensities );
+        if ( updatedVectors == null ) {
+            log.info( "Could not get preferred data vectors, not updating ranks data" );
+            return processedVectors;
+        }
+
+        log.info( "Updating ranks data for " + updatedVectors.size() + " vectors ..." );
+        this.processedDataService.update( updatedVectors );
+        log.info( "Done" );
+        return updatedVectors;
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
+    /**
      * Make sure we have only one ordering!!! If the sample matching is botched, there will be problems.
      * 
      * @param dims
@@ -470,6 +394,81 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
             }
             i++;
         }
+    }
+
+    /**
+     * @param ad
+     * @param builder
+     * @return
+     */
+    private Collection<ProcessedExpressionDataVector> computeRanks(
+            Collection<ProcessedExpressionDataVector> processedDataVectors, ExpressionDataDoubleMatrix intensities ) {
+
+        DoubleArrayList ranksByMean = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.mean );
+        assert ranksByMean != null;
+        DoubleArrayList ranksByMax = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.max );
+        assert ranksByMax != null;
+
+        for ( ProcessedExpressionDataVector vector : processedDataVectors ) {
+            CompositeSequence de = vector.getDesignElement();
+            if ( intensities.getRow( de ) == null ) {
+                log.warn( "No intensity value for " + de + ", rank for vector will be null" );
+                vector.setRankByMean( null );
+                vector.setRankByMax( null );
+                continue;
+            }
+            Integer i = intensities.getRowIndex( de );
+            assert i != null;
+            double rankByMean = ranksByMean.get( i ) / ranksByMean.size();
+            double rankByMax = ranksByMax.get( i ) / ranksByMax.size();
+            vector.setRankByMean( rankByMean );
+            vector.setRankByMax( rankByMax );
+        }
+
+        return processedDataVectors;
+    }
+
+    /**
+     * @param intensities
+     * @return
+     */
+    private DoubleArrayList getRanks( ExpressionDataDoubleMatrix intensities,
+            ProcessedExpressionDataVectorDao.RankMethod method ) {
+        log.debug( "Getting ranks" );
+        assert intensities != null;
+        DoubleArrayList result = new DoubleArrayList( intensities.rows() );
+
+        for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
+            double[] rowObj = ArrayUtils.toPrimitive( intensities.getRow( de.getDesignElement() ) );
+            double valueForRank = Double.MIN_VALUE;
+            if ( rowObj != null ) {
+                DoubleArrayList row = new DoubleArrayList( rowObj );
+                switch ( method ) {
+                    case max:
+                        valueForRank = DescriptiveWithMissing.max( row );
+                        break;
+                    case mean:
+                        valueForRank = DescriptiveWithMissing.mean( row );
+                        break;
+                }
+
+            }
+            result.add( valueForRank );
+        }
+
+        return Rank.rankTransform( result );
+    }
+
+    /**
+     * Masking is done even if the array design is not two-color, so the decision whether to mask or not must be done
+     * elsewhere.
+     * 
+     * @param inMatrix The matrix to be masked
+     * @param missingValues
+     * @param missingValueMatrix The matrix used as a mask.
+     */
+    private void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
+        if ( missingValues != null ) ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValues );
     }
 
 }

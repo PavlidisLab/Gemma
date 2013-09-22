@@ -27,6 +27,18 @@ import ubic.gemma.util.ReflectionUtil;
  */
 public class SearchResult implements Comparable<SearchResult> {
 
+    boolean indexSearch;
+
+    private Class<?> resultClass;
+
+    private Long objectId;
+
+    private String highlightedText;
+
+    private Double score = 0.0;
+
+    private Object resultObject;
+
     /**
      * @param searchResult
      */
@@ -57,24 +69,31 @@ public class SearchResult implements Comparable<SearchResult> {
         this.highlightedText = matchingText;
     }
 
-    boolean indexSearch;
-
-    private Class<?> resultClass;
-
-    private Long objectId;
-
-    private String highlightedText;
-
-    private Double score = 0.0;
-
-    private Object resultObject;
-
-    public Class<?> getResultClass() {
-        return resultClass;
+    /**
+     * Results with higher scores get put at the FRONT (Descending order!)
+     */
+    @Override
+    public int compareTo( SearchResult o ) {
+        return -this.score.compareTo( o.getScore() );
     }
 
-    public Object getResultObject() {
-        return this.resultObject;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        final SearchResult other = ( SearchResult ) obj;
+        if ( objectId == null ) {
+            if ( other.objectId != null ) return false;
+        } else if ( !objectId.equals( other.objectId ) ) return false;
+        if ( resultClass == null ) {
+            if ( other.resultClass != null ) return false;
+        } else if ( !resultClass.getName().equals( other.resultClass.getName() ) ) return false;
+        return true;
+    }
+
+    public String getHighlightedText() {
+        return highlightedText;
     }
 
     /**
@@ -84,20 +103,25 @@ public class SearchResult implements Comparable<SearchResult> {
         return objectId;
     }
 
-    public String getHighlightedText() {
-        return highlightedText;
+    public Class<?> getResultClass() {
+        return resultClass;
     }
 
-    public void setHighlightedText( String highlightedText ) {
-        this.highlightedText = highlightedText;
+    public Object getResultObject() {
+        return this.resultObject;
     }
 
     public Double getScore() {
         return score;
     }
 
-    public void setScore( Double score ) {
-        this.score = score;
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( objectId == null ) ? 0 : objectId.hashCode() );
+        result = prime * result + ( ( resultClass == null ) ? 0 : resultClass.getName().hashCode() );
+        return result;
     }
 
     /**
@@ -107,6 +131,10 @@ public class SearchResult implements Comparable<SearchResult> {
      */
     public boolean isIndexSearchResult() {
         return indexSearch;
+    }
+
+    public void setHighlightedText( String highlightedText ) {
+        this.highlightedText = highlightedText;
     }
 
     public void setIndexSearchResult( boolean isIndexSearchResult ) {
@@ -125,41 +153,13 @@ public class SearchResult implements Comparable<SearchResult> {
         }
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( objectId == null ) ? 0 : objectId.hashCode() );
-        result = prime * result + ( ( resultClass == null ) ? 0 : resultClass.getName().hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        final SearchResult other = ( SearchResult ) obj;
-        if ( objectId == null ) {
-            if ( other.objectId != null ) return false;
-        } else if ( !objectId.equals( other.objectId ) ) return false;
-        if ( resultClass == null ) {
-            if ( other.resultClass != null ) return false;
-        } else if ( !resultClass.getName().equals( other.resultClass.getName() ) ) return false;
-        return true;
+    public void setScore( Double score ) {
+        this.score = score;
     }
 
     @Override
     public String toString() {
         return this.getResultObject() + " matched in: "
                 + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
-    }
-
-    /**
-     * Results with higher scores get put at the FRONT (Descending order!)
-     */
-    @Override
-    public int compareTo( SearchResult o ) {
-        return -this.score.compareTo( o.getScore() );
     }
 }

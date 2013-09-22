@@ -44,14 +44,8 @@ public class UserDetailsImpl implements UserDetails {
     private Boolean enabled;
     private Collection<GrantedAuthority> grantedAuthorities = new HashSet<GrantedAuthority>();
 
-    /**
-     * @param enabled the enabled to set
-     */
-    public void setEnabled( Boolean enabled ) {
-        this.enabled = enabled;
-    }
-
     private String password;
+
     private String signupToken;
     private Date signupTokenDatestamp;
     private String userName;
@@ -96,6 +90,7 @@ public class UserDetailsImpl implements UserDetails {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.userdetails.UserDetails#getAuthorities()
      */
     @Override
@@ -112,6 +107,7 @@ public class UserDetailsImpl implements UserDetails {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.userdetails.UserDetails#getPassword()
      */
     @Override
@@ -135,6 +131,7 @@ public class UserDetailsImpl implements UserDetails {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.userdetails.UserDetails#getUsername()
      */
     @Override
@@ -144,6 +141,7 @@ public class UserDetailsImpl implements UserDetails {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.userdetails.UserDetails#isAccountNonExpired()
      */
     @Override
@@ -153,6 +151,7 @@ public class UserDetailsImpl implements UserDetails {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.userdetails.UserDetails#isAccountNonLocked()
      */
     @Override
@@ -162,6 +161,7 @@ public class UserDetailsImpl implements UserDetails {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.userdetails.UserDetails#isCredentialsNonExpired()
      */
     @Override
@@ -171,6 +171,7 @@ public class UserDetailsImpl implements UserDetails {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.userdetails.UserDetails#isEnabled()
      */
     @Override
@@ -183,6 +184,13 @@ public class UserDetailsImpl implements UserDetails {
      */
     public void setEmail( String email ) {
         this.email = email;
+    }
+
+    /**
+     * @param enabled the enabled to set
+     */
+    public void setEnabled( Boolean enabled ) {
+        this.enabled = enabled;
     }
 
     @Override

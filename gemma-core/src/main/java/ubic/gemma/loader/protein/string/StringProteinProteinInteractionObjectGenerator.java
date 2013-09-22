@@ -71,6 +71,21 @@ public class StringProteinProteinInteractionObjectGenerator {
     }
 
     /**
+     * Fetches files from remote string site and unpacks the file.
+     * 
+     * @throws Exception
+     */
+    public void fetchProteinStringFileFromRemoteSiteUnArchived() {
+        // the file can be null the fetcher determines that
+        Collection<LocalFile> stringProteinInteractionFileArchived = stringProteinFileFetcher
+                .fetch( stringProteinInteractionFileRemote );
+        // set the string protein interaction local file
+        this.setStringProteinInteractionFileLocal( stringProteinFileFetcher
+                .unPackFile( stringProteinInteractionFileArchived ) );
+
+    }
+
+    /**
      * Main method to generate StringProteinProteinInteraction objects.
      * 
      * @param validTaxa Taxon to generate StringProteinProteinInteraction from string (STRING has many taxon).
@@ -104,18 +119,24 @@ public class StringProteinProteinInteractionObjectGenerator {
     }
 
     /**
-     * Fetches files from remote string site and unpacks the file.
-     * 
-     * @throws Exception
+     * @return the stringProteinFileFetcher
      */
-    public void fetchProteinStringFileFromRemoteSiteUnArchived() {
-        // the file can be null the fetcher determines that
-        Collection<LocalFile> stringProteinInteractionFileArchived = stringProteinFileFetcher
-                .fetch( stringProteinInteractionFileRemote );
-        // set the string protein interaction local file
-        this.setStringProteinInteractionFileLocal( stringProteinFileFetcher
-                .unPackFile( stringProteinInteractionFileArchived ) );
+    public HttpArchiveFetcherInterface getStringProteinFileFetcher() {
+        return stringProteinFileFetcher;
+    }
 
+    /**
+     * @return the stringProteinInteractionFileLocal
+     */
+    public File getStringProteinInteractionFileLocal() {
+        return stringProteinInteractionFileLocal;
+    }
+
+    /**
+     * @return the stringProteinInteractionFileRemote
+     */
+    public String getStringProteinInteractionFileRemote() {
+        return stringProteinInteractionFileRemote;
     }
 
     /**
@@ -137,24 +158,10 @@ public class StringProteinProteinInteractionObjectGenerator {
     }
 
     /**
-     * @return the stringProteinInteractionFileRemote
+     * @param stringProteinFileFetcher the stringProteinFileFetcher to set
      */
-    public String getStringProteinInteractionFileRemote() {
-        return stringProteinInteractionFileRemote;
-    }
-
-    /**
-     * @param stringProteinInteractionFileRemote the stringProteinInteractionFileRemote to set
-     */
-    public void setStringProteinInteractionFileRemote( String stringProteinInteractionFileRemote ) {
-        this.stringProteinInteractionFileRemote = stringProteinInteractionFileRemote;
-    }
-
-    /**
-     * @return the stringProteinInteractionFileLocal
-     */
-    public File getStringProteinInteractionFileLocal() {
-        return stringProteinInteractionFileLocal;
+    public void setStringProteinFileFetcher( HttpArchiveFetcherInterface stringProteinFileFetcher ) {
+        this.stringProteinFileFetcher = stringProteinFileFetcher;
     }
 
     /**
@@ -165,17 +172,10 @@ public class StringProteinProteinInteractionObjectGenerator {
     }
 
     /**
-     * @return the stringProteinFileFetcher
+     * @param stringProteinInteractionFileRemote the stringProteinInteractionFileRemote to set
      */
-    public HttpArchiveFetcherInterface getStringProteinFileFetcher() {
-        return stringProteinFileFetcher;
-    }
-
-    /**
-     * @param stringProteinFileFetcher the stringProteinFileFetcher to set
-     */
-    public void setStringProteinFileFetcher( HttpArchiveFetcherInterface stringProteinFileFetcher ) {
-        this.stringProteinFileFetcher = stringProteinFileFetcher;
+    public void setStringProteinInteractionFileRemote( String stringProteinInteractionFileRemote ) {
+        this.stringProteinInteractionFileRemote = stringProteinInteractionFileRemote;
     }
 
 }

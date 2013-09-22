@@ -86,9 +86,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // this.geneService.remove( this.gene );
 
         Collection<Gene> genes = geneService.loadAll();
-        for ( Gene gene : genes ) {
+        for ( Gene g : genes ) {
             try {
-                geneService.remove( gene );
+                geneService.remove( g );
             } catch ( Exception e ) {
 
             }
@@ -149,6 +149,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertNull( this.phenotypeAssociationManagerService.load( evidence.getId() ) );
     }
 
+    @SuppressWarnings("unused")
     private void createLiteratureEvidence() {
         this.litEvidence = new LiteratureEvidenceValueObject();
         this.litEvidence.setDescription( "Test Description" );
@@ -173,6 +174,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     /**
      * @param ncbiId
      */
+    @SuppressWarnings("unused")
     private void makeGene( int ncbiId ) {
         this.gene = Gene.Factory.newInstance();
         this.gene.setName( "RAT1" );
@@ -189,6 +191,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
      * @throws SecurityException
      * @throws NoSuchMethodException
      */
+    @SuppressWarnings("unused")
     private void mockOntology() throws SecurityException, NoSuchMethodException {
 
         OntologyTerm mockedOntoloyTerm = EasyMock.createMock( OntologyTerm.class );

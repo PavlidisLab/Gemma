@@ -1,15 +1,16 @@
 package ubic.gemma.tasks.analysis.expression;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.analysis.service.SampleRemoveService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.tasks.AbstractTask;
-
-import java.util.Collection;
 
 /**
  * Handle 'flagging' a sample as an outlier. The sample will not be used in analyses.

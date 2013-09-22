@@ -90,13 +90,6 @@ public class SystemArchitectureAspect {
     }
 
     /**
-     * Methods which are marked as @Transactional
-     */
-    @Pointcut("@target(org.springframework.transaction.annotation.Transactional) && execution(public * ubic.gemma..*.*(..))")
-    public void transactional() {
-    }
-
-    /**
      * A entity service method: a public method in a \@Service.
      */
     @Pointcut("@target(org.springframework.stereotype.Service) && execution(public * ubic.gemma..*.*(..))")
@@ -112,6 +105,13 @@ public class SystemArchitectureAspect {
 
     @Pointcut("@target(org.springframework.stereotype.Service) && (execution(public * ubic.gemma..*.*(*)) || execution(public * ubic.gemma..*.*(*,..)))")
     public void serviceMethodWithArg() {//
+    }
+
+    /**
+     * Methods which are marked as @Transactional
+     */
+    @Pointcut("@target(org.springframework.transaction.annotation.Transactional) && execution(public * ubic.gemma..*.*(..))")
+    public void transactional() {
     }
 
     /**

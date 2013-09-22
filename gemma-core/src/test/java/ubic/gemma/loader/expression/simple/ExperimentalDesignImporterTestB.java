@@ -75,14 +75,6 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     @Autowired
     private AclTestUtils aclTestUtils;
 
-    @After
-    public void tearDown() {
-        if ( ee != null ) {
-            ee = eeService.load( ee.getId() );
-            eeService.delete( ee );
-        }
-    }
-
     @Before
     public void setup() throws Exception {
 
@@ -116,6 +108,14 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
         ee = simpleExpressionDataLoaderService.create( metaData, data );
 
+    }
+
+    @After
+    public void tearDown() {
+        if ( ee != null ) {
+            ee = eeService.load( ee.getId() );
+            eeService.delete( ee );
+        }
     }
 
     /**

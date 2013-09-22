@@ -55,15 +55,40 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
 
     private Collection<Integer> ncbiTaxonIds;
 
-    public void setFilter( boolean filter ) {
-        this.filter = filter;
+    @Override
+    public boolean containsKey( String key ) {
+        return results.containsKey( key );
     }
 
-    /**
-     * @param ncbiTaxonIds Taxon IDs (NCBI, not Gemma ids) e.g. 9606 for H. sapiens
+    @Override
+    public NCBIGeneInfo get( String key ) {
+        return results.get( key );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.loaderutils.BasicLineMapParser#getKey(java.lang.Object)
      */
-    public void setSupportedTaxa( Collection<Integer> ncbiTaxonIds ) {
-        this.ncbiTaxonIds = ncbiTaxonIds;
+    @Override
+    public String getKey( NCBIGeneInfo newItem ) {
+        return newItem.getGeneId();
+    }
+
+    @Override
+    public Collection<String> getKeySet() {
+        return results.keySet();
+    }
+
+    @Override
+    public Collection<NCBIGeneInfo> getResults() {
+        return results.values();
+    }
+
+    @Override
+    public void parse( InputStream inputStream, BlockingQueue<String> queue ) throws IOException {
+        this.resultsKeys = queue;
+        this.parse( inputStream );
     }
 
     /*
@@ -94,7 +119,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                     return null;
                 }
             }
-            
+
             // #Format:
             // tax_id
             // GeneID
@@ -102,7 +127,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             // LocusTag
             // Synonyms
             // dbXrefs
-            // chromosome 
+            // chromosome
             // map_location
             // description
             // type_of_gene
@@ -149,24 +174,15 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
         return geneInfo;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.loaderutils.BasicLineMapParser#getKey(java.lang.Object)
+    public void setFilter( boolean filter ) {
+        this.filter = filter;
+    }
+
+    /**
+     * @param ncbiTaxonIds Taxon IDs (NCBI, not Gemma ids) e.g. 9606 for H. sapiens
      */
-    @Override
-    public String getKey( NCBIGeneInfo newItem ) {
-        return newItem.getGeneId();
-    }
-
-    @Override
-    public Collection<NCBIGeneInfo> getResults() {
-        return results.values();
-    }
-
-    @Override
-    public NCBIGeneInfo get( String key ) {
-        return results.get( key );
+    public void setSupportedTaxa( Collection<Integer> ncbiTaxonIds ) {
+        this.ncbiTaxonIds = ncbiTaxonIds;
     }
 
     @Override
@@ -180,22 +196,6 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             log.error( e );
             throw new RuntimeException( e );
         }
-    }
-
-    @Override
-    public boolean containsKey( String key ) {
-        return results.containsKey( key );
-    }
-
-    @Override
-    public void parse( InputStream inputStream, BlockingQueue<String> queue ) throws IOException {
-        this.resultsKeys = queue;
-        this.parse( inputStream );
-    }
-
-    @Override
-    public Collection<String> getKeySet() {
-        return results.keySet();
     }
 
 }

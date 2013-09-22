@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -139,6 +140,21 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
     }
 
+    @After
+    public void tearDown() {
+        try {
+            if ( ee != null && ee.getId() != null ) {
+                expressionExperimentService.delete( ee );
+            }
+            if ( newee != null && newee.getId() != null ) {
+                expressionExperimentService.delete( newee );
+            }
+        } catch ( Exception e ) {
+
+        }
+
+    }
+
     /**
      * Tests the construction of an ExpressionDataDoubleMatrix
      * 
@@ -216,7 +232,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         BioAssayDimension bioAssayDimension = BioAssayDimension.Factory.newInstance();
         bioAssayDimension.setName( "GSM15697, GSM15744" );
 
-        Collection<BioAssay> assays = new LinkedHashSet<BioAssay>();
+        List<BioAssay> assays = new ArrayList<>();
 
         BioAssay assay1 = BioAssay.Factory.newInstance();
         assay1.setName( "Current Smoker 73" );
@@ -373,21 +389,6 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         data = matrixBuilder.getProcessedData();
         assertTrue( !tba.getIsOutlier() );
         assertTrue( !Double.isNaN( data.getColumn( tba )[10] ) );
-
-    }
-
-    @After
-    public void tearDown() {
-        try {
-            if ( ee != null && ee.getId() != null ) {
-                expressionExperimentService.delete( ee );
-            }
-            if ( newee != null && newee.getId() != null ) {
-                expressionExperimentService.delete( newee );
-            }
-        } catch ( Exception e ) {
-
-        }
 
     }
 }

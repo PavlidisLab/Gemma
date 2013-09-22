@@ -51,9 +51,10 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
 
     /**
      * @param key
-     * @param value
+     * @return
+     * @see Map
      */
-    protected abstract void put( K key, T value );
+    public abstract boolean containsKey( K key );
 
     /**
      * @param key
@@ -61,12 +62,32 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
      */
     public abstract T get( K key );
 
+    public abstract Collection<K> getKeySet();
+
     /**
-     * @param key
-     * @return
-     * @see Map
+     * 
      */
-    public abstract boolean containsKey( K key );
+    @Override
+    public abstract Collection<T> getResults();
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see baseCode.io.reader.LineParser#parse(java.io.File)
+     */
+    @Override
+    public void parse( File file ) throws IOException {
+        if ( file == null ) {
+            throw new IllegalArgumentException( "File cannot be null" );
+        }
+        if ( !file.exists() || !file.canRead() ) {
+            throw new IOException( "Could not read from file " + file.getPath() );
+        }
+        log.info( "Parsing " + file.getAbsolutePath() );
+        InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+        parse( stream );
+        stream.close();
+    }
 
     /*
      * (non-Javadoc)
@@ -120,25 +141,6 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
     /*
      * (non-Javadoc)
      * 
-     * @see baseCode.io.reader.LineParser#parse(java.io.File)
-     */
-    @Override
-    public void parse( File file ) throws IOException {
-        if ( file == null ) {
-            throw new IllegalArgumentException( "File cannot be null" );
-        }
-        if ( !file.exists() || !file.canRead() ) {
-            throw new IOException( "Could not read from file " + file.getPath() );
-        }
-        log.info( "Parsing " + file.getAbsolutePath() );
-        InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-        parse( stream );
-        stream.close();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.LineParser#pasre(java.lang.String)
      */
     @Override
@@ -165,12 +167,10 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
      */
     protected abstract K getKey( T newItem );
 
-    public abstract Collection<K> getKeySet();
-
     /**
-     * 
+     * @param key
+     * @param value
      */
-    @Override
-    public abstract Collection<T> getResults();
+    protected abstract void put( K key, T value );
 
 }

@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,9 +27,9 @@ import java.util.HashSet;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
@@ -73,6 +73,20 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
             checkResults( resultSet );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
+     */
+    @Override
+    protected void configureMocks() throws Exception {
+
+        configureMockAnalysisServiceHelper( 1 );
+
+        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
+
     }
 
     /**
@@ -138,19 +152,5 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
             }
 
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
-    @Override
-    protected void configureMocks() throws Exception {
-
-        configureMockAnalysisServiceHelper( 1 );
-
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
-
     }
 }

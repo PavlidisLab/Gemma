@@ -64,6 +64,76 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
     private static Log log = LogFactory.getLog( ArrayDesignSequenceAlignmentServiceImpl.class.getName() );
 
+    /**
+     * @param ad
+     * @return all sequences, across all taxa that might be represented on the array design
+     * @see getSequences(ad, taxon) for method to get just the sequences for one taxon.
+     */
+    public static Collection<BioSequence> getSequences( ArrayDesign ad ) {
+        return getSequences( ad, null );
+    }
+
+    /**
+     * @param ad
+     * @param taxon (specified in case array has multiple taxa)
+     * @return
+     */
+    public static Collection<BioSequence> getSequences( ArrayDesign ad, Taxon taxon ) {
+
+        Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
+        Collection<BioSequence> sequencesToBlat = new HashSet<BioSequence>();
+        int numWithNoBioSequence = 0;
+        int numWithNoSequenceData = 0;
+        boolean warned = false;
+        for ( CompositeSequence cs : compositeSequences ) {
+            BioSequence bs = cs.getBiologicalCharacteristic();
+
+            if ( !warned && ( numWithNoBioSequence > 20 || numWithNoSequenceData > 20 ) ) {
+                warned = true;
+                log.warn( "More than 20 composite sequences don't have sequence information, no more warnings..." );
+            }
+
+            if ( bs == null ) {
+                ++numWithNoBioSequence;
+                if ( !warned ) {
+                    log.warn( cs + " had no associated biosequence object" );
+                }
+                continue;
+            }
+
+            if ( bs.getTaxon() == null ) {
+                warned = true;
+                log.warn( "There is no taxon defined for this biosequence " );
+                continue;
+            }
+            // if the taxon is null that means we want this run for all taxa for that array
+            if ( taxon != null && !bs.getTaxon().equals( taxon ) ) {
+                continue;
+            }
+
+            if ( !warned && ( numWithNoBioSequence > 20 || numWithNoSequenceData > 20 ) ) {
+                warned = true;
+                log.warn( "More than 20 composite sequences don't have sequence information, no more warnings..." );
+            }
+
+            if ( StringUtils.isBlank( bs.getSequence() ) ) {
+                ++numWithNoSequenceData;
+                if ( !warned ) {
+                    log.warn( cs + " had " + bs + " but no sequence, skipping" );
+                }
+                continue;
+            }
+            sequencesToBlat.add( bs );
+
+        }
+        if ( numWithNoBioSequence > 0 || numWithNoSequenceData > 0 ) {
+            log.warn( numWithNoBioSequence + " composite sequences lacked biosequence associations; "
+                    + numWithNoSequenceData + " lacked sequence data ( out of " + compositeSequences.size()
+                    + " total)." );
+        }
+        return sequencesToBlat;
+    }
+
     @Autowired
     BlatResultService blatResultService;
 
@@ -78,6 +148,18 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
     @Autowired
     ArrayDesignReportService arrayDesignReportService;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    public Collection<BlatResult> processArrayDesign( ArrayDesign design ) {
+        return this.processArrayDesign( design, false );
+    }
 
     /*
      * (non-Javadoc)
@@ -209,7 +291,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
             result.setSearchedDatabase( searchedDatabase );
             try {
-                FieldUtils.writeField( result.getTargetChromosome(), "taxon", taxon, true  );
+                FieldUtils.writeField( result.getTargetChromosome(), "taxon", taxon, true );
             } catch ( IllegalAccessException e ) {
                 e.printStackTrace();
             }
@@ -350,76 +432,6 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     }
 
     /**
-     * @param ad
-     * @return all sequences, across all taxa that might be represented on the array design
-     * @see getSequences(ad, taxon) for method to get just the sequences for one taxon.
-     */
-    public static Collection<BioSequence> getSequences( ArrayDesign ad ) {
-        return getSequences( ad, null );
-    }
-
-    /**
-     * @param ad
-     * @param taxon (specified in case array has multiple taxa)
-     * @return
-     */
-    public static Collection<BioSequence> getSequences( ArrayDesign ad, Taxon taxon ) {
-
-        Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        Collection<BioSequence> sequencesToBlat = new HashSet<BioSequence>();
-        int numWithNoBioSequence = 0;
-        int numWithNoSequenceData = 0;
-        boolean warned = false;
-        for ( CompositeSequence cs : compositeSequences ) {
-            BioSequence bs = cs.getBiologicalCharacteristic();
-
-            if ( !warned && ( numWithNoBioSequence > 20 || numWithNoSequenceData > 20 ) ) {
-                warned = true;
-                log.warn( "More than 20 composite sequences don't have sequence information, no more warnings..." );
-            }
-
-            if ( bs == null ) {
-                ++numWithNoBioSequence;
-                if ( !warned ) {
-                    log.warn( cs + " had no associated biosequence object" );
-                }
-                continue;
-            }
-
-            if ( bs.getTaxon() == null ) {
-                warned = true;
-                log.warn( "There is no taxon defined for this biosequence " );
-                continue;
-            }
-            // if the taxon is null that means we want this run for all taxa for that array
-            if ( taxon != null && !bs.getTaxon().equals( taxon ) ) {
-                continue;
-            }
-
-            if ( !warned && ( numWithNoBioSequence > 20 || numWithNoSequenceData > 20 ) ) {
-                warned = true;
-                log.warn( "More than 20 composite sequences don't have sequence information, no more warnings..." );
-            }
-
-            if ( StringUtils.isBlank( bs.getSequence() ) ) {
-                ++numWithNoSequenceData;
-                if ( !warned ) {
-                    log.warn( cs + " had " + bs + " but no sequence, skipping" );
-                }
-                continue;
-            }
-            sequencesToBlat.add( bs );
-
-        }
-        if ( numWithNoBioSequence > 0 || numWithNoSequenceData > 0 ) {
-            log.warn( numWithNoBioSequence + " composite sequences lacked biosequence associations; "
-                    + numWithNoSequenceData + " lacked sequence data ( out of " + compositeSequences.size()
-                    + " total)." );
-        }
-        return sequencesToBlat;
-    }
-
-    /**
      * @param sequencesToBlat, assumed to be the ones that were analyzed
      * @param brs, assumed to be from alignments to the genome for the array design (that is, we don't consider aligning
      *        mouse to human)
@@ -432,7 +444,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             Taxon taxon = br.getQuerySequence().getTaxon();
             assert taxon != null;
             try {
-                FieldUtils.writeField( br.getTargetChromosome(), "taxon", taxon , true );
+                FieldUtils.writeField( br.getTargetChromosome(), "taxon", taxon, true );
             } catch ( IllegalAccessException e ) {
                 e.printStackTrace();
             }
@@ -453,17 +465,5 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         }
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign)
-     */
-    @Override
-    public Collection<BlatResult> processArrayDesign( ArrayDesign design ) {
-        return this.processArrayDesign( design, false );
     }
 }

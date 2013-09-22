@@ -20,6 +20,14 @@ package ubic.gemma.security.authentication;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.MessageSource;
 import org.springframework.security.authentication.AnonymousAuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -29,14 +37,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.MessageSource;
 
 /**
  * Process authentication requests that come from outside a web context. This is used for command line interfaces, for
@@ -107,6 +107,19 @@ public class ManualAuthenticationServiceImpl implements ApplicationContextAware,
     /*
      * (non-Javadoc)
      * 
+     * @see
+     * ubic.gemma.security.authentication.ManualAuthenticationService#setApplicationContext(org.springframework.context
+     * .ApplicationContext)
+     */
+    @Override
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
+        this.context = applicationContext;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.ManualAuthenticationService#validateRequest(java.lang.String,
      * java.lang.String)
      */
@@ -157,19 +170,6 @@ public class ManualAuthenticationServiceImpl implements ApplicationContextAware,
     protected void unsuccessfulAuthentication( AuthenticationException failed ) {
         log.debug( "Updated SecurityContextHolder to contain null Authentication" );
         log.debug( "Authentication request failed: " + failed.toString() );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.security.authentication.ManualAuthenticationService#setApplicationContext(org.springframework.context
-     * .ApplicationContext)
-     */
-    @Override
-    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
-        this.context = applicationContext;
 
     }
 

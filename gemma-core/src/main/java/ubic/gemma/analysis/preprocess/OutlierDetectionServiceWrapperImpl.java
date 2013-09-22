@@ -20,7 +20,9 @@ package ubic.gemma.analysis.preprocess;
 
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -32,21 +34,26 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 @Service
 public class OutlierDetectionServiceWrapperImpl implements OutlierDetectionServiceWrapper {
 
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
+
     @Override
-    public Collection<OutlierDetails> findOutliers( ExpressionExperiment ee, OutlierDetectionService outlierDetector ) {
-        return outlierDetector.identifyOutliers( ee );
+    @Transactional(readOnly = true)
+    public Collection<OutlierDetails> findOutliers( ExpressionExperiment ee ) {
+        return outlierDetectionService.identifyOutliers( ee );
     }
 
     @Override
-    public OutlierDetectionTestDetails findOutliers( ExpressionExperiment ee, OutlierDetectionService outlierDetector,
-            boolean useRegression, boolean findByMedian ) {
-        return outlierDetector.identifyOutliers( ee, useRegression, findByMedian );
+    @Transactional(readOnly = true)
+    public OutlierDetectionTestDetails findOutliers( ExpressionExperiment ee, boolean useRegression,
+            boolean findByMedian ) {
+        return outlierDetectionService.identifyOutliers( ee, useRegression, findByMedian );
     }
 
     @Override
-    public OutlierDetectionTestDetails findOutliersByCombinedMethod( ExpressionExperiment ee,
-            OutlierDetectionService outlierDetector ) {
-        return outlierDetector.identifyOutliersByCombinedMethod( ee );
+    @Transactional(readOnly = true)
+    public OutlierDetectionTestDetails findOutliersByCombinedMethod( ExpressionExperiment ee ) {
+        return outlierDetectionService.identifyOutliersByCombinedMethod( ee );
     }
 
 }

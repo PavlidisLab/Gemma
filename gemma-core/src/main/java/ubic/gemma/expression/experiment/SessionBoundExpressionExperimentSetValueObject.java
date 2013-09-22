@@ -61,21 +61,6 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
         super();
     }
 
-    /*
-     * can't implement this because sessionListManager in is 'web' package
-     * 
-     * @Override public Object loadEntity() { return sessionListManager.getExperimentSetById( this.getId() ); }
-     */
-    @Override
-    public boolean isModified() {
-        return this.modified;
-    }
-
-    @Override
-    public void setModified( boolean modified ) {
-        this.modified = modified;
-    }
-
     /**
      * two value objects are equal if their types are the same and their ids are the same
      */
@@ -90,6 +75,21 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
     @Override
     public Collection<Long> getMemberIds() {
         return this.getExpressionExperimentIds();
+    }
+
+    /*
+     * can't implement this because sessionListManager in is 'web' package
+     * 
+     * @Override public Object loadEntity() { return sessionListManager.getExperimentSetById( this.getId() ); }
+     */
+    @Override
+    public boolean isModified() {
+        return this.modified;
+    }
+
+    @Override
+    public void setModified( boolean modified ) {
+        this.modified = modified;
     }
 
 }

@@ -35,25 +35,6 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
 
     private ArrayDesign arrayDesign = null;
 
-    /**
-     * @return
-     */
-    public ArrayDesign getArrayDesign() {
-        return arrayDesign;
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
-
-    @Override
-    public Class<ArrayDesignProbeMapperTask> getTaskClass() {
-        return ArrayDesignProbeMapperTask.class;
-    }
-
     public ArrayDesignProbeMapTaskCommand() {
         super();
     }
@@ -72,8 +53,27 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
         this.arrayDesign = arrayDesign;
     }
 
+    /**
+     * @return
+     */
+    public ArrayDesign getArrayDesign() {
+        return arrayDesign;
+    }
+
+    @Override
+    public Class<ArrayDesignProbeMapperTask> getTaskClass() {
+        return ArrayDesignProbeMapperTask.class;
+    }
+
     public boolean isForceAnalysis() {
         return forceAnalysis;
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    public void setArrayDesign( ArrayDesign arrayDesign ) {
+        this.arrayDesign = arrayDesign;
     }
 
     public void setForceAnalysis( boolean forceAnalysis ) {

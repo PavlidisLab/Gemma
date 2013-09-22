@@ -31,9 +31,9 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -55,28 +55,56 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
     private DiffExAnalyzer analyzer;
 
     /**
-     * Two fixed-level parameters
+     * With a continuous covariate only
      * 
      * @throws Exception
      */
     @Test
-    public void testAncovaTwoway() throws Exception {
+    public void testAncovaContinuousCovariate() throws Exception {
 
         configureMocks();
 
+        /*
+         * Add a continuous factor
+         */
+        ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
+        experimentalFactorC.setName( "confabulatiliationity" );
+        experimentalFactorC.setId( 5399424551L );
+        experimentalFactorC.setType( FactorType.CONTINUOUS );
+        for ( int i = 1; i <= 8; i++ ) {
+
+            FactorValue factorValueC = FactorValue.Factory.newInstance();
+            factorValueC.setId( 2000L + i );
+
+            factorValueC.setMeasurement( Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i,
+                    PrimitiveType.DOUBLE ) );
+
+            factorValueC.setExperimentalFactor( experimentalFactorC );
+
+            assert !biomaterials.get( i - 1 ).getFactorValues().contains( factorValueC );
+            super.biomaterials.get( i - 1 ).getFactorValues().add( factorValueC );
+
+            experimentalFactorC.getFactorValues().add( factorValueC );
+        }
+
+        expressionExperiment.getExperimentalDesign().getExperimentalFactors().clear(); // leave off the others.
+
+        expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
+
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( super.experimentalFactors );
+        config.setFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
         config.setQvalueThreshold( null );
 
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
 
+        assertTrue( !expressionAnalyses.isEmpty() );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
         assertNotNull( expressionAnalysis );
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
-        assertEquals( 2, resultSets.size() );
+        assertEquals( 1, resultSets.size() );
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
 
@@ -84,44 +112,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             assertEquals( 1, factors.size() );
 
-            for ( DifferentialExpressionAnalysisResult probeAnalysisResult : resultSet.getResults() ) {
-
-                CompositeSequence probe = probeAnalysisResult.getProbe();
-                Double pvalue = probeAnalysisResult.getPvalue();
-
-                Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-                Double stat = null;
-                if ( contrasts.isEmpty() ) {
-                    continue;
-                }
-
-                stat = contrasts.iterator().next().getTstat();
-
-                assertNotNull( probe );
-
-                // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; T=" + stat );
-
-                ExperimentalFactor f = factors.iterator().next();
-
-                if ( f.equals( super.experimentalFactorA_Area ) ) {
-                    if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.8572, pvalue, 0.001 );
-                    } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 4.69e-11, pvalue, 1e-12 );
-                    } else if ( probe.getName().equals( "probe_4" ) ) {
-                        assertEquals( 0.0048, pvalue, 0.0001 );
-                        assertEquals( -125.746, stat, 0.001 );
-                        assertEquals( 0.00506, contrasts.iterator().next().getPvalue(), 0.0001 ); // factor1a
-                    }
-
-                } else {
-                    if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.6417, pvalue, 0.001 );
-                    } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 0.196, pvalue, 0.001 );
-                    }
-                }
-
+            assertEquals( 100, resultSet.getResults().size() );
+            for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+                assertNotNull( r.getCorrectedPvalue() );
             }
         }
     }
@@ -349,6 +342,78 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
     }
 
     /**
+     * Two fixed-level parameters
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testAncovaTwoway() throws Exception {
+
+        configureMocks();
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( super.experimentalFactors );
+        config.setQvalueThreshold( null );
+
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+
+        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
+
+        assertNotNull( expressionAnalysis );
+
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+
+        assertEquals( 2, resultSets.size() );
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+
+            Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactors();
+
+            assertEquals( 1, factors.size() );
+
+            for ( DifferentialExpressionAnalysisResult probeAnalysisResult : resultSet.getResults() ) {
+
+                CompositeSequence probe = probeAnalysisResult.getProbe();
+                Double pvalue = probeAnalysisResult.getPvalue();
+
+                Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
+                Double stat = null;
+                if ( contrasts.isEmpty() ) {
+                    continue;
+                }
+
+                stat = contrasts.iterator().next().getTstat();
+
+                assertNotNull( probe );
+
+                // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; T=" + stat );
+
+                ExperimentalFactor f = factors.iterator().next();
+
+                if ( f.equals( super.experimentalFactorA_Area ) ) {
+                    if ( probe.getName().equals( "probe_98" ) ) {
+                        assertEquals( 0.8572, pvalue, 0.001 );
+                    } else if ( probe.getName().equals( "probe_10" ) ) {
+                        assertEquals( 4.69e-11, pvalue, 1e-12 );
+                    } else if ( probe.getName().equals( "probe_4" ) ) {
+                        assertEquals( 0.0048, pvalue, 0.0001 );
+                        assertEquals( -125.746, stat, 0.001 );
+                        assertEquals( 0.00506, contrasts.iterator().next().getPvalue(), 0.0001 ); // factor1a
+                    }
+
+                } else {
+                    if ( probe.getName().equals( "probe_98" ) ) {
+                        assertEquals( 0.6417, pvalue, 0.001 );
+                    } else if ( probe.getName().equals( "probe_10" ) ) {
+                        assertEquals( 0.196, pvalue, 0.001 );
+                    }
+                }
+
+            }
+        }
+    }
+
+    /**
      * Two factors with interactions.
      * 
      * @throws Exception
@@ -441,71 +506,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         }
         assertTrue( foundInteractions );
         assertTrue( foundContrast );
-    }
-
-    /**
-     * With a continuous covariate only
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testAncovaContinuousCovariate() throws Exception {
-
-        configureMocks();
-
-        /*
-         * Add a continuous factor
-         */
-        ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
-        experimentalFactorC.setName( "confabulatiliationity" );
-        experimentalFactorC.setId( 5399424551L );
-        experimentalFactorC.setType( FactorType.CONTINUOUS );
-        for ( int i = 1; i <= 8; i++ ) {
-
-            FactorValue factorValueC = FactorValue.Factory.newInstance();
-            factorValueC.setId( 2000L + i );
-
-            factorValueC.setMeasurement( Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i,
-                    PrimitiveType.DOUBLE ) );
-
-            factorValueC.setExperimentalFactor( experimentalFactorC );
-
-            assert !biomaterials.get( i - 1 ).getFactorValues().contains( factorValueC );
-            super.biomaterials.get( i - 1 ).getFactorValues().add( factorValueC );
-
-            experimentalFactorC.getFactorValues().add( factorValueC );
-        }
-
-        expressionExperiment.getExperimentalDesign().getExperimentalFactors().clear(); // leave off the others.
-
-        expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
-
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
-        config.setQvalueThreshold( null );
-
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
-
-        assertTrue( !expressionAnalyses.isEmpty() );
-        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
-
-        assertNotNull( expressionAnalysis );
-
-        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
-
-        assertEquals( 1, resultSets.size() );
-
-        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-
-            Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactors();
-
-            assertEquals( 1, factors.size() );
-
-            assertEquals( 100, resultSet.getResults().size() );
-            for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-                assertNotNull( r.getCorrectedPvalue() );
-            }
-        }
     }
 
     /*

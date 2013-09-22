@@ -80,13 +80,6 @@ public interface BibliographicReferenceService {
     public BibliographicReference findByExternalId( java.lang.String id );
 
     /**
-     * <p>
-     * Get a reference by the unqualified external id. Searches for pubmed by default
-     * </p>
-     */
-    public BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
-
-    /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      */
     public BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
@@ -96,6 +89,13 @@ public interface BibliographicReferenceService {
      */
     @Secured({ "GROUP_USER" })
     public BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
+
+    /**
+     * <p>
+     * Get a reference by the unqualified external id. Searches for pubmed by default
+     * </p>
+     */
+    public BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
@@ -109,6 +109,12 @@ public interface BibliographicReferenceService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
             BibliographicReference bibliographicReference );
+
+    /**
+     * @param records
+     */
+    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+            Collection<BibliographicReference> records );
 
     /**
      * 
@@ -135,6 +141,20 @@ public interface BibliographicReferenceService {
     @Secured({ "GROUP_ADMIN" })
     public void remove( BibliographicReference BibliographicReference );
 
+    /**
+     * Allows limiting searches to phenotypes and/or experiments.
+     * 
+     * @param settings
+     * @return
+     */
+    public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
+
+    /**
+     * @param query
+     * @return
+     */
+    public List<BibliographicReferenceValueObject> search( String query );
+
     public BibliographicReference thaw( BibliographicReference bibliographicReference );
 
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
@@ -144,25 +164,5 @@ public interface BibliographicReferenceService {
      */
     @Secured({ "GROUP_ADMIN" })
     public void update( BibliographicReference bibliographicReference );
-
-    /**
-     * @param records
-     */
-    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
-            Collection<BibliographicReference> records );
-
-    /**
-     * @param query
-     * @return
-     */
-    public List<BibliographicReferenceValueObject> search( String query );
-
-    /**
-     * Allows limiting searches to phenotypes and/or experiments.
-     * 
-     * @param settings
-     * @return
-     */
-    public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
 
 }

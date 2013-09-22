@@ -60,6 +60,57 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
     /*
      * (non-Javadoc)
      * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService#convertToValueObject(ubic.gemma.model
+     * .analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis)
+     */
+    @Override
+    public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(
+            GeneDifferentialExpressionMetaAnalysis metaAnalysis ) {
+        if ( metaAnalysis == null ) {
+            return null;
+        }
+
+        GeneDifferentialExpressionMetaAnalysisDetailValueObject analysisVO = new GeneDifferentialExpressionMetaAnalysisDetailValueObject();
+
+        analysisVO.setNumGenesAnalyzed( metaAnalysis.getNumGenesAnalyzed() );
+
+        Collection<ExpressionAnalysisResultSet> resultSetsIncluded = metaAnalysis.getResultSetsIncluded();
+
+        analysisVO
+                .setIncludedResultSetsInfo( new HashSet<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject>(
+                        resultSetsIncluded.size() ) );
+
+        for ( ExpressionAnalysisResultSet resultSetIncluded : resultSetsIncluded ) {
+            GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject includedResultSetInfo = new GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject();
+            includedResultSetInfo.setExperimentId( resultSetIncluded.getAnalysis().getExperimentAnalyzed().getId() );
+            includedResultSetInfo.setAnalysisId( resultSetIncluded.getAnalysis().getId() );
+            includedResultSetInfo.setResultSetId( resultSetIncluded.getId() );
+            analysisVO.getIncludedResultSetsInfo().add( includedResultSetInfo );
+        }
+
+        analysisVO.setResults( new HashSet<GeneDifferentialExpressionMetaAnalysisResultValueObject>( metaAnalysis
+                .getResults().size() ) );
+
+        for ( GeneDifferentialExpressionMetaAnalysisResult result : metaAnalysis.getResults() ) {
+            GeneDifferentialExpressionMetaAnalysisResultValueObject resultVO = new GeneDifferentialExpressionMetaAnalysisResultValueObject();
+
+            GeneValueObject gene = new GeneValueObject( result.getGene() );
+            resultVO.setGeneSymbol( gene.getOfficialSymbol() );
+            resultVO.setGeneName( gene.getOfficialName() );
+            resultVO.setMetaPvalue( result.getMetaPvalue() );
+            resultVO.setMetaQvalue( result.getMetaQvalue() );
+            resultVO.setUpperTail( result.getUpperTail() );
+
+            analysisVO.getResults().add( resultVO );
+        }
+
+        return analysisVO;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService#findDetailMetaAnalysisById(long)
      */
     @Override
@@ -122,56 +173,5 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
         }
 
         return vos;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService#convertToValueObject(ubic.gemma.model
-     * .analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis)
-     */
-    @Override
-    public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(
-            GeneDifferentialExpressionMetaAnalysis metaAnalysis ) {
-        if ( metaAnalysis == null ) {
-            return null;
-        }
-
-        GeneDifferentialExpressionMetaAnalysisDetailValueObject analysisVO = new GeneDifferentialExpressionMetaAnalysisDetailValueObject();
-
-        analysisVO.setNumGenesAnalyzed( metaAnalysis.getNumGenesAnalyzed() );
-
-        Collection<ExpressionAnalysisResultSet> resultSetsIncluded = metaAnalysis.getResultSetsIncluded();
-
-        analysisVO
-                .setIncludedResultSetsInfo( new HashSet<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject>(
-                        resultSetsIncluded.size() ) );
-
-        for ( ExpressionAnalysisResultSet resultSetIncluded : resultSetsIncluded ) {
-            GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject includedResultSetInfo = new GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject();
-            includedResultSetInfo.setExperimentId( resultSetIncluded.getAnalysis().getExperimentAnalyzed().getId() );
-            includedResultSetInfo.setAnalysisId( resultSetIncluded.getAnalysis().getId() );
-            includedResultSetInfo.setResultSetId( resultSetIncluded.getId() );
-            analysisVO.getIncludedResultSetsInfo().add( includedResultSetInfo );
-        }
-
-        analysisVO.setResults( new HashSet<GeneDifferentialExpressionMetaAnalysisResultValueObject>( metaAnalysis
-                .getResults().size() ) );
-
-        for ( GeneDifferentialExpressionMetaAnalysisResult result : metaAnalysis.getResults() ) {
-            GeneDifferentialExpressionMetaAnalysisResultValueObject resultVO = new GeneDifferentialExpressionMetaAnalysisResultValueObject();
-
-            GeneValueObject gene = new GeneValueObject( result.getGene() );
-            resultVO.setGeneSymbol( gene.getOfficialSymbol() );
-            resultVO.setGeneName( gene.getOfficialName() );
-            resultVO.setMetaPvalue( result.getMetaPvalue() );
-            resultVO.setMetaQvalue( result.getMetaQvalue() );
-            resultVO.setUpperTail( result.getUpperTail() );
-
-            analysisVO.getResults().add( resultVO );
-        }
-
-        return analysisVO;
     }
 }

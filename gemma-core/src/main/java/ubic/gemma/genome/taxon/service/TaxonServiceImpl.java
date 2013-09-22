@@ -70,119 +70,6 @@ public class TaxonServiceImpl implements TaxonService {
         }
     };
 
-    @Override
-    @Transactional(readOnly = true)
-    public TaxonValueObject loadValueObject( Long id ) {
-        return TaxonValueObject.fromEntity( load( id ) );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> loadAllValueObjects() {
-        Collection<TaxonValueObject> result = new ArrayList<TaxonValueObject>();
-        for ( Taxon tax : loadAll() ) {
-            result.add( TaxonValueObject.fromEntity( tax ) );
-        }
-
-        return result;
-    }
-
-    /**
-     * @return Taxon that are species. (only returns usable taxa)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaSpecies() {
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : loadAll() ) {
-            if ( taxon.getIsSpecies() ) {
-                taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
-            }
-        }
-        return taxaSpecies;
-    }
-
-    /**
-     * @return Taxon that are on NeuroCarta evidence
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaWithEvidence() {
-
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : loadTaxonWithEvidence() ) {
-            if ( taxon.getIsSpecies() ) {
-                taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
-            }
-        }
-        return taxaSpecies;
-    }
-
-    /**
-     * @return Taxon that have genes loaded into Gemma and that should be used
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Taxon> loadAllTaxaWithGenes() {
-        SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
-        for ( Taxon taxon : loadAll() ) {
-            if ( taxon.getIsGenesUsable() ) {
-                taxaWithGenes.add( taxon );
-            }
-        }
-        return taxaWithGenes;
-    }
-
-    /**
-     * @return Taxon that have genes loaded into Gemma and that should be used
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaWithGenes() {
-        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : loadAll() ) {
-            if ( taxon.getIsGenesUsable() ) {
-                taxaWithGenes.add( TaxonValueObject.fromEntity( taxon ) );
-            }
-        }
-        return taxaWithGenes;
-    }
-
-    /**
-     * @return collection of taxa that have expression experiments available.
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaWithDatasets() {
-        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-
-        Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
-
-        for ( Taxon taxon : loadAll() ) {
-            if ( perTaxonCount.containsKey( taxon ) && perTaxonCount.get( taxon ) > 0 ) {
-                taxaWithDatasets.add( TaxonValueObject.fromEntity( taxon ) );
-            }
-        }
-        return taxaWithDatasets;
-    }
-
-    /**
-     * @return List of taxa with array designs in gemma
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaWithArrays() {
-        Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-
-        for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
-            // taxonService.thaw( taxon );
-            taxaWithArrays.add( TaxonValueObject.fromEntity( taxon ) );
-        }
-
-        log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
-        return taxaWithArrays;
-    }
-
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#find(ubic.gemma.model.genome.Taxon)
      */
@@ -273,6 +160,87 @@ public class TaxonServiceImpl implements TaxonService {
     }
 
     /**
+     * @return Taxon that are species. (only returns usable taxa)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<TaxonValueObject> getTaxaSpecies() {
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
+        for ( Taxon taxon : loadAll() ) {
+            if ( taxon.getIsSpecies() ) {
+                taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
+            }
+        }
+        return taxaSpecies;
+    }
+
+    /**
+     * @return List of taxa with array designs in gemma
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<TaxonValueObject> getTaxaWithArrays() {
+        Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
+
+        for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
+            // taxonService.thaw( taxon );
+            taxaWithArrays.add( TaxonValueObject.fromEntity( taxon ) );
+        }
+
+        log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
+        return taxaWithArrays;
+    }
+
+    /**
+     * @return collection of taxa that have expression experiments available.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<TaxonValueObject> getTaxaWithDatasets() {
+        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
+
+        Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
+
+        for ( Taxon taxon : loadAll() ) {
+            if ( perTaxonCount.containsKey( taxon ) && perTaxonCount.get( taxon ) > 0 ) {
+                taxaWithDatasets.add( TaxonValueObject.fromEntity( taxon ) );
+            }
+        }
+        return taxaWithDatasets;
+    }
+
+    /**
+     * @return Taxon that are on NeuroCarta evidence
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<TaxonValueObject> getTaxaWithEvidence() {
+
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
+        for ( Taxon taxon : loadTaxonWithEvidence() ) {
+            if ( taxon.getIsSpecies() ) {
+                taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
+            }
+        }
+        return taxaSpecies;
+    }
+
+    /**
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<TaxonValueObject> getTaxaWithGenes() {
+        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
+        for ( Taxon taxon : loadAll() ) {
+            if ( taxon.getIsGenesUsable() ) {
+                taxaWithGenes.add( TaxonValueObject.fromEntity( taxon ) );
+            }
+        }
+        return taxaWithGenes;
+    }
+
+    /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#load(java.lang.Long)
      */
     @Override
@@ -301,6 +269,32 @@ public class TaxonServiceImpl implements TaxonService {
     }
 
     /**
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Taxon> loadAllTaxaWithGenes() {
+        SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
+        for ( Taxon taxon : loadAll() ) {
+            if ( taxon.getIsGenesUsable() ) {
+                taxaWithGenes.add( taxon );
+            }
+        }
+        return taxaWithGenes;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<TaxonValueObject> loadAllValueObjects() {
+        Collection<TaxonValueObject> result = new ArrayList<TaxonValueObject>();
+        for ( Taxon tax : loadAll() ) {
+            result.add( TaxonValueObject.fromEntity( tax ) );
+        }
+
+        return result;
+    }
+
+    /**
      * Taxon that are on NeuroCarta evidence
      */
     @Override
@@ -312,6 +306,12 @@ public class TaxonServiceImpl implements TaxonService {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findTaxonUsedInEvidence()' --> " + th, th );
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaxonValueObject loadValueObject( Long id ) {
+        return TaxonValueObject.fromEntity( load( id ) );
     }
 
     /**
@@ -330,21 +330,6 @@ public class TaxonServiceImpl implements TaxonService {
     }
 
     /**
-     * @see ubic.gemma.genome.taxon.service.TaxonService#update(ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    @Transactional
-    public void update( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            this.getTaxonDao().update( taxon );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonService.update(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * thaws taxon
      */
     @Override
@@ -355,6 +340,21 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.thaw(ubic.gemma.model.genome.Taxon taxon)' -->' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.genome.taxon.service.TaxonService#update(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    @Transactional
+    public void update( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.getTaxonDao().update( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.update(ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
     }

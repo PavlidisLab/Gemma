@@ -25,13 +25,13 @@ import ubic.gemma.model.genome.Taxon;
 public interface GeneMultifunctionalityPopulationService {
 
     /**
-     * @param t
-     */
-    public void updateMultifunctionality( Taxon t );
-
-    /**
      * Update for all taxa
      */
     public void updateMultifunctionality();
+
+    /**
+     * @param t
+     */
+    public void updateMultifunctionality( Taxon t );
 
 }

@@ -102,6 +102,7 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#addUserToGroup(java.lang.String, java.lang.String)
      */
     @Override
+    @Transactional
     public void addUserToGroup( String userName, String groupName ) {
         this.userManager.addUserToGroup( userName, groupName );
     }
@@ -1053,6 +1054,7 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#makePrivate(java.util.Collection)
      */
     @Override
+    @Transactional
     public void makePrivate( Collection<? extends Securable> objs ) {
         for ( Securable s : objs ) {
             makePrivate( s );
@@ -1066,6 +1068,7 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
     public void makePrivate( Securable object ) {
         if ( object == null ) {
             return;
@@ -1096,6 +1099,7 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#makePublic(java.util.Collection)
      */
     @Override
+    @Transactional
     public void makePublic( Collection<? extends Securable> objs ) {
         for ( Securable s : objs ) {
             makePublic( s );
@@ -1109,6 +1113,7 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
     public void makePublic( Securable object ) {
 
         if ( object == null ) {
@@ -1150,6 +1155,7 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
     public void makeReadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {
@@ -1179,6 +1185,7 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
     public void makeUnreadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {
@@ -1198,6 +1205,7 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
     public void makeUnwriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {
@@ -1215,6 +1223,7 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
     public void makeWriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
 
         if ( StringUtils.isBlank( groupName ) ) {

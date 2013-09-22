@@ -45,12 +45,6 @@ public class DatasetCombinerTest {
     Collection<GeoDataset> gds;
     private boolean skipSlowTests = true;
 
-    @Test
-    public void testFindGSE267() {
-        Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
-        assertEquals( 0, result.size() );
-    }
-
     /*
      * Test method for 'ubic.gemma.loader.expression.geo.DatsetCombiner.findGDSGrouping(String)'
      */
@@ -117,6 +111,12 @@ public class DatasetCombinerTest {
         assertTrue( result.getCorrespondingSamples( "GSM612" ).contains( "GSM638" ) );
         assertEquals( 1, result.getCorrespondingSamples( "GSM618" ).size() );
         assertEquals( 33, numBioMaterials ); // used to be 28
+    }
+
+    @Test
+    public void testFindGSE267() {
+        Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
+        assertEquals( 0, result.size() );
     }
 
     /**

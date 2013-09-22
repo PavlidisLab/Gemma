@@ -115,6 +115,7 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     @Secured({ "GROUP_USER" })
+    @Transactional
     public void changePassword( String oldPassword, String newPassword ) throws AuthenticationException {
         Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -142,6 +143,7 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Transactional
     public String changePasswordForUser( String email, String username, String newPassword )
             throws AuthenticationException {
         Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
@@ -191,6 +193,7 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Transactional
     public void createUser( UserDetails user ) {
 
         /*
@@ -238,6 +241,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional
     public void deleteUser( String username ) {
         User user = loadUser( username );
         userService.delete( user );
@@ -475,13 +479,6 @@ public class UserManagerImpl implements UserManager {
         userService.update( group );
     }
 
-    /**
-     * @param authenticationManager the authenticationManager to set
-     */
-    public void setAuthenticationManager( AuthenticationManager authenticationManager ) {
-        this.authenticationManager = authenticationManager;
-    }
-
     public void setEnableAuthorities( boolean enableAuthorities ) {
         this.enableAuthorities = enableAuthorities;
     }
@@ -494,22 +491,9 @@ public class UserManagerImpl implements UserManager {
         this.rolePrefix = rolePrefix;
     }
 
-    /**
-     * @param userCache the userCache to set
-     */
-    public void setUserCache( UserCache userCache ) {
-        this.userCache = userCache;
-    }
-
-    /**
-     * @param userService the userService to set
-     */
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
-    }
-
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Transactional
     public void updateUser( UserDetails user ) {
         String username = user.getUsername();
         User u = userService.findByUserName( username );

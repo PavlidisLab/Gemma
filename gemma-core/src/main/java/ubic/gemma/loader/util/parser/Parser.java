@@ -34,12 +34,9 @@ public interface Parser<T> {
     public static final int PARSE_ALERT_FREQUENCY = 10000;
 
     /**
-     * Parse a {@link InputStream}.
-     * 
-     * @throws IOException
-     * @param stream
+     * @return the results of the parse.
      */
-    public void parse( InputStream is ) throws IOException;
+    public Collection<T> getResults();
 
     /**
      * Parse a {@link File}
@@ -50,16 +47,19 @@ public interface Parser<T> {
     public void parse( File f ) throws IOException;
 
     /**
+     * Parse a {@link InputStream}.
+     * 
+     * @throws IOException
+     * @param stream
+     */
+    public void parse( InputStream is ) throws IOException;
+
+    /**
      * Parse a file identified by its path.
      * 
      * @param filename Absolute path to the file
      * @throws IOException
      */
     public void parse( String filename ) throws IOException;
-
-    /**
-     * @return the results of the parse.
-     */
-    public Collection<T> getResults();
 
 }

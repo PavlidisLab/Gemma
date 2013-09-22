@@ -21,6 +21,5 @@ package ubic.gemma.tasks.analysis.coexp;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
-
-interface LinkAnalysisTask extends Task<TaskResult, LinkAnalysisTaskCommand>{}
-
+interface LinkAnalysisTask extends Task<TaskResult, LinkAnalysisTaskCommand> {
+}

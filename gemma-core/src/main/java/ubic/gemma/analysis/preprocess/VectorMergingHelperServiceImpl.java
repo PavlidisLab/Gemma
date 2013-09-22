@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -64,6 +65,7 @@ public class VectorMergingHelperServiceImpl implements VectorMergingHelperServic
      * @param newVectors
      */
     @Override
+    @Transactional
     public void persist( ExpressionExperiment expExp, QuantitationType type,
             Collection<DesignElementDataVector> newVectors ) {
         if ( newVectors.size() > 0 ) {

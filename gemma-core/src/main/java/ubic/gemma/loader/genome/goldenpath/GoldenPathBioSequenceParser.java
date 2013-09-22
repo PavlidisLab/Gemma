@@ -54,23 +54,8 @@ public class GoldenPathBioSequenceParser extends BasicLineParser<BioSequence> im
     }
 
     @Override
-    protected void addResult( BioSequence obj ) {
-        try {
-            results.put( obj );
-        } catch ( InterruptedException e ) {
-            // ;
-        }
-    }
-
-    @Override
     public Collection<BioSequence> getResults() {
         return results;
-    }
-
-    private void initGenbank() {
-        genbank = ExternalDatabase.Factory.newInstance();
-        genbank.setName( "Genbank" );
-        genbank.setType( DatabaseType.SEQUENCE );
     }
 
     @Override
@@ -97,6 +82,21 @@ public class GoldenPathBioSequenceParser extends BasicLineParser<BioSequence> im
         bioSequence.setSequenceDatabaseEntry( de );
 
         return bioSequence;
+    }
+
+    @Override
+    protected void addResult( BioSequence obj ) {
+        try {
+            results.put( obj );
+        } catch ( InterruptedException e ) {
+            // ;
+        }
+    }
+
+    private void initGenbank() {
+        genbank = ExternalDatabase.Factory.newInstance();
+        genbank.setName( "Genbank" );
+        genbank.setType( DatabaseType.SEQUENCE );
     }
 
 }

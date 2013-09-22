@@ -46,8 +46,7 @@ public class Ontology {
 
     @Override
     public String toString() {
-        if ( this.getName() != null )
-            return this.getName();
+        if ( this.getName() != null ) return this.getName();
         return this.getWebUri();
     }
 

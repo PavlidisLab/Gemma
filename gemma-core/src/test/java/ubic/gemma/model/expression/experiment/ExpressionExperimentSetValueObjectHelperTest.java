@@ -94,39 +94,6 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
     }
 
     @Test
-    public void testConvertToValueObject() {
-
-        Long id = eeSet.getId();
-        assertNotNull( id );
-
-        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
-
-        assertEquals( eesvo.getId(), eeSet.getId() );
-        assertEquals( eesvo.getNumExperiments().intValue(), eeSet.getExperiments().size() );
-        assertEquals( eesvo.getName(), eeSet.getName() );
-        assertEquals( eesvo.getDescription(), eeSet.getDescription() );
-        assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
-    }
-
-    @Test
-    public void testConvertToLightValueObject() {
-
-        Long id = eeSet.getId();
-        assertNotNull( id );
-
-        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
-
-        assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
-
-        assertEquals( eeSet.getId(), eesvo.getId() );
-        assertEquals( eeSet.getExperiments().size(), eesvo.getNumExperiments().intValue() );
-        assertEquals( eeSet.getName(), eesvo.getName() );
-        assertEquals( eeSet.getDescription(), eesvo.getDescription() );
-        assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
-
-    }
-
-    @Test
     public void testConvertToEntity() {
 
         // create VO from entity
@@ -167,5 +134,38 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         assertEquals( eeSet.getStatus(), remadeEE.getStatus() );
         assertEquals( eeSet.getTaxon(), remadeEE.getTaxon() );
 
+    }
+
+    @Test
+    public void testConvertToLightValueObject() {
+
+        Long id = eeSet.getId();
+        assertNotNull( id );
+
+        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
+
+        assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
+
+        assertEquals( eeSet.getId(), eesvo.getId() );
+        assertEquals( eeSet.getExperiments().size(), eesvo.getNumExperiments().intValue() );
+        assertEquals( eeSet.getName(), eesvo.getName() );
+        assertEquals( eeSet.getDescription(), eesvo.getDescription() );
+        assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
+
+    }
+
+    @Test
+    public void testConvertToValueObject() {
+
+        Long id = eeSet.getId();
+        assertNotNull( id );
+
+        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
+
+        assertEquals( eesvo.getId(), eeSet.getId() );
+        assertEquals( eesvo.getNumExperiments().intValue(), eeSet.getExperiments().size() );
+        assertEquals( eesvo.getName(), eeSet.getName() );
+        assertEquals( eesvo.getDescription(), eeSet.getDescription() );
+        assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
     }
 }

@@ -68,7 +68,7 @@
       maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
   
    <cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl.hitListSizes"
-      maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+      maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="12000" timeToLiveSeconds="12000" overflowToDisk="false" />
 
    <cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl" maxElementsInMemory="10000" eternal="false"
       timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -513,7 +513,7 @@
    <cache name="ubic.gemma.model.expression.bioAssay.BioAssayImpl" maxElementsInMemory="10000" eternal="false"
       timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-   <cache name="ubic.gemma.model.expression.bioAssay.BioAssayImpl.derivedDataFiles" maxElementsInMemory="10000"
+   <cache name="ubic.gemma.model.expression.bioAssay.BioAssayImpl.derivedDataFiles" maxElementsInMemory="20000"
       eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
    <cache name="ubic.gemma.model.expression.bioAssayData.DataVectorImpl" maxElementsInMemory="10000" eternal="false"

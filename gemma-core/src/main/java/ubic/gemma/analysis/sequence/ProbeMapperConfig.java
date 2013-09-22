@@ -167,16 +167,16 @@ public class ProbeMapperConfig {
         return allowMakeProbeAlignedRegion;
     }
 
-    public boolean isTrimNonCanonicalChromosomehits() {
-        return trimNonCanonicalChromosomeHits;
-    }
-
     public boolean isAllowPredictedGenes() {
         return allowPredictedGenes;
     }
 
     public boolean isAllowProbeAlignedRegions() {
         return allowProbeAlignedRegions;
+    }
+
+    public boolean isTrimNonCanonicalChromosomehits() {
+        return trimNonCanonicalChromosomeHits;
     }
 
     /**
@@ -237,10 +237,6 @@ public class ProbeMapperConfig {
 
     public void setAllowMakeProbeAlignedRegion( boolean allowMakeProbeAlignedRegion ) {
         this.allowMakeProbeAlignedRegion = allowMakeProbeAlignedRegion;
-    }
-
-    public void setTrimNonCanonicalChromosomeHits( boolean trimNonCanonicalChromosomeHits ) {
-        this.trimNonCanonicalChromosomeHits = trimNonCanonicalChromosomeHits;
     }
 
     public void setAllowPredictedGenes( boolean allowPredictedGenes ) {
@@ -313,6 +309,10 @@ public class ProbeMapperConfig {
      */
     public void setNonSpecificSiteCountThreshold( double nonSpecificSiteCountThreshold ) {
         this.nonSpecificSiteCountThreshold = nonSpecificSiteCountThreshold;
+    }
+
+    public void setTrimNonCanonicalChromosomeHits( boolean trimNonCanonicalChromosomeHits ) {
+        this.trimNonCanonicalChromosomeHits = trimNonCanonicalChromosomeHits;
     }
 
     /**

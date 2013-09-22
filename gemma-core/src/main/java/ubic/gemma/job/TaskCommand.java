@@ -41,14 +41,6 @@ public class TaskCommand implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    // For now, this how we map from TaskCommand to Task that actually runs it.
-    // We have to have this mapping somewhere until we make Tasks themselves serializable. Tasks are not readily
-    // serializable because they have dependencies to spring services.
-    // at which point TaskCommand can be deprecated(or remain as TaskContext).
-    public Class<?> getTaskClass() {
-        return null;
-    }
-
     /**
      * Should an email be sent to the user when the job is done?
      */
@@ -69,8 +61,8 @@ public class TaskCommand implements Serializable {
      * Used to propagate security to grid workers.
      */
     private SecurityContext securityContext;
-    private String submitter;
 
+    private String submitter;
     private String taskId;
 
     // How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
@@ -86,8 +78,8 @@ public class TaskCommand implements Serializable {
      * How long we will allow this task to be queued before giving up.
      */
     private Integer maxQueueMinutes = MAX_QUEUING_MINUTES;
-    private int maxRuntime = MAX_RUNTIME_MINUTES;
 
+    private int maxRuntime = MAX_RUNTIME_MINUTES;
     /**
      * For tasks that use too much resources and must be run remotely.
      */
@@ -121,35 +113,6 @@ public class TaskCommand implements Serializable {
         return entityId;
     }
 
-    /**
-     * @return the persistJobDetails
-     */
-    public Boolean getPersistJobDetails() {
-        return persistJobDetails;
-    }
-
-    public SecurityContext getSecurityContext() {
-        return this.securityContext;
-    }
-
-    public boolean isEmailAlert() {
-        return emailAlert;
-    }
-
-    /**
-     * @return the submitter
-     */
-    public String getSubmitter() {
-        return submitter;
-    }
-
-    /**
-     * @param taskId
-     */
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
     public Integer getMaxQueueMinutes() {
         return maxQueueMinutes;
     }
@@ -161,8 +124,42 @@ public class TaskCommand implements Serializable {
         return maxRuntime;
     }
 
+    /**
+     * @return the persistJobDetails
+     */
+    public Boolean getPersistJobDetails() {
+        return persistJobDetails;
+    }
+
+    public SecurityContext getSecurityContext() {
+        return this.securityContext;
+    }
+
+    /**
+     * @return the submitter
+     */
+    public String getSubmitter() {
+        return submitter;
+    }
+
+    // For now, this how we map from TaskCommand to Task that actually runs it.
+    // We have to have this mapping somewhere until we make Tasks themselves serializable. Tasks are not readily
+    // serializable because they have dependencies to spring services.
+    // at which point TaskCommand can be deprecated(or remain as TaskContext).
+    public Class<?> getTaskClass() {
+        return null;
+    }
+
     public String getTaskId() {
         return this.taskId;
+    }
+
+    public boolean isEmailAlert() {
+        return emailAlert;
+    }
+
+    public boolean isRemoteOnly() {
+        return remoteOnly;
     }
 
     public void setEmailAlert( boolean emailAlert ) {
@@ -171,13 +168,6 @@ public class TaskCommand implements Serializable {
 
     public void setEntityId( Long entityId ) {
         this.entityId = entityId;
-    }
-
-    /**
-     * @param persistJobDetails the persistJobDetails to set
-     */
-    public void setPersistJobDetails( Boolean persistJobDetails ) {
-        this.persistJobDetails = persistJobDetails;
     }
 
     /**
@@ -196,11 +186,21 @@ public class TaskCommand implements Serializable {
         this.maxRuntime = maxRuntime;
     }
 
-    public boolean isRemoteOnly() {
-        return remoteOnly;
+    /**
+     * @param persistJobDetails the persistJobDetails to set
+     */
+    public void setPersistJobDetails( Boolean persistJobDetails ) {
+        this.persistJobDetails = persistJobDetails;
     }
 
     public void setRemoteOnly( boolean remoteOnly ) {
         this.remoteOnly = remoteOnly;
+    }
+
+    /**
+     * @param taskId
+     */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
     }
 }

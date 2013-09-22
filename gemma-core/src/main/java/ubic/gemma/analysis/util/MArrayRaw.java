@@ -48,6 +48,61 @@ public class MArrayRaw {
     }
 
     /**
+     * Create a stripped-down marrayInfo object, where only the "labels" slot is filled in.
+     * 
+     * @param labels
+     * @return The name of the variable in the R context.
+     */
+    public String makeMArrayInfo( List<String> labels ) {
+        log.debug( "Making info" );
+        String infoName = "info." + AbstractRClient.variableIdentityNumber( labels );
+        String labelsVarName = rc.assignStringList( labels );
+        String makeInfoCmd = infoName + "<-new(\"marrayInfo\", maLabels=" + labelsVarName + ")";
+        rc.voidEval( makeInfoCmd );
+        return infoName;
+    }
+
+    /**
+     * The marrayLayout object is needed for some types of normalization, such as print-tip. This method creates an
+     * absolutely minimal layout when there is really no layout information.
+     * 
+     * @param numSpots
+     * @return The name of the variable in the R context.
+     */
+    public String makeMArrayLayout( int numSpots ) {
+        log.debug( "Making layout" );
+
+        String arrayLayoutName = "layout." + AbstractRClient.variableIdentityNumber( this );
+        String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=1 , maNgc=1, maNsr=1, maNsc="
+                + numSpots + ", maNspots=" + numSpots + ", maSub=TRUE)";
+
+        rc.voidEval( makeLayoutCmd );
+        this.layoutName = arrayLayoutName;
+        return arrayLayoutName;
+    }
+
+    /**
+     * The marrayLayout object is needed for some types of normalization, such as print-tip.
+     * 
+     * @param gridRows The number of major grid rows, or rows of "blocks" of spots.
+     * @param gridColumns The number of major grid columns, or columns of "blocks" of spots.
+     * @param rowsPerGrid
+     * @param colsPerGrid
+     * @return The name of the variable in the R context.
+     */
+    public String makeMArrayLayout( int gridRows, int gridColumns, int rowsPerGrid, int colsPerGrid ) {
+        log.debug( "Making layout" );
+        int numSpots = gridRows * gridColumns * rowsPerGrid * colsPerGrid;
+        String arrayLayoutName = "layout." + AbstractRClient.variableIdentityNumber( this );
+        String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=" + gridRows + ", maNgc=" + gridColumns
+                + ", maNsr=" + rowsPerGrid + ", maNsc=" + colsPerGrid + ", maNspots=" + numSpots + ", maSub=TRUE)";
+
+        rc.voidEval( makeLayoutCmd );
+        this.layoutName = arrayLayoutName;
+        return arrayLayoutName;
+    }
+
+    /**
      * Create marrayRaw object when background and weights are not used or already taken account of.
      * 
      * @param red Matrix of red channel intensities
@@ -114,61 +169,6 @@ public class MArrayRaw {
         }
 
         return rawObjectName;
-    }
-
-    /**
-     * The marrayLayout object is needed for some types of normalization, such as print-tip.
-     * 
-     * @param gridRows The number of major grid rows, or rows of "blocks" of spots.
-     * @param gridColumns The number of major grid columns, or columns of "blocks" of spots.
-     * @param rowsPerGrid
-     * @param colsPerGrid
-     * @return The name of the variable in the R context.
-     */
-    public String makeMArrayLayout( int gridRows, int gridColumns, int rowsPerGrid, int colsPerGrid ) {
-        log.debug( "Making layout" );
-        int numSpots = gridRows * gridColumns * rowsPerGrid * colsPerGrid;
-        String arrayLayoutName = "layout." + AbstractRClient.variableIdentityNumber( this );
-        String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=" + gridRows + ", maNgc=" + gridColumns
-                + ", maNsr=" + rowsPerGrid + ", maNsc=" + colsPerGrid + ", maNspots=" + numSpots + ", maSub=TRUE)";
-
-        rc.voidEval( makeLayoutCmd );
-        this.layoutName = arrayLayoutName;
-        return arrayLayoutName;
-    }
-
-    /**
-     * The marrayLayout object is needed for some types of normalization, such as print-tip. This method creates an
-     * absolutely minimal layout when there is really no layout information.
-     * 
-     * @param numSpots
-     * @return The name of the variable in the R context.
-     */
-    public String makeMArrayLayout( int numSpots ) {
-        log.debug( "Making layout" );
-
-        String arrayLayoutName = "layout." + AbstractRClient.variableIdentityNumber( this );
-        String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=1 , maNgc=1, maNsr=1, maNsc="
-                + numSpots + ", maNspots=" + numSpots + ", maSub=TRUE)";
-
-        rc.voidEval( makeLayoutCmd );
-        this.layoutName = arrayLayoutName;
-        return arrayLayoutName;
-    }
-
-    /**
-     * Create a stripped-down marrayInfo object, where only the "labels" slot is filled in.
-     * 
-     * @param labels
-     * @return The name of the variable in the R context.
-     */
-    public String makeMArrayInfo( List<String> labels ) {
-        log.debug( "Making info" );
-        String infoName = "info." + AbstractRClient.variableIdentityNumber( labels );
-        String labelsVarName = rc.assignStringList( labels );
-        String makeInfoCmd = infoName + "<-new(\"marrayInfo\", maLabels=" + labelsVarName + ")";
-        rc.voidEval( makeInfoCmd );
-        return infoName;
     }
 
 }

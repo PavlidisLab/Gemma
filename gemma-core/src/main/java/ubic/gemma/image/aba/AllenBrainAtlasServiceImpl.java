@@ -74,22 +74,6 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         initDefaults();
     }
 
-    /**
-     * Given a predefined URL (one of the constants declared in the AllenBrainAtlasService) and a list of arguments will
-     * return the correct REST URL for the desired method call
-     * 
-     * @param urlPattern
-     * @param args
-     * @return
-     */
-    protected String buildUrlString( String urlPattern, String args[] ) {
-
-        for ( int i = 0; i < args.length; i++ )
-            urlPattern = urlPattern.replaceFirst( "@", args[i] );
-
-        return ( API_BASE_URL + urlPattern );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -224,116 +208,6 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
             log.info( givenGene + " not found in aba" );
         }
         return result;
-    }
-
-    /**
-     * Given a gene too look for for will return the coressponding abaGene (useful for finding images)
-     * 
-     * @param givenGene symbol of gene that will be used to search ABA.
-     * @return
-     */
-    protected AbaGene getGene( String givenGene, boolean correctCase ) throws IOException {
-        String gene = givenGene;
-
-        if ( correctCase ) {
-            gene = correctCase( gene );
-        }
-
-        File outputFile = getFile( gene );
-        Document geneDoc = null;
-
-        try {
-            FileOutputStream out = new FileOutputStream( outputFile );
-            this.getGene( gene, out );
-            out.close();
-
-            geneDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
-        } catch ( ParserConfigurationException pce ) {
-            log.warn( pce );
-            return null;
-        } catch ( SAXException se ) {
-            log.warn( se );
-        } catch ( FileNotFoundException fnfe ) {
-            return null;
-        }
-
-        if ( geneDoc == null ) {
-            return null;
-        }
-
-        Collection<String> xmlData = XMLUtils.extractTagData( geneDoc, "geneid" );
-        Integer geneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
-
-        xmlData = XMLUtils.extractTagData( geneDoc, "genename" );
-        String geneName = xmlData.isEmpty() ? null : xmlData.iterator().next();
-
-        xmlData = XMLUtils.extractTagData( geneDoc, "genesymbol" );
-        String geneSymbol = xmlData.isEmpty() ? null : xmlData.iterator().next();
-
-        xmlData = XMLUtils.extractTagData( geneDoc, "entrezgeneid" );
-        Integer entrezGeneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
-
-        xmlData = XMLUtils.extractTagData( geneDoc, "ncbiaccessionnumber" );
-        String ncbiAccessionNumber = xmlData.isEmpty() ? null : xmlData.iterator().next();
-
-        String geneUrl = ( geneSymbol == null ) ? null : this.getGeneUrl( geneSymbol );
-
-        if ( geneId == null && geneSymbol == null ) return null;
-
-        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber, geneUrl, null );
-
-        NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
-
-        // log.debug( "Got " + idList.getLength() );
-
-        for ( int i = 0; i < idList.getLength(); i++ ) {
-            Node item = idList.item( i );
-
-            if ( !item.getNodeName().equals( "image-series" ) ) continue;
-
-            NodeList imageSeriesList = item.getChildNodes();
-
-            for ( int j = 0; j < imageSeriesList.getLength(); j++ ) {
-
-                Node imageSeries = imageSeriesList.item( j );
-
-                NodeList childNodes = imageSeries.getChildNodes();
-                Integer imageSeriesId = null;
-                String plane = null;
-
-                for ( int m = 0; m < childNodes.getLength(); m++ ) {
-
-                    Node c = childNodes.item( m );
-
-                    // log.info( c.getNodeName() );
-                    String n = c.getNodeName();
-                    try {
-                        if ( n.equals( "imageseriesid" ) ) {
-                            imageSeriesId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                        } else if ( n.equals( "plane" ) ) {
-                            plane = XMLUtils.getTextValue( ( Element ) c );
-                        } else {
-                            // Just skip and check the next one.
-                        }
-                    } catch ( IOException ioe ) {
-                        log.warn( ioe );
-                    }
-
-                }
-
-                if ( imageSeriesId != null && plane != null ) {
-                    ImageSeries is = new ImageSeries( imageSeriesId, plane );
-                    geneData.addImageSeries( is );
-                    log.debug( "added image series to gene data" );
-                } else {
-                    log.debug( "Skipping adding imageSeries to gene cause data missing" );
-                }
-
-            }
-        }
-
-        return geneData;
-
     }
 
     /*
@@ -574,11 +448,6 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     /*
-     * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
-     * brain atlas web site @param imageSeries @return
-     */
-
-    /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.image.aba.AllenBrainAtlasService#setCaching(boolean)
@@ -599,6 +468,11 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     /*
+     * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
+     * brain atlas web site @param imageSeries @return
+     */
+
+    /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.image.aba.AllenBrainAtlasService#setInfoOut(java.io.PrintStream)
@@ -616,6 +490,132 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     @Override
     public void setVerbose( boolean v ) {
         this.verbose = v;
+    }
+
+    /**
+     * Given a predefined URL (one of the constants declared in the AllenBrainAtlasService) and a list of arguments will
+     * return the correct REST URL for the desired method call
+     * 
+     * @param urlPattern
+     * @param args
+     * @return
+     */
+    protected String buildUrlString( String urlPattern, String args[] ) {
+
+        for ( int i = 0; i < args.length; i++ )
+            urlPattern = urlPattern.replaceFirst( "@", args[i] );
+
+        return ( API_BASE_URL + urlPattern );
+    }
+
+    /**
+     * Given a gene too look for for will return the coressponding abaGene (useful for finding images)
+     * 
+     * @param givenGene symbol of gene that will be used to search ABA.
+     * @return
+     */
+    protected AbaGene getGene( String givenGene, boolean correctCase ) throws IOException {
+        String gene = givenGene;
+
+        if ( correctCase ) {
+            gene = correctCase( gene );
+        }
+
+        File outputFile = getFile( gene );
+        Document geneDoc = null;
+
+        try {
+            FileOutputStream out = new FileOutputStream( outputFile );
+            this.getGene( gene, out );
+            out.close();
+
+            geneDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
+        } catch ( ParserConfigurationException pce ) {
+            log.warn( pce );
+            return null;
+        } catch ( SAXException se ) {
+            log.warn( se );
+        } catch ( FileNotFoundException fnfe ) {
+            return null;
+        }
+
+        if ( geneDoc == null ) {
+            return null;
+        }
+
+        Collection<String> xmlData = XMLUtils.extractTagData( geneDoc, "geneid" );
+        Integer geneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
+
+        xmlData = XMLUtils.extractTagData( geneDoc, "genename" );
+        String geneName = xmlData.isEmpty() ? null : xmlData.iterator().next();
+
+        xmlData = XMLUtils.extractTagData( geneDoc, "genesymbol" );
+        String geneSymbol = xmlData.isEmpty() ? null : xmlData.iterator().next();
+
+        xmlData = XMLUtils.extractTagData( geneDoc, "entrezgeneid" );
+        Integer entrezGeneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
+
+        xmlData = XMLUtils.extractTagData( geneDoc, "ncbiaccessionnumber" );
+        String ncbiAccessionNumber = xmlData.isEmpty() ? null : xmlData.iterator().next();
+
+        String geneUrl = ( geneSymbol == null ) ? null : this.getGeneUrl( geneSymbol );
+
+        if ( geneId == null && geneSymbol == null ) return null;
+
+        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber, geneUrl, null );
+
+        NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
+
+        // log.debug( "Got " + idList.getLength() );
+
+        for ( int i = 0; i < idList.getLength(); i++ ) {
+            Node item = idList.item( i );
+
+            if ( !item.getNodeName().equals( "image-series" ) ) continue;
+
+            NodeList imageSeriesList = item.getChildNodes();
+
+            for ( int j = 0; j < imageSeriesList.getLength(); j++ ) {
+
+                Node imageSeries = imageSeriesList.item( j );
+
+                NodeList childNodes = imageSeries.getChildNodes();
+                Integer imageSeriesId = null;
+                String plane = null;
+
+                for ( int m = 0; m < childNodes.getLength(); m++ ) {
+
+                    Node c = childNodes.item( m );
+
+                    // log.info( c.getNodeName() );
+                    String n = c.getNodeName();
+                    try {
+                        if ( n.equals( "imageseriesid" ) ) {
+                            imageSeriesId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
+                        } else if ( n.equals( "plane" ) ) {
+                            plane = XMLUtils.getTextValue( ( Element ) c );
+                        } else {
+                            // Just skip and check the next one.
+                        }
+                    } catch ( IOException ioe ) {
+                        log.warn( ioe );
+                    }
+
+                }
+
+                if ( imageSeriesId != null && plane != null ) {
+                    ImageSeries is = new ImageSeries( imageSeriesId, plane );
+                    geneData.addImageSeries( is );
+                    log.debug( "added image series to gene data" );
+                } else {
+                    log.debug( "Skipping adding imageSeries to gene cause data missing" );
+                }
+
+            }
+        }
+
+        return geneData;
+
     }
 
     protected boolean getGene( String gene, OutputStream out ) throws MalformedURLException, IOException {

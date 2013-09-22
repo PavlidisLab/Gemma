@@ -110,6 +110,118 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     }
 
     /**
+     * @throws Exception
+     */
+    @Test
+    public void testAddData() throws Exception {
+
+        /*
+         * Load a regular data set that has no data. Platform is (basically) irrelevant.
+         */
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
+        ExpressionExperiment ee;
+
+        // ExpressionExperiment oldee = experimentService.findByShortName( "GSE37646" );
+        // if ( oldee != null ) experimentService.delete( oldee ); // maybe okay?
+
+        try {
+            // RNA-seq data.
+            Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            // log.warn( "Test skipped because GSE37646 was not removed from the system prior to test" );
+            ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
+        }
+
+        ee = experimentService.thawLite( ee );
+
+        List<BioAssay> bioAssays = new ArrayList<BioAssay>( ee.getBioAssays() );
+        assertEquals( 31, bioAssays.size() );
+
+        List<BioMaterial> bms = new ArrayList<BioMaterial>();
+        for ( BioAssay ba : bioAssays ) {
+
+            bms.add( ba.getSampleUsed() );
+        }
+
+        targetArrayDesign = getTestPersistentArrayDesign( 100, true );
+
+        DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+                targetArrayDesign.getCompositeSequences().size(), bms.size() );
+        /*
+         * make up some fake data on another platform, and match it to those samples
+         */
+        for ( int i = 0; i < rawMatrix.rows(); i++ ) {
+            for ( int j = 0; j < rawMatrix.columns(); j++ ) {
+                rawMatrix.set( i, j, ( i + 1 ) * ( j + 1 ) * Math.random() / 100.0 );
+            }
+        }
+
+        List<CompositeSequence> probes = new ArrayList<CompositeSequence>( targetArrayDesign.getCompositeSequences() );
+
+        rawMatrix.setRowNames( probes );
+        rawMatrix.setColumnNames( bms );
+
+        QuantitationType qt = makeQt( true );
+
+        ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
+
+        assertNotNull( data.getBestBioAssayDimension() );
+        assertEquals( rawMatrix.columns(), data.getBestBioAssayDimension().getBioAssays().size() );
+        assertEquals( probes.size(), data.getMatrix().rows() );
+
+        /*
+         * Replace it.
+         */
+        ee = dataUpdater.replaceData( ee, targetArrayDesign, data );
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+        }
+
+        /*
+         * Check
+         */
+        ExpressionExperiment updatedee = experimentService.thaw( ee );
+
+        for ( BioAssay ba : updatedee.getBioAssays() ) {
+            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
+        }
+
+        assertEquals( 100, updatedee.getRawExpressionDataVectors().size() );
+
+        for ( RawExpressionDataVector v : updatedee.getRawExpressionDataVectors() ) {
+            assertTrue( v.getQuantitationType().getIsPreferred() );
+        }
+
+        assertEquals( 100, updatedee.getProcessedExpressionDataVectors().size() );
+
+        Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
+
+        for ( DoubleVectorValueObject v : processedDataArrays ) {
+            assertEquals( 31, v.getBioAssays().size() );
+        }
+
+        /*
+         * Test adding data (non-preferred)
+         */
+        qt = makeQt( false );
+        ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( updatedee, qt, rawMatrix );
+        ee = dataUpdater.addData( updatedee, targetArrayDesign, moreData );
+
+        updatedee = experimentService.thaw( ee );
+        try {
+            // add preferred data twice.
+            dataUpdater.addData( updatedee, targetArrayDesign, data );
+            fail( "Should have gotten an exception" );
+        } catch ( IllegalArgumentException e ) {
+            // okay.
+        }
+
+        dataUpdater.deleteData( updatedee, qt );
+    }
+
+    /**
      * More realistic test of RNA seq. GSE19166
      * 
      * @throws Exception
@@ -290,118 +402,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 4, v.getBioAssays().size() );
         }
 
-    }
-
-    /**
-     * @throws Exception
-     */
-    @Test
-    public void testAddData() throws Exception {
-
-        /*
-         * Load a regular data set that has no data. Platform is (basically) irrelevant.
-         */
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
-        ExpressionExperiment ee;
-
-        // ExpressionExperiment oldee = experimentService.findByShortName( "GSE37646" );
-        // if ( oldee != null ) experimentService.delete( oldee ); // maybe okay?
-
-        try {
-            // RNA-seq data.
-            Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            // log.warn( "Test skipped because GSE37646 was not removed from the system prior to test" );
-            ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
-        }
-
-        ee = experimentService.thawLite( ee );
-
-        List<BioAssay> bioAssays = new ArrayList<BioAssay>( ee.getBioAssays() );
-        assertEquals( 31, bioAssays.size() );
-
-        List<BioMaterial> bms = new ArrayList<BioMaterial>();
-        for ( BioAssay ba : bioAssays ) {
-
-            bms.add( ba.getSampleUsed() );
-        }
-
-        targetArrayDesign = getTestPersistentArrayDesign( 100, true );
-
-        DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
-                targetArrayDesign.getCompositeSequences().size(), bms.size() );
-        /*
-         * make up some fake data on another platform, and match it to those samples
-         */
-        for ( int i = 0; i < rawMatrix.rows(); i++ ) {
-            for ( int j = 0; j < rawMatrix.columns(); j++ ) {
-                rawMatrix.set( i, j, ( i + 1 ) * ( j + 1 ) * Math.random() / 100.0 );
-            }
-        }
-
-        List<CompositeSequence> probes = new ArrayList<CompositeSequence>( targetArrayDesign.getCompositeSequences() );
-
-        rawMatrix.setRowNames( probes );
-        rawMatrix.setColumnNames( bms );
-
-        QuantitationType qt = makeQt( true );
-
-        ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
-
-        assertNotNull( data.getBestBioAssayDimension() );
-        assertEquals( rawMatrix.columns(), data.getBestBioAssayDimension().getBioAssays().size() );
-        assertEquals( probes.size(), data.getMatrix().rows() );
-
-        /*
-         * Replace it.
-         */
-        ee = dataUpdater.replaceData( ee, targetArrayDesign, data );
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
-        }
-
-        /*
-         * Check
-         */
-        ExpressionExperiment updatedee = experimentService.thaw( ee );
-
-        for ( BioAssay ba : updatedee.getBioAssays() ) {
-            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
-        }
-
-        assertEquals( 100, updatedee.getRawExpressionDataVectors().size() );
-
-        for ( RawExpressionDataVector v : updatedee.getRawExpressionDataVectors() ) {
-            assertTrue( v.getQuantitationType().getIsPreferred() );
-        }
-
-        assertEquals( 100, updatedee.getProcessedExpressionDataVectors().size() );
-
-        Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
-
-        for ( DoubleVectorValueObject v : processedDataArrays ) {
-            assertEquals( 31, v.getBioAssays().size() );
-        }
-
-        /*
-         * Test adding data (non-preferred)
-         */
-        qt = makeQt( false );
-        ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( updatedee, qt, rawMatrix );
-        ee = dataUpdater.addData( updatedee, targetArrayDesign, moreData );
-
-        updatedee = experimentService.thaw( ee );
-        try {
-            // add preferred data twice.
-            dataUpdater.addData( updatedee, targetArrayDesign, data );
-            fail( "Should have gotten an exception" );
-        } catch ( IllegalArgumentException e ) {
-            // okay.
-        }
-
-        dataUpdater.deleteData( updatedee, qt );
     }
 
     private QuantitationType makeQt( boolean preferred ) {

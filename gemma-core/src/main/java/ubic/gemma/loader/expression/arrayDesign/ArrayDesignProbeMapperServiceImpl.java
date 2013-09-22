@@ -233,20 +233,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
     }
 
-    /**
-     * Delete outdated annotation and associated experiment files.
-     * 
-     * @param arrayDesign
-     */
-    private void deleteOldFiles( ArrayDesign arrayDesign ) throws IOException {
-        arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
-        Collection<ExpressionExperiment> ees4platform = arrayDesignService.getExpressionExperiments( arrayDesign );
-        for ( ExpressionExperiment ee : ees4platform ) {
-            expressionDataFileService.deleteAllFiles( ee );
-        }
-
-    }
-
     /*
      * (non-Javadoc) - from an input file, not mapped with sequences.
      * 
@@ -530,6 +516,20 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         }
         return null;
+    }
+
+    /**
+     * Delete outdated annotation and associated experiment files.
+     * 
+     * @param arrayDesign
+     */
+    private void deleteOldFiles( ArrayDesign arrayDesign ) throws IOException {
+        arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
+        Collection<ExpressionExperiment> ees4platform = arrayDesignService.getExpressionExperiments( arrayDesign );
+        for ( ExpressionExperiment ee : ees4platform ) {
+            expressionDataFileService.deleteAllFiles( ee );
+        }
+
     }
 
     /**

@@ -48,43 +48,6 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
 
     ExpressionDataBooleanMatrix absentPresentCalls = null;
 
-    /**
-     * Set the minimum number of values that must be present in each row. The default value is 5. This is always
-     * overridden by a hard-coded value (currently 2) that must be present for a row to be kept; but this value is in
-     * turn overridden by the maxfractionRemoved.
-     * 
-     * @param m int
-     */
-    public void setMinPresentCount( int m ) {
-        if ( m < 0 ) {
-            throw new IllegalArgumentException( "Minimum present count must be > 0." );
-        }
-        minPresentIsSet = true;
-        minPresentCount = m;
-    }
-
-    /**
-     * @param k double the fraction of values to be removed.
-     */
-    public void setMinPresentFraction( double k ) {
-        if ( k < 0.0 || k > 1.0 )
-            throw new IllegalArgumentException( "Min present fraction must be between 0 and 1, got " + k );
-        minPresentFractionIsSet = true;
-        minPresentFraction = k;
-    }
-
-    /**
-     * Set the maximum fraction of rows which will be removed from the data set. The default value is 0.3 Set it to 1.0
-     * to remove this restriction.
-     * 
-     * @param f double
-     */
-    public void setMaxFractionRemoved( double f ) {
-        if ( f < 0.0 || f > 1.0 )
-            throw new IllegalArgumentException( "Max fraction removed must be between 0 and 1, got " + f );
-        maxFractionRemoved = f;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -192,5 +155,42 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
      */
     public void setAbsentPresentCalls( ExpressionDataBooleanMatrix absentPresentCalls ) {
         this.absentPresentCalls = absentPresentCalls;
+    }
+
+    /**
+     * Set the maximum fraction of rows which will be removed from the data set. The default value is 0.3 Set it to 1.0
+     * to remove this restriction.
+     * 
+     * @param f double
+     */
+    public void setMaxFractionRemoved( double f ) {
+        if ( f < 0.0 || f > 1.0 )
+            throw new IllegalArgumentException( "Max fraction removed must be between 0 and 1, got " + f );
+        maxFractionRemoved = f;
+    }
+
+    /**
+     * Set the minimum number of values that must be present in each row. The default value is 5. This is always
+     * overridden by a hard-coded value (currently 2) that must be present for a row to be kept; but this value is in
+     * turn overridden by the maxfractionRemoved.
+     * 
+     * @param m int
+     */
+    public void setMinPresentCount( int m ) {
+        if ( m < 0 ) {
+            throw new IllegalArgumentException( "Minimum present count must be > 0." );
+        }
+        minPresentIsSet = true;
+        minPresentCount = m;
+    }
+
+    /**
+     * @param k double the fraction of values to be removed.
+     */
+    public void setMinPresentFraction( double k ) {
+        if ( k < 0.0 || k > 1.0 )
+            throw new IllegalArgumentException( "Min present fraction must be between 0 and 1, got " + k );
+        minPresentFractionIsSet = true;
+        minPresentFraction = k;
     }
 }

@@ -61,6 +61,23 @@ public interface ArrayDesignAnnotationService {
             + "microAnnots" + File.separatorChar;
 
     /**
+     * @param arrayDesign
+     * @throws IOException
+     */
+    public abstract void deleteExistingFiles( ArrayDesign arrayDesign ) throws IOException;
+
+    /**
+     * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
+     * available.
+     * 
+     * @param writer
+     * @param genes
+     * @param type
+     * @return
+     */
+    public abstract int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type );
+
+    /**
      * Format details:
      * <p>
      * There is a one-line header. The columns are:
@@ -86,17 +103,6 @@ public interface ArrayDesignAnnotationService {
             throws IOException;
 
     /**
-     * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
-     * available.
-     * 
-     * @param writer
-     * @param genes
-     * @param type
-     * @return
-     */
-    public abstract int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type );
-
-    /**
      * Opens a file for writing and adds the header.
      * 
      * @param arrayDesign
@@ -107,11 +113,5 @@ public interface ArrayDesignAnnotationService {
      */
     public abstract Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite )
             throws IOException;
-
-    /**
-     * @param arrayDesign
-     * @throws IOException
-     */
-    public abstract void deleteExistingFiles( ArrayDesign arrayDesign ) throws IOException;
 
 }

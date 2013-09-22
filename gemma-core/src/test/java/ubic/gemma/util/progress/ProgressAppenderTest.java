@@ -18,6 +18,12 @@
  */
 package ubic.gemma.util.progress;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -25,15 +31,10 @@ import org.apache.log4j.MDC;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import ubic.gemma.job.executor.common.LogBasedProgressAppender;
 import ubic.gemma.job.executor.common.ProgressUpdateCallback;
 import ubic.gemma.testing.BaseSpringContextTest;
-
-import java.util.Deque;
-import java.util.concurrent.LinkedBlockingDeque;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 
 /**
  * For this test to work you should have the appender configured in log4j.properties. If not it will be set up
@@ -52,6 +53,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
     Logger log4jLogger;
 
     Deque<String> updates = new LinkedBlockingDeque<String>();
+
     /*
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */

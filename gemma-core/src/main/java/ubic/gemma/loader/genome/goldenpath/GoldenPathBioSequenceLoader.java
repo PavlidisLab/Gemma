@@ -27,12 +27,12 @@ import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.externalDb.GoldenPathDumper;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -68,15 +68,6 @@ public class GoldenPathBioSequenceLoader {
         this.taxon = taxon;
     }
 
-    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
-        this.externalDatabaseService = externalDatabaseService;
-        genbank = externalDatabaseService.find( "Genbank" );
-    }
-
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
-
     /**
      * @param file
      * @return
@@ -95,17 +86,44 @@ public class GoldenPathBioSequenceLoader {
     }
 
     /**
-     * @param file
-     * @return
-     * @throws IOException
+     * Load from a database source.
+     * 
+     * @param dumper
      */
-    public void load( String filename ) throws IOException {
-        if ( StringUtils.isBlank( filename ) ) {
-            throw new IllegalArgumentException( "No filename provided" );
+    public void load( final GoldenPathDumper dumper ) {
+        final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );
+
+        final SecurityContext context = SecurityContextHolder.getContext();
+        assert context != null;
+        Thread parseThread = new Thread( new Runnable() {
+            @Override
+            public void run() {
+                dumper.dumpTranscriptBioSequences( limit, queue );
+                log.info( "Done dumping" );
+                producerDone = true;
+            }
+        }, "Parser" );
+
+        parseThread.start();
+
+        Thread loadThread = new Thread( new Runnable() {
+            @Override
+            public void run() {
+                SecurityContextHolder.setContext( context );
+                log.info( "Starting loading" );
+                load( queue );
+            }
+        }, "Loader" );
+
+        loadThread.start();
+
+        while ( !producerDone || !consumerDone ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
         }
-        log.info( "Parsing " + filename );
-        File infile = new File( filename );
-        load( infile );
     }
 
     /**
@@ -155,49 +173,35 @@ public class GoldenPathBioSequenceLoader {
     }
 
     /**
-     * Load from a database source.
-     * 
-     * @param dumper
+     * @param file
+     * @return
+     * @throws IOException
      */
-    public void load( final GoldenPathDumper dumper ) {
-        final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );
-
-        final SecurityContext context = SecurityContextHolder.getContext();
-        assert context != null;
-        Thread parseThread = new Thread( new Runnable() {
-            @Override
-            public void run() {
-                dumper.dumpTranscriptBioSequences( limit, queue );
-                log.info( "Done dumping" );
-                producerDone = true;
-            }
-        }, "Parser" );
-
-        parseThread.start();
-
-        Thread loadThread = new Thread( new Runnable() {
-            @Override
-            public void run() {
-                SecurityContextHolder.setContext( context );
-                log.info( "Starting loading" );
-                load( queue );
-            }
-        }, "Loader" );
-
-        loadThread.start();
-
-        while ( !producerDone || !consumerDone ) {
-            try {
-                Thread.sleep( 1000 );
-            } catch ( InterruptedException e ) {
-                e.printStackTrace();
-            }
+    public void load( String filename ) throws IOException {
+        if ( StringUtils.isBlank( filename ) ) {
+            throw new IllegalArgumentException( "No filename provided" );
         }
+        log.info( "Parsing " + filename );
+        File infile = new File( filename );
+        load( infile );
+    }
+
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
+    }
+
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
+        genbank = externalDatabaseService.find( "Genbank" );
+    }
+
+    public void setLimit( int limit ) {
+        this.limit = limit;
     }
 
     /**
      * @param bioSequences
-     */ 
+     */
     void load( BlockingQueue<BioSequence> queue ) {
         log.debug( "Entering 'load' " );
 
@@ -253,9 +257,5 @@ public class GoldenPathBioSequenceLoader {
         log.info( "Loaded total of " + count + " sequences" );
         consumerDone = true;
 
-    }
-
-    public void setLimit( int limit ) {
-        this.limit = limit;
     }
 }

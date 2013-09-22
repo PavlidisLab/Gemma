@@ -19,8 +19,7 @@
 package ubic.gemma.job;
 
 /**
- * author: anton
- * date: 10/02/13
+ * author: anton date: 10/02/13
  */
 public class EmailNotificationContext {
     private String taskId;
@@ -33,12 +32,12 @@ public class EmailNotificationContext {
         this.taskName = taskName;
     }
 
-    public String getTaskId() {
-        return taskId;
-    }
-
     public String getSubmitter() {
         return submitter;
+    }
+
+    public String getTaskId() {
+        return taskId;
     }
 
     public String getTaskName() {

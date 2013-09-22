@@ -14,12 +14,13 @@
  */
 package ubic.gemma.job.executor.common;
 
+import java.util.concurrent.Callable;
+
 import org.springframework.security.core.context.SecurityContextHolder;
+
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
-
-import java.util.concurrent.Callable;
 
 /**
  * Task Lifecycle Hooks ProgressUpdateAppender -
@@ -29,13 +30,22 @@ import java.util.concurrent.Callable;
  */
 public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
-    private Task<T, ?> task;
+    // These hooks are used to update status of the running task.
+    public interface TaskLifecycleHandler {
+        public void onFailure( Throwable e );
 
+        public void onFinish();
+
+        public void onStart();
+    }
+
+    private Task<T, ?> task;
     // Does not survive serialization.
     private transient TaskLifecycleHandler statusCallback;
-    private transient ProgressUpdateAppender progressAppender;
 
+    private transient ProgressUpdateAppender progressAppender;
     private String taskId;
+
     private TaskCommand taskCommand;
 
     private Throwable taskExecutionException;
@@ -44,23 +54,6 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
         this.task = task;
         this.taskId = taskCommand.getTaskId();
         this.taskCommand = taskCommand;
-    }
-
-    // These hooks are used to update status of the running task.
-    public interface TaskLifecycleHandler {
-        public void onStart();
-
-        public void onFinish();
-
-        public void onFailure( Throwable e );
-    }
-
-    public void setStatusCallback( TaskLifecycleHandler statusCallback ) {
-        this.statusCallback = statusCallback;
-    }
-
-    public void setProgressAppender( ProgressUpdateAppender progressAppender ) {
-        this.progressAppender = progressAppender;
     }
 
     @Override
@@ -91,16 +84,24 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
     }
 
-    private void setup() {
-        progressAppender.initialize();
+    public void setProgressAppender( ProgressUpdateAppender progressAppender ) {
+        this.progressAppender = progressAppender;
+    }
 
-        SecurityContextHolder.setContext( taskCommand.getSecurityContext() ); // TODO: one idea is to have
-                                                                              // SecurityContextAwareExecutorClass.
+    public void setStatusCallback( TaskLifecycleHandler statusCallback ) {
+        this.statusCallback = statusCallback;
     }
 
     private void cleanup() {
         SecurityContextHolder.clearContext();
 
         progressAppender.tearDown();
+    }
+
+    private void setup() {
+        progressAppender.initialize();
+
+        SecurityContextHolder.setContext( taskCommand.getSecurityContext() ); // TODO: one idea is to have
+                                                                              // SecurityContextAwareExecutorClass.
     }
 }

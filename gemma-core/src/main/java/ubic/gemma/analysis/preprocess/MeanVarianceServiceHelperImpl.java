@@ -19,8 +19,8 @@
 package ubic.gemma.analysis.preprocess;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author ptan
  * @version $Id$
  */
-@Service
+@Component
 public class MeanVarianceServiceHelperImpl implements MeanVarianceServiceHelper {
 
     @Autowired
@@ -59,7 +59,6 @@ public class MeanVarianceServiceHelperImpl implements MeanVarianceServiceHelper 
      * .ExpressionExperiment, ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation)
      */
     @Override
-    @Transactional
     public void createMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
         mvr.setSecurityOwner( ee );
         ee.setMeanVarianceRelation( mvr );

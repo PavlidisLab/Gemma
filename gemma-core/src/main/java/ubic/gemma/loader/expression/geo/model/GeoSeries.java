@@ -95,6 +95,13 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @param value
+     */
+    public void addSubSeries( String value ) {
+        this.subSeries.add( value );
+    }
+
+    /**
      * @param keyword
      */
     public void addToKeyWords( String keyword ) {
@@ -187,6 +194,13 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @return the subSeries
+     */
+    public Collection<String> getSubSeries() {
+        return subSeries;
+    }
+
+    /**
      * @return Returns the summaries.
      */
     public String getSummaries() {
@@ -261,6 +275,20 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @param isSubSeries the isSubSeries to set
+     */
+    public void setIsSubSeries( boolean isSubSeries ) {
+        this.isSubSeries = isSubSeries;
+    }
+
+    /**
+     * @param isSuperSeries the isSuperSeries to set
+     */
+    public void setIsSuperSeries( boolean isSuperSeries ) {
+        this.isSuperSeries = isSuperSeries;
+    }
+
+    /**
      * @param type The type to set.
      */
     public void setKeyWords( Collection<String> type ) {
@@ -305,24 +333,10 @@ public class GeoSeries extends GeoData {
     }
 
     /**
-     * @param isSubSeries the isSubSeries to set
-     */
-    public void setIsSubSeries( boolean isSubSeries ) {
-        this.isSubSeries = isSubSeries;
-    }
-
-    /**
      * @param summaries The summaries to set.
      */
     public void setSummaries( String summary ) {
         this.summary = summary;
-    }
-
-    /**
-     * @param isSuperSeries the isSuperSeries to set
-     */
-    public void setIsSuperSeries( boolean isSuperSeries ) {
-        this.isSuperSeries = isSuperSeries;
     }
 
     /**
@@ -341,20 +355,6 @@ public class GeoSeries extends GeoData {
      */
     public void setWebLinks( Collection<String> webLinks ) {
         this.webLinks = webLinks;
-    }
-
-    /**
-     * @param value
-     */
-    public void addSubSeries( String value ) {
-        this.subSeries.add( value );
-    }
-
-    /**
-     * @return the subSeries
-     */
-    public Collection<String> getSubSeries() {
-        return subSeries;
     }
 
 }

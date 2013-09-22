@@ -49,11 +49,6 @@ public class RawDataFetcher extends FtpArchiveFetcher {
         initArchiveHandler( "tar" );
     }
 
-    @Override
-    public final void setNetDataSourceUtil() {
-        this.netDataSourceUtil = new GeoUtil();
-    }
-
     /**
      * @param identifier
      * @return true if the files exist.
@@ -124,6 +119,26 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     }
 
     /**
+     * @throws ConfigurationException
+     */
+    @Override
+    public void initConfig() {
+        localBasePath = Settings.getString( "geo.local.datafile.basepath" );
+        remoteBaseDir = Settings.getString( "geo.remote.rawDataDir" );
+
+        if ( localBasePath == null || localBasePath.length() == 0 )
+            throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
+        if ( remoteBaseDir == null || remoteBaseDir.length() == 0 )
+            throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
+
+    }
+
+    @Override
+    public final void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new GeoUtil();
+    }
+
+    /**
      * @param identifier
      * @param newDir
      * @return
@@ -154,21 +169,6 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     private String formSecondGuessRemoteFilePath( String identifier ) {
         String seekFile = remoteBaseDir + "/" + identifier + "/" + identifier + "_non-normalized.txt.gz";
         return seekFile;
-    }
-
-    /**
-     * @throws ConfigurationException
-     */
-    @Override
-    public void initConfig() {
-        localBasePath = Settings.getString( "geo.local.datafile.basepath" );
-        remoteBaseDir = Settings.getString( "geo.remote.rawDataDir" );
-
-        if ( localBasePath == null || localBasePath.length() == 0 )
-            throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
-        if ( remoteBaseDir == null || remoteBaseDir.length() == 0 )
-            throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
-
     }
 
 }

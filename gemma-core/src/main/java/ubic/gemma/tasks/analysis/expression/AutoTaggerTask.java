@@ -22,6 +22,5 @@ package ubic.gemma.tasks.analysis.expression;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.Task;
 
-
-public interface AutoTaggerTask extends  Task<TaskResult, AutoTaggerTaskCommand> {}
-
+public interface AutoTaggerTask extends Task<TaskResult, AutoTaggerTaskCommand> {
+}

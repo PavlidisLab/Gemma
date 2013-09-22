@@ -34,12 +34,12 @@ public class ComBatException extends RuntimeException {
         super();
     }
 
-    public ComBatException( String message, Throwable cause ) {
-        super( message, cause );
-    }
-
     public ComBatException( String message ) {
         super( message );
+    }
+
+    public ComBatException( String message, Throwable cause ) {
+        super( message, cause );
     }
 
     public ComBatException( Throwable cause ) {

@@ -97,11 +97,6 @@ public class SimpleExpressionExperimentMetaData extends TaskCommand {
 
     Long taxonId;
 
-    @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
-        return null;
-    }
-
     public SimpleExpressionExperimentMetaData() {
         super();
         this.arrayDesigns = new HashSet<ArrayDesign>();
@@ -194,6 +189,11 @@ public class SimpleExpressionExperimentMetaData extends TaskCommand {
 
     public String getSourceUrl() {
         return sourceUrl;
+    }
+
+    @Override
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+        return null;
     }
 
     public Taxon getTaxon() {

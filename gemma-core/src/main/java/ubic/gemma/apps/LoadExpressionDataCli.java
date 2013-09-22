@@ -91,24 +91,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         return "Load data from GEO or ArrayExpress";
     }
 
-    /**
-     * Do missing value and processed vector creation steps.
-     * 
-     * @param ees
-     */
-    private void postProcess( Collection<ExpressionExperiment> ees ) {
-        log.info( "Postprocessing ..." );
-        for ( ExpressionExperiment ee : ees ) {
-
-            try {
-                preprocessorService.process( ee );
-            } catch ( PreprocessingException e ) {
-                log.error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );
-            }
-
-        }
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -324,6 +306,24 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             for ( ExpressionExperiment expressionExperiment : existing ) {
                 eeService.delete( expressionExperiment );
             }
+        }
+    }
+
+    /**
+     * Do missing value and processed vector creation steps.
+     * 
+     * @param ees
+     */
+    private void postProcess( Collection<ExpressionExperiment> ees ) {
+        log.info( "Postprocessing ..." );
+        for ( ExpressionExperiment ee : ees ) {
+
+            try {
+                preprocessorService.process( ee );
+            } catch ( PreprocessingException e ) {
+                log.error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );
+            }
+
         }
     }
 

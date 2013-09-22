@@ -18,31 +18,29 @@
  */
 package ubic.gemma.security.authentication;
 
-
 /**
  * @author cmcdonald
- * 
  */
 public class LoginDetailsValueObject {
 
     private String userName;
-    
-    private boolean loggedIn;
 
-    public void setUserName( String userName ) {
-        this.userName = userName;
-    }
+    private boolean loggedIn;
 
     public String getUserName() {
         return userName;
+    }
+
+    public boolean isLoggedIn() {
+        return loggedIn;
     }
 
     public void setLoggedIn( boolean loggedIn ) {
         this.loggedIn = loggedIn;
     }
 
-    public boolean isLoggedIn() {
-        return loggedIn;
+    public void setUserName( String userName ) {
+        this.userName = userName;
     }
 
 }

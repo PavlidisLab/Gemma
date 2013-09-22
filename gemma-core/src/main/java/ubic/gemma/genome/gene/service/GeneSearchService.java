@@ -35,8 +35,6 @@ import ubic.gemma.search.SearchResultDisplayObject;
  */
 public interface GeneSearchService {
 
-    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId );
-
     /**
      * get all genes in the given taxon that are annotated with the given go id, including its child terms in the
      * hierarchy
@@ -46,6 +44,12 @@ public interface GeneSearchService {
      * @return Collection<GeneSetValueObject> empty if goId was blank or taxonId didn't correspond to a taxon
      */
     public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId );
+
+    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon );
+
+    public Collection<Gene> getPhenotypeAssociatedGenes( String phenptypeQuery, Taxon taxon );
+
+    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId );
 
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
@@ -57,7 +61,6 @@ public interface GeneSearchService {
      */
     public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException;
 
-
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      * 
@@ -66,10 +69,7 @@ public interface GeneSearchService {
      * @return map with each gene-query as a key and a collection of the search-results as the value
      * @throws IOException
      */
-    public Map<String, Collection<GeneValueObject>> searchMultipleGenesGetMap( String query, Long taxonId ) throws IOException;
+    public Map<String, Collection<GeneValueObject>> searchMultipleGenesGetMap( String query, Long taxonId )
+            throws IOException;
 
-    public Collection<Gene> getPhenotypeAssociatedGenes( String phenptypeQuery, Taxon taxon );
-
-    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon );
-    
 }

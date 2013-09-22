@@ -56,6 +56,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     private static final double DEFAULT_FRACTION = 0.90;
 
     // Optional: the maximum fraction of samples that can be outliers
+    @SuppressWarnings("unused")
     private static final double MAX_FRACTION_OUTLIERS = 0.3;
 
     private static Log log = LogFactory.getLog( OutlierDetectionServiceImpl.class );

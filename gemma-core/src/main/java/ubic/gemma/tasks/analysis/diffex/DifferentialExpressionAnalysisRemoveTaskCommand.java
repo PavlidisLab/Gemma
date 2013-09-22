@@ -32,16 +32,16 @@ public class DifferentialExpressionAnalysisRemoveTaskCommand extends Differentia
 
     private static final long serialVersionUID = -6881129987842634598L;
 
-    public DifferentialExpressionAnalysis getToRemove() {
-        return toRemove;
-    }
-
     private DifferentialExpressionAnalysis toRemove;
 
     public DifferentialExpressionAnalysisRemoveTaskCommand( ExpressionExperiment ee,
             DifferentialExpressionAnalysis toRemove ) {
         super( ee );
         this.toRemove = toRemove;
+    }
+
+    public DifferentialExpressionAnalysis getToRemove() {
+        return toRemove;
     }
 
 }

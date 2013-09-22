@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.analysis.expression.AnalysisUtilService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -60,6 +61,7 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
      * .ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
+    @Transactional
     public void persist( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         analysisUtilService.deleteOldAnalyses( expExp );
 

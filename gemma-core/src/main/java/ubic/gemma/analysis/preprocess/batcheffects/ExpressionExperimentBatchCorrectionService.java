@@ -37,18 +37,6 @@ public interface ExpressionExperimentBatchCorrectionService {
     public abstract boolean checkCorrectability( ExpressionExperiment ee );
 
     /**
-     * @param ee
-     * @return
-     */
-    public abstract ExperimentalFactor getBatchFactor( ExpressionExperiment ee );
-
-    /**
-     * @param ee
-     * @return
-     */
-    public abstract ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee );
-
-    /**
      * Run ComBat using default settings (parametric)
      * 
      * @param ee
@@ -68,5 +56,17 @@ public interface ExpressionExperimentBatchCorrectionService {
      */
     public abstract ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix,
             boolean parametric, Double importanceThreshold );
+
+    /**
+     * @param ee
+     * @return
+     */
+    public abstract ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee );
+
+    /**
+     * @param ee
+     * @return
+     */
+    public abstract ExperimentalFactor getBatchFactor( ExpressionExperiment ee );
 
 }

@@ -79,6 +79,20 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
+     */
+    @Override
+    protected void configureMocks() throws Exception {
+
+        configureMockAnalysisServiceHelper( 1 );
+
+        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
+
+    }
+
     /**
      * @param resultSet
      */
@@ -138,20 +152,6 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         }
         assertTrue( "Did not find expected results for probe_1", found );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
-    @Override
-    protected void configureMocks() throws Exception {
-
-        configureMockAnalysisServiceHelper( 1 );
-
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
-
     }
 
 }

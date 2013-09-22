@@ -28,15 +28,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface MeanVarianceService {
 
     /**
-     * Creates the matrix, or loads it if it already exists.
-     * 
-     * @param ExpressionExperiment
-     * @return MeanVarianceRelation
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    public abstract MeanVarianceRelation findOrCreate( ExpressionExperiment ee );
-
-    /**
      * Retrieve (and if necessary compute) the mean-variance relationship for the experiment
      * 
      * @param ExpressionExperiment
@@ -53,7 +44,16 @@ public interface MeanVarianceService {
      * @return
      */
     public abstract MeanVarianceRelation find( ExpressionExperiment ee );
-    
+
+    /**
+     * Creates the matrix, or loads it if it already exists.
+     * 
+     * @param ExpressionExperiment
+     * @return MeanVarianceRelation
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    public abstract MeanVarianceRelation findOrCreate( ExpressionExperiment ee );
+
     /**
      * @return true if the specified experiment already has a MeanVarianceRelation computed
      */

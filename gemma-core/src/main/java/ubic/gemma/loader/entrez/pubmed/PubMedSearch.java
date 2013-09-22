@@ -87,6 +87,25 @@ public class PubMedSearch {
     }
 
     /**
+     * For an integer pubmed id
+     * 
+     * @param pubMedId
+     * @return BibliographicReference representing the publication
+     * @throws IOException
+     */
+    public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms )
+            throws IOException {
+
+        Collection<BibliographicReference> results;
+
+        results = fetchById( searchTerms );
+
+        log.info( "Fetched " + results.size() + " references" );
+
+        return results;
+    }
+
+    /**
      * Gets all the pubmed ID's that would be returned given a list of input terms, using two eUtil calls.
      * 
      * @param searchTerms
@@ -136,25 +155,6 @@ public class PubMedSearch {
 
         Collection<String> ids = parser.parse( toBeGotten.openStream() );
         return ids;
-    }
-
-    /**
-     * For an integer pubmed id
-     * 
-     * @param pubMedId
-     * @return BibliographicReference representing the publication
-     * @throws IOException
-     */
-    public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms )
-            throws IOException {
-
-        Collection<BibliographicReference> results;
-
-        results = fetchById( searchTerms );
-
-        log.info( "Fetched " + results.size() + " references" );
-
-        return results;
     }
 
     private Collection<BibliographicReference> fetchById( Collection<String> ids ) throws IOException {

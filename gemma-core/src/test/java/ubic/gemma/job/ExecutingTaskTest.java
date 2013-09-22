@@ -14,21 +14,11 @@
  */
 package ubic.gemma.job;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import ubic.gemma.job.executor.common.ExecutingTask;
-import ubic.gemma.job.executor.common.ProgressUpdateAppender;
-import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.tasks.AbstractTask;
-import ubic.gemma.tasks.Task;
-import ubic.gemma.testing.BaseSpringContextTest;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
@@ -37,7 +27,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import ubic.gemma.job.executor.common.ExecutingTask;
+import ubic.gemma.job.executor.common.ProgressUpdateAppender;
+import ubic.gemma.security.authentication.UserDetailsImpl;
+import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.tasks.AbstractTask;
+import ubic.gemma.tasks.Task;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author anton
@@ -45,18 +50,35 @@ import static org.junit.Assert.*;
  */
 public class ExecutingTaskTest extends BaseSpringContextTest {
 
+    private static class FailureTestTask extends AbstractTask<TaskResult, TaskCommand> {
+
+        @Override
+        public TaskResult execute() {
+            throw new AccessDeniedException( "Test!" );
+        }
+    }
+
+    private static class SuccessTestTask extends AbstractTask<TaskResult, TaskCommand> {
+
+        @Override
+        public TaskResult execute() {
+            return new TaskResult( getTaskCommand(), "SUCCESS" );
+        }
+    }
+
     @Autowired
     UserManager userManager;
-
     private AtomicBoolean onStartRan = new AtomicBoolean( false );
+
     private AtomicBoolean onFailureRan = new AtomicBoolean( false );
     private AtomicBoolean onFinishRan = new AtomicBoolean( false );
 
     private AtomicBoolean appenderInitialized = new AtomicBoolean( false );
     private AtomicBoolean appenderTakenDown = new AtomicBoolean( false );
-
     private SecurityContext securityContextAfterInitialize;
+
     private SecurityContext securityContextAfterFinish;
+
     private SecurityContext securityContextAfterFail;
 
     private ProgressUpdateAppender progressAppender = new ProgressUpdateAppender() {
@@ -73,8 +95,8 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
     private ExecutingTask.TaskLifecycleHandler statusUpdateHandler = new ExecutingTask.TaskLifecycleHandler() {
         @Override
-        public void onStart() {
-            onStartRan.set( true );
+        public void onFailure( Throwable e ) {
+            onFailureRan.set( true );
         }
 
         @Override
@@ -83,15 +105,15 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         }
 
         @Override
-        public void onFailure( Throwable e ) {
-            onFailureRan.set( true );
+        public void onStart() {
+            onStartRan.set( true );
         }
     };
 
     private ExecutingTask.TaskLifecycleHandler statusSecurityContextCheckerHandler = new ExecutingTask.TaskLifecycleHandler() {
         @Override
-        public void onStart() {
-            securityContextAfterInitialize = SecurityContextHolder.getContext();
+        public void onFailure( Throwable e ) {
+            securityContextAfterFinish = SecurityContextHolder.getContext();
         }
 
         @Override
@@ -100,26 +122,10 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         }
 
         @Override
-        public void onFailure( Throwable e ) {
-            securityContextAfterFinish = SecurityContextHolder.getContext();
+        public void onStart() {
+            securityContextAfterInitialize = SecurityContextHolder.getContext();
         }
     };
-
-    private static class SuccessTestTask extends AbstractTask<TaskResult, TaskCommand> {
-
-        @Override
-        public TaskResult execute() {
-            return new TaskResult( getTaskCommand(), "SUCCESS" );
-        }
-    }
-
-    private static class FailureTestTask extends AbstractTask<TaskResult, TaskCommand> {
-
-        @Override
-        public TaskResult execute() {
-            throw new AccessDeniedException( "Test!" );
-        }
-    }
 
     @Before
     public void setUp() throws Exception {
@@ -141,40 +147,34 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSecurityContextManagement() {
-        try {
-            this.userManager.loadUserByUsername( "ExecutingTaskTestUser" );
-        } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", "ExecutingTaskTestUser", true, null,
-                    "fooUser@chibi.ubc.ca", "key", new Date() ) );
-        }
-
-        runAsUser( "ExecutingTaskTestUser" );
+    public void testOrderOfExecutionFailure() {
         TaskCommand taskCommand = new TaskCommand();
-        runAsAdmin();
-
-        Task<TaskResult, TaskCommand> task = new SuccessTestTask();
+        Task<TaskResult, TaskCommand> task = new FailureTestTask();
         task.setTaskCommand( taskCommand );
 
         ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
         executingTask.setProgressAppender( progressAppender );
-        executingTask.setStatusCallback( statusSecurityContextCheckerHandler );
+        executingTask.setStatusCallback( statusUpdateHandler );
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<TaskResult> future = executorService.submit( executingTask );
         try {
             TaskResult taskResult = future.get();
-            String answer = ( String ) taskResult.getAnswer();
-            assertEquals( "SUCCESS", answer );
+            Throwable exception = taskResult.getException();
+            assertEquals( AccessDeniedException.class, exception.getClass() );
+            assertEquals( "Test!", exception.getMessage() );
         } catch ( InterruptedException e ) {
             fail();
         } catch ( ExecutionException e ) {
             fail();
         }
 
-        assertEquals( taskCommand.getSecurityContext(), securityContextAfterInitialize );
-        assertNotSame( taskCommand.getSecurityContext(), securityContextAfterFinish );
-        assertEquals( null, securityContextAfterFail );
+        assertTrue( appenderInitialized.get() );
+        assertTrue( appenderTakenDown.get() );
+
+        assertTrue( onStartRan.get() );
+        assertFalse( onFinishRan.get() );
+        assertTrue( onFailureRan.get() );
     }
 
     // TODO: Test security context under different failure scenarios
@@ -212,33 +212,39 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testOrderOfExecutionFailure() {
+    public void testSecurityContextManagement() {
+        try {
+            this.userManager.loadUserByUsername( "ExecutingTaskTestUser" );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo", "ExecutingTaskTestUser", true, null,
+                    "fooUser@chibi.ubc.ca", "key", new Date() ) );
+        }
+
+        runAsUser( "ExecutingTaskTestUser" );
         TaskCommand taskCommand = new TaskCommand();
-        Task<TaskResult, TaskCommand> task = new FailureTestTask();
+        runAsAdmin();
+
+        Task<TaskResult, TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
         ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
         executingTask.setProgressAppender( progressAppender );
-        executingTask.setStatusCallback( statusUpdateHandler );
+        executingTask.setStatusCallback( statusSecurityContextCheckerHandler );
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<TaskResult> future = executorService.submit( executingTask );
         try {
             TaskResult taskResult = future.get();
-            Throwable exception = taskResult.getException();
-            assertEquals( AccessDeniedException.class, exception.getClass() );
-            assertEquals( "Test!", exception.getMessage() );
+            String answer = ( String ) taskResult.getAnswer();
+            assertEquals( "SUCCESS", answer );
         } catch ( InterruptedException e ) {
             fail();
         } catch ( ExecutionException e ) {
             fail();
         }
 
-        assertTrue( appenderInitialized.get() );
-        assertTrue( appenderTakenDown.get() );
-
-        assertTrue( onStartRan.get() );
-        assertFalse( onFinishRan.get() );
-        assertTrue( onFailureRan.get() );
+        assertEquals( taskCommand.getSecurityContext(), securityContextAfterInitialize );
+        assertNotSame( taskCommand.getSecurityContext(), securityContextAfterFinish );
+        assertEquals( null, securityContextAfterFail );
     }
 }

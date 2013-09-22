@@ -20,9 +20,11 @@ package ubic.gemma.testing;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -142,8 +144,8 @@ public class PersistentDummyObjectHelper {
     /**
      * @return Collection
      */
-    private Collection<BioAssay> getBioAssays( Collection<BioMaterial> bioMaterials, ArrayDesign ad ) {
-        Collection<BioAssay> baCol = new HashSet<BioAssay>();
+    private List<BioAssay> getBioAssays( Collection<BioMaterial> bioMaterials, ArrayDesign ad ) {
+        List<BioAssay> baCol = new ArrayList<BioAssay>();
         for ( BioMaterial bm : bioMaterials ) {
             BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
             bm.getBioAssaysUsedIn().add( ba );
@@ -161,7 +163,7 @@ public class PersistentDummyObjectHelper {
      * @return
      */
     private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
-            Collection<QuantitationType> quantitationTypes, Collection<BioAssay> bioAssays, ArrayDesign ad ) {
+            Collection<QuantitationType> quantitationTypes, List<BioAssay> bioAssays, ArrayDesign ad ) {
 
         BioAssayDimension baDim = BioAssayDimension.Factory.newInstance(
                 ee.getShortName() + "_" + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
@@ -348,8 +350,8 @@ public class PersistentDummyObjectHelper {
 
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
         Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
-        Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
-        Collection<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
+        List<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
+        List<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
         bioAssays.addAll( bioAssaysA );
         bioAssays.addAll( bioAssaysB );
         ee.setBioAssays( bioAssays );

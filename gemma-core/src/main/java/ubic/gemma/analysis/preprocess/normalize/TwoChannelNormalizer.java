@@ -29,6 +29,16 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 public interface TwoChannelNormalizer {
 
     /**
+     * Normalization without consideration of background or weights.
+     * 
+     * @param channelOneSignal
+     * @param channelTwoSignal
+     * @return
+     */
+    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+            DoubleMatrix<String, String> channelTwoSignal );
+
+    /**
      * @param channelOneSignal
      * @param channelTwoSignal
      * @param channelOneBackground
@@ -39,15 +49,5 @@ public interface TwoChannelNormalizer {
     public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
             DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights );
-
-    /**
-     * Normalization without consideration of background or weights.
-     * 
-     * @param channelOneSignal
-     * @param channelTwoSignal
-     * @return
-     */
-    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
-            DoubleMatrix<String, String> channelTwoSignal );
 
 }

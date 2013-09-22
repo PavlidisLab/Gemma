@@ -18,13 +18,14 @@
  */
 package ubic.gemma.security.authentication;
 
+import java.util.Collection;
+
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.GroupManager;
 import org.springframework.security.provisioning.UserDetailsManager;
+
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-
-import java.util.Collection;
 
 /**
  * @author paul

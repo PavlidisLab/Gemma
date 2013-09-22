@@ -30,14 +30,14 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     // name of the CTD file
     public static final String CTD_FILE = "CTD_genes_diseases.tsv.gz";
 
-    // location of the ctd file
-    private String ctdFile = "";
-
     public static void main( String[] args ) throws Exception {
 
         CtdDatabaseImporter importEvidence = new CtdDatabaseImporter( args );
         importEvidence.processCTDFile();
     }
+
+    // location of the ctd file
+    private String ctdFile = "";
 
     public CtdDatabaseImporter( String[] args ) throws Exception {
         super( args );
@@ -53,6 +53,20 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
         // write headers of the final file
         writeOutputFileHeaders1();
+    }
+
+    private void downloadCTDFileIfDoesntExist() {
+
+        // checks for the ctd file
+        ctdFile = writeFolder + "/" + CTD_FILE;
+
+        File fileCTD = new File( ctdFile );
+
+        // super big file 700MB, only download if we dont already have
+        if ( !fileCTD.exists() ) {
+            // download the CTD file
+            downloadFileFromWeb( CTD_URL_PATH, CTD_FILE );
+        }
     }
 
     private void processCTDFile() throws IOException {
@@ -123,20 +137,6 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
 
         writeBuffersAndCloseFiles();
-    }
-
-    private void downloadCTDFileIfDoesntExist() {
-
-        // checks for the ctd file
-        ctdFile = writeFolder + "/" + CTD_FILE;
-
-        File fileCTD = new File( ctdFile );
-
-        // super big file 700MB, only download if we dont already have
-        if ( !fileCTD.exists() ) {
-            // download the CTD file
-            downloadFileFromWeb( CTD_URL_PATH, CTD_FILE );
-        }
     }
 
 }

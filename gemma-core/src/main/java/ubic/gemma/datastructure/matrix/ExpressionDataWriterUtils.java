@@ -68,22 +68,6 @@ public class ExpressionDataWriterUtils {
     }
 
     /**
-     * Constructs a bioassay name. This is useful when writing out data to a file.
-     * 
-     * @param matrix
-     * @param assayColumnIndex The column index in the matrix.
-     * @return
-     */
-    public static String constructBioAssayName( ExpressionDataMatrix<?> matrix, int assayColumnIndex ) {
-
-        BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( assayColumnIndex );
-        Collection<BioAssay> bioAssaysForColumn = matrix.getBioAssaysForColumn( assayColumnIndex );
-
-        return constructBioAssayName( bioMaterialForColumn, bioAssaysForColumn );
-
-    }
-
-    /**
      * @param bioMaterial
      * @param bioAssays
      * @return
@@ -102,15 +86,19 @@ public class ExpressionDataWriterUtils {
     }
 
     /**
-     * @param colName
+     * Constructs a bioassay name. This is useful when writing out data to a file.
+     * 
+     * @param matrix
+     * @param assayColumnIndex The column index in the matrix.
      * @return
      */
-    private static String constructRCompatibleBioAssayName( String colName ) {
-        String colNameMod = colName;
-        colNameMod = StringUtils.replaceChars( colNameMod, ':', '.' );
-        colNameMod = StringUtils.replaceChars( colNameMod, '|', '.' );
-        colNameMod = StringUtils.replaceChars( colNameMod, '-', '.' );
-        return colNameMod;
+    public static String constructBioAssayName( ExpressionDataMatrix<?> matrix, int assayColumnIndex ) {
+
+        BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( assayColumnIndex );
+        Collection<BioAssay> bioAssaysForColumn = matrix.getBioAssaysForColumn( assayColumnIndex );
+
+        return constructBioAssayName( bioMaterialForColumn, bioAssaysForColumn );
+
     }
 
     /**
@@ -170,6 +158,18 @@ public class ExpressionDataWriterUtils {
         name = StringUtils.isBlank( name ) ? "" : name;
 
         return constructRCompatibleBioAssayName( name );
+    }
+
+    /**
+     * @param colName
+     * @return
+     */
+    private static String constructRCompatibleBioAssayName( String colName ) {
+        String colNameMod = colName;
+        colNameMod = StringUtils.replaceChars( colNameMod, ':', '.' );
+        colNameMod = StringUtils.replaceChars( colNameMod, '|', '.' );
+        colNameMod = StringUtils.replaceChars( colNameMod, '-', '.' );
+        return colNameMod;
     }
 
 }

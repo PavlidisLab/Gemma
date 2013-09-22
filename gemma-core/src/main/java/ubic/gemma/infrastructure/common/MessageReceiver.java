@@ -24,7 +24,7 @@ package ubic.gemma.infrastructure.common;
  * @author: anton date: 08/02/13
  */
 public interface MessageReceiver<T> {
-    T receive();
-
     T blockingReceive();
+
+    T receive();
 }
