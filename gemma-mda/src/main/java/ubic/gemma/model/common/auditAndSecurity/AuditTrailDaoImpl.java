@@ -22,7 +22,6 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -44,7 +44,6 @@ import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -62,9 +61,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
-
-    @Autowired
-    private DesignElementDataVectorService dedvService;
 
     @Before
     public void setUp() throws Exception {

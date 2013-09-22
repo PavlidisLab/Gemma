@@ -177,6 +177,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * @see ubic.gemma.model.association.RelationshipDao#update(Collection)
      */
+    @SuppressWarnings("unused")
     public void update( final Collection<? extends Probe2ProbeCoexpression> entities ) {
         throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
@@ -184,6 +185,7 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#update(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)
      */
+    @SuppressWarnings("unused")
     public void update( Probe2ProbeCoexpression probe2ProbeCoexpression ) {
         throw new UnsupportedOperationException( "Immutable, update not supported" );
     }

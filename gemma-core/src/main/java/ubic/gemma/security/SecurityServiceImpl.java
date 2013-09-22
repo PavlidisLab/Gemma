@@ -629,6 +629,47 @@ public class SecurityServiceImpl implements SecurityService {
         return result;
     }
 
+    @Override
+    public <T extends Securable> Map<T, Boolean> hasPermission( Collection<T> svos,
+            List<Permission> requiredPermissions, Authentication authentication ) {
+
+        Map<T, Boolean> result = new HashMap<T, Boolean>();
+
+        if ( svos.isEmpty() ) return result;
+
+        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( svos );
+
+        /*
+         * Take advantage of fast bulk loading of ACLs.
+         */
+
+        Map<ObjectIdentity, Acl> acls = aclService
+                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+
+        assert !acls.isEmpty();
+
+        List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
+
+        assert !sids.isEmpty();
+
+        for ( ObjectIdentity oi : acls.keySet() ) {
+            Acl acl = acls.get( oi );
+
+            try {
+                boolean granted = acl.isGranted( requiredPermissions, sids, false );
+
+                result.put( ( T ) objectIdentities.get( oi ), granted );
+            } catch ( NotFoundException ignore ) { // this won't happen?
+                /*
+                 * The user is anonymous.
+                 */
+                result.put( ( T ) objectIdentities.get( oi ), false );
+            }
+        }
+        return result;
+
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -636,7 +677,7 @@ public class SecurityServiceImpl implements SecurityService {
      * org.springframework.security.core.Authentication)
      */
     @Override
-    public Map<SecureValueObject, Boolean> hasPermission( Collection<SecureValueObject> svos,
+    public Map<SecureValueObject, Boolean> hasPermissionVO( Collection<SecureValueObject> svos,
             List<Permission> requiredPermissions, Authentication authentication ) {
 
         Map<SecureValueObject, Boolean> result = new HashMap<SecureValueObject, Boolean>();
@@ -684,7 +725,7 @@ public class SecurityServiceImpl implements SecurityService {
      * java.util.List, org.springframework.security.core.Authentication)
      */
     @Override
-    public boolean hasPermission( SecureValueObject svo, List<Permission> requiredPermissions,
+    public boolean hasPermissionVO( SecureValueObject svo, List<Permission> requiredPermissions,
             Authentication authentication ) {
 
         List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
