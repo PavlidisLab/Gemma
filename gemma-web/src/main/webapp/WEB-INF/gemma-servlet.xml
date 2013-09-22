@@ -22,7 +22,7 @@
 
 
 	<!-- This is provided by spring by default, but this declaration is needed because we define other mappers, and to allow 
-		configuration of the interceptor; otherwise this would be configured by default. -->
+		configuration of the interceptor; otherwise this would be configured by default. TODO: switch to RequestMappingHandlerMapping -->
 	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
 		<property name="order" value="1" />
 	</bean>
@@ -227,7 +227,6 @@
 		<dwr:config-param name="allowScriptTagRemoting" value="true" />
 		<dwr:config-param name="crossDomainSessionSecurity" value="false" />
 	</dwr:controller>
-
 
 	<bean id="javascriptLogger" class="ubic.gemma.web.util.JavascriptLogger">
 		<dwr:remote javascript="JavascriptLogger" />

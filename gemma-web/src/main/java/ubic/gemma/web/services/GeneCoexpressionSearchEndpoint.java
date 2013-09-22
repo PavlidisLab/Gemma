@@ -63,7 +63,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
         expressionExperimentSetService = service;
     }
 
-    public void setgeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
+    public void setGeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
         this.geneCoexpressionService = geneCoexpressionService;
     }
 

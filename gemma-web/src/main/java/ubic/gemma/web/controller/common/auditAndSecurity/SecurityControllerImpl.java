@@ -801,7 +801,7 @@ public class SecurityControllerImpl implements SecurityController {
      * @param currentGroup A specific group that we're focusing on. Can be null
      * @return
      */
-    private Collection<SecurityInfoValueObject> securables2VOs( Collection<? extends Securable> securables,
+    private <T extends Securable> Collection<SecurityInfoValueObject> securables2VOs( Collection<T> securables,
             String currentGroup ) {
 
         Collection<SecurityInfoValueObject> result = new HashSet<SecurityInfoValueObject>();
@@ -814,11 +814,11 @@ public class SecurityControllerImpl implements SecurityController {
          * Fast computations out-of-loop
          */
         Collection<String> groupsForCurrentUser = getGroupsForCurrentUser();
-        Map<Securable, Boolean> privacy = securityService.arePrivate( securables );
-        Map<Securable, Boolean> sharedness = securityService.areShared( securables );
-        Map<Securable, Sid> owners = securityService.getOwners( securables );
-        Map<Securable, Collection<String>> groupsReadableBy = securityService.getGroupsReadableBy( securables );
-        Map<Securable, Collection<String>> groupsEditableBy = securityService.getGroupsEditableBy( securables );
+        Map<T, Boolean> privacy = securityService.arePrivate( securables );
+        Map<T, Boolean> sharedness = securityService.areShared( securables );
+        Map<T, Sid> owners = securityService.getOwners( securables );
+        Map<T, Collection<String>> groupsReadableBy = securityService.getGroupsReadableBy( securables );
+        Map<T, Collection<String>> groupsEditableBy = securityService.getGroupsEditableBy( securables );
 
         // int i = 0; // TESTING
         for ( Securable s : securables ) {

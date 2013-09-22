@@ -239,9 +239,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
             ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Function to get a count of expression experiments, grouped by Taxon
-     * </p>
      */
     public Map<Taxon, Long> getPerTaxonCount();
 
@@ -303,7 +301,13 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples)
      */
-    public ubic.gemma.model.genome.Taxon getTaxon( BioAssaySet bioAssaySet );
+    public Taxon getTaxon( BioAssaySet bioAssaySet );
+
+    /**
+     * @param bioAssaySets
+     * @return
+     */
+    public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     /**
      * Includes ones which are untroubled and which don't have a troubled ArrayDesign.

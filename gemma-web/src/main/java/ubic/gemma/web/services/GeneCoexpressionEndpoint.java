@@ -65,6 +65,10 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
      */
     public static final String LOCAL_NAME = "geneCoexpression";
 
+    public void setGeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
+        this.geneCoexpressionService = geneCoexpressionService;
+    }
+
     /**
      * The maximum number of coexpression results to return per input gene; a value of zero will return all possible
      * results (ie. max is infinity). We limit this to avoid results sets from blowing up ridiculously.

@@ -375,7 +375,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public Map<Class<?>, List<SearchResult>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
-        SearchSettings settings = SearchSettingsValueObject.Converter.toEntity( settingsValueObject );
+        SearchSettings settings = SearchSettingsValueObject.toEntity( settingsValueObject );
         return this.search( settings );
     }
 

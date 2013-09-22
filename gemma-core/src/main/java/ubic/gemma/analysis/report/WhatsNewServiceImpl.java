@@ -383,21 +383,23 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         Taxon t = null;
 
         Collection<Long> ids;
+
+        Collection<ExpressionExperiment> publicEEs = securityService.choosePublic( ees );
+
+        Map<ExpressionExperiment, Taxon> taxa = expressionExperimentService.getTaxa( publicEEs );
+
         for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) {
             ee = it.next();
-            if ( securityService.isPrivate( ee ) ) {
-                continue;
+
+            t = taxa.get( ee );
+
+            if ( eesPerTaxon.containsKey( t ) ) {
+                ids = eesPerTaxon.get( t );
+            } else {
+                ids = new ArrayList<Long>();
             }
-            t = expressionExperimentService.getTaxon( ee );
-            if ( t != null ) {
-                if ( eesPerTaxon.containsKey( t ) ) {
-                    ids = eesPerTaxon.get( t );
-                } else {
-                    ids = new ArrayList<Long>();
-                }
-                ids.add( ee.getId() );
-                eesPerTaxon.put( t, ids );
-            }
+            ids.add( ee.getId() );
+            eesPerTaxon.put( t, ids );
         }
         return eesPerTaxon;
     }

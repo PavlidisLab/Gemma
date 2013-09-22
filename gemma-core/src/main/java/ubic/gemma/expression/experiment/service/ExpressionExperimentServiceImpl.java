@@ -975,6 +975,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Override
     @Transactional(readOnly = true)
+    public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
+        return this.expressionExperimentDao.getTaxa( bioAssaySets );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
         Collection<Long> firstPass = this.expressionExperimentDao.getUntroubled( ids );
 

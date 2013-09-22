@@ -120,7 +120,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      */
     @Override
     public JsonReaderResponse<SearchResult> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
-        SearchSettings settings = SearchSettingsValueObject.Converter.toEntity( settingsValueObject );
+        SearchSettings settings = SearchSettingsValueObject.toEntity( settingsValueObject );
 
         List<SearchResult> finalResults = new ArrayList<SearchResult>();
         if ( settings == null || StringUtils.isBlank( settings.getQuery() )

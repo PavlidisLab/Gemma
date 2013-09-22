@@ -19,7 +19,6 @@
 package ubic.gemma.web.feed;
 
 import gemma.gsec.SecurityService;
-import gemma.gsec.model.Securable;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -122,7 +121,7 @@ public class TwitterOutbound {
         // Query latest experiments if there are no updated / new experiments
         if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
             Collection<ExpressionExperiment> latestExperiments = expressionExperimentService.findByUpdatedLimit( 10 );
-            Collection<Securable> publicExperiments = securityService.choosePublic( latestExperiments );
+            Collection<ExpressionExperiment> publicExperiments = securityService.choosePublic( latestExperiments );
 
             if ( publicExperiments.isEmpty() ) {
                 throw new IllegalStateException( "There are no valid experiments to tweet about" );

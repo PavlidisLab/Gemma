@@ -19,7 +19,6 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
-import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
 
 import java.io.IOException;
@@ -1900,7 +1899,7 @@ public class ExpressionExperimentController {
 
         // Hide public data sets if desired.
         if ( !valueobjects.isEmpty() && !showPublic ) {
-            Collection<Securable> publicEEs = securityService.choosePublic( valueobjects );
+            Collection<ExpressionExperimentValueObject> publicEEs = securityService.choosePublic( valueobjects );
             valueobjects.removeAll( publicEEs );
         }
 

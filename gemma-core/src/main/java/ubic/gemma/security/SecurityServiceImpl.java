@@ -113,21 +113,21 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#areNonPublicButReadableByCurrentUser(java.util.Collection)
      */
     @Override
-    public Map<Securable, Boolean> areNonPublicButReadableByCurrentUser( Collection<? extends Securable> securables ) {
+    public <T extends Securable> Map<T, Boolean> areNonPublicButReadableByCurrentUser( Collection<T> securables ) {
 
-        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
+        Map<T, Boolean> result = new HashMap<T, Boolean>();
 
-        for ( Securable s : securables ) {
+        for ( T s : securables ) {
             result.put( s, false );
         }
 
-        Collection<Securable> privateOnes = this.choosePrivate( securables );
+        Collection<T> privateOnes = this.choosePrivate( securables );
 
         if ( privateOnes.isEmpty() ) return result;
 
         String currentUsername = userManager.getCurrentUsername();
 
-        for ( Securable s : privateOnes ) {
+        for ( T s : privateOnes ) {
             try {
                 if ( this.isViewableByUser( s, currentUsername ) ) {
                     result.put( s, true );
@@ -147,11 +147,11 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#areOwnedByCurrentUser(java.util.Collection)
      */
     @Override
-    public Map<Securable, Boolean> areOwnedByCurrentUser( Collection<? extends Securable> securables ) {
+    public <T extends Securable> Map<T, Boolean> areOwnedByCurrentUser( Collection<T> securables ) {
 
-        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
+        Map<T, Boolean> result = new HashMap<T, Boolean>();
 
-        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+        Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
 
         if ( objectIdentities.isEmpty() ) return result;
 
@@ -188,9 +188,9 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
-    public java.util.Map<Securable, Boolean> arePrivate( Collection<? extends Securable> securables ) {
-        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
-        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+    public <T extends Securable> Map<T, Boolean> arePrivate( Collection<T> securables ) {
+        Map<T, Boolean> result = new HashMap<T, Boolean>();
+        Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
 
         if ( objectIdentities.isEmpty() ) return result;
 
@@ -215,9 +215,9 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#areShared(java.util.Collection)
      */
     @Override
-    public Map<Securable, Boolean> areShared( Collection<? extends Securable> securables ) {
-        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
-        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+    public <T extends Securable> Map<T, Boolean> areShared( Collection<T> securables ) {
+        Map<T, Boolean> result = new HashMap<T, Boolean>();
+        Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
 
         if ( objectIdentities.isEmpty() ) return result;
 
@@ -238,11 +238,11 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#choosePrivate(java.util.Collection)
      */
     @Override
-    public Collection<Securable> choosePrivate( Collection<? extends Securable> securables ) {
-        Collection<Securable> result = new HashSet<Securable>();
-        Map<Securable, Boolean> arePrivate = arePrivate( securables );
+    public <T extends Securable> Collection<T> choosePrivate( Collection<T> securables ) {
+        Collection<T> result = new HashSet<>();
+        Map<T, Boolean> arePrivate = arePrivate( securables );
 
-        for ( Securable s : securables ) {
+        for ( T s : securables ) {
             if ( arePrivate.get( s ) ) result.add( s );
         }
         return result;
@@ -255,12 +255,12 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<Securable> choosePublic( Collection<? extends Securable> securables ) {
-        Collection<Securable> result = new HashSet<Securable>();
+    public <T extends Securable> Collection<T> choosePublic( Collection<T> securables ) {
+        Collection<T> result = new HashSet<>();
 
-        Map<Securable, Boolean> arePrivate = arePrivate( securables );
+        Map<T, Boolean> arePrivate = arePrivate( securables );
 
-        for ( Securable s : securables ) {
+        for ( T s : securables ) {
             if ( !arePrivate.get( s ) ) result.add( s );
         }
         return result;
@@ -349,12 +349,12 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#getAcls(java.util.Collection)
      */
     @Override
-    public Map<Securable, Acl> getAcls( Collection<? extends Securable> securables ) {
+    public <T extends Securable> Map<T, Acl> getAcls( Collection<T> securables ) {
         if ( securables.isEmpty() ) {
             throw new IllegalArgumentException( "Must provide securables" );
         }
 
-        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+        Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
 
         assert !objectIdentities.isEmpty();
 
@@ -364,9 +364,9 @@ public class SecurityServiceImpl implements SecurityService {
         Map<ObjectIdentity, Acl> acls = aclService
                 .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
 
-        Map<Securable, Acl> result = new HashMap<Securable, Acl>();
+        Map<T, Acl> result = new HashMap<>();
         for ( ObjectIdentity o : acls.keySet() ) {
-            Securable se = objectIdentities.get( o );
+            T se = objectIdentities.get( o );
             assert se != null;
             result.put( se, acls.get( o ) );
         }
@@ -464,10 +464,10 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
-    public Map<Securable, Collection<String>> getGroupsEditableBy( Collection<? extends Securable> securables ) {
+    public <T extends Securable> Map<T, Collection<String>> getGroupsEditableBy( Collection<T> securables ) {
         Collection<String> groupNames = getGroupsUserCanView();
 
-        Map<Securable, Collection<String>> result = new HashMap<Securable, Collection<String>>();
+        Map<T, Collection<String>> result = new HashMap<T, Collection<String>>();
 
         List<Permission> write = new ArrayList<Permission>();
         write.add( BasePermission.WRITE );
@@ -476,7 +476,7 @@ public class SecurityServiceImpl implements SecurityService {
         admin.add( BasePermission.ADMINISTRATION );
 
         for ( String groupName : groupNames ) {
-            Map<Securable, Boolean> groupHasPermission = this.groupHasPermission( securables, write, groupName );
+            Map<T, Boolean> groupHasPermission = this.groupHasPermission( securables, write, groupName );
 
             populateGroupsEditableBy( result, groupName, groupHasPermission );
 
@@ -517,9 +517,9 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
-    public Map<Securable, Collection<String>> getGroupsReadableBy( Collection<? extends Securable> securables ) {
+    public <T extends Securable> Map<T, Collection<String>> getGroupsReadableBy( Collection<T> securables ) {
 
-        Map<Securable, Collection<String>> result = new HashMap<Securable, Collection<String>>();
+        Map<T, Collection<String>> result = new HashMap<T, Collection<String>>();
 
         if ( securables.isEmpty() ) return result;
 
@@ -532,7 +532,7 @@ public class SecurityServiceImpl implements SecurityService {
         admin.add( BasePermission.ADMINISTRATION );
 
         for ( String groupName : groupNames ) {
-            Map<Securable, Boolean> groupHasPermission = this.groupHasPermission( securables, read, groupName );
+            Map<T, Boolean> groupHasPermission = this.groupHasPermission( securables, read, groupName );
 
             populateGroupsEditableBy( result, groupName, groupHasPermission );
 
@@ -606,9 +606,9 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     @Secured("ACL_SECURABLE_COLLECTION_READ")
-    public Map<Securable, Sid> getOwners( Collection<? extends Securable> securables ) {
-        Map<Securable, Sid> result = new HashMap<Securable, Sid>();
-        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+    public <T extends Securable> Map<T, Sid> getOwners( Collection<T> securables ) {
+        Map<T, Sid> result = new HashMap<>();
+        Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
 
         if ( securables.isEmpty() ) return result;
 
@@ -644,7 +644,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         if ( svos.isEmpty() ) return result;
 
-        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( svos );
+        Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( svos );
 
         /*
          * Take advantage of fast bulk loading of ACLs.
@@ -695,7 +695,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         if ( svos.isEmpty() ) return result;
 
-        Map<ObjectIdentity, SecureValueObject> objectIdentities = getValueObjectIdentities( svos );
+        Map<ObjectIdentity, SecureValueObject> objectIdentities = getObjectIdentities( svos );
 
         /*
          * Take advantage of fast bulk loading of ACLs.
@@ -1377,33 +1377,18 @@ public class SecurityServiceImpl implements SecurityService {
      * @param securables
      * @return
      */
-    private Map<ObjectIdentity, Securable> getObjectIdentities( Collection<? extends Securable> securables ) {
-        Map<ObjectIdentity, Securable> result = new HashMap<ObjectIdentity, Securable>();
-        for ( Securable s : securables ) {
+    private <T extends Securable> Map<ObjectIdentity, T> getObjectIdentities( Collection<T> securables ) {
+        Map<ObjectIdentity, T> result = new HashMap<>();
+        for ( T s : securables ) {
             result.put( objectIdentityRetrievalStrategy.getObjectIdentity( s ), s );
         }
         return result;
     }
 
-    /**
-     * Specialized for value objects.
-     * 
-     * @param securables
-     * @return
-     */
-    private Map<ObjectIdentity, SecureValueObject> getValueObjectIdentities(
-            Collection<? extends SecureValueObject> securables ) {
-        Map<ObjectIdentity, SecureValueObject> result = new HashMap<ObjectIdentity, SecureValueObject>();
-        for ( SecureValueObject s : securables ) {
-            result.put( objectIdentityRetrievalStrategy.getObjectIdentity( s ), s );
-        }
-        return result;
-    }
-
-    private Map<Securable, Boolean> groupHasPermission( Collection<? extends Securable> securables,
+    private <T extends Securable> Map<T, Boolean> groupHasPermission( Collection<T> securables,
             List<Permission> requiredPermissions, String groupName ) {
-        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
-        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+        Map<T, Boolean> result = new HashMap<>();
+        Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
 
         List<GrantedAuthority> auths = userManager.findGroupAuthorities( groupName );
 
@@ -1481,9 +1466,9 @@ public class SecurityServiceImpl implements SecurityService {
         }
     }
 
-    private void populateGroupsEditableBy( Map<Securable, Collection<String>> result, String groupName,
-            Map<Securable, Boolean> groupHasPermission ) {
-        for ( Securable s : groupHasPermission.keySet() ) {
+    private <T extends Securable> void populateGroupsEditableBy( Map<T, Collection<String>> result, String groupName,
+            Map<T, Boolean> groupHasPermission ) {
+        for ( T s : groupHasPermission.keySet() ) {
             if ( groupHasPermission.get( s ) ) {
                 if ( !result.containsKey( s ) ) {
                     result.put( s, new HashSet<String>() );

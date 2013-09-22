@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.monitor.Monitored;
 
@@ -187,7 +188,7 @@ public interface ExpressionExperimentService {
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene, double rank );
+    public Collection<ExpressionExperiment> findByExpressedGene( Gene gene, double rank );
 
     /**
      * @param factorValue
@@ -222,7 +223,7 @@ public interface ExpressionExperimentService {
      * hybidizes to the given Gene)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> findByGene( ubic.gemma.model.genome.Gene gene );
+    public Collection<ExpressionExperiment> findByGene( Gene gene );
 
     /**
      * @param investigator
@@ -243,7 +244,7 @@ public interface ExpressionExperimentService {
      * gets all EE that match the given parent Taxon
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<ExpressionExperiment> findByParentTaxon( Taxon taxon );
 
     /**
      * @param type
@@ -264,7 +265,7 @@ public interface ExpressionExperimentService {
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
 
     /**
      * @param taxon
@@ -272,7 +273,7 @@ public interface ExpressionExperimentService {
      * @return in order of last update (most recent first)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon, Integer limit );
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit );
 
     /**
      * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated
@@ -496,7 +497,13 @@ public interface ExpressionExperimentService {
      * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public ubic.gemma.model.genome.Taxon getTaxon( BioAssaySet expressionExperiment );
+    public Taxon getTaxon( BioAssaySet bioAssaySet );
+
+    /**
+     * @param publicEEs
+     * @return
+     */
+    public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     /**
      * Of the given EE ids, get the ones which are not troubled.

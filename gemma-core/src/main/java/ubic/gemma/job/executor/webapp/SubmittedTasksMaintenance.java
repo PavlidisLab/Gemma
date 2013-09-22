@@ -40,9 +40,11 @@ public class SubmittedTasksMaintenance {
         // Assumes collection implementing weakly consistent iterator with remove support.
         Collection<SubmittedTask<? extends TaskResult>> tasks = taskRunningService.getSubmittedTasks();
 
-        log.info( "Doing submitted tasks maintenance: " + tasks.size() + " tasks monitored." );
+        if ( tasks.size() > 0 ) log.info( "Submitted tasks maintenance: " + tasks.size() + " tasks monitored." );
 
-        for ( SubmittedTask task : tasks ) {
+        for ( SubmittedTask<?> task : tasks ) {
+            log.info( "Checking task: " + task.getTaskCommand().getClass().getSimpleName() + task.getTaskId()
+                    + " started=" + task.getStartTime() + " status=" + task.getStatus() );
             switch ( task.getStatus() ) {
                 case QUEUED:
                     Date submissionTime = task.getSubmissionTime();
@@ -76,9 +78,9 @@ public class SubmittedTasksMaintenance {
                     }
                     break;
                 case CANCELLING:
-
                     break;
                 case FAILED:
+                    // fall through
                 case COMPLETED:
                     if ( task.getFinishTime().before(
                             DateUtils.addMinutes( new Date(), -MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES ) ) ) {

@@ -19,7 +19,6 @@
 package ubic.gemma.analysis.report;
 
 import gemma.gsec.SecurityService;
-import gemma.gsec.model.Securable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -67,8 +66,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
 import ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 
 /**
@@ -313,8 +312,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
 
-        Map<Securable, Boolean> privacyInfo = securityService.arePrivate( ees );
-        Map<Securable, Boolean> sharingInfo = securityService.areShared( ees );
+        Map<ExpressionExperiment, Boolean> privacyInfo = securityService.arePrivate( ees );
+        Map<ExpressionExperiment, Boolean> sharingInfo = securityService.areShared( ees );
 
         /*
          * add in the last events of interest for all eeVos This step is remarkably slow.
@@ -453,7 +452,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         return results;
     }
-
 
     @Override
     public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos ) {

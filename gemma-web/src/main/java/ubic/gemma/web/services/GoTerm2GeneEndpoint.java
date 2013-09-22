@@ -42,16 +42,16 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
 
 public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
 
+    /**
+     * The local name of the expected request/response.
+     */
+    public static final String GO2Gene_LOCAL_NAME = "goTerm2Gene";
+
     private static Log log = LogFactory.getLog( GoTerm2GeneEndpoint.class );
 
     private GeneOntologyService geneOntologyService;
 
     private TaxonService taxonService;
-
-    /**
-     * The local name of the expected request/response.
-     */
-    public static final String GO2Gene_LOCAL_NAME = "goTerm2Gene";
 
     /**
      * Sets the "business service" to delegate to.
@@ -62,6 +62,10 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
 
     public void settaxonService( TaxonService taxS ) {
         this.taxonService = taxS;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**

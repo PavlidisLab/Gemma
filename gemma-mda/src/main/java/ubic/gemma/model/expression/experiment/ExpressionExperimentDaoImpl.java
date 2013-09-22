@@ -26,7 +26,6 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateAccessor;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -1643,7 +1642,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         HibernateTemplate tp = new HibernateTemplate( this.getSessionFactory() );
         tp.setMaxResults( 1 );
-        tp.setFlushMode( HibernateAccessor.FLUSH_NEVER );
 
         if ( ee instanceof ExpressionExperiment ) {
             String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "
@@ -1661,6 +1659,49 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getTaxa(java.util.Collection)
+     */
+    @Override
+    public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
+
+        HibernateTemplate tp = new HibernateTemplate( this.getSessionFactory() );
+
+        Map<T, Taxon> result = new HashMap<>();
+
+        if ( bioAssaySets.isEmpty() ) return result;
+
+        // is this going to run into problems if there are too many ees given? Need to batch?
+        T example = bioAssaySets.iterator().next();
+        List<?> list = null;
+        if ( ExpressionExperiment.class.isAssignableFrom( example.getClass() ) ) {
+            String queryString = "select EE, SU.sourceTaxon from ExpressionExperimentImpl as EE "
+                    + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE in (:ees)";
+            list = tp.findByNamedParam( queryString, "ees", bioAssaySets );
+        } else if ( ExpressionExperimentSubSet.class.isAssignableFrom( example.getClass() ) ) {
+            String queryString = "select eess, su.sourceTaxon from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee"
+                    + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess in (:ees)";
+            list = tp.findByNamedParam( queryString, "ees", bioAssaySets );
+        } else {
+            throw new UnsupportedOperationException( "Can't get taxon of BioAssaySet of class "
+                    + example.getClass().getName() );
+        }
+
+        for ( Object o : list ) {
+            Object[] oa = ( Object[] ) o;
+
+            @SuppressWarnings("unchecked")
+            T e = ( T ) oa[0];
+            Taxon t = ( Taxon ) oa[1];
+            result.put( e, t );
+
+        }
+
+        return result;
     }
 
     /*
@@ -2070,4 +2111,5 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getLowessY() );
         }
     }
+
 }
