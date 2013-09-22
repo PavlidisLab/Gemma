@@ -130,7 +130,7 @@ public interface ArrayDesignService {
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( Long id );
+    public Collection<BioAssay> getAllAssociatedBioAssays( Long id );
 
     /**
      * 
@@ -141,55 +141,47 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * Gets the AuditEvents of the latest annotation file event for the specified array design ids. This returns a map
      * of id -> AuditEvent. If the events do not exist, the map entry will point to null.
-     * </p>
      */
-    public java.util.Map<Long, AuditEvent> getLastAnnotationFile( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastAnnotationFile( Collection<Long> ids );
 
     /**
-     * <p>
      * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id ->
      * AuditEvent. If the events do not exist, the map entry will point to null.
-     * </p>
      */
-    public java.util.Map<Long, AuditEvent> getLastGeneMapping( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map<Long, AuditEvent> getLastRepeatAnalysis( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastRepeatAnalysis( Collection<Long> ids );
 
     /**
-     * <p>
      * Gets the AuditEvents of the latest sequence analyses for the specified array design ids. This returns a map of id
      * -> AuditEvent. If the events do not exist, the map entry will point to null.
-     * </p>
      */
-    public java.util.Map<Long, AuditEvent> getLastSequenceAnalysis( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastSequenceAnalysis( Collection<Long> ids );
 
     /**
-     * <p>
      * Gets the AuditEvents of the latest sequence update for the specified array design ids. This returns a map of id
      * -> AuditEvent. If the events do not exist, the map entry will point to null.
-     * </p>
      */
-    public java.util.Map<Long, AuditEvent> getLastSequenceUpdate( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastSequenceUpdate( Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map<Long, AuditEvent> getLastTroubleEvent( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastTroubleEvent( Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map<Long, AuditEvent> getLastValidationEvent( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastValidationEvent( Collection<Long> ids );
 
     /**
      * @return a map of taxon -> count of how many array designs there are for that taxon. Taxa with no arrays are
@@ -203,7 +195,7 @@ public interface ArrayDesignService {
      * @param id The id of the array design
      * @return The Set of Taxons for array design.
      */
-    public java.util.Collection<Taxon> getTaxa( Long id );
+    public Collection<Taxon> getTaxa( Long id );
 
     /**
      * Return the taxon for the array design. This can be misleading if the array uses multiple taxa: this method will
@@ -220,22 +212,22 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    public java.util.Map<Long, Boolean> isMerged( java.util.Collection<Long> ids );
+    public Map<Long, Boolean> isMerged( Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map<Long, Boolean> isMergee( java.util.Collection<Long> ids );
+    public Map<Long, Boolean> isMergee( Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map<Long, Boolean> isSubsumed( java.util.Collection<Long> ids );
+    public Map<Long, Boolean> isSubsumed( Collection<Long> ids );
 
     /**
      * 
      */
-    public java.util.Map<Long, Boolean> isSubsumer( java.util.Collection<Long> ids );
+    public Map<Long, Boolean> isSubsumer( Collection<Long> ids );
 
     /**
      * 
@@ -250,114 +242,87 @@ public interface ArrayDesignService {
     public Collection<ArrayDesign> loadAll();
 
     /**
-     * <p>
      * loads all Array designs as value objects.
-     * </p>
      */
-    public java.util.Collection<ArrayDesignValueObject> loadAllValueObjects();
+    public Collection<ArrayDesignValueObject> loadAllValueObjects();
 
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );
 
     /**
      * @param arrayDesign
      * @return map of compositesequences to alignments, if available.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * Given a collection of ID (longs) will return a collection of ArrayDesigns
-     * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ArrayDesign> loadMultiple( java.util.Collection<Long> ids );
+    public Collection<ArrayDesign> loadMultiple( Collection<Long> ids );
 
     /**
-     * <p>
      * loads the Value Objects for the Array Designs specified by the input ids.
-     * </p>
      */
     public ArrayDesignValueObject loadValueObject( Long id );
 
     /**
-     * <p>
      * loads the Value Objects for the Array Designs specified by the input ids.
-     * </p>
      */
-    public Collection<ArrayDesignValueObject> loadValueObjects( java.util.Collection<Long> ids );
+    public Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids );
 
     /**
-     * <p>
      * Function to return a count of all compositeSequences with bioSequence associations
-     * </p>
      */
     public long numAllCompositeSequenceWithBioSequences();
 
     /**
-     * <p>
      * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
-     * </p>
      */
-    public long numAllCompositeSequenceWithBioSequences( java.util.Collection<Long> ids );
+    public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids );
 
     /**
-     * <p>
      * Function to return all composite sequences with blat results
-     * </p>
      */
     public long numAllCompositeSequenceWithBlatResults();
 
     /**
-     * <p>
      * Function to return the count of all composite sequences with blat results, given a list of array design Ids
-     * </p>
      */
-    public long numAllCompositeSequenceWithBlatResults( java.util.Collection<Long> ids );
+    public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids );
 
     /**
-     * <p>
      * Function to return a count of all composite sequences with associated genes.
-     * </p>
      */
     public long numAllCompositeSequenceWithGenes();
 
     /**
-     * <p>
      * Function to return the count of all composite sequences with genes, given a list of array design Ids
-     * </p>
      */
-    public long numAllCompositeSequenceWithGenes( java.util.Collection<Long> ids );
+    public long numAllCompositeSequenceWithGenes( Collection<Long> ids );
 
     /**
-     * <p>
      * Returns a count of the number of genes associated with all arrayDesigns
-     * </p>
      */
     public long numAllGenes();
 
     /**
-     * <p>
      * Returns the number of unique Genes associated with the collection of ArrayDesign ids.
-     * </p>
      */
-    public long numAllGenes( java.util.Collection<Long> ids );
+    public long numAllGenes( Collection<Long> ids );
 
     /**
-     * <p>
      * returns the number of bioSequences associated with this ArrayDesign id
-     * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numBioSequences( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * returns the number of BlatResults (BioSequence2GeneProduct) entries associated with this ArrayDesign id.
-     * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numBlatResults( ArrayDesign arrayDesign );

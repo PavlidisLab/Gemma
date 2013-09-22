@@ -19,42 +19,33 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
  * <p>
- * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>ubic.gemma.model.common.description.Characteristic</code>.
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Characteristic</code>.
  * </p>
  * 
- * @see ubic.gemma.model.common.description.Characteristic
+ * @see Characteristic
  */
-public abstract class CharacteristicDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.common.description.CharacteristicDao {
+public abstract class CharacteristicDaoBase extends HibernateDaoSupport implements CharacteristicDao {
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#create(int, java.util.Collection)
+     * @see CharacteristicDao#create(int, Collection)
      */
     @Override
-    public java.util.Collection<? extends Characteristic> create(
-            final java.util.Collection<? extends Characteristic> entities ) {
+    public Collection<? extends Characteristic> create( final Collection<? extends Characteristic> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Characteristic.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Characteristic> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+
+        for ( Iterator<? extends Characteristic> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+            create( entityIterator.next() );
+        }
+
         return entities;
     }
 
@@ -64,11 +55,10 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#create(int transform,
-     *      ubic.gemma.model.common.description.Characteristic)
+     * @see CharacteristicDao#create(int transform, Characteristic)
      */
     @Override
-    public Characteristic create( final ubic.gemma.model.common.description.Characteristic characteristic ) {
+    public Characteristic create( final Characteristic characteristic ) {
         if ( characteristic == null ) {
             throw new IllegalArgumentException( "Characteristic.create - 'characteristic' can not be null" );
         }
@@ -77,97 +67,95 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#findByParentClass(java.lang.Class)
+     * @see CharacteristicDao#findByParentClass(Class)
      */
     @Override
-    public Map<Characteristic, Object> findByParentClass( final java.lang.Class<?> parentClass ) {
+    public Map<Characteristic, Object> findByParentClass( final Class<?> parentClass ) {
         return this.handleFindByParentClass( parentClass );
 
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.lang.String)
+     * @see CharacteristicDao#findByUri(String)
      */
     @Override
-    public java.util.Collection<Characteristic> findByUri( final java.lang.String searchString ) {
+    public Collection<Characteristic> findByUri( final String searchString ) {
         return this.handleFindByUri( searchString );
 
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.util.Collection)
+     * @see CharacteristicDao#findByUri(Collection)
      */
     @Override
-    public java.util.Collection<Characteristic> findByUri( final java.util.Collection<String> uris ) {
+    public Collection<Characteristic> findByUri( final Collection<String> uris ) {
         return this.handleFindByUri( uris );
 
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#findByValue(java.lang.String)
+     * @see CharacteristicDao#findByValue(String)
      */
     @Override
-    public java.util.Collection<Characteristic> findByValue( final java.lang.String search ) {
+    public Collection<Characteristic> findByValue( final String search ) {
         return this.handleFindByValue( search );
 
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#getParents(java.lang.Class, java.util.Collection)
+     * @see CharacteristicDao#getParents(Class, Collection)
      */
     @Override
-    public java.util.Map<Characteristic, Object> getParents( final java.lang.Class<?> parentClass,
-            final java.util.Collection<Characteristic> characteristics ) {
+    public Map<Characteristic, Object> getParents( final Class<?> parentClass,
+            final Collection<Characteristic> characteristics ) {
         return this.handleGetParents( parentClass, characteristics );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#load(int, java.lang.Long)
+     * @see CharacteristicDao#load(int, Long)
      */
 
     @Override
-    public Characteristic load( final java.lang.Long id ) {
+    public Characteristic load( final Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Characteristic.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.description.CharacteristicImpl.class, id );
-        return ( ubic.gemma.model.common.description.Characteristic ) entity;
+        final Object entity = this.getHibernateTemplate().get( CharacteristicImpl.class, id );
+        return ( Characteristic ) entity;
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#loadAll(int)
+     * @see CharacteristicDao#loadAll(int)
      */
 
     @Override
     @SuppressWarnings("unchecked")
-    public java.util.Collection<Characteristic> loadAll() {
-        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.description.CharacteristicImpl.class );
+    public Collection<Characteristic> loadAll() {
+        final Collection<?> results = this.getHibernateTemplate().loadAll( CharacteristicImpl.class );
         return ( Collection<Characteristic> ) results;
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#remove(java.lang.Long)
+     * @see CharacteristicDao#remove(Long)
      */
 
     @Override
-    public void remove( java.lang.Long id ) {
+    public void remove( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Characteristic.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.description.Characteristic entity = this.load( id );
+        Characteristic entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
     }
 
     /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
+     * @see ubic.gemma.model.common.SecurableDao#remove(Collection)
      */
 
     @Override
-    public void remove( java.util.Collection<? extends Characteristic> entities ) {
+    public void remove( Collection<? extends Characteristic> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Characteristic.remove - 'entities' can not be null" );
         }
@@ -175,10 +163,10 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#remove(ubic.gemma.model.common.description.Characteristic)
+     * @see CharacteristicDao#remove(Characteristic)
      */
     @Override
-    public void remove( ubic.gemma.model.common.description.Characteristic characteristic ) {
+    public void remove( Characteristic characteristic ) {
         if ( characteristic == null ) {
             throw new IllegalArgumentException( "Characteristic.remove - 'characteristic' can not be null" );
         }
@@ -186,33 +174,26 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     }
 
     /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
+     * @see ubic.gemma.model.common.SecurableDao#update(Collection)
      */
 
     @Override
-    public void update( final java.util.Collection<? extends Characteristic> entities ) {
+    public void update( final Collection<? extends Characteristic> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Characteristic.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Characteristic> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+
+        for ( Iterator<? extends Characteristic> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+            update( entityIterator.next() );
+        }
+
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicDao#update(ubic.gemma.model.common.description.Characteristic)
+     * @see CharacteristicDao#update(Characteristic)
      */
     @Override
-    public void update( ubic.gemma.model.common.description.Characteristic characteristic ) {
+    public void update( Characteristic characteristic ) {
         if ( characteristic == null ) {
             throw new IllegalArgumentException( "Characteristic.update - 'characteristic' can not be null" );
         }
@@ -220,29 +201,29 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     }
 
     /**
-     * Performs the core logic for {@link #findByParentClass(java.lang.Class)}
+     * Performs the core logic for {@link #findByParentClass(Class)}
      */
-    protected abstract java.util.Map<Characteristic, Object> handleFindByParentClass( java.lang.Class<?> parentClass );
+    protected abstract Map<Characteristic, Object> handleFindByParentClass( Class<?> parentClass );
 
     /**
-     * Performs the core logic for {@link #findByUri(java.lang.String)}
+     * Performs the core logic for {@link #findByUri(String)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.lang.String searchString );
+    protected abstract Collection<Characteristic> handleFindByUri( String searchString );
 
     /**
-     * Performs the core logic for {@link #findByUri(java.util.Collection)}
+     * Performs the core logic for {@link #findByUri(Collection)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.util.Collection<String> uris );
+    protected abstract Collection<Characteristic> handleFindByUri( Collection<String> uris );
 
     /**
-     * Performs the core logic for {@link #findByValue(java.lang.String)}
+     * Performs the core logic for {@link #findByValue(String)}
      */
-    protected abstract java.util.Collection<Characteristic> handleFindByValue( java.lang.String search );
+    protected abstract Collection<Characteristic> handleFindByValue( String search );
 
     /**
-     * Performs the core logic for {@link #getParents(java.lang.Class, java.util.Collection)}
+     * Performs the core logic for {@link #getParents(Class, Collection)}
      */
-    protected abstract java.util.Map<Characteristic, Object> handleGetParents( java.lang.Class<?> parentClass,
-            java.util.Collection<Characteristic> characteristics );
+    protected abstract Map<Characteristic, Object> handleGetParents( Class<?> parentClass,
+            Collection<Characteristic> characteristics );
 
 }

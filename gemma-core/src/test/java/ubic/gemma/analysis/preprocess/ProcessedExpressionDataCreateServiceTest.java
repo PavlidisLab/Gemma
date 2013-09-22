@@ -41,7 +41,6 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
@@ -58,7 +57,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueService;
 
 /**
  * @author pavlidis
@@ -67,36 +65,30 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    GeoService geoService;
+    private GeoService geoService;
 
     @Autowired
-    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Autowired
-    ExperimentalFactorService experimentalFactorService;
+    private ExperimentalFactorService experimentalFactorService;
 
     @Autowired
-    ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
-    ExpressionExperimentReportService experimentReportService;
+    private ExpressionExperimentReportService experimentReportService;
 
     @Autowired
-    BioMaterialService bioMaterialService;
+    private BioMaterialService bioMaterialService;
 
     @Autowired
-    BioAssayService bioAssayService;
+    private BioAssayDimensionService bioAssayDimensionService;
 
-    @Autowired
-    BioAssayDimensionService bioAssayDimensionService;
-
-    @Autowired
-    FactorValueService factorValueService;
-
-    ExpressionExperiment ee = null;
+    private ExpressionExperiment ee = null;
 
     @Test
     public void testComputeDevRankForExpressionExperimentB() throws Exception {

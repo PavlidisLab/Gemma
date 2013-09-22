@@ -155,7 +155,6 @@ public interface GeneService {
      *        single gene is entered
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly );
 
@@ -169,7 +168,6 @@ public interface GeneService {
      * @param knownGenesOnly
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public QueryGeneCoexpression getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
             Integer stringency );
 
@@ -182,13 +180,14 @@ public interface GeneService {
     /**
      * Returns a list of compositeSequences associated with the given gene and array design
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign );
 
     /**
-     * @param id gemma gene id
+     * @param id Gemma gene id
      * @return Return probes for a given gene id.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     public Collection<CompositeSequence> getCompositeSequencesById( Long id );
 
     /**

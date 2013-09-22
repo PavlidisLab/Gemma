@@ -45,11 +45,11 @@ import ubic.gemma.util.NativeQueryUtils;
 /**
  * @author Luke
  * @author Paul
- * @see ubic.gemma.model.common.description.Characteristic
+ * @see Characteristic
  * @version $Id$
  */
 @Repository
-public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.CharacteristicDaoBase {
+public class CharacteristicDaoImpl extends CharacteristicDaoBase {
 
     private static final int BATCH_SIZE = 1000;
 
@@ -63,7 +63,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDao#browse(java.lang.Integer, java.lang.Integer)
+     * @see CharacteristicDao#browse(java.lang.Integer, java.lang.Integer)
      */
     @Override
     public List<Characteristic> browse( Integer start, Integer limit ) {
@@ -77,8 +77,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDao#browse(java.lang.Integer, java.lang.Integer,
-     * java.lang.String, boolean)
+     * @see CharacteristicDao#browse(java.lang.Integer, java.lang.Integer, java.lang.String, boolean)
      */
     @Override
     public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
@@ -96,7 +95,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDao#count()
+     * @see CharacteristicDao#count()
      */
     @Override
     public Integer count() {
@@ -123,7 +122,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.util.Collection, java.util.Collection)
+     * @see CharacteristicDao#findByUri(java.util.Collection, java.util.Collection)
      */
     @Override
     public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris ) {
@@ -153,7 +152,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDao#findByUri(java.util.Collection, java.lang.String)
+     * @see CharacteristicDao#findByUri(java.util.Collection, java.lang.String)
      */
     @Override
     public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString ) {
@@ -181,7 +180,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDao#findByValue(java.util.Collection, java.lang.String)
+     * @see CharacteristicDao#findByValue(java.util.Collection, java.lang.String)
      */
     @Override
     public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
@@ -208,7 +207,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDao#getUsedCategories()
+     * @see CharacteristicDao#getUsedCategories()
      */
     @Override
     public Collection<String> getUsedCategories() {
@@ -226,7 +225,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
+     * @see CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @Override
     protected Map<Characteristic, Object> handleFindByParentClass( Class<?> parentClass ) {
@@ -247,7 +246,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.util.Collection)
+     * @see CharacteristicDaoBase#handleFindByUri(java.util.Collection)
      */
     @Override
     protected Collection<Characteristic> handleFindByUri( Collection<String> uris ) {
@@ -272,7 +271,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.lang.String)
+     * @see CharacteristicDaoBase#handleFindByUri(java.lang.String)
      */
     @Override
     protected Collection<Characteristic> handleFindByUri( String searchString ) {
@@ -283,7 +282,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
+     * @see CharacteristicDaoBase#handleFindByvalue(java.lang.String)
      */
     @Override
     protected Collection<Characteristic> handleFindByValue( String search ) {
@@ -303,8 +302,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class,
-     * java.util.Collection)
+     * @see CharacteristicDaoBase#handleFindParents(java.lang.Class, java.util.Collection)
      */
     @Override
     protected Map<Characteristic, Object> handleGetParents( Class<?> parentClass,

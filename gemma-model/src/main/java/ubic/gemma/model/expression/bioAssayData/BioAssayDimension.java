@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.util.Collection;
 import java.util.List;
 
 import ubic.gemma.model.common.Describable;
@@ -27,6 +26,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 /**
  * Stores the order of BioAssays referred to in DataVectors. Represents a set of microarrays. It can be associated with
  * one or more BioMaterialDimensions to represent the RNA samples run on the arrays.
+ * <p>
+ * Note: Not a SecuredChild. Probably should be.
  */
 public abstract class BioAssayDimension extends Describable {
 

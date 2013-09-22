@@ -28,15 +28,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.designElement.CompositeSequenceService</code>,
  * provides access to all services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.model.expression.designElement.CompositeSequenceService
  */
-public abstract class CompositeSequenceServiceBase implements
-        ubic.gemma.model.expression.designElement.CompositeSequenceService {
+public abstract class CompositeSequenceServiceBase implements CompositeSequenceService {
 
     @Autowired
     private ubic.gemma.model.expression.designElement.CompositeSequenceDao compositeSequenceDao;
