@@ -65,13 +65,6 @@ public abstract class CompoundServiceBase implements CompoundService {
     }
 
     /**
-     * Sets the reference to <code>compound</code>'s DAO.
-     */
-    public void setCompoundDao( CompoundDao compoundDao ) {
-        this.compoundDao = compoundDao;
-    }
-
-    /**
      * @see CompoundService#update(Compound)
      */
     @Override
@@ -84,7 +77,7 @@ public abstract class CompoundServiceBase implements CompoundService {
     /**
      * Gets the reference to <code>compound</code>'s DAO.
      */
-    protected CompoundDao getCompoundDao() {
+    CompoundDao getCompoundDao() {
         return this.compoundDao;
     }
 

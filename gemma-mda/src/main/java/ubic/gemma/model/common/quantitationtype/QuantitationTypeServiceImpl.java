@@ -107,13 +107,6 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
     }
 
     /**
-     * Sets the reference to <code>quantitationType</code>'s DAO.
-     */
-    public void setQuantitationTypeDao( ubic.gemma.model.common.quantitationtype.QuantitationTypeDao quantitationTypeDao ) {
-        this.quantitationTypeDao = quantitationTypeDao;
-    }
-
-    /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#update(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
@@ -126,7 +119,7 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
     /**
      * Gets the reference to <code>quantitationType</code>'s DAO.
      */
-    protected QuantitationTypeDao getQuantitationTypeDao() {
+    QuantitationTypeDao getQuantitationTypeDao() {
         return this.quantitationTypeDao;
     }
 

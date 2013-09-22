@@ -32,12 +32,8 @@ public class PhysicalLocationServiceImpl implements PhysicalLocationService {
     @Autowired
     private PhysicalLocationDao physicalLocationDao;
 
-    public PhysicalLocationDao getPhysicalLocationDao() {
+    PhysicalLocationDao getPhysicalLocationDao() {
         return physicalLocationDao;
-    }
-
-    public void setPhysicalLocationDao( PhysicalLocationDao physicalLocationDao ) {
-        this.physicalLocationDao = physicalLocationDao;
     }
 
     @Override

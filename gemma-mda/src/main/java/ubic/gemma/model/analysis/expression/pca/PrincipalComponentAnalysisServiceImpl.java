@@ -40,14 +40,10 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
     private static Log log = LogFactory.getLog( PrincipalComponentAnalysisServiceImpl.class );
 
     @Autowired
-    private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
-
-    @Autowired
     public QuantitationTypeDao quantitationTypeDao;
 
-    public PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
-        return principalComponentAnalysisDao;
-    }
+    @Autowired
+    private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
 
     /*
      * (non-Javadoc)
@@ -154,6 +150,10 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         while ( this.loadForExperiment( ee ) != null ) {
             this.principalComponentAnalysisDao.remove( this.loadForExperiment( ee ) );
         }
+    }
+
+    PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
+        return principalComponentAnalysisDao;
     }
 
 }

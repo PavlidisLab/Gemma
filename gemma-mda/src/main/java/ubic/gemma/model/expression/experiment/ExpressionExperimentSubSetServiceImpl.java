@@ -37,44 +37,18 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Autowired
-    private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
+    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
     @Autowired
-    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
+    private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 
     @Autowired
     private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
 
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#saveExpressionExperimentSubSet(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
-     */
     @Override
-    protected ExpressionExperimentSubSet handleCreate(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
-        return this.getExpressionExperimentSubSetDao().create( expressionExperimentSubSet );
-    }
-
-    /**
-     * Loads one subset, given an id
-     * 
-     * @return ExpressionExperimentSubSet
-     */
-    @Override
-    protected ExpressionExperimentSubSet handleLoad( Long id ) {
-        return this.getExpressionExperimentSubSetDao().load( id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
-     */
-    @Override
-    protected Collection<ExpressionExperimentSubSet> handleLoadAll() {
-        return ( Collection<ExpressionExperimentSubSet> ) this.getExpressionExperimentSubSetDao().loadAll();
-    }
-
-    @Override
-    public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity ) {
-        return this.getExpressionExperimentSubSetDao().findOrCreate( entity );
+    @Transactional
+    public void delete( ExpressionExperimentSubSet entity ) {
+        this.handleDelete( entity );
     }
 
     @Override
@@ -84,9 +58,17 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
     }
 
     @Override
-    @Transactional
-    public void delete( ExpressionExperimentSubSet entity ) {
-        this.handleDelete( entity );
+    public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity ) {
+        return this.getExpressionExperimentSubSetDao().findOrCreate( entity );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#saveExpressionExperimentSubSet(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
+     */
+    @Override
+    protected ExpressionExperimentSubSet handleCreate(
+            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
+        return this.getExpressionExperimentSubSetDao().create( expressionExperimentSubSet );
     }
 
     /**
@@ -129,6 +111,24 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
         this.probe2ProbeCoexpressionDao.deleteLinks( subset );
 
         this.expressionExperimentSubSetDao.remove( subset );
+    }
+
+    /**
+     * Loads one subset, given an id
+     * 
+     * @return ExpressionExperimentSubSet
+     */
+    @Override
+    protected ExpressionExperimentSubSet handleLoad( Long id ) {
+        return this.getExpressionExperimentSubSetDao().load( id );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
+     */
+    @Override
+    protected Collection<ExpressionExperimentSubSet> handleLoadAll() {
+        return ( Collection<ExpressionExperimentSubSet> ) this.getExpressionExperimentSubSetDao().loadAll();
     }
 
 }

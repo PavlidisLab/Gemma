@@ -23,27 +23,27 @@ import java.util.Collection;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @version $Id$
- * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService
+ * @see BlatAssociationService
  */
 @Service
-public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceBase {
+public class BlatAssociationServiceImpl extends BlatAssociationServiceBase {
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
+     * @see BlatAssociationService#create(BlatAssociation)
      */
     @Override
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
+    protected BlatAssociation handleCreate( BlatAssociation blatAssociation ) {
         return this.getBlatAssociationDao().create( blatAssociation );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceBase#handleFind(ubic.gemma.model.genome.Gene)
+     * @see BlatAssociationServiceBase#handleFind(ubic.gemma.model.genome.Gene)
      */
     @Override
     protected Collection<BlatAssociation> handleFind( Gene gene ) {
@@ -51,11 +51,10 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see BlatAssociationService#find(BioSequence)
      */
     @Override
-    protected java.util.Collection<BlatAssociation> handleFind(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    protected Collection<BlatAssociation> handleFind( BioSequence bioSequence ) {
         return this.getBlatAssociationDao().find( bioSequence );
     }
 

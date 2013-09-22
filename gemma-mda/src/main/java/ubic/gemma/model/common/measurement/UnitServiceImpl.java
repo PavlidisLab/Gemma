@@ -80,13 +80,6 @@ public class UnitServiceImpl implements UnitService {
     }
 
     /**
-     * @return the unitDao
-     */
-    public UnitDao getUnitDao() {
-        return unitDao;
-    }
-
-    /**
      * @param id
      * @return
      * @see ubic.gemma.model.common.measurement.UnitDao#load(java.lang.Long)
@@ -138,13 +131,6 @@ public class UnitServiceImpl implements UnitService {
     }
 
     /**
-     * @param unitDao the unitDao to set
-     */
-    public void setUnitDao( UnitDao unitDao ) {
-        this.unitDao = unitDao;
-    }
-
-    /**
      * @param entities
      * @see ubic.gemma.model.common.measurement.UnitDao#update(java.util.Collection)
      */
@@ -162,6 +148,13 @@ public class UnitServiceImpl implements UnitService {
     @Transactional
     public void update( Unit unit ) {
         unitDao.update( unit );
+    }
+
+    /**
+     * @return the unitDao
+     */
+    UnitDao getUnitDao() {
+        return unitDao;
     }
 
 }

@@ -88,13 +88,6 @@ public class ProtocolServiceImpl implements ProtocolService {
     }
 
     /**
-     * Sets the reference to <code>protocol</code>'s DAO.
-     */
-    public void setProtocolDao( ubic.gemma.model.common.protocol.ProtocolDao protocolDao ) {
-        this.protocolDao = protocolDao;
-    }
-
-    /**
      * @see ubic.gemma.model.common.protocol.ProtocolService#update(ubic.gemma.model.common.protocol.Protocol)
      */
     @Override

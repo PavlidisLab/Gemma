@@ -18,6 +18,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.genome.Gene;
 
@@ -32,16 +33,19 @@ public class GeneCoexpressionNodeDegreeServiceImpl implements GeneCoexpressionNo
     private GeneCoexpressionNodeDegreeDao geneCoexpressionNodeDegreeDao;
 
     @Override
+    @Transactional
     public Collection<GeneCoexpressionNodeDegree> create( Collection<GeneCoexpressionNodeDegree> e ) {
         return ( Collection<GeneCoexpressionNodeDegree> ) this.geneCoexpressionNodeDegreeDao.create( e );
     }
 
     @Override
+    @Transactional
     public void deleteFor( Gene gene ) {
         this.geneCoexpressionNodeDegreeDao.deleteFor( gene );
     }
 
     @Override
+    @Transactional
     public GeneCoexpressionNodeDegree create( GeneCoexpressionNodeDegree n ) {
         return this.geneCoexpressionNodeDegreeDao.create( n );
 

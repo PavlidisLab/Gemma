@@ -19,31 +19,34 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
+import java.util.List;
+
+import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * Stores the order of BioAssays referred to in DataVectors. Represents a set of microarrays. It can be associated with
  * one or more BioMaterialDimensions to represent the RNA samples run on the arrays.
  */
-public abstract class BioAssayDimension extends ubic.gemma.model.common.Describable {
+public abstract class BioAssayDimension extends Describable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.bioAssayData.BioAssayDimension}.
+     * Constructs new instances of {@link BioAssayDimension}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssayData.BioAssayDimension}.
+         * Constructs a new instance of {@link BioAssayDimension}.
          */
-        public static ubic.gemma.model.expression.bioAssayData.BioAssayDimension newInstance() {
-            return new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionImpl();
+        public static BioAssayDimension newInstance() {
+            return new BioAssayDimensionImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssayData.BioAssayDimension}, taking all
-         * possible properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link BioAssayDimension}, taking all possible properties (except the
+         * identifier(s))as arguments.
          */
-        public static ubic.gemma.model.expression.bioAssayData.BioAssayDimension newInstance( String name,
-                String description, Collection<ubic.gemma.model.expression.bioAssay.BioAssay> bioAssays ) {
-            final ubic.gemma.model.expression.bioAssayData.BioAssayDimension entity = new ubic.gemma.model.expression.bioAssayData.BioAssayDimensionImpl();
+        public static BioAssayDimension newInstance( String name, String description, List<BioAssay> bioAssays ) {
+            final BioAssayDimension entity = new BioAssayDimensionImpl();
             entity.setName( name );
             entity.setDescription( description );
             entity.setBioAssays( bioAssays );
@@ -55,25 +58,16 @@ public abstract class BioAssayDimension extends ubic.gemma.model.common.Describa
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = -3509905780277133617L;
-    private Collection<ubic.gemma.model.expression.bioAssay.BioAssay> bioAssays = new java.util.ArrayList<ubic.gemma.model.expression.bioAssay.BioAssay>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BioAssayDimension() {
-    }
+    private List<BioAssay> bioAssays = new java.util.ArrayList<BioAssay>();
 
     /**
      * 
      */
-    public Collection<ubic.gemma.model.expression.bioAssay.BioAssay> getBioAssays() {
+    public List<BioAssay> getBioAssays() {
         return this.bioAssays;
     }
 
-    public void setBioAssays( Collection<ubic.gemma.model.expression.bioAssay.BioAssay> bioAssays ) {
+    public void setBioAssays( List<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
     }
 

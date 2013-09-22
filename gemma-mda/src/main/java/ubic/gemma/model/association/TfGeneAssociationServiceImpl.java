@@ -33,16 +33,19 @@ public class TfGeneAssociationServiceImpl implements TfGeneAssociationService {
     private TfGeneAssociationDao tfGeneAssociationDao;
 
     @Override
+    @Transactional
     public Collection<? extends TfGeneAssociation> create( Collection<? extends TfGeneAssociation> entities ) {
         return tfGeneAssociationDao.create( entities );
     }
 
     @Override
+    @Transactional
     public TfGeneAssociation create( TfGeneAssociation entity ) {
         return tfGeneAssociationDao.create( entity );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene ) {
         return tfGeneAssociationDao.findByTargetGene( gene );
     }

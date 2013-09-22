@@ -32,8 +32,7 @@ public class MeasurementServiceImpl extends ubic.gemma.model.common.measurement.
      * @see ubic.gemma.model.common.measurement.MeasurementService#create(ubic.gemma.model.common.measurement.Measurement)
      */
     @Override
-    protected ubic.gemma.model.common.measurement.Measurement handleCreate(
-            ubic.gemma.model.common.measurement.Measurement measurement ) {
+    protected Measurement handleCreate( Measurement measurement ) {
         return this.getMeasurementDao().create( measurement );
     }
 

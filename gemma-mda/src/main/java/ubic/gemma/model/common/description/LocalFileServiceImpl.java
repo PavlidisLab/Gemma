@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
  * @version $Id$
  */
 @Service
-public class LocalFileServiceImpl extends ubic.gemma.model.common.description.LocalFileServiceBase {
+public class LocalFileServiceImpl extends LocalFileServiceBase {
 
     /**
      * @see ubic.gemma.model.common.description.LocalFileService#copyFile(ubic.gemma.model.common.description.LocalFile,

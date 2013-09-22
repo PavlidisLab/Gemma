@@ -19,58 +19,54 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.ContactService</code>, provides access
- * to all services and entities referenced by this service.
+ * Spring Service base class for <code>ContactService</code>, provides access to all services and entities referenced by
+ * this service.
  * 
- * @see ubic.gemma.model.common.auditAndSecurity.ContactService
+ * @see ContactService
  */
-public abstract class ContactServiceBase implements ubic.gemma.model.common.auditAndSecurity.ContactService {
+public abstract class ContactServiceBase implements ContactService {
 
     @Autowired
-    private ubic.gemma.model.common.auditAndSecurity.ContactDao contactDao;
+    private ContactDao contactDao;
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#find(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ContactService#find(Contact)
      */
     @Override
-    public ubic.gemma.model.common.auditAndSecurity.Contact find(
-            final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+    @Transactional(readOnly = true)
+    public Contact find( final Contact contact ) {
         return this.handleFind( contact );
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ContactService#findOrCreate(Contact)
      */
     @Override
-    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
-            final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+    @Transactional
+    public Contact findOrCreate( final Contact contact ) {
         return this.handleFindOrCreate( contact );
 
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#remove(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ContactService#remove(Contact)
      */
     @Override
-    public void remove( final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+    @Transactional
+    public void remove( final Contact contact ) {
         this.handleRemove( contact );
 
     }
 
     /**
-     * Sets the reference to <code>contact</code>'s DAO.
-     */
-    public void setContactDao( ubic.gemma.model.common.auditAndSecurity.ContactDao contactDao ) {
-        this.contactDao = contactDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#update(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ContactService#update(Contact)
      */
     @Override
-    public void update( final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+    @Transactional
+    public void update( final Contact contact ) {
         this.handleUpdate( contact );
 
     }
@@ -78,30 +74,28 @@ public abstract class ContactServiceBase implements ubic.gemma.model.common.audi
     /**
      * Gets the reference to <code>contact</code>'s DAO.
      */
-    protected ubic.gemma.model.common.auditAndSecurity.ContactDao getContactDao() {
+    ContactDao getContactDao() {
         return this.contactDao;
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     * Performs the core logic for {@link #find(Contact)}
      */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.Contact handleFind(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
+    protected abstract Contact handleFind( Contact contact );
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     * Performs the core logic for {@link #findOrCreate(Contact)}
      */
-    protected abstract ubic.gemma.model.common.auditAndSecurity.Contact handleFindOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
+    protected abstract Contact handleFindOrCreate( Contact contact );
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     * Performs the core logic for {@link #remove(Contact)}
      */
-    protected abstract void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact );
+    protected abstract void handleRemove( Contact contact );
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.auditAndSecurity.Contact)}
+     * Performs the core logic for {@link #update(Contact)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact );
+    protected abstract void handleUpdate( Contact contact );
 
 }

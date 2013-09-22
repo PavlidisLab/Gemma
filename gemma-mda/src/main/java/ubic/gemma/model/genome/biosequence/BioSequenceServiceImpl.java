@@ -34,7 +34,7 @@ import ubic.gemma.model.genome.Gene;
  * @see ubic.gemma.model.genome.biosequence.BioSequenceService
  */
 @Service
-public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.BioSequenceServiceBase {
+public class BioSequenceServiceImpl extends BioSequenceServiceBase {
 
     @Override
     protected Integer handleCountAll() {

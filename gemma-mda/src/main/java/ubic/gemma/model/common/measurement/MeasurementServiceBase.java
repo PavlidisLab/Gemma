@@ -22,20 +22,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.measurement.MeasurementService</code>, provides access to
- * all services and entities referenced by this service.
- * </p>
+ * Spring Service base class for <code>MeasurementService</code>, provides access to all services and entities
+ * referenced by this service.
  * 
- * @see ubic.gemma.model.common.measurement.MeasurementService
+ * @see MeasurementService
  */
-public abstract class MeasurementServiceBase implements ubic.gemma.model.common.measurement.MeasurementService {
+public abstract class MeasurementServiceBase implements MeasurementService {
 
     @Autowired
     private MeasurementDao measurementDao;
 
     /**
-     * @see ubic.gemma.model.common.measurement.MeasurementService#create(ubic.gemma.model.common.measurement.Measurement)
+     * @see MeasurementService#create(Measurement)
      */
     @Override
     @Transactional
@@ -45,21 +43,14 @@ public abstract class MeasurementServiceBase implements ubic.gemma.model.common.
     }
 
     /**
-     * Sets the reference to <code>measurement</code>'s DAO.
-     */
-    public void setMeasurementDao( MeasurementDao measurementDao ) {
-        this.measurementDao = measurementDao;
-    }
-
-    /**
      * Gets the reference to <code>measurement</code>'s DAO.
      */
-    protected MeasurementDao getMeasurementDao() {
+    MeasurementDao getMeasurementDao() {
         return this.measurementDao;
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.common.measurement.Measurement)}
+     * Performs the core logic for {@link #create(Measurement)}
      */
     protected abstract Measurement handleCreate( Measurement measurement );
 

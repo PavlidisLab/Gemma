@@ -52,11 +52,12 @@ public class JobInfoServiceImpl implements JobInfoService {
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#getJobInfoDao()
      */
-    public JobInfoDao getJobInfoDao() {
+    JobInfoDao getJobInfoDao() {
         return jobInfoDao;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<JobInfo> getUsersJobs( String userName ) {
         return jobInfoDao.getUsersJob( userName );
     }

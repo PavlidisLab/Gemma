@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @see ubic.gemma.model.common.auditAndSecurity.PersonService
  */
 @Service
-public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.PersonServiceBase {
+public class PersonServiceImpl extends PersonServiceBase {
 
     @Override
     @Transactional(readOnly = true)

@@ -24,25 +24,23 @@ import org.springframework.stereotype.Service;
  * @author keshav
  * @author pavlidis
  * @version $Id$
- * @see ubic.gemma.model.expression.biomaterial.CompoundService
+ * @see CompoundService
  */
 @Service
-public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial.CompoundServiceBase {
+public class CompoundServiceImpl extends CompoundServiceBase {
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#createFromValueObject(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see CompoundService#createFromValueObject(Compound)
      */
-    protected ubic.gemma.model.expression.biomaterial.Compound handleCreate(
-            ubic.gemma.model.expression.biomaterial.Compound compound ) {
+    protected Compound handleCreate( Compound compound ) {
         return this.getCompoundDao().create( compound );
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#find(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see CompoundService#find(Compound)
      */
     @Override
-    protected ubic.gemma.model.expression.biomaterial.Compound handleFind(
-            ubic.gemma.model.expression.biomaterial.Compound compound ) {
+    protected Compound handleFind( Compound compound ) {
         return this.getCompoundDao().find( compound );
     }
 
@@ -52,18 +50,18 @@ public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#remove(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see CompoundService#remove(Compound)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.expression.biomaterial.Compound compound ) {
+    protected void handleRemove( Compound compound ) {
         this.getCompoundDao().remove( compound );
     }
 
     /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundService#update(ubic.gemma.model.expression.biomaterial.Compound)
+     * @see CompoundService#update(Compound)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.expression.biomaterial.Compound compound ) {
+    protected void handleUpdate( Compound compound ) {
         this.getCompoundDao().update( compound );
     }
 

@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
  * @see ubic.gemma.model.common.description.DatabaseEntryService
  */
 @Service
-public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.description.DatabaseEntryServiceBase {
+public class DatabaseEntryServiceImpl extends DatabaseEntryServiceBase {
 
     @Override
     protected Integer handleCountAll() {

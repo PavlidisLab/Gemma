@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
@@ -31,6 +32,12 @@ import ubic.gemma.model.genome.Gene;
  */
 @Service
 public class Gene2GeneCoexpressionServiceImpl extends Gene2GeneCoexpressionServiceBase {
+
+    @Override
+    @Transactional(readOnly = true)
+    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis ) {
+        return this.getGene2GeneCoexpressionDao().getNumberOfLinks( gene, analysis );
+    }
 
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(java.util.Collection)
@@ -127,11 +134,6 @@ public class Gene2GeneCoexpressionServiceImpl extends Gene2GeneCoexpressionServi
         }
 
         return true;
-    }
-
-    @Override
-    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis ) {
-        return this.getGene2GeneCoexpressionDao().getNumberOfLinks( gene, analysis );
     }
 
 }

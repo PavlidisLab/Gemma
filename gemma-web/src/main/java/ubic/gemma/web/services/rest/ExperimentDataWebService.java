@@ -37,6 +37,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * REST webservice to access experiment related data using an experiments eeId The code writes to and reads from files
  * because it is leveraging existing code (technically no file creation is necessary for these tasks)
+ * 
+ * @author ?
  */
 @Service
 @Path("/experimentData")

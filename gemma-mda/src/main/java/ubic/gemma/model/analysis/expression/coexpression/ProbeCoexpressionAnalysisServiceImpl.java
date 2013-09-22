@@ -42,22 +42,6 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
     @Autowired
     private ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
 
-    public ProbeCoexpressionAnalysisDao getProbeCoexpressionAnalysisDao() {
-        return probeCoexpressionAnalysisDao;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
-        return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
-    }
-
-    @Override
-    @Transactional
-    public void update( ProbeCoexpressionAnalysis o ) {
-        this.getProbeCoexpressionAnalysisDao().update( o );
-    }
-
     /**
      * @see ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysisService#createFromValueObject(ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysis)
      */
@@ -109,6 +93,27 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
 
     @Override
     @Transactional(readOnly = true)
+    public ProbeCoexpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
+        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
+            return null;
+        }
+        Collection<ProbeCoexpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
+        if ( found.isEmpty() ) return null;
+        return found.iterator().next();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
+        return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
+    }
+
+    public ProbeCoexpressionAnalysisDao getProbeCoexpressionAnalysisDao() {
+        return probeCoexpressionAnalysisDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ProbeCoexpressionAnalysis load( Long id ) {
         return this.getProbeCoexpressionAnalysisDao().load( id );
     }
@@ -135,14 +140,9 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ProbeCoexpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
-        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
-            return null;
-        }
-        Collection<ProbeCoexpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
-        if ( found.isEmpty() ) return null;
-        return found.iterator().next();
+    @Transactional
+    public void update( ProbeCoexpressionAnalysis o ) {
+        this.getProbeCoexpressionAnalysisDao().update( o );
     }
 
 }

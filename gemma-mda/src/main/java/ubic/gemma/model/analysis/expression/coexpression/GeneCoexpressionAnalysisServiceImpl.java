@@ -36,40 +36,10 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  */
 @Service
-public class GeneCoexpressionAnalysisServiceImpl implements
-        ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService {
+public class GeneCoexpressionAnalysisServiceImpl implements GeneCoexpressionAnalysisService {
 
     @Autowired
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.AnalysisService#loadMyAnalyses()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneCoexpressionAnalysis> loadMyAnalyses() {
-        return loadEnabled();
-    }
-
-    /**
-     * Gets the reference to <code>geneCoexpressionAnalysis</code>'s DAO.
-     */
-    protected GeneCoexpressionAnalysisDao getGeneCoexpressionAnalysisDao() {
-        return this.geneCoexpressionAnalysisDao;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.AnalysisService#loadMySharedAnalyses()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneCoexpressionAnalysis> loadMySharedAnalyses() {
-        return loadEnabled();
-    }
 
     /*
      * @see
@@ -166,6 +136,30 @@ public class GeneCoexpressionAnalysisServiceImpl implements
 
     @Override
     @Transactional(readOnly = true)
+    public GeneCoexpressionAnalysis findCurrent( Taxon taxon ) {
+        Collection<GeneCoexpressionAnalysis> analyses = null;
+        if ( taxon.getIsSpecies() ) {
+            analyses = findByTaxon( taxon );
+        } else {
+            analyses = findByParentTaxon( taxon );
+        }
+
+        if ( analyses.size() == 0 ) {
+            return null;
+        }
+
+        for ( GeneCoexpressionAnalysis a : analyses ) {
+            if ( a.getEnabled() ) {
+                return a;
+            }
+        }
+
+        return null;
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) {
         return this.getGeneCoexpressionAnalysisDao().getDatasetsAnalyzed( analysis );
     }
@@ -193,6 +187,28 @@ public class GeneCoexpressionAnalysisServiceImpl implements
         return ( Collection<GeneCoexpressionAnalysis> ) this.getGeneCoexpressionAnalysisDao().loadAll();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisService#loadMyAnalyses()
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<GeneCoexpressionAnalysis> loadMyAnalyses() {
+        return loadEnabled();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisService#loadMySharedAnalyses()
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<GeneCoexpressionAnalysis> loadMySharedAnalyses() {
+        return loadEnabled();
+    }
+
     @Override
     @Transactional(readOnly = true)
     public void thaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
@@ -204,6 +220,13 @@ public class GeneCoexpressionAnalysisServiceImpl implements
     @Transactional
     public void update( GeneCoexpressionAnalysis geneCoExpressionAnalysis ) {
         this.getGeneCoexpressionAnalysisDao().update( geneCoExpressionAnalysis );
+    }
+
+    /**
+     * Gets the reference to <code>geneCoexpressionAnalysis</code>'s DAO.
+     */
+    protected GeneCoexpressionAnalysisDao getGeneCoexpressionAnalysisDao() {
+        return this.geneCoexpressionAnalysisDao;
     }
 
     /**
@@ -221,30 +244,6 @@ public class GeneCoexpressionAnalysisServiceImpl implements
         }
 
         return all;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneCoexpressionAnalysis findCurrent( Taxon taxon ) {
-        Collection<GeneCoexpressionAnalysis> analyses = null;
-        if ( taxon.getIsSpecies() ) {
-            analyses = findByTaxon( taxon );
-        } else {
-            analyses = findByParentTaxon( taxon );
-        }
-
-        if ( analyses.size() == 0 ) {
-            return null;
-        }
-
-        for ( GeneCoexpressionAnalysis a : analyses ) {
-            if ( a.getEnabled() ) {
-                return a;
-            }
-        }
-
-        return null;
-
     }
 
 }

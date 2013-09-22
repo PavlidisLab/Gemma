@@ -22,59 +22,56 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.description.DatabaseEntryService</code>, provides access
- * to all services and entities referenced by this service.
- * </p>
+ * Spring Service base class for <code>DatabaseEntryService</code>, provides access to all services and entities
+ * referenced by this service.
  * 
- * @see ubic.gemma.model.common.description.DatabaseEntryService
+ * @see DatabaseEntryService
  */
-public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.common.description.DatabaseEntryService {
+public abstract class DatabaseEntryServiceBase implements DatabaseEntryService {
 
     @Autowired
-    private ubic.gemma.model.common.description.DatabaseEntryDao databaseEntryDao;
+    private DatabaseEntryDao databaseEntryDao;
 
     /**
-     * @see ubic.gemma.model.common.description.DatabaseEntryService#countAll()
+     * @see DatabaseEntryService#countAll()
      */
     @Override
     @Transactional(readOnly = true)
-    public java.lang.Integer countAll() {
+    public Integer countAll() {
         return this.handleCountAll();
     }
 
     /**
-     * @see ubic.gemma.model.common.description.DatabaseEntryService#find(ubic.gemma.model.common.description.DatabaseEntry)
+     * @see DatabaseEntryService#find(DatabaseEntry)
      */
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.common.description.DatabaseEntry find(
-            final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
+    public DatabaseEntry find( final DatabaseEntry databaseEntry ) {
         return this.handleFind( databaseEntry );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.DatabaseEntryService#remove(ubic.gemma.model.common.description.DatabaseEntry)
+     * @see DatabaseEntryService#remove(DatabaseEntry)
      */
     @Override
     @Transactional
-    public void remove( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
+    public void remove( final DatabaseEntry databaseEntry ) {
         this.handleRemove( databaseEntry );
     }
 
     /**
      * Sets the reference to <code>databaseEntry</code>'s DAO.
      */
-    public void setDatabaseEntryDao( ubic.gemma.model.common.description.DatabaseEntryDao databaseEntryDao ) {
+    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
         this.databaseEntryDao = databaseEntryDao;
     }
 
     /**
-     * @see ubic.gemma.model.common.description.DatabaseEntryService#update(ubic.gemma.model.common.description.DatabaseEntry)
+     * @see DatabaseEntryService#update(DatabaseEntry)
      */
     @Override
     @Transactional
-    public void update( final ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
+    public void update( final DatabaseEntry databaseEntry ) {
         this.handleUpdate( databaseEntry );
 
     }
@@ -89,20 +86,20 @@ public abstract class DatabaseEntryServiceBase implements ubic.gemma.model.commo
     /**
      * Performs the core logic for {@link #countAll()}
      */
-    protected abstract java.lang.Integer handleCountAll();
+    protected abstract Integer handleCountAll();
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.description.DatabaseEntry)}
+     * Performs the core logic for {@link #find(DatabaseEntry)}
      */
     protected abstract DatabaseEntry handleFind( DatabaseEntry databaseEntry );
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.DatabaseEntry)}
+     * Performs the core logic for {@link #remove(DatabaseEntry)}
      */
     protected abstract void handleRemove( DatabaseEntry databaseEntry );
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.description.DatabaseEntry)}
+     * Performs the core logic for {@link #update(DatabaseEntry)}
      */
     protected abstract void handleUpdate( DatabaseEntry databaseEntry );
 

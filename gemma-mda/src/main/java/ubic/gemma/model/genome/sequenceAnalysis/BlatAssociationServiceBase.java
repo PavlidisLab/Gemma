@@ -18,162 +18,144 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
 /**
- * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService</code>, provides
- * access to all services and entities referenced by this service.
- * </p>
+ * Spring Service base class for <code>BlatAssociationService</code>, provides access to all services and entities
+ * referenced by this service.
  * 
- * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService
+ * @see BlatAssociationService
  */
-public abstract class BlatAssociationServiceBase implements
-        ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService {
+public abstract class BlatAssociationServiceBase implements BlatAssociationService {
 
     @Autowired
-    private ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao blatAssociationDao;
+    private BlatAssociationDao blatAssociationDao;
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
+     * @see BlatAssociationService#create(BlatAssociation)
      */
     @Override
     @Transactional
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation create(
-            final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
+    public BlatAssociation create( final BlatAssociation blatAssociation ) {
         try {
             return this.handleCreate( blatAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation)' --> "
-                            + th, th );
+            throw new BlatAssociationServiceException(
+                    "Error performing 'BlatAssociationService.create(BlatAssociation blatAssociation)' --> " + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see BlatAssociationService#find(BioSequence)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<BlatAssociation> find( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public Collection<BlatAssociation> find( final BioSequence bioSequence ) {
         try {
             return this.handleFind( bioSequence );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.find(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
-                            + th, th );
+            throw new BlatAssociationServiceException(
+                    "Error performing 'BlatAssociationService.find(BioSequence bioSequence)' --> " + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#find(ubic.gemma.model.genome.Gene)
+     * @see BlatAssociationService#find(Gene)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<BlatAssociation> find( final ubic.gemma.model.genome.Gene gene ) {
+    public Collection<BlatAssociation> find( final Gene gene ) {
         try {
             return this.handleFind( gene );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.find(ubic.gemma.model.genome.Gene gene)' --> "
-                            + th, th );
+            throw new BlatAssociationServiceException( "Error performing 'BlatAssociationService.find(Gene gene)' --> "
+                    + th, th );
         }
     }
 
     /**
-     * Sets the reference to <code>blatAssociation</code>'s DAO.
-     */
-    public void setBlatAssociationDao( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao blatAssociationDao ) {
-        this.blatAssociationDao = blatAssociationDao;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#thaw(java.util.Collection)
+     * @see BlatAssociationService#thaw(BlatAssociation)
      */
     @Override
     @Transactional(readOnly = true)
-    public void thaw( final java.util.Collection<BlatAssociation> blatAssociations ) {
-        try {
-            this.handleThaw( blatAssociations );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.thaw(java.util.Collection blatAssociations)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
+    public void thaw( final BlatAssociation blatAssociation ) {
         try {
             this.handleThaw( blatAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation)' --> "
-                            + th, th );
+            throw new BlatAssociationServiceException(
+                    "Error performing 'BlatAssociationService.thaw(BlatAssociation blatAssociation)' --> " + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService#update(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)
+     * @see BlatAssociationService#thaw(Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public void thaw( final Collection<BlatAssociation> blatAssociations ) {
+        try {
+            this.handleThaw( blatAssociations );
+        } catch ( Throwable th ) {
+            throw new BlatAssociationServiceException(
+                    "Error performing 'BlatAssociationService.thaw(Collection blatAssociations)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see BlatAssociationService#update(BlatAssociation)
      */
     @Override
     @Transactional
-    public void update( final ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) {
+    public void update( final BlatAssociation blatAssociation ) {
         try {
             this.handleUpdate( blatAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.update(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation)' --> "
-                            + th, th );
+            throw new BlatAssociationServiceException(
+                    "Error performing 'BlatAssociationService.update(BlatAssociation blatAssociation)' --> " + th, th );
         }
     }
 
     /**
      * Gets the reference to <code>blatAssociation</code>'s DAO.
      */
-    protected ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao getBlatAssociationDao() {
+    BlatAssociationDao getBlatAssociationDao() {
         return this.blatAssociationDao;
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
+     * Performs the core logic for {@link #create(BlatAssociation)}
      */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation handleCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) throws java.lang.Exception;
+    protected abstract BlatAssociation handleCreate( BlatAssociation blatAssociation ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}
+     * Performs the core logic for {@link #find(BioSequence)}
      */
-    protected abstract java.util.Collection<BlatAssociation> handleFind(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) throws java.lang.Exception;
+    protected abstract Collection<BlatAssociation> handleFind( BioSequence bioSequence ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.Gene)}
+     * Performs the core logic for {@link #find(Gene)}
      */
-    protected abstract java.util.Collection<BlatAssociation> handleFind( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception;
+    protected abstract Collection<BlatAssociation> handleFind( Gene gene ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
+     * Performs the core logic for {@link #thaw(BlatAssociation)}
      */
-    protected abstract void handleThaw( java.util.Collection<BlatAssociation> blatAssociations )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( BlatAssociation blatAssociation ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
+     * Performs the core logic for {@link #thaw(Collection)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( Collection<BlatAssociation> blatAssociations ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation)}
+     * Performs the core logic for {@link #update(BlatAssociation)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( BlatAssociation blatAssociation ) throws java.lang.Exception;
 
 }

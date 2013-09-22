@@ -24,25 +24,23 @@ import org.springframework.stereotype.Service;
  * @author keshav
  * @author pavlidis
  * @version $Id$
- * @see ubic.gemma.model.common.auditAndSecurity.ContactService
+ * @see ContactService
  */
 @Service
-public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity.ContactServiceBase {
+public class ContactServiceImpl extends ContactServiceBase {
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#createFromValueObject(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ContactService#createFromValueObject(Contact)
      */
-    protected ubic.gemma.model.common.auditAndSecurity.Contact handleCreate(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+    protected Contact handleCreate( Contact contact ) {
         return this.getContactDao().create( contact );
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#find(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ContactService#find(Contact)
      */
     @Override
-    protected ubic.gemma.model.common.auditAndSecurity.Contact handleFind(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+    protected Contact handleFind( Contact contact ) {
         return this.getContactDao().find( contact );
     }
 
@@ -52,18 +50,18 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#remove(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ContactService#remove(Contact)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+    protected void handleRemove( Contact contact ) {
         this.getContactDao().remove( contact );
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.ContactService#update(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ContactService#update(Contact)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
+    protected void handleUpdate( Contact contact ) {
         this.getContactDao().update( contact );
     }
 
