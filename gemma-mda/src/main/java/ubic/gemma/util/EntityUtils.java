@@ -138,7 +138,9 @@ public class EntityUtils {
         try {
             return Class.forName( canonicalName.endsWith( "Impl" ) ? type.getName() : type.getName() + "Impl" );
         } catch ( ClassNotFoundException e ) {
-            throw new RuntimeException( "No 'impl' class for " + type.getCanonicalName() + " found" );
+            // OLDCODE throw new RuntimeException( "No 'impl' class for " + type.getCanonicalName() + " found" );
+            // not all our mapped classes end with Impl any more.
+            return type;
         }
     }
 
