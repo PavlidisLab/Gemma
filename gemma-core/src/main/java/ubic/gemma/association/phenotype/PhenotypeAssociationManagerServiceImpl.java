@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
@@ -210,6 +211,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return evidence satisfying the specified filters
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         final Collection<EvidenceValueObject> evidenceValueObjects;
 
@@ -259,6 +261,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return The Gene we are interested in
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
@@ -278,6 +281,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return The Gene we are interested in
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
             EvidenceFilter evidenceFilter ) {
 
@@ -314,6 +318,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the genes found
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri ) {
 
@@ -363,6 +368,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the genes found
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypesValuesUri, Taxon taxon ) {
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
@@ -397,6 +403,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the phenotypes with the gene occurence
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter ) {
 
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
@@ -446,6 +453,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
     @Override
+    @Transactional
     public ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
@@ -472,6 +480,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param id The Evidence database id
      */
     @Override
+    @Transactional(readOnly = true)
     public EvidenceValueObject load( Long id ) {
 
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
@@ -488,6 +497,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Status of the operation
      */
     @Override
+    @Transactional
     public ValidateEvidenceValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
@@ -558,6 +568,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -668,6 +679,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<GeneEvidenceValueObject> list of Genes
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) {
 
         if ( query == null || query.length() == 0 ) {
@@ -720,6 +732,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return BibliographicReferenceValueObject
      */
     @Override
+    @Transactional(readOnly = true)
     public BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId ) {
 
         // check if the given pubmedID is already in the database
@@ -814,6 +827,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> the terms found
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> findExperimentCategory() {
         return this.associationService.findEvidenceCategoryTerms();
     }
@@ -828,6 +842,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @throws Exception
      */
     @Override
+    @Transactional
     public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
             Double selectionThreshold ) {
@@ -880,6 +895,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return DifferentialExpressionEvidence if an differentialExpressionEvidence exists for that id returns it
      */
     @Override
+    @Transactional(readOnly = true)
     public DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId ) {
 
@@ -903,6 +919,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> the terms found
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) {
 
@@ -916,6 +933,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param externalDatabaseName
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName ) {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName );
@@ -929,6 +947,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<String> the valueUri of the phenotypes
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
         return this.associationService.loadAllNeurocartaPhenotypes();
     }
@@ -939,6 +958,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExternalDatabaseStatisticsValueObject> loadNeurocartaStatistics() {
 
         Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new TreeSet<ExternalDatabaseStatisticsValueObject>();
@@ -957,6 +977,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * find all evidence that doesn't come from an external source
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName() {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findEvidencesWithoutExternalDatabaseName();
@@ -978,6 +999,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurrence
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) {
 
         Collection<CharacteristicValueObject> results = new TreeSet<CharacteristicValueObject>();
@@ -1009,6 +1031,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<ExternalDatabaseValueObject> the externalDatabases
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence() {
 
         Collection<ExternalDatabaseValueObject> exDatabases = ExternalDatabaseValueObject

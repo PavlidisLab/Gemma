@@ -240,6 +240,10 @@ public class PhenotypeController extends BaseController {
         return new ModelAndView( "phenotypeAssociationManager" );
     }
 
+    /**
+     * @param evidenceValueObject
+     * @return
+     */
     public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
@@ -251,6 +255,10 @@ public class PhenotypeController extends BaseController {
         return validateEvidenceValueObject;
     }
 
+    /**
+     * @param throwable
+     * @return
+     */
     private ValidateEvidenceValueObject generateValidateEvidenceValueObject( Throwable throwable ) {
         final ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
 
