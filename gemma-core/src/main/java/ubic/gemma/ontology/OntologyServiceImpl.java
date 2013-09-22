@@ -37,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.compass.core.util.concurrent.ConcurrentHashSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -504,7 +505,7 @@ public class OntologyServiceImpl implements OntologyService {
             // FIXME perhaps use this. But would want to update it periodically. e.g. cache that expires.
             // Collection<String> usedUris = characteristicService.getUsedCategories();
 
-            categoryterms = new HashSet<>();
+            categoryterms = new ConcurrentHashSet<>();
             synchronized ( categoryterms ) {
                 try {
                     BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) );

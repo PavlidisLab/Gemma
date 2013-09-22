@@ -46,9 +46,8 @@
 		</p>
 
 		<security:authorize access="hasRole('GROUP_ADMIN')">
-		Sorry, exception not available
-		<%-- this is causing stackoverflow errors ... no idea why, since upgrading to spring 3.2 from 3.0.7 --%>
-			<%-- <Gemma:exception exception="${requestScope['javax.servlet.error.exception']}" />    --%>
+			<%-- this is causing stackoverflow errors ... no idea why, since upgrading to spring 3.2 from 3.0.7 --%>
+			<Gemma:exception exception="${requestScope['javax.servlet.error.exception']}" />
 		</security:authorize>
 	</c:when>
 
