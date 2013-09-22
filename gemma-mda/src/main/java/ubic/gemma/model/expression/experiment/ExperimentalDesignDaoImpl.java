@@ -47,7 +47,7 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
                 .getSessionFactory()
                 .getCurrentSession()
                 .createQuery(
-                        "select ed from ExperimentalDesignImpl ed join fetch ed.experimentalFactors ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ed.id=:id" )
+                        "select ed from ExperimentalDesignImpl ed left join fetch ed.experimentalFactors ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ed.id=:id" )
                 .setParameter( "id", id ).uniqueResult();
     }
 
