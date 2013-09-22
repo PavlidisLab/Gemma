@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -1067,7 +1068,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<CharacteristicValueObject> phenotypesFound = new HashSet<CharacteristicValueObject>();
 
         // Phenotype ---> Genes
-        HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = this.associationService
+        Map<String, HashSet<Integer>> publicPhenotypesGenesAssociations = this.associationService
                 .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren, null, null, false, null );
 
         // for each Ontoly Term find in the search
@@ -1121,8 +1122,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             externalDatabaseIds = evidenceFilter.getExternalDatabaseIds();
         }
 
-        HashMap<String, HashSet<Integer>> publicPhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
-        HashMap<String, HashSet<Integer>> privatePhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
+        Map<String, HashSet<Integer>> publicPhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
+        Map<String, HashSet<Integer>> privatePhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
         // public phenotypes + private phenotypes (what the user can see)
         Set<String> allPhenotypesGenesAssociations = new HashSet<String>();
 

@@ -15,8 +15,8 @@
 package ubic.gemma.model.association.phenotype.service;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.security.access.annotation.Secured;
@@ -128,11 +128,10 @@ public interface PhenotypeAssociationService {
     /** find all PhenotypeAssociation for a specific NCBI id */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
-    
-    
+
     /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI,Set<String> phenotype );
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype );
 
     /** find category term that were used in the database, used to annotated Experiments */
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
@@ -146,16 +145,15 @@ public interface PhenotypeAssociationService {
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
+    public Map<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** find private evidence id that the user can modifiable or own */
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups );
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable,
-            Collection<Long> externalDatabaseIds );
+    public Map<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** return the list of the owners that have evidence in the system */
     public Collection<String> findEvidenceOwners();
@@ -185,8 +183,7 @@ public interface PhenotypeAssociationService {
      * @return Collection<ExternalDatabaseValueObject> the externalDatabases
      */
     public Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
-    
-    
+
     /** find statistics all evidences */
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence();
 
