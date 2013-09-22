@@ -306,6 +306,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional
     public void delete( final ExpressionExperiment expressionExperiment ) {
+        if ( expressionExperiment == null || expressionExperiment.getId() == null ) {
+            throw new IllegalArgumentException( "Experiment is null or had null id" );
+        }
         delete( expressionExperiment.getId() );
     }
 

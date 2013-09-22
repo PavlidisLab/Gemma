@@ -82,7 +82,11 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
 
         // this is somewhat overkill...
         for ( ExpressionExperiment ee4 : ees.loadAll() ) {
-            ees.delete( ee4 );
+            try {
+                ees.delete( ee4 );
+            } catch ( Exception e ) {
+
+            }
         }
 
         for ( ArrayDesign a : adService.loadAll() ) {

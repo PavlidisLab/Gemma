@@ -24,6 +24,7 @@ import java.util.HashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
@@ -32,106 +33,27 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 
 /**
- * @see ubic.gemma.model.genome.gene.GeneProductService
+ * @see GeneProductService
  */
 @Service
-public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GeneProductServiceBase {
+public class GeneProductServiceImpl extends GeneProductServiceBase {
 
     private static Logger log = LoggerFactory.getLogger( GeneProductServiceImpl.class );
 
     @Override
-    protected Integer handleCountAll() {
-        return this.getGeneProductDao().countAll();
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#create(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    @Override
-    protected ubic.gemma.model.genome.gene.GeneProduct handleCreate(
-            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        return this.getGeneProductDao().create( geneProduct );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    @Override
-    protected void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        this.getGeneProductDao().remove( geneProduct );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleFind(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    @Override
-    protected ubic.gemma.model.genome.gene.GeneProduct handleFind( ubic.gemma.model.genome.gene.GeneProduct gProduct ) {
-        return this.getGeneProductDao().find( gProduct );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    @Override
-    protected ubic.gemma.model.genome.gene.GeneProduct handleFindOrCreate(
-            ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        return this.getGeneProductDao().findOrCreate( geneProduct );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByName(java.lang.String)
-     */
-    @Override
-    protected Collection<Gene> handleGetGenesByName( String search ) {
-        return this.getGeneProductDao().getGenesByName( search );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
-     */
-    @Override
-    protected Collection<Gene> handleGetGenesByNcbiId( String search ) {
-        return this.getGeneProductDao().getGenesByNcbiId( search );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#load(java.lang.Long)
-     */
-    @Override
-    protected ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id ) {
-        return this.getGeneProductDao().load( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleLoadMultiple(java.util.Collection)
-     */
-    @Override
-    protected Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids ) {
-        return ( Collection<GeneProduct> ) this.getGeneProductDao().load( ids );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    @Override
-    protected void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        this.getGeneProductDao().update( geneProduct );
+    @Transactional(readOnly = true)
+    public GeneProduct findByGi( String ncbiGi ) {
+        return this.getGeneProductDao().findByNcbiId( ncbiGi );
     }
 
     @Override
-    public GeneProduct thaw( GeneProduct existing ) {
-        return this.getGeneProductDao().thaw( existing );
+    @Transactional(readOnly = true)
+    public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
+        return this.getGeneProductDao().findByName( name, taxon );
     }
 
     @Override
+    @Transactional
     public void remove( Collection<GeneProduct> toRemove ) {
         Collection<? extends BlatAssociation> associations = this.getBlatAssociationDao().find( toRemove );
         if ( !associations.isEmpty() ) {
@@ -167,13 +89,94 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     }
 
     @Override
-    public GeneProduct findByGi( String ncbiGi ) {
-        return this.getGeneProductDao().findByNcbiId( ncbiGi );
+    @Transactional(readOnly = true)
+    public GeneProduct thaw( GeneProduct existing ) {
+        return this.getGeneProductDao().thaw( existing );
     }
 
     @Override
-    public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
-        return this.getGeneProductDao().findByName( name, taxon );
+    protected Integer handleCountAll() {
+        return this.getGeneProductDao().countAll();
+    }
+
+    /**
+     * @see GeneProductService#create(GeneProduct)
+     */
+    @Override
+    protected GeneProduct handleCreate( GeneProduct geneProduct ) {
+        return this.getGeneProductDao().create( geneProduct );
+    }
+
+    /**
+     * @see GeneProductService#delete(GeneProduct)
+     */
+    @Override
+    protected void handleDelete( GeneProduct geneProduct ) {
+        this.getGeneProductDao().remove( geneProduct );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see GeneProductServiceBase#handleFind(GeneProduct)
+     */
+    @Override
+    protected GeneProduct handleFind( GeneProduct gProduct ) {
+        return this.getGeneProductDao().find( gProduct );
+    }
+
+    /**
+     * @see GeneProductService#findOrCreate(GeneProduct)
+     */
+    @Override
+    protected GeneProduct handleFindOrCreate( GeneProduct geneProduct ) {
+        return this.getGeneProductDao().findOrCreate( geneProduct );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see GeneProductServiceBase#handleGetGenesByName(java.lang.String)
+     */
+    @Override
+    protected Collection<Gene> handleGetGenesByName( String search ) {
+        return this.getGeneProductDao().getGenesByName( search );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
+     */
+    @Override
+    protected Collection<Gene> handleGetGenesByNcbiId( String search ) {
+        return this.getGeneProductDao().getGenesByNcbiId( search );
+    }
+
+    /**
+     * @see GeneProductService#load(java.lang.Long)
+     */
+    @Override
+    protected GeneProduct handleLoad( java.lang.Long id ) {
+        return this.getGeneProductDao().load( id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see GeneProductServiceBase#handleLoadMultiple(java.util.Collection)
+     */
+    @Override
+    protected Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids ) {
+        return ( Collection<GeneProduct> ) this.getGeneProductDao().load( ids );
+    }
+
+    /**
+     * @see GeneProductService#update(GeneProduct)
+     */
+    @Override
+    protected void handleUpdate( GeneProduct geneProduct ) {
+        this.getGeneProductDao().update( geneProduct );
     }
 
 }

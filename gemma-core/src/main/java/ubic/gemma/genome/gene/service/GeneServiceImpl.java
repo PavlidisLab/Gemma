@@ -202,6 +202,7 @@ public class GeneServiceImpl implements GeneService {
      * @see GeneService#findByOfficialSymbol(String)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialSymbol( final String officialSymbol ) {
         return this.getGeneDao().findByOfficalSymbol( officialSymbol );
     }
@@ -210,6 +211,7 @@ public class GeneServiceImpl implements GeneService {
      * @see GeneService#findByOfficialSymbol(String, Taxon)
      */
     @Override
+    @Transactional(readOnly = true)
     public Gene findByOfficialSymbol( final String symbol, final Taxon taxon ) {
         return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
     }
@@ -218,11 +220,13 @@ public class GeneServiceImpl implements GeneService {
      * @see GeneService#findByOfficialSymbolInexact(String)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
         if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
         Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
@@ -268,16 +272,6 @@ public class GeneServiceImpl implements GeneService {
             final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
         return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, interGenesOnly );
     }
-
-    // @Override
-    // protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
-    // return this.getGeneDao().loadPredictedGenes( taxon );
-    // }
-    //
-    // @Override
-    // protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
-    // return this.getGeneDao().loadProbeAlignedRegions( taxon );
-    // }
 
     /**
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
@@ -450,10 +444,6 @@ public class GeneServiceImpl implements GeneService {
         }
 
         return result;
-    }
-
-    Collection<Gene> handleThawLite( Collection<Gene> genes ) {
-        return this.getGeneDao().thawLite( genes );
     }
 
     /**
@@ -692,7 +682,7 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> thawLite( final Collection<Gene> genes ) {
-        return this.handleThawLite( genes );
+        return this.getGeneDao().thawLite( genes );
     }
 
     @Override

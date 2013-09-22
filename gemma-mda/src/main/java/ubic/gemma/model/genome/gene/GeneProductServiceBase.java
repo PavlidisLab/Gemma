@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,19 +30,13 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.genome.gene.GeneProductService</code>, provides access to all
- * services and entities referenced by this service.
+ * Spring Service base class for <code>GeneProductService</code>, provides access to all services and entities
+ * referenced by this service.
  * </p>
  * 
- * @see ubic.gemma.model.genome.gene.GeneProductService
+ * @see GeneProductService
  */
-public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.gene.GeneProductService {
-
-    @Autowired
-    private ubic.gemma.model.genome.gene.GeneProductDao geneProductDao;
-
-    @Autowired
-    private BlatAssociationDao blatAssociationDao;
+public abstract class GeneProductServiceBase implements GeneProductService {
 
     @Autowired
     private AnnotationAssociationDao annotationAssociationDao;
@@ -48,8 +44,14 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     @Autowired
     private BioSequenceDao bioSequenceDao;
 
+    @Autowired
+    private BlatAssociationDao blatAssociationDao;
+
+    @Autowired
+    private GeneProductDao geneProductDao;
+
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#countAll()
+     * @see GeneProductService#countAll()
      */
     @Override
     @Transactional(readOnly = true)
@@ -59,17 +61,17 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#create(ubic.gemma.model.genome.gene.GeneProduct)
+     * @see GeneProductService#create(GeneProduct)
      */
     @Override
     @Transactional
-    public ubic.gemma.model.genome.gene.GeneProduct create( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
+    public GeneProduct create( final GeneProduct geneProduct ) {
         return this.handleCreate( geneProduct );
 
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
+     * @see GeneProductService#delete(GeneProduct)
      */
     @Override
     @Transactional
@@ -79,7 +81,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#find(ubic.gemma.model.genome.gene.GeneProduct)
+     * @see GeneProductService#find(GeneProduct)
      */
     @Override
     @Transactional(readOnly = true)
@@ -89,7 +91,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
+     * @see GeneProductService#findOrCreate(GeneProduct)
      */
     @Override
     @Transactional
@@ -111,46 +113,51 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#getGenesByName(java.lang.String)
+     * @see GeneProductService#getGenesByName(java.lang.String)
      */
     @Override
-    public java.util.Collection<Gene> getGenesByName( final java.lang.String search ) {
+    @Transactional(readOnly = true)
+    public Collection<Gene> getGenesByName( final java.lang.String search ) {
         return this.handleGetGenesByName( search );
 
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#getGenesByNcbiId(java.lang.String)
+     * @see GeneProductService#getGenesByNcbiId(java.lang.String)
      */
     @Override
-    public java.util.Collection<Gene> getGenesByNcbiId( final java.lang.String search ) {
+    @Transactional(readOnly = true)
+    public Collection<Gene> getGenesByNcbiId( final java.lang.String search ) {
         return this.handleGetGenesByNcbiId( search );
 
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#load(java.lang.Long)
+     * @see GeneProductService#load(java.lang.Long)
      */
     @Override
-    public ubic.gemma.model.genome.gene.GeneProduct load( final java.lang.Long id ) {
+    @Transactional(readOnly = true)
+    public GeneProduct load( final java.lang.Long id ) {
         return this.handleLoad( id );
 
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#loadMultiple(java.util.Collection)
+     * @see GeneProductService#loadMultiple(Collection)
      */
     @Override
-    public java.util.Collection<GeneProduct> loadMultiple( final java.util.Collection<Long> ids ) {
+    @Transactional(readOnly = true)
+    public Collection<GeneProduct> loadMultiple( final Collection<Long> ids ) {
         return this.handleLoadMultiple( ids );
 
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
+     * @see GeneProductService#update(GeneProduct)
      */
     @Override
-    public void update( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
+    @Transactional
+    public void update( final GeneProduct geneProduct ) {
         this.handleUpdate( geneProduct );
 
     }
@@ -158,7 +165,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * Gets the reference to <code>geneProduct</code>'s DAO.
      */
-    protected ubic.gemma.model.genome.gene.GeneProductDao getGeneProductDao() {
+    protected GeneProductDao getGeneProductDao() {
         return this.geneProductDao;
     }
 
@@ -168,51 +175,48 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     protected abstract java.lang.Integer handleCountAll();
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.gene.GeneProduct)}
+     * Performs the core logic for {@link #create(GeneProduct)}
      */
-    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleCreate(
-            ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    protected abstract GeneProduct handleCreate( GeneProduct geneProduct );
 
     /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.genome.gene.GeneProduct)}
+     * Performs the core logic for {@link #delete(GeneProduct)}
      */
-    protected abstract void handleDelete( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    protected abstract void handleDelete( GeneProduct geneProduct );
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.gene.GeneProduct)}
+     * Performs the core logic for {@link #find(GeneProduct)}
      */
-    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleFind(
-            ubic.gemma.model.genome.gene.GeneProduct gProduct );
+    protected abstract GeneProduct handleFind( GeneProduct gProduct );
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)}
+     * Performs the core logic for {@link #findOrCreate(GeneProduct)}
      */
-    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleFindOrCreate(
-            ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    protected abstract GeneProduct handleFindOrCreate( GeneProduct geneProduct );
 
     /**
      * Performs the core logic for {@link #getGenesByName(java.lang.String)}
      */
-    protected abstract java.util.Collection<Gene> handleGetGenesByName( java.lang.String search );
+    protected abstract Collection<Gene> handleGetGenesByName( java.lang.String search );
 
     /**
      * Performs the core logic for {@link #getGenesByNcbiId(java.lang.String)}
      */
-    protected abstract java.util.Collection<Gene> handleGetGenesByNcbiId( java.lang.String search );
+    protected abstract Collection<Gene> handleGetGenesByNcbiId( java.lang.String search );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.genome.gene.GeneProduct handleLoad( java.lang.Long id );
+    protected abstract GeneProduct handleLoad( java.lang.Long id );
 
     /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
+     * Performs the core logic for {@link #loadMultiple(Collection)}
      */
-    protected abstract java.util.Collection<GeneProduct> handleLoadMultiple( java.util.Collection<Long> ids );
+    protected abstract Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids );
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.gene.GeneProduct)}
+     * Performs the core logic for {@link #update(GeneProduct)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    protected abstract void handleUpdate( GeneProduct geneProduct );
 
 }

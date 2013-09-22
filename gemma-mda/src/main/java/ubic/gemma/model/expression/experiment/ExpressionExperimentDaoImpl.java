@@ -669,6 +669,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @Override
     public void remove( final ExpressionExperiment toDelete ) {
 
+        if ( toDelete == null ) throw new IllegalArgumentException();
+
         Session session = this.getSessionFactory().getCurrentSession();
 
         try {
@@ -775,6 +777,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
 
                 BioMaterial biomaterial = ba.getSampleUsed();
+
+                if ( biomaterial == null ) continue; // shouldn't...
+
                 bioMaterialsToDelete.add( biomaterial );
 
                 copyOfRelations.put( ba, biomaterial );
