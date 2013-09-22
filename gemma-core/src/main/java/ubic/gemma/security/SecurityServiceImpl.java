@@ -240,6 +240,9 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     public <T extends Securable> Collection<T> choosePrivate( Collection<T> securables ) {
         Collection<T> result = new HashSet<>();
+
+        if ( securables.isEmpty() ) return result;
+
         Map<T, Boolean> arePrivate = arePrivate( securables );
 
         for ( T s : securables ) {
@@ -257,6 +260,8 @@ public class SecurityServiceImpl implements SecurityService {
     @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public <T extends Securable> Collection<T> choosePublic( Collection<T> securables ) {
         Collection<T> result = new HashSet<>();
+
+        if ( securables.isEmpty() ) return result;
 
         Map<T, Boolean> arePrivate = arePrivate( securables );
 

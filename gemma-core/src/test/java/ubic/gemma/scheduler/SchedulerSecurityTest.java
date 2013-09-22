@@ -39,13 +39,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class SchedulerSecurityTest extends BaseSpringContextTest {
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    WhatsNewService whatsNewService;
+    private WhatsNewService whatsNewService;
 
     @Autowired
-    ManualAuthenticationService manualAuthenticationService;
+    private ManualAuthenticationService manualAuthenticationService;
 
     /**
      * Tests whether we can run a secured method that has been granted to GROUP_AGENT

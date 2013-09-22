@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -379,20 +378,16 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             }
         } );
 
-        ExpressionExperiment ee = null;
-        Taxon t = null;
-
-        Collection<Long> ids;
+        if ( ees.isEmpty() ) return eesPerTaxon;
 
         Collection<ExpressionExperiment> publicEEs = securityService.choosePublic( ees );
 
         Map<ExpressionExperiment, Taxon> taxa = expressionExperimentService.getTaxa( publicEEs );
 
-        for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) {
-            ee = it.next();
-
-            t = taxa.get( ee );
-
+        // invert the map.
+        for ( ExpressionExperiment ee : taxa.keySet() ) {
+            Taxon t = taxa.get( ee );
+            Collection<Long> ids = null;
             if ( eesPerTaxon.containsKey( t ) ) {
                 ids = eesPerTaxon.get( t );
             } else {
