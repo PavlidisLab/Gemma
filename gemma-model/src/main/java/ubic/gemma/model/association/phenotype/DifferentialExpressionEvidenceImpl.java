@@ -25,8 +25,7 @@ package ubic.gemma.model.association.phenotype;
 /**
  * @see ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence
  */
-public class DifferentialExpressionEvidenceImpl extends
-        ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence {
+public class DifferentialExpressionEvidenceImpl extends DifferentialExpressionEvidence {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

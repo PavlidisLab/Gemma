@@ -35,7 +35,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
@@ -377,7 +377,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
             field = "category";
         else if ( parentClass.isAssignableFrom( Gene2GOAssociationImpl.class ) )
             field = "ontologyEntry";
-        else if ( parentClass.isAssignableFrom( PhenotypeAssociationImpl.class ) ) {
+        else if ( parentClass.isAssignableFrom( PhenotypeAssociation.class ) ) {
             field = "phenotypes";
         } else if ( parentClass.isAssignableFrom( TreatmentImpl.class ) ) {
             field = "action";

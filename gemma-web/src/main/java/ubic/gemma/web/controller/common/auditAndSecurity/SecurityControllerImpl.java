@@ -41,6 +41,7 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
@@ -338,6 +339,7 @@ public class SecurityControllerImpl implements SecurityController {
      * EntityDelegator)
      */
     @Override
+    @Transactional(readOnly = true)
     public SecurityInfoValueObject getSecurityInfo( EntityDelegator ed ) {
 
         Securable s = getSecurable( ed );
@@ -768,7 +770,8 @@ public class SecurityControllerImpl implements SecurityController {
      */
     private SecurityInfoValueObject securable2VO( Securable s ) {
         /*
-         * Problem: this is quite slow.
+         * Problem: this is quite slow. Can probably improve by not loading the securable at all, just load a
+         * SecuredValueObject, but it doesn't currently have all this information.
          */
         boolean isPublic = securityService.isPublic( s );
         boolean isShared = securityService.isShared( s );

@@ -706,7 +706,7 @@
       eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 
-   <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl" maxElementsOnDisk="10000"
+   <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociation" maxElementsOnDisk="10000"
       maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 
@@ -714,7 +714,7 @@
       maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 
-   <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl.phenotypes" maxElementsOnDisk="10000"
+   <cache name="ubic.gemma.model.association.phenotype.PhenotypeAssociation.phenotypes" maxElementsOnDisk="10000"
       maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 

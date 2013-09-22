@@ -23,9 +23,7 @@ import java.util.Collection;
 import ubic.gemma.model.common.Auditable;
 
 /**
- * <p>
  * Represents abstract evidence for the association of a gene with a phenotype.
- * </p>
  */
 public abstract class PhenotypeAssociation extends Auditable implements gemma.gsec.model.Securable {
 

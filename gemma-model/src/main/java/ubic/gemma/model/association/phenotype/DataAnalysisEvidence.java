@@ -21,7 +21,7 @@ package ubic.gemma.model.association.phenotype;
 /**
  * Evidence due to a data analysis
  */
-public abstract class DataAnalysisEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl {
+public abstract class DataAnalysisEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
 
     /**
      * The serial version UID of this class. Needed for serialization.

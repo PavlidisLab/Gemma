@@ -22,7 +22,7 @@ package ubic.gemma.model.association.phenotype;
  * Evidence that is supported only by a free-text description. One of the other evidence types is always preferred if
  * possible.
  */
-public abstract class GenericEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl {
+public abstract class GenericEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.association.phenotype.GenericEvidence}.

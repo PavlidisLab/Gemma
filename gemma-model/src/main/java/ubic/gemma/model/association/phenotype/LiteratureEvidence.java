@@ -21,7 +21,7 @@ package ubic.gemma.model.association.phenotype;
 /**
  * 
  */
-public abstract class LiteratureEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl {
+public abstract class LiteratureEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.association.phenotype.LiteratureEvidence}.

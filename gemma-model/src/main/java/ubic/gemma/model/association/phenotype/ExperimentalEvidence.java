@@ -21,7 +21,7 @@ package ubic.gemma.model.association.phenotype;
 /**
  * Evidence based on an experiment. This could be provided via a publication, or information known only to the provider.
  */
-public abstract class ExperimentalEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl {
+public abstract class ExperimentalEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.association.phenotype.ExperimentalEvidence}.

@@ -629,11 +629,17 @@ public class SecurityServiceImpl implements SecurityService {
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.SecurityService#hasPermission(java.util.List, java.util.List,
+     * org.springframework.security.core.Authentication)
+     */
     @Override
-    public <T extends Securable> Map<T, Boolean> hasPermission( Collection<T> svos,
-            List<Permission> requiredPermissions, Authentication authentication ) {
+    public <T extends Securable> List<Boolean> hasPermission( List<T> svos, List<Permission> requiredPermissions,
+            Authentication authentication ) {
 
-        Map<T, Boolean> result = new HashMap<T, Boolean>();
+        List<Boolean> result = new ArrayList<Boolean>();
 
         if ( svos.isEmpty() ) return result;
 
@@ -642,7 +648,6 @@ public class SecurityServiceImpl implements SecurityService {
         /*
          * Take advantage of fast bulk loading of ACLs.
          */
-
         Map<ObjectIdentity, Acl> acls = aclService
                 .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
 
@@ -652,20 +657,25 @@ public class SecurityServiceImpl implements SecurityService {
 
         assert !sids.isEmpty();
 
-        for ( ObjectIdentity oi : acls.keySet() ) {
+        for ( T s : svos ) {
+            // yes, we have to do it again.
+            ObjectIdentity oi = objectIdentityRetrievalStrategy.getObjectIdentity( s );
             Acl acl = acls.get( oi );
 
             try {
                 boolean granted = acl.isGranted( requiredPermissions, sids, false );
 
-                result.put( ( T ) objectIdentities.get( oi ), granted );
+                result.add( granted );
             } catch ( NotFoundException ignore ) { // this won't happen?
                 /*
                  * The user is anonymous.
                  */
-                result.put( ( T ) objectIdentities.get( oi ), false );
+                result.add( false );
             }
         }
+
+        assert result.size() == svos.size();
+
         return result;
 
     }

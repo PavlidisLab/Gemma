@@ -1,161 +1,161 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @author Gemma @version $Id$ -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:s="http://www.springframework.org/schema/security"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
-   xmlns:aop="http://www.springframework.org/schema/aop"
-   xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
    http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
    http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd  
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd ">
 
-   <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
- 
- 
-   <!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager 
-      so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
-   <s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma">
-      <s:http-basic />
+	<bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
 
-      <s:anonymous granted-authority="GROUP_ANONYMOUS" />
 
-      <s:intercept-url pattern="/admin/**" access="GROUP_ADMIN" />
-      <s:intercept-url pattern="/monitoring" access="GROUP_ADMIN" />
-      <s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" access="GROUP_USER" />
-      <s:intercept-url pattern="/whatsnew/generateCache.html" access="GROUP_ADMIN" />
-      <s:intercept-url pattern="/geneLinkAnalysisManager.html" access="GROUP_ADMIN" />
-      <s:intercept-url pattern="/userProfile.html" access="GROUP_USER" />
-      <s:intercept-url pattern="/manageGroups.html" access="GROUP_USER" />
-      <s:intercept-url pattern="/loadExpressionExperiment.html" access="GROUP_ADMIN" />
-      <s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN" />
-      <s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER" />
-      <s:intercept-url pattern="/phenotypeAssociationManager.html" access="GROUP_USER" />
-      <s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+	<!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager 
+		so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
+	<s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma">
+		<s:http-basic />
 
-      <s:logout logout-success-url="/login.jsp" />
-      <s:form-login login-page="/login.jsp" default-target-url="/" authentication-success-handler-ref="ajaxAuthenticationSuccessHandler"
-         authentication-failure-handler-ref="ajaxAuthenticationFailureHandler" />
-      <s:remember-me key="gemma_rm" />
+		<s:anonymous granted-authority="GROUP_ANONYMOUS" />
 
-      <!-- See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get exceptions 
-         galore. -->
-      <s:session-management session-fixation-protection="none">
-         <!-- We define the session registry ourselves so we can use it to count users -->
-         <s:concurrency-control max-sessions="1" session-registry-ref="sessionRegistry" />
-      </s:session-management>
+		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/monitoring" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/whatsnew/generateCache.html" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/geneLinkAnalysisManager.html" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/userProfile.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/manageGroups.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/loadExpressionExperiment.html" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/phenotypeAssociationManager.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 
-   </s:http>
-   
+		<s:logout logout-success-url="/login.jsp" />
+		<s:form-login login-page="/login.jsp" default-target-url="/" authentication-success-handler-ref="ajaxAuthenticationSuccessHandler"
+			authentication-failure-handler-ref="ajaxAuthenticationFailureHandler" />
+		<s:remember-me key="gemma_rm" />
 
-   <bean id="ajaxAuthenticationSuccessHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationSuccessHandler">
-      <property name="alwaysUseDefaultTargetUrl" value="false"></property>
-   </bean>
+		<!-- See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get exceptions 
+			galore. -->
+		<s:session-management session-fixation-protection="none">
+			<!-- We define the session registry ourselves so we can use it to count users -->
+			<s:concurrency-control max-sessions="1" session-registry-ref="sessionRegistry" />
+		</s:session-management>
 
-   <bean id="ajaxAuthenticationFailureHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationFailureHandler">
-      <property name="defaultFailureUrl" value="/login.jsp"></property>
-   </bean>
+	</s:http>
 
-   <!-- For use with access tags -->
-   <bean id="defaultWebSecurityExpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"></bean>
 
-   <!-- works with the HttpSessionEventPublisher configured in web.xml -->
-   <bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl" />
+	<bean id="ajaxAuthenticationSuccessHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationSuccessHandler">
+		<property name="alwaysUseDefaultTargetUrl" value="false"></property>
+	</bean>
 
-   <bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
-      <property name="allowIfAllAbstainDecisions" value="true" />
-      <property name="decisionVoters">
-         <list>
-            <bean class="org.springframework.security.web.access.expression.WebExpressionVoter" />
-            <ref bean="roleHierarchyVoter" />
-            <bean class="org.springframework.security.access.vote.AuthenticatedVoter" /> <!-- so we can use 'IS_AUTHENTICATED_ANONYMOUSLY in security (as opposed to ROLE_ANONYMOUS) -->
-         </list>
-      </property>
-   </bean>
+	<bean id="ajaxAuthenticationFailureHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationFailureHandler">
+		<property name="defaultFailureUrl" value="/login.jsp"></property>
+	</bean>
 
-   <s:authentication-manager alias="authenticationManager">
-      <s:authentication-provider user-service-ref="userManager">
-         <s:password-encoder ref="passwordEncoder">
-            <s:salt-source user-property="username" />
-         </s:password-encoder>
-      </s:authentication-provider>
-      <s:authentication-provider ref="runAsAuthenticationProvider" />
-   </s:authentication-manager>
+	<!-- For use with access tags -->
+	<bean id="defaultWebSecurityExpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"></bean>
 
-   <bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
-      <property name="rolePrefix" value="GROUP_" />
-      <property name="key" value="${gemma.runas.password}" />
-   </bean>
+	<!-- works with the HttpSessionEventPublisher configured in web.xml -->
+	<bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl" />
 
-   <bean id="runAsAuthenticationProvider" class="org.springframework.security.access.intercept.RunAsImplAuthenticationProvider">
-      <property name="key" value="${gemma.runas.password}" />
-   </bean>
+	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+		<property name="allowIfAllAbstainDecisions" value="true" />
+		<property name="decisionVoters">
+			<list>
+				<bean class="org.springframework.security.web.access.expression.WebExpressionVoter" />
+				<ref bean="roleHierarchyVoter" />
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" /> <!-- so we can use 'IS_AUTHENTICATED_ANONYMOUSLY in security (as opposed to ROLE_ANONYMOUS) -->
+			</list>
+		</property>
+	</bean>
 
-   <!-- declared separately so we can use it direclty. -->
-   <bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
+	<s:authentication-manager alias="authenticationManager">
+		<s:authentication-provider user-service-ref="userManager">
+			<s:password-encoder ref="passwordEncoder">
+				<s:salt-source user-property="username" />
+			</s:password-encoder>
+		</s:authentication-provider>
+		<s:authentication-provider ref="runAsAuthenticationProvider" />
+	</s:authentication-manager>
 
- 
-   <!--- global method security configuration -->
+	<bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
+		<property name="rolePrefix" value="GROUP_" />
+		<property name="key" value="${gemma.runas.password}" />
+	</bean>
 
-   <s:global-method-security run-as-manager-ref="runAsManager" secured-annotations="enabled"
-      pre-post-annotations="enabled" access-decision-manager-ref="accessDecisionManager" order="1">
-      <s:expression-handler ref="securityExpressionHandler" />
+	<bean id="runAsAuthenticationProvider" class="org.springframework.security.access.intercept.RunAsImplAuthenticationProvider">
+		<property name="key" value="${gemma.runas.password}" />
+	</bean>
 
-      <!-- these filters are declared here or in the security-bean-baseconfig.xml -->
-      <s:after-invocation-provider ref="afterAclReadQuiet" />
-      <s:after-invocation-provider ref="afterAclRead" />
-      <s:after-invocation-provider ref="afterAclCollectionRead" />
-      <s:after-invocation-provider ref="afterAclArrayDesignCollectionRead" />
-      <s:after-invocation-provider ref="afterAclDataVectorCollectionRead" />
-      <s:after-invocation-provider ref="afterAclMyDataRead" />
-      <s:after-invocation-provider ref="afterAclMyPrivateDataRead" />
-      <s:after-invocation-provider ref="afterAclAllMyData" />
-      <s:after-invocation-provider ref="afterAclValueObjectCollection" />
-      <s:after-invocation-provider ref="afterAclValueObject" />
-      <s:after-invocation-provider ref="afterAclMapRead" />
-      <s:after-invocation-provider ref="afterAclMapValuesRead" />
-      <s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->
-   </s:global-method-security> 
-   
-   <!-- Aspect that adds ACLs for new entities, and deletes them for deleted entities. -->
-   <aop:config>
-      <aop:aspect id="aclAspect" ref="aclAdvice" order="4">
-         <aop:after-returning method="doAclAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
-            returning="retValue" />
-      </aop:aspect>
-   </aop:config>  
- 
-   <!-- Aspect to add audit info for objects after CRUD operations. -->
-   <aop:config>
-      <aop:aspect id="auditAspect" ref="auditAdvice" order="5">
-         <aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
-            returning="retValue" />
-      </aop:aspect>
-   </aop:config> 
- 
-   <!--  filters (gemma-specific) -->
+	<!-- declared separately so we can use it direclty. -->
+	<bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
 
-   <!-- After reading collection of composite sequences -->
-   <bean id="afterAclArrayDesignCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionCompSeqByArrayDesignFilter">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-   </bean>
 
-   <!-- After reading collection of vectors -->
-   <bean id="afterAclDataVectorCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionDataVectorByExpressionExperimentFilter">
-      <constructor-arg ref="aclService" />
-      <constructor-arg>
-         <list>
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
-            <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
-         </list>
-      </constructor-arg>
-      <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-   </bean>
+	<!--- global method security configuration -->
+
+	<s:global-method-security run-as-manager-ref="runAsManager" secured-annotations="enabled"
+		pre-post-annotations="enabled" access-decision-manager-ref="accessDecisionManager" order="1">
+		<s:expression-handler ref="securityExpressionHandler" />
+
+		<!-- these filters are declared here or in the security-bean-baseconfig.xml -->
+		<s:after-invocation-provider ref="afterAclReadQuiet" />
+		<s:after-invocation-provider ref="afterAclRead" />
+		<s:after-invocation-provider ref="afterAclCollectionRead" />
+		<s:after-invocation-provider ref="afterAclArrayDesignCollectionRead" />
+		<s:after-invocation-provider ref="afterAclDataVectorCollectionRead" />
+		<s:after-invocation-provider ref="afterAclMyDataRead" />
+		<s:after-invocation-provider ref="afterAclMyPrivateDataRead" />
+		<s:after-invocation-provider ref="afterAclAllMyData" />
+		<s:after-invocation-provider ref="afterAclValueObjectCollection" />
+		<s:after-invocation-provider ref="afterAclValueObject" />
+		<s:after-invocation-provider ref="afterAclMapRead" />
+		<s:after-invocation-provider ref="afterAclMapValuesRead" />
+		<s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->
+	</s:global-method-security>
+
+	<!-- Aspect that adds ACLs for new entities, and deletes them for deleted entities. -->
+	<aop:config>
+		<aop:aspect id="aclAspect" ref="aclAdvice" order="4">
+			<aop:after-returning method="doAclAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
+				returning="retValue" />
+		</aop:aspect>
+	</aop:config>
+
+	<!-- Aspect to add audit info for objects after CRUD operations. -->
+	<aop:config>
+		<aop:aspect id="auditAspect" ref="auditAdvice" order="5">
+			<aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
+				returning="retValue" />
+		</aop:aspect>
+	</aop:config>
+
+	<!-- filters (gemma-specific) -->
+
+	<!-- After reading collection of composite sequences -->
+	<bean id="afterAclArrayDesignCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionCompSeqByArrayDesignFilter">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
+			<list>
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
+			</list>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+	</bean>
+
+	<!-- After reading collection of vectors -->
+	<bean id="afterAclDataVectorCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionDataVectorByExpressionExperimentFilter">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
+			<list>
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
+			</list>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+	</bean>
 
 
 

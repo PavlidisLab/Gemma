@@ -25,7 +25,7 @@ package ubic.gemma.model.association.phenotype;
 /**
  * @see ubic.gemma.model.association.phenotype.GenericEvidence
  */
-public class GenericEvidenceImpl extends ubic.gemma.model.association.phenotype.GenericEvidence {
+public class GenericEvidenceImpl extends GenericEvidence {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

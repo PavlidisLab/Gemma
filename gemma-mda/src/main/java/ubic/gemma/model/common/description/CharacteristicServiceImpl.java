@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociationImpl;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
@@ -47,7 +47,7 @@ public class CharacteristicServiceImpl extends CharacteristicServiceBase {
      */
     private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
             BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class,
-            PhenotypeAssociationImpl.class, TreatmentImpl.class };
+            PhenotypeAssociation.class, TreatmentImpl.class };
 
     @Override
     @Transactional(readOnly = true)

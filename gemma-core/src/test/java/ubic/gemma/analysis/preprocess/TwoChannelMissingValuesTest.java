@@ -54,7 +54,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
-    GeoConverter gc = new GeoConverterImpl();
+    private GeoConverter gc = new GeoConverterImpl();
 
     @Autowired
     private TwoChannelMissingValues tcmv;

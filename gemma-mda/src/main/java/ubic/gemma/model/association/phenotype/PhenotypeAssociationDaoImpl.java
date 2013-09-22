@@ -57,7 +57,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     @Autowired
     public PhenotypeAssociationDaoImpl( SessionFactory sessionFactory ) {
-        super( PhenotypeAssociationImpl.class );
+        super( PhenotypeAssociation.class );
         super.setSessionFactory( sessionFactory );
     }
 
@@ -118,7 +118,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
         if ( limit == 0 || ( paIds != null && paIds.size() == 0 ) ) return new ArrayList<PhenotypeAssociation>();
         Session s = this.getSessionFactory().getCurrentSession();
-        String queryString = "select p from PhenotypeAssociationImpl p " + "join p.status s "
+        String queryString = "select p from PhenotypeAssociation p " + "join p.status s "
                 + ( paIds != null || taxonId != null ? "where " : "" )
                 + ( paIds == null ? "" : "p.id in (:paIds) " + ( taxonId == null ? "" : "and " ) )
                 + ( taxonId == null ? "" : "p.gene.taxon.id = " + taxonId ) + " " + "order by s.lastUpdateDate "
@@ -137,7 +137,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
 
         return this.getHibernateTemplate().find(
-                "select distinct p from PhenotypeAssociationImpl as p where p.gene.id=" + geneId );
+                "select distinct p from PhenotypeAssociation as p where p.gene.id=" + geneId );
 
     }
 
@@ -172,7 +172,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             if ( !excludeManualCuration ) {
                 // get all manual curated evidence (the ones with no external source)
                 manualCuration = this.getHibernateTemplate().find(
-                        "select distinct p from PhenotypeAssociationImpl as p where p.gene.id=" + geneId
+                        "select distinct p from PhenotypeAssociation as p where p.gene.id=" + geneId
                                 + "and p.evidenceSource is null" );
             }
 
@@ -183,7 +183,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         }
 
         evidenceWithSource = this.getHibernateTemplate().find(
-                "select distinct p from PhenotypeAssociationImpl as p where p.gene.id=" + geneId
+                "select distinct p from PhenotypeAssociation as p where p.gene.id=" + geneId
                         + findByExternalDatabase );
 
         evidenceWithSource.addAll( manualCuration );
@@ -210,7 +210,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Collection<PhenotypeAssociation> phenotypeAssociation = this
                 .getHibernateTemplate()
                 .findByNamedParam(
-                        "select p from PhenotypeAssociationImpl as p join p.phenotypes as phe join p.gene as g where phe.valueUri in (:p) and g.ncbiGeneId=:n",
+                        "select p from PhenotypeAssociation as p join p.phenotypes as phe join p.gene as g where phe.valueUri in (:p) and g.ncbiGeneId=:n",
                         new String[] { "p", "n" }, new Object[] { phenotype, geneNCBI } );
 
         return phenotypeAssociation;
@@ -256,7 +256,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<ExternalDatabase> findExternalDatabasesWithEvidence() {
 
         Collection<ExternalDatabase> externalDatabasesNames = this.getHibernateTemplate().find(
-                "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociationImpl as p" );
+                "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociation as p" );
         return externalDatabasesNames;
     }
 
@@ -278,7 +278,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         List<Object[]> numEvidence = this
                 .getHibernateTemplate()
-                .find( "select p.evidenceSource.externalDatabase, count (*), p.status.lastUpdateDate from PhenotypeAssociationImpl as p group by p.evidenceSource.externalDatabase order by p.status.lastUpdateDate desc" );
+                .find( "select p.evidenceSource.externalDatabase, count (*), p.status.lastUpdateDate from PhenotypeAssociation as p group by p.evidenceSource.externalDatabase order by p.status.lastUpdateDate desc" );
 
         for ( Object[] o : numEvidence ) {
 
@@ -305,7 +305,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         List<Object[]> numPhenotypes = this
                 .getHibernateTemplate()
-                .find( "select p.evidenceSource.externalDatabase.name, count (distinct c.valueUri) from PhenotypeAssociationImpl as p join p.phenotypes as c group by p.evidenceSource.externalDatabase" );
+                .find( "select p.evidenceSource.externalDatabase.name, count (distinct c.valueUri) from PhenotypeAssociation as p join p.phenotypes as c group by p.evidenceSource.externalDatabase" );
 
         for ( Object[] o : numPhenotypes ) {
             String externalDatabaseName = ( String ) o[0];
@@ -347,7 +347,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration() {
 
         Long numEvidence = ( Long ) this.getHibernateTemplate()
-                .find( "select count (p) from PhenotypeAssociationImpl as p where p.evidenceSource is null" )
+                .find( "select count (p) from PhenotypeAssociation as p where p.evidenceSource is null" )
                 .iterator().next();
 
         Long numGenes = ( Long ) this
@@ -357,14 +357,14 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Long numPhenotypes = ( Long ) this
                 .getHibernateTemplate()
-                .find( "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c where p.evidenceSource is null" )
+                .find( "select count (distinct c.valueUri) from PhenotypeAssociation as p inner join p.phenotypes as c where p.evidenceSource is null" )
                 .iterator().next();
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
         tpl.setMaxResults( 1 );
 
         Date lastUpdatedDate = ( ( Timestamp ) tpl
-                .find( "select p.status.lastUpdateDate from PhenotypeAssociationImpl as p where p.evidenceSource is null order by p.status.lastUpdateDate desc" )
+                .find( "select p.status.lastUpdateDate from PhenotypeAssociation as p where p.evidenceSource is null order by p.status.lastUpdateDate desc" )
                 .iterator().next() );
 
         Collection<String> publicationsLiterature = this
@@ -400,7 +400,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence() {
 
         Long numEvidence = ( Long ) this.getHibernateTemplate()
-                .find( "select count (p) from PhenotypeAssociationImpl as p" ).iterator().next();
+                .find( "select count (p) from PhenotypeAssociation as p" ).iterator().next();
 
         Long numGenes = ( Long ) this.getHibernateTemplate()
                 .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p" )
@@ -408,7 +408,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Long numPhenotypes = ( Long ) this
                 .getHibernateTemplate()
-                .find( "select count (distinct c.valueUri) from PhenotypeAssociationImpl as p inner join p.phenotypes as c" )
+                .find( "select count (distinct c.valueUri) from PhenotypeAssociation as p inner join p.phenotypes as c" )
                 .iterator().next();
 
         Collection<String> publicationsLiterature = this.getHibernateTemplate().find(

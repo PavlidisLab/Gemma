@@ -1,3 +1,11 @@
+-- fix lingering problems with acls. 
+
+update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl';
+update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl';
+update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.ExternalDatabaseEvidenceImpl';
+update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.GenericEvidenceImpl';
+update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl';
+
 -- removing columns that are no longer needed.
 
 -- already ran these.
