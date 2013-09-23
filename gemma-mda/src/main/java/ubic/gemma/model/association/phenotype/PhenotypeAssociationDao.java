@@ -43,7 +43,14 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find PhenotypeAssociations associated with a BibliographicReference */
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
 
-    /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
+    /**
+     * find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit
+     * 
+     * @param ids
+     * @param taxonId
+     * @param limit
+     * @return
+     */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
             Integer limit );
 
@@ -57,7 +64,13 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find all PhenotypeAssociation for a specific NCBI id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
 
-    /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
+    /**
+     * find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri
+     * 
+     * @param geneNCBI
+     * @param phenotype
+     * @return
+     */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype );
 
     /** find category terms currently used in the database by evidence */
@@ -69,7 +82,17 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find all evidence that doesn't come from an external course */
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
-    /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
+    /**
+     * find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
+     * 
+     * @param taxon
+     * @param valuesUri
+     * @param userName
+     * @param groups
+     * @param showOnlyEditable
+     * @param externalDatabaseIds
+     * @return
+     */
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
@@ -79,7 +102,17 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration();
 
-    /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
+    /**
+     * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
+     * 
+     * @param taxon
+     * @param valuesUri
+     * @param userName
+     * @param groups
+     * @param showOnlyEditable
+     * @param externalDatabaseIds
+     * @return
+     */
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
@@ -90,8 +123,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     public Collection<String> findEvidenceOwners();
 
     /**
-     * returns a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
-     * (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
+     * returns a Collection of DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one
+     * exists (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
     public Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, Long maxResults );

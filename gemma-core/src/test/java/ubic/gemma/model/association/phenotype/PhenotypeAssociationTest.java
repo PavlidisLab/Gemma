@@ -38,6 +38,7 @@ import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationServic
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
@@ -116,6 +117,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Test
     public void testFindBibliographicReference() {
         assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1", null ) );
+
+        this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter() );
     }
 
     @Test

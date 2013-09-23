@@ -1170,6 +1170,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 log.info( "Loaded public: " + sw.getTime() + "ms" );
                 if ( isAdmin ) {
+                    log.info( "Loading private" );
                     // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
                             .findPrivatePhenotypesGenesAssociations( taxon, null, null, null, false,
@@ -1177,6 +1178,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     log.info( "Loaded private: total time=" + sw.getTime() + "ms" );
                 } else {
                     // show all private owned by the user or shared by a group
+                    log.info( "Loading owned" );
+                    // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
                             .findPrivatePhenotypesGenesAssociations( taxon, null, userName, groups, false,
                                     externalDatabaseIds );
