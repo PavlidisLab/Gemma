@@ -68,6 +68,10 @@ import ubic.gemma.security.authentication.UserManager;
 
 /**
  * Methods for changing security on objects, creating and modifying groups, checking security on objects.
+ * <p>
+ * We removed the ACL filtering/checking from most of these methods, because it results in basically checking
+ * permissions inside of methods that are checking permissions etc. We assume that anybody with read access on an object
+ * can know something about its security state.
  * 
  * @author keshav
  * @author paul
@@ -187,7 +191,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#arePrivate(java.util.Collection)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public <T extends Securable> Map<T, Boolean> arePrivate( Collection<T> securables ) {
         Map<T, Boolean> result = new HashMap<T, Boolean>();
         Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
@@ -257,7 +260,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#choosePublic(java.util.Collection)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public <T extends Securable> Collection<T> choosePublic( Collection<T> securables ) {
         Collection<T> result = new HashSet<>();
 
@@ -316,7 +318,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#editableBy(ubic.gemma.model.common.auditAndSecurity.Securable)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_READ" })
     public Collection<String> editableBy( Securable s ) {
 
         Collection<String> allUsers = userManager.findAllUsers();
@@ -468,7 +469,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#getGroupsEditableBy(java.util.Collection)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public <T extends Securable> Map<T, Collection<String>> getGroupsEditableBy( Collection<T> securables ) {
         Collection<String> groupNames = getGroupsUserCanView();
 
@@ -500,7 +500,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#getGroupsEditableBy(ubic.gemma.model.common.auditAndSecurity.Securable)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_READ" })
     public Collection<String> getGroupsEditableBy( Securable s ) {
         Collection<String> groupNames = getGroupsUserCanView();
 
@@ -521,7 +520,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#getGroupsReadableBy(java.util.Collection)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public <T extends Securable> Map<T, Collection<String>> getGroupsReadableBy( Collection<T> securables ) {
 
         Map<T, Collection<String>> result = new HashMap<T, Collection<String>>();
@@ -555,7 +553,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#getGroupsReadableBy(ubic.gemma.model.common.auditAndSecurity.Securable)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_READ" })
     public Collection<String> getGroupsReadableBy( Securable s ) {
         Collection<String> groupNames = getGroupsUserCanView();
 
@@ -597,7 +594,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#getOwner(ubic.gemma.model.common.auditAndSecurity.Securable)
      */
     @Override
-    @Secured("ACL_SECURABLE_READ")
     public Sid getOwner( Securable s ) {
         ObjectIdentity oi = this.objectIdentityRetrievalStrategy.getObjectIdentity( s );
         Acl a = this.aclService.readAclById( oi );
@@ -610,7 +606,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#getOwners(java.util.Collection)
      */
     @Override
-    @Secured("ACL_SECURABLE_COLLECTION_READ")
     public <T extends Securable> Map<T, Sid> getOwners( Collection<T> securables ) {
         Map<T, Sid> result = new HashMap<>();
         Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
@@ -766,7 +761,6 @@ public class SecurityServiceImpl implements SecurityService {
      * @see ubic.gemma.security.SecurityService#isEditable(ubic.gemma.model.common.auditAndSecurity.Securable)
      */
     @Override
-    @Secured("ACL_SECURABLE_READ")
     public boolean isEditable( Securable s ) {
 
         if ( !SecurityUtil.isUserLoggedIn() ) {
@@ -794,7 +788,6 @@ public class SecurityServiceImpl implements SecurityService {
      * java.lang.String)
      */
     @Override
-    @Secured("ACL_SECURABLE_READ")
     public boolean isEditableByGroup( Securable s, String groupName ) {
         List<Permission> requiredPermissions = new ArrayList<Permission>();
         requiredPermissions.add( BasePermission.WRITE );
@@ -815,7 +808,6 @@ public class SecurityServiceImpl implements SecurityService {
      * java.lang.String)
      */
     @Override
-    @Secured("ACL_SECURABLE_READ")
     public boolean isEditableByUser( Securable s, String userName ) {
         List<Permission> requiredPermissions = new ArrayList<Permission>();
         requiredPermissions.add( BasePermission.WRITE );
@@ -949,7 +941,6 @@ public class SecurityServiceImpl implements SecurityService {
      * java.lang.String)
      */
     @Override
-    @Secured("ACL_SECURABLE_READ")
     public boolean isReadableByGroup( Securable s, String groupName ) {
         List<Permission> requiredPermissions = new ArrayList<Permission>();
         requiredPermissions.add( BasePermission.READ );
@@ -1004,7 +995,6 @@ public class SecurityServiceImpl implements SecurityService {
      * java.lang.String)
      */
     @Override
-    @Secured({ "ACL_SECURABLE_READ" })
     public boolean isViewableByUser( Securable s, String userName ) {
         List<Permission> requiredPermissions = new ArrayList<Permission>();
         requiredPermissions.add( BasePermission.READ );
