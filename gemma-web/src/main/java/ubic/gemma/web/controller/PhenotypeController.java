@@ -144,6 +144,12 @@ public class PhenotypeController extends BaseController {
         return this.phenotypeAssociationManagerService.findExternalDatabasesWithEvidence();
     }
 
+    /**
+     * @param taxonId
+     * @param showOnlyEditable
+     * @param databaseIds
+     * @return
+     */
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds ) {
 
