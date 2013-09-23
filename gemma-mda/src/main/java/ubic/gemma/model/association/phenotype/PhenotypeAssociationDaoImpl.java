@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -179,7 +180,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /*
      * find Genes link to a phenotype taking into account private and public evidence Here on the case : 1- Admin 2-
      * user not logged in 3- user logged in only showing what he has read acces 4- user logged in only showing what he
-     * has write acces
+     * has write access (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.phenotype.PhenotypeAssociationDao#findGeneWithPhenotypes
      */
     @Override
     public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
@@ -207,6 +210,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
+
+        log.info( sqlQuery );
 
         populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
 
@@ -390,31 +395,34 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
         sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
         sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
-        // sqlQuery += "and PHENOTYPE_ASSOCIATION.ID "
-        // + "not in "
-        // + "(select PHENOTYPE_ASSOCIATION.ID from CHARACTERISTIC"
-        // + " inner join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID "
-        // + "inner join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.ID = PHENOTYPE_ASSOCIATION.GENE_FK "
-        // + "inner join TAXON tax on tax.ID = CHROMOSOME_FEATURE.TAXON_FK "
-        // + "inner join ACLOBJECTIDENTITY aoi on PHENOTYPE_ASSOCIATION.ID = aoi.OBJECT_ID "
-        // + "inner join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID "
-        // + "inner join ACLSID sid on sid.ID = aoi.OWNER_SID_FK where ace.MASK = 1 and ace.SID_FK = 4 "
-        // + "and aoi.OBJECT_CLASS IN " + DISCRIMINATOR_CLAUSE + ") ";
+        sqlQuery += "and PHENOTYPE_ASSOCIATION.ID "
+                + "not in "
+                + "(select PHENOTYPE_ASSOCIATION.ID from CHARACTERISTIC"
+                + " inner join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID "
+                + "inner join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.ID = PHENOTYPE_ASSOCIATION.GENE_FK "
+                + "inner join TAXON tax on tax.ID = CHROMOSOME_FEATURE.TAXON_FK "
+                + "inner join ACLOBJECTIDENTITY aoi on PHENOTYPE_ASSOCIATION.ID = aoi.OBJECT_ID "
+                + "inner join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID "
+                + "inner join ACLSID sid on sid.ID = aoi.OWNER_SID_FK where ace.MASK = 1 and ace.SID_FK = 4 "
+                + "and aoi.OBJECT_CLASS IN " + DISCRIMINATOR_CLAUSE + ") ";
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
 
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
-        // hack to make this work temporarily.
-        Map<String, Set<Integer>> others = findPublicPhenotypesGenesAssociations( taxon, valuesUri, userName, groups,
-                showOnlyEditable, externalDatabaseIds );
-        phenotypesGenesAssociations.keySet().removeAll( others.keySet() );
-
         return phenotypesGenesAssociations;
     }
 
-    /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
+    /*
+     * find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
+     * 
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.association.phenotype.PhenotypeAssociationDao#findPublicPhenotypesGenesAssociations(ubic.gemma
+     * .model.genome.Taxon, java.util.Set, java.lang.String, java.util.Collection, boolean, java.util.Collection)
+     */
     @Override
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
@@ -784,6 +792,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return sqlQuery;
     }
 
+    /**
+     * @param keyWord
+     * @param taxon
+     * @return
+     */
     private String addTaxonToQuery( String keyWord, Taxon taxon ) {
         String taxonSqlQuery = "";
 
@@ -793,6 +806,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return taxonSqlQuery;
     }
 
+    /**
+     * @param keyWord
+     * @param valuesUri
+     * @return
+     */
     private String addValuesUriToQuery( String keyWord, Set<String> valuesUri ) {
 
         String query = "";
@@ -824,6 +842,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return queryString;
     }
 
+    /**
+     * @param groups
+     * @return
+     */
     private String groupToSql( Collection<String> groups ) {
 
         String sqlGroup = "";
@@ -860,10 +882,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         results.close();
     }
 
-    /** execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes */
-    private void populateGenesWithPhenotypes( String sqlQuery,
-            HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes ) {
-
+    /**
+     * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
+     * 
+     * @param sqlQuery
+     * @param genesWithPhenotypes
+     */
+    private void populateGenesWithPhenotypes( String sqlQuery, Map<Long, GeneEvidenceValueObject> genesWithPhenotypes ) {
+        StopWatch sw = new StopWatch();
+        sw.start();
         org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -890,5 +917,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             }
         }
         results.close();
+
+        if ( sw.getTime() > 500 ) {
+            log.info( "Get " + genesWithPhenotypes.size() + " genes with phenotypes: " + sw.getTime() + "ms" );
+        }
     }
 }
