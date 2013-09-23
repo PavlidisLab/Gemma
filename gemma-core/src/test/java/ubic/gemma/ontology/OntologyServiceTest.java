@@ -32,6 +32,9 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
+ * This test will likely fail if the full disease ontology is configured to load; instead we want to load a small 'fake'
+ * one.
+ * 
  * @author paul
  * @version $Id$
  */
@@ -40,6 +43,9 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     @Autowired
     private OntologyService os;
 
+    /**
+     * @throws Exception
+     */
     @Test
     public void test() throws Exception {
 
