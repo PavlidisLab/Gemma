@@ -629,7 +629,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Set<String> owners = new HashSet<String>();
 
-        String sqlQuery = "select distinct acl_sid.sid from ACLOBJECTIDENITY aoi join ACLENTRY ace on ace.OBJECTIDENTITY_FK = "
+        String sqlQuery = "select distinct acl_sid.sid from ACLOBJECTIDENTITY aoi join ACLENTRY ace on ace.OBJECTIDENTITY_FK = "
                 + "aoi.ID join ACLSID sid on sid.id = aoi.OWNER_SID_FK where aoi.OBJECT_CLASS "
                 + "in  "
                 + DISCRIMINATOR_CLAUSE;
