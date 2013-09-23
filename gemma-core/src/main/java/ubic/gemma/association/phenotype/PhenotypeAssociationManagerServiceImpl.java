@@ -39,7 +39,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
@@ -93,6 +94,7 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.Settings;
 
 /**
@@ -101,7 +103,7 @@ import ubic.gemma.util.Settings;
  * @author nicolas
  * @version $Id$
  */
-@Component
+@Service
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
 
     private static final int MAX_PHENOTYPES_FROM_ONTOLOGY = 100;
@@ -165,6 +167,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Status of the operation
      */
     @Override
+    @Transactional
     public ValidateEvidenceValueObject makeEvidence( EvidenceValueObject evidence ) {
 
         if ( evidence.getPhenotypes().isEmpty() ) {
@@ -176,27 +179,31 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         StopWatch sw = new StopWatch();
         sw.start();
-        log.info( "The create is being called for PhenotypeAssociation on geneNCBI: " + evidence.getGeneNCBI() );
+        log.info( "Create PhenotypeAssociation on geneNCBI: " + evidence.getGeneNCBI() + " to "
+                + StringUtils.join( evidence.getPhenotypes(), "," ) );
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         if ( evidenceAlreadyInDatabase( evidence ) != null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setSameEvidenceFound( true );
-            log.info( "The evidence is already in the database: " + evidence.getGeneNCBI() );
+            log.info( "The evidence is already in the database: " + evidence.getGeneNCBI() + " to "
+                    + StringUtils.join( evidence.getPhenotypes(), "," ) + ", no change will be made" );
             return validateEvidenceValueObject;
         }
 
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
                 .valueObject2Entity( evidence );
 
+        assert !phenotypeAssociation.getPhenotypes().isEmpty();
+
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
 
-        // updates the gene in the cache
+        // updates the gene in the cache FIXME is this the right way to enforce this?
         Gene gene = phenotypeAssociation.getGene();
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
-        log.info( "The create method took : " + sw + "  " + evidence.getGeneNCBI() );
+        if ( sw.getTime() > 100 ) log.info( "The create method took : " + sw + "  " + evidence.getGeneNCBI() );
 
         return validateEvidenceValueObject;
     }
@@ -211,6 +218,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return evidence satisfying the specified filters
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         final Collection<EvidenceValueObject> evidenceValueObjects;
 
@@ -245,6 +253,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return The Gene we are interested in
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
@@ -260,6 +269,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return The Gene we are interested in
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
@@ -279,6 +289,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return The Gene we are interested in
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
             EvidenceFilter evidenceFilter ) {
 
@@ -315,6 +326,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the genes found
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri ) {
 
@@ -364,6 +376,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return A collection of the genes found
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypesValuesUri, Taxon taxon ) {
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
@@ -419,6 +432,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param id The Evidence database id
      */
     @Override
+    @Transactional
     public ValidateEvidenceValueObject remove( Long id ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
@@ -471,11 +485,20 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * Load an evidence
      * 
      * @param id The Evidence database id
+     * @return evidence, or null if not found (why not throw an exception?)
      */
     @Override
+    @Transactional(readOnly = true)
     public EvidenceValueObject load( Long id ) {
 
+        assert id != null;
+
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
+
+        if ( phenotypeAssociation == null ) {
+            // throw new IllegalArgumentException( "No phenotype association with id=" + id );
+            return null;
+        }
 
         EvidenceValueObject evidenceValueObject = convert2ValueObjects( phenotypeAssociation );
 
@@ -489,12 +512,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Status of the operation
      */
     @Override
+    @Transactional
     public ValidateEvidenceValueObject update( EvidenceValueObject modifedEvidenceValueObject ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         if ( modifedEvidenceValueObject.getPhenotypes() == null || modifedEvidenceValueObject.getPhenotypes().isEmpty() ) {
-            throw new IllegalArgumentException( "An evidence cannot have no phenotype" );
+            throw new IllegalArgumentException( "An evidence must have a phenotype" );
         }
 
         if ( modifedEvidenceValueObject instanceof DiffExpressionEvidenceValueObject ) {
@@ -669,6 +693,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<GeneEvidenceValueObject> list of Genes
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) {
 
         if ( query == null || query.length() == 0 ) {
@@ -721,6 +746,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return BibliographicReferenceValueObject
      */
     @Override
+    @Transactional(readOnly = true)
     public BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId ) {
 
         // check if the given pubmedID is already in the database
@@ -775,6 +801,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
     @Override
+    @Transactional(readOnly = true)
     public ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
@@ -917,6 +944,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param externalDatabaseName
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName ) {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName );
@@ -958,6 +986,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * find all evidence that doesn't come from an external source
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName() {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findEvidencesWithoutExternalDatabaseName();
@@ -979,6 +1008,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurrence
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) {
 
         Collection<CharacteristicValueObject> results = new TreeSet<CharacteristicValueObject>();
@@ -1258,7 +1288,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return phenotypes;
     }
 
-    /** Build the full trees of the Ontology with the given branches */
+    /**
+     * Build the full trees of the Ontology with the given branches
+     */
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
             Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
@@ -1295,7 +1327,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** Map query phenotypes given to the set of possible children phenotypes in the database */
+    /**
+     * Map query phenotypes given to the set of possible children phenotypes in the database
+     */
     private Map<String, Set<String>> findChildrenForEachPhenotype( Collection<String> phenotypesValuesUri ) {
 
         // root corresponds to one value found in phenotypesValuesUri
@@ -1310,8 +1344,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             if ( phenoRoot.isEmpty() ) {
                 continue;
             }
-
-            OntologyTerm ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenoRoot );
+            OntologyTerm ontologyTermFound = null;
+            try {
+                ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenoRoot );
+                if ( ontologyTermFound == null ) continue;
+            } catch ( EntityNotFoundException e ) {
+                continue;
+            }
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 
             Set<String> parentChildren = new HashSet<String>();
@@ -1473,19 +1512,26 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         EvidenceValueObject evidence = null;
 
-        if ( phe instanceof ExperimentalEvidence ) {
-            evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
-        } else if ( phe instanceof GenericEvidence ) {
-            evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
-        } else if ( phe instanceof LiteratureEvidence ) {
-            evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
-        } else if ( phe instanceof DifferentialExpressionEvidence ) {
-            evidence = convertDifferentialExpressionEvidence2ValueObject( ( DifferentialExpressionEvidence ) phe );
+        Class<?> userClass = phe.getClass();
+        Object p = phe;
+        if ( EntityUtils.isProxy( phe ) ) {
+            p = EntityUtils.getImplementationForProxy( phe );
+            userClass = p.getClass();
         }
 
-        if ( evidence != null ) {
-            findEvidencePermissions( phe, evidence );
+        if ( ExperimentalEvidence.class.isAssignableFrom( userClass ) ) {
+            evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) p );
+        } else if ( GenericEvidence.class.isAssignableFrom( userClass ) ) {
+            evidence = new GenericEvidenceValueObject( ( GenericEvidence ) p );
+        } else if ( LiteratureEvidence.class.isAssignableFrom( userClass ) ) {
+            evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) p );
+        } else if ( DifferentialExpressionEvidence.class.isAssignableFrom( userClass ) ) {
+            evidence = convertDifferentialExpressionEvidence2ValueObject( ( DifferentialExpressionEvidence ) p );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to convert a " + userClass.getSimpleName() );
         }
+
+        findEvidencePermissions( phe, evidence );
 
         return evidence;
     }
@@ -1558,7 +1604,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             // new one
             else {
                 Characteristic c = this.ontologyHelper.valueUri2Characteristic( updatedPhenotype.getValueUri() );
-                if ( c != null ) finalPhenotypes.add( c );
+                if ( c == null ) {
+                    throw new IllegalStateException( updatedPhenotype.getValueUri()
+                            + " could not be converted to a characteristic" );
+                }
+                finalPhenotypes.add( c );
             }
         }
 

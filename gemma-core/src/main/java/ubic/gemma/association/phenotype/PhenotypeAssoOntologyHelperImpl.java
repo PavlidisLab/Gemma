@@ -58,26 +58,28 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     @Override
     public void afterPropertiesSet() {
 
+        /*
+         * We add them even when they aren't available so we can use unit tests that mock or fake the ontologies.
+         */
+
         DiseaseOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        if ( diseaseOntologyService.isEnabled() ) {
-            this.ontologies.add( diseaseOntologyService );
-        } else {
+        this.ontologies.add( diseaseOntologyService );
+        if ( !diseaseOntologyService.isEnabled() ) {
             log.debug( "DO is not enabled, phenotype tools will not work correctly" );
         }
 
         MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = ontologyService
                 .getMammalianPhenotypeOntologyService();
-        if ( mammalianPhenotypeOntologyService.isEnabled() ) {
-            this.ontologies.add( mammalianPhenotypeOntologyService );
-        } else {
+        this.ontologies.add( mammalianPhenotypeOntologyService );
+        if ( !mammalianPhenotypeOntologyService.isEnabled() ) {
             log.debug( "MPO is not enabled, phenotype tools will not work correctly" );
         }
 
         HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
                 .getHumanPhenotypeOntologyService();
-        if ( humanPhenotypeOntologyService.isEnabled() ) {
-            this.ontologies.add( humanPhenotypeOntologyService );
-        } else {
+        this.ontologies.add( humanPhenotypeOntologyService );
+
+        if ( !humanPhenotypeOntologyService.isEnabled() ) {
             log.debug( "HPO is not enabled, phenotype tools will not work correctly" );
         }
     }
@@ -164,7 +166,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
      * @see ubic.gemma.association.phenotype.PhenotypeAssoOntologyHelper#findOntologyTermByUri(java.lang.String)
      */
     @Override
-    public OntologyTerm findOntologyTermByUri( String valueUri ) {
+    public OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException {
 
         if ( valueUri.isEmpty() ) {
             throw new IllegalArgumentException( "URI to load was blank." );
@@ -227,17 +229,19 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     @Override
     public Characteristic valueUri2Characteristic( String valueUri ) {
 
-        OntologyTerm o = findOntologyTermByUri( valueUri );
+        try {
+            OntologyTerm o = findOntologyTermByUri( valueUri );
+            if ( o == null ) return null;
+            VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
+            myPhenotype.setValueUri( o.getUri() );
+            myPhenotype.setValue( o.getLabel() );
+            myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
+            myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
+            return myPhenotype;
+        } catch ( EntityNotFoundException e ) {
+            return null;
+        }
 
-        if ( o == null ) return null;
-
-        VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
-        myPhenotype.setValueUri( o.getUri() );
-        myPhenotype.setValue( o.getLabel() );
-        myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
-        myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
-
-        return myPhenotype;
     }
 
     /**

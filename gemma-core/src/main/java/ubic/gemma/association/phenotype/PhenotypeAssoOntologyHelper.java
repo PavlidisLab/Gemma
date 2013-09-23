@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -49,7 +50,7 @@ public interface PhenotypeAssoOntologyHelper {
     /**
      * For a valueUri return the OntologyTerm found
      */
-    public abstract OntologyTerm findOntologyTermByUri( String valueUri );
+    public abstract OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException;
 
     /**
      * search the disease,hp and mp ontology for a searchQuery and return an ordered set of CharacteristicVO

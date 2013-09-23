@@ -40,8 +40,9 @@ import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
+import ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
+ import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -301,9 +302,10 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             return conversion2GenericEvidence( ( GenericEvidenceValueObject ) evidence );
         } else if ( evidence instanceof DiffExpressionEvidenceValueObject ) {
             return conversion2DifferentialExpressionEvidence( ( DiffExpressionEvidenceValueObject ) evidence );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to convert " + evidence.getClass().getSimpleName() );
         }
 
-        return null;
     }
 
     /**
@@ -466,7 +468,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     private PhenotypeAssociation conversion2LiteratureEvidence( LiteratureEvidenceValueObject evidenceValueObject ) {
 
         // create the entity to populate
-        LiteratureEvidence literatureEvidence = LiteratureEvidence.Factory.newInstance();
+        LiteratureEvidenceImpl literatureEvidence = new LiteratureEvidenceImpl();
 
         // populate common field to evidence
         populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );
@@ -549,7 +551,11 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
             Characteristic c = this.ontologyHelper.valueUri2Characteristic( phenotype.getValueUri() );
-            if ( c != null ) myPhenotypes.add( c );
+            if ( c == null ) {
+                throw new IllegalStateException( phenotype.getValueUri()
+                        + " could not be converted to a characteristic" );
+            }
+            myPhenotypes.add( c );
         }
 
         phe.getPhenotypes().addAll( myPhenotypes );
@@ -559,7 +565,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
      * @param evidenceValueObject
      * @param phenotypeAssociation
      */
-    private void setScoreInformation( EvidenceValueObject evidenceValueObject, PhenotypeAssociation phenotypeAssociation ) {
+    private void setScoreInformation( EvidenceValueObject evidenceValueObject,
+            PhenotypeAssociation phenotypeAssociation ) {
         if ( evidenceValueObject.getScoreValueObject() != null ) {
 
             if ( evidenceValueObject.getScoreValueObject().getScoreName() != null
