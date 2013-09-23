@@ -92,6 +92,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         /*
          * FIXME: if these ontologies are not configured, we will never be ready. Check for valid configuration.
          */
+
         return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded()
                 && this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
                 .getMammalianPhenotypeOntologyService().isOntologyLoaded() );

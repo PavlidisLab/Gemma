@@ -20,18 +20,23 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 
+/**
+ * TODO Document Me
+ * 
+ * @author Paul
+ * @version $Id$
+ */
 public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     /** Ontology term to TreeCharacteristicValueObject */
     public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
-            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree,
+            Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree,
             TreeSet<TreeCharacteristicValueObject> treesPhenotypes ) {
 
         Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );

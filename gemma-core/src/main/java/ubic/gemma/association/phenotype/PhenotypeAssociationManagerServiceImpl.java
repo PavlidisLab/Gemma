@@ -335,7 +335,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
-        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
+        Map<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
 
         Set<String> possibleChildrenPhenotypes = findAllPossibleChildren( phenotypesWithChildren );
 
@@ -371,7 +371,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
-        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
+        Map<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
 
         Set<String> possibleChildrenPhenotypes = findAllPossibleChildren( phenotypesWithChildren );
 
@@ -1162,7 +1162,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // map to help the placement of elements in the tree, used to find quickly the position to add subtrees
-        HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
+        Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
 
         // represents each phenotype and children found in the Ontology, TreeSet used to order trees
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
@@ -1207,7 +1207,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         log.error( "A valueUri found in the database was not found in the ontology; This can happen when a valueUri is updated in the ontology; valueUri: "
                                 + valueUri );
                     } else {
-                        throw new RuntimeException( "Ontologies are not fully loaded yet, try again soon" );
+                        throw new RuntimeException( "Ontologies are not fully loaded yet, try again soon ("
+                                + entityNotFoundException.getMessage() + ")" );
+
                         /*
                          * FIXME there has to be a mechanism to try again? Or is it going to happen anyway.
                          */
@@ -1259,7 +1261,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /** Build the full trees of the Ontology with the given branches */
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
-            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
+            Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
 
         OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( tc.getValueUri() );
 
@@ -1294,7 +1296,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** Map query phenotypes given to the set of possible children phenotypes in the database */
-    private HashMap<String, Set<String>> findChildrenForEachPhenotype( Collection<String> phenotypesValuesUri ) {
+    private Map<String, Set<String>> findChildrenForEachPhenotype( Collection<String> phenotypesValuesUri ) {
 
         // root corresponds to one value found in phenotypesValuesUri
         // root ---> root+children phenotypes
@@ -1329,7 +1331,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /** Filter a set of genes if who have the root phenotype or a children of a root phenotype */
     private Collection<GeneValueObject> filterGenesWithPhenotypes(
             Collection<GeneEvidenceValueObject> geneEvidenceValueObjects,
-            HashMap<String, Set<String>> phenotypesWithChildren ) {
+            Map<String, Set<String>> phenotypesWithChildren ) {
 
         Collection<GeneValueObject> genesVO = new HashSet<GeneValueObject>();
 
@@ -1373,7 +1375,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private void flagEvidence( Collection<EvidenceValueObject> evidencesVO, Set<String> phenotypesValuesUri ) {
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
-        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
+        Map<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri );
 
         Set<String> possibleChildrenPhenotypes = new HashSet<String>();
 
@@ -1545,7 +1547,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // the modified final phenotype to update
         Collection<Characteristic> finalPhenotypes = new HashSet<Characteristic>();
 
-        HashMap<Long, CharacteristicValueObject> updatedPhenotypesMap = new HashMap<Long, CharacteristicValueObject>();
+        Map<Long, CharacteristicValueObject> updatedPhenotypesMap = new HashMap<>();
 
         for ( CharacteristicValueObject updatedPhenotype : updatedPhenotypes ) {
 
@@ -1838,7 +1840,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** add all the keySet together and return a set representing all children for all valueUri given */
-    private Set<String> findAllPossibleChildren( HashMap<String, Set<String>> phenotypesWithChildren ) {
+    private Set<String> findAllPossibleChildren( Map<String, Set<String>> phenotypesWithChildren ) {
 
         Set<String> possibleChildrenPhenotypes = new HashSet<String>();
 
