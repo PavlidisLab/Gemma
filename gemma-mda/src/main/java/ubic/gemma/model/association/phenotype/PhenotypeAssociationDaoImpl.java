@@ -117,7 +117,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Set<String> owners = new HashSet<String>();
 
-        String sqlQuery = "select distinct sid.SID from ACLOBJECTIDENTITY aoi join ACLENTRY ace on ace.OBJECTIDENTITY_FK = "
+        // FIXME only shows owner who is a user, not a grantedauthority. That might be okay.
+        String sqlQuery = "select distinct sid.PRINCIPAL from ACLOBJECTIDENTITY aoi join ACLENTRY ace on ace.OBJECTIDENTITY_FK = "
                 + "aoi.ID join ACLSID sid on sid.ID = aoi.OWNER_SID_FK where aoi.OBJECT_CLASS "
                 + "in  "
                 + DISCRIMINATOR_CLAUSE;
@@ -138,13 +139,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
 
-        // Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
-        // .createCriteria( PhenotypeAssociation.class )
-        // .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "evidenceSource" )
-        // .createCriteria( "externalDatabase" ).add( Restrictions.like( "name", externalDatabaseName ) );
-        //
-        // return geneQueryCriteria.list();
-
         return this
                 .getHibernateTemplate()
                 .findByNamedParam(
@@ -156,12 +150,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all evidence that doesn't come from an external course */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
-
-        // Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
-        // .createCriteria( PhenotypeAssociation.class )
-        // .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
-        // .add( Restrictions.isNull( "evidenceSource" ) );
-        // return geneQueryCriteria.list();
 
         return this.getHibernateTemplate().find(
                 "select p from PhenotypeAssociation as p fetch all properties  " + "where p.evidenceSource is null" );
@@ -211,7 +199,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
 
-        log.info( sqlQuery );
+        // log.info( sqlQuery );
 
         populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
 
@@ -368,7 +356,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
 
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
@@ -457,7 +445,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
          * 'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl',
          * 'ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and ace.MASK = 1 and ace.SID_FK = 4;
          */
-        log.info( sqlQuery );
+        // log.info( sqlQuery );
 
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
@@ -709,6 +697,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return externalDatabaseStatisticsValueObject;
     }
 
+    /**
+     * @param keyWord
+     * @param externalDatabaseIds
+     * @return
+     */
     private String addExternalDatabaseQuery( String keyWord, Collection<Long> externalDatabaseIds ) {
 
         String externalDatabaseSqlQuery = "";
@@ -762,9 +755,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( userName != null && !userName.isEmpty() ) {
 
             if ( showPublic && !showOnlyEditable ) {
-                sqlQuery += "and ((sid.SID = '" + userName + "' ";
+                sqlQuery += "and ((sid.PRINCIPAL = '" + userName + "' ";
             } else {
-                sqlQuery += "and (sid.SID = '" + userName + "' ";
+                sqlQuery += "and (sid.PRINCIPAL = '" + userName + "' ";
             }
 
             if ( groups != null && !groups.isEmpty() ) {
@@ -772,7 +765,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 sqlQuery += "or (ace.SID_FK in (";
                 sqlQuery += "select sid.ID from USER_GROUP ug ";
                 sqlQuery += "join GROUP_AUTHORITY on USER_GROUP.ID = GROUP_AUTHORITY.GROUP_FK ";
-                sqlQuery += "join ACLSID sid on sid.SID=CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
+                sqlQuery += "join ACLSID sid on sid.GRANTED_AUTHORITY=CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
                 sqlQuery += "where ug.name in(" + groupToSql( groups ) + ") ";
                 if ( showOnlyEditable ) {
                     sqlQuery += ") and ace.MASK = 2) ";

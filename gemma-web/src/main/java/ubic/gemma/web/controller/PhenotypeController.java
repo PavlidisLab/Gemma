@@ -92,8 +92,11 @@ public class PhenotypeController extends BaseController {
     /**
      * Returns all genes that have given phenotypes.
      * 
+     * @param taxonId
+     * @param showOnlyEditable
+     * @param databaseIds
      * @param phenotypes
-     * @return all genes that have given phenotypes
+     * @return
      */
     public Collection<GeneValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds, String[] phenotypes ) {
@@ -101,6 +104,12 @@ public class PhenotypeController extends BaseController {
                 showOnlyEditable, databaseIds ), new HashSet<String>( Arrays.asList( phenotypes ) ) );
     }
 
+    /**
+     * @param taxonId
+     * @param limit
+     * @param userName
+     * @return
+     */
     public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
     }

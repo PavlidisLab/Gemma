@@ -355,7 +355,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<String> groups = new HashSet<String>();
 
         if ( SecurityUtil.isUserLoggedIn() ) {
-
             userName = this.userManager.getCurrentUsername();
             groups = this.userManager.findAllGroups();
         }
@@ -1151,7 +1150,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // show only my annotation was chosen
             if ( showOnlyEditable ) {
-                log.info( "Loading editable" );
+                // log.info( "Loading editable" );
                 // show public owned by the user
                 publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
                         taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds );
@@ -1159,44 +1158,44 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // show all private owned by the user or shared by a group
                 privatePhenotypesGenesAssociations = this.associationService.findPrivatePhenotypesGenesAssociations(
                         taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds );
-                log.info( "Loaded editable: " + sw.getTime() + "ms" );
+                // log.info( "Loaded editable: " + sw.getTime() + "ms" );
             }
             // default case to build the tree
             else {
-                log.info( "Loading all public" );
+                // log.info( "Loading all public" );
                 // all public evidences
                 publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
                         taxon, null, null, groups, false, externalDatabaseIds );
 
-                log.info( "Loaded public: " + sw.getTime() + "ms" );
+                // log.info( "Loaded public: " + sw.getTime() + "ms" );
                 if ( isAdmin ) {
-                    log.info( "Loading private" );
+                    // log.info( "Loading private" );
                     // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
                             .findPrivatePhenotypesGenesAssociations( taxon, null, null, null, false,
                                     externalDatabaseIds );
-                    log.info( "Loaded private: total time=" + sw.getTime() + "ms" );
+                    // log.info( "Loaded private: total time=" + sw.getTime() + "ms" );
                 } else {
                     // show all private owned by the user or shared by a group
-                    log.info( "Loading owned" );
+                    // log.info( "Loading owned" );
                     // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
                             .findPrivatePhenotypesGenesAssociations( taxon, null, userName, groups, false,
                                     externalDatabaseIds );
-                    log.info( "Loaded owned: total time=" + sw.getTime() + "ms" );
+                    // log.info( "Loaded owned: total time=" + sw.getTime() + "ms" );
                 }
             }
         }
 
         // anonymous user
         else if ( !showOnlyEditable ) {
-            log.info( "Loading editable" );
+            // log.info( "Loading editable" );
             publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations( taxon,
                     null, null, null, false, externalDatabaseIds );
-            log.info( "Loaded editable: total time=" + sw.getTime() + "ms" );
+            // log.info( "Loaded editable: total time=" + sw.getTime() + "ms" );
         }
 
-        log.info( "Done loading associations" );
+        // log.info( "Done loading associations" );
 
         for ( String phenotype : privatePhenotypesGenesAssociations.keySet() ) {
             allPhenotypesGenesAssociations.add( phenotype );
@@ -1381,7 +1380,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return parentPheno;
     }
 
-    /** Filter a set of genes if who have the root phenotype or a children of a root phenotype */
+    /**
+     * Filter a set of genes if who have the root phenotype or a children of a root phenotype
+     * 
+     * @param geneEvidenceValueObjects
+     * @param phenotypesWithChildren
+     * @return
+     */
     private Collection<GeneValueObject> filterGenesWithPhenotypes(
             Collection<GeneEvidenceValueObject> geneEvidenceValueObjects,
             Map<String, Set<String>> phenotypesWithChildren ) {
