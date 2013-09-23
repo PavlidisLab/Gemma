@@ -319,7 +319,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
 
         BioAssayDimension bad = pca.getBioAssayDimension();
-        List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
+        List<BioAssay> bioAssays = bad.getBioAssays();
 
         SVDValueObject svo;
         try {

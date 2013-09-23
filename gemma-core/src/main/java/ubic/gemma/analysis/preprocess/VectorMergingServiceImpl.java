@@ -314,7 +314,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         boolean found = true;
         for ( BioAssayDimension newDim : oldDims ) {
             // size should be the same.
-            List<BioAssay> assaysInExisting = ( List<BioAssay> ) newDim.getBioAssays();
+            List<BioAssay> assaysInExisting = newDim.getBioAssays();
             if ( assaysInExisting.size() != bioAssays.size() ) {
                 continue;
             }
