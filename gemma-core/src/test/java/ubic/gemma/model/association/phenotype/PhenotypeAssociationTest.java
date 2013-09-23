@@ -54,6 +54,8 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
+    private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";
+
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
@@ -120,14 +122,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void testFindCandidateGenes() {
 
         Set<String> phenotypesValuesUri = new HashSet<String>();
-        phenotypesValuesUri.add( "http://purl.obolibrary.org/obo/DOID_162" );
+        phenotypesValuesUri.add( TEST_PHENOTYPE_URI );
 
         Collection<GeneValueObject> geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes(
                 phenotypesValuesUri, null );
         assertNotNull( geneValueObjects );
 
-        // FIXME
-        // assertEquals( 1, geneValueObjects.size() );
+        assertEquals( 1, geneValueObjects.size() );
     }
 
     @Test
@@ -181,8 +182,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
 
-        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject(
-                "http://purl.obolibrary.org/obo/DOID_162" );
+        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( TEST_PHENOTYPE_URI );
 
         phenotypes.add( characteristicValueObject );
 

@@ -46,6 +46,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatis
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.AbstractDao;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * TODO Document Me
@@ -55,6 +56,12 @@ import ubic.gemma.persistence.AbstractDao;
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
+
+    private static final String DISCRIMINATOR_CLAUSE = "('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl',"
+            + "'ubic.gemma.model.association.phenotype.GenericEvidenceImpl',"
+            + "'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl',"
+            + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl',"
+            + "'ubic.gemma.model.association.phenotype.UrlEvidenceImpl') ";
 
     @Autowired
     public PhenotypeAssociationDaoImpl( SessionFactory sessionFactory ) {
@@ -124,7 +131,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
 
-        return phenotypeAssociationsFound;
+        // FIXME shortcut until we rewrite the above with hql to get FETCH ALL PROPERTIES
+        return load( EntityUtils.getIds( phenotypeAssociationsFound ) );
     }
 
     @Override
@@ -211,23 +219,20 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all PhenotypeAssociation for a specific NCBI id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
 
-        Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
-                .createCriteria( PhenotypeAssociation.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "gene" )
-                .add( Restrictions.like( "ncbiGeneId", geneNCBI ) );
+        return this.getHibernateTemplate().findByNamedParam(
+                "select p from PhenotypeAssociation as p fetch all properties join p.gene as g "
+                        + "where g.ncbiGeneId=:n", new String[] { "n" }, new Object[] { geneNCBI } );
 
-        return geneQueryCriteria.list();
     }
 
     @Override
     /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype ) {
 
-        Collection<PhenotypeAssociation> phenotypeAssociation = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select p from PhenotypeAssociation as p fetch all properties join p.phenotypes as phe join p.gene as g where phe.valueUri in (:p) and g.ncbiGeneId=:n",
-                        new String[] { "p", "n" }, new Object[] { phenotype, geneNCBI } );
+        Collection<PhenotypeAssociation> phenotypeAssociation = this.getHibernateTemplate().findByNamedParam(
+                "select p from PhenotypeAssociation as p fetch all properties join p.phenotypes as phe join p.gene as g "
+                        + "where phe.valueUri in (:p) and g.ncbiGeneId=:n", new String[] { "p", "n" },
+                new Object[] { phenotype, geneNCBI } );
 
         return phenotypeAssociation;
 
@@ -261,12 +266,19 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
 
-        Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
-                .createCriteria( PhenotypeAssociation.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "evidenceSource" )
-                .createCriteria( "externalDatabase" ).add( Restrictions.like( "name", externalDatabaseName ) );
+        // Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
+        // .createCriteria( PhenotypeAssociation.class )
+        // .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "evidenceSource" )
+        // .createCriteria( "externalDatabase" ).add( Restrictions.like( "name", externalDatabaseName ) );
+        //
+        // return geneQueryCriteria.list();
 
-        return geneQueryCriteria.list();
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select p from PhenotypeAssociation as p fetch all properties  join p.evidenceSource es join es.externalDatabase ed where ed.name=:name",
+                        "name", externalDatabaseName );
+
     }
 
     /** Gets all External Databases that are used with evidence */
@@ -281,12 +293,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all evidence that doesn't come from an external course */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
-        Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
-                .createCriteria( PhenotypeAssociation.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
-                .add( Restrictions.isNull( "evidenceSource" ) );
 
-        return geneQueryCriteria.list();
+        // Criteria geneQueryCriteria = super.getSessionFactory().getCurrentSession()
+        // .createCriteria( PhenotypeAssociation.class )
+        // .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
+        // .add( Restrictions.isNull( "evidenceSource" ) );
+        // return geneQueryCriteria.list();
+
+        return this.getHibernateTemplate().find(
+                "select p from PhenotypeAssociation as p fetch all properties  " + "where p.evidenceSource is null" );
+
     }
 
     @Override
@@ -534,7 +550,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 + "inner join ACLOBJECTIDENTITY aoi on PHENOTYPE_ASSOCIATION.ID = aoi.OBJECT_ID "
                 + "inner join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID "
                 + "inner join ACLSID sid on sid.ID = aoi.OWNER_SID_FK where ace.MASK = 1 and ace.SID_FK = 4 "
-                + "and aoi.OBJECT_CLASS = 'ubic.gemma.model.association.phenotype.PhenotypeAssociation') ";
+                + "and aoi.OBJECT_CLASS IN " + DISCRIMINATOR_CLAUSE + ") ";
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
@@ -615,7 +631,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         String sqlQuery = "select distinct acl_sid.sid from ACLOBJECTIDENITY aoi join ACLENTRY ace on ace.OBJECTIDENTITY_FK = "
                 + "aoi.ID join ACLSID sid on sid.id = aoi.OWNER_SID_FK where aoi.OBJECT_CLASS "
-                + "='ubic.gemma.model.association.phenotype.PhenotypeAssociation' ";
+                + "in  "
+                + DISCRIMINATOR_CLAUSE;
 
         org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
@@ -673,7 +690,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         queryString += "join ACLOBJECTIDENTITY aoi on PHENOTYPE_ASSOCIATION.id = aoi.OBJECT_ID ";
         queryString += "join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID ";
         queryString += "join ACLSID sid on sid.ID = aoi.OWNER_SID_FK ";
-        queryString += "where aoi.OBJECT_CLASS = 'ubic.gemma.model.association.phenotype.PhenotypeAssociation' ";
+        queryString += "where aoi.OBJECT_CLASS IN " + DISCRIMINATOR_CLAUSE;
 
         return queryString;
     }
