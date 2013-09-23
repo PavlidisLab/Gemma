@@ -137,6 +137,9 @@ public class PhenotypeController extends BaseController {
                 taxonId );
     }
 
+    /**
+     * @return
+     */
     public Collection<ExternalDatabaseValueObject> findExternalDatabaseName() {
         return this.phenotypeAssociationManagerService.findExternalDatabasesWithEvidence();
     }
@@ -241,6 +244,8 @@ public class PhenotypeController extends BaseController {
     }
 
     /**
+     * AJAX
+     * 
      * @param evidenceValueObject
      * @return
      */
