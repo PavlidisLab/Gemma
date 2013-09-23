@@ -25,7 +25,7 @@ package ubic.gemma.model.expression.bioAssayData;
 /**
  * @see ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation
  */
-public class MeanVarianceRelationImpl extends ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation {
+public class MeanVarianceRelationImpl extends MeanVarianceRelation {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

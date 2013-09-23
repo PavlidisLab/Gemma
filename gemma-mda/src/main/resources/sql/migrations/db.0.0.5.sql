@@ -1,10 +1,20 @@
 -- fix lingering problems with acls. 
 
+alter table ACLOBJECTIDENTITY add column OLD_OBJECT_CLASS varchar(255);
+update ACLOBJECTIDENTITY set OLD_OBJECT_CLASS=OBJECT_CLASS;
+
+
 update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl';
 update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl';
 update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.ExternalDatabaseEvidenceImpl';
 update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.GenericEvidenceImpl';
 update ACLOBJECTIDENTITY  set OBJECT_CLASS='ubic.gemma.model.association.phenotype.PhenotypeAssociation' where OBJECT_CLASS='ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl';
+
+-- reverse
+update ACLOBJECTIDENTITY SET OBJECT_CLASS = OLD_OBJECT_CLASS WHERE OLD_OBJECT_CLASS is not null  and  OBJECT_CLASS = "ubic.gemma.model.association.phenotype.PhenotypeAssociation";
+
+-- later ...
+alter table ACLOBJECTIDENTITY drop column OLD_OBJECT_CLASS ;
 
 -- removing columns that are no longer needed.
 

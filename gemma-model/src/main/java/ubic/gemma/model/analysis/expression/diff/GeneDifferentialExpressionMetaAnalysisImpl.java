@@ -25,8 +25,7 @@ package ubic.gemma.model.analysis.expression.diff;
 /**
  * @see ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis
  */
-public class GeneDifferentialExpressionMetaAnalysisImpl extends
-        ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis {
+public class GeneDifferentialExpressionMetaAnalysisImpl extends GeneDifferentialExpressionMetaAnalysis {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

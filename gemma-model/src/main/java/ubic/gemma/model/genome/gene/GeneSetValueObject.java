@@ -195,6 +195,6 @@ public class GeneSetValueObject implements SecureValueObject {
     @Override
     public void setUserOwned( boolean isUserOwned ) {
         this.currentUserIsOwner = isUserOwned;
-
     }
+
 }

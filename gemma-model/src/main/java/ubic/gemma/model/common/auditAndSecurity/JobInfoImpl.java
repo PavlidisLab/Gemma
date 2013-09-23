@@ -25,7 +25,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.JobInfo
  */
-public class JobInfoImpl extends ubic.gemma.model.common.auditAndSecurity.JobInfo {
+public class JobInfoImpl extends JobInfo {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

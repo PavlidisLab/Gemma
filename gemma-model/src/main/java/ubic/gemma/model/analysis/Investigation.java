@@ -55,18 +55,14 @@ public abstract class Investigation extends Auditable implements gemma.gsec.mode
     }
 
     /**
-     * <p>
      * Annotations that describe the experiment as a whole, for example "tumor" or "brain".
-     * </p>
      */
     public Collection<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
 
     /**
-     * <p>
      * Other contacts who are investigators on this experiment
-     * </p>
      */
     public Collection<ubic.gemma.model.common.auditAndSecurity.Contact> getInvestigators() {
         return this.investigators;

@@ -22,10 +22,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+
 /**
  * 
  */
-public abstract class PrincipalComponentAnalysis extends ubic.gemma.model.analysis.SingleExperimentAnalysisImpl {
+public abstract class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
 
     /**
      * Constructs new instances of {@link PrincipalComponentAnalysis}.

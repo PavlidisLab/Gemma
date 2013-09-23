@@ -62,6 +62,21 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         super.setSessionFactory( sessionFactory );
     }
 
+    @Override
+    public Collection<PhenotypeAssociation> load( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) return new HashSet<>();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from PhenotypeAssociation fetch all properties where id in (:ids)" )
+                .setParameterList( "ids", ids ).list();
+    }
+
+    @Override
+    public PhenotypeAssociation load( Long id ) {
+        return ( PhenotypeAssociation ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "from PhenotypeAssociation fetch all properties where id = :id" ).setParameter( "id", id )
+                .uniqueResult();
+    }
+
     /** load all valueURI of Phenotype in the database */
     @Override
     public Set<String> loadAllPhenotypesUri() {
@@ -119,7 +134,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
         if ( limit == 0 || ( paIds != null && paIds.size() == 0 ) ) return new ArrayList<PhenotypeAssociation>();
         Session s = this.getSessionFactory().getCurrentSession();
-        String queryString = "select p from PhenotypeAssociation p " + "join p.status s "
+        String queryString = "select p from PhenotypeAssociation p fetch all properties " + "join p.status s "
                 + ( paIds != null || taxonId != null ? "where " : "" )
                 + ( paIds == null ? "" : "p.id in (:paIds) " + ( taxonId == null ? "" : "and " ) )
                 + ( taxonId == null ? "" : "p.gene.taxon.id = " + taxonId ) + " " + "order by s.lastUpdateDate "
@@ -138,7 +153,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
 
         return this.getHibernateTemplate().find(
-                "select distinct p from PhenotypeAssociation as p where p.gene.id=" + geneId );
+                "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id=" + geneId );
 
     }
 
@@ -173,8 +188,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             if ( !excludeManualCuration ) {
                 // get all manual curated evidence (the ones with no external source)
                 manualCuration = this.getHibernateTemplate().find(
-                        "select distinct p from PhenotypeAssociation as p where p.gene.id=" + geneId
-                                + "and p.evidenceSource is null" );
+                        "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id="
+                                + geneId + "and p.evidenceSource is null" );
             }
 
             // if we need to exclude some evidence with an external source
@@ -184,7 +199,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         }
 
         evidenceWithSource = this.getHibernateTemplate().find(
-                "select distinct p from PhenotypeAssociation as p where p.gene.id=" + geneId + findByExternalDatabase );
+                "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id=" + geneId
+                        + findByExternalDatabase );
 
         evidenceWithSource.addAll( manualCuration );
 
@@ -210,7 +226,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Collection<PhenotypeAssociation> phenotypeAssociation = this
                 .getHibernateTemplate()
                 .findByNamedParam(
-                        "select p from PhenotypeAssociation as p join p.phenotypes as phe join p.gene as g where phe.valueUri in (:p) and g.ncbiGeneId=:n",
+                        "select p from PhenotypeAssociation as p fetch all properties join p.phenotypes as phe join p.gene as g where phe.valueUri in (:p) and g.ncbiGeneId=:n",
                         new String[] { "p", "n" }, new Object[] { phenotype, geneNCBI } );
 
         return phenotypeAssociation;

@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.Auditable;
 
 /**
  * @author anton

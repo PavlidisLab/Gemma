@@ -20,7 +20,11 @@ package ubic.gemma.model.association.phenotype;
 
 import java.util.Collection;
 
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
 /**
  * Represents abstract evidence for the association of a gene with a phenotype.
@@ -32,7 +36,7 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
      */
     private static final long serialVersionUID = -1734685902449428500L;
 
-    private ubic.gemma.model.association.GOEvidenceCode evidenceCode;
+    private GOEvidenceCode evidenceCode;
     private Boolean isNegativeEvidence = Boolean.valueOf( false );
 
     private String score;
@@ -41,13 +45,13 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
 
     private ubic.gemma.model.genome.Gene gene;
 
-    private Collection<ubic.gemma.model.common.description.Characteristic> phenotypes = new java.util.HashSet<ubic.gemma.model.common.description.Characteristic>();
+    private Collection<Characteristic> phenotypes = new java.util.HashSet<Characteristic>();
 
-    private ubic.gemma.model.common.description.Characteristic associationType;
+    private Characteristic associationType;
 
-    private ubic.gemma.model.common.description.DatabaseEntry evidenceSource;
+    private DatabaseEntry evidenceSource;
 
-    private ubic.gemma.model.common.quantitationtype.QuantitationType scoreType;
+    private QuantitationType scoreType;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -58,29 +62,25 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
     }
 
     /**
-     * <p>
      * Describes the nature of the link between (genetic or physiological variation in) the gene and the phenotype, such
      * as "predisposes to" or "causes".
-     * </p>
      */
-    public ubic.gemma.model.common.description.Characteristic getAssociationType() {
+    public Characteristic getAssociationType() {
         return this.associationType;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.association.GOEvidenceCode getEvidenceCode() {
+    public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
     }
 
     /**
-     * <p>
      * An optional external identifiable source for the evidence, if it does not come from with the system. Used to flag
      * evidence that is imported from other phenotype databases, for example.
-     * </p>
      */
-    public ubic.gemma.model.common.description.DatabaseEntry getEvidenceSource() {
+    public DatabaseEntry getEvidenceSource() {
         return this.evidenceSource;
     }
 
@@ -102,20 +102,16 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
     }
 
     /**
-     * <p>
      * The phenotype this association is about. A phenotype is (basically) a term from a controlled vocabulary such as a
      * disease.
-     * </p>
      */
-    public Collection<ubic.gemma.model.common.description.Characteristic> getPhenotypes() {
+    public Collection<Characteristic> getPhenotypes() {
         return this.phenotypes;
     }
 
     /**
-     * <p>
      * A score, either provided by the system or (often) imported from an external source. If this is populated, the
      * scoreType should be populated.
-     * </p>
      */
     public String getScore() {
         return this.score;
@@ -126,29 +122,27 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
      * Describes the score associated with the evidence.
      * </p>
      */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType getScoreType() {
+    public QuantitationType getScoreType() {
         return this.scoreType;
     }
 
     /**
-     * <p>
      * The relative strength of the evidence, where higher values are better. This strength may be based on human
      * curation could be from an outside source), automated criteria, or a combination of the two.
-     * </p>
      */
     public Double getStrength() {
         return this.strength;
     }
 
-    public void setAssociationType( ubic.gemma.model.common.description.Characteristic associationType ) {
+    public void setAssociationType( Characteristic associationType ) {
         this.associationType = associationType;
     }
 
-    public void setEvidenceCode( ubic.gemma.model.association.GOEvidenceCode evidenceCode ) {
+    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
         this.evidenceCode = evidenceCode;
     }
 
-    public void setEvidenceSource( ubic.gemma.model.common.description.DatabaseEntry evidenceSource ) {
+    public void setEvidenceSource( DatabaseEntry evidenceSource ) {
         this.evidenceSource = evidenceSource;
     }
 
@@ -160,7 +154,7 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
         this.isNegativeEvidence = isNegativeEvidence;
     }
 
-    public void setPhenotypes( Collection<ubic.gemma.model.common.description.Characteristic> phenotypes ) {
+    public void setPhenotypes( Collection<Characteristic> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
@@ -168,7 +162,7 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
         this.score = score;
     }
 
-    public void setScoreType( ubic.gemma.model.common.quantitationtype.QuantitationType scoreType ) {
+    public void setScoreType( QuantitationType scoreType ) {
         this.scoreType = scoreType;
     }
 

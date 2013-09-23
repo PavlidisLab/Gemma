@@ -21,7 +21,7 @@ package ubic.gemma.model.association.phenotype;
 /**
  * Evidence documented by a differential expression result stored in the system
  */
-public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidenceImpl {
+public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidence {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence}.

@@ -21,8 +21,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 /**
  * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysis
  */
-public class GeneCoexpressionAnalysisImpl extends
-        ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis {
+public class GeneCoexpressionAnalysisImpl extends GeneCoexpressionAnalysis {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

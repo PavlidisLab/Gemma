@@ -62,4 +62,5 @@ public class ExperimentalFactorImpl extends ExperimentalFactor {
         result = prime * result + ( ( this.getDescription() == null ) ? 0 : this.getDescription().hashCode() );
         return result;
     }
+
 }

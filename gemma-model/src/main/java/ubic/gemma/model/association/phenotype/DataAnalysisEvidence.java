@@ -21,19 +21,6 @@ package ubic.gemma.model.association.phenotype;
 /**
  * Evidence due to a data analysis
  */
-public abstract class DataAnalysisEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4072908598647340251L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public DataAnalysisEvidence() {
-    }
+public abstract class DataAnalysisEvidence extends PhenotypeAssociation {
 
 }

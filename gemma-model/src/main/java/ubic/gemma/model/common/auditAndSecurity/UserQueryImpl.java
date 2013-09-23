@@ -25,7 +25,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserQuery
  */
-public class UserQueryImpl extends ubic.gemma.model.common.auditAndSecurity.UserQuery {
+public class UserQueryImpl extends UserQuery {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

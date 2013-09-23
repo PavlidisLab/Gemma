@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -37,14 +38,14 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public abstract class BioMaterial extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.SecuredChild {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.biomaterial.BioMaterial}.
+     * Constructs new instances of {@link BioMaterial}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.biomaterial.BioMaterial}.
+         * Constructs a new instance of {@link BioMaterial}.
          */
-        public static ubic.gemma.model.expression.biomaterial.BioMaterial newInstance() {
-            return new ubic.gemma.model.expression.biomaterial.BioMaterialImpl();
+        public static BioMaterial newInstance() {
+            return new BioMaterialImpl();
         }
 
     }
@@ -59,32 +60,19 @@ public abstract class BioMaterial extends ubic.gemma.model.common.Auditable impl
 
     private Collection<Characteristic> characteristics = new HashSet<>();
 
-    private ubic.gemma.model.common.description.DatabaseEntry externalAccession;
+    private DatabaseEntry externalAccession;
 
     /**
      * 
      */
-    private static final long serialVersionUID = -7892217074183258185L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BioMaterial() {
-    }
-
-    /**
-     * 
-     */
-    public Collection<ubic.gemma.model.expression.bioAssay.BioAssay> getBioAssaysUsedIn() {
+    public Collection<BioAssay> getBioAssaysUsedIn() {
         return this.bioAssaysUsedIn;
     }
 
     /**
      * 
      */
-    public Collection<ubic.gemma.model.common.description.Characteristic> getCharacteristics() {
+    public Collection<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
 
@@ -93,14 +81,14 @@ public abstract class BioMaterial extends ubic.gemma.model.common.Auditable impl
      * related BioAssay. We store the information here to help make the data easier to trace. Note that more than one
      * BioMaterial may reference a given external accession. </p>
      */
-    public ubic.gemma.model.common.description.DatabaseEntry getExternalAccession() {
+    public DatabaseEntry getExternalAccession() {
         return this.externalAccession;
     }
 
     /**
      * The values that this BioAssay is associated with for the experiment.
      */
-    public Collection<ubic.gemma.model.expression.experiment.FactorValue> getFactorValues() {
+    public Collection<FactorValue> getFactorValues() {
         return this.factorValues;
     }
 
@@ -119,23 +107,23 @@ public abstract class BioMaterial extends ubic.gemma.model.common.Auditable impl
     /**
      * 
      */
-    public Collection<ubic.gemma.model.expression.biomaterial.Treatment> getTreatments() {
+    public Collection<Treatment> getTreatments() {
         return this.treatments;
     }
 
-    public void setBioAssaysUsedIn( Collection<ubic.gemma.model.expression.bioAssay.BioAssay> bioAssaysUsedIn ) {
+    public void setBioAssaysUsedIn( Collection<BioAssay> bioAssaysUsedIn ) {
         this.bioAssaysUsedIn = bioAssaysUsedIn;
     }
 
-    public void setCharacteristics( Collection<ubic.gemma.model.common.description.Characteristic> characteristics ) {
+    public void setCharacteristics( Collection<Characteristic> characteristics ) {
         this.characteristics = characteristics;
     }
 
-    public void setExternalAccession( ubic.gemma.model.common.description.DatabaseEntry externalAccession ) {
+    public void setExternalAccession( DatabaseEntry externalAccession ) {
         this.externalAccession = externalAccession;
     }
 
-    public void setFactorValues( Collection<ubic.gemma.model.expression.experiment.FactorValue> factorValues ) {
+    public void setFactorValues( Collection<FactorValue> factorValues ) {
         this.factorValues = factorValues;
     }
 
@@ -143,7 +131,7 @@ public abstract class BioMaterial extends ubic.gemma.model.common.Auditable impl
         this.sourceTaxon = sourceTaxon;
     }
 
-    public void setTreatments( Collection<ubic.gemma.model.expression.biomaterial.Treatment> treatments ) {
+    public void setTreatments( Collection<Treatment> treatments ) {
         this.treatments = treatments;
     }
 

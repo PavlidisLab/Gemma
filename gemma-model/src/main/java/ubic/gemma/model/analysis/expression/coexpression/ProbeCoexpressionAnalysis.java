@@ -20,12 +20,12 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
 
-import ubic.gemma.model.analysis.SingleExperimentAnalysisImpl;
+import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 
 /**
  * A coexpression analysis at the level of probes
  */
-public abstract class ProbeCoexpressionAnalysis extends SingleExperimentAnalysisImpl {
+public abstract class ProbeCoexpressionAnalysis extends SingleExperimentAnalysis {
 
     /**
      * Constructs new instances of {@link ProbeCoexpressionAnalysis}.
@@ -40,21 +40,9 @@ public abstract class ProbeCoexpressionAnalysis extends SingleExperimentAnalysis
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 1210363957474375117L;
     private Integer numberOfLinks;
 
     private Collection<CoexpressionProbe> probesUsed = new java.util.HashSet<>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ProbeCoexpressionAnalysis() {
-    }
 
     /**
      * The number of links which were stored for this analysis.

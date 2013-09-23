@@ -21,7 +21,7 @@ package ubic.gemma.model.analysis.expression;
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
  */
-public class ExpressionExperimentSetImpl extends ubic.gemma.model.analysis.expression.ExpressionExperimentSet {
+public class ExpressionExperimentSetImpl extends ExpressionExperimentSet {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

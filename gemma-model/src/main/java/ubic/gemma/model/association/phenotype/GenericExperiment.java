@@ -18,37 +18,26 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+import ubic.gemma.model.analysis.Investigation;
+
 /**
  * <p>
  * An experiment that has no special features; the most basic concrete instantiation of an Investigation.
  * </p>
  */
-public abstract class GenericExperiment extends ubic.gemma.model.analysis.Investigation {
+public abstract class GenericExperiment extends Investigation {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.phenotype.GenericExperiment}.
+     * Constructs new instances of {@link GenericExperiment}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.phenotype.GenericExperiment}.
+         * Constructs a new instance of {@link GenericExperiment}.
          */
-        public static ubic.gemma.model.association.phenotype.GenericExperiment newInstance() {
-            return new ubic.gemma.model.association.phenotype.GenericExperimentImpl();
+        public static GenericExperiment newInstance() {
+            return new GenericExperimentImpl();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8608675030968923218L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public GenericExperiment() {
     }
 
 }

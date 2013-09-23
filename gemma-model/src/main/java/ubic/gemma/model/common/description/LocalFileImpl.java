@@ -33,41 +33,7 @@ public class LocalFileImpl extends LocalFile {
      */
     private static final long serialVersionUID = -2781283721621657394L;
 
-    /**
-     * Attempt to create a java.io.File from the local URI. If it doesn't look like a URI, it is just treated as a path.
-     * 
-     * @see ubic.gemma.model.common.description.LocalFile#asFile()
-     */
-    @Override
-    public java.io.File asFile() {
-
-        if ( this.getLocalURL() == null ) {
-            return null;
-        }
-
-        try {
-            return new File( this.getLocalURL().toURI() );
-        } catch ( URISyntaxException e ) {
-            throw new RuntimeException( e );
-        }
-
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.LocalFile#canRead()
-     */
-    @Override
-    public Boolean canRead() {
-        return this.asFile().canRead();
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.LocalFile#canWrite()
-     */
-    @Override
-    public Boolean canWrite() {
-        return this.asFile().canWrite();
-    }
+   
 
     /*
      * (non-Javadoc)

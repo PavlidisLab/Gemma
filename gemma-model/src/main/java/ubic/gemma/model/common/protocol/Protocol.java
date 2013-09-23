@@ -26,14 +26,14 @@ import ubic.gemma.model.common.description.Characteristic;
  */
 public abstract class Protocol extends Auditable implements gemma.gsec.model.Securable {
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.protocol.Protocol}.
+     * Constructs new instances of {@link Protocol}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.protocol.Protocol}.
+         * Constructs a new instance of {@link Protocol}.
          */
-        public static ubic.gemma.model.common.protocol.Protocol newInstance() {
-            return new ubic.gemma.model.common.protocol.ProtocolImpl();
+        public static Protocol newInstance() {
+            return new ProtocolImpl();
         }
 
     }
@@ -41,19 +41,6 @@ public abstract class Protocol extends Auditable implements gemma.gsec.model.Sec
     private Characteristic type;
 
     private String URI;
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6895648007615254231L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Protocol() {
-    }
 
     /**
      * 
@@ -69,7 +56,7 @@ public abstract class Protocol extends Auditable implements gemma.gsec.model.Sec
         return this.URI;
     }
 
-    public void setType( ubic.gemma.model.common.description.Characteristic type ) {
+    public void setType( Characteristic type ) {
         this.type = type;
     }
 

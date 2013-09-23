@@ -44,16 +44,11 @@ public abstract class BioAssay extends Auditable implements gemma.gsec.model.Sec
         /**
          * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.
          */
-        public static ubic.gemma.model.expression.bioAssay.BioAssay newInstance() {
-            return new ubic.gemma.model.expression.bioAssay.BioAssayImpl();
+        public static BioAssay newInstance() {
+            return new BioAssayImpl();
         }
 
     }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4823368690055991901L;
 
     private Date processingDate;
 
@@ -74,14 +69,6 @@ public abstract class BioAssay extends Auditable implements gemma.gsec.model.Sec
     private Collection<LocalFile> derivedDataFiles = new HashSet<LocalFile>();
 
     private BioMaterial sampleUsed;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BioAssay() {
-    }
 
     /**
      * 

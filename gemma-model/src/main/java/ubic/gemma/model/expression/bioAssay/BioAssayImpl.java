@@ -56,4 +56,5 @@ public class BioAssayImpl extends BioAssay {
 
         return hashCode;
     }
+
 }

@@ -23,7 +23,7 @@ package ubic.gemma.model.expression.arrayDesign;
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesign {
+public class ArrayDesignImpl extends ArrayDesign {
 
     /**
      * The serial version UID of this class. Needed for serialization.

@@ -586,11 +586,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             throw new IllegalArgumentException( "Gene.remove - 'entities' can not be null" );
         }
         // remove associations
-        List<?> assocs = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g.id in (:g)",
-                        "g", EntityUtils.getIds( entities ) );
+        List<?> assocs = this.getHibernateTemplate().findByNamedParam(
+                "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g.id in (:g)",
+                "g", EntityUtils.getIds( entities ) );
         if ( !assocs.isEmpty() ) this.getHibernateTemplate().deleteAll( assocs );
 
         this.getHibernateTemplate().deleteAll( entities );
@@ -1049,11 +1047,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 .getHibernateTemplate()
                 .findByNamedParam(
                         "select distinct g from GeneImpl g "
-                                + "left join fetch g.aliases left join fetch g.accessions acc"
+                                + " left join fetch g.aliases left join fetch g.accessions acc"
                                 + " left join fetch acc.externalDatabase left join fetch g.products gp "
-                                + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
+                                + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
                                 + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                                + " left join fetch g.taxon t left join fetch t.externalDatabase left join fetch g.multifunctionality "
+                                + " left join fetch g.taxon t left join fetch t.externalDatabase "
+                                + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
                                 + " where g.id=:gid", "gid", gene.getId() );
 
         return ( Gene ) res.iterator().next();

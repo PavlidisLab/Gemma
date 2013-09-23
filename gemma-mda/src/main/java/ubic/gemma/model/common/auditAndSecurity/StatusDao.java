@@ -15,6 +15,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.BaseDao;
 

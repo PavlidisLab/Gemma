@@ -21,11 +21,18 @@ package ubic.gemma.model.analysis.expression.coexpression;
 /**
  * @see ubic.gemma.model.analysis.ProbeCoexpressionAnalysis
  */
-public class ProbeCoexpressionAnalysisImpl extends
-        ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis {
+public class ProbeCoexpressionAnalysisImpl extends ProbeCoexpressionAnalysis {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1673631890179355697L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     * 
+     * @author Paul
+     */
+    public ProbeCoexpressionAnalysisImpl() {
+    }
 
 }

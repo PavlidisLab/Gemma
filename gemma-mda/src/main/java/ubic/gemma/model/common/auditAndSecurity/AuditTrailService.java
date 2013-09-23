@@ -23,6 +23,7 @@ import java.util.List;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**

@@ -43,10 +43,6 @@ public abstract class ExperimentalDesign extends ubic.gemma.model.common.Auditab
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -2760199890275037663L;
     private String replicateDescription;
 
     private String qualityControlDescription;
@@ -56,14 +52,6 @@ public abstract class ExperimentalDesign extends ubic.gemma.model.common.Auditab
     private Collection<ExperimentalFactor> experimentalFactors = new java.util.HashSet<>();
 
     private Collection<Characteristic> types = new java.util.HashSet<>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ExperimentalDesign() {
-    }
 
     /**
      * The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.

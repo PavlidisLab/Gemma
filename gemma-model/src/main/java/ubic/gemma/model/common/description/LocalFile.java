@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Collection;
 
 /**
@@ -39,11 +40,6 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 47726248019338862L;
-
     private java.net.URL localURL;
 
     private java.net.URL remoteURL;
@@ -59,27 +55,37 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
     private Collection<LocalFile> sourceFiles = new java.util.HashSet<>();
 
     /**
-     * No-arg constructor added to satisfy javabean contract
+     * Attempt to create a java.io.File from the local URI. If it doesn't look like a URI, it is just treated as a path.
      * 
-     * @author Paul
+     * @see ubic.gemma.model.common.description.LocalFile#asFile()
      */
-    public LocalFile() {
+    public java.io.File asFile() {
+
+        if ( this.getLocalURL() == null ) {
+            return null;
+        }
+
+        try {
+            return new File( this.getLocalURL().toURI() );
+        } catch ( URISyntaxException e ) {
+            throw new RuntimeException( e );
+        }
+
     }
 
     /**
-     * 
+     * @see ubic.gemma.model.common.description.LocalFile#canRead()
      */
-    public abstract File asFile();
+    public Boolean canRead() {
+        return this.asFile().canRead();
+    }
 
     /**
-     * 
+     * @see ubic.gemma.model.common.description.LocalFile#canWrite()
      */
-    public abstract Boolean canRead();
-
-    /**
-     * 
-     */
-    public abstract Boolean canWrite();
+    public Boolean canWrite() {
+        return this.asFile().canWrite();
+    }
 
     /**
      * Returns <code>true</code> if the argument is an LocalFile instance and all identifiers for this entity equal the

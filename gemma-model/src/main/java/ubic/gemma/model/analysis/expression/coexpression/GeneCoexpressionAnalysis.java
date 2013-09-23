@@ -18,12 +18,12 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import ubic.gemma.model.analysis.MultiExperimentAnalysisImpl;
+import ubic.gemma.model.analysis.MultiExperimentAnalysis;
 
 /**
  * A coexpression analysis done at the level of genes, usually for all the genes associated with a taxon
  */
-public abstract class GeneCoexpressionAnalysis extends MultiExperimentAnalysisImpl {
+public abstract class GeneCoexpressionAnalysis extends MultiExperimentAnalysis {
 
     /**
      * Constructs new instances of {@link GeneCoexpressionAnalysis}.

@@ -191,6 +191,18 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         return this.evidenceCode;
     }
 
+    @Override
+    public String toString() {
+        return "EvidenceValueObject [id=" + id + ", description=" + description + ", evidenceCode=" + evidenceCode
+                + ", isNegativeEvidence=" + isNegativeEvidence + ", className=" + className + ", phenotypes="
+                + phenotypes + ", evidenceSource=" + evidenceSource + ", externalUrl=" + externalUrl + ", lastUpdated="
+                + lastUpdated + ", evidenceSecurityValueObject=" + evidenceSecurityValueObject + ", geneId=" + geneId
+                + ", geneNCBI=" + geneNCBI + ", geneOfficialSymbol=" + geneOfficialSymbol + ", geneOfficialName="
+                + geneOfficialName + ", taxonCommonName=" + taxonCommonName + ", isHomologueEvidence="
+                + isHomologueEvidence + ", containQueryPhenotype=" + containQueryPhenotype + ", scoreValueObject="
+                + scoreValueObject + "]";
+    }
+
     public EvidenceSecurityValueObject getEvidenceSecurityValueObject() {
         return this.evidenceSecurityValueObject;
     }

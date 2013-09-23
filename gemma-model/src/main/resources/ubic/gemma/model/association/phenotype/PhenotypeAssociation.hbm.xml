@@ -5,7 +5,7 @@
 
 <hibernate-mapping default-cascade="none">
 	<class name="ubic.gemma.model.association.phenotype.PhenotypeAssociation" table="PHENOTYPE_ASSOCIATION"
-		dynamic-insert="false" dynamic-update="false">
+		dynamic-insert="false" dynamic-update="false" abstract="true">
 		<cache usage="read-write" />
 		<id name="id" type="java.lang.Long" unsaved-value="null">
 			<column name="ID" sql-type="BIGINT" />
@@ -78,8 +78,8 @@
 				<column name="EXPERIMENT_FK" not-null="false" sql-type="BIGINT" />
 			</many-to-one>
 		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.DataAnalysisEvidenceImpl" discriminator-value="DataAnalysisEvidenceImpl"
-			dynamic-insert="false" dynamic-update="false" abstract="true">
+		<subclass name="ubic.gemma.model.association.phenotype.DataAnalysisEvidence" dynamic-insert="false"
+			dynamic-update="false" abstract="true">
 			<subclass name="ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl"
 				discriminator-value="DifferentialExpressionEvidenceImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
 				<property name="selectionThreshold" type="java.lang.Double">

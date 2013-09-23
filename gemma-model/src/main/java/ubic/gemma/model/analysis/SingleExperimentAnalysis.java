@@ -19,17 +19,19 @@
 
 package ubic.gemma.model.analysis;
 
+import gemma.gsec.model.Securable;
+import gemma.gsec.model.SecuredChild;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
  * 
  */
-public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implements gemma.gsec.model.SecuredChild {
-
-    private Integer numberOfElementsAnalyzed;
+public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implements SecuredChild {
 
     private BioAssaySet experimentAnalyzed;
+
+    private Integer numberOfElementsAnalyzed;
 
     /**
      * 
@@ -46,6 +48,11 @@ public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implem
         return this.numberOfElementsAnalyzed;
     }
 
+    @Override
+    public Securable getSecurityOwner() {
+        return this.getExperimentAnalyzed();
+    }
+
     public void setExperimentAnalyzed( ubic.gemma.model.expression.experiment.BioAssaySet experimentAnalyzed ) {
         this.experimentAnalyzed = experimentAnalyzed;
     }
@@ -53,5 +60,4 @@ public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implem
     public void setNumberOfElementsAnalyzed( Integer numberOfElementsAnalyzed ) {
         this.numberOfElementsAnalyzed = numberOfElementsAnalyzed;
     }
-
 }

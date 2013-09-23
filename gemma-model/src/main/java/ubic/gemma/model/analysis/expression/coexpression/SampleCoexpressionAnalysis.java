@@ -18,48 +18,36 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+
 /**
  * 
  */
-public abstract class SampleCoexpressionAnalysis extends ubic.gemma.model.analysis.SingleExperimentAnalysisImpl {
+public abstract class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis}.
+     * Constructs new instances of {@link SampleCoexpressionAnalysis}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis}.
+         * Constructs a new instance of {@link SampleCoexpressionAnalysis}.
          */
-        public static ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis newInstance() {
-            return new ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisImpl();
+        public static SampleCoexpressionAnalysis newInstance() {
+            return new SampleCoexpressionAnalysisImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 3119251067253965209L;
-    private ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix sampleCoexpressionMatrix;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public SampleCoexpressionAnalysis() {
-    }
+    private SampleCoexpressionMatrix sampleCoexpressionMatrix;
 
     /**
      * 
      */
-    public ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix getSampleCoexpressionMatrix() {
+    public SampleCoexpressionMatrix getSampleCoexpressionMatrix() {
         return this.sampleCoexpressionMatrix;
     }
 
-    public void setSampleCoexpressionMatrix(
-            ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix sampleCoexpressionMatrix ) {
+    public void setSampleCoexpressionMatrix( SampleCoexpressionMatrix sampleCoexpressionMatrix ) {
         this.sampleCoexpressionMatrix = sampleCoexpressionMatrix;
     }
 

@@ -18,46 +18,36 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+import ubic.gemma.model.common.description.BibliographicReference;
+
 /**
  * 
  */
-public abstract class LiteratureEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
+public abstract class LiteratureEvidence extends PhenotypeAssociation {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.phenotype.LiteratureEvidence}.
+     * Constructs new instances of {@link LiteratureEvidence}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.phenotype.LiteratureEvidence}.
+         * Constructs a new instance of {@link LiteratureEvidence}.
          */
-        public static ubic.gemma.model.association.phenotype.LiteratureEvidence newInstance() {
-            return new ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl();
+        public static LiteratureEvidence newInstance() {
+            return new LiteratureEvidenceImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 1051299362968669541L;
-    private ubic.gemma.model.common.description.BibliographicReference citation;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public LiteratureEvidence() {
-    }
+    private BibliographicReference citation;
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.BibliographicReference getCitation() {
+    public BibliographicReference getCitation() {
         return this.citation;
     }
 
-    public void setCitation( ubic.gemma.model.common.description.BibliographicReference citation ) {
+    public void setCitation( BibliographicReference citation ) {
         this.citation = citation;
     }
 

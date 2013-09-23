@@ -192,4 +192,5 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
     public void setUserOwned( boolean isUserOwned ) {
         this.isOwnedByCurrentUser = isUserOwned;
     }
+
 }

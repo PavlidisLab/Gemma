@@ -20,21 +20,22 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
 
+import ubic.gemma.model.expression.experiment.FactorValue;
+
 /**
  * An analysis of changes in expression levels across experimental conditions
  */
-public abstract class DifferentialExpressionAnalysis extends ubic.gemma.model.analysis.SingleExperimentAnalysisImpl {
+public abstract class DifferentialExpressionAnalysis extends ubic.gemma.model.analysis.SingleExperimentAnalysis {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis}.
+     * Constructs new instances of {@link DifferentialExpressionAnalysis}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis}
-         * .
+         * Constructs a new instance of {@link DifferentialExpressionAnalysis} .
          */
-        public static ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis newInstance() {
-            return new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl();
+        public static DifferentialExpressionAnalysis newInstance() {
+            return new DifferentialExpressionAnalysisImpl();
         }
 
     }
@@ -43,9 +44,9 @@ public abstract class DifferentialExpressionAnalysis extends ubic.gemma.model.an
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 7964501901575808462L;
-    private ubic.gemma.model.expression.experiment.FactorValue subsetFactorValue;
+    private FactorValue subsetFactorValue;
 
-    private Collection<ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet> resultSets = new java.util.HashSet<ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet>();
+    private Collection<ExpressionAnalysisResultSet> resultSets = new java.util.HashSet<ExpressionAnalysisResultSet>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -61,23 +62,22 @@ public abstract class DifferentialExpressionAnalysis extends ubic.gemma.model.an
      * ResultSet objects. Thus a two-way ANOVA with interactions will have three result sets: the two main effects and
      * the interaction effect.
      */
-    public Collection<ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet> getResultSets() {
+    public Collection<ExpressionAnalysisResultSet> getResultSets() {
         return this.resultSets;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.FactorValue getSubsetFactorValue() {
+    public FactorValue getSubsetFactorValue() {
         return this.subsetFactorValue;
     }
 
-    public void setResultSets(
-            Collection<ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet> resultSets ) {
+    public void setResultSets( Collection<ExpressionAnalysisResultSet> resultSets ) {
         this.resultSets = resultSets;
     }
 
-    public void setSubsetFactorValue( ubic.gemma.model.expression.experiment.FactorValue subsetFactorValue ) {
+    public void setSubsetFactorValue( FactorValue subsetFactorValue ) {
         this.subsetFactorValue = subsetFactorValue;
     }
 

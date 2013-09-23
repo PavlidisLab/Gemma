@@ -23,7 +23,7 @@ package ubic.gemma.model.expression.experiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionExperimentSubSetImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet {
+public class ExpressionExperimentSubSetImpl extends ExpressionExperimentSubSet {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

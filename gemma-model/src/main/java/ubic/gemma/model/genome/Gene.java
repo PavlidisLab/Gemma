@@ -20,6 +20,7 @@ package ubic.gemma.model.genome;
 
 import java.util.Collection;
 
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
@@ -194,8 +195,7 @@ public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
         this.officialSymbol = officialSymbol;
     }
 
-    public void setPhenotypeAssociations(
-            Collection<ubic.gemma.model.association.phenotype.PhenotypeAssociation> phenotypeAssociations ) {
+    public void setPhenotypeAssociations( Collection<PhenotypeAssociation> phenotypeAssociations ) {
         this.phenotypeAssociations = phenotypeAssociations;
     }
 
