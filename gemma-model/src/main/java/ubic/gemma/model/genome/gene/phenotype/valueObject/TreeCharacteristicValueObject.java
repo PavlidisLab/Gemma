@@ -22,6 +22,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -85,7 +86,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     }
 
     /** counts each private occurrence of genes for a phenotype */
-    public void countPrivateGeneForEachNode( Map<String, HashSet<Integer>> phenotypesGenesAssociations ) {
+    public void countPrivateGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
 
         HashSet<Integer> allGenes = new HashSet<Integer>();
 
@@ -114,7 +115,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     }
 
     /** counts each public occurrence of genes for a phenotype */
-    public void countPublicGeneForEachNode( Map<String, HashSet<Integer>> phenotypesGenesAssociations ) {
+    public void countPublicGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
 
         HashSet<Integer> allGenes = new HashSet<Integer>();
 

@@ -15,7 +15,6 @@
 package ubic.gemma.model.association.phenotype.service;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -145,14 +144,14 @@ public interface PhenotypeAssociationService {
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public Map<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
+    public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** find private evidence id that the user can modifiable or own */
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups );
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
-    public Map<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
+    public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** return the list of the owners that have evidence in the system */

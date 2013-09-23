@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -476,10 +477,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
-    public HashMap<String, HashSet<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
+    public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
 
-        HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
+        Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
 
         String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
         sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
@@ -491,12 +492,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
 
-        if ( showOnlyEditable ) {
-            sqlQuery += "and PHENOTYPE_ASSOCIATION.id in ( select PHENOTYPE_ASSOCIATION.id ";
-            sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
-            sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
-            sqlQuery += ") ";
-        }
+        // temporary fix.
+        // if ( showOnlyEditable ) {
+        // sqlQuery += "and PHENOTYPE_ASSOCIATION.id in ( select PHENOTYPE_ASSOCIATION.id ";
+        // sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+        // sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
+        // sqlQuery += ") ";
+        // }
 
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
@@ -528,11 +530,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
-    public HashMap<String, HashSet<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon,
-            Set<String> valuesUri, String userName, Collection<String> groups, boolean showOnlyEditable,
-            Collection<Long> externalDatabaseIds ) {
+    public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
 
-        HashMap<String, HashSet<Integer>> phenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
+        Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
 
         /*
          * At this level of the application, we can't access acls. The reason for this so we don't get uneven page
@@ -696,8 +697,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes */
-    private void populateGenesAssociations( String sqlQuery,
-            HashMap<String, HashSet<Integer>> phenotypesGenesAssociations ) {
+    private void populateGenesAssociations( String sqlQuery, Map<String, Set<Integer>> phenotypesGenesAssociations ) {
 
         SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
@@ -710,7 +710,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             if ( phenotypesGenesAssociations.containsKey( valueUri ) ) {
                 phenotypesGenesAssociations.get( valueUri ).add( geneNcbiId );
             } else {
-                HashSet<Integer> genesNCBI = new HashSet<Integer>();
+                Set<Integer> genesNCBI = new HashSet<Integer>();
                 genesNCBI.add( geneNcbiId );
                 phenotypesGenesAssociations.put( valueUri, genesNCBI );
             }

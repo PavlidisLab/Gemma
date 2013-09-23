@@ -1075,7 +1075,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<CharacteristicValueObject> phenotypesFound = new HashSet<CharacteristicValueObject>();
 
         // Phenotype ---> Genes
-        Map<String, HashSet<Integer>> publicPhenotypesGenesAssociations = this.associationService
+        Map<String, Set<Integer>> publicPhenotypesGenesAssociations = this.associationService
                 .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren, null, null, false, null );
 
         // for each Ontoly Term find in the search
@@ -1131,8 +1131,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             externalDatabaseIds = evidenceFilter.getExternalDatabaseIds();
         }
 
-        Map<String, HashSet<Integer>> publicPhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
-        Map<String, HashSet<Integer>> privatePhenotypesGenesAssociations = new HashMap<String, HashSet<Integer>>();
+        Map<String, Set<Integer>> publicPhenotypesGenesAssociations = new HashMap<>();
+        Map<String, Set<Integer>> privatePhenotypesGenesAssociations = new HashMap<>();
         // public phenotypes + private phenotypes (what the user can see)
         Set<String> allPhenotypesGenesAssociations = new HashSet<String>();
 
