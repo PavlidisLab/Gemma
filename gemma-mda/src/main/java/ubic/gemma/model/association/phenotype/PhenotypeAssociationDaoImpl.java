@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -410,7 +409,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         // hack to make this work temporarily.
         Map<String, Set<Integer>> others = findPublicPhenotypesGenesAssociations( taxon, valuesUri, userName, groups,
                 showOnlyEditable, externalDatabaseIds );
-
         phenotypesGenesAssociations.keySet().removeAll( others.keySet() );
 
         return phenotypesGenesAssociations;

@@ -24,7 +24,7 @@ public class SubmittedTasksMaintenance {
     @Autowired
     private TaskRunningService taskRunningService;
 
-    private static final int MAX_QUEUE_MINUTES = 60;
+    // private static final int MAX_QUEUE_MINUTES = 60;
 
     /**
      * How long we will hold onto results after a task has finished before removing it from task list.
@@ -43,8 +43,10 @@ public class SubmittedTasksMaintenance {
         if ( tasks.size() > 0 ) log.info( "Submitted tasks maintenance: " + tasks.size() + " tasks monitored." );
 
         for ( SubmittedTask<?> task : tasks ) {
-            log.info( "Checking task: " + task.getTaskCommand().getClass().getSimpleName() + task.getTaskId()
-                    + " started=" + task.getStartTime() + " status=" + task.getStatus() );
+            if ( !task.getStatus().equals( SubmittedTask.Status.COMPLETED ) ) {
+                log.info( "Checking task: " + task.getTaskCommand().getClass().getSimpleName() + task.getTaskId()
+                        + " started=" + task.getStartTime() + " status=" + task.getStatus() );
+            }
             switch ( task.getStatus() ) {
                 case QUEUED:
                     Date submissionTime = task.getSubmissionTime();
@@ -90,7 +92,8 @@ public class SubmittedTasksMaintenance {
                     }
                     break;
                 case UNKNOWN:
-
+                    break;
+                default:
                     break;
             }
         }
