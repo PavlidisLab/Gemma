@@ -121,15 +121,16 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      */
     private Collection<String> readListFileToStrings( String fileName ) throws IOException {
         Collection<String> eeNames = new HashSet<String>();
-        BufferedReader in = new BufferedReader( new FileReader( fileName ) );
-        while ( in.ready() ) {
-            String eeName = in.readLine().trim();
-            if ( eeName.startsWith( "#" ) ) {
-                continue;
+        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) );) {
+            while ( in.ready() ) {
+                String eeName = in.readLine().trim();
+                if ( eeName.startsWith( "#" ) ) {
+                    continue;
+                }
+                eeNames.add( eeName );
             }
-            eeNames.add( eeName );
+            return eeNames;
         }
-        return eeNames;
     }
 
     protected boolean allowSubsumedOrMerged = false;

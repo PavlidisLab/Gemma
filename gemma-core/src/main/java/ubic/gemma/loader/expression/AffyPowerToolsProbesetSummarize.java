@@ -238,105 +238,108 @@ public class AffyPowerToolsProbesetSummarize {
 
         log.info( "Parsing " + aptOutputFileToRead );
 
-        DoubleMatrix<String, String> matrix = parse( new FileInputStream( aptOutputFileToRead ) );
+        try (InputStream is = new FileInputStream( aptOutputFileToRead )) {
+            DoubleMatrix<String, String> matrix = parse( is );
 
-        if ( matrix.rows() == 0 ) {
-            throw new IllegalStateException( "Matrix from APT had no rows" );
-        }
-        if ( matrix.columns() == 0 ) {
-            throw new IllegalStateException( "Matrix from APT had no columns" );
-        }
-
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-
-        if ( matrix.columns() < bioAssays.size() ) {
-            // having > is okay, there can be extra.
-            throw new IllegalStateException( "Matrix from APT had the wrong number of colummns" );
-        }
-
-        log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssays.size()
-                + " samples..." );
-
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setName( "For " + ee.getShortName() );
-        bad.setDescription( "Generated from output of apt-probeset-summarize" );
-
-        /*
-         * Add them ...
-         */
-
-        Map<String, BioAssay> bmap = new HashMap<String, BioAssay>();
-        for ( BioAssay bioAssay : bioAssays ) {
-
-            if ( bmap.containsKey( bioAssay.getAccession().getAccession() ) || bmap.containsKey( bioAssay.getName() ) ) {
-                throw new IllegalStateException( "Duplicate" );
+            if ( matrix.rows() == 0 ) {
+                throw new IllegalStateException( "Matrix from APT had no rows" );
             }
-            bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
-            bmap.put( bioAssay.getName(), bioAssay );
-        }
+            if ( matrix.columns() == 0 ) {
+                throw new IllegalStateException( "Matrix from APT had no columns" );
+            }
 
-        if ( log.isDebugEnabled() )
-            log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
-                    + StringUtils.join( bmap.keySet(), "\n" ) );
+            Collection<BioAssay> bioAssays = ee.getBioAssays();
 
-        int found = 0;
-        List<String> columnsToKeep = new ArrayList<String>();
-        for ( int i = 0; i < matrix.columns(); i++ ) {
-            String columnName = matrix.getColName( i );
+            if ( matrix.columns() < bioAssays.size() ) {
+                // having > is okay, there can be extra.
+                throw new IllegalStateException( "Matrix from APT had the wrong number of colummns" );
+            }
 
-            String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
+            log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssays.size()
+                    + " samples..." );
+
+            BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+            bad.setName( "For " + ee.getShortName() );
+            bad.setDescription( "Generated from output of apt-probeset-summarize" );
 
             /*
-             * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
+             * Add them ...
              */
-            BioAssay assay = null;
-            if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
-                String geoAcc = sampleName.split( "_" )[0];
 
-                log.info( "Found column for " + geoAcc );
-                if ( bmap.containsKey( geoAcc ) ) {
-                    assay = bmap.get( geoAcc );
+            Map<String, BioAssay> bmap = new HashMap<String, BioAssay>();
+            for ( BioAssay bioAssay : bioAssays ) {
+
+                if ( bmap.containsKey( bioAssay.getAccession().getAccession() )
+                        || bmap.containsKey( bioAssay.getName() ) ) {
+                    throw new IllegalStateException( "Duplicate" );
+                }
+                bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
+                bmap.put( bioAssay.getName(), bioAssay );
+            }
+
+            if ( log.isDebugEnabled() )
+                log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
+                        + StringUtils.join( bmap.keySet(), "\n" ) );
+
+            int found = 0;
+            List<String> columnsToKeep = new ArrayList<String>();
+            for ( int i = 0; i < matrix.columns(); i++ ) {
+                String columnName = matrix.getColName( i );
+
+                String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
+
+                /*
+                 * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
+                 */
+                BioAssay assay = null;
+                if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
+                    String geoAcc = sampleName.split( "_" )[0];
+
+                    log.info( "Found column for " + geoAcc );
+                    if ( bmap.containsKey( geoAcc ) ) {
+                        assay = bmap.get( geoAcc );
+                    } else {
+                        log.warn( "No bioassay for " + geoAcc );
+                    }
                 } else {
-                    log.warn( "No bioassay for " + geoAcc );
-                }
-            } else {
 
-                /*
-                 * Sometimes column names are like Aud_19L.CEL or
-                 */
-                assay = bmap.get( sampleName );
+                    /*
+                     * Sometimes column names are like Aud_19L.CEL or
+                     */
+                    assay = bmap.get( sampleName );
+                }
+
+                if ( assay == null ) {
+                    /*
+                     * This is okay, if we have extras
+                     */
+                    if ( matrix.columns() == bioAssays.size() ) {
+                        throw new IllegalStateException( "No bioassay could be matched to CEL file identified by "
+                                + sampleName );
+                    }
+                    log.warn( "No bioassay for " + sampleName );
+                    continue;
+                }
+
+                log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
+                        + assay.getAccession().getAccession() + "]" );
+
+                columnsToKeep.add( columnName );
+                assay.setArrayDesignUsed( targetPlatform ); // OK?
+                bad.getBioAssays().add( assay );
+                found++;
             }
 
-            if ( assay == null ) {
-                /*
-                 * This is okay, if we have extras
-                 */
-                if ( matrix.columns() == bioAssays.size() ) {
-                    throw new IllegalStateException( "No bioassay could be matched to CEL file identified by "
-                            + sampleName );
-                }
-                log.warn( "No bioassay for " + sampleName );
-                continue;
+            if ( found != bioAssays.size() ) {
+                throw new IllegalStateException( "Failed to find a data column for every bioassay" );
             }
 
-            log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
-                    + assay.getAccession().getAccession() + "]" );
+            if ( columnsToKeep.size() < matrix.columns() ) {
+                matrix = matrix.subsetColumns( columnsToKeep );
+            }
 
-            columnsToKeep.add( columnName );
-            assay.setArrayDesignUsed( targetPlatform ); // OK?
-            bad.getBioAssays().add( assay );
-            found++;
+            return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
         }
-
-        if ( found != bioAssays.size() ) {
-            throw new IllegalStateException( "Failed to find a data column for every bioassay" );
-        }
-
-        if ( columnsToKeep.size() < matrix.columns() ) {
-            matrix = matrix.subsetColumns( columnsToKeep );
-        }
-
-        return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
     }
 
     /**

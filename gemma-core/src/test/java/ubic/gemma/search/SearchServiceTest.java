@@ -103,12 +103,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Before
     public void setup() throws Exception {
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );) {
+            assert is != null;
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );
-        assert is != null;
-
-        ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
-
+            ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
+        }
         ee = this.getTestPersistentBasicExpressionExperiment();
 
         eeCharSpinalCord = VocabCharacteristic.Factory.newInstance();
@@ -243,6 +242,67 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         fail( "Didn't get expected result from search" );
 
+    }
+
+    @Test
+    public void testSearchByBibRefIdProblems() {
+
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+        BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
+        bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
+        assertTrue( bibref.getAbstractText().contains(
+                "ase proved to be a de novo mutation. In the third kindred, affected brothers both have a" ) );
+
+        IndexerTaskCommand c = new IndexerTaskCommand();
+        c.setIndexBibRef( true );
+
+        indexerTask.setTaskCommand( c );
+        indexerTask.execute();
+
+        SearchSettings settings = SearchSettings.Factory.newInstance();
+        settings.noSearches();
+        settings.setQuery( "de novo mutation" );
+        settings.setSearchBibrefs( true );
+
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+        for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
+            if ( sr.getResultObject().equals( bibref ) ) {
+                return;
+            }
+        }
+        fail( "Didn't get expected result from search" );
+    }
+
+    @Test
+    public void testSearchByBibRefIdProblemsB() {
+
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+        BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
+        bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
+        assertTrue( bibref.getAbstractText().contains(
+                "d to chromosome 22q12. Our results confirm chromosome 22q12 as the solitary locus for FFEVF" ) );
+
+        IndexerTaskCommand c = new IndexerTaskCommand();
+        c.setIndexBibRef( true );
+
+        indexerTask.setTaskCommand( c );
+        indexerTask.execute();
+
+        SearchSettings settings = SearchSettings.Factory.newInstance();
+        settings.noSearches();
+        settings.setQuery( "confirm chromosome 22q12" );
+        settings.setSearchBibrefs( true );
+
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+        for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
+            if ( sr.getResultObject().equals( bibref ) ) {
+                return;
+            }
+        }
+
+        fail( "Didn't get expected result from search" );
     }
 
     @Test

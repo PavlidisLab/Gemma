@@ -1083,24 +1083,25 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
      */
     private Collection<CompositeSequence> getProbesFromSubset( File f ) throws IOException {
 
-        BufferedReader in = new BufferedReader( new FileReader( f ) );
-        Collection<CompositeSequence> probeSubset = new HashSet<CompositeSequence>();
+        try (BufferedReader in = new BufferedReader( new FileReader( f ) );) {
+            Collection<CompositeSequence> probeSubset = new HashSet<CompositeSequence>();
 
-        String line;
-        log.info( "Loading probes from " + f );
-        while ( ( line = in.readLine() ) != null ) {
-            line = line.trim();
-            if ( line.startsWith( "#" ) ) {
-                continue;
+            String line;
+            log.info( "Loading probes from " + f );
+            while ( ( line = in.readLine() ) != null ) {
+                line = line.trim();
+                if ( line.startsWith( "#" ) ) {
+                    continue;
+                }
+
+                String[] fields = StringUtils.split( line, "\t" );
+
+                String prb = fields[0];
+                CompositeSequence cs = css.findByName( arrayDesign, prb );
+                probeSubset.add( cs );
             }
-
-            String[] fields = StringUtils.split( line, "\t" );
-
-            String prb = fields[0];
-            CompositeSequence cs = css.findByName( arrayDesign, prb );
-            probeSubset.add( cs );
+            return probeSubset;
         }
-        return probeSubset;
     }
 
     /**

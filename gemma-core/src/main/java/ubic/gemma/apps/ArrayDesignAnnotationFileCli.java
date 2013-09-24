@@ -299,55 +299,56 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( "Loading platforms to annotate from " + this.batchFileName );
         InputStream is = new FileInputStream( this.batchFileName );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 
-        String line = null;
-        int lineNumber = 0;
-        while ( ( line = br.readLine() ) != null ) {
-            lineNumber++;
-            if ( StringUtils.isBlank( line ) ) {
-                continue;
+            String line = null;
+            int lineNumber = 0;
+            while ( ( line = br.readLine() ) != null ) {
+                lineNumber++;
+                if ( StringUtils.isBlank( line ) ) {
+                    continue;
+                }
+
+                String[] arguments = StringUtils.split( line, ',' );
+
+                String accession = arguments[0];
+                String annotationFileName = arguments[1];
+                String typeo = arguments[2];
+
+                // Check the syntax of the given line
+                if ( ( accession == null ) || StringUtils.isBlank( accession ) ) {
+                    log.warn( "Incorrect line format in Batch Annotation file: Line " + lineNumber
+                            + "Platform is required: " + line );
+                    log.warn( "Unable to process that line. Skipping to next." );
+                    continue;
+                }
+                if ( ( annotationFileName == null ) || StringUtils.isBlank( annotationFileName ) ) {
+                    annotationFileName = accession;
+                    log.warn( "No annotation file name specified on line: " + lineNumber
+                            + " Using platform name as default annotation file name" );
+                }
+                if ( StringUtils.isBlank( typeo ) ) {
+                    this.type = OutputType.SHORT;
+                    log.warn( "No type specifed for line: " + lineNumber + " Defaulting to short" );
+                } else {
+                    type = OutputType.valueOf( typeo.toUpperCase() );
+                }
+
+                // need to set these so processing ad works correctly (todo: make
+                // processtype take all 3 parameter)
+                ArrayDesign arrayDesign = locateArrayDesign( accession );
+
+                try {
+                    processAD( arrayDesign, annotationFileName, type );
+                } catch ( Exception e ) {
+                    log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ********" );
+                    log.error( e, e );
+                    cacheException( e );
+                    errorObjects.add( arrayDesign + ": " + e.getMessage() );
+                    continue;
+                }
+
             }
-
-            String[] arguments = StringUtils.split( line, ',' );
-
-            String accession = arguments[0];
-            String annotationFileName = arguments[1];
-            String typeo = arguments[2];
-
-            // Check the syntax of the given line
-            if ( ( accession == null ) || StringUtils.isBlank( accession ) ) {
-                log.warn( "Incorrect line format in Batch Annotation file: Line " + lineNumber
-                        + "Platform is required: " + line );
-                log.warn( "Unable to process that line. Skipping to next." );
-                continue;
-            }
-            if ( ( annotationFileName == null ) || StringUtils.isBlank( annotationFileName ) ) {
-                annotationFileName = accession;
-                log.warn( "No annotation file name specified on line: " + lineNumber
-                        + " Using platform name as default annotation file name" );
-            }
-            if ( StringUtils.isBlank( typeo ) ) {
-                this.type = OutputType.SHORT;
-                log.warn( "No type specifed for line: " + lineNumber + " Defaulting to short" );
-            } else {
-                type = OutputType.valueOf( typeo.toUpperCase() );
-            }
-
-            // need to set these so processing ad works correctly (todo: make
-            // processtype take all 3 parameter)
-            ArrayDesign arrayDesign = locateArrayDesign( accession );
-
-            try {
-                processAD( arrayDesign, annotationFileName, type );
-            } catch ( Exception e ) {
-                log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ********" );
-                log.error( e, e );
-                cacheException( e );
-                errorObjects.add( arrayDesign + ": " + e.getMessage() );
-                continue;
-            }
-
         }
 
         summarizeProcessing();
@@ -468,32 +469,33 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     private void processGeneList() throws IOException {
         log.info( "Loading genes to annotate from " + geneFileName );
         InputStream is = new FileInputStream( geneFileName );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-        String line = null;
-        GeneService geneService = getBean( GeneService.class );
-        TaxonService taxonService = getBean( TaxonService.class );
-        Taxon taxon = taxonService.findByCommonName( taxonName );
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
-        }
-        Collection<Gene> genes = new HashSet<Gene>();
-        while ( ( line = br.readLine() ) != null ) {
-            if ( StringUtils.isBlank( line ) ) {
-                continue;
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+            String line = null;
+            GeneService geneService = getBean( GeneService.class );
+            TaxonService taxonService = getBean( TaxonService.class );
+            Taxon taxon = taxonService.findByCommonName( taxonName );
+            if ( taxon == null ) {
+                throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
             }
-            String[] arguments = StringUtils.split( line, '\t' );
-            String gene = arguments[0];
-            Gene g = geneService.findByOfficialSymbol( gene, taxon );
-            if ( g == null ) {
-                log.info( "Gene: " + gene + " not found." );
-                continue;
+            Collection<Gene> genes = new HashSet<Gene>();
+            while ( ( line = br.readLine() ) != null ) {
+                if ( StringUtils.isBlank( line ) ) {
+                    continue;
+                }
+                String[] arguments = StringUtils.split( line, '\t' );
+                String gene = arguments[0];
+                Gene g = geneService.findByOfficialSymbol( gene, taxon );
+                if ( g == null ) {
+                    log.info( "Gene: " + gene + " not found." );
+                    continue;
+                }
+                genes.add( g );
             }
-            genes.add( g );
+            log.info( "File contained " + genes.size() + " potential gene symbols" );
+            int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ),
+                    genes, OutputType.SHORT );
+            log.info( "Processed " + numProcessed + " genes that were found" );
         }
-        log.info( "File contained " + genes.size() + " potential gene symbols" );
-        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
-                OutputType.SHORT );
-        log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
     /**

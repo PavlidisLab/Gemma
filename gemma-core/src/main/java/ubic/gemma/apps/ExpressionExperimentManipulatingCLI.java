@@ -284,19 +284,20 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         log.info( "Reading " + inFile );
 
         Collection<Gene> genes = new ArrayList<Gene>();
-        BufferedReader in = new BufferedReader( new FileReader( inFile ) );
-        String line;
-        while ( ( line = in.readLine() ) != null ) {
-            if ( line.startsWith( "#" ) ) continue;
-            String s = line.trim();
-            Gene gene = findGeneByOfficialSymbol( s, t );
-            if ( gene == null ) {
-                log.error( "ERROR: Cannot find genes for " + s );
-                continue;
+        try (BufferedReader in = new BufferedReader( new FileReader( inFile ) );) {
+            String line;
+            while ( ( line = in.readLine() ) != null ) {
+                if ( line.startsWith( "#" ) ) continue;
+                String s = line.trim();
+                Gene gene = findGeneByOfficialSymbol( s, t );
+                if ( gene == null ) {
+                    log.error( "ERROR: Cannot find genes for " + s );
+                    continue;
+                }
+                genes.add( gene );
             }
-            genes.add( gene );
+            return genes;
         }
-        return genes;
     }
 
     /**
@@ -423,15 +424,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private Collection<String> readExpressionExperimentListFileToStrings( String fileName ) throws IOException {
         Collection<String> eeNames = new HashSet<String>();
-        BufferedReader in = new BufferedReader( new FileReader( fileName ) );
-        while ( in.ready() ) {
-            String eeName = in.readLine().trim();
-            if ( eeName.startsWith( "#" ) ) {
-                continue;
+        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) );) {
+            while ( in.ready() ) {
+                String eeName = in.readLine().trim();
+                if ( eeName.startsWith( "#" ) ) {
+                    continue;
+                }
+                eeNames.add( eeName );
             }
-            eeNames.add( eeName );
+            return eeNames;
         }
-        return eeNames;
     }
 
     /**

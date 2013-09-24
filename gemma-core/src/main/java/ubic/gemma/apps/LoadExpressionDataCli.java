@@ -195,17 +195,18 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             if ( accessionFile != null ) {
                 log.info( "Loading accessions from " + accessionFile );
                 InputStream is = new FileInputStream( accessionFile );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+                try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
 
-                String accession = null;
-                while ( ( accession = br.readLine() ) != null ) {
+                    String accession = null;
+                    while ( ( accession = br.readLine() ) != null ) {
 
-                    if ( StringUtils.isBlank( accession ) ) {
-                        continue;
+                        if ( StringUtils.isBlank( accession ) ) {
+                            continue;
+                        }
+
+                        processAccession( geoService, accession );
+
                     }
-
-                    processAccession( geoService, accession );
-
                 }
             }
             summarizeProcessing();

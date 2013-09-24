@@ -54,52 +54,52 @@ public class LuceneTest {
      */
     @Test
     public void luceneRamIndexTest() throws Exception {
+        try (RAMDirectory idx = new RAMDirectory(); Analyzer analyzer = new StandardAnalyzer( Version.LUCENE_36 );) {
 
-        RAMDirectory idx = new RAMDirectory();
-        Analyzer analyzer = new StandardAnalyzer( Version.LUCENE_36 );
+            IndexWriterConfig iwc = new IndexWriterConfig( Version.LUCENE_36, analyzer );
+            IndexWriter writer = new IndexWriter( idx, iwc );
+            Document doc = new Document();
+            Field f = new Field( "content", "I have a small braintest", Field.Store.YES, Field.Index.ANALYZED );
+            doc.add( f );
+            writer.addDocument( doc );
+            doc = new Document();
+            f = new Field( "content", "I have a small braddintest", Field.Store.YES, Field.Index.ANALYZED );
+            doc.add( f );
+            writer.addDocument( doc );
+            doc = new Document();
+            f = new Field( "content", "I have a small brasaaafintest", Field.Store.YES, Field.Index.ANALYZED );
+            doc.add( f );
+            writer.addDocument( doc );
+            doc = new Document();
+            f = new Field( "content", "I have a small braidagagntest", Field.Store.YES, Field.Index.ANALYZED );
+            doc.add( f );
+            writer.addDocument( doc );
+            writer.close();
 
-        IndexWriterConfig iwc = new IndexWriterConfig( Version.LUCENE_36, analyzer );
-        IndexWriter writer = new IndexWriter( idx, iwc );
-        Document doc = new Document();
-        Field f = new Field( "content", "I have a small braintest", Field.Store.YES, Field.Index.ANALYZED );
-        doc.add( f );
-        writer.addDocument( doc );
-        doc = new Document();
-        f = new Field( "content", "I have a small braddintest", Field.Store.YES, Field.Index.ANALYZED );
-        doc.add( f );
-        writer.addDocument( doc );
-        doc = new Document();
-        f = new Field( "content", "I have a small brasaaafintest", Field.Store.YES, Field.Index.ANALYZED );
-        doc.add( f );
-        writer.addDocument( doc );
-        doc = new Document();
-        f = new Field( "content", "I have a small braidagagntest", Field.Store.YES, Field.Index.ANALYZED );
-        doc.add( f );
-        writer.addDocument( doc );
-        writer.close();
+            try (IndexReader ir = IndexReader.open( idx ); IndexSearcher searcher = new IndexSearcher( ir );) {
 
-        IndexReader ir = IndexReader.open( idx );
-        IndexSearcher searcher = new IndexSearcher( ir );
-        TopDocsCollector<ScoreDoc> hc = TopScoreDocCollector.create( 1, true );
+                TopDocsCollector<ScoreDoc> hc = TopScoreDocCollector.create( 1, true );
 
-        QueryParser parser = new QueryParser( Version.LUCENE_36, "content", analyzer );
-        Query parsedQuery;
+                QueryParser parser = new QueryParser( Version.LUCENE_36, "content", analyzer );
+                Query parsedQuery;
 
-        parsedQuery = parser.parse( "braintest" );
+                parsedQuery = parser.parse( "braintest" );
 
-        searcher.search( parsedQuery, hc );
+                searcher.search( parsedQuery, hc );
 
-        TopDocs topDocs = hc.topDocs();
+                TopDocs topDocs = hc.topDocs();
 
-        int hitcount = topDocs.totalHits;
-        assertTrue( hitcount > 0 );
-
+                int hitcount = topDocs.totalHits;
+                assertTrue( hitcount > 0 );
+            }
+        }
     }
 
     @Test
     public void testEnglishAnalyzer() throws Exception {
-        Analyzer analyzer = new EnglishAnalyzer( Version.LUCENE_36 );
-        luceneTestB( analyzer );
+        try (Analyzer analyzer = new EnglishAnalyzer( Version.LUCENE_36 );) {
+            luceneTestB( analyzer );
+        }
     }
 
     // @Test
@@ -118,139 +118,137 @@ public class LuceneTest {
 
     public void luceneTestB( Analyzer analyzer ) throws Exception {
 
-        RAMDirectory idx = new RAMDirectory();
-
         IndexWriterConfig iwc = new IndexWriterConfig( Version.LUCENE_36, analyzer );
+        try (RAMDirectory idx = new RAMDirectory(); IndexWriter writer = new IndexWriter( idx, iwc );) {
+            Document doc = new Document();
+            Field f = new Field( "content", "Parkinson's disease", Field.Store.YES, Field.Index.ANALYZED );
+            doc.add( f );
+            writer.addDocument( doc );
 
-        IndexWriter writer = new IndexWriter( idx, iwc );
-        Document doc = new Document();
-        Field f = new Field( "content", "Parkinson's disease", Field.Store.YES, Field.Index.ANALYZED );
-        doc.add( f );
-        writer.addDocument( doc );
+            doc = new Document();
+            f = new Field( "content", "fooo", Field.Store.YES, Field.Index.ANALYZED );
+            doc.add( f );
+            writer.addDocument( doc );
+            log.info( doc );
 
-        doc = new Document();
-        f = new Field( "content", "fooo", Field.Store.YES, Field.Index.ANALYZED );
-        doc.add( f );
-        writer.addDocument( doc );
-        log.info( doc );
+            writer.close();
 
-        writer.close();
+            IndexReader ir = IndexReader.open( idx );
+            IndexSearcher searcher = new IndexSearcher( ir );
+            TopDocsCollector<ScoreDoc> hc = TopScoreDocCollector.create( 1, true );
 
-        IndexReader ir = IndexReader.open( idx );
-        IndexSearcher searcher = new IndexSearcher( ir );
-        TopDocsCollector<ScoreDoc> hc = TopScoreDocCollector.create( 1, true );
+            QueryParser parser = new QueryParser( Version.LUCENE_36, "content", analyzer );
+            parser.setAutoGeneratePhraseQueries( true );
+            parser.setEnablePositionIncrements( true );
 
-        QueryParser parser = new QueryParser( Version.LUCENE_36, "content", analyzer );
-        parser.setAutoGeneratePhraseQueries( true );
-        parser.setEnablePositionIncrements( true );
+            Query parsedQuery;
 
-        Query parsedQuery;
+            parsedQuery = parser.parse( "Parkinson's disease" );
+            log.info( parsedQuery.toString() );
+            hc = TopScoreDocCollector.create( 1, true );
+            searcher.search( parsedQuery, hc );
+            TopDocs topDocs = hc.topDocs();
+            int hitcount = topDocs.totalHits;
+            assertTrue( parsedQuery.toString(), hitcount > 0 );
+            log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "content" ) );
 
-        parsedQuery = parser.parse( "Parkinson's disease" );
-        log.info( parsedQuery.toString() );
-        hc = TopScoreDocCollector.create( 1, true );
-        searcher.search( parsedQuery, hc );
-        TopDocs topDocs = hc.topDocs();
-        int hitcount = topDocs.totalHits;
-        assertTrue( parsedQuery.toString(), hitcount > 0 );
-        log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "content" ) );
+            parsedQuery = parser.parse( "parkinson's disease" );
+            log.info( parsedQuery.toString() );
+            hc = TopScoreDocCollector.create( 1, true );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( parsedQuery.toString(), hitcount > 0 );
 
-        parsedQuery = parser.parse( "parkinson's disease" );
-        log.info( parsedQuery.toString() );
-        hc = TopScoreDocCollector.create( 1, true );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( parsedQuery.toString(), hitcount > 0 );
+            parsedQuery = parser.parse( "\"parkinson's disease\"" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( parsedQuery.toString(), hitcount > 0 );
 
-        parsedQuery = parser.parse( "\"parkinson's disease\"" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( parsedQuery.toString(), hitcount > 0 );
+            parsedQuery = parser.parse( "\"parkinsons disease \"" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( parsedQuery.toString(), hitcount > 0 );
 
-        parsedQuery = parser.parse( "\"parkinsons disease \"" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( parsedQuery.toString(), hitcount > 0 );
+            parsedQuery = parser.parse( "\"parkinson disease \"" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( parsedQuery.toString(), hitcount > 0 );
+            parsedQuery = parser.parse( "parkinsons" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( hitcount > 0 );
+            parsedQuery = parser.parse( "parkinson" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( hitcount > 0 );
 
-        parsedQuery = parser.parse( "\"parkinson disease \"" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( parsedQuery.toString(), hitcount > 0 );
-        parsedQuery = parser.parse( "parkinsons" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( hitcount > 0 );
-        parsedQuery = parser.parse( "parkinson" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( hitcount > 0 );
+            parsedQuery = parser.parse( "parkinson*" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( hitcount > 0 );
+            log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "index" ) );
 
-        parsedQuery = parser.parse( "parkinson*" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( hitcount > 0 );
-        log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "index" ) );
+            parsedQuery = parser.parse( "park*" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( hitcount > 0 );
 
-        parsedQuery = parser.parse( "park*" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( hitcount > 0 );
+            parsedQuery = parser.parse( "parkinson's AND disease" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( hitcount > 0 );
 
-        parsedQuery = parser.parse( "parkinson's AND disease" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( hitcount > 0 );
+            parsedQuery = parser.parse( "'parkinson's AND disease'" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( hitcount > 0 );
 
-        parsedQuery = parser.parse( "'parkinson's AND disease'" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( hitcount > 0 );
+            parsedQuery = parser.parse( "parkinson disease" );
+            hc = TopScoreDocCollector.create( 1, true );
+            log.info( parsedQuery.toString() );
+            searcher.search( parsedQuery, hc );
+            topDocs = hc.topDocs();
+            hitcount = topDocs.totalHits;
+            assertTrue( hitcount > 0 );
+            log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "content" ) );
 
-        parsedQuery = parser.parse( "parkinson disease" );
-        hc = TopScoreDocCollector.create( 1, true );
-        log.info( parsedQuery.toString() );
-        searcher.search( parsedQuery, hc );
-        topDocs = hc.topDocs();
-        hitcount = topDocs.totalHits;
-        assertTrue( hitcount > 0 );
-        log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "content" ) );
+            // parsedQuery = parser.parse( "parknson" );
+            // hc = TopScoreDocCollector.create( 1, true );
+            // log.info( parsedQuery.toString() );
+            // searcher.search( parsedQuery, hc );
+            // topDocs = hc.topDocs();
+            // hitcount = topDocs.totalHits;
+            // assertTrue( hitcount > 0 );
+            // log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "content" ) );
 
-        // parsedQuery = parser.parse( "parknson" );
-        // hc = TopScoreDocCollector.create( 1, true );
-        // log.info( parsedQuery.toString() );
-        // searcher.search( parsedQuery, hc );
-        // topDocs = hc.topDocs();
-        // hitcount = topDocs.totalHits;
-        // assertTrue( hitcount > 0 );
-        // log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "content" ) );
-
+        }
     }
 }

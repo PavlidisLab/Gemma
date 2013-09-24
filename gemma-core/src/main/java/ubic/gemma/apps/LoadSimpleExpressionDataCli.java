@@ -123,34 +123,34 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
             return err;
         }
         try {
-            this.eeLoaderService = this
-                    .getBean( SimpleExpressionDataLoaderService.class );
+            this.eeLoaderService = this.getBean( SimpleExpressionDataLoaderService.class );
             this.eeService = this.getBean( ExpressionExperimentService.class );
             this.adService = this.getBean( ArrayDesignService.class );
             this.taxonService = this.getBean( TaxonService.class );
             if ( this.fileName != null ) {
                 log.info( "Loading experiments from " + this.fileName );
                 InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-                String conf = null;
-                while ( ( conf = br.readLine() ) != null ) {
+                try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+                    String conf = null;
+                    while ( ( conf = br.readLine() ) != null ) {
 
-                    if ( StringUtils.isBlank( conf ) ) {
-                        continue;
-                    }
+                        if ( StringUtils.isBlank( conf ) ) {
+                            continue;
+                        }
 
-                    /* Comments in the list file */
-                    if ( conf.startsWith( "#" ) ) continue;
+                        /* Comments in the list file */
+                        if ( conf.startsWith( "#" ) ) continue;
 
-                    String expName = conf.split( SPLITCHAR )[0];
+                        String expName = conf.split( SPLITCHAR )[0];
 
-                    try {
-                        this.loadExperiment( conf );
-                        log.info( "Successfully Loaded " + expName );
-                        successObjects.add( expName );
-                    } catch ( Exception e ) {
-                        errorObjects.add( expName + ": " + e.getMessage() );
-                        log.error( "Failure loading " + expName, e );
+                        try {
+                            this.loadExperiment( conf );
+                            log.info( "Successfully Loaded " + expName );
+                            successObjects.add( expName );
+                        } catch ( Exception e ) {
+                            errorObjects.add( expName + ": " + e.getMessage() );
+                            log.error( "Failure loading " + expName, e );
+                        }
                     }
                 }
                 summarizeProcessing();
