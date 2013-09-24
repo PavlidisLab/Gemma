@@ -105,6 +105,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
      },
      
      filter: function () {
+    	 if (!this.ready) {return;}
 	        
          var stringency = this.coexDisplaySettings.getStringency();
          var queryGenesOnly = this.coexDisplaySettings.getQueryGenesOnly();
