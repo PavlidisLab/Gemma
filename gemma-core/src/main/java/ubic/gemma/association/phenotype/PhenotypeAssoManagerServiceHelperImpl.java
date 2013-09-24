@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +44,7 @@ import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
- import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -102,6 +104,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+
+    private static Log log = LogFactory.getLog( PhenotypeAssoManagerServiceHelperImpl.class );
 
     /*
      * (non-Javadoc)
@@ -392,8 +396,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
                 // the Investigation is already present in the database so we can reuse it
                 if ( sameFound ) {
-                    System.out
-                            .println( "Investigation For the ExperimentalEvidence found in the database and will be reuse" );
+                    log.info( "Investigation For the ExperimentalEvidence found in the database and will be reuse" );
                     genericExperiment = genericExp;
                 }
             }
@@ -565,8 +568,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
      * @param evidenceValueObject
      * @param phenotypeAssociation
      */
-    private void setScoreInformation( EvidenceValueObject evidenceValueObject,
-            PhenotypeAssociation phenotypeAssociation ) {
+    private void setScoreInformation( EvidenceValueObject evidenceValueObject, PhenotypeAssociation phenotypeAssociation ) {
         if ( evidenceValueObject.getScoreValueObject() != null ) {
 
             if ( evidenceValueObject.getScoreValueObject().getScoreName() != null
