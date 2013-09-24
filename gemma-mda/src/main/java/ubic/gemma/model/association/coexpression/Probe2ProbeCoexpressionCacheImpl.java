@@ -111,8 +111,8 @@ public class Probe2ProbeCoexpressionCacheImpl implements InitializingBean, Probe
         boolean eternal = Settings.getBoolean( "gemma.cache.probe2probe.eternal", CACHE_DEFAULT_ETERNAL )
                 && timeToLive == 0;
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
-        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.probe2probe.usedisk",
-                CACHE_DEFAULT_OVERFLOW_TO_DISK );
+        boolean overFlowToDisk = Settings
+                .getBoolean( "gemma.cache.probe2probe.usedisk", CACHE_DEFAULT_OVERFLOW_TO_DISK );
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
         if ( !cacheManager.cacheExists( CACHE_NAME_BASE ) ) {

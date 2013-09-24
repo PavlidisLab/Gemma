@@ -30,8 +30,8 @@ public interface GeneCoexpressionNodeDegreeService {
      */
     public Collection<GeneCoexpressionNodeDegree> create( Collection<GeneCoexpressionNodeDegree> e );
 
-    public void deleteFor( Gene gene );
-
     public GeneCoexpressionNodeDegree create( GeneCoexpressionNodeDegree n );
+
+    public void deleteFor( Gene gene );
 
 }

@@ -144,7 +144,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
 
         byte[] matrixBytes = matObj.getCoexpressionMatrix();
 
-        final List<BioAssay> bioAssays = ( List<BioAssay> ) matObj.getBioAssayDimension().getBioAssays();
+        final List<BioAssay> bioAssays = matObj.getBioAssayDimension().getBioAssays();
         int numBa = bioAssays.size();
 
         if ( numBa == 0 ) {

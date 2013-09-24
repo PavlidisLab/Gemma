@@ -47,15 +47,6 @@ public class JobInfoServiceImpl implements JobInfoService {
         return jobInfoDao.create( entity );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#getJobInfoDao()
-     */
-    JobInfoDao getJobInfoDao() {
-        return jobInfoDao;
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Collection<JobInfo> getUsersJobs( String userName ) {
@@ -117,6 +108,15 @@ public class JobInfoServiceImpl implements JobInfoService {
     @Transactional
     public void update( JobInfo entity ) {
         jobInfoDao.update( entity );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.JobInfoServiceff#getJobInfoDao()
+     */
+    JobInfoDao getJobInfoDao() {
+        return jobInfoDao;
     }
 
 }

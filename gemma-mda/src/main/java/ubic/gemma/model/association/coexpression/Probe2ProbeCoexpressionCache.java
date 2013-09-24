@@ -27,16 +27,6 @@ import ubic.gemma.model.genome.Gene;
 public interface Probe2ProbeCoexpressionCache {
 
     /**
-     * @return the enabled
-     */
-    public abstract Boolean isEnabled();
-
-    /**
-     * @param enabled the enabled to set
-     */
-    public abstract void setEnabled( Boolean enabled );
-
-    /**
      * @param coExVOForCache
      */
     public abstract void addToCache( CoexpressionCacheValueObject coExVOForCache );
@@ -59,5 +49,15 @@ public interface Probe2ProbeCoexpressionCache {
      * @return
      */
     public abstract Collection<CoexpressionCacheValueObject> get( BioAssaySet ee, Gene g );
+
+    /**
+     * @return the enabled
+     */
+    public abstract Boolean isEnabled();
+
+    /**
+     * @param enabled the enabled to set
+     */
+    public abstract void setEnabled( Boolean enabled );
 
 }

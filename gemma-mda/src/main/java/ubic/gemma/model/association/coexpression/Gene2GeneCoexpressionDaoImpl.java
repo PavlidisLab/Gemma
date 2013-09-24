@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import net.sf.ehcache.Element;
 
 import org.apache.commons.lang3.time.StopWatch;
@@ -52,13 +53,6 @@ import ubic.gemma.util.TaxonUtility;
  */
 @Repository
 public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
-
-    @Autowired
-    public Gene2GeneCoexpressionDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
-    }
-
-    private static boolean SINGLE_QUERY_FOR_LINKS = Settings.getBoolean( "store.gene.coexpression.bothways", true );
 
     /**
      * For storing information about gene results that are cached.
@@ -116,7 +110,26 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         }
     }
 
+    private static boolean SINGLE_QUERY_FOR_LINKS = Settings.getBoolean( "store.gene.coexpression.bothways", true );
+
     private static Log log = LogFactory.getLog( Gene2GeneCoexpressionDaoImpl.class );
+
+    @Autowired
+    public Gene2GeneCoexpressionDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
+    @Override
+    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis ) {
+        // Assume SINGLE_QUERY_FOR_LINKS.
+        final String q = "select count (g2g) from " + getClassName( gene ) + " as g2g where g2g.firstGene = :qgene "
+                + " and g2g.sourceAnalysis = :sourceAnalysis";
+        List<?> r = this.getHibernateTemplate().findByNamedParam( q, new String[] { "qgene", "sourceAnalysis" },
+                new Object[] { gene, analysis } );
+
+        return ( ( Long ) r.iterator().next() ).intValue();
+
+    }
 
     /**
      * Clear the cache of gene2gene objects. This should be run when gene2gene is updated.
@@ -427,6 +440,56 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 .remove( new GeneCached( object.getFirstGene().getId(), object.getSourceAnalysis().getId() ) );
     }
 
+    private void cacheCoexpression( Collection<Long> geneIds, GeneCoexpressionAnalysis sourceAnalysis,
+            List<Gene2GeneCoexpression> r ) {
+        /*
+         * Cache all values.
+         */
+
+        StopWatch timer = new StopWatch();
+
+        timer.reset();
+        timer.start();
+        Map<Long, List<Gene2GeneCoexpression>> forCache = new HashMap<Long, List<Gene2GeneCoexpression>>();
+        for ( Gene2GeneCoexpression g2g : r ) {
+
+            Long firstGeneId = g2g.getFirstGene().getId();
+            if ( geneIds.contains( firstGeneId ) ) {
+                if ( !forCache.containsKey( firstGeneId ) ) {
+                    forCache.put( firstGeneId, new ArrayList<Gene2GeneCoexpression>() );
+                }
+
+                forCache.get( firstGeneId ).add( g2g );
+            }
+
+            Long secondGeneId = g2g.getSecondGene().getId();
+            if ( geneIds.contains( secondGeneId ) ) {
+                if ( !forCache.containsKey( secondGeneId ) ) {
+                    forCache.put( secondGeneId, new ArrayList<Gene2GeneCoexpression>() );
+                }
+
+                forCache.get( secondGeneId ).add( g2g );
+            }
+
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "pre-processing " + r.size() + " results to be cached took: " + timer.getTime() + "ms" );
+        }
+
+        int totalResultsCached = 0;
+        for ( Long geneId : forCache.keySet() ) {
+
+            List<Gene2GeneCoexpression> resultsToCache = forCache.get( geneId );
+
+            this.getGene2GeneCoexpressionCache().getCache()
+                    .put( new Element( new GeneCached( geneId, sourceAnalysis.getId() ), resultsToCache ) );
+
+            totalResultsCached = totalResultsCached + resultsToCache.size();
+        }
+
+    }
+
     /**
      * @param gene
      * @return
@@ -530,68 +593,6 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         return r;
 
     }
-
-    private void cacheCoexpression( Collection<Long> geneIds, GeneCoexpressionAnalysis sourceAnalysis,
-            List<Gene2GeneCoexpression> r ) {
-        /*
-         * Cache all values.
-         */
-
-        StopWatch timer = new StopWatch();
-
-        timer.reset();
-        timer.start();
-        Map<Long, List<Gene2GeneCoexpression>> forCache = new HashMap<Long, List<Gene2GeneCoexpression>>();
-        for ( Gene2GeneCoexpression g2g : r ) {
-
-            Long firstGeneId = g2g.getFirstGene().getId();
-            if ( geneIds.contains( firstGeneId ) ) {
-                if ( !forCache.containsKey( firstGeneId ) ) {
-                    forCache.put( firstGeneId, new ArrayList<Gene2GeneCoexpression>() );
-                }
-
-                forCache.get( firstGeneId ).add( g2g );
-            }
-
-            Long secondGeneId = g2g.getSecondGene().getId();
-            if ( geneIds.contains( secondGeneId ) ) {
-                if ( !forCache.containsKey( secondGeneId ) ) {
-                    forCache.put( secondGeneId, new ArrayList<Gene2GeneCoexpression>() );
-                }
-
-                forCache.get( secondGeneId ).add( g2g );
-            }
-
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "pre-processing " + r.size() + " results to be cached took: " + timer.getTime() + "ms" );
-        }
-
-        int totalResultsCached = 0;
-        for ( Long geneId : forCache.keySet() ) {
-
-            List<Gene2GeneCoexpression> resultsToCache = forCache.get( geneId );
-
-            this.getGene2GeneCoexpressionCache().getCache()
-                    .put( new Element( new GeneCached( geneId, sourceAnalysis.getId() ), resultsToCache ) );
-
-            totalResultsCached = totalResultsCached + resultsToCache.size();
-        }
-
-    }
-
-    @Override
-    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis ) {
-        // Assume SINGLE_QUERY_FOR_LINKS.
-        final String q = "select count (g2g) from " + getClassName( gene ) + " as g2g where g2g.firstGene = :qgene "
-                + " and g2g.sourceAnalysis = :sourceAnalysis";
-        List<?> r = this.getHibernateTemplate().findByNamedParam( q, new String[] { "qgene", "sourceAnalysis" },
-                new Object[] { gene, analysis } );
-
-        return ( ( Long ) r.iterator().next() ).intValue();
-
-    }
 }
 
 class GeneLink {
@@ -616,16 +617,6 @@ class GeneLink {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( g1 == null ) ? 0 : g1.hashCode() );
-        result = prime * result + ( ( g2 == null ) ? 0 : g2.hashCode() );
-        result = prime * result + ( positive ? 1231 : 1237 );
-        return result;
-    }
-
-    @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
         if ( obj == null ) return false;
@@ -640,6 +631,16 @@ class GeneLink {
         if ( positive != other.positive ) return false;
 
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( g1 == null ) ? 0 : g1.hashCode() );
+        result = prime * result + ( ( g2 == null ) ? 0 : g2.hashCode() );
+        result = prime * result + ( positive ? 1231 : 1237 );
+        return result;
     }
 
 }

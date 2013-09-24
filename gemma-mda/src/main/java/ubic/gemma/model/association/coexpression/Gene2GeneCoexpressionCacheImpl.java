@@ -18,11 +18,6 @@
  */
 package ubic.gemma.model.association.coexpression;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
-import org.springframework.stereotype.Component;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.CacheConfiguration;
@@ -31,6 +26,12 @@ import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
+import org.springframework.stereotype.Component;
+
 import ubic.gemma.util.Settings;
 
 /**
@@ -54,27 +55,6 @@ public class Gene2GeneCoexpressionCacheImpl implements InitializingBean, Gene2Ge
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
     private Cache cache;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionCache#clearCache()
-     */
-    @Override
-    public void clearCache() {
-        CacheManager manager = CacheManager.getInstance();
-        manager.getCache( GENE_COEXPRESSION_CACHE_NAME ).removeAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionCache#getCache()
-     */
-    @Override
-    public Cache getCache() {
-        return cache;
-    }
-
     /**
      * Initialize the cache; if it already exists it will not be recreated.
      * 
@@ -94,8 +74,9 @@ public class Gene2GeneCoexpressionCacheImpl implements InitializingBean, Gene2Ge
         boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.gene2gene.usedisk",
                 GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
 
-        boolean eternal = Settings.getBoolean( "gemma.cache.gene2gene.eternal",
-                GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
+        boolean eternal = Settings
+                .getBoolean( "gemma.cache.gene2gene.eternal", GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL )
+                && timeToLive == 0;
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
 
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
@@ -139,5 +120,26 @@ public class Gene2GeneCoexpressionCacheImpl implements InitializingBean, Gene2Ge
         }
 
         cacheManager.addCache( cache );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionCache#clearCache()
+     */
+    @Override
+    public void clearCache() {
+        CacheManager manager = CacheManager.getInstance();
+        manager.getCache( GENE_COEXPRESSION_CACHE_NAME ).removeAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionCache#getCache()
+     */
+    @Override
+    public Cache getCache() {
+        return cache;
     }
 }

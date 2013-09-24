@@ -39,17 +39,17 @@ public class Probe2ProbeCoexpressionServiceImpl extends Probe2ProbeCoexpressionS
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<ProbeLink> getProbeCoExpression( ExpressionExperiment expressionExperiment,
-            java.lang.String taxon ) {
-        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, false );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
             ExpressionExperiment ee, String taxon ) {
         return this.getProbe2ProbeCoexpressionDao()
                 .getCoexpressedProbes( queryProbeIds, coexpressedProbeIds, ee, taxon );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Collection<ProbeLink> getProbeCoExpression( ExpressionExperiment expressionExperiment,
+            java.lang.String taxon ) {
+        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, false );
     }
 
     @Override

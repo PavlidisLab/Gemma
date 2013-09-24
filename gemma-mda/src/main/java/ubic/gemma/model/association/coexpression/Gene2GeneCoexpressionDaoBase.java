@@ -70,12 +70,6 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
         return entities;
     }
 
-    @Override
-    public Collection<? extends Gene2GeneCoexpression> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneCoexpressionImpl where id in (:ids)",
-                "ids", ids );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -124,6 +118,12 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
      */
     public Gene2GeneCoexpressionCache getGene2GeneCoexpressionCache() {
         return gene2GeneCoexpressionCache;
+    }
+
+    @Override
+    public Collection<? extends Gene2GeneCoexpression> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneCoexpressionImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**

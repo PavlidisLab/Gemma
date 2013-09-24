@@ -139,6 +139,17 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     }
 
     /**
+     * @see ubic.gemma.model.association.RelationshipDao#remove(Collection)
+     */
+    @Override
+    public void remove( Collection<? extends Probe2ProbeCoexpression> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Probe2ProbeCoexpression.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#remove(Long)
      */
     public void remove( Long id ) {
@@ -149,17 +160,6 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
         if ( entity != null ) {
             this.remove( entity );
         }
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#remove(Collection)
-     */
-    @Override
-    public void remove( Collection<? extends Probe2ProbeCoexpression> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Probe2ProbeCoexpression.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
     }
 
     /**

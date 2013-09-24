@@ -30,21 +30,20 @@ import ubic.gemma.model.genome.Gene;
  */
 public interface Probe2ProbeCoexpressionDao {
 
-    public Collection<? extends Probe2ProbeCoexpression> create( Collection<? extends Probe2ProbeCoexpression> entities );
-
-    public void remove( Collection<? extends Probe2ProbeCoexpression> links );
-
-    public void remove( Probe2ProbeCoexpression link );
-
     /**
      * Get the total number of probe2probe coexpression links for the given experiment, or null if there are none.
      */
     public Integer countLinks( Long id );
 
+    public Collection<? extends Probe2ProbeCoexpression> create( Collection<? extends Probe2ProbeCoexpression> entities );
+
     /**
      * Removes the all the probe2probeCoexpression links for a given expression experiment
      */
     public void deleteLinks( BioAssaySet bioAssaySet );
+
+    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
+            ExpressionExperiment ee, String taxon );
 
     /**
      * Return a list of all BioAssaySets in which the given gene was tested for coexpression in, among the given
@@ -88,7 +87,8 @@ public interface Probe2ProbeCoexpressionDao {
      */
     public void prepareForShuffling( Collection<BioAssaySet> ees, java.lang.String taxon, boolean filterNonSpecific );
 
-    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
-            ExpressionExperiment ee, String taxon );
+    public void remove( Collection<? extends Probe2ProbeCoexpression> links );
+
+    public void remove( Probe2ProbeCoexpression link );
 
 }

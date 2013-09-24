@@ -62,17 +62,6 @@ public interface Gene2GeneCoexpressionService {
             int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
-     * This should typically only be called directly during analysis. The values can be more readily retrieved using the
-     * GeneCoexpressionNodeDegreeService.
-     * 
-     * @param gene
-     * @param analysis
-     * @return the total number of coexpression links we have stored for this gene.
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis );
-
-    /**
      * 
      */
     public Collection<Gene2GeneCoexpression> findCoexpressionRelationships( Gene gene, int stringency, int maxResults,
@@ -85,5 +74,16 @@ public interface Gene2GeneCoexpressionService {
      */
     public java.util.Map<Long, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationship(
             Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
+
+    /**
+     * This should typically only be called directly during analysis. The values can be more readily retrieved using the
+     * GeneCoexpressionNodeDegreeService.
+     * 
+     * @param gene
+     * @param analysis
+     * @return the total number of coexpression links we have stored for this gene.
+     */
+    @Secured({ "GROUP_ADMIN" })
+    public Integer getNumberOfLinks( Gene gene, GeneCoexpressionAnalysis analysis );
 
 }

@@ -79,6 +79,31 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
     }
 
     /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getCoexpressedProbes(java.util.
+     * Collection, java.util.Collection, ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.String)
+     */
+    @Override
+    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
+            ExpressionExperiment ee, String taxon ) {
+
+        String tableName = getTableName( taxon, false );
+
+        Collection<ProbeLink> links = getLinks( queryProbeIds, coexpressedProbeIds, ee.getId(), tableName );
+
+        Collection<Long> results = new HashSet<Long>();
+        if ( links == null || links.isEmpty() ) return results;
+
+        for ( ProbeLink probeLink : links ) {
+            results.add( probeLink.getFirstDesignElementId() );
+            results.add( probeLink.getSecondDesignElementId() );
+        }
+
+        return results;
+    }
+
+    /*
      * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
      * assumes all the links in the collection are of the same class!F
      * 
@@ -131,31 +156,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends Probe2ProbeCoexpressionDaoBa
                     + ")" );
 
         // log.debug( "Deleted " + count + " links" );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getCoexpressedProbes(java.util.
-     * Collection, java.util.Collection, ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.String)
-     */
-    @Override
-    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
-            ExpressionExperiment ee, String taxon ) {
-
-        String tableName = getTableName( taxon, false );
-
-        Collection<ProbeLink> links = getLinks( queryProbeIds, coexpressedProbeIds, ee.getId(), tableName );
-
-        Collection<Long> results = new HashSet<Long>();
-        if ( links == null || links.isEmpty() ) return results;
-
-        for ( ProbeLink probeLink : links ) {
-            results.add( probeLink.getFirstDesignElementId() );
-            results.add( probeLink.getSecondDesignElementId() );
-        }
-
-        return results;
     }
 
     /*

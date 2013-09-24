@@ -45,7 +45,7 @@ public class Gene2GeneCoexpressionServiceImpl extends Gene2GeneCoexpressionServi
     @Override
     protected Collection<Gene2GeneCoexpression> handleCreate( Collection<Gene2GeneCoexpression> gene2genes ) {
 
-        if ( !this.validCollection( gene2genes ) ) return null;
+        if ( !validCollection( gene2genes ) ) return null;
 
         return ( Collection<Gene2GeneCoexpression> ) this.getGene2GeneCoexpressionDao().create( gene2genes );
 
@@ -113,7 +113,12 @@ public class Gene2GeneCoexpressionServiceImpl extends Gene2GeneCoexpressionServi
                 .findInterCoexpressionRelationships( genes, stringency, sourceAnalysis );
     }
 
-    private Boolean validCollection( java.util.Collection<Gene2GeneCoexpression> g2gExpressions )
+    /**
+     * @param g2gExpressions
+     * @return
+     * @throws IllegalArgumentException
+     */
+    private static Boolean validCollection( java.util.Collection<Gene2GeneCoexpression> g2gExpressions )
             throws IllegalArgumentException {
         // sanity check.
         if ( ( g2gExpressions == null ) || ( g2gExpressions.size() == 0 ) ) return false;

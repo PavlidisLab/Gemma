@@ -30,16 +30,16 @@ import ubic.gemma.persistence.BaseDao;
 public interface Gene2GeneCoexpressionDao extends BaseDao<Gene2GeneCoexpression> {
 
     /**
-     * Returns a collection of gene2geneCoexpression objects. Set maxResults to 0 to remove limits.
-     */
-    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships( Gene gene, int stringency,
-            int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
-
-    /**
      * Returns a map of genes to coexpression results. Set maxResults to 0 to remove limits.
      */
     public java.util.Map<Long, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
             Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
+
+    /**
+     * Returns a collection of gene2geneCoexpression objects. Set maxResults to 0 to remove limits.
+     */
+    public java.util.Collection<Gene2GeneCoexpression> findCoexpressionRelationships( Gene gene, int stringency,
+            int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * Return coexpression relationships among the given genes.

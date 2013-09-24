@@ -40,15 +40,15 @@ public class GeneCoexpressionNodeDegreeServiceImpl implements GeneCoexpressionNo
 
     @Override
     @Transactional
-    public void deleteFor( Gene gene ) {
-        this.geneCoexpressionNodeDegreeDao.deleteFor( gene );
+    public GeneCoexpressionNodeDegree create( GeneCoexpressionNodeDegree n ) {
+        return this.geneCoexpressionNodeDegreeDao.create( n );
+
     }
 
     @Override
     @Transactional
-    public GeneCoexpressionNodeDegree create( GeneCoexpressionNodeDegree n ) {
-        return this.geneCoexpressionNodeDegreeDao.create( n );
-
+    public void deleteFor( Gene gene ) {
+        this.geneCoexpressionNodeDegreeDao.deleteFor( gene );
     }
 
 }
