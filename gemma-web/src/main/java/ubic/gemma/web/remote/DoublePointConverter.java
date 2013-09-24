@@ -33,7 +33,7 @@ import org.directwebremoting.extend.Property;
 import ubic.basecode.dataStructure.DoublePoint;
 
 /**
- * Ther 8 decimal percission of a double is just a waste of bandwidth in most cases. This converter just truncs the
+ * The 8 decimal precision of a double is just a waste of bandwidth in most cases. This converter just truncs the
  * precision to 3 when the double gets converted to a string.
  * 
  * @author kelsey
