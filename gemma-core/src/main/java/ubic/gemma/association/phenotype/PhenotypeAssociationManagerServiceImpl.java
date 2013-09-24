@@ -200,6 +200,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
 
         // updates the gene in the cache FIXME is this the right way to enforce this?
+        /*
+         * NOTE : me and Anton used this solution, if not would cause problems in other services calls,would return the
+         * cached unchanged version of it, we found documentation on this, might be a better way to do it
+         */
         Gene gene = phenotypeAssociation.getGene();
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
@@ -495,7 +499,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
 
         if ( phenotypeAssociation == null ) {
-            // throw new IllegalArgumentException( "No phenotype association with id=" + id );
             return null;
         }
 
@@ -600,13 +603,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<CharacteristicValueObject> allPhenotypesFoundInOntology = this.ontologyHelper
                 .findPhenotypesInOntology( newSearchQuery );
 
-        if ( allPhenotypesFoundInOntology.isEmpty() ) {
-            // keep going - the ontology might not be loaded, but that shouldn't matter.
-            // log.info( "No phenotypes in ontologies match: " + searchQuery + "[search was for " + newSearchQuery + "]"
-            // );
-            // return orderedPhenotypesFromOntology;
-        }
-
         // All phenotypes present on the gene (if the gene was given)
         Set<CharacteristicValueObject> phenotypesOnCurrentGene = null;
 
@@ -627,7 +623,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<CharacteristicValueObject> phenotypesStartWithQuery = new TreeSet<CharacteristicValueObject>();
         Set<CharacteristicValueObject> phenotypesSubstringAndInDatabase = new TreeSet<CharacteristicValueObject>();
         Set<CharacteristicValueObject> phenotypesSubstring = new TreeSet<CharacteristicValueObject>();
-        Set<CharacteristicValueObject> phenotypesNoRuleFound = new TreeSet<CharacteristicValueObject>();
 
         /*
          * for each CharacteristicVO found from the Ontology, filter them and add them to a specific list if they
@@ -667,9 +662,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 else if ( cha.getValue().toLowerCase().indexOf( searchQuery.toLowerCase() ) != -1 ) {
                     phenotypesSubstringAndInDatabase.add( cha );
                     phenotypesSubstring.add( cha );
-
-                } else {
-                    phenotypesNoRuleFound.add( cha );
                 }
             }
 
@@ -708,8 +700,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     } else {
                         phenotypesSubstring.add( cha );
                     }
-                } else {
-                    phenotypesNoRuleFound.add( cha );
                 }
             }
         }
@@ -721,8 +711,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         orderedPhenotypesFromOntology.addAll( phenotypesSubstringAndInDatabase );
         orderedPhenotypesFromOntology.addAll( phenotypesStartWithQuery );
         orderedPhenotypesFromOntology.addAll( phenotypesSubstring );
-        // orderedPhenotypesFromOntology.addAll( phenotypesNoRuleFound ); // this is huge; what is it for? PP commented
-        // out.
 
         // limit the size of the returned phenotypes to 100 terms
         if ( orderedPhenotypesFromOntology.size() > MAX_PHENOTYPES_FROM_ONTOLOGY ) {
@@ -1305,10 +1293,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     } else {
                         throw new RuntimeException( "Ontologies are not fully loaded yet, try again soon ("
                                 + entityNotFoundException.getMessage() + ")" );
-
-                        /*
-                         * FIXME there has to be a mechanism to try again? Or is it going to happen anyway.
-                         */
                     }
                 }
             }
@@ -1394,7 +1378,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Map query phenotypes given to the set of possible children phenotypes in the database
+     * Map query phenotypes given to the set of possible children phenotypes in the database so for example if the user
+     * search for : cerebral palsy (parent phenotype), this will return all children associated with it that are also
+     * present in the database(all children of phenotype) : Map<String(parent phenotype), Set<String>(all children of
+     * phenotype)>
      * 
      * @param phenotypesValuesUri
      * @return map of terms to their children. The term itself is included.
@@ -1405,7 +1392,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // root ---> root+children phenotypes
         Map<String, Set<String>> parentPheno = new HashMap<String, Set<String>>();
 
-        // FIXME this is being called in a context where it has already been called.
+        // FIXME this is being called in a context where it has already been called
+        // called where ? unsure about this one
+
+        // gets all phenotype URI in the database
         Set<String> phenotypesUriInDatabase = this.associationService.loadAllPhenotypesUri();
 
         // determine all children terms for each other phenotypes
@@ -1527,33 +1517,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Change a searchQuery to make it search in the Ontology using * and AND (?)
+     * used when we add an evidence and search for phenotype to add, other places too adds a wildcard to the search
      * 
      * @param query
-     * @return fixed-up query. Undocumented special case. Add a wildcard to it.
+     * @return the string with an added wildcard to it.
      */
     private String prepareOntologyQuery( String query ) {
-        // what was the purpose of this? It breaks queries like "parkinson's disease" (with quotes)
-        // if ( query.startsWith( "\\\"" ) && query.endsWith( "\\\"" ) ) {
-        // return query;
-        // }
-        String[] toks = StringUtils.split( query );
-        boolean multiterm = toks.length > 1;
 
         String newSearchQuery = query;
 
-        // special case when we have character '-' replace it with a blank
-        if ( query.length() > 2 ) {
-            /*
-             * FIXME: I don't really know what this is trying to do. What are the first 2 characters?
-             */
-            String part1 = query.substring( 0, 2 );
-            String part2 = query.substring( 2, query.length() ).replaceAll( "-", " " );
-            newSearchQuery = part1 + part2;
+        if ( query != null ) {
+            newSearchQuery = newSearchQuery + "*";
         }
-
-        if ( !multiterm ) newSearchQuery = newSearchQuery + "*";
-
         return newSearchQuery;
     }
 
