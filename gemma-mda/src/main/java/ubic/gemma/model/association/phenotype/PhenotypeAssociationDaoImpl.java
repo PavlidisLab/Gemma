@@ -467,22 +467,20 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .uniqueResult();
     }
 
-    /** find all phenotypes in Neurocarta */
+    /** find all phenotypes in Neurocarta. FIXME this is almost the same asloadAllPhenotypesUri */
     @Override
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
 
         Collection<PhenotypeValueObject> phenotypeValueObjects = new HashSet<PhenotypeValueObject>();
 
-        String sqlQuery = "SELECT DISTINCT VALUE_URI,VALUE FROM CHARACTERISTIC WHERE PHENOTYPE_ASSOCIATION_FK is not null";
+        List<?> res = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct c.valueUri,c.value from PhenotypeAssociation p join p.phenotypes c" )
+                .list();
 
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-
-            String valueUri = ( String ) results.get( 0 );
-            String value = ( String ) results.get( 1 );
-
+        for ( Object o : res ) {
+            Object[] oa = ( Object[] ) o;
+            String valueUri = ( String ) oa[0];
+            String value = ( String ) oa[1];
             PhenotypeValueObject p = new PhenotypeValueObject( value, valueUri );
             phenotypeValueObjects.add( p );
         }
@@ -493,18 +491,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** load all valueURI of Phenotype in the database */
     @Override
     public Set<String> loadAllPhenotypesUri() {
-        Set<String> phenotypesURI = new HashSet<String>();
-
-        String queryString = "select distinct value_uri from CHARACTERISTIC where phenotype_association_fk is not null";
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-            phenotypesURI.add( ( String ) results.get( 0 ) );
-        }
-        results.close();
-
-        return phenotypesURI;
+        return new HashSet<String>( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct c.valueUri from PhenotypeAssociation p join p.phenotypes c" ).list() );
     }
 
     /**

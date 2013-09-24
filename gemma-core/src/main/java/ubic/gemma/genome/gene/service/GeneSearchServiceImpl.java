@@ -236,22 +236,23 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             return displayResults;
         }
 
-        ArrayList<SearchResultDisplayObject> goSRDOs = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> goSRDOs = new ArrayList<SearchResultDisplayObject>();
         // get GO group results
         log.debug( "Getting GO group results for " + query );
         goSRDOs = getGOGroupResults( query, taxon, MAX_GO_TERMS_TO_PROCESS, MAX_GO_GROUP_SIZE );
 
-        ArrayList<SearchResultDisplayObject> phenotypeSRDOs = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> phenotypeSRDOs = new ArrayList<SearchResultDisplayObject>();
 
         // only do phenotype search if there is no results at all
-        if ( ( genes.size() < 1 ) ) {
+        // if ( ( genes.size() < 1 ) ) {
 
-            if ( !query.toUpperCase().startsWith( "GO" ) ) {
-                log.info( "getting Phenotype Association results for " + query );
-                phenotypeSRDOs = getPhenotypeAssociationSearchResults( query, taxon );
-            }
-
+        if ( !query.toUpperCase().startsWith( "GO" ) ) {
+            log.info( "getting Phenotype Association results for " + query );
+            phenotypeSRDOs = getPhenotypeAssociationSearchResults( query, taxon );
         }
+
+        // }
+
         // get summary results
         log.debug( "Getting Summary results for " + query );
         List<SearchResultDisplayObject> summaryEntries = addEntryForAllResults( query, genes, geneSets, goSRDOs,
@@ -450,9 +451,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * @param goSets
      * @param goSRDOs
      */
-    private ArrayList<SearchResultDisplayObject> getPhenotypeAssociationSearchResults( String query, Taxon taxon ) {
+    private List<SearchResultDisplayObject> getPhenotypeAssociationSearchResults( String query, Taxon taxon ) {
 
-        ArrayList<SearchResultDisplayObject> phenotypeSRDOs = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> phenotypeSRDOs = new ArrayList<SearchResultDisplayObject>();
         // if taxon==null then it grabs results for all taxons
         Collection<GeneSetValueObject> geneSets = geneSetSearch.findByPhenotypeName( query, taxon );
         for ( GeneSetValueObject geneSet : geneSets ) {
@@ -597,9 +598,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      */
     private List<SearchResultDisplayObject> addEntryForAllResults( String query,
             Collection<SearchResultDisplayObject> genes, Collection<SearchResultDisplayObject> geneSets,
-            ArrayList<SearchResultDisplayObject> goSRDOs, ArrayList<SearchResultDisplayObject> phenotypeSRDOs ) {
+            List<SearchResultDisplayObject> goSRDOs, List<SearchResultDisplayObject> phenotypeSRDOs ) {
 
-        List<SearchResultDisplayObject> summaryResultEntries = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> summaryResultEntries = new ArrayList<>();
 
         /*
          * ALL RESULTS BY TAXON GROUPS

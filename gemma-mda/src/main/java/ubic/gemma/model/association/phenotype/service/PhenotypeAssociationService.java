@@ -103,7 +103,7 @@ public interface PhenotypeAssociationService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( PhenotypeAssociation evidence );
 
-    /** load all valueURI of Phenotype in the database */
+    /** load all valueURI of Phenotype in the database FIXME cache the results of this */
     public Set<String> loadAllPhenotypesUri();
 
     /** find PhenotypeAssociations associated with a BibliographicReference */

@@ -585,7 +585,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        ArrayList<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<CharacteristicValueObject>();
+        List<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<CharacteristicValueObject>();
 
         boolean geneProvided = true;
 
@@ -600,6 +600,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<CharacteristicValueObject> allPhenotypesFoundInOntology = this.ontologyHelper
                 .findPhenotypesInOntology( newSearchQuery );
 
+        if ( allPhenotypesFoundInOntology.isEmpty() ) {
+            // keep going - the ontology might not be loaded, but that shouldn't matter.
+            // log.info( "No phenotypes in ontologies match: " + searchQuery + "[search was for " + newSearchQuery + "]"
+            // );
+            // return orderedPhenotypesFromOntology;
+        }
+
         // All phenotypes present on the gene (if the gene was given)
         Set<CharacteristicValueObject> phenotypesOnCurrentGene = null;
 
@@ -609,6 +616,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // all phenotypes currently in the database
         Set<String> allPhenotypesInDatabase = this.associationService.loadAllPhenotypesUri();
+        if ( allPhenotypesInDatabase.isEmpty() ) {
+            return orderedPhenotypesFromOntology;
+        }
 
         // rules to order the Ontology results found
         Set<CharacteristicValueObject> phenotypesWithExactMatch = new TreeSet<CharacteristicValueObject>();
@@ -623,42 +633,84 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
          * for each CharacteristicVO found from the Ontology, filter them and add them to a specific list if they
          * satisfied the condition
          */
-        for ( CharacteristicValueObject cha : allPhenotypesFoundInOntology ) {
+        if ( allPhenotypesFoundInOntology.isEmpty() ) {
+            /*
+             * This is just for the case where ontology isn't loaded; so we can still get results. But that means only
+             * results are terms that are already used in a phenotype.
+             */
+            Collection<PhenotypeValueObject> allNeurocartaPhenotypes = this.associationService
+                    .loadAllNeurocartaPhenotypes();
+            for ( PhenotypeValueObject pvo : allNeurocartaPhenotypes ) {
 
-            // set flag for UI, flag if the phenotype is on the Gene or if in the database
-            if ( phenotypesOnCurrentGene != null && phenotypesOnCurrentGene.contains( cha ) ) {
+                CharacteristicValueObject cha = new CharacteristicValueObject( pvo.getValue(), pvo.getValueUri() );
+                // set flag for UI, flag if the phenotype is on the Gene or if in the database
                 cha.setAlreadyPresentOnGene( true );
-            } else if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
                 cha.setAlreadyPresentInDatabase( true );
-            }
 
-            // order the results by specific rules
+                // order the results by specific rules
 
-            // Case 1, exact match
-            if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
-                phenotypesWithExactMatch.add( cha );
-            }
-            // Case 2, phenotype already present on Gene
-            else if ( phenotypesOnCurrentGene != null && phenotypesOnCurrentGene.contains( cha ) ) {
-                phenotypesAlreadyPresentOnGene.add( cha );
-            }
-            // Case 3, starts with a substring of the word
-            else if ( cha.getValue().toLowerCase().startsWith( searchQuery.toLowerCase() ) ) {
-                if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
+                // Case 1, exact match
+                if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
+                    phenotypesWithExactMatch.add( cha );
+                }
+                // Case 2, phenotype already present on Gene
+                else if ( phenotypesOnCurrentGene != null && phenotypesOnCurrentGene.contains( cha ) ) {
+                    phenotypesAlreadyPresentOnGene.add( cha );
+                }
+                // Case 3, starts with a substring of the word
+                else if ( cha.getValue().toLowerCase().startsWith( searchQuery.toLowerCase() ) ) {
                     phenotypesStartWithQueryAndInDatabase.add( cha );
-                } else {
                     phenotypesStartWithQuery.add( cha );
+
+                }
+                // Case 4, contains a substring of the word
+                else if ( cha.getValue().toLowerCase().indexOf( searchQuery.toLowerCase() ) != -1 ) {
+                    phenotypesSubstringAndInDatabase.add( cha );
+                    phenotypesSubstring.add( cha );
+
+                } else {
+                    phenotypesNoRuleFound.add( cha );
                 }
             }
-            // Case 4, contains a substring of the word
-            else if ( cha.getValue().toLowerCase().indexOf( searchQuery.toLowerCase() ) != -1 ) {
-                if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
-                    phenotypesSubstringAndInDatabase.add( cha );
-                } else {
-                    phenotypesSubstring.add( cha );
+
+        } else {
+            for ( CharacteristicValueObject cha : allPhenotypesFoundInOntology ) {
+
+                // set flag for UI, flag if the phenotype is on the Gene or if in the database
+                if ( phenotypesOnCurrentGene != null && phenotypesOnCurrentGene.contains( cha ) ) {
+                    cha.setAlreadyPresentOnGene( true );
+                } else if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
+                    cha.setAlreadyPresentInDatabase( true );
                 }
-            } else {
-                phenotypesNoRuleFound.add( cha );
+
+                // order the results by specific rules
+
+                // Case 1, exact match
+                if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
+                    phenotypesWithExactMatch.add( cha );
+                }
+                // Case 2, phenotype already present on Gene
+                else if ( phenotypesOnCurrentGene != null && phenotypesOnCurrentGene.contains( cha ) ) {
+                    phenotypesAlreadyPresentOnGene.add( cha );
+                }
+                // Case 3, starts with a substring of the word
+                else if ( cha.getValue().toLowerCase().startsWith( searchQuery.toLowerCase() ) ) {
+                    if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
+                        phenotypesStartWithQueryAndInDatabase.add( cha );
+                    } else {
+                        phenotypesStartWithQuery.add( cha );
+                    }
+                }
+                // Case 4, contains a substring of the word
+                else if ( cha.getValue().toLowerCase().indexOf( searchQuery.toLowerCase() ) != -1 ) {
+                    if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
+                        phenotypesSubstringAndInDatabase.add( cha );
+                    } else {
+                        phenotypesSubstring.add( cha );
+                    }
+                } else {
+                    phenotypesNoRuleFound.add( cha );
+                }
             }
         }
 
@@ -669,7 +721,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         orderedPhenotypesFromOntology.addAll( phenotypesSubstringAndInDatabase );
         orderedPhenotypesFromOntology.addAll( phenotypesStartWithQuery );
         orderedPhenotypesFromOntology.addAll( phenotypesSubstring );
-        orderedPhenotypesFromOntology.addAll( phenotypesNoRuleFound );
+        // orderedPhenotypesFromOntology.addAll( phenotypesNoRuleFound ); // this is huge; what is it for? PP commented
+        // out.
 
         // limit the size of the returned phenotypes to 100 terms
         if ( orderedPhenotypesFromOntology.size() > MAX_PHENOTYPES_FROM_ONTOLOGY ) {
@@ -1342,13 +1395,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     /**
      * Map query phenotypes given to the set of possible children phenotypes in the database
+     * 
+     * @param phenotypesValuesUri
+     * @return map of terms to their children. The term itself is included.
      */
     private Map<String, Set<String>> findChildrenForEachPhenotype( Collection<String> phenotypesValuesUri ) {
 
         // root corresponds to one value found in phenotypesValuesUri
         // root ---> root+children phenotypes
-        HashMap<String, Set<String>> parentPheno = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> parentPheno = new HashMap<String, Set<String>>();
 
+        // FIXME this is being called in a context where it has already been called.
         Set<String> phenotypesUriInDatabase = this.associationService.loadAllPhenotypesUri();
 
         // determine all children terms for each other phenotypes
@@ -1362,11 +1419,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenoRoot );
                 if ( ontologyTermFound == null ) continue;
             } catch ( EntityNotFoundException e ) {
+                // that's okay keep it. Ontologies might not be loaded.
+                parentPheno.put( phenoRoot, new HashSet<String>() );
+                parentPheno.get( phenoRoot ).add( phenoRoot );
                 continue;
             }
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 
-            Set<String> parentChildren = new HashSet<String>();
+            Set<String> parentChildren = new HashSet<>();
             parentChildren.add( phenoRoot );
 
             for ( OntologyTerm ot : ontologyChildrenFound ) {
@@ -1908,7 +1968,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     }
 
-    /** add all the keySet together and return a set representing all children for all valueUri given */
+    /**
+     * add all the keySet together and return a set representing all children for all valueUri given (collapse the map
+     * down to a single set)
+     * 
+     * @param phenotypesWithChildren
+     * @return
+     */
     private Set<String> findAllPossibleChildren( Map<String, Set<String>> phenotypesWithChildren ) {
 
         Set<String> possibleChildrenPhenotypes = new HashSet<String>();

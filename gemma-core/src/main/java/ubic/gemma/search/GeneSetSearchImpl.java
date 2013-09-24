@@ -328,7 +328,8 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     /**
-     * Convert a phenotype association to a 'GeneSet', including genes from all child phenotypes.
+     * Convert a phenotype association to a 'GeneSet', including genes from all child phenotypes. Searches for genes
+     * associated with the term.
      */
     private GeneSetValueObject phenotypeAssociationToGeneSet( CharacteristicValueObject term, Taxon taxon ) {
         if ( term == null ) return null;

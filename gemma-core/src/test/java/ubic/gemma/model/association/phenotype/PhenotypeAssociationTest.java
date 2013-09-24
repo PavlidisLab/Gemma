@@ -41,7 +41,9 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -55,27 +57,27 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
+    private static boolean dosLoaded = false;
+
     private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";
-
-    @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-
-    private int geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
 
     private Gene gene = null;
 
-    private LiteratureEvidenceValueObject litEvidence = null;
+    private int geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
 
     @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
+    private GeneService geneService;
+
+    private LiteratureEvidenceValueObject litEvidence = null;
 
     @Autowired
     private OntologyService os;
 
     @Autowired
-    private GeneService geneService;
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
-    private static boolean dosLoaded = false;
+    @Autowired
+    private PhenotypeAssociationService phenotypeAssociationService;
 
     @Before
     public void setup() throws Exception {
@@ -140,6 +142,36 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
                 .findEvidenceByGeneId( this.gene.getId() );
         assertNotNull( evidences );
         assertEquals( 1, evidences.size() );
+    }
+
+    @Test
+    public void testFindPhenotypesForBibliographicReference() {
+        Collection<PhenotypeAssociation> phenotypes = this.phenotypeAssociationService
+                .findPhenotypesForBibliographicReference( "1" );
+        assertEquals( 1, phenotypes.size() );
+    }
+
+    @Test
+    public void testloadAllNeurocartaPhenotypes() {
+        Collection<PhenotypeValueObject> np = this.phenotypeAssociationManagerService.loadAllNeurocartaPhenotypes();
+        assertTrue( np.size() > 0 );
+    }
+
+    @Test
+    public void testLoadAllPhenotypeUris() {
+        Set<String> uris = this.phenotypeAssociationService.loadAllPhenotypesUri();
+        assertTrue( !uris.isEmpty() );
+    }
+
+    @Test
+    public void testLoadStatistics() {
+        ExternalDatabaseStatisticsValueObject a = this.phenotypeAssociationService.loadStatisticsOnAllEvidence();
+        assertNotNull( a );
+        Collection<ExternalDatabaseStatisticsValueObject> b = this.phenotypeAssociationService
+                .loadStatisticsOnExternalDatabases();
+        assertNotNull( b );
+        ExternalDatabaseStatisticsValueObject c = this.phenotypeAssociationService.loadStatisticsOnManualCuration();
+        assertNotNull( c );
     }
 
     @Test
