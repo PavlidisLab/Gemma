@@ -53,10 +53,11 @@ import ubic.gemma.persistence.AbstractDao;
 import ubic.gemma.util.EntityUtils;
 
 /**
- * TODO Document Me
+ * deals with all basic queries used by Neurocarta
  * 
  * @author Nicolas
- * @version $Id$
+ * @version $Id$ TODO: change criteria queries to
+ *          hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -64,8 +65,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     private static final String DISCRIMINATOR_CLAUSE = "('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl',"
             + "'ubic.gemma.model.association.phenotype.GenericEvidenceImpl',"
             + "'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl',"
-            + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl',"
-            + "'ubic.gemma.model.association.phenotype.UrlEvidenceImpl') ";
+            + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl') ";
 
     private static Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
 
@@ -135,7 +135,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return owners;
     }
 
-    /** delete all evidences from a specific external database */
+    /** loads all evidences from a specific external database */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
 
@@ -340,6 +340,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
 
         // FIXME shortcut until we rewrite the above with hql to get FETCH ALL PROPERTIES
+        /*
+         * TODO, the model will change and this will be to redo with hql and fetch all, all evidence will be of type
+         * literature
+         */
         return load( EntityUtils.getIds( phenotypeAssociationsFound ) );
     }
 
@@ -433,20 +437,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             sqlQuery += ") ";
         }
 
-        /*
-         * explain select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI from CHARACTERISTIC join
-         * PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID join
-         * CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id = PHENOTYPE_ASSOCIATION.GENE_FK join TAXON tax on tax.ID =
-         * CHROMOSOME_FEATURE.TAXON_FK join ACLOBJECTIDENTITY aoi on PHENOTYPE_ASSOCIATION.id = aoi.OBJECT_ID join
-         * ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID join ACLSID sid on sid.ID = aoi.OWNER_SID_FK
-         * 
-         * where aoi.OBJECT_CLASS IN (
-         * 'ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl','ubic.gemma.model.association.phenotype.GenericEvidenceImpl',
-         * 'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl','ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl',
-         * 'ubic.gemma.model.association.phenotype.UrlEvidenceImpl') and ace.MASK = 1 and ace.SID_FK = 4;
-         */
-        // log.info( sqlQuery );
-
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
         return phenotypesGenesAssociations;
@@ -467,7 +457,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .uniqueResult();
     }
 
-    /** find all phenotypes in Neurocarta. FIXME this is almost the same asloadAllPhenotypesUri */
+    /**
+     * find all phenotypes in Neurocarta, this was requested by AspireBD, FIXME this is almost the same
+     * asloadAllPhenotypesUri
+     */
     @Override
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
 
@@ -489,6 +482,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** load all valueURI of Phenotype in the database */
+    // TODO : both method could be the same and return PhenotypeValueObject, returning a set of uri makes the
+    // manipulation easy when comparing it to other String uri
     @Override
     public Set<String> loadAllPhenotypesUri() {
         return new HashSet<String>( this.getSessionFactory().getCurrentSession()
