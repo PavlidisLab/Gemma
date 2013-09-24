@@ -713,6 +713,7 @@
 			<dwr:converter id="characteristicConverter" class="ubic.gemma.web.remote.CharacteristicConverter" />
 			<dwr:converter id="standardQuantitationTypeConverter" class="ubic.gemma.web.remote.StandardQuantitationTypeConverter" />
 			<dwr:converter id="scaleTypeConverter" class="ubic.gemma.web.remote.ScaleTypeConverter" />
+			<dwr:converter id="directionConverter" class="ubic.gemma.web.remote.DirectionConverter" />
 			<dwr:converter id="goEvidenceCodeConverter" class="ubic.gemma.web.remote.GOEvidenceCodeConverter" />
 			<dwr:converter id="doublePointConverter" class="ubic.gemma.web.remote.DoublePointConverter" />
 		</dwr:init>
@@ -1002,6 +1003,8 @@
 		</dwr:convert>
 
 		<dwr:convert type="standardQuantitationTypeConverter" class="ubic.gemma.model.common.quantitationtype.StandardQuantitationType" />
+
+		<!-- duplicates? -->
 		<dwr:convert type="scaleTypeConverter" class="ubic.gemma.model.common.quantitationtype.ScaleType" />
 
 		<dwr:convert type="exception" class="java.lang.Exception" />
