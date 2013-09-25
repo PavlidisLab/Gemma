@@ -864,12 +864,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         File outputFile = new File( f, histFileName );
 
-        // log.info( outputFile );
-        try {
-            FileWriter out = new FileWriter( outputFile, true /*
-                                                               * clobber, but usually won't since file names are per
-                                                               * analyssi
-                                                               */);
+        /*
+         * clobber, but usually won't since file names are per Analysis
+         */
+        try (FileWriter out = new FileWriter( outputFile, true );) {
+
             out.write( "# Gemma: differential expression statistics - " + "pvalues" + "\n" );
             out.write( "# Generated=" + ( new Date() ) + "\n" );
             out.write( ExpressionDataFileService.DISCLAIMER );

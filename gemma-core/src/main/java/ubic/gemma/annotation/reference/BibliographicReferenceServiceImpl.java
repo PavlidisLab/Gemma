@@ -44,8 +44,7 @@ import ubic.gemma.search.SearchService;
  * @see ubic.gemma.annotation.reference.BibliographicReferenceService
  */
 @Service
-public class BibliographicReferenceServiceImpl extends
-        ubic.gemma.annotation.reference.BibliographicReferenceServiceBase {
+public class BibliographicReferenceServiceImpl extends BibliographicReferenceServiceBase {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
     @Autowired
@@ -54,8 +53,7 @@ public class BibliographicReferenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
-     * java.lang.Integer)
+     * @see BibliographicReferenceService#browse(java.lang.Integer, java.lang.Integer)
      */
     @Override
     @Transactional(readOnly = true)
@@ -66,8 +64,7 @@ public class BibliographicReferenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
-     * java.lang.Integer, java.lang.String, boolean)
+     * @see BibliographicReferenceService#browse(java.lang.Integer, java.lang.Integer, java.lang.String, boolean)
      */
     @Override
     @Transactional(readOnly = true)
@@ -78,7 +75,7 @@ public class BibliographicReferenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#count()
+     * @see BibliographicReferenceService#count()
      */
     @Override
     @Transactional(readOnly = true)
@@ -98,8 +95,7 @@ public class BibliographicReferenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
+     * @see BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
      */
     @Override
     @Transactional(readOnly = true)
@@ -117,8 +113,7 @@ public class BibliographicReferenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
+     * @see BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
      */
     @Override
     @Transactional(readOnly = true)
@@ -187,8 +182,7 @@ public class BibliographicReferenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @seeubic.gemma.model.common.description.BibliographicReferenceService#thaw(ubic.gemma.model.common.description.
-     * BibliographicReference)
+     * @seeBibliographicReferenceService#thaw( BibliographicReference)
      */
     @Override
     @Transactional(readOnly = true)
@@ -202,7 +196,7 @@ public class BibliographicReferenceServiceImpl extends
      * 
      * /* (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#thaw(java.util.Collection)
+     * @see BibliographicReferenceService#thaw(java.util.Collection)
      */
     @Override
     @Transactional(readOnly = true)
@@ -213,8 +207,7 @@ public class BibliographicReferenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleAddDocument(byte[],
-     * ubic.gemma.model.common.description.BibliographicReference)
+     * @see BibliographicReferenceServiceBase#handleAddDocument(byte[], BibliographicReference)
      */
     @Override
     protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) {
@@ -224,22 +217,20 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#saveBibliographicReference(BibliographicReference)
      */
     @Override
-    protected BibliographicReference handleCreate(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+    protected BibliographicReference handleCreate( BibliographicReference bibliographicReference ) {
         return getBibliographicReferenceDao().create( bibliographicReference );
     }
 
     /**
      * Check to see if the reference already exists
      * 
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#alreadyExists(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#alreadyExists(BibliographicReference)
      */
     @Override
-    protected BibliographicReference handleFind(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+    protected BibliographicReference handleFind( BibliographicReference bibliographicReference ) {
 
         return getBibliographicReferenceDao().find( bibliographicReference );
     }
@@ -248,7 +239,7 @@ public class BibliographicReferenceServiceImpl extends
      * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findByExternalId(java.lang.String)
      */
     @Override
-    protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id ) {
+    protected BibliographicReference handleFindByExternalId( java.lang.String id ) {
 
         return this.getBibliographicReferenceDao().findByExternalId( id, PUB_MED_DATABASE_NAME );
 
@@ -259,8 +250,7 @@ public class BibliographicReferenceServiceImpl extends
      *      java.lang.String)
      */
     @Override
-    protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id,
-            java.lang.String databaseName ) {
+    protected BibliographicReference handleFindByExternalId( java.lang.String id, java.lang.String databaseName ) {
 
         return this.getBibliographicReferenceDao().findByExternalId( id, databaseName );
     }
@@ -289,9 +279,7 @@ public class BibliographicReferenceServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang
-     * .Long)
+     * @see BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang .Long)
      */
     protected BibliographicReference handleLoadBibliographicReference( Long id ) {
         return getBibliographicReferenceDao().load( id );
@@ -327,10 +315,10 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#saveBibliographicReference(BibliographicReference)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference ) {
+    protected void handleUpdate( BibliographicReference BibliographicReference ) {
         getBibliographicReferenceDao().update( BibliographicReference );
     }
 

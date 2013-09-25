@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -174,6 +175,13 @@ public class AclTestUtils {
             }
 
         }
+    }
+
+    public void checkEESubSetAcls( ExpressionExperimentSubSet eeset ) {
+        checkEEAcls( eeset.getSourceExperiment() );
+        checkHasAcl( eeset );
+        checkLacksAces( eeset );
+
     }
 
     public void checkHasAces( Object f ) {

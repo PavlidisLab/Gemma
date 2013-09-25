@@ -833,9 +833,9 @@
 			class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.ontology.OntologyTreeNode" />
-		<dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" />
-		<dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditAction" />
+		<!-- yes, used -->
 		<dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType" />
+
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.UserGroupValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject" />
@@ -896,10 +896,6 @@
 			<dwr:include method="value" />
 		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis">
-			<dwr:include method="name" />
-			<dwr:include method="description" />
-		</dwr:convert>
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject">
 			<dwr:include method="id" />
@@ -971,18 +967,13 @@
 		<dwr:convert type="bean"
 			class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo" />
-		<dwr:convert type="bean"
-			class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl$AnalysisType" />
+
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService" />
 		<dwr:convert type="bean" class="ubic.gemma.web.remote.JsonReaderResponse" />
 		<dwr:convert type="bean" class="ubic.gemma.web.remote.EntityDelegator" />
 		<dwr:convert type="bean" class="ubic.gemma.web.remote.ListBatchCommand" />
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.Property" />
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.DataProperty" />
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.Taxon" />
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProductType" />
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneProduct" />
-		<dwr:convert type="bean" class="ubic.gemma.model.expression.biomaterial.BioMaterial" />
 
 		<dwr:convert type="bean" class="ubic.basecode.dataStructure.DoublePoint">
 			<dwr:include method="x" />

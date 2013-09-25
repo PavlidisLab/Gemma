@@ -206,12 +206,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.easymock</groupId>
-			<artifactId>easymockclassextension</artifactId>
-			<version>3.2</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>obo</groupId>
 			<artifactId>obo</artifactId>
 			<version>1.002</version>

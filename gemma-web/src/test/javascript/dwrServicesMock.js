@@ -52,9 +52,7 @@ if (typeof AuditController === 'undefined') {
     var AuditController = {};
 }
 AuditController.addAuditEvent = function(p0, p1, p2, p3, callback) {
-};
-AuditController.getAuditable = function(p0, callback) {
-};
+}; 
 AuditController.getEvents = function(p0, callback) {
 };
 

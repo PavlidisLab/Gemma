@@ -81,7 +81,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#add(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @Override    
+    @Override
     public ModelAndView add( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" ); // FIXME: allow use of the primary key as well.
 
@@ -157,7 +157,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#delete(javax.servlet.http
      * .HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @Override    
+    @Override
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "acc" );
 
@@ -178,7 +178,9 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
     @Override
     public BibliographicReferenceValueObject load( Long id ) {
-
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ID cannot be null" );
+        }
         Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
         JsonReaderResponse<BibliographicReferenceValueObject> returnVal = this.loadMultiple( ids );
@@ -256,7 +258,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#searchBibRefs(javax.servlet
      * .http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @Override   
+    @Override
     public ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "bibRefList" );
     }
@@ -279,7 +281,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#show(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @Override    
+    @Override
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" );
         String gemmaId = request.getParameter( "id" );
@@ -320,7 +322,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
      * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#showAllForExperiments(javax
      * .servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    @Override    
+    @Override
     public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
                 .getAllExperimentLinkedReferences();

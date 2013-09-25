@@ -99,13 +99,36 @@ public class AuditController {
 
     /**
      * AJAX
-     * <p>
+     * 
+     * @param e
+     * @return
+     */
+    public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
+        Collection<AuditEventValueObject> result = new HashSet<AuditEventValueObject>();
+
+        Auditable entity = getAuditable( e );
+
+        if ( entity == null ) {
+            return result;
+        }
+        assert entity.getAuditTrail().getId() != null;
+
+        Collection<AuditEvent> events = auditEventService.getEvents( entity );
+        for ( AuditEvent ev : events ) {
+            if ( ev == null ) continue;
+            result.add( new AuditEventValueObject( ev ) );
+        }
+
+        return result;
+    }
+
+    /**
      * FIXME this relies on the exact class name being available from the EntityDelegator.
      * 
      * @param e
      * @return
      */
-    public Auditable getAuditable( EntityDelegator e ) {
+    private Auditable getAuditable( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         if ( e.getClassDelegatingFor() == null ) return null;
 
@@ -130,31 +153,6 @@ public class AuditController {
         if ( result == null ) {
             log.warn( "Entity with id = " + e.getId() + " not found" );
         }
-        return result;
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param e
-     * @return
-     */
-    public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
-        Collection<AuditEventValueObject> result = new HashSet<AuditEventValueObject>();
-
-        Auditable entity = getAuditable( e );
-
-        if ( entity == null ) {
-            return result;
-        }
-        assert entity.getAuditTrail().getId() != null;
-
-        Collection<AuditEvent> events = auditEventService.getEvents( entity );
-        for ( AuditEvent ev : events ) {
-            if ( ev == null ) continue;
-            result.add( new AuditEventValueObject( ev ) );
-        }
-
         return result;
     }
 }

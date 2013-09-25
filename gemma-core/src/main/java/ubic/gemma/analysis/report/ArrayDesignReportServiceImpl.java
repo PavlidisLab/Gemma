@@ -211,7 +211,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             if ( cachedVo != null ) {
                 origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );
                 origVo.setNumProbeAlignments( cachedVo.getNumProbeAlignments() );
-                origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() ); 
+                origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() );
                 origVo.setNumGenes( cachedVo.getNumGenes() );
                 origVo.setDateCached( cachedVo.getDateCached() );
                 origVo.setDesignElementCount( cachedVo.getDesignElementCount() );
@@ -244,23 +244,19 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
-
-        try {
-            // remove file first
-            File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                    + ARRAY_DESIGN_SUMMARY );
-            if ( f.exists() ) {
-                if ( !f.canWrite() || !f.delete() ) {
-                    log.warn( "Cannot write to file." );
-                    return;
-                }
+        // remove file first
+        File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                + ARRAY_DESIGN_SUMMARY );
+        if ( f.exists() ) {
+            if ( !f.canWrite() || !f.delete() ) {
+                log.warn( "Cannot write to file." );
+                return;
             }
-            FileOutputStream fos = new FileOutputStream( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR
-                    + File.separatorChar + ARRAY_DESIGN_SUMMARY );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
+        }
+        try (FileOutputStream fos = new FileOutputStream( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR
+                + File.separatorChar + ARRAY_DESIGN_SUMMARY );
+                ObjectOutputStream oos = new ObjectOutputStream( fos );) {
             oos.writeObject( adVo );
-            oos.flush();
-            oos.close();
         } catch ( Throwable e ) {
             // cannot write to file. Just fail gracefully.
             log.error( "Cannot write to file." );
@@ -325,24 +321,21 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         String reportFileName = reportDir + File.separatorChar + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
                 + adVo.getId();
+        File f = new File( reportFileName );
 
-        try {
+        if ( f.exists() ) {
+            if ( !f.canWrite() || !f.delete() ) {
+                log.error( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
+                return;
+            }
+        }
+
+        try (FileOutputStream fos = new FileOutputStream( reportFileName );
+                ObjectOutputStream oos = new ObjectOutputStream( fos );) {
             // remove old file first (possible todo: don't do this until after new file is okayed - maybe this delete
             // isn't needed, just clobber.)
 
-            File f = new File( reportFileName );
-
-            if ( f.exists() ) {
-                if ( !f.canWrite() || !f.delete() ) {
-                    log.error( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
-                    return;
-                }
-            }
-            FileOutputStream fos = new FileOutputStream( reportFileName );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
             oos.writeObject( adVo );
-            oos.flush();
-            oos.close();
         } catch ( Throwable e ) {
             log.error( "Cannot write to file: " + reportFileName );
             return;
@@ -414,18 +407,14 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Override
     public ArrayDesignValueObject getSummaryObject() {
         ArrayDesignValueObject adVo = null;
-        try {
-            File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                    + ARRAY_DESIGN_SUMMARY );
-            if ( f.exists() ) {
-                FileInputStream fis = new FileInputStream( f );
-                ObjectInputStream ois = new ObjectInputStream( fis );
+        File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                + ARRAY_DESIGN_SUMMARY );
+        if ( f.exists() ) {
+            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis );) {
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
-                ois.close();
-                fis.close();
+            } catch ( Throwable e ) {
+                return null;
             }
-        } catch ( Throwable e ) {
-            return null;
         }
         return adVo;
     }
@@ -457,18 +446,16 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Override
     public ArrayDesignValueObject getSummaryObject( Long id ) {
         ArrayDesignValueObject adVo = null;
-        try {
-            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                    + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + id );
-            if ( f.exists() ) {
-                FileInputStream fis = new FileInputStream( f );
-                ObjectInputStream ois = new ObjectInputStream( fis );
+        File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + id );
+        if ( f.exists() ) {
+            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis );) {
+
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
-                ois.close();
-                fis.close();
+
+            } catch ( Throwable e ) {
+                return null;
             }
-        } catch ( Throwable e ) {
-            return null;
         }
         return adVo;
     }

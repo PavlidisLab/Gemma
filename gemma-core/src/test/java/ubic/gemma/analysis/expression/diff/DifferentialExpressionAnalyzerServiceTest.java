@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 
 /**
@@ -237,6 +239,17 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     }
 
+    @After
+    public void tearDown() {
+        if ( ee != null ) {
+            try {
+                expressionExperimentService.delete( ee );
+            } catch ( Exception e ) {
+
+            }
+        }
+    }
+
     /**
      * Test inspired by bug 2605
      * 
@@ -264,9 +277,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         ee = expressionExperimentService.thawLite( ee );
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" );
-        assertNotNull( is );
-        experimentalDesignImporter.importDesign( ee, is );
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" );) {
+            assertNotNull( is );
+            experimentalDesignImporter.importDesign( ee, is );
+        }
 
         differentialExpressionAnalyzerService.deleteAnalyses( ee );
 
@@ -308,6 +322,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .getExperimentalFactor() );
         assertEquals( "Interaction was not retained in the analyzed subset", 3, analysis.getResultSets().size() );
 
+        ExpressionExperimentSubSet eeset = ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed();
+
+        aclTestUtils.checkEESubSetAcls( eeset );
+        aclTestUtils.checkHasAcl( analysis );
+        aclTestUtils.checkLacksAces( eeset );
+        aclTestUtils.checkLacksAces( analysis );
+
         // check that we read it back correctly.
         Collection<DifferentialExpressionAnalysisValueObject> vos = differentialExpressionAnalysisService
                 .getAnalysisValueObjects( analysis.getExperimentAnalyzed().getId() );
@@ -317,6 +338,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
             assertNotNull( vo.getSubsetFactorValue() );
             assertTrue( !vo.getFactorValuesUsed().isEmpty() );
         }
+
     }
 
     /**

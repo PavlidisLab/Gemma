@@ -28,14 +28,18 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.ExternalDatabaseDao;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.description.LocalFileDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 
 /**
- * Service base class for <code>ubic.gemma.model.common.description.BibliographicReferenceService</code>, provides
- * access to all services and entities referenced by this service.
+ * Service base class for <code>BibliographicReferenceService</code>, provides access to all services and entities
+ * referenced by this service.
  * 
  * @see ubic.gemma.annotation.reference.BibliographicReferenceService
  */
@@ -43,62 +47,58 @@ public abstract class BibliographicReferenceServiceBase implements
         ubic.gemma.annotation.reference.BibliographicReferenceService {
 
     @Autowired
-    private ubic.gemma.model.common.description.BibliographicReferenceDao bibliographicReferenceDao;
+    private BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
-    private ubic.gemma.model.common.description.ExternalDatabaseDao externalDatabaseDao;
+    private ExternalDatabaseDao externalDatabaseDao;
 
     @Autowired
-    private ubic.gemma.model.common.description.LocalFileDao localFileDao;
+    private LocalFileDao localFileDao;
 
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#addPDF(ubic.gemma.model.common.description.LocalFile,
-     *      ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#addPDF(LocalFile, BibliographicReference)
      */
     @Override
     @Transactional
-    public void addPDF( final ubic.gemma.model.common.description.LocalFile pdfFile,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+    public void addPDF( final LocalFile pdfFile, final BibliographicReference bibliographicReference ) {
         try {
             this.handleAddPDF( pdfFile, bibliographicReference );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.addPDF(ubic.gemma.model.common.description.LocalFile pdfFile, ubic.gemma.model.common.description.BibliographicReference bibliographicReference)' --> "
+                    "Error performing 'BibliographicReferenceService.addPDF(LocalFile pdfFile, BibliographicReference bibliographicReference)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#create(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#create(BibliographicReference)
      */
     @Override
     @Transactional
-    public ubic.gemma.model.common.description.BibliographicReference create(
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+    public BibliographicReference create( final BibliographicReference bibliographicReference ) {
         try {
             return this.handleCreate( bibliographicReference );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.create(ubic.gemma.model.common.description.BibliographicReference bibliographicReference)' --> "
+                    "Error performing 'BibliographicReferenceService.create(BibliographicReference bibliographicReference)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#find(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#find(BibliographicReference)
      */
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.common.description.BibliographicReference find(
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+    public BibliographicReference find( final BibliographicReference bibliographicReference ) {
         try {
             return this.handleFind( bibliographicReference );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.find(ubic.gemma.model.common.description.BibliographicReference bibliographicReference)' --> "
+                    "Error performing 'BibliographicReferenceService.find(BibliographicReference bibliographicReference)' --> "
                             + th, th );
         }
     }
@@ -108,13 +108,13 @@ public abstract class BibliographicReferenceServiceBase implements
      */
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( final java.lang.String id ) {
+    public BibliographicReference findByExternalId( final java.lang.String id ) {
         try {
             return this.handleFindByExternalId( id );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId(java.lang.String id)' --> "
-                            + th, th );
+                    "Error performing 'BibliographicReferenceService.findByExternalId(java.lang.String id)' --> " + th,
+                    th );
         }
     }
 
@@ -124,29 +124,27 @@ public abstract class BibliographicReferenceServiceBase implements
      */
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( final java.lang.String id,
-            final java.lang.String databaseName ) {
+    public BibliographicReference findByExternalId( final java.lang.String id, final java.lang.String databaseName ) {
         try {
             return this.handleFindByExternalId( id, databaseName );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId(java.lang.String id, java.lang.String databaseName)' --> "
+                    "Error performing 'BibliographicReferenceService.findByExternalId(java.lang.String id, java.lang.String databaseName)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findOrCreate(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#findOrCreate(BibliographicReference)
      */
     @Override
     @Transactional
-    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
-            final ubic.gemma.model.common.description.BibliographicReference BibliographicReference ) {
+    public BibliographicReference findOrCreate( final BibliographicReference BibliographicReference ) {
         try {
             return this.handleFindOrCreate( BibliographicReference );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findOrCreate(ubic.gemma.model.common.description.BibliographicReference BibliographicReference)' --> "
+                    "Error performing 'BibliographicReferenceService.findOrCreate(BibliographicReference BibliographicReference)' --> "
                             + th, th );
         }
     }
@@ -168,8 +166,8 @@ public abstract class BibliographicReferenceServiceBase implements
             return bibrefVO;
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId(java.lang.String id)' --> "
-                            + th, th );
+                    "Error performing 'BibliographicReferenceService.findByExternalId(java.lang.String id)' --> " + th,
+                    th );
         }
     }
 
@@ -183,23 +181,22 @@ public abstract class BibliographicReferenceServiceBase implements
             return this.handleGetAllExperimentLinkedReferences();
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.getAllExperimentLinkedReferences()' --> "
-                            + th, th );
+                    "Error performing 'BibliographicReferenceService.getAllExperimentLinkedReferences()' --> " + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#getRelatedExperiments(BibliographicReference)
      */
     @Override
     @Transactional(readOnly = true)
     public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+            final BibliographicReference bibliographicReference ) {
         try {
             return this.handleGetRelatedExperiments( bibliographicReference );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference bibliographicReference)' --> "
+                    "Error performing 'BibliographicReferenceService.getRelatedExperiments(BibliographicReference bibliographicReference)' --> "
                             + th, th );
         }
     }
@@ -209,13 +206,12 @@ public abstract class BibliographicReferenceServiceBase implements
      */
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.common.description.BibliographicReference load( final java.lang.Long id ) {
+    public BibliographicReference load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.load(java.lang.Long id)' --> "
-                            + th, th );
+                    "Error performing 'BibliographicReferenceService.load(java.lang.Long id)' --> " + th, th );
         }
     }
 
@@ -229,8 +225,8 @@ public abstract class BibliographicReferenceServiceBase implements
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.loadMultiple(java.util.Collection ids)' --> "
-                            + th, th );
+                    "Error performing 'BibliographicReferenceService.loadMultiple(java.util.Collection ids)' --> " + th,
+                    th );
         }
     }
 
@@ -245,22 +241,22 @@ public abstract class BibliographicReferenceServiceBase implements
             return this.handleLoadMultipleValueObjects( ids );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.loadMultiple(java.util.Collection ids)' --> "
-                            + th, th );
+                    "Error performing 'BibliographicReferenceService.loadMultiple(java.util.Collection ids)' --> " + th,
+                    th );
         }
     }
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#remove(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#remove(BibliographicReference)
      */
     @Override
     @Transactional
-    public void remove( final ubic.gemma.model.common.description.BibliographicReference BibliographicReference ) {
+    public void remove( final BibliographicReference BibliographicReference ) {
         try {
             this.handleRemove( BibliographicReference );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.remove(ubic.gemma.model.common.description.BibliographicReference BibliographicReference)' --> "
+                    "Error performing 'BibliographicReferenceService.remove(BibliographicReference BibliographicReference)' --> "
                             + th, th );
         }
     }
@@ -268,36 +264,35 @@ public abstract class BibliographicReferenceServiceBase implements
     /**
      * Sets the reference to <code>bibliographicReference</code>'s DAO.
      */
-    public void setBibliographicReferenceDao(
-            ubic.gemma.model.common.description.BibliographicReferenceDao bibliographicReferenceDao ) {
+    public void setBibliographicReferenceDao( BibliographicReferenceDao bibliographicReferenceDao ) {
         this.bibliographicReferenceDao = bibliographicReferenceDao;
     }
 
     /**
      * Sets the reference to <code>externalDatabase</code>'s DAO.
      */
-    public void setExternalDatabaseDao( ubic.gemma.model.common.description.ExternalDatabaseDao externalDatabaseDao ) {
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
     }
 
     /**
      * Sets the reference to <code>localFile</code>'s DAO.
      */
-    public void setLocalFileDao( ubic.gemma.model.common.description.LocalFileDao localFileDao ) {
+    public void setLocalFileDao( LocalFileDao localFileDao ) {
         this.localFileDao = localFileDao;
     }
 
     /**
-     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#update(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ubic.gemma.annotation.reference.BibliographicReferenceService#update(BibliographicReference)
      */
     @Override
     @Transactional
-    public void update( final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
+    public void update( final BibliographicReference bibliographicReference ) {
         try {
             this.handleUpdate( bibliographicReference );
         } catch ( Throwable th ) {
             throw new ubic.gemma.annotation.reference.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.update(ubic.gemma.model.common.description.BibliographicReference bibliographicReference)' --> "
+                    "Error performing 'BibliographicReferenceService.update(BibliographicReference bibliographicReference)' --> "
                             + th, th );
         }
     }
@@ -305,63 +300,57 @@ public abstract class BibliographicReferenceServiceBase implements
     /**
      * Gets the reference to <code>bibliographicReference</code>'s DAO.
      */
-    protected ubic.gemma.model.common.description.BibliographicReferenceDao getBibliographicReferenceDao() {
+    protected BibliographicReferenceDao getBibliographicReferenceDao() {
         return this.bibliographicReferenceDao;
     }
 
     /**
      * Gets the reference to <code>externalDatabase</code>'s DAO.
      */
-    protected ubic.gemma.model.common.description.ExternalDatabaseDao getExternalDatabaseDao() {
+    protected ExternalDatabaseDao getExternalDatabaseDao() {
         return this.externalDatabaseDao;
     }
 
     /**
      * Gets the reference to <code>localFile</code>'s DAO.
      */
-    protected ubic.gemma.model.common.description.LocalFileDao getLocalFileDao() {
+    protected LocalFileDao getLocalFileDao() {
         return this.localFileDao;
     }
 
     /**
-     * Performs the core logic for
-     * {@link #addPDF(ubic.gemma.model.common.description.LocalFile, ubic.gemma.model.common.description.BibliographicReference)}
+     * Performs the core logic for {@link #addPDF(LocalFile, BibliographicReference)}
      */
-    protected abstract void handleAddPDF( ubic.gemma.model.common.description.LocalFile pdfFile,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
+    protected abstract void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference )
             throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.common.description.BibliographicReference)}
+     * Performs the core logic for {@link #create(BibliographicReference)}
      */
-    protected abstract ubic.gemma.model.common.description.BibliographicReference handleCreate(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
+    protected abstract BibliographicReference handleCreate( BibliographicReference bibliographicReference )
             throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.common.description.BibliographicReference)}
+     * Performs the core logic for {@link #find(BibliographicReference)}
      */
-    protected abstract ubic.gemma.model.common.description.BibliographicReference handleFind(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
+    protected abstract BibliographicReference handleFind( BibliographicReference bibliographicReference )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByExternalId(java.lang.String)}
      */
-    protected abstract ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId(
-            java.lang.String id ) throws java.lang.Exception;
+    protected abstract BibliographicReference handleFindByExternalId( java.lang.String id ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByExternalId(java.lang.String, java.lang.String)}
      */
-    protected abstract ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId(
-            java.lang.String id, java.lang.String databaseName ) throws java.lang.Exception;
+    protected abstract BibliographicReference handleFindByExternalId( java.lang.String id, java.lang.String databaseName )
+            throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.description.BibliographicReference)}
+     * Performs the core logic for {@link #findOrCreate(BibliographicReference)}
      */
-    protected abstract ubic.gemma.model.common.description.BibliographicReference handleFindOrCreate(
-            ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
+    protected abstract BibliographicReference handleFindOrCreate( BibliographicReference BibliographicReference )
             throws java.lang.Exception;
 
     /**
@@ -371,8 +360,7 @@ public abstract class BibliographicReferenceServiceBase implements
             throws java.lang.Exception;
 
     /**
-     * Performs the core logic for
-     * {@link #getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)}
+     * Performs the core logic for {@link #getRelatedExperiments(BibliographicReference)}
      */
     protected abstract java.util.Collection<ExpressionExperiment> handleGetRelatedExperiments(
             BibliographicReference bibliographicReference ) throws java.lang.Exception;
@@ -380,8 +368,7 @@ public abstract class BibliographicReferenceServiceBase implements
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.common.description.BibliographicReference handleLoad( java.lang.Long id )
-            throws java.lang.Exception;
+    protected abstract BibliographicReference handleLoad( java.lang.Long id ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
@@ -396,18 +383,14 @@ public abstract class BibliographicReferenceServiceBase implements
             java.util.Collection<Long> ids ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.BibliographicReference)}
+     * Performs the core logic for {@link #remove(BibliographicReference)}
      */
-    protected abstract void handleRemove(
-            ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
-            throws java.lang.Exception;
+    protected abstract void handleRemove( BibliographicReference BibliographicReference ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.description.BibliographicReference)}
+     * Performs the core logic for {@link #update(BibliographicReference)}
      */
-    protected abstract void handleUpdate(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( BibliographicReference bibliographicReference ) throws java.lang.Exception;
 
     /**
      * @param bibRefs

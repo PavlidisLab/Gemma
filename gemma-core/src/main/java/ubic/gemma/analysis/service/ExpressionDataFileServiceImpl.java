@@ -1371,15 +1371,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,
             ExpressionDataMatrix<?> expressionDataMatrix, boolean gzipped ) throws IOException, FileNotFoundException {
 
-        OutputStream ostream;
+        OutputStream fout = new FileOutputStream( file );
 
         if ( gzipped ) {
-            ostream = new GZIPOutputStream( new FileOutputStream( file ) );
-        } else {
-            ostream = new FileOutputStream( file );
+            fout = new GZIPOutputStream( fout );
         }
 
-        Writer writer = new OutputStreamWriter( ostream );
+        Writer writer = new OutputStreamWriter( fout );
         MatrixWriter matrixWriter = new MatrixWriter();
         matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
         writer.flush();

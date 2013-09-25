@@ -62,7 +62,7 @@ public class CharacteristicBrowserController {
 
     private static final Log log = LogFactory.getLog( CharacteristicBrowserController.class.getName() );
 
-    private static final int MAX_RESULTS = 1000;
+    private static final int MAX_RESULTS = 2000;
 
     @Autowired
     private TaskRunningService taskRunningService;
