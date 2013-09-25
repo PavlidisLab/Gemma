@@ -21,7 +21,7 @@ package ubic.gemma.model.common.description;
 /**
  * 
  */
-public abstract class Keyword extends ubic.gemma.model.common.description.BibRefAnnotationImpl {
+public abstract class Keyword extends BibRefAnnotationImpl {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.description.Keyword}.

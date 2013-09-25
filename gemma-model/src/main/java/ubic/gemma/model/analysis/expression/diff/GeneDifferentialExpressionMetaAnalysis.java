@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Represents an analysis that combines the results of other analyses of differential expression.
@@ -39,25 +40,13 @@ public abstract class GeneDifferentialExpressionMetaAnalysis extends
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5896210853804341350L;
     private Integer numGenesAnalyzed;
 
     private Double qvalueThresholdForStorage;
 
-    private Collection<ExpressionAnalysisResultSet> resultSetsIncluded = new java.util.HashSet<>();
+    private Collection<ExpressionAnalysisResultSet> resultSetsIncluded = new HashSet<>();
 
-    private Collection<GeneDifferentialExpressionMetaAnalysisResult> results = new java.util.HashSet<>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public GeneDifferentialExpressionMetaAnalysis() {
-    }
+    private Collection<GeneDifferentialExpressionMetaAnalysisResult> results = new HashSet<>();
 
     /**
      * <p>

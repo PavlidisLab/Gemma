@@ -23,7 +23,7 @@ package ubic.gemma.model.analysis.expression.diff;
  * @version $Id$
  * @see ubic.gemma.model.analysis.ContrastResult
  */
-public class ContrastResultImpl extends ubic.gemma.model.analysis.expression.diff.ContrastResult {
+public class ContrastResultImpl extends ContrastResult {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

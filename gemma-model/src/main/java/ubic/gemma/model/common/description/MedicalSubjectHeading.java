@@ -23,43 +23,32 @@ import java.util.Collection;
 /**
  * 
  */
-public abstract class MedicalSubjectHeading extends ubic.gemma.model.common.description.BibRefAnnotationImpl {
+public abstract class MedicalSubjectHeading extends BibRefAnnotationImpl {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.MedicalSubjectHeading}.
+     * Constructs new instances of {@link MedicalSubjectHeading}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.MedicalSubjectHeading}.
+         * Constructs a new instance of {@link MedicalSubjectHeading}.
          */
-        public static ubic.gemma.model.common.description.MedicalSubjectHeading newInstance() {
-            return new ubic.gemma.model.common.description.MedicalSubjectHeadingImpl();
+        public static MedicalSubjectHeading newInstance() {
+            return new MedicalSubjectHeadingImpl();
         }
 
     }
+ 
+    private Collection<MedicalSubjectHeading> qualifiers = new java.util.HashSet<>();
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3430778627085924503L;
-    private Collection<ubic.gemma.model.common.description.MedicalSubjectHeading> qualifiers = new java.util.HashSet<ubic.gemma.model.common.description.MedicalSubjectHeading>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public MedicalSubjectHeading() {
-    }
-
+     
     /**
      * 
      */
-    public Collection<ubic.gemma.model.common.description.MedicalSubjectHeading> getQualifiers() {
+    public Collection<MedicalSubjectHeading> getQualifiers() {
         return this.qualifiers;
     }
 
-    public void setQualifiers( Collection<ubic.gemma.model.common.description.MedicalSubjectHeading> qualifiers ) {
+    public void setQualifiers( Collection<MedicalSubjectHeading> qualifiers ) {
         this.qualifiers = qualifiers;
     }
 

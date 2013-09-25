@@ -25,7 +25,7 @@ package ubic.gemma.model.common.description;
 /**
  * @see ubic.gemma.model.common.description.BibRefAnnotation
  */
-public abstract class BibRefAnnotationImpl extends ubic.gemma.model.common.description.BibRefAnnotation {
+public abstract class BibRefAnnotationImpl extends BibRefAnnotation {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

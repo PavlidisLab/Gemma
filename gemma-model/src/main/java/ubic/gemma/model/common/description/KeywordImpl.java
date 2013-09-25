@@ -23,9 +23,9 @@
 package ubic.gemma.model.common.description;
 
 /**
- * @see ubic.gemma.model.common.description.Keyword
+ * @see Keyword
  */
-public class KeywordImpl extends ubic.gemma.model.common.description.Keyword {
+public class KeywordImpl extends Keyword {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

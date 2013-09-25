@@ -19,52 +19,30 @@
 package ubic.gemma.model.common.measurement;
 
 /**
- * 
- */
+ *  
+ */ 
 public abstract class Unit implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.measurement.Unit}.
+     * Constructs new instances of {@link Unit}.
      */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.measurement.Unit}.
-         */
-        public static ubic.gemma.model.common.measurement.Unit newInstance() {
-            return new ubic.gemma.model.common.measurement.UnitImpl();
-        }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.measurement.Unit}, taking all possible properties
-         * (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link Unit}, taking all possible properties (except the identifier(s))as
+         * arguments.
          */
-        public static ubic.gemma.model.common.measurement.Unit newInstance( String unitNameCV ) {
-            final ubic.gemma.model.common.measurement.Unit entity = new ubic.gemma.model.common.measurement.UnitImpl();
+        public static Unit newInstance( String unitNameCV ) {
+            final Unit entity = new UnitImpl();
             entity.setUnitNameCV( unitNameCV );
             return entity;
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -5092028526841912834L;
     private String unitNameCV;
 
     private Long id;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Unit() {
-    }
-
-    /**
-     * Returns <code>true</code> if the argument is an Unit instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -94,9 +72,6 @@ public abstract class Unit implements java.io.Serializable {
         return this.unitNameCV;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;

@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import gemma.gsec.model.Securable;
+import gemma.gsec.model.SecuredChild;
+
 import java.util.Collection;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -25,7 +28,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 /**
  * A subset of samples from an ExpressionExperiment
  */
-public abstract class ExpressionExperimentSubSet extends BioAssaySet {
+public abstract class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild {
 
     /**
      * Constructs new instances of {@link ExpressionExperimentSubSet}.
@@ -44,9 +47,9 @@ public abstract class ExpressionExperimentSubSet extends BioAssaySet {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1880425342951467283L;
-    private ExpressionExperiment sourceExperiment;
 
     private Collection<BioAssay> bioAssays = new java.util.HashSet<>();
+    private ExpressionExperiment sourceExperiment;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -62,6 +65,11 @@ public abstract class ExpressionExperimentSubSet extends BioAssaySet {
     @Override
     public Collection<BioAssay> getBioAssays() {
         return this.bioAssays;
+    }
+
+    @Override
+    public Securable getSecurityOwner() {
+        return sourceExperiment;
     }
 
     /**

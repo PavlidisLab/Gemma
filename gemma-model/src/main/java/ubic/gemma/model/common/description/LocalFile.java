@@ -87,29 +87,26 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
         return this.asFile().canWrite();
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an LocalFile instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof LocalFile ) ) {
-            return false;
-        }
-        final LocalFile that = ( LocalFile ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        LocalFile other = ( LocalFile ) obj;
+        if ( id == null ) {
+            if ( other.id != null ) return false;
+        } else if ( !id.equals( other.id ) ) return false;
+
+        if ( localURL == null ) {
+            if ( other.localURL != null ) return false;
+        } else if ( !localURL.equals( other.localURL ) ) return false;
         return true;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.FileFormat getFormat() {
+    public FileFormat getFormat() {
         return this.format;
     }
 
@@ -156,18 +153,17 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
         return this.version;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
 
-        return hashCode;
+        if ( id != null ) result = prime * result + ( ( localURL == null ) ? 0 : localURL.hashCode() );
+        return result;
     }
 
-    public void setFormat( ubic.gemma.model.common.description.FileFormat format ) {
+    public void setFormat( FileFormat format ) {
         this.format = format;
     }
 
@@ -187,7 +183,7 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
         this.size = size;
     }
 
-    public void setSourceFiles( Collection<ubic.gemma.model.common.description.LocalFile> sourceFiles ) {
+    public void setSourceFiles( Collection<LocalFile> sourceFiles ) {
         this.sourceFiles = sourceFiles;
     }
 

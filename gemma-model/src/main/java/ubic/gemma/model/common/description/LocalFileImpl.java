@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.common.description;
 
-import java.io.File;
-import java.net.URISyntaxException;
 
 /**
  * @author pavlidis
@@ -32,8 +30,6 @@ public class LocalFileImpl extends LocalFile {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -2781283721621657394L;
-
-   
 
     /*
      * (non-Javadoc)

@@ -4,30 +4,27 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.common.protocol.ProtocolImpl" table="PROTOCOL" dynamic-insert="false" dynamic-update="false">
-      <cache usage="read-write" />
-      <id name="id" type="java.lang.Long" unsaved-value="null">
-         <column name="ID" sql-type="BIGINT"/>
-         <generator class="native">
-         </generator>
-      </id>
-      <property name="URI" type="java.lang.String">
-         <column name="U_R_I" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-      </property>
-      <many-to-one name="type" class="ubic.gemma.model.common.description.CharacteristicImpl"  cascade="all" lazy="false" fetch="select">
-         <column name="TYPE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
-      <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
-         <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
-      <many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl"  cascade="all" lazy="proxy" fetch="select">
-         <column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
-      <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-      </property>
-      <property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
-      </property>
-   </class>
+	<class name="ubic.gemma.model.common.protocol.ProtocolImpl" table="PROTOCOL" dynamic-insert="false"
+		dynamic-update="false">
+		<cache usage="read-write" />
+		<id name="id" type="java.lang.Long" unsaved-value="null">
+			<column name="ID" sql-type="BIGINT" />
+			<generator class="native">
+			</generator>
+		</id> 
+		<many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
+			lazy="proxy" fetch="select">
+			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true" />
+		</many-to-one>
+		<many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl" cascade="all" lazy="proxy"
+			fetch="select">
+			<column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true" />
+		</many-to-one>
+		<property name="name" type="java.lang.String">
+			<column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
+		<property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+			<column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci" />
+		</property>
+	</class>
 </hibernate-mapping>

@@ -32,27 +32,15 @@ import ubic.gemma.model.common.description.Characteristic;
  */
 public abstract class Investigation extends Auditable implements gemma.gsec.model.SecuredNotChild {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -122213115714441341L;
-
     private Collection<Characteristic> characteristics = new HashSet<>();
-    private Contact owner;
-
-    private BibliographicReference primaryPublication;
-
-    private Collection<BibliographicReference> otherRelevantPublications = new HashSet<>();
 
     private Collection<Contact> investigators = new HashSet<>();
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Investigation() {
-    }
+    private Collection<BibliographicReference> otherRelevantPublications = new HashSet<>();
+
+    private Contact owner;
+
+    private BibliographicReference primaryPublication;
 
     /**
      * Annotations that describe the experiment as a whole, for example "tumor" or "brain".
@@ -69,10 +57,8 @@ public abstract class Investigation extends Auditable implements gemma.gsec.mode
     }
 
     /**
-     * <p>
      * A collection of other publications that are directly relevant to this investigation (e.g., use the same data but
      * are not the primary publication for the investigation).
-     * </p>
      */
     public Collection<BibliographicReference> getOtherRelevantPublications() {
         return this.otherRelevantPublications;

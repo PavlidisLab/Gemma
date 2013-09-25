@@ -32,11 +32,6 @@ public class PhenotypeValueObject {
     }
 
     @Override
-    public String toString() {
-        return "PhenotypeVO [value=" + value + " : " + valueUri + "]";
-    }
-
-    @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
         if ( obj == null ) return false;
@@ -74,6 +69,11 @@ public class PhenotypeValueObject {
 
     public void setValueUri( String valueUri ) {
         this.valueUri = valueUri;
+    }
+
+    @Override
+    public String toString() {
+        return "PhenotypeVO [value=" + value + " : " + valueUri + "]";
     }
 
 }

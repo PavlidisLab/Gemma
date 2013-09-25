@@ -18,32 +18,34 @@
  */
 package ubic.gemma.model.common.measurement;
 
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+
 /**
  * 
  */
 public abstract class Measurement implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.measurement.Measurement}.
+     * Constructs new instances of {@link Measurement}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.measurement.Measurement}.
+         * Constructs a new instance of {@link Measurement}.
          */
-        public static ubic.gemma.model.common.measurement.Measurement newInstance() {
-            return new ubic.gemma.model.common.measurement.MeasurementImpl();
+        public static Measurement newInstance() {
+            return new MeasurementImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.measurement.Measurement}, taking all possible
+         * Constructs a new instance of {@link Measurement}, taking all possible
          * properties (except the identifier(s))as arguments.
          */
-        public static ubic.gemma.model.common.measurement.Measurement newInstance(
-                ubic.gemma.model.common.measurement.MeasurementType type, String value,
-                ubic.gemma.model.common.measurement.MeasurementKind kindCV, String otherKind,
-                ubic.gemma.model.common.quantitationtype.PrimitiveType representation,
-                ubic.gemma.model.common.measurement.Unit unit ) {
-            final ubic.gemma.model.common.measurement.Measurement entity = new ubic.gemma.model.common.measurement.MeasurementImpl();
+        public static Measurement newInstance(
+                MeasurementType type, String value,
+                MeasurementKind kindCV, String otherKind,
+                PrimitiveType representation,
+                Unit unit ) {
+            final Measurement entity = new MeasurementImpl();
             entity.setType( type );
             entity.setValue( value );
             entity.setKindCV( kindCV );
@@ -54,13 +56,13 @@ public abstract class Measurement implements java.io.Serializable {
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.measurement.Measurement}, taking all required
+         * Constructs a new instance of {@link Measurement}, taking all required
          * and/or read-only properties as arguments.
          */
-        public static ubic.gemma.model.common.measurement.Measurement newInstance(
-                ubic.gemma.model.common.measurement.MeasurementType type, String value,
-                ubic.gemma.model.common.quantitationtype.PrimitiveType representation ) {
-            final ubic.gemma.model.common.measurement.Measurement entity = new ubic.gemma.model.common.measurement.MeasurementImpl();
+        public static Measurement newInstance(
+                MeasurementType type, String value,
+                PrimitiveType representation ) {
+            final Measurement entity = new MeasurementImpl();
             entity.setType( type );
             entity.setValue( value );
             entity.setRepresentation( representation );
@@ -72,19 +74,19 @@ public abstract class Measurement implements java.io.Serializable {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 1833568047451431226L;
-    private ubic.gemma.model.common.measurement.MeasurementType type;
+    private MeasurementType type;
 
     private String value;
 
-    private ubic.gemma.model.common.measurement.MeasurementKind kindCV;
+    private MeasurementKind kindCV;
 
     private String otherKind;
 
-    private ubic.gemma.model.common.quantitationtype.PrimitiveType representation;
+    private PrimitiveType representation;
 
     private Long id;
 
-    private ubic.gemma.model.common.measurement.Unit unit;
+    private Unit unit;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -123,7 +125,7 @@ public abstract class Measurement implements java.io.Serializable {
     /**
      * 
      */
-    public ubic.gemma.model.common.measurement.MeasurementKind getKindCV() {
+    public MeasurementKind getKindCV() {
         return this.kindCV;
     }
 
@@ -137,21 +139,21 @@ public abstract class Measurement implements java.io.Serializable {
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.PrimitiveType getRepresentation() {
+    public PrimitiveType getRepresentation() {
         return this.representation;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.common.measurement.MeasurementType getType() {
+    public MeasurementType getType() {
         return this.type;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.common.measurement.Unit getUnit() {
+    public Unit getUnit() {
         return this.unit;
     }
 
@@ -177,7 +179,7 @@ public abstract class Measurement implements java.io.Serializable {
         this.id = id;
     }
 
-    public void setKindCV( ubic.gemma.model.common.measurement.MeasurementKind kindCV ) {
+    public void setKindCV( MeasurementKind kindCV ) {
         this.kindCV = kindCV;
     }
 
@@ -185,15 +187,15 @@ public abstract class Measurement implements java.io.Serializable {
         this.otherKind = otherKind;
     }
 
-    public void setRepresentation( ubic.gemma.model.common.quantitationtype.PrimitiveType representation ) {
+    public void setRepresentation( PrimitiveType representation ) {
         this.representation = representation;
     }
 
-    public void setType( ubic.gemma.model.common.measurement.MeasurementType type ) {
+    public void setType( MeasurementType type ) {
         this.type = type;
     }
 
-    public void setUnit( ubic.gemma.model.common.measurement.Unit unit ) {
+    public void setUnit( Unit unit ) {
         this.unit = unit;
     }
 

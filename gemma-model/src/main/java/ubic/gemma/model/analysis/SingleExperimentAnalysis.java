@@ -50,10 +50,13 @@ public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implem
 
     @Override
     public Securable getSecurityOwner() {
+        /*
+         * Note: this could be a subset. But that's a secured child as well. AclAdvice fixes that.
+         */
         return this.getExperimentAnalyzed();
     }
 
-    public void setExperimentAnalyzed( ubic.gemma.model.expression.experiment.BioAssaySet experimentAnalyzed ) {
+    public void setExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
         this.experimentAnalyzed = experimentAnalyzed;
     }
 

@@ -18,31 +18,31 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.expression.experiment.FactorValue;
+
 /**
  * 
  */
 public abstract class ContrastResult implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.diff.ContrastResult}.
+     * Constructs new instances of {@link ContrastResult}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.diff.ContrastResult}.
+         * Constructs a new instance of {@link ContrastResult}.
          */
-        public static ubic.gemma.model.analysis.expression.diff.ContrastResult newInstance() {
-            return new ubic.gemma.model.analysis.expression.diff.ContrastResultImpl();
+        public static ContrastResult newInstance() {
+            return new ContrastResultImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.diff.ContrastResult}, taking all
-         * possible properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link ContrastResult}, taking all possible properties (except the
+         * identifier(s))as arguments.
          */
-        public static ubic.gemma.model.analysis.expression.diff.ContrastResult newInstance( Double pvalue,
-                Double tstat, Double coefficient, Double logFoldChange,
-                ubic.gemma.model.expression.experiment.FactorValue factorValue,
-                ubic.gemma.model.expression.experiment.FactorValue secondFactorValue ) {
-            final ubic.gemma.model.analysis.expression.diff.ContrastResult entity = new ubic.gemma.model.analysis.expression.diff.ContrastResultImpl();
+        public static ContrastResult newInstance( Double pvalue, Double tstat, Double coefficient,
+                Double logFoldChange, FactorValue factorValue, FactorValue secondFactorValue ) {
+            final ContrastResult entity = new ContrastResultImpl();
             entity.setPvalue( pvalue );
             entity.setTstat( tstat );
             entity.setCoefficient( coefficient );
@@ -53,10 +53,6 @@ public abstract class ContrastResult implements java.io.Serializable {
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5200377592403068104L;
     private Double pvalue;
 
     private Double tstat;
@@ -67,17 +63,9 @@ public abstract class ContrastResult implements java.io.Serializable {
 
     private Long id;
 
-    private ubic.gemma.model.expression.experiment.FactorValue factorValue;
+    private FactorValue factorValue;
 
-    private ubic.gemma.model.expression.experiment.FactorValue secondFactorValue;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ContrastResult() {
-    }
+    private FactorValue secondFactorValue;
 
     /**
      * Returns <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
@@ -99,21 +87,17 @@ public abstract class ContrastResult implements java.io.Serializable {
     }
 
     /**
-     * <p>
      * The estimated value from the fit
-     * </p>
      */
     public Double getCoefficient() {
         return this.coefficient;
     }
 
     /**
-     * <p>
      * The factorValue for the group of samples that is being compared to baseline. The baseline itself is a property of
      * the ResultSet. For factors that have continuous values, this will be null.
-     * </p>
      */
-    public ubic.gemma.model.expression.experiment.FactorValue getFactorValue() {
+    public FactorValue getFactorValue() {
         return this.factorValue;
     }
 
@@ -125,10 +109,8 @@ public abstract class ContrastResult implements java.io.Serializable {
     }
 
     /**
-     * <p>
      * The fold change relative to the baseline, based on the fitted values. log2-transformed. This will be the same as
      * the coefficient if the data were log transformed when analyzed. This might be null if it wasn't computed.
-     * </p>
      */
     public Double getLogFoldChange() {
         return this.logFoldChange;
@@ -144,14 +126,12 @@ public abstract class ContrastResult implements java.io.Serializable {
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.FactorValue getSecondFactorValue() {
+    public FactorValue getSecondFactorValue() {
         return this.secondFactorValue;
     }
 
     /**
-     * <p>
      * Serves as the effect size as well as an indicator of the direction of change relative to the baseline
-     * </p>
      */
     public Double getTstat() {
         return this.tstat;
@@ -172,7 +152,7 @@ public abstract class ContrastResult implements java.io.Serializable {
         this.coefficient = coefficient;
     }
 
-    public void setFactorValue( ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
+    public void setFactorValue( FactorValue factorValue ) {
         this.factorValue = factorValue;
     }
 
@@ -188,7 +168,7 @@ public abstract class ContrastResult implements java.io.Serializable {
         this.pvalue = pvalue;
     }
 
-    public void setSecondFactorValue( ubic.gemma.model.expression.experiment.FactorValue secondFactorValue ) {
+    public void setSecondFactorValue( FactorValue secondFactorValue ) {
         this.secondFactorValue = secondFactorValue;
     }
 

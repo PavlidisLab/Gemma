@@ -40,10 +40,6 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6553250926957951550L;
     private Double metaPvalue;
 
     private Double metaQvalue;
@@ -58,15 +54,7 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
 
     private Gene gene;
 
-    private Collection<DifferentialExpressionAnalysisResult> resultsUsed = new java.util.HashSet<DifferentialExpressionAnalysisResult>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public GeneDifferentialExpressionMetaAnalysisResult() {
-    }
+    private Collection<DifferentialExpressionAnalysisResult> resultsUsed = new java.util.HashSet<>();
 
     /**
      * Returns <code>true</code> if the argument is an GeneDifferentialExpressionMetaAnalysisResult instance and all

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -25,19 +26,17 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 /**
  * Result of an analysis of differences in expression levels -- a single test (e.g., for one gene or one probe).
  */
-public abstract class DifferentialExpressionAnalysisResult implements java.io.Serializable {
+public abstract class DifferentialExpressionAnalysisResult implements Serializable {
 
     /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult}.
+     * Constructs new instances of {@link DifferentialExpressionAnalysisResult}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult}.
+         * Constructs a new instance of {@link DifferentialExpressionAnalysisResult}.
          */
-        public static ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult newInstance() {
-            return new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl();
+        public static DifferentialExpressionAnalysisResult newInstance() {
+            return new DifferentialExpressionAnalysisResultImpl();
         }
 
     }
@@ -56,7 +55,7 @@ public abstract class DifferentialExpressionAnalysisResult implements java.io.Se
 
     private Long id;
 
-    private Collection<ubic.gemma.model.analysis.expression.diff.ContrastResult> contrasts = new java.util.HashSet<>();
+    private Collection<ContrastResult> contrasts = new java.util.HashSet<>();
 
     private ExpressionAnalysisResultSet resultSet;
 
@@ -93,15 +92,13 @@ public abstract class DifferentialExpressionAnalysisResult implements java.io.Se
      * Contrasts for this result. These might only be stored if the Result itself is significant at some given threshold
      * (e.g., nominal p-value of 0.05)
      */
-    public Collection<ubic.gemma.model.analysis.expression.diff.ContrastResult> getContrasts() {
+    public Collection<ContrastResult> getContrasts() {
         return this.contrasts;
     }
 
     /**
-     * <p>
      * A false discovery estimate (qvalue), Bonferroni-corrected pvalue or other corrected pvalue. The details of how
      * this was computed would be found in the protocol.
-     * </p>
      */
     public Double getCorrectedPvalue() {
         return this.correctedPvalue;
@@ -152,7 +149,7 @@ public abstract class DifferentialExpressionAnalysisResult implements java.io.Se
     /**
      * 
      */
-    public ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet getResultSet() {
+    public ExpressionAnalysisResultSet getResultSet() {
         return this.resultSet;
     }
 
@@ -167,7 +164,7 @@ public abstract class DifferentialExpressionAnalysisResult implements java.io.Se
         return hashCode;
     }
 
-    public void setContrasts( Collection<ubic.gemma.model.analysis.expression.diff.ContrastResult> contrasts ) {
+    public void setContrasts( Collection<ContrastResult> contrasts ) {
         this.contrasts = contrasts;
     }
 
@@ -195,7 +192,7 @@ public abstract class DifferentialExpressionAnalysisResult implements java.io.Se
         this.rank = rank;
     }
 
-    public void setResultSet( ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet resultSet ) {
+    public void setResultSet( ExpressionAnalysisResultSet resultSet ) {
         this.resultSet = resultSet;
     }
 

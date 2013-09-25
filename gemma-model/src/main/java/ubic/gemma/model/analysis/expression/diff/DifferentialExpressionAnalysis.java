@@ -19,13 +19,15 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.HashSet;
 
+import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * An analysis of changes in expression levels across experimental conditions
  */
-public abstract class DifferentialExpressionAnalysis extends ubic.gemma.model.analysis.SingleExperimentAnalysis {
+public abstract class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
 
     /**
      * Constructs new instances of {@link DifferentialExpressionAnalysis}.
@@ -40,21 +42,9 @@ public abstract class DifferentialExpressionAnalysis extends ubic.gemma.model.an
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7964501901575808462L;
     private FactorValue subsetFactorValue;
 
-    private Collection<ExpressionAnalysisResultSet> resultSets = new java.util.HashSet<ExpressionAnalysisResultSet>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public DifferentialExpressionAnalysis() {
-    }
+    private Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
 
     /**
      * Groups of results produced by this ExpressionAnalysis. For example, in a two-way ANOVA, the model has 2 or 3

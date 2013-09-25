@@ -25,7 +25,7 @@ package ubic.gemma.model.common.description;
 /**
  * @see ubic.gemma.model.common.description.MedicalSubjectHeading
  */
-public class MedicalSubjectHeadingImpl extends ubic.gemma.model.common.description.MedicalSubjectHeading {
+public class MedicalSubjectHeadingImpl extends MedicalSubjectHeading {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

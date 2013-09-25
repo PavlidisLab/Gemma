@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
@@ -28,24 +29,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  * of "samples" that can be used for any purpose. These could be a published grouping, or a subset of samples from a
  * published study.
  */
-public abstract class BioAssaySet extends ubic.gemma.model.analysis.Investigation {
+public abstract class BioAssaySet extends Investigation {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 4541296467289029991L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BioAssaySet() {
-    }
-
-    /**
-     * 
-     */
     public abstract Collection<BioAssay> getBioAssays();
 
 }

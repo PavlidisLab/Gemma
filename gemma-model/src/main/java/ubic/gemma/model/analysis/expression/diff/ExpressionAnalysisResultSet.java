@@ -22,6 +22,8 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * A group of results for an ExpressionExperiment.
@@ -29,26 +31,25 @@ import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet}.
+     * Constructs new instances of {@link ExpressionAnalysisResultSet}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet}.
+         * Constructs a new instance of {@link ExpressionAnalysisResultSet}.
          */
-        public static ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet newInstance() {
-            return new ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl();
+        public static ExpressionAnalysisResultSet newInstance() {
+            return new ExpressionAnalysisResultSetImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet},
-         * taking all possible properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link ExpressionAnalysisResultSet}, taking all possible properties (except the
+         * identifier(s))as arguments.
          */
-        public static ExpressionAnalysisResultSet newInstance(
-                Collection<ubic.gemma.model.expression.experiment.ExperimentalFactor> experimentalFactors,
+        public static ExpressionAnalysisResultSet newInstance( Collection<ExperimentalFactor> experimentalFactors,
                 Integer numberOfProbesTested, java.lang.Integer numberOfGenesTested, Double qvalueThresholdForStorage,
-                ubic.gemma.model.expression.experiment.FactorValue baselineGroup,
-                Collection<DifferentialExpressionAnalysisResult> results, DifferentialExpressionAnalysis analysis,
-                PvalueDistribution pvalueDistribution, Collection<HitListSize> hitListSizes ) {
+                FactorValue baselineGroup, Collection<DifferentialExpressionAnalysisResult> results,
+                DifferentialExpressionAnalysis analysis, PvalueDistribution pvalueDistribution,
+                Collection<HitListSize> hitListSizes ) {
             final ExpressionAnalysisResultSet entity = new ExpressionAnalysisResultSetImpl();
             entity.setExperimentalFactors( experimentalFactors );
             entity.setNumberOfProbesTested( numberOfProbesTested );
@@ -63,38 +64,26 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 3117593242531904445L;
     private Integer numberOfProbesTested;
 
     private Integer numberOfGenesTested;
 
     private Double qvalueThresholdForStorage;
 
-    private ubic.gemma.model.expression.experiment.FactorValue baselineGroup;
+    private FactorValue baselineGroup;
 
-    private Collection<DifferentialExpressionAnalysisResult> results = new java.util.HashSet<ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult>();
+    private Collection<DifferentialExpressionAnalysisResult> results = new java.util.HashSet<>();
 
     private DifferentialExpressionAnalysis analysis;
 
     private PvalueDistribution pvalueDistribution;
 
-    private Collection<ubic.gemma.model.analysis.expression.diff.HitListSize> hitListSizes = new java.util.HashSet<ubic.gemma.model.analysis.expression.diff.HitListSize>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ExpressionAnalysisResultSet() {
-    }
+    private Collection<HitListSize> hitListSizes = new java.util.HashSet<HitListSize>();
 
     /**
      * 
      */
-    public ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis getAnalysis() {
+    public DifferentialExpressionAnalysis getAnalysis() {
         return this.analysis;
     }
 
@@ -103,14 +92,14 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
      * be recognized. For continuous factors, this would be null. For interaction terms we do not compute this so it
      * will also be null.
      */
-    public ubic.gemma.model.expression.experiment.FactorValue getBaselineGroup() {
+    public FactorValue getBaselineGroup() {
         return this.baselineGroup;
     }
 
     /**
      * 
      */
-    public Collection<ubic.gemma.model.analysis.expression.diff.HitListSize> getHitListSizes() {
+    public Collection<HitListSize> getHitListSizes() {
         return this.hitListSizes;
     }
 
@@ -132,7 +121,7 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
     /**
      * 
      */
-    public ubic.gemma.model.analysis.expression.diff.PvalueDistribution getPvalueDistribution() {
+    public PvalueDistribution getPvalueDistribution() {
         return this.pvalueDistribution;
     }
 
@@ -150,19 +139,19 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
      * 
      */
     @Override
-    public Collection<ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult> getResults() {
+    public Collection<DifferentialExpressionAnalysisResult> getResults() {
         return this.results;
     }
 
-    public void setAnalysis( ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis analysis ) {
+    public void setAnalysis( DifferentialExpressionAnalysis analysis ) {
         this.analysis = analysis;
     }
 
-    public void setBaselineGroup( ubic.gemma.model.expression.experiment.FactorValue baselineGroup ) {
+    public void setBaselineGroup( FactorValue baselineGroup ) {
         this.baselineGroup = baselineGroup;
     }
 
-    public void setHitListSizes( Collection<ubic.gemma.model.analysis.expression.diff.HitListSize> hitListSizes ) {
+    public void setHitListSizes( Collection<HitListSize> hitListSizes ) {
         this.hitListSizes = hitListSizes;
     }
 
@@ -174,7 +163,7 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
         this.numberOfProbesTested = numberOfProbesTested;
     }
 
-    public void setPvalueDistribution( ubic.gemma.model.analysis.expression.diff.PvalueDistribution pvalueDistribution ) {
+    public void setPvalueDistribution( PvalueDistribution pvalueDistribution ) {
         this.pvalueDistribution = pvalueDistribution;
     }
 
@@ -182,8 +171,7 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
         this.qvalueThresholdForStorage = qvalueThresholdForStorage;
     }
 
-    public void setResults(
-            Collection<ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult> results ) {
+    public void setResults( Collection<DifferentialExpressionAnalysisResult> results ) {
         this.results = results;
     }
 

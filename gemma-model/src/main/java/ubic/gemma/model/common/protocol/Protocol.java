@@ -18,13 +18,13 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.description.Characteristic;
 
 /**
  * 
  */
-public abstract class Protocol extends Auditable implements gemma.gsec.model.Securable {
+public abstract class Protocol extends Auditable implements Securable {
     /**
      * Constructs new instances of {@link Protocol}.
      */
@@ -36,32 +36,6 @@ public abstract class Protocol extends Auditable implements gemma.gsec.model.Sec
             return new ProtocolImpl();
         }
 
-    }
-
-    private Characteristic type;
-
-    private String URI;
-
-    /**
-     * 
-     */
-    public Characteristic getType() {
-        return this.type;
-    }
-
-    /**
-     * 
-     */
-    public String getURI() {
-        return this.URI;
-    }
-
-    public void setType( Characteristic type ) {
-        this.type = type;
-    }
-
-    public void setURI( String URI ) {
-        this.URI = URI;
     }
 
 }
