@@ -36,14 +36,19 @@ import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.CitationValueObject;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -57,19 +62,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
-    private static boolean dosLoaded = false;
-
-    private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";
-
-    private Gene gene = null;
-
-    private int geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
-
-    @Autowired
-    private GeneService geneService;
-
-    private LiteratureEvidenceValueObject litEvidence = null;
-
     @Autowired
     private OntologyService os;
 
@@ -78,6 +70,24 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
+
+    @Autowired
+    private GeneService geneService;
+
+    private static boolean dosLoaded = false;
+
+    private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";
+    private static final String TEST_EXTERNAL_DATABASE = "EXTERNAL_DATABASE_TEST_NAME";
+
+    private Gene gene = null;
+
+    private int geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
+
+    private LiteratureEvidenceValueObject litEvidence = null;
+
+    private ExternalDatabase externalDatabase = null;
+
+    private Taxon humanTaxon = null;
 
     @Before
     public void setup() throws Exception {
@@ -96,8 +106,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
             dosLoaded = true;
         }
 
-        makeGene( this.geneNCBI );
-
+        // create what will be needed for tests
+        createGene();
+        createExternalDatabase();
         createLiteratureEvidence();
     }
 
@@ -113,7 +124,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         this.geneService.update( this.gene );
         this.geneService.remove( this.gene );
-
+        this.externalDatabaseService.remove( this.externalDatabase );
     }
 
     @Test
@@ -206,6 +217,46 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertNull( this.phenotypeAssociationManagerService.load( evidence.getId() ) );
     }
 
+    @Test
+    public void testSearchOntologyForPhenotypes() {
+
+        // simulate someone looking for cancer, it should be found in the ontology file
+        assertTrue( !this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( "can", null ).isEmpty() );
+
+        // this should not return anything
+        assertTrue( this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( "canloixys", null ).isEmpty() );
+    }
+
+    @Test
+    public void testFindGenesWithEvidence() {
+        assertTrue( !this.phenotypeAssociationManagerService.findGenesWithEvidence( "RA", this.humanTaxon.getId() )
+                .isEmpty() );
+
+        assertTrue( this.phenotypeAssociationManagerService.findGenesWithEvidence( "XXXX", this.humanTaxon.getId() )
+                .isEmpty() );
+    }
+
+    @Test
+    public void testLoadTree() {
+        Collection<SimpleTreeValueObject> tree = this.phenotypeAssociationManagerService
+                .loadAllPhenotypesByTree( new EvidenceFilter() );
+        assertTrue( tree != null && tree.size() != 0 );
+    }
+
+    @Test
+    public void testFindEvidenceByFilters() {
+        Collection<EvidenceValueObject> evidenceVO = this.phenotypeAssociationManagerService.findEvidenceByFilters(
+                this.humanTaxon.getId(), 10, null );
+        assertTrue( evidenceVO != null && evidenceVO.size() != 0 );
+    }
+
+    private void createExternalDatabase() {
+        externalDatabase = ExternalDatabase.Factory.newInstance();
+        externalDatabase.setName( TEST_EXTERNAL_DATABASE );
+        externalDatabase.setWebUri( "http://www.test.ca/" );
+        externalDatabaseService.findOrCreate( externalDatabase );
+    }
+
     private void createLiteratureEvidence() {
         this.litEvidence = new LiteratureEvidenceValueObject();
         this.litEvidence.setDescription( "Test Description" );
@@ -215,6 +266,12 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         CitationValueObject citationValueObject = new CitationValueObject();
         citationValueObject.setPubmedAccession( "1" );
 
+        ExternalDatabaseValueObject externalDatabaseValueObject = new ExternalDatabaseValueObject();
+        externalDatabaseValueObject.setName( "EXTERNAL_DATABASE_TEST" );
+
+        EvidenceSourceValueObject evidenceSourceValueObject = new EvidenceSourceValueObject( "url_link",
+                externalDatabaseValueObject );
+
         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
 
         CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( TEST_PHENOTYPE_URI );
@@ -223,6 +280,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         this.litEvidence.setPhenotypes( phenotypes );
         this.litEvidence.setCitationValueObject( citationValueObject );
+        this.litEvidence.setEvidenceSource( evidenceSourceValueObject );
 
         ValidateEvidenceValueObject e = this.phenotypeAssociationManagerService.makeEvidence( this.litEvidence );
         assertNull( e );
@@ -231,14 +289,15 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     /**
      * @param ncbiId
      */
-    private void makeGene( int ncbiId ) {
+    private void createGene() {
+        this.humanTaxon = this.taxonService.findByCommonName( "human" );
         this.gene = Gene.Factory.newInstance();
         this.gene.setName( "RAT1" );
         this.gene.setOfficialName( "RAT1" );
         this.gene.setOfficialSymbol( "RAT1" );
-        this.gene.setNcbiGeneId( new Integer( ncbiId ) );
+        this.gene.setNcbiGeneId( new Integer( this.geneNCBI ) );
         // the taxon is already populated in the test database
-        this.gene.setTaxon( this.taxonService.findByCommonName( "human" ) );
+        this.gene.setTaxon( humanTaxon );
         this.gene.getProducts().add( super.getTestPersistentGeneProduct( this.gene ) );
         this.gene = ( Gene ) this.persisterHelper.persist( this.gene );
     }
