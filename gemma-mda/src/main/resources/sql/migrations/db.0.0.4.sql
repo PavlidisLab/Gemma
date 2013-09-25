@@ -82,6 +82,9 @@ select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTI
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join EXPERIMENTAL_FACTOR b on b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" and o.PARENT_OBJECT_FK is  null and b.ID is null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join FACTOR_VALUE b on b.ID=o.OBJECT_ID  where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.FactorValueImpl"  and o.PARENT_OBJECT_FK is  null and b.ID is null;
 
+select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join PHENOTYPE_ASSOCIATION b on  b.ID=o.OBJECT_ID   where o.OBJECT_CLASS like "ubic.gemma.model.%EvidenceImpl" and o.PARENT_OBJECT_FK is null and b.ID is null;
+
+
 -- these are all zero.
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join ANALYSIS b on  b.ID=o.OBJECT_ID where b.class="DifferentialExpressionAnalysisImpl" AND o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl"  and o.PARENT_OBJECT_FK is  null and b.ID is null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join ANALYSIS b on  b.ID=o.OBJECT_ID where b.class="ProbeCoexpressionAnalysisImpl" AND o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl"  and o.PARENT_OBJECT_FK is  null and b.ID is null;
