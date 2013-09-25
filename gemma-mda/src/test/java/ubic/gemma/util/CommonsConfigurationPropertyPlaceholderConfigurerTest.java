@@ -18,35 +18,35 @@
  */
 package ubic.gemma.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.configuration.io.FileHandler;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.xml.XmlBeanFactory;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import ubic.gemma.util.JustATestBean;
-import ubic.basecode.util.FileTools;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class CommonsConfigurationPropertyPlaceholderConfigurerTest extends TestCase {
+public class CommonsConfigurationPropertyPlaceholderConfigurerTest {
 
     ConfigurableListableBeanFactory bf;
+    ClassPathXmlApplicationContext ap;
 
     /*
      * (non-Javadoc)
      * 
      * @see junit.framework.TestCase#setUp()
      */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         CompositeConfiguration config = new CompositeConfiguration();
         config.addConfiguration( new SystemConfiguration() );
         PropertiesConfiguration pc = new PropertiesConfiguration();
@@ -55,15 +55,20 @@ public class CommonsConfigurationPropertyPlaceholderConfigurerTest extends TestC
         handler.load();
         config.addConfiguration( pc );
 
-        // InputStream doesn't work for maven...get 'don't read twice' error.
-        Resource testConfig = new FileSystemResource( FileTools.resourceToPath( "/test.spring.config.xml" ) );
+        ap = new ClassPathXmlApplicationContext( "classpath:/test.spring.config.xml" );
+        bf = ap.getBeanFactory();
 
-        bf = new XmlBeanFactory( testConfig );
+    }
+
+    @After
+    public void tearDown() {
+        ap.close();
     }
 
     /**
      * Test method for {@link ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer#mergeProperties()}.
      */
+    @Test
     public final void testMergeProperties() throws Exception {
         FileHandler bpfh = ( FileHandler ) bf.getBean( "buildPropertiesFileHandler" );
         assertNotNull( bpfh );
@@ -72,8 +77,8 @@ public class CommonsConfigurationPropertyPlaceholderConfigurerTest extends TestC
 
         assertEquals( "foo", pc.getProperty( "testProperty" ) );
 
-        CommonsConfigurationPropertyPlaceholderConfigurer cc = ( CommonsConfigurationPropertyPlaceholderConfigurer ) bf
-                .getBean( "configurationPropertyConfigurer" );
+        CommonsConfigurationPropertyPlaceholderConfigurer cc = bf
+                .getBean( CommonsConfigurationPropertyPlaceholderConfigurer.class );
 
         assert cc != null;
         cc.postProcessBeanFactory( bf ); // when does this normally get called? Maybe an XmlWebApplicationContext

@@ -18,31 +18,32 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.net.URL;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
- * @see ubic.gemma.model.common.description.LocalFile
+ * @see LocalFile
  */
 public interface LocalFileDao extends BaseDao<LocalFile> {
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile find( ubic.gemma.model.common.description.LocalFile localFile );
+    public LocalFile find( LocalFile localFile );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile findByLocalURL( java.net.URL url, java.lang.Long size );
+    public LocalFile findByLocalURL( URL url, Long size );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile findByRemoteURL( java.net.URL url, java.lang.Long size );
+    public LocalFile findByRemoteURL( URL url, Long size );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile findOrCreate(
-            ubic.gemma.model.common.description.LocalFile localFile );
+    public LocalFile findOrCreate( LocalFile localFile );
 
 }

@@ -37,8 +37,7 @@ import org.springframework.stereotype.Service;
 public class LocalFileServiceImpl extends LocalFileServiceBase {
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileService#copyFile(ubic.gemma.model.common.description.LocalFile,
-     *      ubic.gemma.model.common.description.LocalFile)
+     * @see LocalFileService#copyFile(LocalFile, LocalFile)
      */
     @Override
     protected LocalFile handleCopyFile( LocalFile sourceFile, LocalFile targetFile ) throws IOException {
@@ -47,25 +46,23 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
 
         File dst = targetFile.asFile();
         if ( dst == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
+        try (InputStream in = new FileInputStream( src ); OutputStream out = new FileOutputStream( dst );) {
+            // Transfer bytes from in to out
+            byte[] buf = new byte[1024];
+            int len;
+            long size = 0;
+            while ( ( len = in.read( buf ) ) > 0 ) {
+                out.write( buf, 0, len );
+                size += len;
+            }
+            in.close();
+            out.close();
 
-        InputStream in = new FileInputStream( src );
-        OutputStream out = new FileOutputStream( dst );
+            targetFile.setSize( size );
 
-        // Transfer bytes from in to out
-        byte[] buf = new byte[1024];
-        int len;
-        long size = 0;
-        while ( ( len = in.read( buf ) ) > 0 ) {
-            out.write( buf, 0, len );
-            size += len;
+            this.getLocalFileDao().create( targetFile );
+            return targetFile;
         }
-        in.close();
-        out.close();
-
-        targetFile.setSize( size );
-
-        this.getLocalFileDao().create( targetFile );
-        return targetFile;
     }
 
     /**
@@ -154,6 +151,11 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
         this.getLocalFileDao().update( localFile );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.LocalFileService#loadAll()
+     */
     @Override
     public Collection<LocalFile> loadAll() {
         return ( Collection<LocalFile> ) this.getLocalFileDao().loadAll();

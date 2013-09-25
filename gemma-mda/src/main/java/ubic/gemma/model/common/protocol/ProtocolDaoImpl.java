@@ -32,7 +32,7 @@ import org.springframework.stereotype.Repository;
  * @see ubic.gemma.model.common.protocol.Protocol
  */
 @Repository
-public class ProtocolDaoImpl extends ubic.gemma.model.common.protocol.ProtocolDaoBase {
+public class ProtocolDaoImpl extends ProtocolDaoBase {
 
     private static Log log = LogFactory.getLog( ProtocolDaoImpl.class.getName() );
 

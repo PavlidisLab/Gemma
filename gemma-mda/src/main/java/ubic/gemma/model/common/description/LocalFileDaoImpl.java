@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.net.URL;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -46,7 +47,7 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
      * 
      */
     @Override
-    public LocalFile find( ubic.gemma.model.common.description.LocalFile localFile ) {
+    public LocalFile find( LocalFile localFile ) {
 
         BusinessKey.checkValidKey( localFile );
 
@@ -79,11 +80,9 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, java.lang.String, java.net.URL,
-     *      java.lang.Long)
+     * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, java.lang.String, URL, java.lang.Long)
      */
-    public LocalFile findByLocalURL( final java.lang.String queryString, final java.net.URL url,
-            final java.lang.Long size ) {
+    public LocalFile findByLocalURL( final String queryString, final URL url, final java.lang.Long size ) {
 
         List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "url", "size" },
                 new Object[] { url, size } );
@@ -99,23 +98,19 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, java.net.URL, java.lang.Long)
+     * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, URL, java.lang.Long)
      */
     @Override
-    public LocalFile findByLocalURL( final java.net.URL url, final java.lang.Long size ) {
-        return this
-                .findByLocalURL(
-                        "from ubic.gemma.model.common.description.LocalFile as localFile where localFile.url = :url and localFile.size = :size",
-                        url, size );
+    public LocalFile findByLocalURL( final URL url, final java.lang.Long size ) {
+        return this.findByLocalURL(
+                "from LocalFileImpl as localFile where localFile.url = :url and localFile.size = :size", url, size );
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, java.lang.String, java.net.URL,
-     *      java.lang.Long)
+     * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, java.lang.String, URL, java.lang.Long)
      */
 
-    public LocalFile findByRemoteURL( final java.lang.String queryString, final java.net.URL url,
-            final java.lang.Long size ) {
+    public LocalFile findByRemoteURL( final java.lang.String queryString, final URL url, final java.lang.Long size ) {
 
         List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "url", "size" },
                 new Object[] { url, size } );
@@ -131,11 +126,11 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
     }
 
     /**
-     * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, java.net.URL, java.lang.Long)
+     * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, URL, java.lang.Long)
      */
     @Override
-    public LocalFile findByRemoteURL( final java.net.URL url, final java.lang.Long size ) {
-        return this.findByRemoteURL( "from ubic.gemma.model.common.description.LocalFile as localFile "
+    public LocalFile findByRemoteURL( final URL url, final java.lang.Long size ) {
+        return this.findByRemoteURL( "from LocalFileImpl as localFile "
                 + "where localFile.url = :url and localFile.size = :size", url, size );
     }
 
