@@ -177,6 +177,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         // NOte that this reader generally won't work for experiment files because of the gene annotations.
         DoubleMatrixReader r = new DoubleMatrixReader();
+
+        assertTrue( outputLocation.canRead() );
+
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
         assertEquals( 99, readIn.rows() );

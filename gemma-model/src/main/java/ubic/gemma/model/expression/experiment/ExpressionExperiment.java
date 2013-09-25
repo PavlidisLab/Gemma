@@ -18,38 +18,37 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import gemma.gsec.model.SecuredNotChild;
+
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 
 /**
- * <p>
  * A gene expression study.
- * </p>
  */
-public abstract class ExpressionExperiment extends ubic.gemma.model.expression.experiment.BioAssaySet {
+public abstract class ExpressionExperiment extends BioAssaySet implements SecuredNotChild {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}.
+     * Constructs new instances of {@link ExpressionExperiment}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}.
+         * Constructs a new instance of {@link ExpressionExperiment}.
          */
-        public static ubic.gemma.model.expression.experiment.ExpressionExperiment newInstance() {
-            return new ubic.gemma.model.expression.experiment.ExpressionExperimentImpl();
+        public static ExpressionExperiment newInstance() {
+            return new ExpressionExperimentImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 4493017089352390643L;
     private String source;
 
     private String shortName;
@@ -58,7 +57,7 @@ public abstract class ExpressionExperiment extends ubic.gemma.model.expression.e
 
     private Integer numberOfDataVectors;
 
-    private Collection<ubic.gemma.model.common.quantitationtype.QuantitationType> quantitationTypes = new java.util.HashSet<ubic.gemma.model.common.quantitationtype.QuantitationType>();
+    private Collection<QuantitationType> quantitationTypes = new HashSet<>();
 
     private DatabaseEntry accession;
 
@@ -66,26 +65,18 @@ public abstract class ExpressionExperiment extends ubic.gemma.model.expression.e
 
     private LocalFile rawDataFile;
 
-    private Collection<ubic.gemma.model.expression.bioAssay.BioAssay> bioAssays = new java.util.HashSet<ubic.gemma.model.expression.bioAssay.BioAssay>();
+    private Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
 
     private MeanVarianceRelation meanVarianceRelation;
 
-    private Collection<RawExpressionDataVector> rawExpressionDataVectors = new java.util.HashSet<ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector>();
+    private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
 
-    private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new java.util.HashSet<ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ExpressionExperiment() {
-    }
+    private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.DatabaseEntry getAccession() {
+    public DatabaseEntry getAccession() {
         return this.accession;
     }
 
@@ -93,21 +84,21 @@ public abstract class ExpressionExperiment extends ubic.gemma.model.expression.e
      * 
      */
     @Override
-    public Collection<ubic.gemma.model.expression.bioAssay.BioAssay> getBioAssays() {
+    public Collection<BioAssay> getBioAssays() {
         return this.bioAssays;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalDesign getExperimentalDesign() {
+    public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation getMeanVarianceRelation() {
+    public MeanVarianceRelation getMeanVarianceRelation() {
         return this.meanVarianceRelation;
     }
 
@@ -128,28 +119,28 @@ public abstract class ExpressionExperiment extends ubic.gemma.model.expression.e
     /**
      * 
      */
-    public Collection<ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector> getProcessedExpressionDataVectors() {
+    public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors() {
         return this.processedExpressionDataVectors;
     }
 
     /**
      * 
      */
-    public Collection<ubic.gemma.model.common.quantitationtype.QuantitationType> getQuantitationTypes() {
+    public Collection<QuantitationType> getQuantitationTypes() {
         return this.quantitationTypes;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile getRawDataFile() {
+    public LocalFile getRawDataFile() {
         return this.rawDataFile;
     }
 
     /**
      * 
      */
-    public Collection<ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector> getRawExpressionDataVectors() {
+    public Collection<RawExpressionDataVector> getRawExpressionDataVectors() {
         return this.rawExpressionDataVectors;
     }
 
@@ -168,20 +159,19 @@ public abstract class ExpressionExperiment extends ubic.gemma.model.expression.e
         return this.source;
     }
 
-    public void setAccession( ubic.gemma.model.common.description.DatabaseEntry accession ) {
+    public void setAccession( DatabaseEntry accession ) {
         this.accession = accession;
     }
 
-    public void setBioAssays( Collection<ubic.gemma.model.expression.bioAssay.BioAssay> bioAssays ) {
+    public void setBioAssays( Collection<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
     }
 
-    public void setExperimentalDesign( ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign ) {
+    public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
         this.experimentalDesign = experimentalDesign;
     }
 
-    public void setMeanVarianceRelation(
-            ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation meanVarianceRelation ) {
+    public void setMeanVarianceRelation( MeanVarianceRelation meanVarianceRelation ) {
         this.meanVarianceRelation = meanVarianceRelation;
     }
 
@@ -194,21 +184,19 @@ public abstract class ExpressionExperiment extends ubic.gemma.model.expression.e
     }
 
     public void setProcessedExpressionDataVectors(
-            Collection<ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector> processedExpressionDataVectors ) {
+            Collection<ProcessedExpressionDataVector> processedExpressionDataVectors ) {
         this.processedExpressionDataVectors = processedExpressionDataVectors;
     }
 
-    public void setQuantitationTypes(
-            Collection<ubic.gemma.model.common.quantitationtype.QuantitationType> quantitationTypes ) {
+    public void setQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
         this.quantitationTypes = quantitationTypes;
     }
 
-    public void setRawDataFile( ubic.gemma.model.common.description.LocalFile rawDataFile ) {
+    public void setRawDataFile( LocalFile rawDataFile ) {
         this.rawDataFile = rawDataFile;
     }
 
-    public void setRawExpressionDataVectors(
-            Collection<ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector> rawExpressionDataVectors ) {
+    public void setRawExpressionDataVectors( Collection<RawExpressionDataVector> rawExpressionDataVectors ) {
         this.rawExpressionDataVectors = rawExpressionDataVectors;
     }
 

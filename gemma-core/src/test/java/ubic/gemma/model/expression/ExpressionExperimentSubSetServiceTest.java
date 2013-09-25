@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -34,10 +35,15 @@ public class ExpressionExperimentSubSetServiceTest extends BaseSpringContextTest
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
+    @Autowired
+    private AclTestUtils aclTestUtils;
+
     @Test
     public final void testFind() {
 
         ExpressionExperiment ee = super.testHelper.getTestPersistentBasicExpressionExperiment();
+
+        aclTestUtils.checkEEAcls( ee );
 
         ExpressionExperimentSubSet subset = ExpressionExperimentSubSet.Factory.newInstance();
 
@@ -48,6 +54,9 @@ public class ExpressionExperimentSubSetServiceTest extends BaseSpringContextTest
         ExpressionExperimentSubSet persisted = expressionExperimentSubSetService.create( subset );
 
         assertNotNull( persisted );
+
+        aclTestUtils.checkEESubSetAcls( persisted );
+
         ExpressionExperimentSubSet hit = expressionExperimentSubSetService.find( persisted );
 
         assertEquals( persisted, hit );

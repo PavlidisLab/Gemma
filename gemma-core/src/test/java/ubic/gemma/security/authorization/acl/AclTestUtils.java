@@ -177,11 +177,14 @@ public class AclTestUtils {
         }
     }
 
+    /**
+     * @param eeset
+     */
     public void checkEESubSetAcls( ExpressionExperimentSubSet eeset ) {
         checkEEAcls( eeset.getSourceExperiment() );
         checkHasAcl( eeset );
         checkLacksAces( eeset );
-
+        checkHasAclParent( eeset, eeset.getSourceExperiment() );
     }
 
     public void checkHasAces( Object f ) {

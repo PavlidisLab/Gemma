@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.analysis;
 
+import gemma.gsec.model.Securable;
+
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -30,7 +32,7 @@ import ubic.gemma.model.common.description.Characteristic;
 /**
  * An abstract concept of a scientific study
  */
-public abstract class Investigation extends Auditable implements gemma.gsec.model.SecuredNotChild {
+public abstract class Investigation extends Auditable implements Securable {
 
     private Collection<Characteristic> characteristics = new HashSet<>();
 
@@ -52,7 +54,7 @@ public abstract class Investigation extends Auditable implements gemma.gsec.mode
     /**
      * Other contacts who are investigators on this experiment
      */
-    public Collection<ubic.gemma.model.common.auditAndSecurity.Contact> getInvestigators() {
+    public Collection<Contact> getInvestigators() {
         return this.investigators;
     }
 
