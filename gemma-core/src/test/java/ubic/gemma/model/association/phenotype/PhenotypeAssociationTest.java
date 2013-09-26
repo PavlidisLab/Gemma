@@ -250,11 +250,15 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertTrue( evidenceVO != null && evidenceVO.size() != 0 );
     }
 
+    /**
+     * 
+     */
     private void createExternalDatabase() {
         externalDatabase = ExternalDatabase.Factory.newInstance();
         externalDatabase.setName( TEST_EXTERNAL_DATABASE );
         externalDatabase.setWebUri( "http://www.test.ca/" );
         externalDatabaseService.findOrCreate( externalDatabase );
+        assertNotNull( externalDatabaseService.find( TEST_EXTERNAL_DATABASE ) );
     }
 
     private void createLiteratureEvidence() {
@@ -267,7 +271,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         citationValueObject.setPubmedAccession( "1" );
 
         ExternalDatabaseValueObject externalDatabaseValueObject = new ExternalDatabaseValueObject();
-        externalDatabaseValueObject.setName( "EXTERNAL_DATABASE_TEST" );
+        externalDatabaseValueObject.setName( TEST_EXTERNAL_DATABASE );
 
         EvidenceSourceValueObject evidenceSourceValueObject = new EvidenceSourceValueObject( "url_link",
                 externalDatabaseValueObject );
