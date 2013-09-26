@@ -36,6 +36,7 @@ import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.CitationValueObject;
+import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -73,6 +74,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Autowired
     private GeneService geneService;
+
+    @Autowired
+    private DatabaseEntryDao databaseEntryDao;
 
     private static boolean dosLoaded = false;
 
@@ -120,17 +124,14 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         for ( PhenotypeAssociation phenotypeAssociation : this.gene.getPhenotypeAssociations() ) {
             this.phenotypeAssociationService.remove( phenotypeAssociation );
-        }
 
+            if ( phenotypeAssociation.getEvidenceSource() != null ) {
+                this.databaseEntryDao.remove( phenotypeAssociation.getEvidenceSource().getId() );
+            }
+        }
         this.geneService.update( this.gene );
         this.geneService.remove( this.gene );
-
-        // FIXME this will not work without deleting the database entries first.
-        try {
-            this.externalDatabaseService.remove( this.externalDatabase );
-        } catch ( Exception e ) {
-
-        }
+        this.externalDatabaseService.remove( this.externalDatabase );
     }
 
     @Test
@@ -187,9 +188,6 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         Collection<ExternalDatabaseStatisticsValueObject> b = this.phenotypeAssociationService
                 .loadStatisticsOnExternalDatabases();
         assertNotNull( b );
-        ExternalDatabaseStatisticsValueObject c = this.phenotypeAssociationService.loadStatisticsOnManualCuration();
-        assertNotNull( c );
-        // FAILS assertNotNull( c.getLastUpdateDate() );
     }
 
     @Test
