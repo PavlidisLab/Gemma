@@ -42,9 +42,10 @@ public class GemmaEndpointTest extends TestCase {
             }
 
             public Document readTest() throws IOException {
-                InputStream stream = GemmaEndpointTest.class.getResourceAsStream( "/data/DEDVforEE-159-test.xml" );
-                assert stream != null;
-                return this.readReport( stream );
+                try (InputStream stream = GemmaEndpointTest.class.getResourceAsStream( "/data/DEDVforEE-159-test.xml" );) {
+                    assert stream != null;
+                    return this.readReport( stream );
+                }
             }
 
             @Override

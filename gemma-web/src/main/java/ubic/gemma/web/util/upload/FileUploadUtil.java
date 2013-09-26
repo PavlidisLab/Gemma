@@ -149,10 +149,11 @@ public class FileUploadUtil {
     private static void copyFile( MultipartFile file, File copiedFile ) throws FileNotFoundException, IOException {
         log.info( "Copying file " + file + " (" + file.getSize() + " bytes)" );
         // write the file to the file specified
-        InputStream stream = file.getInputStream();
+        try (InputStream stream = file.getInputStream();) {
 
-        copy( copiedFile, stream );
-        log.info( "Done copying to " + copiedFile );
+            copy( copiedFile, stream );
+            log.info( "Done copying to " + copiedFile );
+        }
     }
 
     /**

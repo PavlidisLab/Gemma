@@ -359,9 +359,9 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         if ( !file.exists() ) return null;
 
         // TODO: only load file if it is not out of date
-        InputStream is = new FileInputStream( path + fileName );
-
-        return readReport( is );
+        try (InputStream is = new FileInputStream( path + fileName );) {
+            return readReport( is );
+        }
     }
 
     protected void setLocalName( String localName ) {

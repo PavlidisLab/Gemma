@@ -39,23 +39,17 @@ import ubic.gemma.persistence.BaseDao;
 public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     /**
-     * <p>
      * returns all compositeSequences for the given arrayDesign that do not have bioSequence associations.
-     * </p>
      */
     public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * returns all compositeSequences for the given arrayDesign that do not have BLAT results.
-     * </p>
      */
     public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * returns all compositeSequences for the given arrayDesign without gene associations.
-     * </p>
      */
     public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
@@ -70,9 +64,7 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public void deleteAlignmentData( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * deletes the gene product associations on the specified array design
-     * </p>
      */
     public void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
@@ -107,9 +99,7 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public Collection<BioAssay> getAllAssociatedBioAssays( Long id );
 
     /**
-     * <p>
      * Get all audit events associated with the specified arrayDesign ids.
-     * </p>
      */
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
@@ -151,93 +141,67 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public Map<Long, Boolean> isSubsumer( Collection<Long> ids );
 
     /**
-     * <p>
      * loads all Array designs as value objects.
-     * </p>
      */
     public Collection<ArrayDesignValueObject> loadAllValueObjects();
 
     /**
-     * <p>
      * Needed because we want to lazy-load composite sequences
-     * </p>
      */
     public Collection<CompositeSequence> loadCompositeSequences( Long id );
 
     /**
-     * <p>
      * loads the Value Objects for the Array Designs specified by the input ids.
-     * </p>
      */
     public Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids );
 
     /**
-     * <p>
      * Function to count all composite sequences with bioSequences.
-     * </p>
      */
     public long numAllCompositeSequenceWithBioSequences();
 
     /**
-     * <p>
      * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
-     * </p>
      */
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids );
 
     /**
-     * <p>
      * Function to count all compositeSequences with blat results.
-     * </p>
      */
     public long numAllCompositeSequenceWithBlatResults();
 
     /**
-     * <p>
      * Function to return the count of all composite sequences with blat results, given a list of array design Ids
-     * </p>
      */
     public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids );
 
     /**
-     * <p>
      * Function to count all compositeSequences with associated genes.
-     * </p>
      */
     public long numAllCompositeSequenceWithGenes();
 
     /**
-     * <p>
      * Function to return the count of all composite sequences with genes, given a list of array design Ids
-     * </p>
      */
     public long numAllCompositeSequenceWithGenes( Collection<Long> ids );
 
     /**
-     * <p>
      * Returns a count of the genes associated with all composite Sequences
-     * </p>
      */
     public long numAllGenes();
 
     /**
-     * <p>
      * returns a count of the unique genes associated witht the given arrayDesigns
-     * </p>
      */
     public long numAllGenes( Collection<Long> ids );
 
     /**
-     * <p>
      * returns the number of bioSequences associated with this ArrayDesign
-     * </p>
      */
     public long numBioSequences( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * returns the number of BlatResults (BioSequence2GeneProduct) entries associated with this ArrayDesign id.
-     * </p>
      */
     public long numBlatResults( ArrayDesign arrayDesign );
 
@@ -247,44 +211,34 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public Integer numCompositeSequences( Long id );
 
     /**
-     * <p>
      * Given an array design, returns the number of unique composite sequences from that array design that have
      * bioSequences associated with them. The bioSequences matched have a non-null sequence.
-     * </p>
      */
     public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * Given an array design, returns the number of unique composite sequences from that array design that have blat
      * results associated with them.
-     * </p>
      */
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * Given an array design, returns the number of unique composite sequences from that array design that have genes
      * associated with them.
-     * </p>
      */
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * Returns the number of Genes associated with this ArrayDesign
-     * </p>
      */
     public long numGenes( ArrayDesign arrayDesign );
 
     /**
-     * <p>
      * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
      * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
      * oligonucleotide is not given. Instead the submitter provides Genbank accessions, which are misleading. This
      * method can be used to clear those until the "right" sequences can be identified and filled in. Note that this
      * does not delete the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
-     * </p>
      */
     public void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
@@ -304,10 +258,8 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     /**
-     * <p>
      * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to
      * reflect this fact. The boolean value returned indicates whether there was indeed a subsuming relationship found.
-     * </p>
      */
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
@@ -333,6 +285,12 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes );
 
+    /**
+     * Limited to those which map to a geneproduct FIXME rename this method to reflect that more obviously.
+     * 
+     * @param arrayDesign
+     * @return
+     */
     public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign );
 
 }

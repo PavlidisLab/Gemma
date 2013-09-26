@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -309,14 +310,14 @@ public class ExpressionExperimentFormController extends BaseFormController {
         // parse JSON-serialized map
         String jsonSerialization = request.getParameter( "assayToMaterialMap" );
         // convert back to a map
-        JSONParser parser = new JSONParser( new StringInputStream( jsonSerialization ) );
 
         Map<String, JSONValue> bioAssayMap = null;
-        try {
+        try (StringInputStream aStream = new StringInputStream( jsonSerialization );) {
+            JSONParser parser = new JSONParser( aStream );
+
             bioAssayMap = ( ( JSONObject ) parser.nextValue() ).getValue();
-        } catch ( TokenStreamException e ) {
-            throw new RuntimeException( e );
-        } catch ( RecognitionException e ) {
+
+        } catch ( IOException | TokenStreamException | RecognitionException e ) {
             throw new RuntimeException( e );
         }
 

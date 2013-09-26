@@ -68,13 +68,12 @@ public class HibernateByteBlobType implements UserType {
             SQLException {
         final Object object;
 
-        final InputStream inputStream = resultSet.getBinaryStream( names[0] );
-        if ( inputStream == null ) {
-            object = null;
-        } else {
-            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try (final InputStream inputStream = resultSet.getBinaryStream( names[0] );
+                final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();) {
+            if ( inputStream == null ) {
+                object = null;
+            } else {
 
-            try {
                 final byte[] buffer = new byte[65536];
                 int read = -1;
 
@@ -82,13 +81,14 @@ public class HibernateByteBlobType implements UserType {
                     outputStream.write( buffer, 0, read );
                 }
                 outputStream.close();
-            } catch ( IOException exception ) {
-                throw new HibernateException( "Unable to read blob " + names[0], exception );
-            }
-            object = outputStream.toByteArray();
-        }
 
-        return object;
+                object = outputStream.toByteArray();
+            }
+
+            return object;
+        } catch ( IOException e ) {
+            throw new HibernateException( "Unable to read blob " + names[0], e );
+        }
     }
 
     /**

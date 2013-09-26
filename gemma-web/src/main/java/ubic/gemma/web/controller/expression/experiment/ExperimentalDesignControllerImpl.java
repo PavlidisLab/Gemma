@@ -128,11 +128,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new IllegalArgumentException( "Cannot read from file:" + f );
         }
 
-        try {
+        try (InputStream is = new FileInputStream( f );) {
             // removed dry run code, validation and object creation is done before any commits to DB
             // So if validation fails no rollback needed. HWoever, this call is wrapped in a transaction
             // as a fail safe.
-            InputStream is = new FileInputStream( f );
+
             experimentalDesignImporter.importDesign( ee, is );
             this.experimentReportService.evictFromCache( ee.getId() );
         } catch ( IOException e ) {

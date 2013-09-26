@@ -68,11 +68,12 @@ public class DownloadBinaryFileView extends AbstractView {
 
         response.setContentLength( ( int ) f.length() );
 
-        InputStream reader = new BufferedInputStream( new FileInputStream( f ) );
+        try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) );) {
 
-        writeToClient( response, reader, f );
+            writeToClient( response, reader, f );
 
-        response.getOutputStream().flush();
+            response.getOutputStream().flush();
+        }
     }
 
     /**
@@ -82,13 +83,13 @@ public class DownloadBinaryFileView extends AbstractView {
      */
     private void writeToClient( HttpServletResponse response, InputStream reader, File f ) throws IOException {
         assert reader != null;
-        OutputStream outputStream = response.getOutputStream();
-        byte[] buf = new byte[1024];
-        int len;
-        while ( ( len = reader.read( buf ) ) > 0 ) {
-            outputStream.write( buf, 0, len );
+        try (OutputStream outputStream = response.getOutputStream();) {
+            byte[] buf = new byte[1024];
+            int len;
+            while ( ( len = reader.read( buf ) ) > 0 ) {
+                outputStream.write( buf, 0, len );
+            }
         }
-        reader.close();
     }
 
 }

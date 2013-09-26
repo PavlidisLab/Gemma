@@ -253,6 +253,9 @@ public interface ArrayDesignService {
     public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );
 
     /**
+     * Retrieves alignments for the platform elements, limited to those which map to a gene product (so not all
+     * blatresults)
+     * 
      * @param arrayDesign
      * @return map of compositesequences to alignments, if available.
      */

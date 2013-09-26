@@ -275,30 +275,31 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         String fileName = fileBaseName + fileType + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
 
         File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
-        InputStream reader;
-        try {
-            reader = new BufferedInputStream( new FileInputStream( f ) );
+
+        try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) );) {
+
+            response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
+            response.setContentType( "application/octet-stream" );
+
+            try (OutputStream outputStream = response.getOutputStream();) {
+
+                byte[] buf = new byte[1024];
+                int len;
+                while ( ( len = reader.read( buf ) ) > 0 ) {
+                    outputStream.write( buf, 0, len );
+                }
+                reader.close();
+
+            } catch ( IOException ioe ) {
+                log.warn( "Failure during streaming of annotation file " + fileName + " Error: " + ioe );
+            }
         } catch ( FileNotFoundException fnfe ) {
             log.warn( "Annotation file " + fileName + " can't be found at " + fnfe );
             return null;
+        } catch ( IOException e ) {
+            log.warn( "Annotation file " + fileName + " could not be read: " + e.getMessage() );
+            return null;
         }
-
-        response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
-        response.setContentType( "application/octet-stream" );
-
-        try {
-            OutputStream outputStream = response.getOutputStream();
-            byte[] buf = new byte[1024];
-            int len;
-            while ( ( len = reader.read( buf ) ) > 0 ) {
-                outputStream.write( buf, 0, len );
-            }
-            reader.close();
-
-        } catch ( IOException ioe ) {
-            log.warn( "Failure during streaming of annotation file " + fileName + " Error: " + ioe );
-        }
-
         return null;
     }
 

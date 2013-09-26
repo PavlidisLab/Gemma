@@ -102,8 +102,9 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
         if ( !isAvailable() ) {
             throw new IllegalStateException( "File has been moved - cannot be read again" );
         }
-        InputStream inputStream = this.fileItem.getInputStream();
-        return ( inputStream != null ? inputStream : new ByteArrayInputStream( new byte[0] ) );
+        try (InputStream inputStream = this.fileItem.getInputStream();) {
+            return ( inputStream != null ? inputStream : new ByteArrayInputStream( new byte[0] ) );
+        }
     }
 
     /**

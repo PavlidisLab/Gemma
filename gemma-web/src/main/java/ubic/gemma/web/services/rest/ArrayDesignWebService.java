@@ -158,31 +158,23 @@ public class ArrayDesignWebService {
             throw new WebApplicationException( builder.build() );
         }
 
-        InputStream reader;
-        try {
-            reader = new BufferedInputStream( new FileInputStream( f ) );
-        } catch ( FileNotFoundException fnfe ) {
-            ResponseBuilder builder = Response.status( Status.NOT_FOUND );
-            builder.type( MediaType.TEXT_PLAIN );
-            throw new WebApplicationException( builder.build() );
-        }
+        try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) );
+                OutputStream os = servletResponse.getOutputStream();) {
 
-        try {
             byte[] buf = new byte[1024];
             int len;
-            OutputStream os = servletResponse.getOutputStream();
+
             while ( ( len = reader.read( buf ) ) > 0 ) {
                 os.write( buf, 0, len );
             }
             reader.close();
 
-        } catch ( IOException ioe ) {
-            ResponseBuilder builder = Response.status( Status.INTERNAL_SERVER_ERROR );
+        } catch ( IOException e ) {
+            ResponseBuilder builder = Response.status( Status.NOT_FOUND );
             builder.type( MediaType.TEXT_PLAIN );
             throw new WebApplicationException( builder.build() );
         }
 
         return arrayDesign.getShortName();
     }
-
 }
