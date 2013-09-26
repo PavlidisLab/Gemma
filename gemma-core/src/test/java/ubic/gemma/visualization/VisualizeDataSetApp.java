@@ -228,10 +228,11 @@ public class VisualizeDataSetApp {
      * @throws IOException
      */
     private DoubleMatrix<String, String> parseData( boolean headerExists ) throws IOException {
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + filePath );
-        if ( is == null ) throw new RuntimeException( "could not load data" );
-        DoubleMatrixReader reader = new DoubleMatrixReader();
-        return reader.read( is );
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + filePath );) {
+            if ( is == null ) throw new RuntimeException( "could not load data" );
+            DoubleMatrixReader reader = new DoubleMatrixReader();
+            return reader.read( is );
+        }
     }
 
     /**

@@ -33,9 +33,10 @@ public class PazarParserTest extends TestCase {
     public void testParse() throws Exception {
 
         PazarParser p = new PazarParser();
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/pazar-test.txt" );
-        assertNotNull( is );
-        p.parse( is );
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/pazar-test.txt" );) {
+            assertNotNull( is );
+            p.parse( is );
+        }
         Collection<PazarRecord> recs = p.getResults();
         assertEquals( 49, recs.size() );
 

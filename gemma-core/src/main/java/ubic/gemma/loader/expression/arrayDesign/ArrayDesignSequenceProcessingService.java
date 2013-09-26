@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
+import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
@@ -58,7 +59,8 @@ public interface ArrayDesignSequenceProcessingService {
     public abstract void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
             throws IOException;
 
-    public abstract void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, InputStream fastaFile ) throws IOException;
+    public abstract void assignSequencesToDesignElements( Collection<CompositeSequence> designElements,
+            InputStream fastaFile ) throws IOException;
 
     /**
      * Use this to add sequences to an existing Affymetrix design.
@@ -166,6 +168,9 @@ public interface ArrayDesignSequenceProcessingService {
             InputStream sequenceIdentifierFile, String[] databaseNames, String blastDbHome, Taxon taxon, boolean force )
             throws IOException;
 
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
+            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force, FastaCmd fc ) throws IOException;
+
     public abstract Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
             boolean force );
 
@@ -187,6 +192,19 @@ public interface ArrayDesignSequenceProcessingService {
      */
     public abstract Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
             String blastDbHome, boolean force );
+
+    /**
+     * Provided primarily for testing.
+     * 
+     * @param arrayDesign
+     * @param databaseNames
+     * @param blastDbHome
+     * @param force
+     * @param fc
+     * @return
+     */
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
+            String blastDbHome, boolean force, FastaCmd fc );
 
     /**
      * Update a single sequence in the system.

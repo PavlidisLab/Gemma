@@ -199,10 +199,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
         Collection<String> lines = new ArrayList<String>();
         int lineNumber = 0;
-        try {
-
-            InputStream is = new FileInputStream( fileName );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        try (InputStream is = new FileInputStream( fileName );
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
 
             String line = null;
 

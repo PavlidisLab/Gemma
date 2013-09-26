@@ -90,24 +90,21 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
         File f = File.createTempFile( "test_writer_" + shortName + ".", ".txt" );
-        PrintWriter writer = new PrintWriter( f );
+        try (PrintWriter writer = new PrintWriter( f );) {
 
-        edWriter.write( writer, ee, true, true );
-
-        writer.flush();
-        writer.close();
+            edWriter.write( writer, ee, true, true );
+        }
 
         log.info( f );
-        FileReader fr = new FileReader( f );
+        try (FileReader fr = new FileReader( f );) {
 
-        char[] b = new char[( int ) f.length()];
-        fr.read( b );
-        fr.close();
+            char[] b = new char[( int ) f.length()];
+            fr.read( b );
+            String in = new String( b );
 
-        String in = new String( b );
-
-        assertTrue( in.contains( "PoolTs1Cje_P0_hyb1" ) );
-        assertTrue( in.contains( "#$strain : Category=strain Type=Categorical" ) );
+            assertTrue( in.contains( "PoolTs1Cje_P0_hyb1" ) );
+            assertTrue( in.contains( "#$strain : Category=strain Type=Categorical" ) );
+        }
 
     }
 }

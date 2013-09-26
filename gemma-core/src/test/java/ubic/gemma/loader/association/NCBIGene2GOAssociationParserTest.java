@@ -61,21 +61,19 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     @Test
     public void testParseAndLoad() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );
+                InputStream gZipIs = new GZIPInputStream( is );) {
+            gene2GOAssLoader.load( gZipIs );
 
-        InputStream gZipIs = new GZIPInputStream( is );
+            gZipIs.close();
+            is.close();
+            int count = gene2GOAssLoader.getCount();
 
-        gene2GOAssLoader.load( gZipIs );
-
-        gZipIs.close();
-        is.close();
-        int count = gene2GOAssLoader.getCount();
-
-        /*
-         * Actual count might vary depending on state of database (which taxa are available)
-         */
-        assertTrue( count >= 61 );
-
+            /*
+             * Actual count might vary depending on state of database (which taxa are available)
+             */
+            assertTrue( count >= 61 );
+        }
     }
 
 }

@@ -37,10 +37,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.Settings;
 
 /**
+ * Uses the Affy Power Tools, and full-sized data sets.
+ * 
  * @author paul
  * @version $Id$
  */
 public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
+
     @Autowired
     private GeoService geoService;
 
@@ -61,9 +64,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
     }
 
     /**
-     * Test method for
-     * {@link ubic.gemma.loader.expression.geo.DataUpdater#addAffyExonArrayData(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
-     * .
+     * Test method for .
      */
     @Test
     public void testAddAffyExonArrayDataExpressionExperiment() throws Exception {

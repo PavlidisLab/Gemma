@@ -65,9 +65,6 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
 
     @Before
     public void setup() throws Exception {
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/expdesign.import.testfull.data.txt" );
-
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
         Taxon human = taxonService.findByCommonName( "human" );
@@ -87,7 +84,12 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         metaData.getArrayDesigns().add( ad );
 
-        ee = s.create( metaData, data );
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/expression/expdesign.import.testfull.data.txt" );) {
+
+            ee = s.create( metaData, data );
+        }
+
         ee = eeService.thawLite( ee );
     }
 
@@ -97,9 +99,10 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
     @Test
     public final void testParse() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.txt" );
-
-        experimentalDesignImporter.importDesign( ee, is, false );
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/expdesign.import.testfull.txt" );) {
+            experimentalDesignImporter.importDesign( ee, is, false );
+        }
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {

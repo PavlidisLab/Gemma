@@ -171,49 +171,45 @@ public class ComBat<R, C> {
             ghtheoryT.fill( n );
         }
         XYSeries ghtheory = ghtheoryT.plot();
-
-        OutputStream os = null;
-
+        File tmpfile = null;
         try {
-            File tmpfile = File.createTempFile( filePrefix + ".gammahat.histogram.", ".png" );
+            tmpfile = File.createTempFile( filePrefix + ".gammahat.histogram.", ".png" );
             log.info( tmpfile );
-            os = new FileOutputStream( tmpfile );
         } catch ( FileNotFoundException e ) {
             throw new RuntimeException( e );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
-        writePlot( os, ghplot, ghtheory );
+        try (OutputStream os = new FileOutputStream( tmpfile );) {
+            writePlot( os, ghplot, ghtheory );
 
-        /*
-         * View the distribution of deltaHat, which we assume has an inverse gamma distribution
-         */
-        DoubleMatrix1D dhr = deltaHat.viewRow( 0 );
-        Histogram deltaHatHist = new Histogram( "DeltaHat", NUM_HIST_BINS, dhr );
-        XYSeries dhplot = deltaHatHist.plot();
-        Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
+            /*
+             * View the distribution of deltaHat, which we assume has an inverse gamma distribution
+             */
+            DoubleMatrix1D dhr = deltaHat.viewRow( 0 );
+            Histogram deltaHatHist = new Histogram( "DeltaHat", NUM_HIST_BINS, dhr );
+            XYSeries dhplot = deltaHatHist.plot();
+            Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
 
-        Histogram deltaHatT = new Histogram( "Delta", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
+            Histogram deltaHatT = new Histogram( "Delta", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
 
-        for ( int i = 0; i < 10000; i++ ) {
-            double invg = 1.0 / g.nextDouble();
-            deltaHatT.fill( invg );
-        }
-        XYSeries dhtheory = deltaHatT.plot();
+            for ( int i = 0; i < 10000; i++ ) {
+                double invg = 1.0 / g.nextDouble();
+                deltaHatT.fill( invg );
+            }
+            XYSeries dhtheory = deltaHatT.plot();
 
-        os = null;
-
-        try {
-            File tmpfile = File.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
+            tmpfile = File.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
             log.info( tmpfile );
-            os = new FileOutputStream( tmpfile );
-        } catch ( FileNotFoundException e ) {
-            throw new RuntimeException( e );
+
+            try (OutputStream os2 = new FileOutputStream( tmpfile );) {
+                writePlot( os2, dhplot, dhtheory );
+            }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-        writePlot( os, dhplot, dhtheory );
+
     }
 
     /**

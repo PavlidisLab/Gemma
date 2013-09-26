@@ -390,11 +390,29 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
+     * @return
+     */
+    protected BioSequence getTestPersistentBioSequence( Taxon t ) {
+        return testHelper.getTestPersistentBioSequence( t );
+    }
+
+    /**
+     * @return
+     */
+    protected BioSequence getTestNonPersistentBioSequence( Taxon t ) {
+        return testHelper.getTestNonPersistentBioSequence( t );
+    }
+
+    protected BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
+        return testHelper.getTestPersistentBlatResult( querySequence, taxon );
+    }
+
+    /**
      * @param querySequence
      * @return
      */
     protected BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
-        return testHelper.getTestPersistentBlatResult( querySequence );
+        return testHelper.getTestPersistentBlatResult( querySequence, null );
     }
 
     /**

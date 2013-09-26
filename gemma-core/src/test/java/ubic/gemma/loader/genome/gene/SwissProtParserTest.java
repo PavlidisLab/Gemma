@@ -31,18 +31,19 @@ public class SwissProtParserTest extends TestCase {
 
     public void testParse() throws Exception {
 
-        InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/genome/gene/uniprot_sprot_human.sample.dat" );
-        assertNotNull( is );
-        SwissProtParser p = new SwissProtParser();
-        p.parse( is );
-        is.close();
-        Collection<?> results = p.getResults();
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/genome/gene/uniprot_sprot_human.sample.dat" );) {
+            assertNotNull( is );
+            SwissProtParser p = new SwissProtParser();
+            p.parse( is );
+            is.close();
+            Collection<?> results = p.getResults();
 
-        /*
-         * Parser not fully implemented, doesn't return anything.
-         */
-        assertEquals( 0, results.size() );
+            /*
+             * Parser not fully implemented, doesn't return anything.
+             */
+            assertEquals( 0, results.size() );
+        }
 
     }
 

@@ -84,122 +84,132 @@ import ubic.gemma.persistence.Persister;
 @Component
 public class PersistentDummyObjectHelper {
 
-    public static final int NUM_FACTOR_VALUES = 2;
-    public static final int NUM_EXPERIMENTAL_FACTORS = 2;
-    public static final int NUM_QUANTITATION_TYPES = 2;
-    public static final int NUM_BIOMATERIALS = 8;
-    private static final int RANDOM_STRING_LENGTH = 10;
     public static final int DEFAULT_TEST_ELEMENT_COLLECTION_SIZE = 6;
+    public static final int NUM_BIOMATERIALS = 8;
+    public static final int NUM_EXPERIMENTAL_FACTORS = 2;
+    public static final int NUM_FACTOR_VALUES = 2;
+    public static final int NUM_QUANTITATION_TYPES = 2;
+    private static ExternalDatabase genbank;
 
-    @Autowired
-    private Persister persisterHelper;
+    private static ExternalDatabase geo;
+
+    private static ExternalDatabase pubmed;
+
+    private static final int RANDOM_STRING_LENGTH = 10;
+
+    private static Taxon testTaxon;
+
+    /**
+     * @return
+     */
+    public static BioSequence getTestNonPersistentBioSequence( Taxon taxon ) {
+        BioSequence bs = BioSequence.Factory.newInstance();
+        bs.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiosequence" );
+        bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
+        if ( taxon == null )
+            bs.setTaxon( getTestNonPersistentTaxon() );
+        else
+            bs.setTaxon( taxon );
+
+        if ( genbank == null ) {
+            genbank = ExternalDatabase.Factory.newInstance();
+            genbank.setName( "Genbank" );
+        }
+
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+
+        de.setExternalDatabase( genbank );
+        de.setAccession( RandomStringUtils.randomAlphanumeric( 10 ) );
+
+        bs.setSequenceDatabaseEntry( de );
+        return bs;
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    public static GeneProduct getTestNonPersistentGeneProduct( Gene gene ) {
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+        gp.setNcbiGi( RandomStringUtils.randomAlphanumeric( 10 ) );
+        gp.setName( RandomStringUtils.randomAlphanumeric( 6 ) );
+        gp.setGene( gene );
+        return gp;
+    }
+
+    /**
+     * Note that if you want a 'preferred' qt or other special properites you have to set it yourself.
+     * 
+     * @return
+     */
+    public static QuantitationType getTestNonPersistentQuantitationType() {
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testqt" );
+        qt.setDescription( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testqt" );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsBackground( false );
+        qt.setIsBackgroundSubtracted( false );
+        qt.setIsNormalized( false );
+        qt.setIsPreferred( false );
+        qt.setIsRatio( false );
+        qt.setIsMaskedPreferred( false );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LINEAR );
+        return qt;
+    }
+
+    /**
+     * To allow the persister helper to manaage
+     * 
+     * @return
+     */
+    private static Taxon getTestNonPersistentTaxon() {
+
+        Taxon t = Taxon.Factory.newInstance();
+        t.setCommonName( "mouse" );
+        t.setScientificName( "Mus musculus" );
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
+
+        return t;
+    }
+
+    protected Log log = LogFactory.getLog( getClass() );
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
-    private ExternalDatabase geo;
-
-    private ExternalDatabase genbank;
+    @Autowired
+    private Persister persisterHelper;
 
     private int testElementCollectionSize = DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
 
-    private ExternalDatabase pubmed;
-
-    protected Log log = LogFactory.getLog( getClass() );
-
-    private Taxon testTaxon;
-
-    private Collection<BioMaterial> getBioMaterials( Collection<FactorValue> allFactorValues ) {
-
-        if ( allFactorValues.isEmpty() )
-            throw new RuntimeException(
-                    "Factor values have not been associated with biomaterials.  Try creating the experimental design first." );
-
-        Iterator<FactorValue> iter = allFactorValues.iterator();
-
-        Collection<BioMaterial> baCol = new HashSet<BioMaterial>();
-        // one biomaterial for each set of bioassays
-        for ( int j = 0; j < NUM_BIOMATERIALS; j++ ) {
-            BioMaterial bm = this.getTestNonPersistentBioMaterial();
-            Collection<FactorValue> fvCol = new HashSet<FactorValue>();
-            if ( iter.hasNext() ) {
-                fvCol.add( iter.next() );
-            } else {
-                // start over.
-                iter = allFactorValues.iterator();
-                fvCol.add( iter.next() );
-            }
-
-            Characteristic c = Characteristic.Factory.newInstance();
-            c.setValue( "test_char_" + RandomStringUtils.randomAlphanumeric( 10 ) );
-
-            bm.getCharacteristics().add( c );
-
-            bm.setFactorValues( fvCol );
-            baCol.add( bm );
-        }
-        return baCol;
-    }
-
     /**
-     * @return Collection
-     */
-    private List<BioAssay> getBioAssays( Collection<BioMaterial> bioMaterials, ArrayDesign ad ) {
-        List<BioAssay> baCol = new ArrayList<BioAssay>();
-        for ( BioMaterial bm : bioMaterials ) {
-            BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
-            bm.getBioAssaysUsedIn().add( ba );
-            baCol.add( ba );
-        }
-        return baCol;
-    }
-
-    /**
-     * These are nonpersistent
-     * 
      * @param ee
-     * @param bioAssays
-     * @param ad
-     * @return
      */
-    private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
-            Collection<QuantitationType> quantitationTypes, List<BioAssay> bioAssays, ArrayDesign ad ) {
+    public void addTestAnalyses( ExpressionExperiment ee ) {
+        /*
+         * Add analyses
+         */
+        ProbeCoexpressionAnalysis pca = ProbeCoexpressionAnalysis.Factory.newInstance();
+        pca.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
 
-        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance(
-                ee.getShortName() + "_" + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
+        pca.setExperimentAnalyzed( ee );
 
-        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
-        for ( QuantitationType quantType : quantitationTypes ) {
-            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-                RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
-                byte[] bdata = getDoubleData();
-                vector.setData( bdata );
-                vector.setDesignElement( cs );
+        persisterHelper.persist( pca );
 
-                assert cs.getArrayDesign() != null;
+        /*
+         * Diff
+         */
+        DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
+        Protocol protocol = Protocol.Factory.newInstance();
+        protocol.setName( "Differential expression analysis settings" );
+        protocol.setDescription( "qvalue: " + true );
+        expressionAnalysis.setProtocol( protocol );
+        expressionAnalysis.setExperimentAnalyzed( ee );
 
-                vector.setExpressionExperiment( ee );
-                vector.setQuantitationType( quantType );
-                vector.setBioAssayDimension( baDim );
-                vectors.add( vector );
-            }
-        }
-        return vectors;
-    }
-
-    private byte[] getDoubleData() {
-        double[] data = new double[NUM_BIOMATERIALS];
-        double bump = 0.0;
-        for ( int j = 0; j < data.length; j++ ) {
-            data[j] = new Random().nextDouble() + bump;
-            if ( j % 3 == 0 ) {
-                // add some correlation structure to the data.
-                bump += 0.5;
-            }
-        }
-        ByteArrayConverter bconverter = new ByteArrayConverter();
-        byte[] bdata = bconverter.doubleArrayToBytes( data );
-        return bdata;
+        persisterHelper.persist( expressionAnalysis );
     }
 
     /**
@@ -220,49 +230,12 @@ public class PersistentDummyObjectHelper {
         return this.getExperimentalFactors( ed, new HashSet<FactorValue>() );
     }
 
-    /**
-     * @return
-     */
-    protected Collection<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed,
-            Collection<FactorValue> allFactorValues ) {
-        Collection<ExperimentalFactor> efCol = new HashSet<ExperimentalFactor>();
-        for ( int i = 0; i < NUM_EXPERIMENTAL_FACTORS; i++ ) {
-            ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
-            ef.setExperimentalDesign( ed );
-            ef.setName( "Experimental Factor " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-            ef.setDescription( i + ": A test experimental factor" );
-            ef.setType( FactorType.CATEGORICAL );
-            VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
-            c.setCategory( "OrganismPart" );
-            c.setName( "OrganismPart" );
-            ef.setCategory( c );
-            log.debug( "experimental factor => factor values" );
-            ef.setFactorValues( getFactorValues( ef, allFactorValues ) );
-            efCol.add( ef );
-        }
-        return efCol;
-    }
-
     public Collection<FactorValue> getFactorValues( ExperimentalFactor ef ) {
         return this.getFactorValues( ef, new HashSet<FactorValue>() );
     }
 
-    /**
-     * @return Collection
-     */
-    protected Collection<FactorValue> getFactorValues( ExperimentalFactor ef, Collection<FactorValue> allFactorValues ) {
-
-        Collection<FactorValue> fvCol = new HashSet<FactorValue>();
-        for ( int i = 0; i < NUM_FACTOR_VALUES; i++ ) {
-            FactorValue fv = FactorValue.Factory.newInstance();
-            fv.setValue( "Factor value " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-            fv.setExperimentalFactor( ef );
-            fvCol.add( fv );
-        }
-
-        allFactorValues.addAll( fvCol );
-
-        return fvCol;
+    public int getTestElementCollectionSize() {
+        return testElementCollectionSize;
     }
 
     /**
@@ -270,51 +243,6 @@ public class PersistentDummyObjectHelper {
      */
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies() {
         return this.getTestExpressionExperimentWithAllDependencies( true );
-    }
-
-    /**
-     * @return A lighter-weight EE, with no data, and the ADs have no sequences.
-     */
-    public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-        ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-        ee.setDescription( "A test expression experiment" );
-        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
-        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
-        ee.setAccession( de1 );
-
-        ArrayDesign adA = this.getTestPersistentArrayDesign( 0, false, false );
-        ArrayDesign adB = this.getTestPersistentArrayDesign( 0, false, false );
-
-        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
-        ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
-        ee.setExperimentalDesign( ed );
-        ee.setOwner( this.getTestPersistentContact() );
-
-        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
-        Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
-        Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
-        Collection<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
-        bioAssays.addAll( bioAssaysA );
-        bioAssays.addAll( bioAssaysB );
-        ee.setBioAssays( bioAssays );
-
-        Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
-        for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
-            QuantitationType q = getTestNonPersistentQuantitationType();
-            if ( quantitationTypes.size() == 0 ) {
-                q.setIsPreferred( true );
-            }
-            quantitationTypes.add( q );
-        }
-
-        assert quantitationTypes.size() > 0;
-        ee.setQuantitationTypes( quantitationTypes );
-
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
-
-        return ee;
     }
 
     /**
@@ -384,33 +312,6 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @param ee
-     */
-    public void addTestAnalyses( ExpressionExperiment ee ) {
-        /*
-         * Add analyses
-         */
-        ProbeCoexpressionAnalysis pca = ProbeCoexpressionAnalysis.Factory.newInstance();
-        pca.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-
-        pca.setExperimentAnalyzed( ee );
-
-        persisterHelper.persist( pca );
-
-        /*
-         * Diff
-         */
-        DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
-        Protocol protocol = Protocol.Factory.newInstance();
-        protocol.setName( "Differential expression analysis settings" );
-        protocol.setDescription( "qvalue: " + true );
-        expressionAnalysis.setProtocol( protocol );
-        expressionAnalysis.setExperimentAnalyzed( ee );
-
-        persisterHelper.persist( expressionAnalysis );
-    }
-
-    /**
      * @return with default taxon
      */
     public Gene getTestPeristentGene() {
@@ -427,7 +328,7 @@ public class PersistentDummyObjectHelper {
         gene.setOfficialSymbol( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ).toUpperCase() );
 
         if ( t == null ) {
-            gene.setTaxon( this.getTestNonPersistentTaxon() );
+            gene.setTaxon( getTestNonPersistentTaxon() );
         } else {
             gene.setTaxon( t );
         }
@@ -488,6 +389,51 @@ public class PersistentDummyObjectHelper {
         return ( ArrayDesign ) persisterHelper.persist( ad );
     }
 
+    /**
+     * @return A lighter-weight EE, with no data, and the ADs have no sequences.
+     */
+    public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+        ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+        ee.setDescription( "A test expression experiment" );
+        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
+        ee.setAccession( de1 );
+
+        ArrayDesign adA = this.getTestPersistentArrayDesign( 0, false, false );
+        ArrayDesign adB = this.getTestPersistentArrayDesign( 0, false, false );
+
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
+        ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
+        ee.setExperimentalDesign( ed );
+        ee.setOwner( this.getTestPersistentContact() );
+
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+        Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
+        Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
+        Collection<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
+        bioAssays.addAll( bioAssaysA );
+        bioAssays.addAll( bioAssaysB );
+        ee.setBioAssays( bioAssays );
+
+        Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
+        for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
+            QuantitationType q = getTestNonPersistentQuantitationType();
+            if ( quantitationTypes.size() == 0 ) {
+                q.setIsPreferred( true );
+            }
+            quantitationTypes.add( q );
+        }
+
+        assert quantitationTypes.size() > 0;
+        ee.setQuantitationTypes( quantitationTypes );
+
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+
+        return ee;
+    }
+
     public BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         BibliographicReference br = BibliographicReference.Factory.newInstance();
         if ( pubmed == null ) {
@@ -516,43 +462,6 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @param ad
-     * @param bm
-     * @return
-     */
-    private BioAssay getTestNonPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
-        BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
-        ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbioassay" );
-        ba.setSampleUsed( bm );
-        ba.setArrayDesignUsed( ad );
-        ba.setIsOutlier( false );
-        ba.setSequencePairedReads( false );
-        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-
-        de.setExternalDatabase( this.geo );
-        de.setAccession( ba.getName() );
-        ba.setAccession( de );
-
-        LocalFile file = LocalFile.Factory.newInstance();
-        try {
-            file.setLocalURL( new URL( "file:///tmp/" + ba.getName() ) );
-        } catch ( MalformedURLException e ) {
-        }
-        ba.setRawDataFile( file );
-
-        LocalFile fileb = LocalFile.Factory.newInstance();
-        try {
-            fileb.setLocalURL( new URL( "file:///tmp/raw" + ba.getName() ) );
-        } catch ( MalformedURLException e ) {
-        }
-        ba.setRawDataFile( file );
-
-        ba.getDerivedDataFiles().add( fileb );
-
-        return ba;
-    }
-
-    /**
      * @return
      */
     public BioMaterial getTestPersistentBioMaterial() {
@@ -569,44 +478,10 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * Slightly misleading, associations are persistent.
-     * 
-     * @return
-     */
-    private BioMaterial getTestNonPersistentBioMaterial() {
-        BioMaterial bm = BioMaterial.Factory.newInstance();
-        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiomaterial" );
-        if ( geo == null ) {
-            geo = externalDatabaseService.find( "GEO" );
-            assert geo != null;
-        }
-        bm.setSourceTaxon( getTestNonPersistentTaxon() );
-        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
-        return bm;
-    }
-
-    /**
-     * Slightly misleading, associations are persistent.
-     * 
-     * @return
-     */
-    private BioMaterial getTestNonPersistentBioMaterial( Taxon tax ) {
-        BioMaterial bm = BioMaterial.Factory.newInstance();
-        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiomaterial" );
-        if ( geo == null ) {
-            geo = externalDatabaseService.find( "GEO" );
-            assert geo != null;
-        }
-        bm.setSourceTaxon( tax );
-        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
-        return bm;
-    }
-
-    /**
      * @return
      */
     public BioSequence getTestPersistentBioSequence() {
-        BioSequence bs = getTestNonPersistentBioSequence();
+        BioSequence bs = getTestNonPersistentBioSequence( null );
 
         return ( BioSequence ) persisterHelper.persist( bs );
     }
@@ -614,24 +489,10 @@ public class PersistentDummyObjectHelper {
     /**
      * @return
      */
-    public BioSequence getTestNonPersistentBioSequence() {
-        BioSequence bs = BioSequence.Factory.newInstance();
-        bs.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiosequence" );
-        bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
-        bs.setTaxon( getTestNonPersistentTaxon() );
+    public BioSequence getTestPersistentBioSequence( Taxon taxon ) {
+        BioSequence bs = getTestNonPersistentBioSequence( taxon );
 
-        if ( this.genbank == null ) {
-            genbank = ExternalDatabase.Factory.newInstance();
-            genbank.setName( "Genbank" );
-        }
-
-        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-
-        de.setExternalDatabase( this.genbank );
-        de.setAccession( RandomStringUtils.randomAlphanumeric( 10 ) );
-
-        bs.setSequenceDatabaseEntry( de );
-        return bs;
+        return ( BioSequence ) persisterHelper.persist( bs );
     }
 
     /**
@@ -645,7 +506,7 @@ public class PersistentDummyObjectHelper {
         b2g.setScore( new Random().nextDouble() );
         b2g.setBioSequence( bioSequence );
         b2g.setGeneProduct( this.getTestPersistentGeneProduct( this.getTestPeristentGene() ) );
-        b2g.setBlatResult( this.getTestPersistentBlatResult( bioSequence ) );
+        b2g.setBlatResult( this.getTestPersistentBlatResult( bioSequence, null ) );
         b2gCol.add( b2g );
 
         return ( Collection<BioSequence2GeneProduct> ) persisterHelper.persist( b2gCol );
@@ -655,13 +516,20 @@ public class PersistentDummyObjectHelper {
      * @param querySequence
      * @return
      */
-    public BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
+    public BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
         BlatResult br = BlatResult.Factory.newInstance();
 
-        Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, getTestPersistentBioSequence(),
-                this.getTestPersistentTaxon() );
+        if ( taxon == null ) {
+            taxon = this.getTestPersistentTaxon();
+        }
+        Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null, getTestPersistentBioSequence( taxon ),
+                taxon );
+        assert chromosome.getSequence() != null;
         chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
+        assert chromosome != null;
+        assert chromosome.getSequence() != null;
         br.setTargetChromosome( chromosome );
+        assert br.getTargetChromosome().getSequence() != null;
         br.setQuerySequence( querySequence );
         br.setTargetStart( 1L );
         br.setTargetEnd( 1000L );
@@ -804,18 +672,6 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @param gene
-     * @return
-     */
-    public GeneProduct getTestNonPersistentGeneProduct( Gene gene ) {
-        GeneProduct gp = GeneProduct.Factory.newInstance();
-        gp.setNcbiGi( RandomStringUtils.randomAlphanumeric( 10 ) );
-        gp.setName( RandomStringUtils.randomAlphanumeric( 6 ) );
-        gp.setGene( gene );
-        return gp;
-    }
-
-    /**
      * Convenience method to provide a QuantitationType that can be used to fill non-nullable associations in test
      * objects.
      * 
@@ -824,28 +680,6 @@ public class PersistentDummyObjectHelper {
     public QuantitationType getTestPersistentQuantitationType() {
         QuantitationType qt = getTestNonPersistentQuantitationType();
         return ( QuantitationType ) persisterHelper.persist( qt );
-    }
-
-    /**
-     * Note that if you want a 'preferred' qt or other special properites you have to set it yourself.
-     * 
-     * @return
-     */
-    public static QuantitationType getTestNonPersistentQuantitationType() {
-        QuantitationType qt = QuantitationType.Factory.newInstance();
-        qt.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testqt" );
-        qt.setDescription( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testqt" );
-        qt.setRepresentation( PrimitiveType.DOUBLE );
-        qt.setIsBackground( false );
-        qt.setIsBackgroundSubtracted( false );
-        qt.setIsNormalized( false );
-        qt.setIsPreferred( false );
-        qt.setIsRatio( false );
-        qt.setIsMaskedPreferred( false );
-        qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.AMOUNT );
-        qt.setScale( ScaleType.LINEAR );
-        return qt;
     }
 
     public Taxon getTestPersistentTaxon() {
@@ -862,20 +696,8 @@ public class PersistentDummyObjectHelper {
         return testTaxon;
     }
 
-    /**
-     * To allow the persister helper to manaage
-     * 
-     * @return
-     */
-    private Taxon getTestNonPersistentTaxon() {
-
-        Taxon t = Taxon.Factory.newInstance();
-        t.setCommonName( "mouse" );
-        t.setScientificName( "Mus musculus" );
-        t.setIsSpecies( true );
-        t.setIsGenesUsable( true );
-
-        return t;
+    public void resetTestElementCollectionSize() {
+        this.testElementCollectionSize = DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
     }
 
     /**
@@ -902,12 +724,209 @@ public class PersistentDummyObjectHelper {
         this.testElementCollectionSize = testElementCollectionSize;
     }
 
-    public void resetTestElementCollectionSize() {
-        this.testElementCollectionSize = DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
+    /**
+     * @return
+     */
+    protected Collection<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed,
+            Collection<FactorValue> allFactorValues ) {
+        Collection<ExperimentalFactor> efCol = new HashSet<ExperimentalFactor>();
+        for ( int i = 0; i < NUM_EXPERIMENTAL_FACTORS; i++ ) {
+            ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+            ef.setExperimentalDesign( ed );
+            ef.setName( "Experimental Factor " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+            ef.setDescription( i + ": A test experimental factor" );
+            ef.setType( FactorType.CATEGORICAL );
+            VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
+            c.setCategory( "OrganismPart" );
+            c.setName( "OrganismPart" );
+            ef.setCategory( c );
+            log.debug( "experimental factor => factor values" );
+            ef.setFactorValues( getFactorValues( ef, allFactorValues ) );
+            efCol.add( ef );
+        }
+        return efCol;
     }
 
-    public int getTestElementCollectionSize() {
-        return testElementCollectionSize;
+    /**
+     * @return Collection
+     */
+    protected Collection<FactorValue> getFactorValues( ExperimentalFactor ef, Collection<FactorValue> allFactorValues ) {
+
+        Collection<FactorValue> fvCol = new HashSet<FactorValue>();
+        for ( int i = 0; i < NUM_FACTOR_VALUES; i++ ) {
+            FactorValue fv = FactorValue.Factory.newInstance();
+            fv.setValue( "Factor value " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+            fv.setExperimentalFactor( ef );
+            fvCol.add( fv );
+        }
+
+        allFactorValues.addAll( fvCol );
+
+        return fvCol;
+    }
+
+    /**
+     * @return Collection
+     */
+    private List<BioAssay> getBioAssays( Collection<BioMaterial> bioMaterials, ArrayDesign ad ) {
+        List<BioAssay> baCol = new ArrayList<BioAssay>();
+        for ( BioMaterial bm : bioMaterials ) {
+            BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            baCol.add( ba );
+        }
+        return baCol;
+    }
+
+    private Collection<BioMaterial> getBioMaterials( Collection<FactorValue> allFactorValues ) {
+
+        if ( allFactorValues.isEmpty() )
+            throw new RuntimeException(
+                    "Factor values have not been associated with biomaterials.  Try creating the experimental design first." );
+
+        Iterator<FactorValue> iter = allFactorValues.iterator();
+
+        Collection<BioMaterial> baCol = new HashSet<BioMaterial>();
+        // one biomaterial for each set of bioassays
+        for ( int j = 0; j < NUM_BIOMATERIALS; j++ ) {
+            BioMaterial bm = this.getTestNonPersistentBioMaterial();
+            Collection<FactorValue> fvCol = new HashSet<FactorValue>();
+            if ( iter.hasNext() ) {
+                fvCol.add( iter.next() );
+            } else {
+                // start over.
+                iter = allFactorValues.iterator();
+                fvCol.add( iter.next() );
+            }
+
+            Characteristic c = Characteristic.Factory.newInstance();
+            c.setValue( "test_char_" + RandomStringUtils.randomAlphanumeric( 10 ) );
+
+            bm.getCharacteristics().add( c );
+
+            bm.setFactorValues( fvCol );
+            baCol.add( bm );
+        }
+        return baCol;
+    }
+
+    /**
+     * These are nonpersistent
+     * 
+     * @param ee
+     * @param bioAssays
+     * @param ad
+     * @return
+     */
+    private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
+            Collection<QuantitationType> quantitationTypes, List<BioAssay> bioAssays, ArrayDesign ad ) {
+
+        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance(
+                ee.getShortName() + "_" + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
+
+        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
+        for ( QuantitationType quantType : quantitationTypes ) {
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
+                byte[] bdata = getDoubleData();
+                vector.setData( bdata );
+                vector.setDesignElement( cs );
+
+                assert cs.getArrayDesign() != null;
+
+                vector.setExpressionExperiment( ee );
+                vector.setQuantitationType( quantType );
+                vector.setBioAssayDimension( baDim );
+                vectors.add( vector );
+            }
+        }
+        return vectors;
+    }
+
+    private byte[] getDoubleData() {
+        double[] data = new double[NUM_BIOMATERIALS];
+        double bump = 0.0;
+        for ( int j = 0; j < data.length; j++ ) {
+            data[j] = new Random().nextDouble() + bump;
+            if ( j % 3 == 0 ) {
+                // add some correlation structure to the data.
+                bump += 0.5;
+            }
+        }
+        ByteArrayConverter bconverter = new ByteArrayConverter();
+        byte[] bdata = bconverter.doubleArrayToBytes( data );
+        return bdata;
+    }
+
+    /**
+     * @param ad
+     * @param bm
+     * @return
+     */
+    private BioAssay getTestNonPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
+        BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
+        ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbioassay" );
+        ba.setSampleUsed( bm );
+        ba.setArrayDesignUsed( ad );
+        ba.setIsOutlier( false );
+        ba.setSequencePairedReads( false );
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+
+        de.setExternalDatabase( geo );
+        de.setAccession( ba.getName() );
+        ba.setAccession( de );
+
+        LocalFile file = LocalFile.Factory.newInstance();
+        try {
+            file.setLocalURL( new URL( "file:///tmp/" + ba.getName() ) );
+        } catch ( MalformedURLException e ) {
+        }
+        ba.setRawDataFile( file );
+
+        LocalFile fileb = LocalFile.Factory.newInstance();
+        try {
+            fileb.setLocalURL( new URL( "file:///tmp/raw" + ba.getName() ) );
+        } catch ( MalformedURLException e ) {
+        }
+        ba.setRawDataFile( file );
+
+        ba.getDerivedDataFiles().add( fileb );
+
+        return ba;
+    }
+
+    /**
+     * Slightly misleading, associations are persistent.
+     * 
+     * @return
+     */
+    private BioMaterial getTestNonPersistentBioMaterial() {
+        BioMaterial bm = BioMaterial.Factory.newInstance();
+        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiomaterial" );
+        if ( geo == null ) {
+            geo = externalDatabaseService.find( "GEO" );
+            assert geo != null;
+        }
+        bm.setSourceTaxon( getTestNonPersistentTaxon() );
+        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
+        return bm;
+    }
+
+    /**
+     * Slightly misleading, associations are persistent.
+     * 
+     * @return
+     */
+    private BioMaterial getTestNonPersistentBioMaterial( Taxon tax ) {
+        BioMaterial bm = BioMaterial.Factory.newInstance();
+        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiomaterial" );
+        if ( geo == null ) {
+            geo = externalDatabaseService.find( "GEO" );
+            assert geo != null;
+        }
+        bm.setSourceTaxon( tax );
+        bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
+        return bm;
     }
 
 }

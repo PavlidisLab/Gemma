@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -76,11 +75,11 @@ public class EutilFetch {
      */
     public static String fetch( String db, String searchString, Mode mode, int limit ) throws IOException {
 
-        try {
-            URL searchUrl = new URL( ESEARCH + db + "&usehistory=y&term=" + searchString );
-            URLConnection conn = searchUrl.openConnection();
-            conn.connect();
-            InputStream is = conn.getInputStream();
+        URL searchUrl = new URL( ESEARCH + db + "&usehistory=y&term=" + searchString );
+        URLConnection conn = searchUrl.openConnection();
+        conn.connect();
+
+        try (InputStream is = conn.getInputStream();) {
 
             factory.setIgnoringComments( true );
             factory.setValidating( false );
@@ -115,24 +114,24 @@ public class EutilFetch {
 
             conn = fetchUrl.openConnection();
             conn.connect();
-            is = conn.getInputStream();
+        } catch ( ParserConfigurationException | SAXException e1 ) {
+            throw new RuntimeException( "Failed to parse XML: " + e1.getMessage(), e1 );
+        }
 
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            StringBuilder buf = new StringBuilder();
-            String line = null;
-            while ( ( line = br.readLine() ) != null ) {
-                buf.append( line );
-                // if ( !line.endsWith( " " ) ) {
-                // buf.append( " " );
-                // }
+        try (InputStream is = conn.getInputStream();) {
+
+            try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+                StringBuilder buf = new StringBuilder();
+                String line = null;
+                while ( ( line = br.readLine() ) != null ) {
+                    buf.append( line );
+                    // if ( !line.endsWith( " " ) ) {
+                    // buf.append( " " );
+                    // }
+                }
+
+                return buf.toString();
             }
-            return buf.toString();
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        } catch ( ParserConfigurationException e ) {
-            throw new RuntimeException( e );
-        } catch ( SAXException e ) {
-            throw new RuntimeException( e );
         }
 
     }

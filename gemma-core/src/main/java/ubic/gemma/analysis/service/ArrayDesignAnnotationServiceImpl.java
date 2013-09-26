@@ -119,9 +119,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             }
             probeNameToId.put( cs.getName(), cs.getId() );
         }
-        try {
-            log.info( "Reading annotations from: " + f );
-            InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+        log.info( "Reading annotations from: " + f );
+        try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );) {
             return parseAnnotationFile( results, is, probeNameToId );
         } catch ( FileNotFoundException e ) {
             throw new RuntimeException( e );

@@ -49,7 +49,8 @@ import java.util.Map;
  */
 @Component
 @Scope("prototype")
-public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, CharacteristicUpdateCommand> implements CharacteristicUpdateTask {
+public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, CharacteristicUpdateCommand> implements
+        CharacteristicUpdateTask {
 
     private static Log log = LogFactory.getLog( CharacteristicUpdateTask.class );
 
@@ -292,6 +293,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
              * at this point, cFromDatabase points to the class-corrected characteristic in the database that must be
              * updated with the information coming from the client.
              */
+            assert cFromDatabase != null;
             cFromDatabase.setValue( cFromClient.getValue() );
             cFromDatabase.setCategory( cFromClient.getCategory() );
             if ( cFromDatabase instanceof VocabCharacteristic ) {

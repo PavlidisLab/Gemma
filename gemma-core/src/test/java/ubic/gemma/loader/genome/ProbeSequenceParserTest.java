@@ -30,14 +30,14 @@ public class ProbeSequenceParserTest extends TestCase {
 
     public void testParseInputStream() throws Exception {
         ProbeSequenceParser p = new ProbeSequenceParser();
-        InputStream i = this.getClass().getResourceAsStream( "/data/loader/genome/probesequence.test.txt" );
-        p.parse( i );
-
+        try (InputStream i = this.getClass().getResourceAsStream( "/data/loader/genome/probesequence.test.txt" );) {
+            p.parse( i );
+        }
         assertNotNull( p.get( "117" ) );
         assertEquals( "GE59978", p.get( "117" ).getName() );
         assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "117" ).getSequence() );
         assertEquals( 9, p.getResults().size() );
-        
+
         assertEquals( "GE59979", p.get( "118" ).getName() );
         assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "118" ).getSequence() );
         assertEquals( 9, p.getResults().size() );

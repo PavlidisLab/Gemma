@@ -163,29 +163,30 @@ public class GeoBrowserServiceParseTest {
      */
     @Test
     public void testParse2() throws Exception {
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/geo.esummary.test1.xml" );
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/geo.esummary.test1.xml" );
+                BufferedReader r = new BufferedReader( new InputStreamReader( is ) );) {
 
-        BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
-        String l = null;
-        StringBuilder buf = new StringBuilder();
-        while ( ( l = r.readLine() ) != null ) {
-            buf.append( l );
+            String l = null;
+            StringBuilder buf = new StringBuilder();
+            while ( ( l = r.readLine() ) != null ) {
+                buf.append( l );
+            }
+
+            String response = buf.toString();
+
+            GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
+            serv.afterPropertiesSet();
+
+            ArrayDesignService ads = createMock( ArrayDesignService.class );
+            ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
+            serv.arrayDesignService = ads;
+            serv.expressionExperimentService = ees;
+            expect( ads.findByShortName( "GPL570" ) ).andReturn( null );
+            expect( ees.findByShortName( "GSE27128" ) ).andReturn( null );
+            replay( ads );
+            serv.formatDetails( response );
         }
-        r.close();
-        String response = buf.toString();
-
-        GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
-        serv.afterPropertiesSet();
-
-        ArrayDesignService ads = createMock( ArrayDesignService.class );
-        ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
-        serv.arrayDesignService = ads;
-        serv.expressionExperimentService = ees;
-        expect( ads.findByShortName( "GPL570" ) ).andReturn( null );
-        expect( ees.findByShortName( "GSE27128" ) ).andReturn( null );
-        replay( ads );
-        serv.formatDetails( response );
-
     }
 
     /**
@@ -193,28 +194,29 @@ public class GeoBrowserServiceParseTest {
      */
     @Test
     public void testParse3() throws Exception {
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/geo.esummary.test2.xml" );
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/geo.esummary.test2.xml" );
+                BufferedReader r = new BufferedReader( new InputStreamReader( is ) );) {
 
-        BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
-        String l = null;
-        StringBuilder buf = new StringBuilder();
-        while ( ( l = r.readLine() ) != null ) {
-            buf.append( l );
+            String l = null;
+            StringBuilder buf = new StringBuilder();
+            while ( ( l = r.readLine() ) != null ) {
+                buf.append( l );
+            }
+            String response = buf.toString();
+
+            GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
+            serv.afterPropertiesSet();
+
+            ArrayDesignService ads = createMock( ArrayDesignService.class );
+            ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
+            serv.arrayDesignService = ads;
+            serv.expressionExperimentService = ees;
+            expect( ads.findByShortName( "GPL3829" ) ).andReturn( null );
+            expect( ees.findByShortName( "GSE21230" ) ).andReturn( null );
+            replay( ads );
+            serv.formatDetails( response );
         }
-        r.close();
-        String response = buf.toString();
-
-        GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
-        serv.afterPropertiesSet();
-
-        ArrayDesignService ads = createMock( ArrayDesignService.class );
-        ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
-        serv.arrayDesignService = ads;
-        serv.expressionExperimentService = ees;
-        expect( ads.findByShortName( "GPL3829" ) ).andReturn( null );
-        expect( ees.findByShortName( "GSE21230" ) ).andReturn( null );
-        replay( ads );
-        serv.formatDetails( response );
 
     }
 }

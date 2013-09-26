@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.apps.Blat;
+import ubic.gemma.apps.ShellDelegatingBlat;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
@@ -65,52 +66,35 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest {
 
-    @Autowired
-    private CompositeSequenceService compositeSequenceService = null;
-
-    @Autowired
-    private GeneService geneService = null;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService = null;
-
-    @Autowired
-    private GeoService geoService = null;
-
     private ArrayDesign ad = null;
 
     private String arrayAccession = "GPL96";
 
+    @Autowired
+    private ArrayDesignService arrayDesignService = null;
+
+    private Blat blat = new ShellDelegatingBlat();
+
+    @Autowired
+    private CompositeSequenceService compositeSequenceService = null;
+
     private String csName = "117_at";// "218120_s_at";
-
-    private String geneOfficialSymbol = "HSPA6";// "HMOX2";
-
-    private Blat blat = new Blat();
-
-    // private static boolean alreadyPersistedData = false;
 
     @Autowired
     private ExpressionExperimentService eeService;
 
-    /**
-     *
-     */
-    @Before
-    public void setup() throws Exception {
-        cleanup();
-        // first load small two-color
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession, true,
-                true, false, false );
-        ad = ads.iterator().next();
+    private String geneOfficialSymbol = "HSPA6";// "HMOX2";
 
-        ad = arrayDesignService.thaw( ad );
+    @Autowired
+    private GeneService geneService = null;
 
-        loadData();
+    // private static boolean alreadyPersistedData = false;
 
-        // alreadyPersistedData = true;
+    @Autowired
+    private GeoService geoService = null;
 
-    }
+    @Autowired
+    private ArrayDesignSequenceProcessingService sequenceProcessingService;
 
     @After
     public void cleanup() throws Exception {
@@ -133,6 +117,23 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
             }
         }
+    }
+
+    /**
+     *
+     */
+    @Before
+    public void setup() throws Exception {
+        cleanup();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession, true,
+                true, false, false );
+        ad = ads.iterator().next();
+
+        ad = arrayDesignService.thaw( ad );
+
+        loadData();
+
     }
 
     /**
@@ -245,12 +246,12 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
      * @throws IOException
      */
     private void loadSequenceData() throws IOException {
-        InputStream sequenceFile = this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl96_short.sequences2.fasta" );
-        ArrayDesignSequenceProcessingService sequenceProcessingService = getBean( ArrayDesignSequenceProcessingService.class );
+        try (InputStream sequenceFile = this.getClass().getResourceAsStream(
+                "/data/loader/genome/gpl96_short.sequences2.fasta" );) {
 
-        sequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST,
-                taxonService.findByCommonName( "human" ) );
+            sequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST,
+                    taxonService.findByCommonName( "human" ) );
+        }
 
     }
 

@@ -61,7 +61,7 @@ public class ExpressionDataSVDTest {
      * @see junit.framework.TestCase#setUp()
      */
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
 
         testData = new ExpressionDataTestMatrix();
         svd = new ExpressionDataSVD( testData, false );

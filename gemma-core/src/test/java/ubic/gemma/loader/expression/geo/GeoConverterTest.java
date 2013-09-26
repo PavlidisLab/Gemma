@@ -85,12 +85,12 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test5091() throws Exception {
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-        is.close();
+        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );) {
+
+            parser.parse( is );
+        }
 
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
         DatasetCombiner datasetCombiner = new DatasetCombiner();
@@ -506,11 +506,12 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testConvertGSE5091() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
+        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );) {
 
+            parser.parse( is );
+        }
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
@@ -812,13 +813,13 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @Test
     public void testGPL6096ExonArray() throws Exception {
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GPL6096_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.setProcessPlatformsOnly( true );
-        parser.parse( is );
-        is.close();
+        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GPL6096_family.soft.gz" ) );) {
+
+            parser.parse( is );
+        }
 
         GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get(
                 "GPL6096" );
@@ -1153,11 +1154,13 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @Test
     public final void testWithImages() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GPL890_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.setProcessPlatformsOnly( true );
-        parser.parse( is );
+        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GPL890_family.soft.gz" ) );) {
+
+            parser.parse( is );
+        }
         GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get(
                 "GPL890" );
         Object result = this.gc.convert( platform );

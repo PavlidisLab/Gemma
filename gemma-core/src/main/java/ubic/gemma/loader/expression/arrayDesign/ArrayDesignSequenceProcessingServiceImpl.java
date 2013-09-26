@@ -65,20 +65,20 @@ import ubic.gemma.persistence.Persister;
 @Component
 public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequenceProcessingService {
 
+    private static final int BATCH_SIZE = 100;
+
+    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
+
     /**
      * After seeing more than this number of compositeSequences lacking sequences we don't give a detailed warning.
      */
     private static final int MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS = 20;
 
-    private static final int BATCH_SIZE = 100;
-
-    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
+    @Autowired
+    ArrayDesignReportService arrayDesignReportService;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private Persister persisterHelper;
 
     @Autowired
     private BioSequenceService bioSequenceService;
@@ -87,7 +87,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private ExternalDatabaseService externalDatabaseService;
 
     @Autowired
-    ArrayDesignReportService arrayDesignReportService;
+    private Persister persisterHelper;
 
     /*
      * (non-Javadoc)
@@ -400,6 +400,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     }
 
+    @Override
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
+            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException {
+        return processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, blastDbHome, taxon, force, null );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -410,7 +416,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      */
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
-            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException {
+            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force, FastaCmd fc ) throws IOException {
         checkForCompositeSequences( arrayDesign );
 
         Map<String, String> probe2acc = parseAccessionFile( sequenceIdentifierFile );
@@ -432,8 +438,10 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
          */
         int versionNumber = 1;
         int numSwitched = 0;
+        if ( fc == null ) fc = new SimpleFastaCmd();
         while ( versionNumber < MAX_VERSION_NUMBER ) {
-            Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
+
+            Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
 
             // map of accessions to sequence.
             Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
@@ -534,6 +542,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return this.processArrayDesign( arrayDesign, databaseNames, null, force );
     }
 
+    @Override
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
+            String blastDbHome, boolean force ) {
+        return processArrayDesign( arrayDesign, databaseNames, blastDbHome, force, null );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -543,7 +557,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      */
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
-            String blastDbHome, boolean force ) {
+            String blastDbHome, boolean force, FastaCmd fc ) {
 
         Map<String, BioSequence> accessionsToFetch = initializeFetchList( arrayDesign, force );
 
@@ -563,8 +577,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Collection<BioSequence> finalResult = new HashSet<BioSequence>();
 
         int versionNumber = 1;
+        if ( fc == null ) fc = new SimpleFastaCmd();
         while ( versionNumber < MAX_VERSION_NUMBER ) {
-            Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
+            Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
 
             // we can loop through the taxa as we can ignore sequence when retrieved and arraydesign taxon not match.
 
@@ -620,7 +635,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome,
             boolean force ) {
-        BioSequence found = this.searchBlastDbs( databaseNames, blastDbHome, sequenceId );
+        BioSequence found = this.searchBlastDbs( databaseNames, blastDbHome, sequenceId, new SimpleFastaCmd() );
         if ( found == null ) return null;
         return createOrUpdateGenbankSequence( found, force );
 
@@ -823,7 +838,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
             Collection<BioSequence> retrievedSequences, Collection<Taxon> taxa, boolean force ) {
 
-        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
+        Map<String, BioSequence> found = new HashMap<>();
         for ( Taxon taxon : taxa ) {
 
             if ( taxon == null ) {
@@ -999,38 +1014,38 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * @throws IOException
      */
     private Map<String, String> parseAccessionFile( InputStream sequenceIdentifierFile ) throws IOException {
-        BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile ) );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile ) );) {
 
-        String line = null;
+            String line = null;
 
-        StopWatch timer = new StopWatch();
-        timer.start();
+            StopWatch timer = new StopWatch();
+            timer.start();
 
-        Map<String, String> probe2acc = new HashMap<String, String>();
-        int count = 0;
-        int totalLines = 0;
-        while ( ( line = br.readLine() ) != null ) {
-            String[] fields = line.split( "\t" );
-            ++totalLines;
-            if ( fields.length < 2 ) {
-                continue;
+            Map<String, String> probe2acc = new HashMap<String, String>();
+            int count = 0;
+            int totalLines = 0;
+            while ( ( line = br.readLine() ) != null ) {
+                String[] fields = line.split( "\t" );
+                ++totalLines;
+                if ( fields.length < 2 ) {
+                    continue;
+                }
+
+                String probeName = fields[0];
+                String seqAcc = fields[1];
+
+                if ( StringUtils.isBlank( seqAcc ) ) {
+                    continue;
+                }
+
+                probe2acc.put( probeName, seqAcc );
+                if ( ++count % 2000 == 0 && timer.getTime() > 10000 ) {
+                    log.info( count + " / " + totalLines + " probes read so far have identifiers" );
+                }
             }
-
-            String probeName = fields[0];
-            String seqAcc = fields[1];
-
-            if ( StringUtils.isBlank( seqAcc ) ) {
-                continue;
-            }
-
-            probe2acc.put( probeName, seqAcc );
-            if ( ++count % 2000 == 0 && timer.getTime() > 10000 ) {
-                log.info( count + " / " + totalLines + " probes read so far have identifiers" );
-            }
+            log.info( count + " / " + totalLines + " probes have accessions" );
+            return probe2acc;
         }
-        br.close();
-        log.info( count + " / " + totalLines + " probes have accessions" );
-        return probe2acc;
 
     }
 
@@ -1109,9 +1124,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * @return
      */
     private Collection<BioSequence> searchBlastDbs( String[] databaseNames, String blastDbHome,
-            Collection<String> accessionsToFetch ) {
-        // search the databases.
-        FastaCmd fc = new SimpleFastaCmd();
+            Collection<String> accessionsToFetch, FastaCmd fc ) {
+
         Collection<BioSequence> retrievedSequences = new HashSet<BioSequence>();
         for ( String dbname : databaseNames ) {
             Collection<BioSequence> moreBioSequences;
@@ -1140,8 +1154,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * @param accessionToFetch
      * @return
      */
-    private BioSequence searchBlastDbs( String[] databaseNames, String blastDbHome, String accessionToFetch ) {
-        FastaCmd fc = new SimpleFastaCmd();
+    private BioSequence searchBlastDbs( String[] databaseNames, String blastDbHome, String accessionToFetch, FastaCmd fc ) {
+
         for ( String dbname : databaseNames ) {
             BioSequence moreBioSequence;
             if ( blastDbHome != null ) {

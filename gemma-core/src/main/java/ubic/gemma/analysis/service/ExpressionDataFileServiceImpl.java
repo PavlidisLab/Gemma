@@ -465,10 +465,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         String filename = getDiffExArchiveFileName( analysis );
         File f = getOutputFile( filename );
 
-        try {
-            // We create .zip file with analysis results.
-            log.info( "Creating new Differential Expression data archive file: " + f.getName() );
-            ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) );
+        // We create .zip file with analysis results.
+        log.info( "Creating new Differential Expression data archive file: " + f.getName() );
+        try (ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) );) {
 
             // Add gene x factor analysis results file.
             zipOut.putNextEntry( new ZipEntry( "analysis.data.txt" ) );
@@ -515,30 +514,29 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         // We create .zip file with analysis results.
         log.info( "Creating new Differential Expression data archive file: " + f.getName() );
-        ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) );
+        try (ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) );) {
 
-        // Add gene x factor analysis results file.
-        zipOut.putNextEntry( new ZipEntry( "analysis.data.txt" ) );
-        String analysisData = convertDiffExpressionAnalysisData( analysis, geneAnnotations );
-        zipOut.write( analysisData.getBytes() );
-        zipOut.closeEntry();
-
-        // Add a file for each result set with contrasts information.
-        for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-            if ( resultSet.getExperimentalFactors().size() > 1 ) {
-                continue; // Skip interactions.
-            }
-
-            assert resultSet.getQvalueThresholdForStorage() == null || resultSet.getQvalueThresholdForStorage() == 1.0;
-
-            String resultSetData = convertDiffExpressionResultSetData( resultSet, geneAnnotations );
-            zipOut.putNextEntry( new ZipEntry( "resultset_" + resultSet.getId() + ".data.txt" ) );
-            zipOut.write( resultSetData.getBytes() );
+            // Add gene x factor analysis results file.
+            zipOut.putNextEntry( new ZipEntry( "analysis.data.txt" ) );
+            String analysisData = convertDiffExpressionAnalysisData( analysis, geneAnnotations );
+            zipOut.write( analysisData.getBytes() );
             zipOut.closeEntry();
+
+            // Add a file for each result set with contrasts information.
+            for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+                if ( resultSet.getExperimentalFactors().size() > 1 ) {
+                    continue; // Skip interactions.
+                }
+
+                assert resultSet.getQvalueThresholdForStorage() == null
+                        || resultSet.getQvalueThresholdForStorage() == 1.0;
+
+                String resultSetData = convertDiffExpressionResultSetData( resultSet, geneAnnotations );
+                zipOut.putNextEntry( new ZipEntry( "resultset_" + resultSet.getId() + ".data.txt" ) );
+                zipOut.write( resultSetData.getBytes() );
+                zipOut.closeEntry();
+            }
         }
-
-        zipOut.close();
-
     }
 
     @Override
@@ -1249,10 +1247,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
 
         // Write coexpression data to file (zipped of course)
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        writer.write( buf.toString() );
-        writer.flush();
-        writer.close();
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
+            writer.write( buf.toString() );
+        }
 
     }
 
@@ -1315,11 +1312,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             ostream = new FileOutputStream( file );
         }
 
-        Writer writer = new OutputStreamWriter( ostream );
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-        edWriter.write( writer, expressionExperiment, true, orderByDesign );
-        writer.flush();
-        writer.close();
+        try (Writer writer = new OutputStreamWriter( ostream );) {
+            ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+            edWriter.write( writer, expressionExperiment, true, orderByDesign );
+        }
         return file;
     }
 
@@ -1332,11 +1328,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      */
     private void writeJson( File file, Map<Long, Collection<Gene>> geneAnnotations,
             ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException, FileNotFoundException {
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter matrixWriter = new MatrixWriter();
-        matrixWriter.writeJSON( writer, expressionDataMatrix, true );
-        writer.flush();
-        writer.close();
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
+            MatrixWriter matrixWriter = new MatrixWriter();
+            matrixWriter.writeJSON( writer, expressionDataMatrix, true );
+        }
     }
 
     /**
@@ -1349,9 +1344,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             Collection<? extends DesignElementDataVector> vectors ) throws IOException {
         this.designElementDataVectorService.thaw( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter matrixWriter = new MatrixWriter();
-        matrixWriter.writeJSON( writer, expressionDataMatrix, true );
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
+            MatrixWriter matrixWriter = new MatrixWriter();
+            matrixWriter.writeJSON( writer, expressionDataMatrix, true );
+        }
     }
 
     private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,

@@ -42,15 +42,17 @@ public class GenericScanFileDateExtractorTest {
      */
     @Test
     public void testExtractGeneSpring() throws Exception {
-        InputStream is = getClass().getResourceAsStream( "/data/loader/expression/geo/GSM522322.part.genespring.txt" );
-        GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
+        try (InputStream is = getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSM522322.part.genespring.txt" );) {
+            GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
 
-        Date actual = extractor.extract( is );
+            Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
-        Date expected = formatter.parse( "2005-08-30T15:17:28" );
+            DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+            Date expected = formatter.parse( "2005-08-30T15:17:28" );
 
-        assertEquals( expected, actual );
+            assertEquals( expected, actual );
+        }
     }
 
     /**
@@ -101,14 +103,15 @@ public class GenericScanFileDateExtractorTest {
 
     @Test
     public void testExtractImagene() throws Exception {
-        InputStream is = getClass().getResourceAsStream( "/data/loader/expression/geo/GSM542196.imagene.part.txt" );
-        GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
+        try (InputStream is = getClass().getResourceAsStream( "/data/loader/expression/geo/GSM542196.imagene.part.txt" );) {
+            GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
 
-        Date actual = extractor.extract( is );
+            Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss zzz" );
-        Date expected = formatter.parse( "2002-06-17T20:26:36 PDT" );
-        assertEquals( expected, actual );
+            DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss zzz" );
+            Date expected = formatter.parse( "2002-06-17T20:26:36 PDT" );
+            assertEquals( expected, actual );
+        }
     }
 
     @Test

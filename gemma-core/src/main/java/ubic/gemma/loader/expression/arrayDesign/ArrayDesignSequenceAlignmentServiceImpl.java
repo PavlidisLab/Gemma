@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.apps.Blat;
+import ubic.gemma.apps.ShellDelegatingBlat;
 import ubic.gemma.externalDb.GoldenPathQuery;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -135,19 +136,19 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     }
 
     @Autowired
-    BlatResultService blatResultService;
+    private ArrayDesignReportService arrayDesignReportService;
 
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
     @Autowired
-    Persister persisterHelper;
+    private BioSequenceService bioSequenceService;
 
     @Autowired
-    BioSequenceService bioSequenceService;
+    private BlatResultService blatResultService;
 
     @Autowired
-    ArrayDesignReportService arrayDesignReportService;
+    private Persister persisterHelper;
 
     /*
      * (non-Javadoc)
@@ -158,7 +159,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
      */
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign design ) {
-        return this.processArrayDesign( design, false );
+        return this.processArrayDesign( design, false, null );
     }
 
     /*
@@ -166,75 +167,23 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
      * 
      * @see
      * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign, boolean)
+     * .expression.arrayDesign.ArrayDesign)
      */
     @Override
-    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive ) {
+    public Collection<BlatResult> processArrayDesign( ArrayDesign design, Blat blat ) {
+        return this.processArrayDesign( design, false, blat );
+    }
 
-        Collection<BlatResult> allResults = new HashSet<BlatResult>();
-
-        if ( sensitive ) log.info( "Running in 'sensitive' mode if possible" );
-
-        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
-        boolean first = true;
-        for ( Taxon taxon : taxa ) {
-
-            Collection<BioSequence> sequencesToBlat = getSequences( ad, taxon );
-
-            Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, sensitive, taxon );
-
-            log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
-
-            Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
-            for ( BioSequence bs : results.keySet() ) {
-                if ( nameMap.containsKey( bs.getName() ) ) {
-                    throw new IllegalStateException(
-                            "All distinct sequences on the array must have unique names; found " + bs.getName()
-                                    + " more than once." );
-                }
-                nameMap.put( bs.getName(), bs );
-            }
-
-            int noresults = 0;
-            int count = 0;
-
-            // We only delete the results here, after we have at least one set of blat results.
-            if ( first ) {
-                log.info( "Looking for old results to remove..." );
-                arrayDesignService.deleteAlignmentData( ad );
-            }
-
-            for ( BioSequence sequence : sequencesToBlat ) {
-                if ( sequence == null ) {
-                    log.warn( "Null sequence!" );
-                    continue;
-                }
-                Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
-                if ( brs == null ) {
-                    ++noresults;
-                    continue;
-                }
-                for ( BlatResult result : brs ) {
-                    result.setQuerySequence( sequence ); // must do this to replace
-                    // placeholder instance.
-                }
-                allResults.addAll( persistBlatResults( brs ) );
-
-                if ( ++count % 2000 == 0 ) {
-                    log.info( "Checked results for " + count + " queries, " + allResults.size()
-                            + " blat results so far." );
-                }
-
-            }
-
-            log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
-            first = false;
-        }
-
-        arrayDesignReportService.generateArrayDesignReport( ad.getId() );
-
-        return allResults;
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    public Collection<BlatResult> processArrayDesign( ArrayDesign design, boolean sensitive ) {
+        return this.processArrayDesign( design, sensitive, null );
     }
 
     /*
@@ -268,7 +217,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             seqMap.put( bioSequence.getName(), bioSequence );
         }
 
-        ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
+        ExternalDatabase searchedDatabase = ShellDelegatingBlat.getSearchedGenome( taxon );
 
         Collection<BlatResult> toSkip = new HashSet<BlatResult>();
         for ( BlatResult result : rawBlatResults ) {
@@ -363,8 +312,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
      * @return Map of biosequences to collections of blat results.
      */
     private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat,
-            boolean sensitive, Taxon taxon ) {
-        Blat blat = new Blat();
+            boolean sensitive, Taxon taxon, Blat blat ) {
+
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
         sequencesToBlat = bioSequenceService.thaw( sequencesToBlat );
         try {
@@ -443,6 +392,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             assert br.getQuerySequence().getName() != null;
             Taxon taxon = br.getQuerySequence().getTaxon();
             assert taxon != null;
+
             try {
                 FieldUtils.writeField( br.getTargetChromosome(), "taxon", taxon, true );
             } catch ( IllegalAccessException e ) {
@@ -465,5 +415,82 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         }
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
+     * .expression.arrayDesign.ArrayDesign, boolean)
+     */
+    private Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive, Blat blat ) {
+
+        if ( blat == null ) blat = new ShellDelegatingBlat();
+
+        Collection<BlatResult> allResults = new HashSet<BlatResult>();
+
+        if ( sensitive ) log.info( "Running in 'sensitive' mode if possible" );
+
+        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
+        boolean first = true;
+        for ( Taxon taxon : taxa ) {
+
+            Collection<BioSequence> sequencesToBlat = getSequences( ad, taxon );
+
+            Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, sensitive, taxon, blat );
+
+            log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
+
+            Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
+            for ( BioSequence bs : results.keySet() ) {
+                if ( nameMap.containsKey( bs.getName() ) ) {
+                    throw new IllegalStateException(
+                            "All distinct sequences on the array must have unique names; found " + bs.getName()
+                                    + " more than once." );
+                }
+                nameMap.put( bs.getName(), bs );
+            }
+
+            int noresults = 0;
+            int count = 0;
+
+            // We only delete the results here, after we have at least one set of blat results.
+            if ( first ) {
+                log.info( "Looking for old results to remove..." );
+                arrayDesignService.deleteAlignmentData( ad );
+            }
+
+            for ( BioSequence sequence : sequencesToBlat ) {
+                if ( sequence == null ) {
+                    log.warn( "Null sequence!" );
+                    continue;
+                }
+                Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
+                if ( brs == null ) {
+                    ++noresults;
+                    continue;
+                }
+                for ( BlatResult result : brs ) {
+                    result.setQuerySequence( sequence ); // must do this to replace
+                    // placeholder instance.
+                }
+                allResults.addAll( persistBlatResults( brs ) );
+
+                if ( ++count % 2000 == 0 ) {
+                    log.info( "Checked results for " + count + " queries, " + allResults.size()
+                            + " blat results so far." );
+                }
+
+            }
+
+            log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
+            first = false;
+        }
+
+        arrayDesignReportService.generateArrayDesignReport( ad.getId() );
+
+        return allResults;
+
     }
 }

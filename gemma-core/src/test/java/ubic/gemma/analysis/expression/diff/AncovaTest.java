@@ -397,6 +397,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                         assertEquals( 4.69e-11, pvalue, 1e-12 );
                     } else if ( probe.getName().equals( "probe_4" ) ) {
                         assertEquals( 0.0048, pvalue, 0.0001 );
+                        assertNotNull( stat );
                         assertEquals( -125.746, stat, 0.001 );
                         assertEquals( 0.00506, contrasts.iterator().next().getPvalue(), 0.0001 ); // factor1a
                     }
@@ -483,6 +484,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                             assertEquals( 5.158e-10, pvalue, 1e-12 );
                         } else if ( probe.getName().equals( "probe_4" ) ) {
                             assertEquals( 0.0048, pvalue, 0.0001 );
+                            assertNotNull( stat );
                             assertEquals( -125.746, stat, 0.001 );
                         } else if ( probe.getName().equals( "probe_0" ) ) {
                             assertEquals( 1, probeAnalysisResult.getContrasts().size() );

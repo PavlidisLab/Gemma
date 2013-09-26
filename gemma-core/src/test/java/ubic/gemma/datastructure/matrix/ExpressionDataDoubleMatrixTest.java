@@ -128,11 +128,11 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );
-
-        DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
-        ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );) {
+            DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
+            ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
+        }
 
         assertNotNull( ee );
         assertEquals( 200, ee.getRawExpressionDataVectors().size() );

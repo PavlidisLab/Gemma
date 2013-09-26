@@ -49,7 +49,7 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
      */
     private static final long serialVersionUID = 1L;
 
-    public ExpressionDataTestMatrix() {
+    public ExpressionDataTestMatrix() throws IOException {
         super();
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderServiceImpl();
@@ -76,18 +76,17 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );
-        try {
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );) {
             DoubleMatrix<String, String> matrix = service.parse( data );
             ExpressionExperiment ee = service.convert( metaData, matrix );
             super.init();
             Collection<DesignElementDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes()
                     .iterator().next() );
             vectorsToMatrix( selectedVectors );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+
         }
+
     }
 
 }

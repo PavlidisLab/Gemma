@@ -352,28 +352,29 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        InputStream countData = this.getClass().getResourceAsStream(
+        try (InputStream countData = this.getClass().getResourceAsStream(
                 "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
-        DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
-        InputStream rpkmData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );
-        DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
+                InputStream rpkmData = this.getClass().getResourceAsStream(
+                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );) {
+            DoubleMatrix<String, String> countMatrix = reader.read( countData );
+            DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
-        List<String> probeNames = countMatrix.getRowNames();
+            List<String> probeNames = countMatrix.getRowNames();
 
-        // we have to find the right generic platform to use.
-        ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
-                taxonService.findByCommonName( "human" ) );
-        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+            // we have to find the right generic platform to use.
+            ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
+                    taxonService.findByCommonName( "human" ) );
+            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
-        try {
-            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
-            fail( "Should have gotten an exception" );
-        } catch ( IllegalArgumentException e ) {
-            // Expected
+            try {
+                dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+                fail( "Should have gotten an exception" );
+            } catch ( IllegalArgumentException e ) {
+                // Expected
+            }
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
         }
-        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
 
         ExpressionExperiment updatedee = eeService.thaw( ee );
 

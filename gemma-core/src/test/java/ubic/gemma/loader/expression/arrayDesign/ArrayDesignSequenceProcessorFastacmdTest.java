@@ -33,6 +33,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.Settings;
 
 /**
+ * Test exercises the fastacmd - requires executable.
+ * 
  * @author pavlidis
  * @version $Id$
  */

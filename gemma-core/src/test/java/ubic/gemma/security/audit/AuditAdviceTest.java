@@ -366,11 +366,13 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     }
 
     private boolean checkDeletedAuditTrail( Long atid ) {
-        return this.simpleJdbcTemplate.queryForInt( "SELECT COUNT(*) FROM AUDIT_TRAIL WHERE ID = ?", atid ) == 0;
+        return this.simpleJdbcTemplate.queryForObject( "SELECT COUNT(*) FROM AUDIT_TRAIL WHERE ID = ?", Integer.class,
+                atid ) == 0;
     }
 
     private boolean checkDeletedEvent( Long i ) {
-        return this.simpleJdbcTemplate.queryForInt( "SELECT COUNT(*) FROM AUDIT_EVENT WHERE ID = ?", i ) == 0;
+        return this.simpleJdbcTemplate.queryForObject( "SELECT COUNT(*) FROM AUDIT_EVENT WHERE ID = ?", Integer.class,
+                i ) == 0;
     }
 
     private void checkDeletedTrails( Collection<Long> trailIds, Collection<Long> eventIds ) {

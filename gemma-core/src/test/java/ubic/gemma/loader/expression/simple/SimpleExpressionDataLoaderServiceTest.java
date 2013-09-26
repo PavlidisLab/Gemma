@@ -88,9 +88,10 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        InputStream data = this.getClass().getResourceAsStream( "/data/testdata.txt" );
+        try (InputStream data = this.getClass().getResourceAsStream( "/data/testdata.txt" );) {
 
-        ee = service.create( metaData, data );
+            ee = service.create( metaData, data );
+        }
         ee = eeService.thaw( ee );
 
         assertNotNull( ee );
@@ -98,7 +99,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertEquals( 12, ee.getBioAssays().size() );
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public final void testLoadDuplicatedRow() throws Exception {
 
         Taxon taxon = this.getTaxon( "mouse" );
@@ -124,15 +125,12 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" );
+        try (InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" );) {
 
-        try {
             ee = service.create( metaData, data );
             fail( "Should have gotten an exception about duplicated row" );
-        } catch ( IllegalArgumentException e ) {
-            // expected
-        }
 
+        }
     }
 
     /**
@@ -163,10 +161,11 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );) {
 
-        ee = service.create( metaData, data );
+            ee = service.create( metaData, data );
+        }
 
         ee = eeService.thaw( ee );
 

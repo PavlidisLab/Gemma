@@ -84,8 +84,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         File outputFile = getFile( "atlasImageMap" + imageseriesId.toString() );
         Document atlasImageMapDoc = null;
 
-        try {
-            FileOutputStream out = new FileOutputStream( outputFile );
+        try (FileOutputStream out = new FileOutputStream( outputFile );) {
             this.getAtlasImageMap( imageseriesId, out );
 
             atlasImageMapDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
@@ -249,10 +248,15 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         File outputFile = getFile( "ImageseriesId_" + imageseriesId.toString() );
         Document imageSeriesDoc = null;
 
-        try {
-            FileOutputStream out = new FileOutputStream( outputFile );
+        try (FileOutputStream out = new FileOutputStream( outputFile );) {
             this.getImageseries( imageseriesId, out );
-            imageSeriesDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
+        } catch ( Exception e ) {
+            log.error( e.getMessage(), e.getCause() );
+            return null;
+        }
+
+        try (FileInputStream input = new FileInputStream( outputFile );) {
+            imageSeriesDoc = XMLUtils.openAndParse( input );
         } catch ( Exception e ) {
             log.error( e.getMessage(), e.getCause() );
             return null;
@@ -524,12 +528,12 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         File outputFile = getFile( gene );
         Document geneDoc = null;
 
-        try {
-            FileOutputStream out = new FileOutputStream( outputFile );
+        try (FileOutputStream out = new FileOutputStream( outputFile );) {
             this.getGene( gene, out );
-            out.close();
+        }
 
-            geneDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
+        try (FileInputStream input = new FileInputStream( outputFile )) {
+            geneDoc = XMLUtils.openAndParse( input );
         } catch ( ParserConfigurationException pce ) {
             log.warn( pce );
             return null;
@@ -698,14 +702,13 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     private boolean doPageDownload( String urlString, OutputStream out ) throws MalformedURLException, IOException {
 
         URL url = new URL( urlString );
-        DataInputStream in = null;
+        try (DataInputStream in = getInput( url );) {
+            if ( in == null ) return ( false );
 
-        in = getInput( url );
-        if ( in == null ) return ( false );
+            transferData( in, out );
 
-        transferData( in, out );
-
-        return ( true );
+            return ( true );
+        }
     }
 
     private DataInputStream getCachedFile( String cachedName ) throws FileNotFoundException {
@@ -761,9 +764,10 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
         if ( this.useFileCache ) {
             String cachedName = this.cacheDir + "/" + url.toString().replace( "/", "_" );
-            FileOutputStream out = new FileOutputStream( new File( cachedName ) );
-            transferData( in, out );
-            return ( getCachedFile( cachedName ) );
+            try (FileOutputStream out = new FileOutputStream( new File( cachedName ) );) {
+                transferData( in, out );
+                return ( getCachedFile( cachedName ) );
+            }
         }
 
         return ( in );

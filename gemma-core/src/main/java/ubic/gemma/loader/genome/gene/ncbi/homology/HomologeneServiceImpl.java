@@ -236,8 +236,7 @@ public class HomologeneServiceImpl implements HomologeneService {
 
                 while ( !interrupted && !ready.get() ) {
 
-                    try {
-                        InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+                    try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );) {
                         parseHomologGeneFile( is );
                     } catch ( IOException ioe ) {
                         log.error( "Unable to parse homologene file. Error is " + ioe );

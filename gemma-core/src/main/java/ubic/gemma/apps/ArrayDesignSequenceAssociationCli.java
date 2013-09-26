@@ -152,52 +152,52 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 }
 
                 if ( this.hasOption( 'f' ) ) {
-                    InputStream sequenceFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( sequenceFile );
+                    try (InputStream sequenceFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( sequenceFile );) {
 
-                    if ( sequenceFileIs == null ) {
-                        log.error( "No file " + sequenceFile + " was readable" );
-                        bail( ErrorCode.INVALID_OPTION );
-                        return null;
-                    }
-
-                    Taxon taxon = null;
-                    if ( this.hasOption( 't' ) ) {
-                        taxon = taxonService.findByCommonName( this.taxonName );
-                        if ( taxon == null ) {
-                            throw new IllegalArgumentException( "No taxon named " + taxonName );
+                        if ( sequenceFileIs == null ) {
+                            log.error( "No file " + sequenceFile + " was readable" );
+                            bail( ErrorCode.INVALID_OPTION );
+                            return null;
                         }
+
+                        Taxon taxon = null;
+                        if ( this.hasOption( 't' ) ) {
+                            taxon = taxonService.findByCommonName( this.taxonName );
+                            if ( taxon == null ) {
+                                throw new IllegalArgumentException( "No taxon named " + taxonName );
+                            }
+                        }
+
+                        log.info( "Processing ArrayDesign..." );
+
+                        arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs,
+                                sequenceTypeEn, taxon );
+
+                        audit( arrayDesign, "Sequences read from file: " + sequenceFile );
                     }
-
-                    log.info( "Processing ArrayDesign..." );
-
-                    arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs,
-                            sequenceTypeEn, taxon );
-
-                    audit( arrayDesign, "Sequences read from file: " + sequenceFile );
-
-                    sequenceFileIs.close();
                 } else if ( this.hasOption( 'i' ) ) {
-                    InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile );
+                    try (InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile );) {
 
-                    if ( idFileIs == null ) {
-                        log.error( "No file " + idFile + " was readable" );
-                        bail( ErrorCode.INVALID_OPTION );
-                    }
-
-                    Taxon taxon = null;
-                    if ( this.hasOption( 't' ) ) {
-                        taxon = taxonService.findByCommonName( this.taxonName );
-                        if ( taxon == null ) {
-                            throw new IllegalArgumentException( "No taxon named " + taxonName );
+                        if ( idFileIs == null ) {
+                            log.error( "No file " + idFile + " was readable" );
+                            bail( ErrorCode.INVALID_OPTION );
                         }
+
+                        Taxon taxon = null;
+                        if ( this.hasOption( 't' ) ) {
+                            taxon = taxonService.findByCommonName( this.taxonName );
+                            if ( taxon == null ) {
+                                throw new IllegalArgumentException( "No taxon named " + taxonName );
+                            }
+                        }
+
+                        log.info( "Processing ArrayDesign..." );
+
+                        arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs, new String[] {
+                                "nt", "est_others", "est_human", "est_mouse" }, null, taxon, force );
+
+                        audit( arrayDesign, "Sequences identifiers from file: " + idFile );
                     }
-
-                    log.info( "Processing ArrayDesign..." );
-
-                    arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs, new String[] {
-                            "nt", "est_others", "est_human", "est_mouse" }, null, taxon, force );
-
-                    audit( arrayDesign, "Sequences identifiers from file: " + idFile );
                 } else {
                     log.info( "Retrieving sequences from BLAST databases" );
                     // FIXME - put in correctdatabases to search. Don't always want to do mouse, human etc.

@@ -109,68 +109,61 @@ public class GeoBrowser {
             throw new RuntimeException( "Invalid URL " + url, e );
         }
 
-        InputStream is = null;
+        URLConnection conn = url.openConnection();
+        conn.connect();
+        try (InputStream is = conn.getInputStream();
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
 
-        try {
-            URLConnection conn = url.openConnection();
-            conn.connect();
-            is = conn.getInputStream();
-        } catch ( IOException e ) {
-            log.error( e, e );
-            throw e;
-        }
+            // We are getting a tab delimited file.
 
-        // We are getting a tab delimited file.
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+            // Read columns headers.
+            String headerLine = br.readLine();
+            String[] headers = StringUtil.csvSplit( headerLine );
 
-        // Read columns headers.
-        String headerLine = br.readLine();
-        String[] headers = StringUtil.csvSplit( headerLine );
-
-        // Map column names to their indices (handy later).
-        Map<String, Integer> columnNameToIndex = new HashMap<String, Integer>();
-        for ( int i = 0; i < headers.length; i++ ) {
-            columnNameToIndex.put( headers[i], i );
-        }
-
-        // Read the rest of the file.
-        String line = null;
-        while ( ( line = br.readLine() ) != null ) {
-            String[] fields = StringUtil.csvSplit( line );
-
-            GeoRecord geoRecord = new GeoRecord();
-            geoRecord.setGeoAccession( fields[columnNameToIndex.get( "Accession" )] );
-            geoRecord.setTitle( StringUtils.strip( fields[columnNameToIndex.get( "Title" )].replaceAll(
-                    FLANKING_QUOTES_REGEX, "" ) ) );
-
-            String sampleCountS = fields[columnNameToIndex.get( "Sample Count" )];
-            if ( StringUtils.isNotBlank( sampleCountS ) ) {
-                try {
-                    geoRecord.setNumSamples( Integer.parseInt( sampleCountS ) );
-                } catch ( NumberFormatException e ) {
-                    throw new RuntimeException( "Could not parse sample count: " + sampleCountS );
-                }
-            } else {
-                log.warn( "No sample count for " + geoRecord.getGeoAccession() );
+            // Map column names to their indices (handy later).
+            Map<String, Integer> columnNameToIndex = new HashMap<String, Integer>();
+            for ( int i = 0; i < headers.length; i++ ) {
+                columnNameToIndex.put( headers[i], i );
             }
-            geoRecord
-                    .setContactName( fields[columnNameToIndex.get( "Contact" )].replaceAll( FLANKING_QUOTES_REGEX, "" ) );
 
-            String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )].replaceAll( FLANKING_QUOTES_REGEX, "" )
-                    .split( ";" );
-            geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
+            // Read the rest of the file.
+            String line = null;
+            while ( ( line = br.readLine() ) != null ) {
+                String[] fields = StringUtil.csvSplit( line );
 
-            Date date = DateUtils.parseDate(
-                    fields[columnNameToIndex.get( "Release Date" )].replaceAll( FLANKING_QUOTES_REGEX, "" ),
-                    DATE_FORMATS );
-            geoRecord.setReleaseDate( date );
+                GeoRecord geoRecord = new GeoRecord();
+                geoRecord.setGeoAccession( fields[columnNameToIndex.get( "Accession" )] );
+                geoRecord.setTitle( StringUtils.strip( fields[columnNameToIndex.get( "Title" )].replaceAll(
+                        FLANKING_QUOTES_REGEX, "" ) ) );
 
-            geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
+                String sampleCountS = fields[columnNameToIndex.get( "Sample Count" )];
+                if ( StringUtils.isNotBlank( sampleCountS ) ) {
+                    try {
+                        geoRecord.setNumSamples( Integer.parseInt( sampleCountS ) );
+                    } catch ( NumberFormatException e ) {
+                        throw new RuntimeException( "Could not parse sample count: " + sampleCountS );
+                    }
+                } else {
+                    log.warn( "No sample count for " + geoRecord.getGeoAccession() );
+                }
+                geoRecord.setContactName( fields[columnNameToIndex.get( "Contact" )].replaceAll( FLANKING_QUOTES_REGEX,
+                        "" ) );
 
-            records.add( geoRecord );
+                String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )].replaceAll( FLANKING_QUOTES_REGEX, "" )
+                        .split( ";" );
+                geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
+
+                Date date = DateUtils.parseDate(
+                        fields[columnNameToIndex.get( "Release Date" )].replaceAll( FLANKING_QUOTES_REGEX, "" ),
+                        DATE_FORMATS );
+                geoRecord.setReleaseDate( date );
+
+                geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
+
+                records.add( geoRecord );
+            }
+
         }
-
-        is.close();
 
         if ( records.isEmpty() ) {
             log.warn( "No records obtained" );
@@ -194,51 +187,52 @@ public class GeoBrowser {
             RuntimeException {
 
         List<GeoRecord> records = new ArrayList<GeoRecord>();
-
-        try {
-            URL searchUrl = new URL( ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize
-                    + "&usehistory=y" );
-
-            URLConnection conn = searchUrl.openConnection();
-            conn.connect();
-            InputStream is = conn.getInputStream();
+        URL searchUrl = new URL( ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y" );
+        Document searchDocument;
+        URLConnection conn = searchUrl.openConnection();
+        conn.connect();
+        try (InputStream is = conn.getInputStream();) {
 
             docFactory.setIgnoringComments( true );
             docFactory.setValidating( false );
 
             DocumentBuilder builder = docFactory.newDocumentBuilder();
-            Document searchDocument = builder.parse( is );
+            searchDocument = builder.parse( is );
+        } catch ( ParserConfigurationException | SAXException e ) {
+            throw new RuntimeException( e );
+        }
 
-            NodeList countNode = searchDocument.getElementsByTagName( "Count" );
-            Node countEl = countNode.item( 0 );
+        NodeList countNode = searchDocument.getElementsByTagName( "Count" );
+        Node countEl = countNode.item( 0 );
 
-            int count = 0;
-            try {
-                count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-            } catch ( NumberFormatException e ) {
-                throw new IOException( "Could not parse count from: " + searchUrl );
-            }
+        int count = 0;
+        try {
+            count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
+        } catch ( NumberFormatException e ) {
+            throw new IOException( "Could not parse count from: " + searchUrl );
+        }
 
-            if ( count == 0 ) throw new IOException( "Got no records from: " + searchUrl );
+        if ( count == 0 ) throw new IOException( "Got no records from: " + searchUrl );
 
-            NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
+        NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
 
-            Element queryIdEl = ( Element ) qnode.item( 0 );
+        Element queryIdEl = ( Element ) qnode.item( 0 );
 
-            NodeList cknode = searchDocument.getElementsByTagName( "WebEnv" );
-            Element cookieEl = ( Element ) cknode.item( 0 );
+        NodeList cknode = searchDocument.getElementsByTagName( "WebEnv" );
+        Element cookieEl = ( Element ) cknode.item( 0 );
 
-            String queryId = XMLUtils.getTextValue( queryIdEl );
-            String cookie = XMLUtils.getTextValue( cookieEl );
+        String queryId = XMLUtils.getTextValue( queryIdEl );
+        String cookie = XMLUtils.getTextValue( cookieEl );
 
-            URL fetchUrl = new URL( EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retstart=" + start
-                    + "&retmax=" + pageSize + "&WebEnv=" + cookie );
+        URL fetchUrl = new URL( EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retstart=" + start
+                + "&retmax=" + pageSize + "&WebEnv=" + cookie );
 
-            conn = fetchUrl.openConnection();
-            conn.connect();
-            is = conn.getInputStream();
-
-            Document summaryDocument = builder.parse( is );
+        conn = fetchUrl.openConnection();
+        conn.connect();
+        Document summaryDocument;
+        try (InputStream is = conn.getInputStream();) {
+            DocumentBuilder builder = docFactory.newDocumentBuilder();
+            summaryDocument = builder.parse( is );
 
             XPathFactory xFactory = XPathFactory.newInstance();
             XPath xpath = xFactory.newXPath();
@@ -284,22 +278,12 @@ public class GeoBrowser {
                 records.add( record );
             }
 
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        } catch ( ParserConfigurationException e ) {
-            throw new RuntimeException( e );
-        } catch ( SAXException e ) {
-            throw new RuntimeException( e );
-        } catch ( XPathException e ) {
-            throw new RuntimeException( e );
-        } catch ( ParseException e ) {
-            throw new RuntimeException( e );
+            if ( records.isEmpty() ) {
+                log.warn( "No records obtained" );
+            }
+        } catch ( ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
+            throw new IOException( "Could not parse data: " + searchUrl, e );
         }
-
-        if ( records.isEmpty() ) {
-            log.warn( "No records obtained" );
-        }
-
         return records;
 
     }

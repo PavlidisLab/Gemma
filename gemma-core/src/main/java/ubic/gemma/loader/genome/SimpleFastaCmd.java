@@ -136,13 +136,12 @@ public class SimpleFastaCmd implements FastaCmd {
                     "No blast database location specified, you must set this in your environment" );
         }
         File tmp = File.createTempFile( "sequenceIds", ".txt" );
-        Writer tmpOut = new FileWriter( tmp );
+        try (Writer tmpOut = new FileWriter( tmp );) {
 
-        for ( Object object : keys ) {
-            tmpOut.write( object.toString() + "\n" );
+            for ( Object object : keys ) {
+                tmpOut.write( object.toString() + "\n" );
+            }
         }
-
-        tmpOut.close();
         String[] opts = new String[] { "BLASTDB=" + blastHome };
         String command = fastaCmdExecutable + " -" + dbOption + " " + database + " -" + entryBatchOption + " "
                 + tmp.getAbsolutePath();
@@ -162,33 +161,28 @@ public class SimpleFastaCmd implements FastaCmd {
      * @return
      * @throws IOException
      */
-    private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) {
+    private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) throws IOException {
 
-        final InputStream is = new BufferedInputStream( pr.getInputStream() );
-        InputStream err = pr.getErrorStream();
+        try (final InputStream is = new BufferedInputStream( pr.getInputStream() );
+                InputStream err = pr.getErrorStream();) {
 
-        final FastaParser parser = new FastaParser();
+            final FastaParser parser = new FastaParser();
 
-        ParsingStreamConsumer<BioSequence> sg = new ParsingStreamConsumer<BioSequence>( parser, is );
-        GenericStreamConsumer gsc = new GenericStreamConsumer( err );
-        sg.start();
-        gsc.start();
+            ParsingStreamConsumer<BioSequence> sg = new ParsingStreamConsumer<BioSequence>( parser, is );
+            GenericStreamConsumer gsc = new GenericStreamConsumer( err );
+            sg.start();
+            gsc.start();
 
-        try {
-            int exitVal = pr.waitFor();
-            Thread.sleep( 200 ); // Makes sure results are flushed.
-            is.close();
-            err.close();
-            Thread.sleep( 200 ); // Makes sure results are flushed.
-            log.debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
+            try {
+                int exitVal = pr.waitFor();
+                Thread.sleep( 200 ); // Makes sure results are flushed.
+                log.debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
 
-            return parser.getResults();
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+                return parser.getResults();
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( e );
+            }
         }
-
     }
 
     /**

@@ -50,9 +50,11 @@ public class HomologeneServiceTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         hgs = new HomologeneServiceImpl();
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/homologene/homologene.testdata.txt" );
-        assert is != null;
-        hgs.parseHomologGeneFile( is );
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/genome/homologene/homologene.testdata.txt" );) {
+            assert is != null;
+            hgs.parseHomologGeneFile( is );
+        }
     }
 
 }

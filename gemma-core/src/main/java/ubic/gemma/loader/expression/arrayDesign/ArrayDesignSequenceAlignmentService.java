@@ -2,6 +2,7 @@ package ubic.gemma.loader.expression.arrayDesign;
 
 import java.util.Collection;
 
+import ubic.gemma.apps.Blat;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -41,5 +42,12 @@ public interface ArrayDesignSequenceAlignmentService {
      * @param design
      */
     public abstract Collection<BlatResult> processArrayDesign( ArrayDesign design );
+
+    /**
+     * @param ad
+     * @param blat partly offered for testing
+     * @return
+     */
+    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Blat blat );
 
 }

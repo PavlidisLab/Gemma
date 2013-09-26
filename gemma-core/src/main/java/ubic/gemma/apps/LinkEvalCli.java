@@ -1493,13 +1493,12 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
     }
 
     private void outputRandomLinks() {
-        try {
-            assert firstProbes.size() == secondProbes.size() : "yikes";
-            Writer w = initRandLinksFile( outRandLinksFile );
+        assert firstProbes.size() == secondProbes.size() : "yikes";
+        try (Writer w = initRandLinksFile( outRandLinksFile );) {
+
             for ( int i = 0; i < firstProbes.size(); i++ ) {
                 w.write( firstProbes.get( i ).getId() + "\t" + secondProbes.get( i ).getId() + "\t\n" );
             }
-            w.flush();
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -1635,8 +1634,7 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
     }
 
     private void summarizeResults( int[][] results ) {
-        try {
-            Writer w = initHistFile( outFile );
+        try (Writer w = initHistFile( outFile );) {
 
             for ( int i = 0; i < MAX_GO_SIM; i++ ) {
                 double[] valsForBin = new double[numberOfRandomRuns];
@@ -1664,7 +1662,6 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
 
                 w.write( "\t" + mean + "\t" + stdev + "\t" + meanF + "\t" + stdevF + "\n" );
             }
-            w.flush();
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -1717,8 +1714,7 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
         subsetLinks = scoreMap.size();
-        try {
-            Writer write = initOutputFile( outFile );
+        try (Writer write = initOutputFile( outFile );) {
             for ( GenePair pair : scoreMap.keySet() ) {
                 List<Gene> firstGenes = pair.getFirstGenes();
                 List<Gene> secondGenes = pair.getSecondGenes();

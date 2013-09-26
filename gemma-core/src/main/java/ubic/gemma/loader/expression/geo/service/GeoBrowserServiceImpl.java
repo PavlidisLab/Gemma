@@ -296,19 +296,19 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      */
     private void initializeLocalInfo() {
         File f = getInfoStoreFile();
-        try {
-            if ( f.exists() ) {
-                FileInputStream fis = new FileInputStream( f );
-                ObjectInputStream ois = new ObjectInputStream( fis );
+        if ( f.exists() ) {
+            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis );) {
+
                 this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
                 ois.close();
                 fis.close();
-            } else {
-                this.localInfo = new HashMap<String, GeoRecord>();
+
+            } catch ( Exception e ) {
+                log.error( "Failed to load local GEO info, reinitializing..." );
+                this.localInfo = new HashMap<>();
             }
-        } catch ( Exception e ) {
-            log.error( "Failed to load local GEO info, reinitializing..." );
-            this.localInfo = new HashMap<String, GeoRecord>();
+        } else {
+            this.localInfo = new HashMap<>();
         }
         assert this.localInfo != null;
     }
@@ -329,9 +329,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      */
     private void saveLocalInfo() {
         if ( this.localInfo == null ) return;
-        try {
-            FileOutputStream fos = new FileOutputStream( getInfoStoreFile() );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
+        try (FileOutputStream fos = new FileOutputStream( getInfoStoreFile() );
+                ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+
             oos.writeObject( this.localInfo );
             oos.flush();
             oos.close();
@@ -348,15 +348,14 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
      * @throws IOException
      */
     protected String formatDetails( String details ) throws IOException {
-        try {
 
-            /*
-             * Bug 2690. There must be a better way.
-             */
-            details = details.replaceAll( "encoding=\"UTF-8\"", "" );
+        /*
+         * Bug 2690. There must be a better way.
+         */
+        details = details.replaceAll( "encoding=\"UTF-8\"", "" );
 
+        try (StringInputStream is = new StringInputStream( details );) {
             DocumentBuilder builder = factory.newDocumentBuilder();
-            StringInputStream is = new StringInputStream( details );
 
             Document document = builder.parse( is );
 

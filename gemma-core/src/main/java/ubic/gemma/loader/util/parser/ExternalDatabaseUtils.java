@@ -69,7 +69,7 @@ public class ExternalDatabaseUtils {
     }
 
     @Autowired
-    ExternalDatabaseDao externalDatabaseDao;
+    private ExternalDatabaseDao externalDatabaseDao;
 
     /**
      * @param seekPersistent if true, searches the database for an existing persistent copy. If false, just returns a

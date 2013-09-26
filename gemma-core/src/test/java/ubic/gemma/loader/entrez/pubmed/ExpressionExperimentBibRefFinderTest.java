@@ -40,7 +40,6 @@ public class ExpressionExperimentBibRefFinderTest {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentBibRefFinderTest.class.getName() );
 
-    @SuppressWarnings("null")
     @Test
     public void testLocatePrimaryReference() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();

@@ -254,143 +254,146 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     "Do not use this service to process platforms that do not use an probe-based technology." );
         }
 
-        BufferedReader b = new BufferedReader( new FileReader( source ) );
-        String line = null;
-        int numSkipped = 0;
+        try (BufferedReader b = new BufferedReader( new FileReader( source ) );) {
+            String line = null;
+            int numSkipped = 0;
 
-        log.info( "Removing any old associations" );
-        arrayDesignService.deleteGeneProductAssociations( arrayDesign );
+            log.info( "Removing any old associations" );
+            arrayDesignService.deleteGeneProductAssociations( arrayDesign );
 
-        while ( ( line = b.readLine() ) != null ) {
+            while ( ( line = b.readLine() ) != null ) {
 
-            if ( StringUtils.isBlank( line ) ) {
-                continue;
-            }
-            if ( line.startsWith( "#" ) ) {
-                continue;
-            }
+                if ( StringUtils.isBlank( line ) ) {
+                    continue;
+                }
+                if ( line.startsWith( "#" ) ) {
+                    continue;
+                }
 
-            String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
-            if ( fields.length != 3 ) {
-                throw new IOException( "Illegal format, expected three columns, got " + fields.length );
-            }
+                String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
+                if ( fields.length != 3 ) {
+                    throw new IOException( "Illegal format, expected three columns, got " + fields.length );
+                }
 
-            String probeId = fields[0];
-            String seqName = fields[1];
+                String probeId = fields[0];
+                String seqName = fields[1];
 
-            /*
-             * FIXME. We have to allow NCBI gene ids here.
-             */
-            String geneSymbol = fields[2];
+                /*
+                 * FIXME. We have to allow NCBI gene ids here.
+                 */
+                String geneSymbol = fields[2];
 
-            if ( StringUtils.isBlank( geneSymbol ) ) {
-                numSkipped++;
-                continue;
-            }
+                if ( StringUtils.isBlank( geneSymbol ) ) {
+                    numSkipped++;
+                    continue;
+                }
 
-            CompositeSequence c = compositeSequenceService.findByName( arrayDesign, probeId );
+                CompositeSequence c = compositeSequenceService.findByName( arrayDesign, probeId );
 
-            if ( c == null ) {
-                if ( log.isDebugEnabled() )
-                    log.debug( "No probe found for '" + probeId + "' on " + arrayDesign + ", skipping" );
-                numSkipped++;
-                continue;
-            }
+                if ( c == null ) {
+                    if ( log.isDebugEnabled() )
+                        log.debug( "No probe found for '" + probeId + "' on " + arrayDesign + ", skipping" );
+                    numSkipped++;
+                    continue;
+                }
 
-            // a probe can have more than one gene associated with it if so they are piped |
-            Collection<Gene> geneListProbe = new HashSet<Gene>();
+                // a probe can have more than one gene associated with it if so they are piped |
+                Collection<Gene> geneListProbe = new HashSet<Gene>();
 
-            // indicate multiple genes
-            Gene geneDetails = null;
+                // indicate multiple genes
+                Gene geneDetails = null;
 
-            StringTokenizer st = new StringTokenizer( geneSymbol, "|" );
-            while ( st.hasMoreTokens() ) {
-                String geneToken = st.nextToken().trim();
-                if ( ncbiIds ) {
-                    geneDetails = geneService.findByNCBIId( Integer.parseInt( geneToken ) );
+                StringTokenizer st = new StringTokenizer( geneSymbol, "|" );
+                while ( st.hasMoreTokens() ) {
+                    String geneToken = st.nextToken().trim();
+                    if ( ncbiIds ) {
+                        geneDetails = geneService.findByNCBIId( Integer.parseInt( geneToken ) );
+                    } else {
+                        geneDetails = geneService.findByOfficialSymbol( geneToken, taxon );
+                    }
+                    if ( geneDetails != null ) {
+                        geneListProbe.add( geneDetails );
+                    }
+                }
+
+                if ( geneListProbe.size() == 0 ) {
+                    log.warn( "No gene(s) found for '" + geneSymbol + "' in " + taxon + ", skipping" );
+                    numSkipped++;
+                    continue;
+                } else if ( geneListProbe.size() > 1 ) {
+                    // this is a common situation, when the geneSymbol actually has |-separated genes, so no need to
+                    // make a
+                    // lot of fuss.
+                    log.debug( "More than one gene found for '" + geneSymbol + "' in " + taxon );
+                }
+
+                BioSequence bs = c.getBiologicalCharacteristic();
+
+                if ( bs != null ) {
+                    if ( StringUtils.isNotBlank( seqName ) ) {
+                        bs = bioSequenceService.thaw( bs );
+                        if ( !bs.getName().equals( seqName ) ) {
+                            log.warn( "Sequence name '" + seqName + "' given for " + probeId
+                                    + " does not match existing entry " + bs.getName() + ", skipping" );
+                            numSkipped++;
+                            continue;
+                        }
+
+                    }
+                    // otherwise we assume everything is okay.
                 } else {
-                    geneDetails = geneService.findByOfficialSymbol( geneToken, taxon );
-                }
-                if ( geneDetails != null ) {
-                    geneListProbe.add( geneDetails );
-                }
-            }
-
-            if ( geneListProbe.size() == 0 ) {
-                log.warn( "No gene(s) found for '" + geneSymbol + "' in " + taxon + ", skipping" );
-                numSkipped++;
-                continue;
-            } else if ( geneListProbe.size() > 1 ) {
-                // this is a common situation, when the geneSymbol actually has |-separated genes, so no need to make a
-                // lot of fuss.
-                log.debug( "More than one gene found for '" + geneSymbol + "' in " + taxon );
-            }
-
-            BioSequence bs = c.getBiologicalCharacteristic();
-
-            if ( bs != null ) {
-                if ( StringUtils.isNotBlank( seqName ) ) {
-                    bs = bioSequenceService.thaw( bs );
-                    if ( !bs.getName().equals( seqName ) ) {
-                        log.warn( "Sequence name '" + seqName + "' given for " + probeId
-                                + " does not match existing entry " + bs.getName() + ", skipping" );
+                    // create one based on the text provided.
+                    if ( StringUtils.isBlank( seqName ) ) {
+                        log.warn( "You must provide sequence names for probes which are not already mapped. probeName="
+                                + probeId + " had no sequence associated and no name provided; skipping" );
                         numSkipped++;
                         continue;
                     }
 
+                    bs = BioSequence.Factory.newInstance();
+                    bs.setName( seqName );
+                    bs.setTaxon( taxon );
+                    bs.setDescription( "Imported from annotation file" );
+
+                    // Placeholder.
+                    bs.setType( SequenceType.OTHER );
+
+                    bs = bioSequenceService.create( bs );
+
+                    c.setBiologicalCharacteristic( bs );
+
+                    // fixme: possibly move outside the loop if that's faster.
+                    compositeSequenceService.update( c );
                 }
-                // otherwise we assume everything is okay.
-            } else {
-                // create one based on the text provided.
-                if ( StringUtils.isBlank( seqName ) ) {
-                    log.warn( "You must provide sequence names for probes which are not already mapped. probeName="
-                            + probeId + " had no sequence associated and no name provided; skipping" );
-                    numSkipped++;
-                    continue;
-                }
 
-                bs = BioSequence.Factory.newInstance();
-                bs.setName( seqName );
-                bs.setTaxon( taxon );
-                bs.setDescription( "Imported from annotation file" );
+                assert bs != null;
+                assert bs.getId() != null;
+                for ( Gene gene : geneListProbe ) {
+                    gene = geneService.thaw( gene );
+                    if ( gene.getProducts().size() == 0 ) {
+                        log.warn( "There are no gene products for " + gene
+                                + ", it cannot be mapped to probes. Skipping" );
+                        numSkipped++;
+                        continue;
+                    }
+                    for ( GeneProduct gp : gene.getProducts() ) {
+                        AnnotationAssociation association = AnnotationAssociation.Factory.newInstance();
+                        association.setBioSequence( bs );
+                        association.setGeneProduct( gp );
+                        association.setSource( sourceDB );
+                        annotationAssociationService.create( association );
+                    }
 
-                // Placeholder.
-                bs.setType( SequenceType.OTHER );
-
-                bs = bioSequenceService.create( bs );
-
-                c.setBiologicalCharacteristic( bs );
-
-                // fixme: possibly move outside the loop if that's faster.
-                compositeSequenceService.update( c );
-            }
-
-            assert bs.getId() != null;
-            for ( Gene gene : geneListProbe ) {
-                gene = geneService.thaw( gene );
-                if ( gene.getProducts().size() == 0 ) {
-                    log.warn( "There are no gene products for " + gene + ", it cannot be mapped to probes. Skipping" );
-                    numSkipped++;
-                    continue;
-                }
-                for ( GeneProduct gp : gene.getProducts() ) {
-                    AnnotationAssociation association = AnnotationAssociation.Factory.newInstance();
-                    association.setBioSequence( bs );
-                    association.setGeneProduct( gp );
-                    association.setSource( sourceDB );
-                    annotationAssociationService.create( association );
                 }
 
             }
 
+            arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+
+            this.deleteOldFiles( arrayDesign );
+
+            log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
         }
-
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-
-        this.deleteOldFiles( arrayDesign );
-
-        log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
-        b.close();
     }
 
     /*

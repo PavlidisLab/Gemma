@@ -127,9 +127,6 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         assertNotNull( ad );
 
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/designLoadTests/expressionDataBrain2003TestFile.txt" );
-
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
@@ -142,8 +139,11 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         metaData.getArrayDesigns().add( ad );
 
-        ee = simpleExpressionDataLoaderService.create( metaData, data );
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/designLoadTests/expressionDataBrain2003TestFile.txt" );) {
 
+            ee = simpleExpressionDataLoaderService.create( metaData, data );
+        }
         // eeService.thawLite( ee );
     }
 
@@ -157,16 +157,17 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
         /*
          * The following file has a bug in it. It should fail.
          */
-        InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003FirstBadFile.txt" );
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003FirstBadFile.txt" );) {
 
-        try {
-            experimentalDesignImporter.importDesign( ee, is, true ); // dry run, should fail.
-            fail( "Should have gotten an error when loading a bad file" );
-        } catch ( IOException ok ) {
-            // ok
+            try {
+                experimentalDesignImporter.importDesign( ee, is, true ); // dry run, should fail.
+                fail( "Should have gotten an error when loading a bad file" );
+            } catch ( IOException ok ) {
+                // ok
+            }
+            is.close();
         }
-        is.close();
         /*
          * make sure we didn't load anything
          */
@@ -177,19 +178,20 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
         /*
          * Now try the good one.
          */
-        is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" );
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" );) {
 
-        experimentalDesignImporter.importDesign( ee, is, true ); // dry run, should pass
-        is.close();
+            experimentalDesignImporter.importDesign( ee, is, true ); // dry run, should pass
+        }
 
         /*
          * Reopen the file.
          */
-        is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" );
-        experimentalDesignImporter.importDesign( ee, is, false ); // not a dry run, should pass.
-        is.close();
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" );) {
+            experimentalDesignImporter.importDesign( ee, is, false ); // not a dry run, should pass.
+        }
+
         ee = this.expressionExperimentService.load( ee.getId() );
         this.aclTestUtils.checkEEAcls( ee );
         ee = this.expressionExperimentService.thawLite( ee );

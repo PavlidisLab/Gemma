@@ -210,79 +210,78 @@ public class QuantitationTypeParameterGuesserTest {
      */
     @Test
     public void testTortureQuantitationTypes() throws Exception {
-
-        InputStream is = new FileInputStream(
-                FileTools.resourceToPath( "/data/loader/expression/quantitationTypes.txt" ) );
-        BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );
-        dis.readLine(); // throw away header.
-        String line = null;
-
         Collection<String> failed = new ArrayList<String>();
         Collection<String> passed = new ArrayList<String>();
-        int lineNum = 1;
-        while ( ( line = dis.readLine() ) != null ) {
-            String[] fields = line.split( "\\t" );
-            String name = fields[1];
-            String description = fields[2];
-            Boolean isBackground = fields[3].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
-            PrimitiveType representation = PrimitiveType.fromString( fields[4] );
-            GeneralType generalType = GeneralType.fromString( fields[5] );
-            StandardQuantitationType type = StandardQuantitationType.fromString( fields[6] );
-            ScaleType scale = ScaleType.fromString( fields[7] );
+        try (InputStream is = new FileInputStream(
+                FileTools.resourceToPath( "/data/loader/expression/quantitationTypes.txt" ) );
+                BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );) {
+            dis.readLine(); // throw away header.
+            String line = null;
 
-            Boolean isPreferred = fields[8].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
-            Boolean isNormalized = fields[9].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
-            Boolean isBackgroundSubtracted = fields[10].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
-            Boolean isRatio = fields[11].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+            int lineNum = 1;
+            while ( ( line = dis.readLine() ) != null ) {
+                String[] fields = line.split( "\\t" );
+                String name = fields[1];
+                String description = fields[2];
+                Boolean isBackground = fields[3].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+                PrimitiveType representation = PrimitiveType.fromString( fields[4] );
+                GeneralType generalType = GeneralType.fromString( fields[5] );
+                StandardQuantitationType type = StandardQuantitationType.fromString( fields[6] );
+                ScaleType scale = ScaleType.fromString( fields[7] );
 
-            qt = QuantitationType.Factory.newInstance();
-            qt.setName( name );
-            qt.setDescription( description );
-            QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, name, description );
+                Boolean isPreferred = fields[8].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+                Boolean isNormalized = fields[9].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+                Boolean isBackgroundSubtracted = fields[10].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
+                Boolean isRatio = fields[11].equals( "0" ) ? Boolean.FALSE : Boolean.TRUE;
 
-            if ( qt.getGeneralType() != generalType ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed general type for '" + fields[1] + " (" + fields[2] + ")"
-                        + "', got " + qt.getGeneralType() );
-            } else if ( qt.getType() != type ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed standard type for '" + fields[1] + " (" + fields[2] + ")"
-                        + "', got " + qt.getType() );
-            } else if ( qt.getRepresentation() != representation ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed representation type for '" + fields[1] + " (" + fields[2]
-                        + ")" + "', got " + qt.getRepresentation() );
-            } else if ( qt.getIsBackground() != isBackground ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed isBackground for '" + fields[1] + " (" + fields[2] + ")"
-                        + "', got " + qt.getIsBackground() );
-            } else if ( qt.getScale() != scale ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed scale type for '" + fields[1] + " (" + fields[2] + ")"
-                        + "', got " + qt.getScale() );
-            } else if ( qt.getIsBackgroundSubtracted() != isBackgroundSubtracted ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed isBackgroundSubtracted for '" + fields[1] + " ("
-                        + fields[2] + ")" + "', got " + qt.getIsBackgroundSubtracted() );
-            } else if ( qt.getIsPreferred() != isPreferred ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed isPreferred for '" + fields[1] + " (" + fields[2] + ")"
-                        + "', got " + qt.getIsPreferred() );
-            } else if ( qt.getIsNormalized() != isNormalized ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed isNormalized for '" + fields[1] + " (" + fields[2] + ")"
-                        + "', got " + qt.getIsNormalized() );
-            } else if ( qt.getIsRatio() != isRatio ) {
-                failed.add( line );
-                log.info( ">>> Line " + lineNum + ": Failed isRatio for '" + fields[1] + " (" + fields[2] + ")"
-                        + "', got " + qt.getIsRatio() );
-            } else {
-                passed.add( line );
+                qt = QuantitationType.Factory.newInstance();
+                qt.setName( name );
+                qt.setDescription( description );
+                QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, name, description );
+
+                if ( qt.getGeneralType() != generalType ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed general type for '" + fields[1] + " (" + fields[2]
+                            + ")" + "', got " + qt.getGeneralType() );
+                } else if ( qt.getType() != type ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed standard type for '" + fields[1] + " (" + fields[2]
+                            + ")" + "', got " + qt.getType() );
+                } else if ( qt.getRepresentation() != representation ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed representation type for '" + fields[1] + " ("
+                            + fields[2] + ")" + "', got " + qt.getRepresentation() );
+                } else if ( qt.getIsBackground() != isBackground ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed isBackground for '" + fields[1] + " (" + fields[2]
+                            + ")" + "', got " + qt.getIsBackground() );
+                } else if ( qt.getScale() != scale ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed scale type for '" + fields[1] + " (" + fields[2] + ")"
+                            + "', got " + qt.getScale() );
+                } else if ( qt.getIsBackgroundSubtracted() != isBackgroundSubtracted ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed isBackgroundSubtracted for '" + fields[1] + " ("
+                            + fields[2] + ")" + "', got " + qt.getIsBackgroundSubtracted() );
+                } else if ( qt.getIsPreferred() != isPreferred ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed isPreferred for '" + fields[1] + " (" + fields[2] + ")"
+                            + "', got " + qt.getIsPreferred() );
+                } else if ( qt.getIsNormalized() != isNormalized ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed isNormalized for '" + fields[1] + " (" + fields[2]
+                            + ")" + "', got " + qt.getIsNormalized() );
+                } else if ( qt.getIsRatio() != isRatio ) {
+                    failed.add( line );
+                    log.info( ">>> Line " + lineNum + ": Failed isRatio for '" + fields[1] + " (" + fields[2] + ")"
+                            + "', got " + qt.getIsRatio() );
+                } else {
+                    passed.add( line );
+                }
+                lineNum++;
+
             }
-            lineNum++;
-
         }
-
         StringBuilder buf = new StringBuilder();
         buf.append( "\n***** PASSED: " + passed.size() + " *******\n" );
 

@@ -109,12 +109,13 @@ public class BiomartEnsemblNcbiFetcher {
             throw new RuntimeException( e );
         }
 
-        BufferedReader biomartBufferedReader = this.readFile( url, data );
-        File EnsemblEntrezHGCNProteinMappingFile = this.getFileName( bioMartTaxonName );
-        String headerForEnsemblEntrezHGCNProteinMapping = getHeaderForBiomartFileForProteinQuery( bioMartTaxonName );
+        try (BufferedReader biomartBufferedReader = this.readFile( url, data );) {
+            File EnsemblEntrezHGCNProteinMappingFile = this.getFileName( bioMartTaxonName );
+            String headerForEnsemblEntrezHGCNProteinMapping = getHeaderForBiomartFileForProteinQuery( bioMartTaxonName );
 
-        return this.writeFile( EnsemblEntrezHGCNProteinMappingFile, headerForEnsemblEntrezHGCNProteinMapping,
-                biomartBufferedReader );
+            return this.writeFile( EnsemblEntrezHGCNProteinMappingFile, headerForEnsemblEntrezHGCNProteinMapping,
+                    biomartBufferedReader );
+        }
 
     }
 
@@ -208,16 +209,16 @@ public class BiomartEnsemblNcbiFetcher {
      */
     private File writeFile( File file, String headerForFile, BufferedReader reader ) throws IOException {
 
-        BufferedWriter writer = new BufferedWriter( new FileWriter( file ) );
-        writer.append( headerForFile + "\n" );
-        String line;
-        while ( ( line = reader.readLine() ) != null ) {
-            if ( line.contains( "ERROR" ) && line.contains( "Exception" ) ) {
-                throw new IOException( "Error from BioMart: " + line );
+        try (BufferedWriter writer = new BufferedWriter( new FileWriter( file ) );) {
+            writer.append( headerForFile + "\n" );
+            String line;
+            while ( ( line = reader.readLine() ) != null ) {
+                if ( line.contains( "ERROR" ) && line.contains( "Exception" ) ) {
+                    throw new IOException( "Error from BioMart: " + line );
+                }
+                writer.append( line + "\n" );
             }
-            writer.append( line + "\n" );
         }
-        writer.close();
         reader.close();
         return file;
 

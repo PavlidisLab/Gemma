@@ -38,7 +38,7 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
     BioSequenceService bioSequenceService;
 
     @Test
-    public void testGetTranscriptBioSequences() {
+    public void testGetTranscriptBioSequences() throws Exception {
 
         Taxon taxon = taxonService.findByCommonName( "mouse" );
 
@@ -47,8 +47,9 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/goldenPathSequenceTest.txt" );
-        gp.load( is );
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/goldenPathSequenceTest.txt" );) {
+            gp.load( is );
+        }
 
     }
 

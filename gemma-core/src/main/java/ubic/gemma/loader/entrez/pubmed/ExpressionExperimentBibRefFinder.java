@@ -89,13 +89,19 @@ public class ExpressionExperimentBibRefFinder {
 
         Pattern pat = Pattern.compile( PUBMEDREF_REGEX );
 
+        URLConnection conn;
         try {
             url = new URL( GEO_SERIES_URL_BASE + geoSeries );
-
-            URLConnection conn = url.openConnection();
+            conn = url.openConnection();
             conn.connect();
-            InputStream is = conn.getInputStream();
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        } catch ( IOException e1 ) {
+            log.error( e1, e1 );
+            throw new RuntimeException( "Could not get data from remote server", e1 );
+        }
+
+        try (InputStream is = conn.getInputStream();
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+
             String line = null;
             while ( ( line = br.readLine() ) != null ) {
                 Matcher mat = pat.matcher( line );
@@ -107,9 +113,7 @@ public class ExpressionExperimentBibRefFinder {
                 }
             }
             is.close();
-        } catch ( MalformedURLException e ) {
-            log.error( e, e );
-            throw new RuntimeException( "Invalid URL " + url, e );
+
         } catch ( IOException e ) {
             log.error( e, e );
             throw new RuntimeException( "Could not get data from remote server", e );

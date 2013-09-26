@@ -144,45 +144,10 @@ public class BatchInfoParser {
 
             ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
 
-            try {
+            try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );) {
 
-                String providerName = arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed
-                        .getDesignProvider().getName();
-                if ( providerName.equalsIgnoreCase( "affymetrix" )
-                        || arrayDesignUsed.getName().toLowerCase().contains( "affymetrix" ) ) {
-                    scanDateExtractor = new AffyScanDateExtractor();
-                } else if ( providerName.equalsIgnoreCase( "agilent" )
-                        || arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) {
-                    scanDateExtractor = new AgilentScanDateExtractor();
-                } else if ( providerName.equalsIgnoreCase( "illumina" )
-                        || arrayDesignUsed.getName().toLowerCase().contains( "illumina" )
-                        || arrayDesignUsed.getName().toLowerCase().contains( "sentrix" ) ) {
+                locateExtractor( arrayDesignUsed, ba, f );
 
-                    /*
-                     * Not all illumina arrays are beadarrays - e.g. GPL6799.
-                     */
-                    if ( f.getName().contains( ".gpr" ) ) {
-                        /*
-                         * We'll give it a try.
-                         */
-                        log.info( "Looks like an Illumina spotted array with GPR formatted scan file: " + f );
-                        scanDateExtractor = new GenericScanFileDateExtractor();
-                    } else {
-                        /*
-                         * We can attempt to use the slide number as the key, if the data is in the beadarray file
-                         * format.s
-                         */
-
-                        throw new UnsupportedRawdataFileFormatException( arrayDesignUsed
-                                + " not matched to a supported platform type for scan date extraction for " + ba
-                                + "(Illumina files do not contain dates)" );
-                    }
-                } else {
-                    log.warn( "Unknown provider/format, attempting a generic extractor for " + f );
-                    scanDateExtractor = new GenericScanFileDateExtractor();
-                }
-
-                InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
                 Date d = scanDateExtractor.extract( is );
 
                 // sanity check. Strictly speaking, due to time zone differences it is theoretically possible for this
@@ -219,6 +184,48 @@ public class BatchInfoParser {
         }
 
         return result;
+    }
+
+    /**
+     * @param arrayDesignUsed
+     * @param ba
+     * @param f
+     */
+    private void locateExtractor( ArrayDesign arrayDesignUsed, BioAssay ba, File f ) {
+        String providerName = arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed.getDesignProvider()
+                .getName();
+        if ( providerName.equalsIgnoreCase( "affymetrix" )
+                || arrayDesignUsed.getName().toLowerCase().contains( "affymetrix" ) ) {
+            scanDateExtractor = new AffyScanDateExtractor();
+        } else if ( providerName.equalsIgnoreCase( "agilent" )
+                || arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) {
+            scanDateExtractor = new AgilentScanDateExtractor();
+        } else if ( providerName.equalsIgnoreCase( "illumina" )
+                || arrayDesignUsed.getName().toLowerCase().contains( "illumina" )
+                || arrayDesignUsed.getName().toLowerCase().contains( "sentrix" ) ) {
+
+            /*
+             * Not all illumina arrays are beadarrays - e.g. GPL6799.
+             */
+            if ( f.getName().contains( ".gpr" ) ) {
+                /*
+                 * We'll give it a try.
+                 */
+                log.info( "Looks like an Illumina spotted array with GPR formatted scan file: " + f );
+                scanDateExtractor = new GenericScanFileDateExtractor();
+            } else {
+                /*
+                 * We can attempt to use the slide number as the key, if the data is in the beadarray file format.s
+                 */
+
+                throw new UnsupportedRawdataFileFormatException( arrayDesignUsed
+                        + " not matched to a supported platform type for scan date extraction for " + ba
+                        + "(Illumina files do not contain dates)" );
+            }
+        } else {
+            log.warn( "Unknown provider/format, attempting a generic extractor for " + f );
+            scanDateExtractor = new GenericScanFileDateExtractor();
+        }
     }
 
     /**

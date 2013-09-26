@@ -18,16 +18,21 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Keyword;
@@ -39,13 +44,26 @@ import ubic.gemma.model.expression.biomaterial.Compound;
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedXMLParserTest extends TestCase {
+public class PubMedXMLParserTest {
 
     private static Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
 
-    InputStream testStream;
-    PubMedXMLParser testParser;
+    private InputStream testStream;
+    private PubMedXMLParser testParser;
 
+    @Before
+    public void setUp() throws Exception {
+        testParser = new PubMedXMLParser();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        testStream.close();
+        testParser = null;
+        testStream = null;
+    }
+
+    @Test
     public void testParse() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
@@ -74,70 +92,7 @@ public class PubMedXMLParserTest extends TestCase {
         }
     }
 
-    public void testParseMultipartAbstract() throws Exception {
-        try {
-            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mpabs.xml" );
-
-            Collection<BibliographicReference> brl = testParser.parse( testStream );
-            BibliographicReference br = brl.iterator().next();
-            assertNotNull( br.getAbstractText() );
-            assertTrue( br.getAbstractText().startsWith( "PURPOSE: To dete" ) );
-            assertTrue( br.getAbstractText().contains(
-                    "METHODS: RGCs of Brown Norway rats were retrogradely labeled bilaterally with the "
-                            + "fluorescent dye 4-(4-(dihexadecylamino)styryl)-N" ) );
-            assertTrue( br.getAbstractText()
-                    .contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
-            log.info( br.getAbstractText() );
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
-        }
-    }
-
-    /**
-     * PMID 7914452 is an example of a retracted article.
-     * 
-     * @throws Exception
-     */
-    public void testParseRetracted() throws Exception {
-        try {
-            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-retracted.xml" );
-
-            Collection<BibliographicReference> brl = testParser.parse( testStream );
-            BibliographicReference br = brl.iterator().next();
-            assertNotNull( br.getAbstractText() );
-            assertEquals(
-                    "Retracted [In: Garey CE, Schwarzman AL, Rise ML, Seyfried TN. Nat Genet. 1995 Sep;11(1):104 PMID=7550304]",
-                    br.getDescription() );
-
-            boolean ok = false;
-            for ( PublicationType pt : br.getPublicationTypes() ) {
-                if ( "Retracted Publication".equals( pt.getType() ) ) {
-                    ok = true;
-                }
-            }
-            assertTrue( ok );
-
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
-        }
-    }
-
+    @Test
     public void testParseBook() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-fullbook.xml" );
@@ -183,6 +138,7 @@ public class PubMedXMLParserTest extends TestCase {
      * 
      * @throws Exception
      */
+    @Test
     public void testParseBookArticle() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-bookarticle.xml" );
@@ -220,6 +176,7 @@ public class PubMedXMLParserTest extends TestCase {
         }
     }
 
+    @Test
     public void testParseMesh() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mesh-test.xml" );
@@ -251,6 +208,7 @@ public class PubMedXMLParserTest extends TestCase {
      * 
      * @throws Exception
      */
+    @Test
     public void testParseMulti() throws Exception {
         try {
             testStream = new GZIPInputStream(
@@ -293,17 +251,69 @@ public class PubMedXMLParserTest extends TestCase {
         }
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        testParser = new PubMedXMLParser();
+    @Test
+    public void testParseMultipartAbstract() throws Exception {
+        try {
+            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mpabs.xml" );
+
+            Collection<BibliographicReference> brl = testParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertNotNull( br.getAbstractText() );
+            assertTrue( br.getAbstractText().startsWith( "PURPOSE: To dete" ) );
+            assertTrue( br.getAbstractText().contains(
+                    "METHODS: RGCs of Brown Norway rats were retrogradely labeled bilaterally with the "
+                            + "fluorescent dye 4-(4-(dihexadecylamino)styryl)-N" ) );
+            assertTrue( br.getAbstractText()
+                    .contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
+            log.info( br.getAbstractText() );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
+        }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        testStream.close();
-        testParser = null;
-        testStream = null;
+    /**
+     * PMID 7914452 is an example of a retracted article.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testParseRetracted() throws Exception {
+        try {
+            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-retracted.xml" );
+
+            Collection<BibliographicReference> brl = testParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertNotNull( br.getAbstractText() );
+            assertEquals(
+                    "Retracted [In: Garey CE, Schwarzman AL, Rise ML, Seyfried TN. Nat Genet. 1995 Sep;11(1):104 PMID=7550304]",
+                    br.getDescription() );
+
+            boolean ok = false;
+            for ( PublicationType pt : br.getPublicationTypes() ) {
+                if ( "Retracted Publication".equals( pt.getType() ) ) {
+                    ok = true;
+                }
+            }
+            assertTrue( ok );
+
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
+        }
     }
 }

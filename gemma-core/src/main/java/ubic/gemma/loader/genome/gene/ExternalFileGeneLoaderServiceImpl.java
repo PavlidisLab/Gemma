@@ -88,11 +88,14 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     public int load( String geneFile, String taxonName ) throws Exception {
 
         log.info( "Starting loading gene file " + geneFile + " for taxon " + taxonName );
-        BufferedReader bufferedReaderGene = readFile( geneFile );
         Taxon taxon = validateTaxon( taxonName );
         log.info( "Taxon and file validation passed for " + geneFile + " for taxon " + taxonName );
-        int loadedGeneCount = load( bufferedReaderGene, taxon );
-        return loadedGeneCount;
+
+        try (BufferedReader bufferedReaderGene = readFile( geneFile );) {
+
+            int loadedGeneCount = load( bufferedReaderGene, taxon );
+            return loadedGeneCount;
+        }
     }
 
     /**

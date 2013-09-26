@@ -88,11 +88,13 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
         assertNotNull( newee );
         newee = expressionExperimentService.thawLite( newee );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( newee );
-        InputStream deis = this.getClass().getResourceAsStream( "/data/loader/expression/geo/gse18162Short/design.txt" );
-        experimentalDesignImporter.importDesign( newee, deis );
-
+        try (InputStream deis = this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18162Short/design.txt" );) {
+            experimentalDesignImporter.importDesign( newee, deis );
+        }
         ExpressionDataDoubleMatrix comBat = correctionService.comBat( newee );
         assertNotNull( comBat );
+
     }
 
     private void cleanup() {

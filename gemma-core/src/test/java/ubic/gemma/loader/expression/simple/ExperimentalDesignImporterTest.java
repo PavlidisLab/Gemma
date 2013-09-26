@@ -81,10 +81,6 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     @Before
     public void setup() throws Exception {
-
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/experimentalDesignTestData.txt" );
-
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
         Taxon human = taxonService.findByCommonName( "human" );
@@ -106,9 +102,11 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         metaData.getArrayDesigns().add( ad );
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/expression/experimentalDesignTestData.txt" );) {
 
-        ee = simpleExpressionDataLoaderService.create( metaData, data );
-
+            ee = simpleExpressionDataLoaderService.create( metaData, data );
+        }
         ee = eeService.thawLite( ee );
     }
 
@@ -119,10 +117,11 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Test
     public final void testParse() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );) {
 
-        experimentalDesignImporter.importDesign( ee, is, false );
-
+            experimentalDesignImporter.importDesign( ee, is, false );
+        }
         ee = eeService.thawLite( ee );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
@@ -140,25 +139,26 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Test
     public final void testParseDryRun() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );) {
 
-        experimentalDesignImporter.importDesign( ee, is, true );
+            experimentalDesignImporter.importDesign( ee, is, true );
+        }
 
         ee = eeService.thawLite( ee );
         assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
     }
 
-    @Test
-    public final void testParseFailedDryRun() {
+    @Test(expected = Exception.class)
+    public final void testParseFailedDryRun() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/experimentalDesignTestBad.txt" );) {
 
-        try {
             experimentalDesignImporter.importDesign( ee, is, true );
             fail( "Should have gotten an Exception" );
-        } catch ( Exception e ) {
-            // ok
+
         }
 
     }
@@ -171,10 +171,12 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Test
     public final void testParseWhereExtraValue() throws Exception {
 
-        InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/experimentalDesignTestExtra.txt" );) {
 
-        experimentalDesignImporter.importDesign( ee, is, false );
+            experimentalDesignImporter.importDesign( ee, is, false );
+        }
+
         ee = eeService.thawLite( ee );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();

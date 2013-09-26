@@ -154,16 +154,16 @@ public class ProbeMapperTest extends TestCase {
         tester.add( new Double( 100 ) );
         tester.add( new Double( 50 ) );
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" );
-        BlatResultParser brp = new BlatResultParser();
-        Taxon m = Taxon.Factory.newInstance();
-        m.setCommonName( "mouse" );
-        brp.setTaxon( m );
-        brp.parse( is );
-        blatres = brp.getResults();
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" );) {
+            BlatResultParser brp = new BlatResultParser();
+            Taxon m = Taxon.Factory.newInstance();
+            m.setCommonName( "mouse" );
+            brp.setTaxon( m );
+            brp.parse( is );
+            blatres = brp.getResults();
 
-        assert blatres != null && blatres.size() > 0;
-
+            assert blatres != null && blatres.size() > 0;
+        }
         databaseHost = Settings.getString( "gemma.testdb.host" );
         databaseUser = Settings.getString( "gemma.testdb.user" );
         databasePassword = Settings.getString( "gemma.testdb.password" );

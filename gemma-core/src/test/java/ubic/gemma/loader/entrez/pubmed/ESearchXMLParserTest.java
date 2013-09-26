@@ -39,8 +39,8 @@ public class ESearchXMLParserTest extends TestCase {
      * Test method for 'ubic.gemma.loader.entrez.pubmed.ESearchXMLParser.parse(InputStream)'
      */
     public void testParse() throws Exception {
-        try {
-            InputStream stream = ESearchXMLParserTest.class.getResourceAsStream( "/data/esearchresult.xml" );
+        try (InputStream stream = ESearchXMLParserTest.class.getResourceAsStream( "/data/esearchresult.xml" );) {
+
             assert stream != null;
             ESearchXMLParser parser = new ESearchXMLParser();
             Collection<String> ids = parser.parse( stream );

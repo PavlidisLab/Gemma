@@ -28,7 +28,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.apps.Blat;
+import ubic.gemma.apps.ShellDelegatingBlat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -283,7 +285,7 @@ public class ProbeMapperImpl implements ProbeMapper {
     @Override
     public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
 
-        Blat b = new Blat();
+        Blat b = new ShellDelegatingBlat();
         b.setBlatScoreThreshold( ( new ProbeMapperConfig() ).getBlatScoreThreshold() );
         Collection<BlatResult> results;
         try {
@@ -305,7 +307,7 @@ public class ProbeMapperImpl implements ProbeMapper {
     @Override
     public Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
             Collection<BioSequence> sequences, ProbeMapperConfig config ) {
-        Blat b = new Blat();
+        Blat b = new ShellDelegatingBlat();
         b.setBlatScoreThreshold( config.getBlatScoreThreshold() );
 
         try {

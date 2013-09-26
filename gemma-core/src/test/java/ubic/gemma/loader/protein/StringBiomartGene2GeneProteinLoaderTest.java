@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.testing.PersistentDummyObjectHelper;
 
 /**
  * Tests the loader for string protein interactions: Test 3 out of the 4 scenarios for loading protein protein
@@ -169,7 +170,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         g.setNcbiGeneId( Integer.parseInt( ncbiId ) );
         g.setTaxon( t );
         Collection<GeneProduct> ggg = new HashSet<GeneProduct>();
-        ggg.add( testHelper.getTestNonPersistentGeneProduct( g ) );
+        ggg.add( PersistentDummyObjectHelper.getTestNonPersistentGeneProduct( g ) );
         g.getProducts().addAll( ggg );
         g = ( Gene ) persisterHelper.persist( g );
         return g;

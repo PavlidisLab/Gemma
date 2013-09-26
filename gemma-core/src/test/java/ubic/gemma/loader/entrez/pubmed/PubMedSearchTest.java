@@ -18,14 +18,16 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 
@@ -33,13 +35,14 @@ import ubic.gemma.model.common.description.BibliographicReference;
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedSearchTest extends TestCase {
+public class PubMedSearchTest {
 
     private static Log log = LogFactory.getLog( PubMedSearchTest.class.getName() );
 
     /*
      * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
+    @Test
     public void testSearchAndRetrieveByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
@@ -68,6 +71,7 @@ public class PubMedSearchTest extends TestCase {
     /*
      * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
+    @Test
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
@@ -89,8 +93,7 @@ public class PubMedSearchTest extends TestCase {
         return;
     }
 
-  
-
+    @Test
     public void testSearchAndRetrieveIdByHTTPBookshelf() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
@@ -106,6 +109,7 @@ public class PubMedSearchTest extends TestCase {
         }
     }
 
+    @Test
     public void testSearchAndRetrievIdsByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();

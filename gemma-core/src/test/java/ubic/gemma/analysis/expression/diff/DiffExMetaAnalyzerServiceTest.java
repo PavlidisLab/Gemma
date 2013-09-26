@@ -57,6 +57,8 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -66,7 +68,8 @@ import ubic.gemma.persistence.TableMaintenenceUtil;
 
 /**
  * This is a test that requires complex setup: loading several data sets, information on genes, array design
- * annotations, conducting differential expression, and finally the meta-analysis.
+ * annotations, conducting differential expression, and finally the meta-analysis. It's somewhat of a kitchensink test -
+ * some non-meta-analysis related tests are included.
  * 
  * @author Paul
  * @version $Id$
@@ -84,6 +87,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
 
     @Autowired
     private ExperimentalDesignImporter designImporter;
@@ -121,6 +127,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     private boolean loadedGenes = false;
 
     @Autowired
+    private TableMaintenenceUtil maintenenceUtil;
+
+    @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Autowired
@@ -134,10 +143,11 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * Add genes.
          */
         if ( !loadedGenes ) {
-            InputStream geneFile = this.getClass().getResourceAsStream(
-                    "/data/loader/expression/geo/meta-analysis/human.genes.subset.for.import.txt" );
-            externalFileGeneLoaderService.load( geneFile, "human" );
-            loadedGenes = true;
+            try (InputStream geneFile = this.getClass().getResourceAsStream(
+                    "/data/loader/expression/geo/meta-analysis/human.genes.subset.for.import.txt" );) {
+                externalFileGeneLoaderService.load( geneFile, "human" );
+                loadedGenes = true;
+            }
         }
 
         // load three experiments; all have GDS's so they also get experimental designs.
@@ -391,15 +401,52 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         }
 
         // this is a little extra test, related to bug 3341
-        differentialExpressionResultService.thaw( rs1 );
+        {
+            differentialExpressionResultService.thaw( rs1 );
 
-        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = differentialExpressionResultService
-                .getExperimentalFactors( rs1.getResults() );
-        assertTrue( factorsByResultMap.keySet().containsAll( rs1.getResults() ) );
+            Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = differentialExpressionResultService
+                    .getExperimentalFactors( rs1.getResults() );
+            assertTrue( factorsByResultMap.keySet().containsAll( rs1.getResults() ) );
+        }
 
         // bug 3722
         analysisService.delete( metaAnalysis );
 
+        /*
+         * Kitchen sink extra tests.
+         */
+        {
+            Collection<Gene> geneCollection = geneService.findByOfficialSymbol( "ACTA2" );
+            assertTrue( !geneCollection.isEmpty() );
+            Gene g = geneCollection.iterator().next();
+            assertNotNull( g );
+            long count = geneService.getCompositeSequenceCountById( g.getId() );
+            assertTrue( count != 0 );
+
+            Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
+            assertTrue( compSequences.size() != 0 );
+
+            Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g );
+            assertEquals( 1, collection.size() );
+
+            ArrayDesign ad = experimentService.getArrayDesignsUsed( ds1 ).iterator().next();
+            collection = compositeSequenceService.findByGene( g, ad );
+            assertEquals( 1, collection.size() );
+
+            Collection<CompositeSequence> css = compositeSequenceService.findByName( "200974_at" );
+            assertTrue( !css.isEmpty() );
+            CompositeSequence cs = css.iterator().next();
+            Collection<Gene> genes = compositeSequenceService.getGenes( cs );
+            assertEquals( 1, genes.size() );
+            assertEquals( g, genes.iterator().next() );
+
+            maintenenceUtil.disableEmail();
+            maintenenceUtil.updateGene2CsEntries();
+
+            Map<CompositeSequence, Collection<Gene>> gm = compositeSequenceService.getGenes( css );
+            assertEquals( 1, gm.size() );
+            assertEquals( g, gm.values().iterator().next().iterator().next() );
+        }
     }
 
     /**
@@ -529,14 +576,4 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         return buf.toString();
     }
 
-    // private String logFailure( GeneDifferentialExpressionMetaAnalysis metaAnalysis ) {
-    // StringBuilder buf = new StringBuilder();
-    // for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
-    // buf.append( "----" );
-    // String gene = r.getGene().getOfficialSymbol();
-    // buf.append( logComponentResults( r, gene ) );
-    // }
-    //
-    // return buf.toString();
-    // }
 }

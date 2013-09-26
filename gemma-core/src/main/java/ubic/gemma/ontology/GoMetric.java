@@ -687,6 +687,8 @@ public class GoMetric {
                 throw new UnsupportedOperationException( "percent not supported yet" );
             case simple:
                 break;
+            default:
+                break;
         }
 
         return score;
@@ -694,7 +696,7 @@ public class GoMetric {
 
     /**
      * @param gene
-     * @returndirect GO annotation terms
+     * @return direct GO annotation terms
      */
     private Collection<OntologyTerm> getOntologyTerms( Gene gene ) {
 

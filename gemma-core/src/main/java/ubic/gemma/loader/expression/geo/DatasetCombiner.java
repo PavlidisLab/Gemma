@@ -155,20 +155,22 @@ public class DatasetCombiner {
 
         try {
             url = new URL( ENTREZ_GEO_QUERY_URL_BASE + datasetAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
-
             URLConnection conn = url.openConnection();
             conn.connect();
-            InputStream is = conn.getInputStream();
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String line = null;
-            while ( ( line = br.readLine() ) != null ) {
-                Matcher mat = pat.matcher( line );
-                if ( mat.find() ) {
-                    String capturedAccession = mat.group( 1 );
-                    associatedSeriesAccession.add( capturedAccession );
+
+            try (InputStream is = conn.getInputStream();
+                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+
+                String line = null;
+                while ( ( line = br.readLine() ) != null ) {
+                    Matcher mat = pat.matcher( line );
+                    if ( mat.find() ) {
+                        String capturedAccession = mat.group( 1 );
+                        associatedSeriesAccession.add( capturedAccession );
+                    }
                 }
+                is.close();
             }
-            is.close();
         } catch ( MalformedURLException e ) {
             log.error( e, e );
             throw new RuntimeException( "Invalid URL " + url, e );
@@ -225,9 +227,7 @@ public class DatasetCombiner {
     public static Collection<String> findGDSforGSE( String seriesAccession ) {
 
         Collection<String> associatedDatasetAccessions = new HashSet<String>();
-
         try {
-
             String details = EutilFetch.fetch( "gds", seriesAccession, 100 );
             if ( details.equalsIgnoreCase( "no results" ) ) {
                 return associatedDatasetAccessions;
@@ -247,26 +247,24 @@ public class DatasetCombiner {
              * Bug 2690. There must be a better way.
              */
             details = details.replaceAll( "encoding=\"UTF-8\"", "" );
+            try (StringInputStream sis = new StringInputStream( StringUtils.trim( details ) );) {
 
-            StringInputStream sis = new StringInputStream( StringUtils.trim( details ) );
-            Document document = builder.parse( sis );
+                Document document = builder.parse( sis );
 
-            NodeList result = ( NodeList ) xgds.evaluate( document, XPathConstants.NODESET );
-            for ( int i = 0; i < result.getLength(); i++ ) {
-                String nodeValue = result.item( i ).getNodeValue();
-                // if ( nodeValue.contains( ";" ) ) continue; //
-                associatedDatasetAccessions.add( "GDS" + nodeValue );
+                NodeList result = ( NodeList ) xgds.evaluate( document, XPathConstants.NODESET );
+                for ( int i = 0; i < result.getLength(); i++ ) {
+                    String nodeValue = result.item( i ).getNodeValue();
+                    // if ( nodeValue.contains( ";" ) ) continue; //
+                    associatedDatasetAccessions.add( "GDS" + nodeValue );
+                }
+
+                return associatedDatasetAccessions;
+
             }
-
-            return associatedDatasetAccessions;
 
         } catch ( IOException e ) {
             throw new RuntimeException( "Could not parse XML data from remote server", e );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( "XML parsing error of remote data", e );
-        } catch ( ParserConfigurationException e ) {
-            throw new RuntimeException( "XML parsing error of remote data", e );
-        } catch ( SAXException e ) {
+        } catch ( ParserConfigurationException | SAXException | XPathExpressionException e ) {
             throw new RuntimeException( "XML parsing error of remote data", e );
         }
     }

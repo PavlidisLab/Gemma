@@ -146,12 +146,11 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     protected String savePvaluesForDebugging( double[] pvaluesToUse ) {
         try {
             File f = File.createTempFile( "diffanalysis_", ".pvalues.txt" );
-            FileWriter w = new FileWriter( f );
-            for ( double d : pvaluesToUse ) {
-                w.write( d + "\n" );
+            try (FileWriter w = new FileWriter( f );) {
+                for ( double d : pvaluesToUse ) {
+                    w.write( d + "\n" );
+                }
             }
-            w.close();
-
             return f.getPath();
         } catch ( IOException e ) {
             throw new RuntimeException( e );

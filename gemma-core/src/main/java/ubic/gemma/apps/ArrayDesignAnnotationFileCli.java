@@ -438,32 +438,33 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return false;
         }
 
-        Writer writer = arrayDesignAnnotationService.initOutputFile( arrayDesign, fileBaseName, this.overWrite );
+        try (Writer writer = arrayDesignAnnotationService.initOutputFile( arrayDesign, fileBaseName, this.overWrite );) {
 
-        // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
-        if ( writer == null ) {
-            log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
-            return false;
+            // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
+            if ( writer == null ) {
+                log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
+                return false;
+            }
+
+            log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
+
+            int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( writer, genesWithSpecificity,
+                    outputType );
+
+            log.info( "Finished processing platform: " + arrayDesign.getName() );
+
+            successObjects.add( String.format( "%s (%s)", arrayDesign.getName(), arrayDesign.getShortName() ) );
+
+            if ( StringUtils.isBlank( fileBaseName ) ) {
+                log.info( "Processed " + numProcessed + " composite sequences" );
+                audit( arrayDesign, "Processed " + numProcessed + " composite sequences" );
+            } else {
+                String filename = fileBaseName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
+                log.info( "Created file:  " + filename + " with " + numProcessed + " values" );
+                audit( arrayDesign, "Created file: " + filename + " with " + numProcessed + " values" );
+            }
+            return true;
         }
-
-        log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
-
-        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( writer, genesWithSpecificity,
-                outputType );
-
-        log.info( "Finished processing platform: " + arrayDesign.getName() );
-
-        successObjects.add( String.format( "%s (%s)", arrayDesign.getName(), arrayDesign.getShortName() ) );
-
-        if ( StringUtils.isBlank( fileBaseName ) ) {
-            log.info( "Processed " + numProcessed + " composite sequences" );
-            audit( arrayDesign, "Processed " + numProcessed + " composite sequences" );
-        } else {
-            String filename = fileBaseName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-            log.info( "Created file:  " + filename + " with " + numProcessed + " values" );
-            audit( arrayDesign, "Created file: " + filename + " with " + numProcessed + " values" );
-        }
-        return true;
     }
 
     private void processGeneList() throws IOException {

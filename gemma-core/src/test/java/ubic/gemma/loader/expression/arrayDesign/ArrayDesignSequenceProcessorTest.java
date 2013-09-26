@@ -52,21 +52,20 @@ import ubic.gemma.util.Settings;
  */
 public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
-    Collection<CompositeSequence> designElements = new HashSet<CompositeSequence>();
-    InputStream seqFile;
-    InputStream probeFile;
-    InputStream designElementStream;
-    ArrayDesign result;
+    private Collection<CompositeSequence> designElements = new HashSet<>();
+    private InputStream seqFile;
+    private InputStream designElementStream;
+    private ArrayDesign result;
 
     @Autowired
-    ArrayDesignSequenceProcessingService app;
+    private ArrayDesignSequenceProcessingService app;
 
     @Autowired
-    ArrayDesignService arrayDesignService;
-    Taxon taxon;
+    private ArrayDesignService arrayDesignService;
+    private Taxon taxon;
 
     @Autowired
-    BioSequenceService bss;
+    private BioSequenceService bss;
 
     @Before
     public void setup() {
@@ -78,8 +77,6 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
         // Target sequences
         seqFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_target" );
-
-        probeFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_probe" );
 
     }
 
@@ -153,15 +150,17 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         result = ads.iterator().next();
         result = arrayDesignService.thaw( result );
         // have to specify taxon as this has two taxons in it
-        InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
-        Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
-                "testblastdbPartTwo" }, FileTools.resourceToPath( "/data/loader/genome/blast" ), taxon, true );
-        assertNotNull( res );
-        for ( BioSequence sequence : res ) {
-            assertNotNull( sequence.getSequence() );
-        }
-        for ( CompositeSequence cs : result.getCompositeSequences() ) {
-            assert cs.getBiologicalCharacteristic() != null;
+        try (InputStream f = this.getClass().getResourceAsStream(
+                "/data/loader/expression/arrayDesign/identifierTest.txt" );) {
+            Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
+                    "testblastdbPartTwo" }, FileTools.resourceToPath( "/data/loader/genome/blast" ), taxon, true );
+            assertNotNull( res );
+            for ( BioSequence sequence : res ) {
+                assertNotNull( sequence.getSequence() );
+            }
+            for ( CompositeSequence cs : result.getCompositeSequences() ) {
+                assert cs.getBiologicalCharacteristic() != null;
+            }
         }
     }
 

@@ -244,26 +244,29 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        InputStream countData = this.getClass().getResourceAsStream(
+        try (InputStream countData = this.getClass().getResourceAsStream(
                 "/data/loader/expression/flatfileload/GSE19166_expression_count.test.txt" );
-        DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
-        InputStream rpkmData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" );
-        DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
+                InputStream rpkmData = this.getClass().getResourceAsStream(
+                        "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" );) {
 
-        List<String> probeNames = countMatrix.getRowNames();
+            DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
-        assertEquals( 199, probeNames.size() );
+            DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
-        // we have to find the right generic platform to use.
-        targetArrayDesign = this.getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
-        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+            List<String> probeNames = countMatrix.getRowNames();
 
-        assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
+            assertEquals( 199, probeNames.size() );
 
-        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+            // we have to find the right generic platform to use.
+            targetArrayDesign = this
+                    .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
+            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
+            assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
+
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+        }
         /*
          * Check
          */
@@ -339,27 +342,29 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        InputStream countData = this.getClass().getResourceAsStream(
+        try (InputStream countData = this.getClass().getResourceAsStream(
                 "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
-        DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
-        InputStream rpkmData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );
-        DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
+                InputStream rpkmData = this.getClass().getResourceAsStream(
+                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );) {
+            DoubleMatrix<String, String> countMatrix = reader.read( countData );
+            DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
-        List<String> probeNames = countMatrix.getRowNames();
+            List<String> probeNames = countMatrix.getRowNames();
 
-        // we have to find the right generic platform to use.
-        targetArrayDesign = this.getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
-        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
-
-        try {
-            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
-            fail( "Should have gotten an exception" );
-        } catch ( IllegalArgumentException e ) {
-            // Expected
+            // we have to find the right generic platform to use.
+            targetArrayDesign = this
+                    .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
+            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+            try {
+                dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+                fail( "Should have gotten an exception" );
+            } catch ( IllegalArgumentException e ) {
+                // Expected
+            }
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
         }
-        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
+
         /*
          * Check
          */

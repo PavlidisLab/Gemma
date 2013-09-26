@@ -38,27 +38,29 @@ public class AgilentScanDateExtractorTest {
 
     @Test
     public void testExtractGPR() throws Exception {
-        InputStream is = getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM393974.gpr.txt" );
-        AgilentScanDateExtractor extractor = new AgilentScanDateExtractor();
+        try (InputStream is = getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM393974.gpr.txt" );) {
+            AgilentScanDateExtractor extractor = new AgilentScanDateExtractor();
 
-        Date actual = extractor.extract( is );
+            Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
-        Date expected = formatter.parse( "2005/11/09 11:36:27" );
+            DateFormat formatter = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
+            Date expected = formatter.parse( "2005/11/09 11:36:27" );
 
-        assertEquals( expected, actual );
+            assertEquals( expected, actual );
+        }
     }
 
     @Test
     public void testExtractAgilent() throws Exception {
-        InputStream is = getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM361301.agilent.txt" );
-        AgilentScanDateExtractor extractor = new AgilentScanDateExtractor();
+        try (InputStream is = getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM361301.agilent.txt" );) {
+            AgilentScanDateExtractor extractor = new AgilentScanDateExtractor();
 
-        Date actual = extractor.extract( is );
+            Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "MM-dd-yyyy HH:mm:ss" );
-        Date expected = formatter.parse( "10-18-2005 13:02:36" );
+            DateFormat formatter = new SimpleDateFormat( "MM-dd-yyyy HH:mm:ss" );
+            Date expected = formatter.parse( "10-18-2005 13:02:36" );
 
-        assertEquals( expected, actual );
+            assertEquals( expected, actual );
+        }
     }
 }

@@ -65,6 +65,12 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
 
             }
         }
+
+        if ( ad != null ) try {
+            arrayDesignService.remove( ad );
+        } catch ( Exception e ) {
+
+        }
     }
 
     /*

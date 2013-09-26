@@ -261,8 +261,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             SimpleExpressionDataLoaderService simpleExpressionDataLoaderService = this
                     .getBean( SimpleExpressionDataLoaderService.class );
             ByteArrayConverter bArrayConverter = new ByteArrayConverter();
-            try {
-                InputStream data = new FileInputStream( new File( this.dataFileName ) );
+            try (InputStream data = new FileInputStream( new File( this.dataFileName ) );) {
+
                 DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
 
                 BioAssayDimension bad = makeBioAssayDimension( arrayDesign, matrix );

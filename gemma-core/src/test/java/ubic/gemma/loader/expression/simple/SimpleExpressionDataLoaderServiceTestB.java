@@ -97,30 +97,34 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
 
         assertNotNull( ad );
 
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/gill2006hormone.head.txt" );
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/expression/flatfileload/gill2006hormone.head.txt" );) {
 
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+            SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-        makeMetaData( salmon, ad, metaData );
+            makeMetaData( salmon, ad, metaData );
 
-        ee = simpleExpressionDataLoaderService.create( metaData, data );
+            ee = simpleExpressionDataLoaderService.create( metaData, data );
+        }
 
         /*
          * Do second one that has overlapping bioassay names.
          */
-        data = this.getClass().getResourceAsStream( "/data/loader/expression/flatfileload/gill2006oceanfate.head.txt" );
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/expression/flatfileload/gill2006oceanfate.head.txt" );) {
 
-        metaData = new SimpleExpressionExperimentMetaData();
+            SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-        assertNotNull( salmon );
+            assertNotNull( salmon );
 
-        makeMetaData( salmon, ad, metaData );
+            makeMetaData( salmon, ad, metaData );
 
-        ExpressionExperiment a = simpleExpressionDataLoaderService.create( metaData, data );
+            ExpressionExperiment a = simpleExpressionDataLoaderService.create( metaData, data );
 
-        // ugly, but try to clean up .
-        eeService.delete( a );
+            // ugly, but try to
+            // clean up .
+            eeService.delete( a );
+        }
 
     }
 

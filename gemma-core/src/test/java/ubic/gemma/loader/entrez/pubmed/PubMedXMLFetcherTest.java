@@ -18,13 +18,18 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 
@@ -32,10 +37,11 @@ import ubic.gemma.model.common.description.BibliographicReference;
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedXMLFetcherTest extends TestCase {
+public class PubMedXMLFetcherTest {
     private static Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
-    PubMedXMLFetcher pmf;
+    private PubMedXMLFetcher pmf;
 
+    @Test
     public final void testRetrieveByHTTP() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 15173114 );
@@ -59,6 +65,7 @@ public class PubMedXMLFetcherTest extends TestCase {
      * 
      * @throws Exception
      */
+    @Test
     public final void testRetrieveByHTTPBookshelf() throws Exception {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 20301615 );
@@ -79,6 +86,7 @@ public class PubMedXMLFetcherTest extends TestCase {
         }
     }
 
+    @Test
     public final void testRetrieveByHTTPNotFound() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
@@ -89,15 +97,13 @@ public class PubMedXMLFetcherTest extends TestCase {
         }
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         pmf = new PubMedXMLFetcher();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         pmf = null;
     }
 

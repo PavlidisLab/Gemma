@@ -580,10 +580,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     protected void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
             ObjectMatrix<String, String, Object> designMatrix ) {
         MatrixWriter mw = new MatrixWriter();
-        try {
-            mw.write( new FileWriter( File.createTempFile( "data.", ".txt" ) ), dmatrix, null, true, false );
+        try (FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
+                FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) );) {
+
+            mw.write( writer, dmatrix, null, true, false );
+
             ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<String, String>(
-                    new FileWriter( File.createTempFile( "design.", ".txt" ) ) );
+                    out );
             dem.writeMatrix( designMatrix, true );
 
         } catch ( IOException e ) {

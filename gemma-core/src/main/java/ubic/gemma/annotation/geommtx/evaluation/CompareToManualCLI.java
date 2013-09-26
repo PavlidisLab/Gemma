@@ -622,10 +622,10 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     private Map<String, Set<String>> getHumanMappingsFromDisk() throws Exception {
         Map<String, Set<String>> result;
-        ObjectInputStream o = new ObjectInputStream( new FileInputStream(
-                SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );
-        result = ( Map<String, Set<String>> ) o.readObject();
-        o.close();
+        try (ObjectInputStream o = new ObjectInputStream( new FileInputStream(
+                SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );) {
+            result = ( Map<String, Set<String>> ) o.readObject();
+        }
 
         log.info( "Loaded Gemma annotations from local disk" );
         return result;

@@ -110,32 +110,35 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         ee = eeService.thaw( ee );
 
-        InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE29006_design.txt" );
-        assertNotNull( is );
-        experimentalDesignImporter.importDesign( ee, is );
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/flatfileload/GSE29006_design.txt" );) {
+            assertNotNull( is );
+            experimentalDesignImporter.importDesign( ee, is );
+        }
 
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        InputStream countData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
-        DoubleMatrix<String, String> countMatrix = reader.read( countData );
+        try (InputStream countData = this.getClass().getResourceAsStream(
+                "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );) {
+            DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
-        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
-        assertEquals( 1, experimentalFactors.size() );
+            Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+            assertEquals( 1, experimentalFactors.size() );
 
-        List<String> probeNames = countMatrix.getRowNames();
-        assertEquals( 199, probeNames.size() );
+            List<String> probeNames = countMatrix.getRowNames();
+            assertEquals( 199, probeNames.size() );
 
-        // we have to find the right generic platform to use.
-        targetArrayDesign = this.getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
-        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+            // we have to find the right generic platform to use.
+            targetArrayDesign = this
+                    .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
+            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
-        // the experiment has 8 samples but the data has 4 columns so allow missing samples
-        // GSM718707 GSM718708 GSM718709 GSM718710
-        boolean allMissingSamples = true;
-        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, null, 36, true, allMissingSamples );
+            // the experiment has 8 samples but the data has 4 columns so allow missing samples
+            // GSM718707 GSM718708 GSM718709 GSM718710
+            boolean allMissingSamples = true;
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, null, 36, true, allMissingSamples );
+        }
 
         // make sure to do a thaw() to get the addCountData() updates
         ExpressionExperiment updatedee = eeService.thaw( ee );
@@ -216,8 +219,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
             ee = eeService.load( ee.getId() );
             ee = eeService.thawLite( ee );
 
-            InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE35930/design.txt" );
-            experimentalDesignImporter.importDesign( ee, is, false );
+            try (InputStream is = this.getClass().getResourceAsStream(
+                    "/data/loader/expression/geo/GSE35930/design.txt" );) {
+                experimentalDesignImporter.importDesign( ee, is, false );
+            }
 
             ee = eeService.load( ee.getId() );
             ee = eeService.thawLite( ee );

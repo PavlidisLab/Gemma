@@ -79,10 +79,6 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     public void setup() throws Exception {
 
         super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
-
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );
-
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
         Taxon salmon = taxonService.findByCommonName( "salmonid" );
@@ -105,9 +101,12 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         ad.setPrimaryTaxon( salmon );
 
         metaData.getArrayDesigns().add( ad );
+        try (InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );) {
 
-        ee = simpleExpressionDataLoaderService.create( metaData, data );
+            ee = simpleExpressionDataLoaderService.create( metaData, data );
 
+        }
     }
 
     @After
@@ -125,11 +124,11 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     @Test
     public final void testParseLoadDelete() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/gill2007temperatureGemmaAnnotationData.txt" );
+        try (InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/gill2007temperatureGemmaAnnotationData.txt" );) {
 
-        experimentalDesignImporter.importDesign( ee, is, false );
-
+            experimentalDesignImporter.importDesign( ee, is, false );
+        }
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
