@@ -217,13 +217,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
         if ( !gene2CsInfopath.canRead() ) {
             return null;
         }
-        FileInputStream fis = new FileInputStream( gene2CsInfopath );
-        ObjectInputStream ois = new ObjectInputStream( fis );
-        Gene2CsStatus d = ( Gene2CsStatus ) ois.readObject();
-        ois.close();
-        fis.close();
+        try (FileInputStream fis = new FileInputStream( gene2CsInfopath );
+                ObjectInputStream ois = new ObjectInputStream( fis );) {
+            Gene2CsStatus d = ( Gene2CsStatus ) ois.readObject();
+            return d;
+        }
 
-        return d;
     }
 
     /**
@@ -266,11 +265,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
         status.setError( e );
         status.setAnnotation( annotation );
 
-        FileOutputStream fos = new FileOutputStream( getGene2CsInfopath() );
-        ObjectOutputStream oos = new ObjectOutputStream( fos );
-        oos.writeObject( status );
-        oos.flush();
-        oos.close();
+        try (FileOutputStream fos = new FileOutputStream( getGene2CsInfopath() );
+                ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+            oos.writeObject( status );
+        }
         return status;
     }
 
