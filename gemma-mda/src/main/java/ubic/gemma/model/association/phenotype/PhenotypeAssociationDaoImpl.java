@@ -56,8 +56,8 @@ import ubic.gemma.util.EntityUtils;
  * deals with all basic queries used by Neurocarta
  * 
  * @author Nicolas
- * @version $Id$ TODO: change criteria queries to
- *          hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
+ * @version $Id$ TODO: change criteria queries
+ *          to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -648,9 +648,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
         tpl.setMaxResults( 1 );
 
-        Date lastUpdatedDate = ( ( Timestamp ) tpl
-                .find( "select p.status.lastUpdateDate from PhenotypeAssociation as p "
-                        + "where p.evidenceSource is null order by p.status.lastUpdateDate desc" ).iterator().next() );
+        List<?> result = tpl.find( "select p.status.lastUpdateDate from PhenotypeAssociation as p "
+                + "where p.evidenceSource is null order by p.status.lastUpdateDate desc" );
+
+        Date lastUpdatedDate = null;
+        if ( !result.isEmpty() ) {
+            lastUpdatedDate = ( Timestamp ) result.get( 0 );
+        }
 
         Collection<String> publicationsLiterature = this
                 .getHibernateTemplate()
