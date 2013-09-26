@@ -183,6 +183,11 @@ public abstract class BioSequence extends ubic.gemma.model.common.Describable {
         this.polymerType = polymerType;
     }
 
+    /**
+     * The actual nucleotisequence as in ATGC
+     * 
+     * @param sequence
+     */
     public void setSequence( String sequence ) {
         this.sequence = sequence;
     }

@@ -24,22 +24,18 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 public abstract class BlatResult extends SequenceSimilaritySearchResult {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.sequenceAnalysis.BlatResult}.
+     * Constructs new instances of {@link BlatResult}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.sequenceAnalysis.BlatResult}.
+         * Constructs a new instance of {@link BlatResult}.
          */
-        public static ubic.gemma.model.genome.sequenceAnalysis.BlatResult newInstance() {
-            return new ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl();
+        public static BlatResult newInstance() {
+            return new BlatResultImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 3110768245871858012L;
     private Integer matches;
 
     private Integer mismatches;
@@ -73,14 +69,6 @@ public abstract class BlatResult extends SequenceSimilaritySearchResult {
     private String queryStarts;
 
     private String targetStarts;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BlatResult() {
-    }
 
     /**
      * 

@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Id$
  * @see ubic.gemma.model.sequence.sequenceAnalysis.BlatResult
  */
-public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatResult {
+public class BlatResultImpl extends BlatResult {
 
     /**
      * 
@@ -96,12 +96,14 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
         long matches = this.getMatches() + this.getRepMatches();
 
         /*
-         * This can happen if the sequence in our system was polyA/T trimmed, which we don't do any more, but there are
-         * remnants. When blat results come back from goldenpath (rather than computed by us) the lengths can disagree.
+         * This might happen if the sequence in our system was polyA/T trimmed, which we don't do any more, but there
+         * could be remnants. When blat results come back from goldenpath (rather than computed by us) the lengths can
+         * disagree. Other reasons for this unclear.
          */
         if ( matches > length ) {
-            log.warn( "Blat result for " + this.getQuerySequence()
-                    + " More matches than sequence length (polyA trimmed?) " + matches + " > " + length );
+            log.warn( "Blat result for " + this.getQuerySequence() + " More matches than sequence length: "
+                    + this.getMatches() + " match + " + this.getRepMatches() + " repmatch = " + matches + " > "
+                    + length );
             matches = length;
         }
 
