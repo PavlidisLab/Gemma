@@ -332,7 +332,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         Collection<Gene> genes = new HashSet<Gene>();
         String geneQuery = "from GeneImpl g where g.id in ( :gs )";
 
-        org.hibernate.Query geneQueryObject = super.getSessionFactory().getCurrentSession().createQuery( geneQuery ).setFetchSize( 1000 );
+        org.hibernate.Query geneQueryObject = super.getSessionFactory().getCurrentSession().createQuery( geneQuery )
+                .setFetchSize( 1000 );
 
         for ( Long gene : genesToFetch ) {
             batch.add( gene );
@@ -390,8 +391,11 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @Override
     protected Collection<Gene> handleGetGenes( CompositeSequence compositeSequence ) {
-        final String queryString = "select distinct gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene  "
-                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+        // gets all kinds of associations, not just blat.
+        final String queryString = "select distinct gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
+                + "GeneProductImpl gp, GeneImpl gene  "
+                + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
+                + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
 
         return this.getHibernateTemplate().findByNamedParam( queryString, "cs", compositeSequence );
     }
@@ -457,7 +461,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             // get all probes. Uses a light-weight version of this query that omits as much as possible.
             final String queryString = nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign.getId();
             try {
-                org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
+                org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
+                        .createSQLQuery( queryString );
                 queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                         .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
                 queryObject.setMaxResults( MAX_CS_RECORDS );
@@ -519,7 +524,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         // This uses the 'full' query, assuming that this list isn't too big.
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQueryString );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
+                .createSQLQuery( nativeQueryString );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
                 .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
@@ -552,7 +558,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             limit = Math.min( numResults, MAX_CS_RECORDS );
         }
 
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQueryString );
+        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
+                .createSQLQuery( nativeQueryString );
         queryObject.setParameter( "id", id );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
