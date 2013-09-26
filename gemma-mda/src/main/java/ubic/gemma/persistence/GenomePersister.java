@@ -455,7 +455,7 @@ abstract public class GenomePersister extends CommonPersister {
         fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
         fillChromosomeLocationAssociations( gene.getCytogenicLocation(), gene.getTaxon() );
 
-        log.info( "New gene: " + gene );
+        if ( log.isInfoEnabled() ) log.info( "New gene: " + gene );
         gene = geneDao.create( gene );
 
         Collection<GeneProduct> geneProductsForNewGene = new HashSet<GeneProduct>();
@@ -479,6 +479,7 @@ abstract public class GenomePersister extends CommonPersister {
                 geneProductsForNewGene.add( product );
             }
         }
+
         // attach the products.
         gene.setProducts( geneProductsForNewGene );
         for ( GeneProduct gp : gene.getProducts() ) {
@@ -486,7 +487,7 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         try {
-            // // we do a separate create because the cascade doesn't trigger auditing correctly - otherwise the
+            // we do a separate create because the cascade doesn't trigger auditing correctly - otherwise the
             // products are not persistent until the session is flushed, later. There might be a better way around this,
             // but so far as I know this is the only place this happens.
             gene.setProducts( ( Collection<GeneProduct> ) geneProductDao.create( gene.getProducts() ) );
@@ -948,13 +949,31 @@ abstract public class GenomePersister extends CommonPersister {
         if ( seenChromosomes.containsKey( key ) ) {
             return seenChromosomes.get( key );
         }
-        try {
-            FieldUtils.writeField( chromosome, "taxon", persistTaxon( ct ), true );
-        } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
-        }
 
-        chromosome = chromosomeDao.findOrCreate( chromosome.getName(), ct );
+        Collection<Chromosome> chroms = chromosomeDao.find( chromosome.getName(), ct );
+
+        if ( chroms == null || chroms.isEmpty() ) {
+
+            // no point in doing this if it already exists.
+            try {
+                FieldUtils.writeField( chromosome, "taxon", persist( ct ), true );
+                if ( chromosome.getSequence() != null ) {
+                    // cascade should do?
+                    FieldUtils.writeField( chromosome, "sequence", persist( chromosome.getSequence() ), true );
+                }
+                if ( chromosome.getAssemblyDatabase() != null ) {
+                    FieldUtils.writeField( chromosome, "assemblyDatabase", persist( chromosome.getAssemblyDatabase() ),
+                            true );
+                }
+            } catch ( IllegalAccessException e ) {
+                e.printStackTrace();
+            }
+            chromosome = chromosomeDao.create( chromosome );
+        } else if ( chroms.size() == 1 ) {
+            chromosome = chroms.iterator().next();
+        } else {
+            throw new IllegalArgumentException( "Non-unique chromosome name  " + chromosome.getName() + " on " + ct );
+        }
 
         seenChromosomes.put( key, chromosome );
         if ( chromosome == null || chromosome.getId() == null )
