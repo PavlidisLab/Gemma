@@ -136,11 +136,11 @@ public interface PhenotypeAssociationService {
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
 
     /** find all evidences from a specific external database */
-    @Secured({ "GROUP_ADMIN" })
+    @Secured({ "GROUP_AGENT" })
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
 
     /** find all evidences with no external database */
-    @Secured({ "GROUP_ADMIN" })
+    @Secured({ "GROUP_AGENT" })
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
