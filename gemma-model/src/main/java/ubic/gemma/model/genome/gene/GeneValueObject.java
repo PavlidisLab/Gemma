@@ -57,6 +57,13 @@ public class GeneValueObject implements java.io.Serializable {
         return converted;
     }
 
+    @Override
+    public String toString() {
+        return "GeneValueObject [" + ( id != null ? "id=" + id + ", " : "" )
+                + ( officialSymbol != null ? "officialSymbol=" + officialSymbol + ", " : "" )
+                + ( officialName != null ? "officialName=" + officialName : "" ) + "]";
+    }
+
     /**
      * A static method for easily converting GeneSetMembers into GeneValueObjects
      * 

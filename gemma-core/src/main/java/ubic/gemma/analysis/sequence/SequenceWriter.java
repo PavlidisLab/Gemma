@@ -60,36 +60,37 @@ public class SequenceWriter {
      * @throws IOException
      */
     public static int writeSequencesToFile( Collection<BioSequence> sequences, File outputFile ) throws IOException {
-        BufferedWriter out = new BufferedWriter( new FileWriter( outputFile ) );
+        try (BufferedWriter out = new BufferedWriter( new FileWriter( outputFile ) );) {
 
-        log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
-        int count = 0;
-        Collection<Object> identifiers = new HashSet<Object>();
-        int repeats = 0;
-        for ( BioSequence b : sequences ) {
-            if ( StringUtils.isBlank( b.getSequence() ) ) {
-                log.warn( "Blank sequence for " + b );
-                continue;
-            }
-            String identifier = getIdentifier( b );
-            if ( identifiers.contains( identifier ) ) {
-                log.debug( b + " is a repeat with identifier " + identifier );
-                repeats++;
-                continue; // don't repeat sequences.
+            log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
+            int count = 0;
+            Collection<Object> identifiers = new HashSet<Object>();
+            int repeats = 0;
+            for ( BioSequence b : sequences ) {
+                if ( StringUtils.isBlank( b.getSequence() ) ) {
+                    log.warn( "Blank sequence for " + b );
+                    continue;
+                }
+                String identifier = getIdentifier( b );
+                if ( identifiers.contains( identifier ) ) {
+                    log.debug( b + " is a repeat with identifier " + identifier );
+                    repeats++;
+                    continue; // don't repeat sequences.
+                }
+
+                // use toUpper to ensure that sequence does not start out 'masked'.
+                out.write( ">" + identifier + "\n" + b.getSequence().toUpperCase() + "\n" );
+                identifiers.add( identifier );
+
+                if ( ++count % 2000 == 0 ) {
+                    log.debug( "Wrote " + count + " sequences" );
+                }
             }
 
-            // use toUpper to ensure that sequence does not start out 'masked'.
-            out.write( ">" + identifier + "\n" + b.getSequence().toUpperCase() + "\n" );
-            identifiers.add( identifier );
-
-            if ( ++count % 2000 == 0 ) {
-                log.debug( "Wrote " + count + " sequences" );
-            }
+            log.info( "Wrote " + count + " sequences to " + outputFile
+                    + ( repeats > 0 ? " ( " + repeats + " repeated items were skipped)." : "" ) );
+            return count;
         }
-        out.close();
-        log.info( "Wrote " + count + " sequences to " + outputFile
-                + ( repeats > 0 ? " ( " + repeats + " repeated items were skipped)." : "" ) );
-        return count;
     }
 
     /**

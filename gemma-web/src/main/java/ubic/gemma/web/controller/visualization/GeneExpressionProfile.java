@@ -18,7 +18,10 @@
  */
 package ubic.gemma.web.controller.visualization;
 
+import java.util.Arrays;
 import java.util.Collection;
+
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -32,6 +35,18 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * @version $Id$
  */
 public class GeneExpressionProfile {
+
+    @Override
+    public String toString() {
+
+        StringBuilder buf = new StringBuilder();
+        for ( double d : profile ) {
+            buf.append( String.format( "  %.2g", d ) );
+        }
+
+        return "GeneExpressionProfile:\n" + ( genes != null ? "genes=" + StringUtils.join( genes, "," ) : "" )
+                + ( profile != null ? "profile=\n" + buf + ", " : "" ) + "\n";
+    }
 
     private boolean allMissing = true;
 

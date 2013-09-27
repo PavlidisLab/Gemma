@@ -64,6 +64,10 @@ public class FactorProfile {
         addValues( values );
     }
 
+    /**
+     * @param values
+     * @param isContinuous
+     */
     public FactorProfile( List<Double> values, boolean isContinuous ) {
         super();
         this.isContinuous = isContinuous;
@@ -96,6 +100,13 @@ public class FactorProfile {
      */
     public void setPlots( List<List<DoublePoint>> plots ) {
         this.plots = plots;
+    }
+
+    @Override
+    public String toString() {
+        final int maxLen = 5;
+        return "FactorProfile ["
+                + ( plots != null ? "plots=" + plots.subList( 0, Math.min( plots.size(), maxLen ) ) : "" ) + "]";
     }
 
     /**

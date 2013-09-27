@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -213,97 +214,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         return result;
     }
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.visualization.ExperimentalDesignVisualizationService#sortLayoutSamplesByFactor(java.util.Map)
-    // */
-    // @Override
-    // public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>
-    // sortLayoutSamplesByFactor(
-    // final Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
-    //
-    // Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortedLayouts = new
-    // HashMap<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>();
-    // StopWatch timer = new StopWatch();
-    // timer.start();
-    // for ( Long bioAssaySet : layouts.keySet() ) {
-    //
-    // final LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts
-    // .get( bioAssaySet );
-    //
-    // if ( layout == null || layout.size() == 0 ) {
-    // log.warn( "Null or empty layout for ee: " + bioAssaySet ); // does this happen?
-    // continue;
-    // }
-    // LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new
-    // LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>();
-    //
-    // Collection<ExperimentalFactor> filteredFactors = extractFactors( layout, false );
-    //
-    // if ( filteredFactors.isEmpty() ) {
-    // if ( sortedLayouts.containsKey( bioAssaySet ) ) {
-    // log.warn( "sortedLayouts already contained ee with ID = " + bioAssaySet
-    // + ". Value was map with # keys = " + sortedLayouts.get( bioAssaySet ).keySet().size() );
-    // }
-    // sortedLayouts.put( bioAssaySet, sortedLayout );
-    // continue; // batch was the only factor.
-    // }
-    //
-    // List<BioMaterialValueObject> bmList = new ArrayList<BioMaterialValueObject>();
-    // Map<BioMaterialValueObject, BioAssayValueObject> BMtoBA = new HashMap<BioMaterialValueObject,
-    // BioAssayValueObject>();
-    //
-    // for ( BioAssayValueObject ba : layout.keySet() ) {
-    // BioMaterialValueObject bm = ba.getSample();
-    // BMtoBA.put( bm, ba );
-    // bmList.add( bm );
-    //
-    // }
-    //
-    // // sort factors within layout by number of values
-    // LinkedList<ExperimentalFactor> sortedFactors = ( LinkedList<ExperimentalFactor> ) ExpressionDataMatrixColumnSort
-    // .orderFactorsByExperimentalDesignVO( bmList, filteredFactors );
-    //
-    // // this isn't necessary, because we can have factors get dropped if we are looking at a subset.
-    // // assert sortedFactors.size() == filteredFactors.size();
-    //
-    // List<BioMaterialValueObject> sortedBMList = ExpressionDataMatrixColumnSort
-    // .orderBiomaterialsBySortedFactorsVO( bmList, sortedFactors );
-    //
-    // assert sortedBMList.size() == bmList.size();
-    //
-    // // sort layout entries according to sorted ba list
-    // // List<BioAssayValueObject> sortedBAList = new ArrayList<BioAssayValueObject>();
-    // for ( BioMaterialValueObject bm : sortedBMList ) {
-    // BioAssayValueObject ba = BMtoBA.get( bm );
-    // assert ba != null;
-    //
-    // // sortedBAList.add( bavo );
-    //
-    // // sort factor-value pairs for each biomaterial
-    // LinkedHashMap<ExperimentalFactor, Double> facs = layout.get( ba );
-    //
-    // LinkedHashMap<ExperimentalFactor, Double> sortedFacs = new LinkedHashMap<ExperimentalFactor, Double>();
-    // for ( ExperimentalFactor fac : sortedFactors ) {
-    // sortedFacs.put( fac, facs.get( fac ) );
-    // }
-    //
-    // // assert facs.size() == sortedFacs.size() : "Expected " + facs.size() + " factors, got "
-    // // + sortedFacs.size();
-    // sortedLayout.put( ba, sortedFacs );
-    // }
-    // sortedLayouts.put( bioAssaySet, sortedLayout );
-    //
-    // }
-    //
-    // if ( timer.getTime() > 1000 ) {
-    // log.info( "Sorting layout samples by factor: " + timer.getTime() + "ms" );
-    // }
-    //
-    // return sortedLayouts;
-    // }
-
     /*
      * (non-Javadoc)
      * 
@@ -313,12 +223,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedvs ) {
 
-        // cachedLayouts.clear(); // TEMPORARY FOR DEBUGGING.
+        // cachedLayouts.clear(); // uncomment FOR DEBUGGING.
 
-        if ( dedvs == null )
-            return new HashMap<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>( 0 );
+        if ( dedvs == null ) {
+            return new HashMap<>( 0 );
+        }
 
-        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>(
+        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<>(
                 dedvs.size() );
 
         StopWatch timer = new StopWatch();
@@ -333,6 +244,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         /*
          * This loop is not a performance issue.
          */
+        Map<DoubleVectorValueObject, List<BioAssayValueObject>> newOrderingsForBioAssayDimensions = new HashMap<>();
         for ( DoubleVectorValueObject vec : dedvs ) {
 
             if ( vec.isReorganized() ) {
@@ -350,7 +262,8 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             assert layout != null;
 
-            List<BioAssayValueObject> newOrdering = new ArrayList<BioAssayValueObject>( layout.keySet() );
+            List<BioAssayValueObject> newOrdering = new ArrayList<>( layout.keySet() );
+            newOrderingsForBioAssayDimensions.put( vec, newOrdering );
             newOrdering.retainAll( vec.getBioAssays() );
             Map<BioAssayValueObject, Integer> ordering = getOrdering( newOrdering );
 
@@ -382,22 +295,27 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             List<BioAssayValueObject> oldOrdering = vec.getBioAssayDimension().getBioAssays();
             int j = 0;
+            if ( log.isTraceEnabled() )
+                log.trace( "Old order: " + StringUtils.join( ArrayUtils.toObject( data ), "," ) );
             for ( BioAssayValueObject ba : oldOrdering ) {
 
-                if ( !ordering.containsKey( ba ) ) {
-                    log.warn( "Order for vector didn't contain " + ba );
-                    continue;
-                }
+                assert ordering.containsKey( ba );
 
                 int targetIndex = ordering.get( ba );
 
                 data[targetIndex] = dol[j++];
 
             }
+            if ( log.isTraceEnabled() )
+                log.trace( "New order: " + StringUtils.join( ArrayUtils.toObject( data ), "," ) );
 
-            vec.getBioAssayDimension().reorder( newOrdering );
             vec.setReorganized( true );
 
+        }
+
+        for ( DoubleVectorValueObject vec : dedvs ) {
+            if ( vec.getBioAssayDimension().isReordered() ) continue;
+            vec.getBioAssayDimension().reorder( newOrderingsForBioAssayDimensions.get( vec ) );
         }
 
         if ( timer.getTime() > 1500 ) {

@@ -151,6 +151,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                     }
                 } else {
                     ba.setProcessingDate( dates.get( bm ) );
+                    // arrgh, hibernate.
                     bioAssayService.update( ba );
                 }
 

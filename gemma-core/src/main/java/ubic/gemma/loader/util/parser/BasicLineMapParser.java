@@ -84,9 +84,9 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
         log.info( "Parsing " + file.getAbsolutePath() );
-        InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-        parse( stream );
-        stream.close();
+        try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {
+            parse( stream );
+        }
     }
 
     /*
@@ -98,44 +98,44 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
     public void parse( InputStream is ) throws IOException {
 
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
 
-        StopWatch timer = new StopWatch();
-        timer.start();
+            StopWatch timer = new StopWatch();
+            timer.start();
 
-        int nullLines = 0;
-        String line = null;
-        int linesParsed = 0;
-        while ( ( line = br.readLine() ) != null ) {
+            int nullLines = 0;
+            String line = null;
+            int linesParsed = 0;
+            while ( ( line = br.readLine() ) != null ) {
 
-            if ( line.startsWith( COMMENTMARK ) ) {
-                continue;
+                if ( line.startsWith( COMMENTMARK ) ) {
+                    continue;
+                }
+                T newItem = parseOneLine( line );
+
+                if ( newItem == null ) {
+                    nullLines++;
+                    continue;
+                }
+
+                K key = getKey( newItem );
+                if ( key == null ) {
+                    throw new IllegalStateException( "Got null key for item " + linesParsed );
+                }
+                put( key, newItem );
+
+                if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
+                    String message = "Parsed " + linesParsed + " lines, last had key " + key;
+                    log.info( message );
+                    timer.reset();
+                    timer.start();
+                }
+
             }
-            T newItem = parseOneLine( line );
-
-            if ( newItem == null ) {
-                nullLines++;
-                continue;
-            }
-
-            K key = getKey( newItem );
-            if ( key == null ) {
-                throw new IllegalStateException( "Got null key for item " + linesParsed );
-            }
-            put( key, newItem );
-
-            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
-                String message = "Parsed " + linesParsed + " lines, last had key " + key;
-                log.info( message );
-                timer.reset();
-                timer.start();
-            }
+            log.info( "Parsed " + linesParsed + " lines. "
+                    + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
 
         }
-        log.info( "Parsed " + linesParsed + " lines. "
-                + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
-
-        br.close();
     }
 
     /*

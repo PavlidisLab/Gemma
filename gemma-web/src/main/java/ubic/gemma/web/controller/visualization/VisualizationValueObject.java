@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,27 +55,27 @@ public class VisualizationValueObject {
 
     private ExpressionExperimentValueObject eevo = null;
 
+    private LinkedHashMap<String, LinkedHashMap<String, String>> factorNames; // map of factor name to value-colour map
+
     private Collection<FactorProfile> factorProfiles;
 
-    private Collection<GeneExpressionProfile> profiles;
-
-    private List<String> sampleNames;
+    // (for labels)
+    private ArrayList<LinkedHashMap<String, String[]>> factorValueMaps; // list of factor name to value-colour maps (for
+                                                                        // colouring column headers)
 
     /**
      * used for displaying factor info in heatmap
      */
     private List<List<String>> factorValues;
-    private LinkedHashMap<String, LinkedHashMap<String, String>> factorNames; // map of factor name to value-colour map
-                                                                              // (for labels)
-    private ArrayList<LinkedHashMap<String, String[]>> factorValueMaps; // list of factor name to value-colour maps (for
-                                                                        // colouring column headers)
 
+    private Collection<GeneExpressionProfile> profiles;
+
+    private List<String> sampleNames;
     public VisualizationValueObject() {
         super();
         this.profiles = new HashSet<GeneExpressionProfile>();
     }
-
-    /**
+                                                                              /**
      * @param vectors
      * @param genes
      * @param validatedProbeList
@@ -258,10 +259,6 @@ public class VisualizationValueObject {
         this.factorProfiles = factorProfiles;
     }
 
-    // ---------------------------------
-    // Getters and Setters
-    // ---------------------------------
-
     public void setFactorValues( List<List<String>> factorValues ) {
         this.factorValues = factorValues;
     }
@@ -269,6 +266,10 @@ public class VisualizationValueObject {
     public void setFactorValuesToNames( ArrayList<LinkedHashMap<String, String[]>> factorValueMaps2 ) {
         this.factorValueMaps = factorValueMaps2;
     }
+
+    // ---------------------------------
+    // Getters and Setters
+    // ---------------------------------
 
     public void setProfiles( Collection<GeneExpressionProfile> profiles ) {
         this.profiles = profiles;
@@ -304,6 +305,14 @@ public class VisualizationValueObject {
         }
     }
 
+    @Override
+    public String toString() {
+        final int maxLen = 5;
+        return "VisualizationValueObject [" + ( eevo != null ? "eevo=" + eevo + "\n " : "" )
+                + ( factorProfiles != null ? "factorProfiles=\n" + toString( factorProfiles, maxLen ) + ", " : "" )
+                + ( profiles != null ? "profiles=" + toString( profiles, maxLen ) : "" ) + "]";
+    }
+
     /**
      * @param genes
      */
@@ -316,6 +325,18 @@ public class VisualizationValueObject {
             colorMap.put( g, colors[i % colors.length] );
             i++;
         }
+    }
+
+    private String toString( Collection<?> collection, int maxLen ) {
+        StringBuilder builder = new StringBuilder();
+        builder.append( "[" );
+        int i = 0;
+        for ( Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++ ) {
+            if ( i > 0 ) builder.append( ", " );
+            builder.append( iterator.next() );
+        }
+        builder.append( "]" );
+        return builder.toString();
     }
 
 }

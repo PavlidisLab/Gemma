@@ -131,12 +131,14 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
                 if ( probe.getName().equals( "probe_1" ) ) { // id=1001
                     assertEquals( 0.001814, pvalue, 0.00001 );
+                    assertNotNull( stat );
                     assertEquals( -287.061, stat, 0.001 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) { // id 1097
                     assertEquals( 0.3546, pvalue, 0.001 );
                 } else if ( probe.getName().equals( "probe_0" ) ) {
                     assertEquals( 1.36e-12, pvalue, 1e-10 );
+                    assertNotNull( stat );
                     assertEquals( -425.3, stat, 0.1 );
                 }
 

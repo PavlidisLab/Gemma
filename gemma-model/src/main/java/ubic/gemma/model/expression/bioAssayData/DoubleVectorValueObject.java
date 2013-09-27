@@ -240,7 +240,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     }
 
     public void setReorganized( boolean reorganized ) {
-        assert this.getBioAssayDimension().isReordered(); // have to do that first...
+      //  assert this.getBioAssayDimension().isReordered(); // have to do that at some point.
         this.reorganized = reorganized;
     }
 

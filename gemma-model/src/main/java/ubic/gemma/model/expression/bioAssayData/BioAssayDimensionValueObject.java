@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -35,6 +37,13 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
  * @version $Id$
  */
 public class BioAssayDimensionValueObject {
+
+    @Override
+    public String toString() {
+        return "BioAssayDimensionValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + "isReordered="
+                + isReordered + ", " + ( bioAssays != null ? "bioAssays=" + StringUtils.join( bioAssays, "," ) : "" )
+                + "]";
+    }
 
     private BioAssayDimension bioAssayDimension = null;
 
@@ -143,6 +152,10 @@ public class BioAssayDimensionValueObject {
      * @param newOrdering
      */
     public void reorder( List<BioAssayValueObject> newOrdering ) {
+        if ( isReordered ) throw new IllegalStateException( "You cannot reorder twice" );
+
+        assert bioAssays != null;
+
         synchronized ( this.bioAssays ) {
 
             // make sure we have a backup. (might not be very important)

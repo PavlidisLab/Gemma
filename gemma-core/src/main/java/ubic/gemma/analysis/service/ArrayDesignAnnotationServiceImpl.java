@@ -156,10 +156,10 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             probeNameToId.put( cs.getName(), cs.getId() );
         }
 
-        try {
+        try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
             log.info( "Reading annotations from: " + f );
-            InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
             String line = null;
 
             while ( ( line = br.readLine() ) != null ) {

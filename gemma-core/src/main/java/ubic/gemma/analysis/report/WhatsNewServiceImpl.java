@@ -446,12 +446,11 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      */
     private Collection<AuditableObject> loadAuditableObjects( File newObjects ) throws FileNotFoundException,
             IOException, ClassNotFoundException {
-        FileInputStream fis = new FileInputStream( newObjects );
-        ObjectInputStream ois = new ObjectInputStream( fis );
-        Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois.readObject();
-        ois.close();
-        fis.close();
-        return aos;
+        try (FileInputStream fis = new FileInputStream( newObjects );
+                ObjectInputStream ois = new ObjectInputStream( fis );) {
+            Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois.readObject();
+            return aos;
+        }
     }
 
     /**
@@ -512,17 +511,16 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
                 ao.id = ee.getId();
                 updatedObjects.add( ao );
             }
-            FileOutputStream fos = new FileOutputStream( newOutput );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
-            oos.writeObject( newObjects );
-            oos.flush();
-            oos.close();
+            try (FileOutputStream fos = new FileOutputStream( newOutput );
+                    ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+                oos.writeObject( newObjects );
+            }
 
-            fos = new FileOutputStream( updatedOutput );
-            oos = new ObjectOutputStream( fos );
-            oos.writeObject( updatedObjects );
-            oos.flush();
-            oos.close();
+            try (FileOutputStream fos = new FileOutputStream( updatedOutput );
+                    ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+                oos.writeObject( updatedObjects );
+            }
+
         } catch ( Throwable e ) {
             return false;
         }

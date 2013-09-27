@@ -450,6 +450,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
                     case mean:
                         valueForRank = DescriptiveWithMissing.mean( row );
                         break;
+                    default:
+                        throw new UnsupportedOperationException();
                 }
 
             }

@@ -83,13 +83,12 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
         ArrayDesignProbeRenamingService arrayDesignProbeRenamingService = this
                 .getBean( ArrayDesignProbeRenamingService.class );
+        File file = new File( fileName );
+        if ( !file.canRead() ) {
+            return new IOException( "Cannot read from " + fileName );
+        }
+        try (InputStream newIdFile = new FileInputStream( file );) {
 
-        try {
-            File file = new File( fileName );
-            if ( !file.canRead() ) {
-                throw new IOException( "Cannot read from " + fileName );
-            }
-            InputStream newIdFile = new FileInputStream( file );
             arrayDesignProbeRenamingService.reName( arrayDesign, newIdFile );
             newIdFile.close();
             audit( arrayDesign, "Probes renamed using file " + fileName );

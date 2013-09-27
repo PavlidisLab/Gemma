@@ -196,4 +196,11 @@ public class BioAssayValueObject implements Serializable {
         this.sequenceReadLength = sequenceReadLength;
     }
 
+    @Override
+    public String toString() {
+        return "BioAssay [" + ( id != null ? "id=" + id + ", " : "" )
+                + ( name != null ? "name=" + name + ", " : "" )
+                + ( description != null ? "description=" + description : "" ) + "]";
+    }
+
 }
