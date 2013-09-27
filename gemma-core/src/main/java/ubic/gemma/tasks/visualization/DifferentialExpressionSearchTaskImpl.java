@@ -18,6 +18,15 @@
  */
 package ubic.gemma.tasks.visualization;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +37,25 @@ import org.springframework.util.StopWatch;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.analysis.expression.diff.ContrastVO;
+import ubic.gemma.model.analysis.expression.diff.ContrastsValueObject;
+import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.MissingResult;
+import ubic.gemma.model.analysis.expression.diff.NonRetainedResult;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject.Condition;
 import ubic.gemma.util.EntityUtils;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Encapsulates the search for differential expression results, for a set of genes and experiments (which can be

@@ -291,7 +291,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * util.Collection, java.util.Collection, boolean)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<? extends BioAssaySet> ees,
             Collection<CompositeSequence> probes ) {
 
@@ -326,7 +325,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<Long> genesToSearch = new HashSet<Long>();
         checkCache( ees, genes, results, needToSearch, genesToSearch );
 
-        log.info( results.size() + " vectors fetched from cache" );
+        if ( !results.isEmpty() ) log.info( results.size() + " vectors fetched from cache" );
 
         Map<ProcessedExpressionDataVector, Collection<Long>> rawResults = new HashMap<ProcessedExpressionDataVector, Collection<Long>>();
 
@@ -335,12 +334,18 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          */
         if ( !noGeneProbes.isEmpty() ) {
             Collection<ExpressionExperiment> eesForNoGeneProbes = new HashSet<ExpressionExperiment>();
-            eesForNoGeneProbes.addAll( ( Collection<? extends ExpressionExperiment> ) ees );
+            for ( BioAssaySet ee : ees ) {
+                if ( ee instanceof ExpressionExperiment ) {
+                    eesForNoGeneProbes.add( ( ExpressionExperiment ) ee );
+                } else {
+                    eesForNoGeneProbes.add( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment() );
+                }
+            }
             needToSearch.addAll( eesForNoGeneProbes );
             rawResults.putAll( getProcessedVectors( EntityUtils.getIds( eesForNoGeneProbes ), noGeneProbes ) );
         }
 
-        log.info( rawResults.size() + " vectors retrieved so far, for noGeneProbes" );
+        if ( !rawResults.isEmpty() ) log.info( rawResults.size() + " vectors retrieved so far, for noGeneProbes" );
 
         /*
          * Non-cached items.
@@ -349,15 +354,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             rawResults.putAll( getProcessedVectors( EntityUtils.getIds( needToSearch ), cs2gene ) );
         }
 
-        log.info( rawResults.size() + " vectors retrieved so far, after fetching non-cached." );
+        if ( !rawResults.isEmpty() )
+            log.info( rawResults.size() + " vectors retrieved so far, after fetching non-cached." );
 
         /*
          * Deal with possibility of 'gaps' and unpack the vectors.
          */
         Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
-        for ( BioAssaySet bioassayset : needToSearch ) {
+        for ( ExpressionExperiment ee : needToSearch ) {
 
-            Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( bioassayset );
+            Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
 
             if ( bioAssayDimensions.size() == 1 ) {
                 newResults.addAll( unpack( rawResults ) );
@@ -760,6 +766,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
+     * Always provide full vectors, not subsets.
+     * 
      * @param newResults
      */
     private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
@@ -774,7 +782,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 this.processedDataVectorCache.addToCache( eeid, g, mapForCache.get( eeid ).get( g ) );
             }
         }
-        log.info( "Cached " + i + ", input " + newResults.size() );
+        // WARNING cache size() can be slow, esp. terracotta.
+        log.info( "Cached " + i + ", input " + newResults.size() + "; total cached: "
+        /* + this.processedDataVectorCache.size() */);
     }
 
     /**
@@ -994,7 +1004,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * @param ees
      * @param cs2gene Map of probe to genes.
-     * @return
+     * @return map of vectors to genes.
      */
     private Map<ProcessedExpressionDataVector, Collection<Long>> getProcessedVectors( Collection<Long> ees,
             Map<Long, Collection<Long>> cs2gene ) {

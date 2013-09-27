@@ -837,8 +837,9 @@ public class DEDVController {
 
         watch.reset();
         watch.start();
+        Collection<DoubleVectorValueObject> processedDataArraysByProbe = processedExpressionDataVectorService.getProcessedDataArraysByProbe( ees, probes );
         List<DoubleVectorValueObject> dedvs = new ArrayList<DoubleVectorValueObject>(
-                processedExpressionDataVectorService.getProcessedDataArraysByProbe( ees, probes ) );
+                processedDataArraysByProbe );
 
         watch.stop();
         if ( watch.getTime() > 1000 ) {

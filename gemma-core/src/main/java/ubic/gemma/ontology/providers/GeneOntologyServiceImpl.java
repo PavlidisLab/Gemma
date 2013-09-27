@@ -79,6 +79,9 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     private static boolean enabled = true;
 
+    /*
+     * FIXME don't hardcode this.
+     */
     private final static String GO_URL = "http://purl.obolibrary.org/obo/go.owl";
 
     private final static boolean LOAD_BY_DEFAULT = true;

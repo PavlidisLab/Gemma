@@ -71,11 +71,13 @@ public class VisualizationValueObject {
     private Collection<GeneExpressionProfile> profiles;
 
     private List<String> sampleNames;
+
     public VisualizationValueObject() {
         super();
         this.profiles = new HashSet<GeneExpressionProfile>();
     }
-                                                                              /**
+
+    /**
      * @param vectors
      * @param genes
      * @param validatedProbeList
@@ -308,9 +310,12 @@ public class VisualizationValueObject {
     @Override
     public String toString() {
         final int maxLen = 5;
-        return "VisualizationValueObject [" + ( eevo != null ? "eevo=" + eevo + "\n " : "" )
-                + ( factorProfiles != null ? "factorProfiles=\n" + toString( factorProfiles, maxLen ) + ", " : "" )
-                + ( profiles != null ? "profiles=" + toString( profiles, maxLen ) : "" ) + "]";
+        return "VisualizationValueObject ["
+                + ( eevo != null ? "eevo=" + eevo + "\n " : "" )
+                + ( factorProfiles != null ? factorProfiles.size() + " factorProfiles=\n"
+                        + toString( factorProfiles, 20 ) : "" )
+                + ( profiles != null ? profiles.size() + " exp. profiles (show up to " + maxLen + "):\n"
+                        + toString( profiles, maxLen ) : "" ) + "]";
     }
 
     /**
@@ -335,7 +340,7 @@ public class VisualizationValueObject {
             if ( i > 0 ) builder.append( ", " );
             builder.append( iterator.next() );
         }
-        builder.append( "]" );
+        builder.append( "]\n" );
         return builder.toString();
     }
 

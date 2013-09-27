@@ -18,49 +18,38 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * Represents the processed data that is used for actual analyses. The vectors in this class would have been masked to
  * remove missing values.
  */
-public abstract class ProcessedExpressionDataVector extends
-        ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl {
+public abstract class ProcessedExpressionDataVector extends DesignElementDataVectorImpl {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector}.
+     * Constructs new instances of {@link ProcessedExpressionDataVector}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector}.
+         * Constructs a new instance of {@link ProcessedExpressionDataVector}.
          */
-        public static ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector newInstance() {
-            return new ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorImpl();
+        public static ProcessedExpressionDataVector newInstance() {
+            return new ProcessedExpressionDataVectorImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7802069398062779337L;
     private Double rankByMean;
 
     private Double rankByMax;
 
-    private ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ProcessedExpressionDataVector() {
-    }
+    private ExpressionExperiment expressionExperiment;
 
     /**
      * 
      */
     @Override
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment() {
+    public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
     }
 
@@ -88,8 +77,7 @@ public abstract class ProcessedExpressionDataVector extends
     }
 
     @Override
-    public void setExpressionExperiment(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
     }
 

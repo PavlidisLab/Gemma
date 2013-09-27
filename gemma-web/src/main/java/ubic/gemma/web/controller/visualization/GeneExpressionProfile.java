@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.visualization;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
@@ -44,8 +43,8 @@ public class GeneExpressionProfile {
             buf.append( String.format( "  %.2g", d ) );
         }
 
-        return "GeneExpressionProfile:\n" + ( genes != null ? "genes=" + StringUtils.join( genes, "," ) : "" )
-                + ( profile != null ? "profile=\n" + buf + ", " : "" ) + "\n";
+        return "Profile: " + ( genes != null ? "genes=" + StringUtils.join( genes, "," ) : "" )
+                + ( profile != null ? "\ndata=" + buf + "\n" : "" );
     }
 
     private boolean allMissing = true;

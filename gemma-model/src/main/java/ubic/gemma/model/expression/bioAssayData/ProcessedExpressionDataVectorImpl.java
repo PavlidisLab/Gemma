@@ -21,8 +21,7 @@ package ubic.gemma.model.expression.bioAssayData;
 /**
  * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector
  */
-public class ProcessedExpressionDataVectorImpl extends
-        ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector {
+public class ProcessedExpressionDataVectorImpl extends ProcessedExpressionDataVector {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

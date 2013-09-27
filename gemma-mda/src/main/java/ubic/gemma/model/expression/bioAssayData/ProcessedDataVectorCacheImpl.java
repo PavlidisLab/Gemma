@@ -53,12 +53,12 @@ import ubic.gemma.util.Settings;
 @Component
 public class ProcessedDataVectorCacheImpl implements InitializingBean, ProcessedDataVectorCache {
 
-    private static final String VECTOR_CACHE_NAME = "ProcessedExpressionDataVectorCache";
-    private static final int VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
-    private static final int VECTOR_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
-    private static final int VECTOR_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
     private static final boolean VECTOR_CACHE_DEFAULT_ETERNAL = true;
+    private static final int VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
     private static final boolean VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
+    private static final int VECTOR_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
+    private static final int VECTOR_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
+    private static final String VECTOR_CACHE_NAME = "ProcessedExpressionDataVectorCache";
 
     private Cache cache;
 
@@ -181,6 +181,11 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
             dvvo.setPvalue( null );
         }
         return result;
+    }
+
+    @Override
+    public int size() {
+        return this.cache.getSize();
     }
 }
 

@@ -49,4 +49,9 @@ public interface ProcessedDataVectorCache {
      */
     public abstract Collection<DoubleVectorValueObject> get( BioAssaySet ee, Long g );
 
+    /**
+     * @return number of elements currently in the cache. Warning: expensive operation, and only an approximate count.
+     */
+    public abstract int size();
+
 }
