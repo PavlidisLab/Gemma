@@ -104,7 +104,8 @@ public interface DifferentialExpressionResultService {
      * interfaces.
      * 
      * @param resultSets
-     * @param genes * @return map of resultset IDs to map of gene id to differential expression results.
+     * @param genes
+     * @return map of resultset IDs to map of gene id to differential expression results.
      */
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds );

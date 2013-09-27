@@ -528,6 +528,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                  * Each query tuple are the probe, result, resultsSet, qvalue, pvalue.
                  */
                 for ( Object o : queryResult ) {
+//                    Long resultSetId = ( ( BigInteger )((Object[])o)[2] ).longValue();
+//                    if (!resultSetId.equals)
                     numResults += processResultTuple( o, resultsFromDb, cs2GeneIdMap );
                 }
 
@@ -880,7 +882,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         // final String queryString =
         // "from DifferentialExpressionAnalysisResultImpl dea left join fetch dea.contrasts where dea.id in (:ids)";
 
-        final String queryString = "SELECT DISTINCT c.ID, c.LOG_FOLD_CHANGE, c.FACTOR_VALUE_FK, c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, c.PVALUE from CONTRAST_RESULT c"
+        final String queryString = "SELECT DISTINCT c.ID, c.LOG_FOLD_CHANGE, c.FACTOR_VALUE_FK,"
+                + " c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, c.PVALUE from CONTRAST_RESULT c"
                 + " WHERE c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK IN (:ids)  ";
 
         Map<Long, ContrastsValueObject> probeResults = new HashMap<Long, ContrastsValueObject>();

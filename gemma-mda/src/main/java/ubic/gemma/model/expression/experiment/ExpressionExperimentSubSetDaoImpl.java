@@ -41,7 +41,8 @@ public class ExpressionExperimentSubSetDaoImpl extends ExpressionExperimentSubSe
     @Override
     public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
         try {
-            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperimentSubSet.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession()
+                    .createCriteria( ExpressionExperimentSubSet.class );
 
             BusinessKey.checkKey( entity );
 
@@ -68,6 +69,24 @@ public class ExpressionExperimentSubSetDaoImpl extends ExpressionExperimentSubSe
     public Collection<? extends ExpressionExperimentSubSet> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSubSetImpl where id in (:ids)",
                 "ids", ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getFactorValuesUsed(ubic.gemma.model.expression
+     * .experiment.ExpressionExperimentSubSet, ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     */
+    @Override
+    public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
+        return this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select distinct fv from ExpressionExperimentSubSetImpl es join es.bioAssays ba join ba.sampleUsed bm "
+                                + "join bm.factorValues fv where es=:es and fv.experimentalFactor = :ef " )
+                .setParameter( "es", entity ).setParameter( "ef", factor ).list();
     }
 
 }

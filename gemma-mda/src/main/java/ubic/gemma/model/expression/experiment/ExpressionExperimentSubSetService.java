@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 /**
@@ -29,32 +31,42 @@ public interface ExpressionExperimentSubSetService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExpressionExperimentSubSet load( java.lang.Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperimentSubSet load( Long id );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperimentSubSet> loadAll();
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperimentSubSet> loadAll();
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
 
+    /**
+     * @param entity
+     * @param factor
+     * @return the factor values of the given factor that are relevant to the subset.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
     /**
-     * Deletes an experiment subset and all of its associated DifferentialExpressionAnalysis objects. This method is similar to 
-     * ubic.gemma.expression.experiment.service.ExpressionExperimentServiceImpl.handleDelete(ExpressionExperiment) but it
-     * doesn't include removal of sample coexpression matrices, PCA, probe2probe coexpression links, or adjusting of experiment set members.
+     * Deletes an experiment subset and all of its associated DifferentialExpressionAnalysis objects. This method is
+     * similar to
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentServiceImpl.handleDelete(ExpressionExperiment) but
+     * it doesn't include removal of sample coexpression matrices, PCA, probe2probe coexpression links, or adjusting of
+     * experiment set members.
+     * 
      * @param entity the subset to delete
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentServiceImpl.handleDelete(ExpressionExperiment)
      */

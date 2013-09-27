@@ -62,9 +62,14 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
         return this.getExpressionExperimentSubSetDao().findOrCreate( entity );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
+        return this.getExpressionExperimentSubSetDao().getFactorValuesUsed( entity, factor );
+    }
+
     /**
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#saveExpressionExperimentSubSet(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
-     */
+      */
     @Override
     protected ExpressionExperimentSubSet handleCreate(
             ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {

@@ -89,6 +89,6 @@ public class DifferentialExpressionAnalysisResultImpl extends
     @Override
     public String toString() {
         return "DiffExRes[" + this.getId() + "]: " + this.getProbe() + " p=" + String.format( "%g", this.getPvalue() )
-                + " ressetId=" + this.getResultSet().getId();
+                + " ressetId=" + ( this.getResultSet() == null ? "" : this.getResultSet().getId() );
     }
 }

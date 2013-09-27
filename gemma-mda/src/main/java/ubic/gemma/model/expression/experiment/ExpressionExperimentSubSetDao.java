@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet
  */
@@ -31,5 +33,7 @@ public interface ExpressionExperimentSubSetDao extends
     ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
 
     ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
+
+    Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
 }

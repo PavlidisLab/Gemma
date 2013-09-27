@@ -44,6 +44,14 @@ public class DiffExprGeneSearchResult implements Serializable {
     }
 
     @Override
+    public String toString() {
+        return "DiffExprGeneSearchResult ["
+                + ( analysisResultId != null ? "analysisResultId=" + analysisResultId + ", " : "" )
+                + ( geneId != null ? "geneId=" + geneId + ", " : "" ) + ( pvalue != null ? "pvalue=" + pvalue : "" )
+                + "]";
+    }
+
+    @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
         if ( obj == null ) return false;
