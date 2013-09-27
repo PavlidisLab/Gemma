@@ -18,6 +18,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.SortedSet;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -128,13 +130,6 @@ public interface PhenotypeAssociationManagerService {
             String categoryUri, Long taxonId );
 
     /**
-     * Gets all External Databases that are used with evidence
-     * 
-     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
-     */
-    public abstract Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
-
-    /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      * 
      * @param query
@@ -182,6 +177,13 @@ public interface PhenotypeAssociationManagerService {
      */
     public abstract DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId );
+
+    /**
+     * Gets all External Databases that are used with evidence
+     * 
+     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     */
+    public abstract Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
 
     /**
      * find all evidence that doesn't come from an external source
@@ -267,4 +269,11 @@ public interface PhenotypeAssociationManagerService {
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
     public abstract ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence );
+
+    /**
+     * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
+     * by Quartz
+     */
+    @Secured({"GROUP_AGENT" })
+    public abstract void writeAllEvidenceToFile();
 }
