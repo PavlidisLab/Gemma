@@ -136,7 +136,7 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 		row.push ("Gene");
 		row.push ("Meta p-value");
 		for (var i = 0; i < this.conditions.items.length; i++) {		
-			var condition = this.conditions.items[0];
+			var condition = this.conditions.items[i];
 				row.push ("'"+condition.contrastFactorValue + " vs " + condition.baselineFactorValue + " : " + condition.datasetShortName+"'");				
 		}
 		return row.join('\t')+"\n";		
