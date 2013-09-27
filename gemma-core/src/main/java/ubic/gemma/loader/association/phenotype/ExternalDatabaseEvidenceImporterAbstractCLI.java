@@ -23,7 +23,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -48,7 +47,7 @@ import ubic.gemma.util.Settings;
 /**
  * TODO Parent of all Importers
  * 
- * @author Paul
+ * @author nicolas
  * @version $Id$
  */
 public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
@@ -236,16 +235,18 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         }
 
         String pathFileName = writeFolder + File.separator + fileName;
+        log.info( "Trying to download : " + fullPathToDownload );
 
+        URL url;
         try {
-
-            log.info( "Trying to download : " + fullPathToDownload );
-
-            URL url = new URL( fullPathToDownload );
+            url = new URL( fullPathToDownload );
             url.openConnection();
-            InputStream reader = url.openStream();
+        } catch ( IOException e1 ) {
+            throw new RuntimeException( e1 );
+        }
 
-            FileOutputStream writer = new FileOutputStream( pathFileName );
+        try (InputStream reader = url.openStream(); FileOutputStream writer = new FileOutputStream( pathFileName );) {
+
             byte[] buffer = new byte[153600];
             int bytesRead = 0;
 
@@ -258,10 +259,8 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
             reader.close();
             log.info( "Download Completed" );
 
-        } catch ( MalformedURLException e ) {
-            e.printStackTrace();
         } catch ( IOException e ) {
-            e.printStackTrace();
+            throw new RuntimeException( e );
         }
 
         return pathFileName;
@@ -324,88 +323,88 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         HashSet<String> meshIds = new HashSet<String>();
         String valueUri = null;
 
-        BufferedReader br = new BufferedReader( new FileReader( diseaseOntologyFile ) );
+        try (BufferedReader br = new BufferedReader( new FileReader( diseaseOntologyFile ) );) {
 
-        String line = "";
+            String line = "";
 
-        boolean foundTerm = false;
+            boolean foundTerm = false;
 
-        while ( ( line = br.readLine() ) != null ) {
+            while ( ( line = br.readLine() ) != null ) {
 
-            String[] tokens = null;
+                String[] tokens = null;
 
-            line = line.trim();
+                line = line.trim();
 
-            // found a term
-            if ( line.equalsIgnoreCase( "[Term]" ) ) {
-                foundTerm = true;
-                valueUri = null;
-                omimIds = new HashSet<String>();
-                meshIds = new HashSet<String>();
-            } else if ( foundTerm ) {
+                // found a term
+                if ( line.equalsIgnoreCase( "[Term]" ) ) {
+                    foundTerm = true;
+                    valueUri = null;
+                    omimIds = new HashSet<String>();
+                    meshIds = new HashSet<String>();
+                } else if ( foundTerm ) {
 
-                if ( line.startsWith( "id:" ) ) {
+                    if ( line.startsWith( "id:" ) ) {
 
-                    tokens = line.split( ":" );
+                        tokens = line.split( ":" );
 
-                    String diseaseId = tokens[2].trim();
-                    // will throw exception if a number is not found
-                    Integer.parseInt( diseaseId );
-                    // disease id
-                    valueUri = "http://purl.obolibrary.org/obo/DOID_" + diseaseId;
+                        String diseaseId = tokens[2].trim();
+                        // will throw exception if a number is not found
+                        Integer.parseInt( diseaseId );
+                        // disease id
+                        valueUri = "http://purl.obolibrary.org/obo/DOID_" + diseaseId;
 
-                } else if ( line.indexOf( "xref: OMIM" ) != -1 ) {
+                    } else if ( line.indexOf( "xref: OMIM" ) != -1 ) {
 
-                    tokens = line.split( ":" );
-                    omimIds.add( tokens[2].trim() );
-                } else if ( line.indexOf( "xref: MSH" ) != -1 ) {
-                    tokens = line.split( ":" );
-                    meshIds.add( tokens[2].trim() );
-                }
-
-                // end of a term
-                else if ( line.equalsIgnoreCase( "" ) ) {
-
-                    foundTerm = false;
-
-                    for ( String omimId : omimIds ) {
-
-                        HashSet<String> h = new HashSet<String>();
-
-                        if ( diseaseFileMappingFound.get( omimId ) == null ) {
-                            if ( !isObsoleteOrNotExist( valueUri ) ) {
-                                h.add( valueUri );
-                            }
-                        } else {
-                            h = diseaseFileMappingFound.get( omimId );
-                            if ( !isObsoleteOrNotExist( valueUri ) ) {
-                                h.add( valueUri );
-                            }
-                        }
-                        diseaseFileMappingFound.put( "OMIM:" + omimId, h );
+                        tokens = line.split( ":" );
+                        omimIds.add( tokens[2].trim() );
+                    } else if ( line.indexOf( "xref: MSH" ) != -1 ) {
+                        tokens = line.split( ":" );
+                        meshIds.add( tokens[2].trim() );
                     }
 
-                    for ( String meshId : meshIds ) {
+                    // end of a term
+                    else if ( line.equalsIgnoreCase( "" ) ) {
 
-                        HashSet<String> h = new HashSet<String>();
+                        foundTerm = false;
 
-                        if ( diseaseFileMappingFound.get( meshId ) == null ) {
-                            if ( !isObsoleteOrNotExist( valueUri ) ) {
-                                h.add( valueUri );
+                        for ( String omimId : omimIds ) {
+
+                            HashSet<String> h = new HashSet<String>();
+
+                            if ( diseaseFileMappingFound.get( omimId ) == null ) {
+                                if ( !isObsoleteOrNotExist( valueUri ) ) {
+                                    h.add( valueUri );
+                                }
+                            } else {
+                                h = diseaseFileMappingFound.get( omimId );
+                                if ( !isObsoleteOrNotExist( valueUri ) ) {
+                                    h.add( valueUri );
+                                }
                             }
-                        } else {
-                            h = diseaseFileMappingFound.get( meshId );
-                            if ( !isObsoleteOrNotExist( valueUri ) ) {
-                                h.add( valueUri );
-                            }
+                            diseaseFileMappingFound.put( "OMIM:" + omimId, h );
                         }
-                        diseaseFileMappingFound.put( "MESH:" + meshId, h );
+
+                        for ( String meshId : meshIds ) {
+
+                            HashSet<String> h = new HashSet<String>();
+
+                            if ( diseaseFileMappingFound.get( meshId ) == null ) {
+                                if ( !isObsoleteOrNotExist( valueUri ) ) {
+                                    h.add( valueUri );
+                                }
+                            } else {
+                                h = diseaseFileMappingFound.get( meshId );
+                                if ( !isObsoleteOrNotExist( valueUri ) ) {
+                                    h.add( valueUri );
+                                }
+                            }
+                            diseaseFileMappingFound.put( "MESH:" + meshId, h );
+                        }
                     }
                 }
             }
-        }
 
-        br.close();
+        }
     }
 
     // parse file and returns a collection of stop words to exclude
