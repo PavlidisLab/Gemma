@@ -19,6 +19,8 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
@@ -97,9 +99,7 @@ public interface BioMaterialService {
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
     /**
-     * <p>
      * Updates the given biomaterial to the database.
-     * </p>
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( BioMaterial bioMaterial );
@@ -113,5 +113,14 @@ public interface BioMaterialService {
      */
     @Secured({ "GROUP_USER" })
     public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects );
+
+    /**
+     * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
+     * 
+     * @param dates
+     * @param d2fv
+     */
+    @Secured({ "GROUP_ADMIN" })
+    public void associateBatchFactor( Map<BioMaterial, Date> dates, Map<Date, FactorValue> d2fv );
 
 }

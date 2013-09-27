@@ -34,20 +34,22 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * Test fetching and loading the batch information from raw files.
+ * Test fetching and loading the batch information from raw files. Test takes around 10-15 minutes if the files are not
+ * downloaded first.
  * 
  * @author paul
  * @version $Id$
  */
 public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServiceTest {
+
     @Autowired
-    protected GeoService geoService;
+    private GeoService geoService;
 
     @Autowired
     private BatchInfoPopulationService batchInfoPopulationService;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
     @Test
     public void testLoad() throws Exception {

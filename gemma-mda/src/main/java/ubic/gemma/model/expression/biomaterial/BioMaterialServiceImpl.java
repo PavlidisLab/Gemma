@@ -15,6 +15,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -38,9 +40,44 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialService
  */
 @Service
-public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase {
+public class BioMaterialServiceImpl extends BioMaterialServiceBase {
 
     private static Logger log = LoggerFactory.getLogger( BioMaterialServiceImpl.class );
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#associateBatchFactor(java.util.Map,
+     * java.util.Map)
+     */
+    @Override
+    public void associateBatchFactor( final Map<BioMaterial, Date> dates, final Map<Date, FactorValue> d2fv ) {
+
+        for ( final BioMaterial bm : dates.keySet() ) {
+
+            final BioMaterial toUpdate = this.bioMaterialDao.load( bm.getId() );
+
+            if ( !d2fv.isEmpty() ) {
+                toUpdate.getFactorValues().add( d2fv.get( dates.get( toUpdate ) ) );
+            }
+
+            for ( final BioAssay ba : toUpdate.getBioAssaysUsedIn() ) {
+
+                if ( ba.getProcessingDate() != null ) {
+                    if ( !ba.getProcessingDate().equals( dates.get( toUpdate ) ) ) {
+                        ba.setProcessingDate( dates.get( toUpdate ) );
+                        bioAssayDao.update( ba );
+                    }
+
+                } else {
+                    ba.setProcessingDate( dates.get( toUpdate ) );
+                    bioAssayDao.update( ba );
+                }
+            }
+            bioMaterialDao.update( toUpdate );
+        }
+
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -82,6 +119,25 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
         return this.getBioMaterialDao().thaw( bioMaterials );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#updateBioMaterials(java.util.Collection)
+     */
+    @Override
+    @Transactional
+    public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
+
+        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        for ( BioMaterialValueObject bioMaterialValueObject : valueObjects ) {
+            BioMaterial updatedBm = this.update( bioMaterialValueObject );
+            // the map FactorIdToFactorValueId contains values for all factors, including empty ones.
+            assert bioMaterialValueObject.getFactorIdToFactorValueId().size() >= updatedBm.getFactorValues().size();
+            bms.add( updatedBm );
+        }
+        return bms;
     }
 
     /*
@@ -172,29 +228,11 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         this.getBioMaterialDao().update( bioMaterial );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#updateBioMaterials(java.util.Collection)
-     */
-    @Override
-    @Transactional   public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
-
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
-        for ( BioMaterialValueObject bioMaterialValueObject : valueObjects ) {
-            BioMaterial updatedBm = this.update( bioMaterialValueObject );
-            // the map FactorIdToFactorValueId contains values for all factors, including empty ones.
-            assert bioMaterialValueObject.getFactorIdToFactorValueId().size() >= updatedBm.getFactorValues().size();
-            bms.add( updatedBm );
-        }
-        return bms;
-    }
-
     /**
      * @param bmvo
      * @return
      */
-  private BioMaterial update( BioMaterialValueObject bmvo ) {
+    private BioMaterial update( BioMaterialValueObject bmvo ) {
         BioMaterial bm = load( bmvo.getId() );
 
         Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();

@@ -40,7 +40,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
@@ -93,12 +92,12 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         /*
          * Go through the dates and convert to factor values.
          */
-        Collection<Date> allDates = new HashSet<Date>();
+        Collection<Date> allDates = new HashSet<>();
         allDates.addAll( dates.values() );
 
         Map<String, Collection<Date>> datesToBatch = convertDatesToBatches( allDates );
 
-        Map<Date, FactorValue> d2fv = new HashMap<Date, FactorValue>();
+        Map<Date, FactorValue> d2fv = new HashMap<>();
         ExperimentalFactor ef = null;
         if ( datesToBatch == null || datesToBatch.size() < 2 ) {
             if ( datesToBatch != null ) {
@@ -135,29 +134,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             }
         }
 
-        /*
-         * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
-         */
-        for ( BioMaterial bm : dates.keySet() ) {
-            // bioMaterialService.thaw( bm );
-
-            if ( !d2fv.isEmpty() ) bm.getFactorValues().add( d2fv.get( dates.get( bm ) ) );
-
-            for ( BioAssay ba : bm.getBioAssaysUsedIn() ) {
-                if ( ba.getProcessingDate() != null ) {
-                    if ( !ba.getProcessingDate().equals( dates.get( bm ) ) ) {
-                        ba.setProcessingDate( dates.get( bm ) );
-                        bioAssayService.update( ba );
-                    }
-                } else {
-                    ba.setProcessingDate( dates.get( bm ) );
-                    // arrgh, hibernate.
-                    bioAssayService.update( ba );
-                }
-
-            }
-            bioMaterialService.update( bm );
-        }
+        bioMaterialService.associateBatchFactor( dates, d2fv );
 
         return ef;
     }
