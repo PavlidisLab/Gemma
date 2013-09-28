@@ -18,6 +18,8 @@ AnnotationController.reinitializeOntologyIndices = function(callback) {
 };
 AnnotationController.validateTags = function(p0, callback) {
 };
+AnnotationController.getCategoryTerms = function(callback) {
+};
 
 if (typeof ArrayDesignController === 'undefined') {
     var ArrayDesignController = {};
@@ -552,12 +554,6 @@ if (typeof LinkAnalysisController === 'undefined') {
     var LinkAnalysisController = {};
 }
 LinkAnalysisController.run = function(p0, callback) {
-};
-
-if (typeof OntologyService === 'undefined') {
-    var OntologyService = {};
-}
-OntologyService.getCategoryTerms = function(p0, callback) {
 };
 
 if (typeof ProcessedExpressionDataVectorCreateController === 'undefined') {

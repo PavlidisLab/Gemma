@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
@@ -71,6 +72,13 @@ public class AnnotationController {
     private OntologyService ontologyService;
     @Autowired
     private TaxonService taxonService;
+
+    /**
+     * @return
+     */
+    public Collection<OntologyTerm> getCategoryTerms() {
+        return ontologyService.getCategoryTerms();
+    }
 
     /**
      * @param eeId

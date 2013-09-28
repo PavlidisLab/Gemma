@@ -502,6 +502,7 @@
 		<dwr:remote javascript="AnnotationController">
 			<dwr:include method="autoTag" />
 			<dwr:include method="findTerm" />
+			<dwr:include method="getCategoryTerms" />
 			<dwr:include method="createExperimentTag" />
 			<dwr:include method="removeExperimentTag" />
 			<dwr:include method="createBioMaterialTag" />
@@ -637,11 +638,6 @@
 		</dwr:remote>
 	</bean>
 
-	<bean id="ontologyService" class="ubic.gemma.ontology.OntologyServiceImpl">
-		<dwr:remote javascript="OntologyService">
-			<dwr:include method="getCategoryTerms" />
-		</dwr:remote>
-	</bean>
 
 	<bean id="systemMonitorController" class="ubic.gemma.web.controller.monitoring.SystemMonitorController">
 		<dwr:remote javascript="SystemMonitorController">

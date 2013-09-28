@@ -31,7 +31,7 @@ Gemma.CategoryCombo = Ext.extend(Ext.form.ComboBox, {
 
       initComponent : function() {
 
-         this.dwrMethod = OntologyService.getCategoryTerms;
+         this.dwrMethod = AnnotationController.getCategoryTerms;
          this.dwrParams = [];
 
          this.store = new Ext.data.Store({

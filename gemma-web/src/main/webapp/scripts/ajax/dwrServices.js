@@ -34,6 +34,9 @@ AnnotationController.removeExperimentTag = function(p0, p1, callback) {
 AnnotationController.createBioMaterialTag = function(p0, p1, callback) {
    dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'createBioMaterialTag', p0, p1, callback);
 };
+AnnotationController.getCategoryTerms = function(callback) {
+   dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'getCategoryTerms', callback);
+};
 AnnotationController.removeBioMaterialTag = function(p0, p1, callback) {
    dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'removeBioMaterialTag', p0, p1, callback);
 };
@@ -1063,15 +1066,7 @@ LinkAnalysisController.run = function(p0, callback) {
    googleAnalyticsTrackPageviewIfConfigured("/Gemma/LinkAnalysisController/run");
    dwr.engine._execute(LinkAnalysisController._path, 'LinkAnalysisController', 'run', p0, callback);
 };
-//
-// // ====================================================================================
-if ( typeof OntologyService === 'undefined' ) {
-   var OntologyService = {};
-}
-OntologyService._path = '/Gemma/dwr';
-OntologyService.getCategoryTerms = function(callback) {
-   dwr.engine._execute(OntologyService._path, 'OntologyService', 'getCategoryTerms', callback);
-};
+
 // ====================================================================================
 if ( typeof ProcessedExpressionDataVectorCreateController === 'undefined' ) {
    var ProcessedExpressionDataVectorCreateController = {};
