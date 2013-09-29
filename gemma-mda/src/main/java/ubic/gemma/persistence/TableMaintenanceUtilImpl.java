@@ -28,6 +28,7 @@ import java.io.ObjectOutputStream;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -59,6 +60,8 @@ import ubic.gemma.util.MailEngine;
  */
 @Service
 public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
+
+    private static final AtomicBoolean running = new AtomicBoolean( false );
 
     /**
      * The query used to repopulate the contents of the GENE2CS table.
@@ -104,12 +107,15 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
      */
     @Override
     @Transactional
-    public void updateGene2CsEntries() {
+    public synchronized void updateGene2CsEntries() {
+
+        if ( running.get() ) return;
 
         log.debug( "Running Gene2CS status check" );
 
         String annotation = "";
         try {
+            running.set( true );
 
             Gene2CsStatus status = getLastGene2CsUpdateStatus();
             boolean needToRefresh = false;
@@ -168,6 +174,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
             } catch ( IOException e1 ) {
                 throw new RuntimeException( e1 );
             }
+        } finally {
+            running.set( false );
         }
     }
 
