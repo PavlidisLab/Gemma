@@ -97,12 +97,13 @@ public class CacheMonitorImpl implements CacheMonitor {
         Arrays.sort( cacheNames );
 
         buf.append( cacheNames.length + " caches; only non-empty caches listed below." );
+        // FIXME make these sortable.
         buf.append( "<br/>&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
         buf.append( "<br/>&nbsp;To start statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
         buf.append( "<br/>&nbsp;To stop statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
 
         buf.append( "<table style='font-size:small'  ><tr>" );
-        String header = "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
+        String header = "<th>Name</th><th>HitRate</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
         buf.append( header );
         buf.append( "</tr>" );
 
@@ -129,7 +130,14 @@ public class CacheMonitorImpl implements CacheMonitor {
             long onDiskHits = statistics.getOnDiskHits();
             long evictions = statistics.getEvictionCount();
 
+            if ( hits + misses > 0 ) {
+
+                buf.append( makeTableCellForStat( String.format( "%.2f", ( double ) hits / ( hits + misses ) ) ) );
+            } else {
+                buf.append( "<td></td>" );
+            }
             buf.append( makeTableCellForStat( hits ) );
+
             buf.append( makeTableCellForStat( misses ) );
             buf.append( makeTableCellForStat( objectCount ) );
             buf.append( makeTableCellForStat( inMemoryHits ) );
@@ -175,7 +183,11 @@ public class CacheMonitorImpl implements CacheMonitor {
         return "<td>" + ( hits > 0 ? hits : "" ) + "</td>";
     }
 
-    private void setStatisticsEnabled( boolean b ) {
+    private String makeTableCellForStat( String s ) {
+        return "<td>" + s + "</td>";
+    }
+
+    private synchronized void setStatisticsEnabled( boolean b ) {
         String[] cacheNames = cacheManager.getCacheNames();
 
         for ( String rawCacheName : cacheNames ) {
