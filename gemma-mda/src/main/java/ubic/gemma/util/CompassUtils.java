@@ -121,17 +121,6 @@ public class CompassUtils {
             return false;
         }
 
-        // Optimization no longer necessary (deprecated)
-        // log.info( "Indexing done. Now Optimizing index" );
-        // try {
-        // gps.getIndexCompass().getSearchEngineOptimizer().optimize();
-        // } catch ( Exception e ) {
-        // String bodyText = "Failed to optimize Index. Error is:  " + e;
-        // log.error( bodyText, e );
-        // return false;
-        // }
-        //
-        // log.info( "Optimizing complete" );
         /* Return state of device */
         if ( !wasRunningBefore ) {
             disableIndexMirroring( gps );
