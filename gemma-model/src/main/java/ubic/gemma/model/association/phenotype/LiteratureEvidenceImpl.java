@@ -26,7 +26,6 @@ package ubic.gemma.model.association.phenotype;
  * @see ubic.gemma.model.association.phenotype.LiteratureEvidence
  */
 public class LiteratureEvidenceImpl extends LiteratureEvidence {
-    private final String discriminator = "ubic.gemma.model.association.phenotype.PhenotypeAssociation";
     /**
      * The serial version UID of this class. Needed for serialization.
      */
