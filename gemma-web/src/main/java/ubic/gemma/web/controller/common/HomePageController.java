@@ -45,6 +45,27 @@ import ubic.gemma.web.controller.WebConstants;
 @Controller
 public class HomePageController {
 
+    private static final class TaxonComparator implements Comparator<Map.Entry<Taxon, Long>> {
+        @Override
+        public int compare( Map.Entry<Taxon, Long> e1, Map.Entry<Taxon, Long> e2 ) {
+            Long e1value = e1.getValue();
+            Long e2value = e2.getValue();
+
+            int cf = e1value.compareTo( e2value );
+            if ( cf == 0 ) {
+                try {
+                    String e1commonName = e1.getKey().getCommonName();
+                    String e2commonName = e2.getKey().getCommonName();
+
+                    cf = e1commonName.compareTo( e2commonName );
+                } catch ( Exception e ) {
+                    cf = 1;
+                }
+            }
+            return cf;
+        }
+    }
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -62,6 +83,9 @@ public class HomePageController {
         otherTaxa.setIsSpecies( false );
     }
 
+    /**
+     * For the show-off graph that shows number of data sets per taxon.
+     */
     public void getCountsForTaxonPieChart() {
 
         Map<Taxon, Long> unsortedEEsPerTaxon = expressionExperimentService.getPerTaxonCount();
@@ -70,20 +94,8 @@ public class HomePageController {
          * Sort taxa by count.
          */
         TreeSet<Map.Entry<Taxon, Long>> eesPerTaxonValueSorted = new TreeSet<Map.Entry<Taxon, Long>>(
-                new Comparator<Map.Entry<Taxon, Long>>() {
-                    @Override
-                    public int compare( Map.Entry<Taxon, Long> e1, Map.Entry<Taxon, Long> e2 ) {
-                        int cf = e1.getValue().compareTo( e2.getValue() );
-                        if ( cf == 0 ) {
-                            try {
-                                cf = e1.getKey().getCommonName().compareTo( e2.getKey().getCommonName() );
-                            } catch ( Exception e ) {
-                                cf = 1;
-                            }
-                        }
-                        return cf;
-                    }
-                } );
+                new TaxonComparator() );
+
         eesPerTaxonValueSorted.addAll( unsortedEEsPerTaxon.entrySet() );
 
         long expressionExperimentCount = expressionExperimentService.countAll();
@@ -91,9 +103,11 @@ public class HomePageController {
         double groupBelow = 0.1; // if a taxon has less then this percent of total count, group into 'other'
         String googleData = encodeDataForGoogle( eesPerTaxonValueSorted.descendingSet(), expressionExperimentCount,
                 groupBelow );
+
         List<String> googleLabelsColls = new ArrayList<String>();
         boolean grouped = false;
         List<String> others = new ArrayList<String>();
+
         for ( Entry<Taxon, Long> entry : eesPerTaxonValueSorted.descendingSet() ) {
             String tname = entry.getKey().getCommonName();
             if ( StringUtils.isBlank( tname ) ) tname = entry.getKey().getScientificName();
@@ -107,9 +121,11 @@ public class HomePageController {
                 googleLabelsColls.add( tname );
             }
         }
+
         if ( grouped ) {
             googleLabelsColls.add( StringUtils.abbreviate( StringUtils.join( others, ", " ), 50 ) );
         }
+
         String googleLabels = StringUtils.join( googleLabelsColls, '|' );
 
         mav.addObject( "googleData", googleData );
@@ -124,14 +140,14 @@ public class HomePageController {
          * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
          * functionality here without considering that.
          */
-        // updateCounts();
         getCountsForTaxonPieChart();
         return mav;
     }
 
+    private final static char[] simpleEncoding = new String(
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" ).toCharArray();
+
     private String encodeDataForGoogle( Set<Entry<Taxon, Long>> eesPerTaxonValueSorted, long maxValue, double groupBelow ) {
-        char[] simpleEncoding = new String( "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" )
-                .toCharArray();
 
         // This function scales the submitted values so that
         // maxVal becomes the highest value.

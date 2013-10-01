@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jena.larq.IndexLARQ;
 
 import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.model.ObjectPropertyImpl;
@@ -34,6 +33,7 @@ import ubic.basecode.ontology.model.OntologyClassRestriction;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologyIndexer;
 import ubic.basecode.ontology.search.OntologySearch;
+import ubic.basecode.ontology.search.SearchIndex;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -58,7 +58,7 @@ public class MeshService {
     private final static String MESH_ONT_URL = "http://onto.eva.mpg.de/obo/mesh.owl";
     private static final String MESH_INDEX_NAME = "mesh";
     private static OntModel model;
-    private static IndexLARQ index;
+    private static SearchIndex index;
     private static ExternalDatabase meshdb;
 
     static {

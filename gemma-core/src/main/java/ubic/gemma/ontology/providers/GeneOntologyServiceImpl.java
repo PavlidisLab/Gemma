@@ -43,6 +43,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologyIndexer;
 import ubic.basecode.ontology.search.OntologySearch;
+import ubic.basecode.ontology.search.SearchIndex;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -177,7 +178,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
      */
     private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
 
-    private Collection<IndexLARQ> indices = new HashSet<IndexLARQ>();
+    private Collection<SearchIndex> indices = new HashSet<>();
 
     private OntModel model;
 
@@ -318,7 +319,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         queryString = queryString.replaceAll( "\\s+", " AND " );
 
         Collection<OntologyResource> rawMatches = new HashSet<OntologyResource>();
-        for ( IndexLARQ index : this.indices ) {
+        for ( SearchIndex index : this.indices ) {
             rawMatches.addAll( OntologySearch.matchIndividuals( model, index, queryString ) );
         }
 

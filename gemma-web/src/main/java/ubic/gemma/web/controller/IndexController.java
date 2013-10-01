@@ -30,7 +30,7 @@ import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 public class IndexController {
 
     @Autowired
-    IndexService indexService;
+    private IndexService indexService;
 
     public String index( IndexerTaskCommand command ) {
         return this.indexService.index( command );

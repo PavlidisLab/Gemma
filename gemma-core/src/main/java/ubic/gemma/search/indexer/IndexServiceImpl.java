@@ -78,7 +78,7 @@ public class IndexServiceImpl implements IndexService {
     private Compass compassProbe;
 
     /**
-     * Job that loads in a javaspace. NOTE do not set this up to run on a worker. The search index directory may not be
+     * Job that loads in grid. NOTE do not set this up to run on a worker. The search index directory may not be
      * accessible.
      * 
      * @author Paul
@@ -98,7 +98,11 @@ public class IndexServiceImpl implements IndexService {
             SubmittedTask<IndexerResult> indexingTask = taskRunningService.getSubmittedTask( taskId );
             try {
                 TaskResult f = indexingTask.getResult();
+
                 if ( f instanceof IndexerResult ) {
+                    if ( indexingTask.isRunningRemotely() ) {
+                        loadExternalIndices( taskCommand, result );
+                    }
                     return ( IndexerResult ) f;
                 }
                 // probably there was an error.
@@ -111,14 +115,14 @@ public class IndexServiceImpl implements IndexService {
                 e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
             }
 
-            if ( indexingTask.isRunningRemotely() && result != null ) {
-                loadExternalIndices( taskCommand, result );
-            }
-
             return result;
         }
     }
 
+    /**
+     * @param indexerTaskCommand
+     * @param remoteIndexTaskResult
+     */
     private void loadExternalIndices( IndexerTaskCommand indexerTaskCommand, IndexerResult remoteIndexTaskResult ) {
         /*
          * When the rebuild is done in another JVM, in the client the index must be 'swapped' to refer to the new one.

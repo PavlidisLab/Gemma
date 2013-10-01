@@ -187,7 +187,8 @@ public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskComm
             ontologyService.reindexAllOntologies();
         }
 
-        log.info( "Indexing Finished. Returning result to space. Result is: " + result );
+        log.info( "Indexing Finished" );
+
         return result;
 
     }

@@ -182,7 +182,7 @@ public class OntologyServiceImpl implements OntologyService {
      */
     static final String USED = " -USED- ";
 
-    private static Collection<OntologyTerm> categoryterms;
+    private static Collection<OntologyTerm> categoryterms = null;
 
     private static Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
 
@@ -193,34 +193,34 @@ public class OntologyServiceImpl implements OntologyService {
     private static final int MAX_TERMS_TO_FETCH = 200;
 
     @Autowired
-    private GeneOntologyService geneOntologyService;
-
-    @Autowired
     private BioMaterialService bioMaterialService;
 
-    private NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
-    private ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
-    private FMAOntologyService fmaOntologyService = new FMAOntologyService();
-    private DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
-    private HumanDevelopmentOntologyService humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
     private CellTypeOntologyService cellTypeOntologyService = new CellTypeOntologyService();
-    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
-    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
-    private ExperimentalFactorOntologyService experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
-    private SequenceOntologyService sequenceOntologyService = new SequenceOntologyService();
-    private ObiService obiService = new ObiService();
 
     @Autowired
     private CharacteristicService characteristicService;
-
+    private ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
+    private DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
     @Autowired
     private ExpressionExperimentService eeService;
+    private ExperimentalFactorOntologyService experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
+    private FMAOntologyService fmaOntologyService = new FMAOntologyService();
+    @Autowired
+    private GeneOntologyService geneOntologyService;
+    private HumanDevelopmentOntologyService humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
+    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
+    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
+    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
+    private NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
+
+    private ObiService obiService = new ObiService();
 
     private Collection<AbstractOntologyService> ontologyServices = new ArrayList<>();
 
     @Autowired
     private SearchService searchService;
+
+    private SequenceOntologyService sequenceOntologyService = new SequenceOntologyService();
 
     @Override
     public void afterPropertiesSet() {
@@ -499,43 +499,10 @@ public class OntologyServiceImpl implements OntologyService {
          * Requires EFO, OBI and SO. If one of them isn't loaded, the terms are filled in with placeholders.
          */
 
-        if ( categoryterms == null ) {
-            URL termUrl = OntologyServiceImpl.class.getResource( "/ubic/gemma/ontology/EFO.factor.categories.txt" );
+        if ( categoryterms == null || categoryterms.isEmpty() ) {
 
-            // FIXME perhaps use this. But would want to update it periodically. e.g. cache that expires.
-            // Collection<String> usedUris = characteristicService.getUsedCategories();
+            initializeCategoryTerms();
 
-            categoryterms = new ConcurrentHashSet<>();
-            synchronized ( categoryterms ) {
-                try {
-                    BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) );
-                    String line;
-                    while ( ( line = reader.readLine() ) != null ) {
-                        if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) ) continue;
-                        String[] f = StringUtils.split( line, '\t' );
-                        if ( f.length < 2 ) {
-                            continue;
-                        }
-                        OntologyTerm t = getTerm( f[0] );
-                        if ( t == null ) {
-                            // this is not great. We might want to let it expire and redo it later if the ontology
-                            // becomes
-                            // available. Inference will not be available.
-                            log.info( "Ontology needed is not loaded? Using light-weight placeholder for " + f[0] );
-                            t = new OntologyTermSimple( f[0], f[1] );
-                        }
-
-                        categoryterms.add( t );
-                    }
-                    reader.close();
-
-                } catch ( IOException ioe ) {
-                    log.error( "Error reading from term list '" + termUrl + "'; returning general term list", ioe );
-                    categoryterms = null;
-                }
-
-                categoryterms = Collections.unmodifiableCollection( categoryterms );
-            }
         }
         return categoryterms;
 
@@ -951,6 +918,47 @@ public class OntologyServiceImpl implements OntologyService {
             vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId() );
         }
         return vc;
+    }
+
+    /**
+     * 
+     */
+    private synchronized void initializeCategoryTerms() {
+
+        URL termUrl = OntologyServiceImpl.class.getResource( "/ubic/gemma/ontology/EFO.factor.categories.txt" );
+        categoryterms = new ConcurrentHashSet<>();
+        try (BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) );) {
+            String line;
+            boolean warned = false;
+            while ( ( line = reader.readLine() ) != null ) {
+                if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) ) continue;
+                String[] f = StringUtils.split( line, '\t' );
+                if ( f.length < 2 ) {
+                    continue;
+                }
+                OntologyTerm t = getTerm( f[0] );
+                if ( t == null ) {
+                    // this is not great. We might want to let it expire and redo it later if the ontology
+                    // becomes
+                    // available. Inference will not be available.
+                    if ( !warned ) {
+                        log.info( "Ontology needed is not loaded? Using light-weight placeholder for " + f[0]
+                                + " (further warnings hidden)" );
+
+                        warned = true;
+                    }
+                    t = new OntologyTermSimple( f[0], f[1] );
+                }
+
+                categoryterms.add( t );
+            }
+
+        } catch ( IOException ioe ) {
+            log.error( "Error reading from term list '" + termUrl + "'; returning general term list", ioe );
+            categoryterms = null;
+        }
+
+        categoryterms = Collections.unmodifiableCollection( categoryterms );
     }
 
     /** given a collection of characteristics add them to the correct List */
