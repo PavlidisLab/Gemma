@@ -205,7 +205,7 @@ public class DifferentialExpressionSearchTaskImpl extends
                              * This can only happen if there is just a baseline factorvalue. Even for one-sided tests //
                              * that // won't be the case.
                              */
-                            log.warn( "Nothing usable for " + resultSet );
+                            log.warn( "Nothing usable for resultSet=" + resultSet.getId() );
                             continue;
                         }
 
