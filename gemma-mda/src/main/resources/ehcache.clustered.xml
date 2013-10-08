@@ -1188,7 +1188,7 @@
 	</cache>
 
 	<cache name="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
+		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="120000" timeToLiveSeconds="120000" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
 				<timeoutBehavior type="noop" />
@@ -1242,8 +1242,8 @@
 	</cache>
 
 	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.quantitationTypes"
-		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
-		overflowToDisk="false">
+	maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="120000" timeToLiveSeconds="120000"
+	overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
 				<timeoutBehavior type="noop" />
