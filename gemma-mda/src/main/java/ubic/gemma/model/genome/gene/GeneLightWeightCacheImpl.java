@@ -25,20 +25,20 @@ import org.springframework.stereotype.Component;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.Settings;
 
 /**
- * Configures the cache for lightweight Gene objects to speed up coexpression search.
- * coexpression search doesn't need all of the associations of the Gene entity loaded and also reuses 
- * Gene objects frequently(for example a list of highly coexpressed genes)
- * 
- *
+ * Configures the cache for lightweight Gene objects to speed up coexpression search. coexpression search doesn't need
+ * all of the associations of the Gene entity loaded and also reuses Gene objects frequently(for example a list of
+ * highly coexpressed genes)
  */
 @Component
 public class GeneLightWeightCacheImpl implements InitializingBean, GeneLightWeightCache {
@@ -54,16 +54,11 @@ public class GeneLightWeightCacheImpl implements InitializingBean, GeneLightWeig
     private static final boolean GENE_LIGHT_WEIGHT_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean GENE_LIGHT_WEIGHT_CACHE_DEFAULT_OVERFLOW_TO_DISK = false;
     private Cache cache;
-    
+
     @Override
     public void clearCache() {
         CacheManager manager = CacheManager.getInstance();
         manager.getCache( GENE_LIGHT_WEIGHT_CACHE_NAME ).removeAll();
-    }
-    
-    @Override
-    public Cache getCache() {
-        return cache;
     }
 
     /**
@@ -76,17 +71,17 @@ public class GeneLightWeightCacheImpl implements InitializingBean, GeneLightWeig
         CacheManager cacheManager = cacheManagerFactory.getObject();
         assert cacheManager != null;
         int maxElements = Settings.getInt( "gemma.cache.genelightweight.maxelements",
-        		GENE_LIGHT_WEIGHT_CACHE_DEFAULT_MAX_ELEMENTS );
+                GENE_LIGHT_WEIGHT_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = Settings.getInt( "gemma.cache.genelightweight.timetolive",
-        		GENE_LIGHT_WEIGHT_CACHE_DEFAULT_TIME_TO_LIVE );
+                GENE_LIGHT_WEIGHT_CACHE_DEFAULT_TIME_TO_LIVE );
         int timeToIdle = Settings.getInt( "gemma.cache.genelightweight.timetoidle",
-        		GENE_LIGHT_WEIGHT_CACHE_DEFAULT_TIME_TO_IDLE );
+                GENE_LIGHT_WEIGHT_CACHE_DEFAULT_TIME_TO_IDLE );
 
         boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.genelightweight.usedisk",
-        		GENE_LIGHT_WEIGHT_CACHE_DEFAULT_OVERFLOW_TO_DISK );
+                GENE_LIGHT_WEIGHT_CACHE_DEFAULT_OVERFLOW_TO_DISK );
 
         boolean eternal = Settings.getBoolean( "gemma.cache.genelightweight.eternal",
-        		GENE_LIGHT_WEIGHT_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
+                GENE_LIGHT_WEIGHT_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
 
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
@@ -119,7 +114,7 @@ public class GeneLightWeightCacheImpl implements InitializingBean, GeneLightWeig
             nonstopConfiguration.addTimeoutBehavior( tobc );
             config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
             this.cache = new Cache( config );
-            
+
         } else {
             this.cache = new Cache( GENE_LIGHT_WEIGHT_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
                     overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,
@@ -127,5 +122,18 @@ public class GeneLightWeightCacheImpl implements InitializingBean, GeneLightWeig
         }
 
         cacheManager.addCache( cache );
+    }
+
+    @Override
+    public Gene get( Long idToGet ) {
+        Element e = this.cache.get( idToGet );
+        if ( e == null ) return null;
+        return ( Gene ) e.getValue();
+    }
+
+    @Override
+    public void put( Gene g ) {
+        this.cache.put( new Element( g.getId(), g ) );
+
     }
 }

@@ -39,23 +39,23 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private String gene2GeneProteinAssociationStringUrl;
     private String gene2GeneProteinInteractionConfidenceScore;
     private String gene2GeneProteinInteractionEvidence;
-    private Integer goSim;
-    private Integer maxGoSim;
-    private Integer negSupp;
-    private Integer nonSpecNegSupp;
-    private Integer nonSpecPosSupp;
-    private Integer numTestedIn;
-    private Integer posSupp;
-    private GeneValueObject queryGene;
+    private Integer goSim = 0;
+    private Integer maxGoSim = 0;
+    private Integer negSupp = 0;
+    private Integer nonSpecNegSupp = 0;
+    private Integer nonSpecPosSupp = 0;
+    private Integer numTestedIn = 0;
+    private Integer posSupp = 0;
+    private GeneValueObject queryGene = null;
     private Boolean queryRegulatesFound = false;
-    private Double queryGeneNodeDegree;
-    private Double foundGeneNodeDegree;
+    private Double queryGeneNodeDegree = 0.0;
+    private Double foundGeneNodeDegree = 0.0;
 
-    private String sortKey;
+    private String sortKey = null;
 
-    private Collection<Long> supportingExperiments;
+    private Collection<Long> supportingExperiments = null;
 
-    private Integer supportKey;
+    private Integer supportKey = 0;
 
     @Override
     public int compareTo( CoexpressionValueObjectExt arg0 ) {
@@ -75,13 +75,14 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         CoexpressionValueObjectExt other = ( CoexpressionValueObjectExt ) obj;
         if ( this.sortKey == null ) {
             if ( other.sortKey != null ) return false;
-        } else if ( !sortKey.equals( other.sortKey ) ) {            
+        } else if ( !sortKey.equals( other.sortKey ) ) {
             return false;
-        } else if (!this.queryGene.getOfficialSymbol().equals( other.queryGene.getOfficialSymbol() )) {
+        } else if ( !this.queryGene.getOfficialSymbol().equals( other.queryGene.getOfficialSymbol() ) ) {
             return false;
         }
         return true;
     }
+
     public Boolean getContainsMyData() {
         return containsMyData;
     }
@@ -273,6 +274,8 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     }
 
     public void setSortKey() {
+        assert this.getFoundGene() != null;
+        assert this.getSupportKey() != null;
         this.sortKey = String.format( "%06f%s", 1.0 / Math.abs( getSupportKey() ), getFoundGene().getOfficialSymbol() );
     }
 

@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import net.sf.ehcache.Element;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -329,10 +327,10 @@ public class CoexpressionSearchController {
         Collection<Long> gidsNeeded = new HashSet<Long>();
 
         for ( Long gid : searchOptions.getGeneIds() ) {
-            Element e = this.getGeneLightWeightCache().getCache().get( gid );
+            Gene g = this.getGeneLightWeightCache().get( gid );
 
-            if ( e != null ) {
-                genes.add( ( Gene ) e.getValue() );
+            if ( g != null ) {
+                genes.add( g );
             } else {
                 gidsNeeded.add( gid );
             }
@@ -346,7 +344,7 @@ public class CoexpressionSearchController {
             genes.addAll( recentGenesLoaded );
 
             for ( Gene g : recentGenesLoaded ) {
-                this.getGeneLightWeightCache().getCache().put( new Element( g.getId(), g ) );
+                this.getGeneLightWeightCache().put( g );
             }
         }
 

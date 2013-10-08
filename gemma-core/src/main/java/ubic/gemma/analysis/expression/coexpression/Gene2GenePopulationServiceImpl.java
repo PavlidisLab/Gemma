@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -114,46 +115,80 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
     /**
      * @param ggc
      * @param eePositionToIdMap
+     * @param limit to those in this set.
      * @return
      */
-    public static List<Long> getSpecificExperimentIds( Gene2GeneCoexpression ggc, List<Long> eePositionToIdMap ) {
+    public static Set<Long> getSpecificExperimentIds( Gene2GeneCoexpression ggc, List<Long> eePositionToIdMap,
+            Set<Long> restraint ) {
         if ( ggc.getSpecificityVector() == null ) {
-            return new ArrayList<Long>();
+            return new HashSet<>();
         }
-        // log.info( BitUtil.prettyPrint( ggc.getSpecificityVector() ) );
-        return convertBitVector( eePositionToIdMap, ggc.getSpecificityVector() );
+        return convertBitVector( eePositionToIdMap, ggc.getSpecificityVector(), restraint );
     }
 
     /**
      * @param ggc
      * @param positionToIDMap
+     * @param limit to those in this set.
      * @return
      */
-    public static List<Long> getSupportingExperimentIds( Gene2GeneCoexpression ggc, List<Long> positionToIDMap ) {
-        return convertBitVector( positionToIDMap, ggc.getDatasetsSupportingVector() );
+    public static Set<Long> getSupportingExperimentIds( Gene2GeneCoexpression ggc, List<Long> positionToIDMap,
+            Set<Long> restraint ) {
+        return convertBitVector( positionToIDMap, ggc.getDatasetsSupportingVector(), restraint );
     }
 
     /**
      * @param ggc
      * @param eePositionToIdMap
+     * @param limit to those in this set.
      * @return
      */
-    public static List<Long> getTestedExperimentIds( Gene2GeneCoexpression ggc, List<Long> eePositionToIdMap ) {
-        return convertBitVector( eePositionToIdMap, ggc.getDatasetsTestedVector() );
+    public static Set<Long> getTestedExperimentIds( Gene2GeneCoexpression ggc, List<Long> eePositionToIdMap,
+            Set<Long> restraint ) {
+        return convertBitVector( eePositionToIdMap, ggc.getDatasetsTestedVector(), restraint );
     }
 
     /**
-     * @param positionToIDMap
-     * @param bitvector
-     * @return
+     * @param positionToIDMap of same length as bits in the bitvector (ignoring padding)
+     * @param bitvector that comes as binary from the database.
+     * @param restraint limit to items in this list.
+     * @return the items in positionToIDMap that are in bitvector, subject to restraint
      */
-    private static List<Long> convertBitVector( List<Long> positionToIDMap, byte[] bitvector ) {
-        List<Long> ids = new ArrayList<Long>( positionToIDMap.size() );
-        boolean[] asBools = BitUtil.asBools( bitvector );
-        assert asBools.length >= positionToIDMap.size(); // padding at the end.
-        for ( int i = 0; i < positionToIDMap.size(); i++ ) {
-            if ( asBools[i] ) ids.add( positionToIDMap.get( i ) );
+    private static Set<Long> convertBitVector( List<Long> positionToIDMap, byte[] bitvector, Set<Long> restraint ) {
+        Set<Long> ids = new HashSet<>(); // size should be ~1/10 of ptoidmap.
+
+        int i = 0;
+        for ( Long id : positionToIDMap ) {
+            if ( restraint != null && !restraint.contains( id ) ) {
+                i++;
+                continue;
+            }
+
+            if ( BitUtil.get( bitvector, i++ ) ) {
+                ids.add( id );
+            }
         }
+
+        // we have to iterate over the vector. If the bit at the position is 1, we take that value.
+        // for ( int i = 0; i < bitvector.length; i++ ) {
+        // byte b = bitvector[i];
+        // int bb = i * Byte.SIZE;
+        // for ( int j = 0; j < Byte.SIZE; j++ ) {
+        // // is it faster to shift the values by j?
+        //
+        // int k = b & BitUtil.masks[j];
+        // if ( k != 0 ) {
+        // ids.add( positionToIDMap.get( bb + j ) );
+        // }
+        // }
+        // }
+
+        // boolean[] asBools = BitUtil.asBools( bitvector );
+        // assert asBools.length >= positionToIDMap.size(); // padding at the end.
+        // for ( int i = 0; i < positionToIDMap.size(); i++ ) {
+        // if ( asBools[i] ) ids.add( positionToIDMap.get( i ) );
+        // }
+
         return ids;
     }
 
