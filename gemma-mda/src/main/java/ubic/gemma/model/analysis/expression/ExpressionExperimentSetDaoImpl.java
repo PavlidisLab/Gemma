@@ -27,13 +27,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 
@@ -71,18 +69,12 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSet.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( Iterator<? extends ExpressionExperimentSet> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+
+        for ( Iterator<? extends ExpressionExperimentSet> entityIterator = entities.iterator(); entityIterator
+                .hasNext(); ) {
+            create( entityIterator.next() );
+        }
+
         return entities;
     }
 
@@ -292,19 +284,11 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      */
     @Override
     public void thaw( final ExpressionExperimentSet expressionExperimentSet ) {
-
-        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
-
-            @Override
-            public Object doInHibernate( Session session ) throws HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( expressionExperimentSet );
-                Hibernate.initialize( expressionExperimentSet );
-                Hibernate.initialize( expressionExperimentSet.getTaxon() );
-                Hibernate.initialize( expressionExperimentSet.getExperiments() );
-                return null;
-            }
-        } );
-
+        Session sess = this.getSessionFactory().getCurrentSession();
+        sess.buildLockRequest( LockOptions.NONE ).lock( expressionExperimentSet );
+        Hibernate.initialize( expressionExperimentSet );
+        Hibernate.initialize( expressionExperimentSet.getTaxon() );
+        Hibernate.initialize( expressionExperimentSet.getExperiments() );
     }
 
     /**
@@ -316,18 +300,11 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSet.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( Iterator<? extends ExpressionExperimentSet> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+
+        for ( Iterator<? extends ExpressionExperimentSet> entityIterator = entities.iterator(); entityIterator
+                .hasNext(); ) {
+            update( entityIterator.next() );
+        }
     }
 
     /**
