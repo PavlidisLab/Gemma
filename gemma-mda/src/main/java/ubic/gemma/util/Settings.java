@@ -475,7 +475,7 @@ public class Settings {
      * @return
      * @see org.apache.commons.configuration.CompositeConfiguration#getKeys()
      */
-    public static Iterator<?> getKeys() {
+    public static Iterator<String> getKeys() {
         return config.getKeys();
     }
 
@@ -484,7 +484,7 @@ public class Settings {
      * @return
      * @see org.apache.commons.configuration.CompositeConfiguration#getKeys(java.lang.String)
      */
-    public static Iterator<?> getKeys( String key ) {
+    public static Iterator<String> getKeys( String key ) {
         return config.getKeys( key );
     }
 
