@@ -179,7 +179,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             }
         }
 
-        int CHUNK_SIZE = 10;
+        int CHUNK_SIZE = 20;
 
         if ( geneIdsNeeded.size() > 0 ) {
 
