@@ -49,9 +49,8 @@ public abstract class BioMaterialServiceBase implements BioMaterialService {
      * @see BioMaterialService#copy(BioMaterial)
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public BioMaterial copy( final BioMaterial bioMaterial ) {
-
         return this.handleCopy( bioMaterial );
     }
 
@@ -60,8 +59,7 @@ public abstract class BioMaterialServiceBase implements BioMaterialService {
      */
     @Override
     @Transactional(readOnly = true)
-    public java.lang.Integer countAll() {
-
+    public Integer countAll() {
         return this.handleCountAll();
 
     }
