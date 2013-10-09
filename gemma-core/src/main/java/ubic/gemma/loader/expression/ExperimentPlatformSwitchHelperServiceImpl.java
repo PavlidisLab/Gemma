@@ -65,7 +65,7 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
     public void persist( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         analysisUtilService.deleteOldAnalyses( expExp );
 
-        expressionExperimentService.update( expExp );
+        // expressionExperimentService.update( expExp );
 
         update( expExp.getRawExpressionDataVectors() );
         update( expExp.getProcessedExpressionDataVectors() ); // usually shouldn't be needed.
