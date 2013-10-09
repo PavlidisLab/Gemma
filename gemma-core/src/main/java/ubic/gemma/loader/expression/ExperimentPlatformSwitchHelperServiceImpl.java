@@ -63,9 +63,9 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
     @Override
     @Transactional
     public void persist( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
-        analysisUtilService.deleteOldAnalyses( expExp );
+        expressionExperimentService.update( expExp );
 
-        // expressionExperimentService.update( expExp );
+        analysisUtilService.deleteOldAnalyses( expExp );
 
         update( expExp.getRawExpressionDataVectors() );
         update( expExp.getProcessedExpressionDataVectors() ); // usually shouldn't be needed.
