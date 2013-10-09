@@ -95,6 +95,9 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
+        // delete any processed data vectors, they might have been accidentally generated.
+        processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
+
         // get relation between sequence and designelements.
         Map<BioSequence, Collection<CompositeSequence>> designElementMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
         Collection<CompositeSequence> elsWithNoSeq = new HashSet<CompositeSequence>();
@@ -163,7 +166,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                         throw new IllegalStateException( "Two types of vector for one quantitationtype: " + type );
                     }
 
-                    assert RawExpressionDataVector.class.isAssignableFrom( vector.getClass() );
+                    assert RawExpressionDataVector.class.isAssignableFrom( vector.getClass() ) : "Unexpected class: "
+                            + vector.getClass().getName();
 
                     CompositeSequence oldDe = vector.getDesignElement();
 
