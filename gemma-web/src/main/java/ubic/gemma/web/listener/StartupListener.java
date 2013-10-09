@@ -19,6 +19,7 @@
 package ubic.gemma.web.listener;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
@@ -132,6 +133,12 @@ public class StartupListener extends ContextLoaderListener {
         if ( config == null ) {
             config = new HashMap<String, Object>();
         }
+
+        for ( Iterator<String> it = Settings.getKeys(); it.hasNext(); ) {
+            String o = it.next();
+            config.put( o, Settings.getProperty( o ) );
+        }
+
         return config;
     }
 

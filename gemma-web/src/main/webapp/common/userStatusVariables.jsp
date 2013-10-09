@@ -28,3 +28,8 @@
 <c:if test="${empty pageContext.request.remoteUser}">
 	<input type="hidden" id="username-logged-in" value="" />
 </c:if>
+
+<%-- dump some other useful settings --%>
+<input type="hidden" id="coexpressionSearch.maxGenesPerQuery" value='${appConfig["gemma.coexpressionSearch.maxGenesPerQuery"]}' />
+<input type="hidden" id="coexpressionSearch.maxGenesPerCoexVisQuery" value='${appConfig["gemma.coexpressionSearch.maxGenesPerCoexVisQuery"]}' />
+<input type="hidden" id="gemma.coexpressionSearch.maxResultsPerQueryGene" value='${appConfig["gemma.coexpressionSearch.maxResultsPerQueryGene"]}' />
