@@ -131,10 +131,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find Genes link to a phenotype */
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
+    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUris, Taxon taxon,
             String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
             Collection<Long> externalDatabaseIds ) {
-        return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri, taxon, userName, groups,
+        return this.phenotypeAssociationDao.findGenesWithPhenotypes( phenotypesValueUris, taxon, userName, groups,
                 isAdmin, showOnlyEditable, externalDatabaseIds );
     }
 
@@ -231,7 +231,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** load all valueURI of Phenotype in the database */
     @Override
     @Transactional(readOnly = true)
-    public Set<String> loadAllPhenotypesUri() {
+    public Set<String> loadAllUsedPhenotypeUris() {
         return this.phenotypeAssociationDao.loadAllPhenotypesUri();
     }
 

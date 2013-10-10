@@ -56,8 +56,8 @@ import ubic.gemma.util.EntityUtils;
  * deals with all basic queries used by Neurocarta
  * 
  * @author Nicolas
- * @version $Id$ TODO: change criteria queries
- *          to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
+ * @version $Id$ TODO: change criteria queries to
+ *          hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -173,11 +173,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * @see ubic.gemma.model.association.phenotype.PhenotypeAssociationDao#findGeneWithPhenotypes
      */
     @Override
-    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
+    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
             Collection<Long> externalDatabaseIds ) {
 
-        HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<Long, GeneEvidenceValueObject>();
+        HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<>();
 
         if ( phenotypesValueUri.isEmpty() ) {
             return genesWithPhenotypes.values();
@@ -487,7 +487,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Set<String> loadAllPhenotypesUri() {
         return new HashSet<String>( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct c.valueUri from PhenotypeAssociation p join p.phenotypes c" ).list() );
+                .createQuery( "select distinct c.valueUri from PhenotypeAssociation p join p.phenotypes c" )
+                .setCacheable( true ).setCacheRegion( null ).list() );
     }
 
     /**
@@ -893,7 +894,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 g.setOfficialName( officialName );
                 g.setOfficialSymbol( officialSymbol );
                 g.setTaxonCommonName( taxonCommonName );
-                g.setTaxonId(taxonId);
+                g.setTaxonId( taxonId );
                 g.getPhenotypesValueUri().add( valueUri );
                 genesWithPhenotypes.put( geneId, g );
             }

@@ -18,58 +18,47 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * 
  */
-public abstract class DesignElementDataVector extends ubic.gemma.model.expression.bioAssayData.DataVectorImpl {
+public abstract class DesignElementDataVector extends DataVector {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5614004098731894433L;
-
-    private ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension;
-    private ubic.gemma.model.expression.designElement.CompositeSequence designElement;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public DesignElementDataVector() {
-    }
+    private BioAssayDimension bioAssayDimension;
+    private CompositeSequence designElement;
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension getBioAssayDimension() {
+    public BioAssayDimension getBioAssayDimension() {
         return this.bioAssayDimension;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.designElement.CompositeSequence getDesignElement() {
+    public CompositeSequence getDesignElement() {
         return this.designElement;
     }
 
     /**
      * 
      */
-    public abstract ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment();
+    public abstract ExpressionExperiment getExpressionExperiment();
 
-    public void setBioAssayDimension( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
+    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         this.bioAssayDimension = bioAssayDimension;
     }
 
-    public void setDesignElement( ubic.gemma.model.expression.designElement.CompositeSequence designElement ) {
+    public void setDesignElement( CompositeSequence designElement ) {
         this.designElement = designElement;
     }
 
     /**
      * 
      */
-    public abstract void setExpressionExperiment(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public abstract void setExpressionExperiment( ExpressionExperiment expressionExperiment );
 
 }

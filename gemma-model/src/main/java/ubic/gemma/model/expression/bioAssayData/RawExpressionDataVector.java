@@ -24,47 +24,33 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Data for one design element, across one or more bioassays, for a single quantitation type. For example, the
  * "expression profile" for a probe (gene) across a set of samples
  */
-public abstract class RawExpressionDataVector extends
-        ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorImpl {
+public abstract class RawExpressionDataVector extends DesignElementDataVector {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector}.
+     * Constructs new instances of {@link RawExpressionDataVector}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector}.
+         * Constructs a new instance of {@link RawExpressionDataVector}.
          */
-        public static ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector newInstance() {
-            return new ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorImpl();
+        public static RawExpressionDataVector newInstance() {
+            return new RawExpressionDataVectorImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 3282821691174780641L;
     private ExpressionExperiment expressionExperiment;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public RawExpressionDataVector() {
-    }
 
     /**
      * 
      */
     @Override
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment getExpressionExperiment() {
+    public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
     }
 
     @Override
-    public void setExpressionExperiment(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
     }
 

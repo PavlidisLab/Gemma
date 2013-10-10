@@ -18,28 +18,17 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+
 /**
  * An abstract class representing a one-dimensional vector of data about some aspect of an experiment.
  */
 public abstract class DataVector implements java.io.Serializable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8244723777573193951L;
-
     private byte[] data;
     private Long id;
 
-    private ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public DataVector() {
-    }
+    private QuantitationType quantitationType;
 
     /**
      * Returns <code>true</code> if the argument is an DataVector instance and all identifiers for this entity equal the
@@ -77,7 +66,7 @@ public abstract class DataVector implements java.io.Serializable {
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType getQuantitationType() {
+    public QuantitationType getQuantitationType() {
         return this.quantitationType;
     }
 
@@ -100,7 +89,7 @@ public abstract class DataVector implements java.io.Serializable {
         this.id = id;
     }
 
-    public void setQuantitationType( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+    public void setQuantitationType( QuantitationType quantitationType ) {
         this.quantitationType = quantitationType;
     }
 

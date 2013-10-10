@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -147,21 +148,14 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      */
     @Override
     public void thaw( final BioMaterial bioMaterial ) {
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
 
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-
-                session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
-                Hibernate.initialize( bioMaterial );
-                Hibernate.initialize( bioMaterial.getSourceTaxon() );
-                Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );
-                Hibernate.initialize( bioMaterial.getTreatments() );
-                Hibernate.initialize( bioMaterial.getFactorValues() );
-                return null;
-
-            }
-        } );
+        Session session = this.getSessionFactory().getCurrentSession();
+        session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
+        Hibernate.initialize( bioMaterial );
+        Hibernate.initialize( bioMaterial.getSourceTaxon() );
+        Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );
+        Hibernate.initialize( bioMaterial.getTreatments() );
+        Hibernate.initialize( bioMaterial.getFactorValues() );
 
     }
 
@@ -192,26 +186,17 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     @Override
     protected BioMaterial handleCopy( final BioMaterial bioMaterial ) {
 
-        return ( BioMaterial ) this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+        BioMaterial newMaterial = BioMaterial.Factory.newInstance();
+        newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" );
+        newMaterial.setCharacteristics( bioMaterial.getCharacteristics() );
+        newMaterial.setSourceTaxon( bioMaterial.getSourceTaxon() );
 
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        session.evict( bioMaterial );
-                        BioMaterial newMaterial = BioMaterial.Factory.newInstance();
-                        newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" );
-                        newMaterial.setCharacteristics( bioMaterial.getCharacteristics() );
-                        newMaterial.setSourceTaxon( bioMaterial.getSourceTaxon() );
+        newMaterial.setTreatments( bioMaterial.getTreatments() );
+        newMaterial.setFactorValues( bioMaterial.getFactorValues() );
 
-                        newMaterial.setTreatments( bioMaterial.getTreatments() );
-                        newMaterial.setFactorValues( bioMaterial.getFactorValues() );
-
-                        newMaterial.setName( "Modeled after " + bioMaterial.getName() );
-                        newMaterial = findOrCreate( newMaterial );
-                        return newMaterial;
-                    }
-                } );
+        newMaterial.setName( "Modeled after " + bioMaterial.getName() );
+        newMaterial = findOrCreate( newMaterial );
+        return newMaterial;
 
     }
 

@@ -24,7 +24,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Represents the processed data that is used for actual analyses. The vectors in this class would have been masked to
  * remove missing values.
  */
-public abstract class ProcessedExpressionDataVector extends DesignElementDataVectorImpl {
+public abstract class ProcessedExpressionDataVector extends DesignElementDataVector {
 
     /**
      * Constructs new instances of {@link ProcessedExpressionDataVector}.

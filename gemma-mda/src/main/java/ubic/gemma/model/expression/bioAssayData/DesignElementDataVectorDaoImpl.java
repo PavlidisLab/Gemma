@@ -82,7 +82,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
         }
 
-        if ( timer.getTime() > 50 ) {
+        if ( timer.getTime() > Math.max( 200, 20 * dedv2genes.size() ) ) {
             log.info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in "
                     + timer.getTime() + "ms\n" + "Vector query was: "
                     + NativeQueryUtils.toSql( this.getHibernateTemplate(), queryString ) );
@@ -116,7 +116,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
         }
 
-        if ( timer.getTime() > 50 ) {
+        if ( timer.getTime() > Math.max( 200, 20 * dedv2genes.size() ) ) {
             log.info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in "
                     + timer.getTime() + "ms\n" + "Vector query was: "
                     + NativeQueryUtils.toSql( this.getHibernateTemplate(), queryString ) );

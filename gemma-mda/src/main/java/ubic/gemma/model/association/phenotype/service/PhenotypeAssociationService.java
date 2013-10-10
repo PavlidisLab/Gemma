@@ -53,7 +53,7 @@ public interface PhenotypeAssociationService {
      * 
      * @param phenotypesValueUri The Ontology valueURI of the phenotype
      */
-    public Collection<GeneEvidenceValueObject> findGeneWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
+    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
             Collection<Long> externalDatabaseIds );
 
@@ -104,7 +104,7 @@ public interface PhenotypeAssociationService {
     public void update( PhenotypeAssociation evidence );
 
     /** load all valueURI of Phenotype in the database FIXME cache the results of this */
-    public Set<String> loadAllPhenotypesUri();
+    public Set<String> loadAllUsedPhenotypeUris();
 
     /** find PhenotypeAssociations associated with a BibliographicReference */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

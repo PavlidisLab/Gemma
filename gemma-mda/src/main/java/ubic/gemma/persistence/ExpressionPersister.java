@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.model.expression.biomaterial.Compound;
@@ -427,7 +428,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         StopWatch timer = new StopWatch();
         timer.start();
         int count = 0;
-        for ( DesignElementDataVector dataVector : ee.getRawExpressionDataVectors() ) {
+        for ( RawExpressionDataVector dataVector : ee.getRawExpressionDataVectors() ) {
             BioAssayDimension bioAssayDimension = fillInDesignElementDataVectorAssociations( dataVector, c );
 
             if ( timer.getTime() > 5000 ) {
