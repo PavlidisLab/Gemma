@@ -18,6 +18,9 @@
  */
 package ubic.gemma.web.controller.monitoring;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+
 import javax.jms.JMSException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -88,7 +91,12 @@ public class SystemMonitorController {
      * @return
      */
     public String getHibernateStatus() {
-        return this.hibernateMonitor.getStats( false, false, false );
+        return this.hibernateMonitor.getStats( false, false, false ) + "<br/>" + this.getSystemStatus();
+    }
+
+    private String getSystemStatus() {
+        OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+        return String.format( "<p>System load average = %.2f</p>", operatingSystemMXBean.getSystemLoadAverage() );
     }
 
     /**
