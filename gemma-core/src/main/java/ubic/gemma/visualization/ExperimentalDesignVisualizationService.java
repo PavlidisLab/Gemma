@@ -33,7 +33,7 @@ public interface ExperimentalDesignVisualizationService {
      * of the dedvs to be set to true.
      * 
      * @param dedvs
-     * @return Map of EE ids to Map of BioAssays ...
+     * @return Map of EE ids to "layouts", which are Maps of BioAssays to map of experimentalfactors to doubles.
      */
     public abstract Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedvs );

@@ -642,6 +642,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             Taxon taxon;
             for ( Map.Entry<Long, HashSet<Long>> entry : geneIdsByTaxonId.entrySet() ) {
                 taxonId = entry.getKey();
+                assert taxonId != null;
                 taxon = taxonService.load( taxonId );
 
                 // don't make groups for 1 gene

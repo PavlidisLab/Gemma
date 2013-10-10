@@ -15,6 +15,7 @@
 package ubic.gemma.association.phenotype;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -56,9 +57,9 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
      * @param taxon the name of the taxon (optinal)
-     * @return A collection of the genes found
+     * @return A map or uris to collections of the genes found
      */
-    public abstract Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypesValuesUri, Taxon taxon );
+    public abstract Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypesValuesUris, Taxon taxon );
 
     /**
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
@@ -69,6 +70,24 @@ public interface PhenotypeAssociationManagerService {
      */
     public abstract Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri );
+
+    /**
+     * @param phenotypesValuesUri the roots phenotype of the query
+     * @param taxon
+     * @return collections of the genes found
+     */
+    public abstract Collection<GeneValueObject> findCandidateGenes( String phenotypesValuesUri, Taxon taxon );
+
+    /**
+     * For each phenotypeUri, find the genes that are associated with it. Different from findCandidateGenes which finds
+     * genes associated with <em>all</em> the phenotypes together.
+     * 
+     * @param phenotypeUris
+     * @param taxon
+     * @return
+     */
+    public abstract Map<String, Collection<? extends GeneValueObject>> findCandidateGenesForEach(
+            Set<String> phenotypeUris, Taxon taxon );
 
     /**
      * Return evidence satisfying the specified filters. If the current user has not logged in, empty container is
@@ -130,6 +149,13 @@ public interface PhenotypeAssociationManagerService {
             String categoryUri, Long taxonId );
 
     /**
+     * Gets all External Databases that are used with evidence
+     * 
+     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     */
+    public abstract Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
+
+    /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      * 
      * @param query
@@ -177,13 +203,6 @@ public interface PhenotypeAssociationManagerService {
      */
     public abstract DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId );
-
-    /**
-     * Gets all External Databases that are used with evidence
-     * 
-     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
-     */
-    public abstract Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
 
     /**
      * find all evidence that doesn't come from an external source
@@ -274,6 +293,6 @@ public interface PhenotypeAssociationManagerService {
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
      * by Quartz
      */
-    @Secured({"GROUP_AGENT" })
+    @Secured({ "GROUP_AGENT" })
     public abstract void writeAllEvidenceToFile();
 }

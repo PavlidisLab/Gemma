@@ -2024,6 +2024,7 @@ public class SearchServiceImpl implements SearchService {
             Collection<CharacteristicValueObject> phenotypeTermHits = this.phenotypeAssociationManagerService
                     .searchInDatabaseForPhenotype( settings.getQuery() );
 
+            // FIXME do it all at once, not one at a time like this
             for ( CharacteristicValueObject phenotype : phenotypeTermHits ) {
                 Set<String> phenotypeUris = new HashSet<String>();
                 phenotypeUris.add( phenotype.getValueUri() );

@@ -129,9 +129,14 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
                 this.databaseEntryDao.remove( phenotypeAssociation.getEvidenceSource().getId() );
             }
         }
-        this.geneService.update( this.gene );
-        this.geneService.remove( this.gene );
-        this.externalDatabaseService.remove( this.externalDatabase );
+
+        try {
+            this.geneService.update( this.gene );
+            this.geneService.remove( this.gene );
+            this.externalDatabaseService.remove( this.externalDatabase );
+        } catch ( Exception e ) {
+
+        }
     }
 
     @Test
@@ -179,7 +184,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadAllPhenotypeUris() {
-        Set<String> uris = this.phenotypeAssociationService.loadAllPhenotypesUri();
+        Set<String> uris = this.phenotypeAssociationService.loadAllUsedPhenotypeUris();
         assertTrue( !uris.isEmpty() );
     }
 

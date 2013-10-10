@@ -29,21 +29,21 @@ public class IndexerResult extends TaskResult {
 
     private static final long serialVersionUID = -150285942553712429L;
 
-    protected String pathToArrayIndex = null;
+    private String pathToArrayIndex = null;
 
-    protected String pathToBibliographicIndex = null;
+    private String pathToBibliographicIndex = null;
 
-    protected String pathToBiosequenceIndex = null;
+    private String pathToBiosequenceIndex = null;
 
-    protected String pathToExperimentSetIndex;
+    private String pathToExperimentSetIndex;
 
-    protected String pathToExpressionIndex = null;
+    private String pathToExpressionIndex = null;
 
-    protected String pathToGeneIndex = null;
+    private String pathToGeneIndex = null;
 
-    protected String pathToGeneSetIndex;
+    private String pathToGeneSetIndex;
 
-    protected String pathToProbeIndex = null;
+    private String pathToProbeIndex = null;
 
     public IndexerResult( IndexerTaskCommand command ) {
         super( command, null );

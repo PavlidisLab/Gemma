@@ -47,6 +47,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -382,7 +383,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 1, ees.size() );
         ExpressionExperiment ee = ees.iterator().next();
         boolean ok = false;
-        for ( DesignElementDataVector dedv : ee.getRawExpressionDataVectors() ) {
+        for ( RawExpressionDataVector dedv : ee.getRawExpressionDataVectors() ) {
             QuantitationType qt = dedv.getQuantitationType();
             if ( qt.getIsPreferred() ) {
                 ok = true;

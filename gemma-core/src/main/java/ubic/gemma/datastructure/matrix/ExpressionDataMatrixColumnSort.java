@@ -451,7 +451,7 @@ public class ExpressionDataMatrixColumnSort {
             unsortedFactors = getFactors( start );
         }
         if ( unsortedFactors.size() == 0 ) {
-            log.warn( "No experimental design, sorting by sample name" );
+            log.debug( "No experimental design, sorting by sample name" );
             orderByName( start );
             return start;
         }

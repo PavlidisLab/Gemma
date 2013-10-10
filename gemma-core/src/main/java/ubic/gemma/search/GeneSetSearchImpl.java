@@ -20,8 +20,9 @@
 package ubic.gemma.search;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -186,13 +187,35 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         log.debug( " Converting CharacteristicValueObjects collection(size:" + phenotypes.size()
                 + ") into GeneSets for  phenotype query " + phenotypeQuery );
         int convertedCount = 0;
+        Map<String, CharacteristicValueObject> uris = new HashMap<>();
         for ( CharacteristicValueObject cvo : phenotypes ) {
-            GeneSetValueObject converted = phenotypeAssociationToGeneSet( cvo, taxon );
-            if ( converted != null ) {
-                convertedCount++;
-                results.add( converted );
-            }
+            uris.put( cvo.getValueUri(), cvo );
         }
+
+        Map<String, Collection<? extends GeneValueObject>> genes = phenotypeAssociationManagerService
+                .findCandidateGenesForEach( uris.keySet(), taxon );
+
+        for ( String uri : genes.keySet() ) {
+
+            Collection<? extends GeneValueObject> gvos = genes.get( uri );
+
+            if ( gvos.isEmpty() ) continue;
+
+            Collection<Long> geneIds = EntityUtils.getIds( gvos );
+
+            GeneSetValueObject transientGeneSet = new GeneSetValueObject();
+
+            transientGeneSet.setName( uri2phenoID( uris.get( uri ) ) );
+            transientGeneSet.setDescription( uris.get( uri ).getValue() );
+            transientGeneSet.setGeneIds( geneIds );
+
+            transientGeneSet.setTaxonId( gvos.iterator().next().getTaxonId() );
+            transientGeneSet.setTaxonName( gvos.iterator().next().getTaxonCommonName() );
+
+            results.add( transientGeneSet );
+
+        }
+
         log.info( "added " + convertedCount + " results" );
 
         if ( timer.getTime() > 1000 ) {
@@ -327,30 +350,30 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return transientGeneSet;
     }
 
-    /**
-     * Convert a phenotype association to a 'GeneSet', including genes from all child phenotypes. Searches for genes
-     * associated with the term.
-     */
-    private GeneSetValueObject phenotypeAssociationToGeneSet( CharacteristicValueObject term, Taxon taxon ) {
-        if ( term == null ) return null;
-        // for each phenotype, get all genes
-        Set<String> URIs = new HashSet<String>();
-        URIs.add( term.getValueUri() );
-        Collection<GeneValueObject> gvos = phenotypeAssociationManagerService.findCandidateGenes( URIs, taxon );
-        Collection<Long> geneIds = EntityUtils.getIds( gvos );
-
-        GeneSetValueObject transientGeneSet = new GeneSetValueObject();
-
-        transientGeneSet.setName( uri2phenoID( term ) );
-        transientGeneSet.setDescription( term.getValue() );
-        transientGeneSet.setGeneIds( geneIds );
-        if ( !gvos.isEmpty() ) {
-            transientGeneSet.setTaxonId( gvos.iterator().next().getTaxonId() );
-            transientGeneSet.setTaxonName( gvos.iterator().next().getTaxonCommonName() );
-        }
-
-        return transientGeneSet;
-    }
+    // /**
+    // * Convert a phenotype association to a 'GeneSet', including genes from all child phenotypes. Searches for genes
+    // * associated with the term.
+    // */
+    // private GeneSetValueObject phenotypeAssociationToGeneSet( CharacteristicValueObject term, Taxon taxon ) {
+    // if ( term == null ) return null;
+    // // for each phenotype, get all genes
+    // Set<String> URIs = new HashSet<>();
+    // URIs.add( term.getValueUri() );
+    // Collection<GeneValueObject> gvos = phenotypeAssociationManagerService.findCandidateGenes( URIs, taxon );
+    // Collection<Long> geneIds = EntityUtils.getIds( gvos );
+    //
+    // GeneSetValueObject transientGeneSet = new GeneSetValueObject();
+    //
+    // transientGeneSet.setName( uri2phenoID( term ) );
+    // transientGeneSet.setDescription( term.getValue() );
+    // transientGeneSet.setGeneIds( geneIds );
+    // if ( !gvos.isEmpty() ) {
+    // transientGeneSet.setTaxonId( gvos.iterator().next().getTaxonId() );
+    // transientGeneSet.setTaxonName( gvos.iterator().next().getTaxonCommonName() );
+    // }
+    //
+    // return transientGeneSet;
+    // }
 
     private String uri2goid( OntologyResource t ) {
         return t.getUri().replaceFirst( ".*/", "" );

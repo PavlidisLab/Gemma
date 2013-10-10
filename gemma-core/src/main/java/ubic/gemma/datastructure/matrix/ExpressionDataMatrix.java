@@ -148,6 +148,10 @@ public interface ExpressionDataMatrix<T> {
      */
     public T[] getColumn( Integer column );
 
+    /**
+     * @param bioMaterial
+     * @return the index of the column for the data for the bioMaterial.
+     */
     public int getColumnIndex( BioMaterial bioMaterial );
 
     /**

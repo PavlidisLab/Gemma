@@ -39,7 +39,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -187,7 +187,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         boolean found2 = false;
 
         ByteArrayConverter bac = new ByteArrayConverter();
-        for ( DesignElementDataVector v : ee.getProcessedExpressionDataVectors() ) {
+        for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
             double[] dat = bac.byteArrayToDoubles( v.getData() );
             int count = 0;
 
