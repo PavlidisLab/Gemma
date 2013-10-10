@@ -152,6 +152,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertNotNull( geneValueObjects );
 
         assertEquals( 1, geneValueObjects.size() );
+
+        assertTrue( geneValueObjects.iterator().next().getTaxonId() != null );
     }
 
     @Test
