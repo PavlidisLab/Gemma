@@ -321,7 +321,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
             throw new RuntimeException( e );
         }
 
-        Map<BioAssay, BioMaterial> deleteAssociations = new HashMap<BioAssay, BioMaterial>();
+        Map<BioAssay, BioMaterial> deleteAssociations = new HashMap<>();
         // set the bioMaterial - bioAssay associations if they are different
         Set<Entry<String, JSONValue>> bioAssays = bioAssayMap.entrySet();
 

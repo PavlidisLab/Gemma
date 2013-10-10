@@ -1413,6 +1413,7 @@ public class ExpressionExperimentController {
             }
         }
 
+        // FIXME this should be in a transaction!   
         for ( BioMaterial bm : needToProcess ) {
             int i = 0;
             for ( BioAssay baU : bm.getBioAssaysUsedIn() ) {
