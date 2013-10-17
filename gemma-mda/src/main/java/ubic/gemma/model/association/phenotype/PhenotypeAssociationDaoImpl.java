@@ -30,15 +30,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
@@ -50,7 +47,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatis
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.AbstractDao;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * deals with all basic queries used by Neurocarta
@@ -152,7 +148,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
 
         return this.getHibernateTemplate().find(
-                "select p from PhenotypeAssociation as p fetch all properties  " + "where p.evidenceSource is null" );
+                "select p from PhenotypeAssociation as p fetch all properties where p.evidenceSource is null" );
 
     }
 
@@ -212,7 +208,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return this.getHibernateTemplate().find(
                 "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id=" + geneId );
-
     }
 
     @Override
@@ -312,39 +307,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     /** find PhenotypeAssociations associated with a BibliographicReference */
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID ) {
-
-        Collection<PhenotypeAssociation> phenotypeAssociationsFound = new HashSet<PhenotypeAssociation>();
-
-        // Literature Evidence have BibliographicReference
-        org.hibernate.classic.Session session = super.getSessionFactory().getCurrentSession();
-        Criteria geneQueryCriteria = session.createCriteria( LiteratureEvidence.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "citation" )
-                .createCriteria( "pubAccession" ).add( Restrictions.like( "accession", pubMedID ) );
-
-        phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
-
-        // Experimental Evidence have a primary BibliographicReference
-        geneQueryCriteria = session.createCriteria( ExperimentalEvidence.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "experiment" )
-                .createCriteria( "primaryPublication" ).createCriteria( "pubAccession" )
-                .add( Restrictions.like( "accession", pubMedID ) );
-
-        phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
-
-        // Experimental Evidence have relevant BibliographicReference
-        geneQueryCriteria = session.createCriteria( ExperimentalEvidence.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "experiment" )
-                .createCriteria( "otherRelevantPublications" ).createCriteria( "pubAccession" )
-                .add( Restrictions.like( "accession", pubMedID ) );
-
-        phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
-
-        // FIXME shortcut until we rewrite the above with hql to get FETCH ALL PROPERTIES
-        /*
-         * TODO, the model will change and this will be to redo with hql and fetch all, all evidence will be of type
-         * literature
-         */
-        return load( EntityUtils.getIds( phenotypeAssociationsFound ) );
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select phe from PhenotypeAssociation as phe join phe.phenotypeAssociationPublications as pub join pub.citation as c join c.pubAccession as acc where acc.accession=:pubMedID",
+                        "pubMedID", pubMedID );
     }
 
     /**
@@ -528,23 +495,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .find( "select count (distinct c.valueUri) from PhenotypeAssociation as p inner join p.phenotypes as c" )
                 .iterator().next();
 
-        Collection<String> publicationsLiterature = this.getHibernateTemplate().find(
-                "select distinct l.citation.pubAccession.accession from LiteratureEvidenceImpl as l" );
-
-        // find all primary pubmed for ExperimentalEvidence
-        Collection<String> publicationsExperimentalPrimary = this
+        Collection<String> publications = this
                 .getHibernateTemplate()
-                .find( "select distinct ex.experiment.primaryPublication.pubAccession.accession from ExperimentalEvidenceImpl as ex" );
-
-        // find all secondary pubmed for ExperimentalEvidence
-        Collection<String> publicationsExperimentalSecondary = this
-                .getHibernateTemplate()
-                .find( "select distinct o.pubAccession.accession from ExperimentalEvidenceImpl as ex join ex.experiment.otherRelevantPublications as o" );
-
-        Set<String> publications = new HashSet<String>();
-        publications.addAll( publicationsLiterature );
-        publications.addAll( publicationsExperimentalPrimary );
-        publications.addAll( publicationsExperimentalSecondary );
+                .find( "select distinct phe.citation.pubAccession.accession from PhenotypeAssociation as p join p.phenotypeAssociationPublications as phe" );
 
         Long numPublications = new Long( publications.size() );
 
@@ -596,31 +549,12 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             externalDatabasesStatistics.get( externalDatabaseName ).setNumPhenotypes( ( Long ) o[1] );
         }
 
-        List<Object[]> numPublicationsLiterature = this.getHibernateTemplate().find(
-                "select l.evidenceSource.externalDatabase.name, count (distinct l.citation.pubAccession.accession) "
-                        + "from LiteratureEvidenceImpl as l group by l.evidenceSource.externalDatabase" );
+        List<Object[]> numPublications = this.getHibernateTemplate().find(
+                "select p.evidenceSource.externalDatabase.name, count (pub.citation.pubAccession.accession) "
+                        + "from PhenotypeAssociation as p join p.phenotypeAssociationPublications as pub"
+                        + " group by p.evidenceSource.externalDatabase" );
 
-        for ( Object[] o : numPublicationsLiterature ) {
-            String externalDatabaseName = ( String ) o[0];
-            externalDatabasesStatistics.get( externalDatabaseName ).addNumPublications( ( Long ) o[1] );
-        }
-
-        List<Object[]> numPublicationsExperimentalPrimary = this
-                .getHibernateTemplate()
-                .find( "select ex.evidenceSource.externalDatabase.name, count (distinct ex.experiment.primaryPublication.pubAccession.accession) "
-                        + "from ExperimentalEvidenceImpl as ex " + "group by ex.evidenceSource.externalDatabase" );
-
-        for ( Object[] o : numPublicationsExperimentalPrimary ) {
-            String externalDatabaseName = ( String ) o[0];
-            externalDatabasesStatistics.get( externalDatabaseName ).addNumPublications( ( Long ) o[1] );
-        }
-
-        List<Object[]> numPublicationsExperimentalSecondary = this.getHibernateTemplate().find(
-                "select ex.evidenceSource.externalDatabase.name, count (o.pubAccession.accession) "
-                        + "from ExperimentalEvidenceImpl as ex join ex.experiment.otherRelevantPublications as o"
-                        + " group by ex.evidenceSource.externalDatabase" );
-
-        for ( Object[] o : numPublicationsExperimentalSecondary ) {
+        for ( Object[] o : numPublications ) {
             String externalDatabaseName = ( String ) o[0];
             externalDatabasesStatistics.get( externalDatabaseName ).addNumPublications( ( Long ) o[1] );
         }
@@ -657,24 +591,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             lastUpdatedDate = ( Timestamp ) result.get( 0 );
         }
 
-        Collection<String> publicationsLiterature = this
-                .getHibernateTemplate()
-                .find( "select distinct l.citation.pubAccession.accession from LiteratureEvidenceImpl as l where l.evidenceSource is null" );
-
-        // find all primary pubmed for ExperimentalEvidence
-        Collection<String> publicationsExperimentalPrimary = this
-                .getHibernateTemplate()
-                .find( "select distinct ex.experiment.primaryPublication.pubAccession.accession from ExperimentalEvidenceImpl as ex where ex.evidenceSource is null" );
-
         // find all secondary pubmed for ExperimentalEvidence
-        Collection<String> publicationsExperimentalSecondary = this.getHibernateTemplate().find(
-                "select distinct o.pubAccession.accession from ExperimentalEvidenceImpl as ex "
-                        + "join ex.experiment.otherRelevantPublications as o where ex.evidenceSource is null" );
-
-        Set<String> publications = new HashSet<String>();
-        publications.addAll( publicationsLiterature );
-        publications.addAll( publicationsExperimentalPrimary );
-        publications.addAll( publicationsExperimentalSecondary );
+        Collection<String> publications = this.getHibernateTemplate().find(
+                "select distinct pub.citation.pubAccession.accession from PhenotypeAssociation as p "
+                        + "join p.phenotypeAssociationPublications as pub where p.evidenceSource is null" );
 
         Long numPublications = new Long( publications.size() );
 
@@ -752,7 +672,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 // find what acl group the user is in
                 sqlQuery += "or (ace.SID_FK in (";
                 sqlQuery += "select sid.ID from USER_GROUP ug ";
-                sqlQuery += "join GROUP_AUTHORITY on USER_GROUP.ID = GROUP_AUTHORITY.GROUP_FK ";
+                sqlQuery += "join GROUP_AUTHORITY on ug.ID = GROUP_AUTHORITY.GROUP_FK ";
                 sqlQuery += "join ACLSID sid on sid.GRANTED_AUTHORITY=CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
                 sqlQuery += "where ug.name in(" + groupToSql( groups ) + ") ";
                 if ( showOnlyEditable ) {
@@ -904,5 +824,12 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( sw.getTime() > 500 ) {
             log.info( "Get " + genesWithPhenotypes.size() + " genes with phenotypes: " + sw.getTime() + "ms" );
         }
+    }
+
+    @Override
+    /** remove a PhenotypeAssociationPublication **/
+    public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
+        this.getHibernateTemplate().bulkUpdate( "delete from PhenotypeAssociationPublicationImpl p where p.id = ?",
+                phenotypeAssociationPublicationId );
     }
 }

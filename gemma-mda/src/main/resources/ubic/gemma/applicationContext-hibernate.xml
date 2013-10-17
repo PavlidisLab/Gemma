@@ -119,6 +119,7 @@
 				<value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/GeneCoexpressionNodeDegree.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociationPublication.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml</value>

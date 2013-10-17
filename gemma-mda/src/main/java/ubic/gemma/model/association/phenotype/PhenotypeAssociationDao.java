@@ -145,4 +145,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find statistics all evidences */
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence();
 
+    /** remove a PhenotypeAssociationPublication **/
+    public void removePhenotypePublication( Long phenotypeAssociationPublicationId );
+
 }

@@ -185,5 +185,7 @@ public interface PhenotypeAssociationService {
 
     /** find statistics all evidences */
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence();
+    
+    public void removePhenotypePublication(Long phenotypeAssociationPublicationId);
 
 }

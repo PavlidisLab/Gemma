@@ -305,5 +305,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public void update( PhenotypeAssociation evidence ) {
         this.phenotypeAssociationDao.update( evidence );
     }
+    
+    @Override
+    @Transactional
+    public void removePhenotypePublication(Long phenotypeAssociationPublicationId){
+        this.phenotypeAssociationDao.removePhenotypePublication( phenotypeAssociationPublicationId );
+    }
 
 }
