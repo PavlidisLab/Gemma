@@ -182,6 +182,10 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
         Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
 
+        if ( phenotypes.isEmpty() ) {
+            return results;
+        }
+
         StopWatch timer = new StopWatch();
         timer.start();
         log.debug( " Converting CharacteristicValueObjects collection(size:" + phenotypes.size()
