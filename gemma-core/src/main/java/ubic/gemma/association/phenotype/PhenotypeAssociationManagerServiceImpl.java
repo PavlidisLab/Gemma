@@ -65,6 +65,7 @@ import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -91,7 +92,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceVa
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
@@ -230,6 +230,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param taxon the name of the taxon (optinal)
      * @return A collection of the genes found
      */
+
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypeValueUris, Taxon taxon ) {
@@ -451,9 +452,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         flagEvidence( evidenceValueObjects, phenotypesValuesUri, this.associationService.loadAllUsedPhenotypeUris() );
 
-        Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = groupCommonEvidences( evidenceValueObjects );
-
-        return evidenceValueObjectsRegrouped;
+        return evidenceValueObjects;
     }
 
     /**
@@ -1151,29 +1150,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return validateEvidenceValueObject;
         }
 
-        if ( evidence instanceof LiteratureEvidenceValueObject ) {
-
-            String pubmedId = ( ( LiteratureEvidenceValueObject ) evidence ).getCitationValueObject()
-                    .getPubmedAccession();
-
-            validateEvidenceValueObject = determineSameGeneAndPhenotypeAnnotated( evidence, pubmedId );
-
-        } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
-
-            ExperimentalEvidenceValueObject experimentalEvidenceValueObject = ( ExperimentalEvidenceValueObject ) evidence;
-
-            if ( experimentalEvidenceValueObject.getPrimaryPublicationCitationValueObject() != null ) {
-
-                String pubmedId = experimentalEvidenceValueObject.getPrimaryPublicationCitationValueObject()
-                        .getPubmedAccession();
-                validateEvidenceValueObject = determineSameGeneAndPhenotypeAnnotated( evidence, pubmedId );
-            }
+        if ( !evidence.getPhenotypeAssPubVO().isEmpty() && evidence.getEvidenceSource() == null ) {
+            validateEvidenceValueObject = determineSameGeneAndPhenotypeAnnotated( evidence, evidence
+                    .getPhenotypeAssPubVO().iterator().next().getCitationValueObject().getPubmedAccession() );
         }
+
         return validateEvidenceValueObject;
     }
 
-    // TODO this method right now, is not accessible to the client, that will be implented later, testing stage, also we
-    // need to change the schema later, we might be more field too like score and evidenceCode, etc
+    // TODO this method right now, is not accessible to the client
     /**
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
      * by Quartz
@@ -1247,8 +1232,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     if ( phenotypeAssociation instanceof LiteratureEvidence ) {
                         LiteratureEvidence l = ( LiteratureEvidence ) phenotypeAssociation;
-                        if ( l.getCitation() != null ) {
-                            pubmeds = l.getCitation().getPubAccession().getAccession();
+                        if ( l.getPhenotypeAssociationPublications() != null ) {
+
+                            for ( PhenotypeAssociationPublication phenotypeAssociationPublication : l
+                                    .getPhenotypeAssociationPublications() ) {
+
+                                pubmeds = phenotypeAssociationPublication.getCitation().getPubAccession()
+                                        .getAccession()
+                                        + ";";
+                            }
                         }
                     }
 
@@ -1271,7 +1263,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         isNegative = "Yes";
                     }
 
-                    // reprents 1 evidence
+                    // represents 1 evidence
                     String evidenceLine = externalDatabaseValueObject.getName() + "\t"
                             + phenotypeAssociation.getGene().getNcbiGeneId() + "\t"
                             + phenotypeAssociation.getGene().getOfficialSymbol() + "\t"
@@ -2075,75 +2067,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** Literature Evidence that are very similar are grouped together into a new type called GroupEvidenceValueObject */
-    private Collection<EvidenceValueObject> groupCommonEvidences( Collection<EvidenceValueObject> evidenceValueObjects ) {
-
-        Collection<EvidenceValueObject> evidenceValueObjectsRegrouped = new TreeSet<EvidenceValueObject>();
-
-        HashMap<String, Collection<LiteratureEvidenceValueObject>> commonEvidences = new HashMap<String, Collection<LiteratureEvidenceValueObject>>();
-
-        for ( EvidenceValueObject evidence : evidenceValueObjects ) {
-
-            if ( evidence.getEvidenceSource() != null && evidence instanceof LiteratureEvidenceValueObject ) {
-
-                LiteratureEvidenceValueObject litEvidenceValueObject = ( LiteratureEvidenceValueObject ) evidence;
-
-                // we want to regroup evidence with the same key, (key representing what makes 2 evidences very similar)
-                String key = makeUniqueKey( litEvidenceValueObject );
-
-                if ( commonEvidences.get( key ) == null ) {
-                    Collection<LiteratureEvidenceValueObject> setCommonEvidences = new HashSet<LiteratureEvidenceValueObject>();
-                    setCommonEvidences.add( litEvidenceValueObject );
-                    commonEvidences.put( key, setCommonEvidences );
-                } else {
-                    commonEvidences.get( key ).add( litEvidenceValueObject );
-                }
-            } else {
-                evidenceValueObjectsRegrouped.add( evidence );
-            }
-        }
-
-        for ( Collection<LiteratureEvidenceValueObject> groupedLiteratureEvidences : commonEvidences.values() ) {
-
-            if ( groupedLiteratureEvidences.size() == 1 ) {
-                evidenceValueObjectsRegrouped.addAll( groupedLiteratureEvidences );
-            } else {
-                // create the new type of evidence that regroup common evidences
-                GroupEvidenceValueObject groupEvidenceValueObject = new GroupEvidenceValueObject(
-                        groupedLiteratureEvidences );
-                evidenceValueObjectsRegrouped.add( groupEvidenceValueObject );
-            }
-        }
-
-        return evidenceValueObjectsRegrouped;
-    }
-
-    /**
-     * To be regrouped an evidence must have the same phenotypes + type + evidenceCode + isNegative
-     */
-    private String makeUniqueKey( LiteratureEvidenceValueObject evidence ) {
-
-        String key = "";
-
-        for ( CharacteristicValueObject cha : evidence.getPhenotypes() ) {
-            key = key + cha.getValueUri();
-        }
-
-        key = key + evidence.getDescription();
-        key = key + evidence.getGeneNCBI();
-        key = key + evidence.getIsNegativeEvidence();
-
-        // When we display homologue's evidence, we don't show evidence code. So,
-        // we don't use evidence code as part of the key for homologue's evidence.
-        if ( !evidence.isHomologueEvidence() ) {
-            key = key + evidence.getEvidenceCode();
-        }
-
-        key = key + evidence.getEvidenceSource().getAccession();
-
-        return key;
-    }
-
     /** Take care of populating new values for the phenotypes in an update */
     private void populateModifiedPhenotypes( Set<CharacteristicValueObject> updatedPhenotypes,
             PhenotypeAssociation phenotypeAssociation ) {
@@ -2151,7 +2074,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // the modified final phenotype to update
         Collection<Characteristic> finalPhenotypes = new HashSet<Characteristic>();
 
-        Map<Long, CharacteristicValueObject> updatedPhenotypesMap = new HashMap<>();
+        Map<Long, CharacteristicValueObject> updatedPhenotypesMap = new HashMap<Long, CharacteristicValueObject>();
 
         for ( CharacteristicValueObject updatedPhenotype : updatedPhenotypes ) {
 

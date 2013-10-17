@@ -24,8 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,9 +39,9 @@ import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
-import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -63,6 +61,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject;
 import ubic.gemma.persistence.Persister;
 
 /**
@@ -104,8 +103,6 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
-
-    private static Log log = LogFactory.getLog( PhenotypeAssoManagerServiceHelperImpl.class );
 
     /*
      * (non-Javadoc)
@@ -150,20 +147,10 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         phenotypeAssociation.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
 
         setScoreInformation( evidenceValueObject, phenotypeAssociation );
+        updatePhenotypeAssociationPublication( phenotypeAssociation, evidenceValueObject );
 
         // 2- modify specific values depending on evidence type
-        if ( phenotypeAssociation instanceof LiteratureEvidence ) {
-
-            LiteratureEvidence literatureEvidence = ( LiteratureEvidence ) phenotypeAssociation;
-
-            LiteratureEvidenceValueObject literatureVO = ( LiteratureEvidenceValueObject ) evidenceValueObject;
-
-            String primaryPubMed = literatureVO.getCitationValueObject().getPubmedAccession();
-
-            // primary bibliographic reference
-            literatureEvidence.setCitation( findOrCreateBibliographicReference( primaryPubMed ) );
-
-        } else if ( phenotypeAssociation instanceof ExperimentalEvidence ) {
+        if ( phenotypeAssociation instanceof ExperimentalEvidence ) {
 
             ExperimentalEvidenceValueObject experimentalVO = ( ExperimentalEvidenceValueObject ) evidenceValueObject;
             ExperimentalEvidence experimentalEvidence = ( ExperimentalEvidence ) phenotypeAssociation;
@@ -226,28 +213,6 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             }
             experiment.getCharacteristics().clear();
             experiment.getCharacteristics().addAll( finalCharacteristics );
-
-            // ***************************************************************
-            // 2- The bibliographic references
-            // ***************************************************************
-
-            if ( experimentalVO.getPrimaryPublicationCitationValueObject() != null ) {
-                String primaryPubMed = experimentalVO.getPrimaryPublicationCitationValueObject().getPubmedAccession();
-                experiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubMed ) );
-            } else {
-                experiment.setPrimaryPublication( null );
-            }
-
-            Set<String> otherRelevantPubMed = new HashSet<String>();
-
-            for ( CitationValueObject citation : experimentalVO.getRelevantPublicationsCitationValueObjects() ) {
-                otherRelevantPubMed.add( citation.getPubmedAccession() );
-            }
-
-            // relevant bibliographic references
-            experiment.setOtherRelevantPublications( findOrCreateBibliographicReference( otherRelevantPubMed ) );
-        } else if ( phenotypeAssociation instanceof GenericEvidence ) {
-            // nothing special to do
         }
 
     }
@@ -266,6 +231,11 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
         phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
         phe.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
+
+        if ( evidenceValueObject.getPhenotypeAssPubVO() != null
+                && evidenceValueObject.getPhenotypeAssPubVO().size() != 0 ) {
+            populatePhenotypeAssociationPublication( phe, evidenceValueObject );
+        }
 
         if ( evidenceValueObject.getEvidenceSource() != null ) {
             populateEvidenceSource( phe, evidenceValueObject );
@@ -340,6 +310,20 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
      */
     private PhenotypeAssociation conversion2ExperimentalEvidence( ExperimentalEvidenceValueObject evidenceValueObject ) {
 
+        CitationValueObject primaryCitationValueObject = null;
+        CitationValueObject relevantCitationValueObject = null;
+
+        // when we create the experiment we had the pubmed to it ( kind of optional since the are already on the
+        // evidence)
+        if ( evidenceValueObject.getPhenotypeAssPubVO().size() > 0 ) {
+            primaryCitationValueObject = evidenceValueObject.getPhenotypeAssPubVO().iterator().next()
+                    .getCitationValueObject();
+        }
+        if ( evidenceValueObject.getPhenotypeAssPubVO().size() > 1 ) {
+            relevantCitationValueObject = evidenceValueObject.getPhenotypeAssPubVO().iterator().next()
+                    .getCitationValueObject();
+        }
+
         // create the entity to populate
         ExperimentalEvidence experimentalEvidence = ExperimentalEvidence.Factory.newInstance();
 
@@ -348,12 +332,11 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
         GenericExperiment genericExperiment = null;
 
-        if ( evidenceValueObject.getPrimaryPublicationCitationValueObject() != null ) {
+        if ( primaryCitationValueObject != null ) {
 
             // we only need to create the experiment if its not already in the database
             Collection<GenericExperiment> genericExperimentWithPubmed = this.phenotypeAssociationService
-                    .findByPubmedID( evidenceValueObject.getPrimaryPublicationCitationValueObject()
-                            .getPubmedAccession() );
+                    .findByPubmedID( primaryCitationValueObject.getPubmedAccession() );
 
             // for the list received we need to check each one to see if they are the same
             for ( GenericExperiment genericExp : genericExperimentWithPubmed ) {
@@ -362,10 +345,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
                 HashSet<String> relevantPublication = new HashSet<String>();
 
-                for ( CitationValueObject relevantPubli : evidenceValueObject
-                        .getRelevantPublicationsCitationValueObjects() ) {
-
-                    relevantPublication.add( relevantPubli.getPubmedAccession() );
+                if ( relevantCitationValueObject != null ) {
+                    relevantPublication.add( relevantCitationValueObject.getPubmedAccession() );
                 }
 
                 for ( BibliographicReference bilbi : genericExp.getOtherRelevantPublications() ) {
@@ -396,7 +377,6 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
                 // the Investigation is already present in the database so we can reuse it
                 if ( sameFound ) {
-                    log.info( "Investigation For the ExperimentalEvidence found in the database and will be reuse" );
                     genericExperiment = genericExp;
                 }
             }
@@ -410,18 +390,16 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             // find all pubmed id from the value object
             String primaryPubmedId = null;
 
-            if ( evidenceValueObject.getPrimaryPublicationCitationValueObject() != null ) {
+            if ( primaryCitationValueObject != null ) {
 
-                primaryPubmedId = evidenceValueObject.getPrimaryPublicationCitationValueObject().getPubmedAccession();
+                primaryPubmedId = primaryCitationValueObject.getPubmedAccession();
                 genericExperiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubmedId ) );
             }
 
             Collection<String> relevantPubmedId = new HashSet<String>();
 
-            for ( CitationValueObject citationValueObject : evidenceValueObject
-                    .getRelevantPublicationsCitationValueObjects() ) {
-
-                relevantPubmedId.add( citationValueObject.getPubmedAccession() );
+            if ( relevantCitationValueObject != null ) {
+                relevantPubmedId.add( relevantCitationValueObject.getPubmedAccession() );
             }
 
             genericExperiment.setOtherRelevantPublications( findOrCreateBibliographicReference( relevantPubmedId ) );
@@ -476,9 +454,6 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         // populate common field to evidence
         populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );
 
-        // populate specific fields for this evidence
-        String pubmedId = evidenceValueObject.getCitationValueObject().getPubmedAccession();
-        literatureEvidence.setCitation( findOrCreateBibliographicReference( pubmedId ) );
         return literatureEvidence;
     }
 
@@ -540,6 +515,84 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         databaseEntry = this.databaseEntryDao.create( databaseEntry );
 
         phe.setEvidenceSource( databaseEntry );
+    }
+
+    private void updatePhenotypeAssociationPublication( PhenotypeAssociation phe,
+            EvidenceValueObject evidenceValueObject ) {
+
+        boolean toUpdate = false;
+
+        if ( evidenceValueObject.getPhenotypeAssPubVO().size() != phe.getPhenotypeAssociationPublications().size() ) {
+            toUpdate = true;
+        } else {
+
+            Collection<String> pubmeds = new HashSet<String>();
+
+            if ( !phe.getPhenotypeAssociationPublications().isEmpty() ) {
+
+                for ( PhenotypeAssociationPublication assocationPublication : phe.getPhenotypeAssociationPublications() ) {
+                    pubmeds.add( assocationPublication.getCitation().getPubAccession().getAccession() );
+                }
+            }
+
+            for ( PhenotypeAssPubValueObject p : evidenceValueObject.getPhenotypeAssPubVO() ) {
+
+                if ( !pubmeds.contains( p.getCitationValueObject().getPubmedAccession() ) ) {
+                    toUpdate = true;
+                    break;
+                }
+            }
+        }
+
+        if ( toUpdate ) {
+
+            for ( PhenotypeAssociationPublication assocationPublication : phe.getPhenotypeAssociationPublications() ) {
+                this.phenotypeAssociationService.removePhenotypePublication( assocationPublication.getId() );
+            }
+
+            Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications = new HashSet<PhenotypeAssociationPublication>();
+
+            for ( PhenotypeAssPubValueObject phenotypeAssPubValueObject : evidenceValueObject.getPhenotypeAssPubVO() ) {
+
+                PhenotypeAssociationPublication phenotypeAssociationPublication = null;
+
+                if ( phenotypeAssPubValueObject != null && phenotypeAssPubValueObject.getCitationValueObject() != null ) {
+
+                    phenotypeAssociationPublication = PhenotypeAssociationPublication.Factory.newInstance();
+                    phenotypeAssociationPublication.setType( phenotypeAssPubValueObject.getType() );
+                    String pubmedId = phenotypeAssPubValueObject.getCitationValueObject().getPubmedAccession();
+                    phenotypeAssociationPublication.setCitation( findOrCreateBibliographicReference( pubmedId ) );
+                    phenotypeAssociationPublications.add( phenotypeAssociationPublication );
+                }
+
+            }
+
+            phe.getPhenotypeAssociationPublications().clear();
+            phe.getPhenotypeAssociationPublications().addAll( phenotypeAssociationPublications );
+        }
+    }
+
+    private void populatePhenotypeAssociationPublication( PhenotypeAssociation phe,
+            EvidenceValueObject evidenceValueObject ) {
+
+        Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications = new HashSet<PhenotypeAssociationPublication>();
+
+        for ( PhenotypeAssPubValueObject phenotypeAssPubValueObject : evidenceValueObject.getPhenotypeAssPubVO() ) {
+
+            PhenotypeAssociationPublication phenotypeAssociationPublication = null;
+
+            if ( phenotypeAssPubValueObject != null && phenotypeAssPubValueObject.getCitationValueObject() != null ) {
+
+                phenotypeAssociationPublication = PhenotypeAssociationPublication.Factory.newInstance();
+                phenotypeAssociationPublication.setType( phenotypeAssPubValueObject.getType() );
+                String pubmedId = phenotypeAssPubValueObject.getCitationValueObject().getPubmedAccession();
+                phenotypeAssociationPublication.setCitation( findOrCreateBibliographicReference( pubmedId ) );
+                phenotypeAssociationPublications.add( phenotypeAssociationPublication );
+            }
+
+        }
+
+        phe.getPhenotypeAssociationPublications().addAll( phenotypeAssociationPublications );
     }
 
     /**

@@ -48,6 +48,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
@@ -130,20 +131,15 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
             }
         }
 
-        try {
-            this.geneService.update( this.gene );
-            this.geneService.remove( this.gene );
-            this.externalDatabaseService.remove( this.externalDatabase );
-        } catch ( Exception e ) {
+        this.geneService.update( this.gene );
+        this.geneService.remove( this.gene );
+        this.externalDatabaseService.remove( this.externalDatabase );
 
-        }
     }
 
     @Test
     public void testFindBibliographicReference() {
         assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1", null ) );
-
-        this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter() );
     }
 
     @Test
@@ -295,7 +291,15 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         phenotypes.add( characteristicValueObject );
 
         this.litEvidence.setPhenotypes( phenotypes );
-        this.litEvidence.setCitationValueObject( citationValueObject );
+
+        SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO = new TreeSet<PhenotypeAssPubValueObject>();
+
+        PhenotypeAssPubValueObject phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
+        phenotypeAssPubValueObject.setType( "Primary" );
+        phenotypeAssPubValueObject.setCitationValueObject( citationValueObject );
+        phenotypeAssPubVO.add( phenotypeAssPubValueObject );
+
+        this.litEvidence.setPhenotypeAssPubVO( phenotypeAssPubVO );
         this.litEvidence.setEvidenceSource( evidenceSourceValueObject );
 
         ValidateEvidenceValueObject e = this.phenotypeAssociationManagerService.makeEvidence( this.litEvidence );
