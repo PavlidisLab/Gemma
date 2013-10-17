@@ -13,7 +13,7 @@
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.loader.association.phenotype;
-
+//TODO
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -65,7 +65,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         args[3] = "administrator";
         // the path of the file
         args[4] = "-f";
-        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/evidenceImporter/FilesToImport/finalResults.tsv";
+        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/CTD_2013-08-30_11:38.tsv";
         // create the evidence in the database
         args[6] = "-c";
         args[7] = "true";
@@ -73,7 +73,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // true == production database
         // false == testDatabase, put gene not found to NCBI 1
         args[8] = "-e";
-        args[9] = "true";
+        args[9] = "false";
 
         return args;
     }
@@ -367,7 +367,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         CitationValueObject citationValueObject = new CitationValueObject();
         citationValueObject.setPubmedAccession( primaryReferencePubmed );
-        evidence.setCitationValueObject( citationValueObject );
+      //  evidence.setCitationValueObject( citationValueObject );
 
         return evidence;
     }
@@ -385,7 +385,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         CitationValueObject citationValueObject = new CitationValueObject();
         citationValueObject.setPubmedAccession( primaryReferencePubmed );
-        evidence.setPrimaryPublicationCitationValueObject( citationValueObject );
+      //  evidence.setPrimaryPublicationCitationValueObject( citationValueObject );
 
         String reviewReferencePubmed = tokens[this.mapColumns.get( "OtherPubMed" )].trim();
 
@@ -398,7 +398,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         for ( String relevantPubMedID : relevantPublicationsPubmed ) {
             CitationValueObject relevantPublicationValueObject = new CitationValueObject();
             relevantPublicationValueObject.setPubmedAccession( relevantPubMedID );
-            evidence.getRelevantPublicationsCitationValueObjects().add( relevantPublicationValueObject );
+         //   evidence.getRelevantPublicationsCitationValueObjects().add( relevantPublicationValueObject );
         }
 
         Set<String> developmentStage = trimArray( tokens[this.mapColumns.get( "DevelopmentalStage" )].split( ";" ) );
