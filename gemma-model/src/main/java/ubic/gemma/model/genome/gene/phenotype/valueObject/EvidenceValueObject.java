@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
@@ -61,6 +62,10 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
     private boolean isHomologueEvidence = false;
 
     private boolean containQueryPhenotype = false;
+
+    private boolean testest = false;
+
+    private SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO = new TreeSet<PhenotypeAssPubValueObject>();
 
     private ScoreValueObject scoreValueObject = new ScoreValueObject();
 
@@ -101,6 +106,13 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
             CharacteristicValueObject characteristicVO = new CharacteristicValueObject( ( VocabCharacteristicImpl ) c );
             characteristicVO.setId( c.getId() );
             this.phenotypes.add( characteristicVO );
+        }
+
+        for ( PhenotypeAssociationPublication phenotypeAssociationPublication : phenotypeAssociation
+                .getPhenotypeAssociationPublications() ) {
+
+            PhenotypeAssPubValueObject phenotypeAss = new PhenotypeAssPubValueObject( phenotypeAssociationPublication );
+            this.phenotypeAssPubVO.add( phenotypeAss );
         }
 
         this.lastUpdated = phenotypeAssociation.getStatus().getLastUpdateDate().getTime();
@@ -175,6 +187,16 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         if ( this.geneNCBI == null ) {
             if ( other.geneNCBI != null ) return false;
         } else if ( !this.geneNCBI.equals( other.geneNCBI ) ) return false;
+
+        if ( this.phenotypeAssPubVO.size() != other.phenotypeAssPubVO.size() ) {
+            return false;
+        }
+
+        for ( PhenotypeAssPubValueObject phenotypeAssPubValueObject : other.phenotypeAssPubVO ) {
+            if ( !this.phenotypeAssPubVO.contains( phenotypeAssPubValueObject ) ) {
+                return false;
+            }
+        }
 
         return true;
     }
@@ -435,6 +457,35 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         comparison = compareEvidenceSource( evidenceValueObject );
         if ( comparison != 0 ) return comparison;
 
+        // compare their pubmeds
+
+        if ( this.phenotypeAssPubVO.size() != evidenceValueObject.phenotypeAssPubVO.size() ) {
+            return -1;
+        }
+
+        for ( PhenotypeAssPubValueObject phenotypeAssPubValueObject : this.phenotypeAssPubVO ) {
+            if ( !evidenceValueObject.phenotypeAssPubVO.contains( phenotypeAssPubValueObject ) ) {
+                return -1;
+            }
+        }
+
         return 0;
     }
+
+    public boolean isTestest() {
+        return testest;
+    }
+
+    public void setTestest( boolean testest ) {
+        this.testest = testest;
+    }
+
+    public SortedSet<PhenotypeAssPubValueObject> getPhenotypeAssPubVO() {
+        return phenotypeAssPubVO;
+    }
+
+    public void setPhenotypeAssPubVO( SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO ) {
+        this.phenotypeAssPubVO = phenotypeAssPubVO;
+    }
+
 }

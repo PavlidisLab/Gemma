@@ -53,6 +53,8 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
 
     private QuantitationType scoreType;
 
+    private Collection<PhenotypeAssociationPublication> PhenotypeAssociationPublications = new java.util.HashSet<PhenotypeAssociationPublication>();
+
     /**
      * No-arg constructor added to satisfy javabean contract
      * 
@@ -168,6 +170,15 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
 
     public void setStrength( Double strength ) {
         this.strength = strength;
+    }
+
+    public Collection<PhenotypeAssociationPublication> getPhenotypeAssociationPublications() {
+        return PhenotypeAssociationPublications;
+    }
+
+    public void setPhenotypeAssociationPublications(
+            Collection<PhenotypeAssociationPublication> PhenotypeAssociationPublications ) {
+        this.PhenotypeAssociationPublications = PhenotypeAssociationPublications;
     }
 
 }

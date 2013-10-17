@@ -137,7 +137,10 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
 
     @Override
     public int compareTo( CitationValueObject o ) {
-        return this.getCitation().toLowerCase().compareTo( o.getCitation().toLowerCase() );
+        if ( this.getCitation() != null ) {
+            return this.getCitation().toLowerCase().compareTo( o.getCitation().toLowerCase() );
+        }
+        return -1;
     }
 
     @Override

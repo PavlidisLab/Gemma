@@ -50,6 +50,13 @@
 			</key>
 			<one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl" />
 		</set>
+		<set name="phenotypeAssociationPublications" lazy="false" fetch="select" inverse="false" cascade="all">
+			<cache usage="read-write" />
+			<key foreign-key="PHENOTYPE_ASSOCIATION_PUBLICATION_FKC">
+				<column name="PHENOTYPE_ASSOCIATION_FK" sql-type="BIGINT" />
+			</key>
+			<one-to-many class="ubic.gemma.model.association.phenotype.PhenotypeAssociationPublicationImpl" />
+		</set>
 		<many-to-one name="associationType" class="ubic.gemma.model.common.description.CharacteristicImpl"
 			cascade="all" lazy="false" fetch="select">
 			<column name="ASSOCIATION_TYPE_FK" not-null="false" sql-type="BIGINT" unique="true" />
@@ -64,10 +71,6 @@
 		</many-to-one>
 		<subclass name="ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl" discriminator-value="LiteratureEvidenceImpl"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
-			<many-to-one name="citation" class="ubic.gemma.model.common.description.BibliographicReferenceImpl" lazy="proxy"
-				fetch="select">
-				<column name="CITATION_FK" not-null="false" sql-type="BIGINT" />
-			</many-to-one>
 		</subclass>
 		<subclass name="ubic.gemma.model.association.phenotype.GenericEvidenceImpl" discriminator-value="GenericEvidenceImpl"
 			dynamic-insert="false" dynamic-update="false" abstract="false">

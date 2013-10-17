@@ -3,17 +3,18 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 
-public class BibliographicPhenotypesValueObject {
+public class BibliographicPhenotypesValueObject implements Comparable<BibliographicPhenotypesValueObject> {
 
     public static Collection<BibliographicPhenotypesValueObject> phenotypeAssociations2BibliographicPhenotypesValueObjects(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
-        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = new HashSet<BibliographicPhenotypesValueObject>();
+        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = new TreeSet<BibliographicPhenotypesValueObject>();
 
         for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
 
@@ -93,5 +94,11 @@ public class BibliographicPhenotypesValueObject {
 
     public void setPhenotypesValues( Set<CharacteristicValueObject> phenotypesValues ) {
         this.phenotypesValues = phenotypesValues;
+    }
+
+    @Override
+    public int compareTo( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject ) {
+
+        return this.geneName.compareTo( bibliographicPhenotypesValueObject.getGeneName() );
     }
 }

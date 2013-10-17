@@ -18,27 +18,11 @@
  */
 package ubic.gemma.model.association.phenotype;
 
-/**
- * 
- */
-public abstract class LiteratureEvidence extends PhenotypeAssociation {
+public class PhenotypeAssociationPublicationImpl extends PhenotypeAssociationPublication {
 
     /**
-     * 
+     * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = -4106020347488355001L;
-
-    /**
-     * Constructs new instances of {@link LiteratureEvidence}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link LiteratureEvidence}.
-         */
-        public static LiteratureEvidence newInstance() {
-            return new LiteratureEvidenceImpl();
-        }
-
-    }
+    private static final long serialVersionUID = -4156623110205197711L;
 
 }

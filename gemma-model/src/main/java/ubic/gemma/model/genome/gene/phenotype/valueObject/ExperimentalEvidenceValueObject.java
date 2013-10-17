@@ -19,22 +19,17 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
     private Collection<CharacteristicValueObject> experimentCharacteristics = new TreeSet<CharacteristicValueObject>();
-    private Set<CitationValueObject> relevantPublicationsCitationValueObjects = new HashSet<CitationValueObject>();
-    private CitationValueObject primaryPublicationCitationValueObject = null;
 
     public ExperimentalEvidenceValueObject() {
         super();
@@ -43,12 +38,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     /** Entity to Value Object */
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
-
-        this.primaryPublicationCitationValueObject = BibliographicReferenceValueObject
-                .constructCitation( experimentalEvidence.getExperiment().getPrimaryPublication() );
-
-        this.relevantPublicationsCitationValueObjects.addAll( BibliographicReferenceValueObject
-                .constructCitations( experimentalEvidence.getExperiment().getOtherRelevantPublications() ) );
 
         Collection<Characteristic> collectionCharacteristics = experimentalEvidence.getExperiment()
                 .getCharacteristics();
@@ -83,17 +72,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
             Set<CharacteristicValueObject> experimentCharacteristics ) {
         super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
 
-        if ( primaryPublication != null ) {
-            this.primaryPublicationCitationValueObject = new CitationValueObject();
-            this.primaryPublicationCitationValueObject.setPubmedAccession( primaryPublication );
-        }
-
-        for ( String relevantPubMedID : relevantPublication ) {
-            CitationValueObject relevantPublicationValueObject = new CitationValueObject();
-            relevantPublicationValueObject.setPubmedAccession( relevantPubMedID );
-            this.relevantPublicationsCitationValueObjects.add( relevantPublicationValueObject );
-        }
-
         this.experimentCharacteristics = experimentCharacteristics;
     }
 
@@ -103,24 +81,12 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         if ( !super.equals( obj ) ) return false;
         if ( getClass() != obj.getClass() ) return false;
         ExperimentalEvidenceValueObject other = ( ExperimentalEvidenceValueObject ) obj;
-        if ( this.primaryPublicationCitationValueObject == null ) {
-            if ( other.primaryPublicationCitationValueObject != null ) return false;
-        } else if ( !this.primaryPublicationCitationValueObject.equals( other.primaryPublicationCitationValueObject ) )
-            return false;
+
         if ( this.experimentCharacteristics.size() != other.experimentCharacteristics.size() ) {
             return false;
         }
         for ( CharacteristicValueObject characteristicValueObject : this.experimentCharacteristics ) {
             if ( !other.experimentCharacteristics.contains( characteristicValueObject ) ) {
-                return false;
-            }
-        }
-        if ( this.relevantPublicationsCitationValueObjects.size() != other.relevantPublicationsCitationValueObjects
-                .size() ) {
-            return false;
-        }
-        for ( CitationValueObject relevantPublicationsCitationValueObject : this.relevantPublicationsCitationValueObjects ) {
-            if ( !other.relevantPublicationsCitationValueObjects.contains( relevantPublicationsCitationValueObject ) ) {
                 return false;
             }
         }
@@ -131,28 +97,12 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return this.experimentCharacteristics;
     }
 
-    public CitationValueObject getPrimaryPublicationCitationValueObject() {
-        return this.primaryPublicationCitationValueObject;
-    }
-
-    public Set<CitationValueObject> getRelevantPublicationsCitationValueObjects() {
-        return this.relevantPublicationsCitationValueObjects;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
         for ( CharacteristicValueObject phenotype : this.experimentCharacteristics ) {
-            result = result + phenotype.hashCode();
-        }
-        result = prime
-                * result
-                + ( ( this.primaryPublicationCitationValueObject == null ) ? 0
-                        : this.primaryPublicationCitationValueObject.hashCode() );
-
-        for ( CitationValueObject relevantPublicationsCitationValueObject : this.relevantPublicationsCitationValueObjects ) {
-            result = result + relevantPublicationsCitationValueObject.hashCode();
+            result = prime * result + phenotype.hashCode();
         }
 
         return result;
@@ -160,15 +110,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
     public void setExperimentCharacteristics( Collection<CharacteristicValueObject> experimentCharacteristics ) {
         this.experimentCharacteristics = experimentCharacteristics;
-    }
-
-    public void setPrimaryPublicationCitationValueObject( CitationValueObject primaryPublicationCitationValueObject ) {
-        this.primaryPublicationCitationValueObject = primaryPublicationCitationValueObject;
-    }
-
-    public void setRelevantPublicationsCitationValueObjects(
-            Set<CitationValueObject> relevantPublicationsCitationValueObjects ) {
-        this.relevantPublicationsCitationValueObjects = relevantPublicationsCitationValueObjects;
     }
 
 }
