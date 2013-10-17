@@ -107,6 +107,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
       var generatePublicationLinks = function(pudmedId, pubmedUrl) {
          var anchor = '';
          if (pudmedId != null) {
+        	
             var imageSrc = '/Gemma/images/icons/magnifier.png';
             var size = 12;
 
@@ -205,17 +206,16 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
             fn : function(value, metadata, record, rowIndex, colIndex, store) {
                var phenotypesHtml = '';
                for (var i = 0; i < value.length; i++) {
-                  if (this.displayPhenotypeAsLink) {
-                     phenotypesHtml += String.format(
-                        '<a target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a>', value[i].urlId,
-                        value[i].value, record.data.geneId);
-                  } else {
+
                      if (value[i].child || value[i].root) {
-                        phenotypesHtml += '<span style="font-weight: bold; color: red;">' + value[i].value + '</span>';
+                    	 phenotypesHtml += String.format(
+                                 '<a style="color:red; font-weight: bold;" target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a>', value[i].urlId,
+                                 value[i].value, record.data.geneId);
                      } else {
-                        phenotypesHtml += value[i].value;
+                    	 phenotypesHtml += String.format(
+                                 '<a target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a>', value[i].urlId,
+                                 value[i].value, record.data.geneId);
                      }
-                  }
 
                   phenotypesHtml += '<br />';
                }
@@ -230,22 +230,24 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
       var getFormWindowData = function(id) {
          var record = this.getStore().getById(id);
          var evidenceClassName = record.data.className;
-
+         var phenotypeAssPubVO = record.data.phenotypeAssPubVO;
          var data = null;
 
          if (evidenceClassName === 'LiteratureEvidenceValueObject') {
-            data = {
-               pubMedId : record.data.citationValueObject.pubmedAccession
+            data = {		
+            	pubMedId :	phenotypeAssPubVO[0].citationValueObject.pubmedAccession
             };
          } else if (evidenceClassName === 'ExperimentalEvidenceValueObject') {
             data = {
-               primaryPubMedId : record.data.primaryPublicationCitationValueObject != null ? record.data.primaryPublicationCitationValueObject.pubmedAccession : null,
+               primaryPubMedId : phenotypeAssPubVO[0].citationValueObject != null ? phenotypeAssPubVO[0].citationValueObject.pubmedAccession : null,
                // Assume we have at most one other PubMed
                // Id.
-               secondaryPubMedId : record.data.relevantPublicationsCitationValueObjects != null && record.data.relevantPublicationsCitationValueObjects.length > 0
-                  ? record.data.relevantPublicationsCitationValueObjects[0].pubmedAccession
+            		   
+               secondaryPubMedId : phenotypeAssPubVO.length > 1 && phenotypeAssPubVO[1].citationValueObject != null
+                  ? phenotypeAssPubVO[1].citationValueObject.pubmedAccession
                   : null,
-               experimentCharacteristics : record.data.experimentCharacteristics
+
+               experimentCharacteristics : record.experimentCharacteristics
             };
          }
 
@@ -372,7 +374,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                   // for
                   // EvidenceValueObject
                   'id', 'className', 'description', 'evidenceCode', 'evidenceSecurityValueObject', 'evidenceSource', 'isNegativeEvidence', 'lastUpdated', 'phenotypes',
-                  'containQueryPhenotype', 'scoreValueObject.strength',
+                  'containQueryPhenotype', 'scoreValueObject.strength', 'phenotypeAssPubVO',
                   // for
                   // GroupEvidenceValueObject
                   'literatureEvidences',
@@ -381,7 +383,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                   'geneDifferentialExpressionMetaAnalysisSummaryValueObject', 'selectionThreshold', 'numEvidenceFromSameMetaAnalysis',
                   // for
                   // ExperimentalEvidenceValueObject
-                  'experimentCharacteristics', 'primaryPublicationCitationValueObject', 'relevantPublicationsCitationValueObjects',
+                  'experimentCharacteristics',
                   // for
                   // LiteratureEvidenceValueObject
                   'citationValueObject',
@@ -423,73 +425,43 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                               break;
 
                            case 'ExperimentalEvidenceValueObject' :
-                              if (record.primaryPublicationCitationValueObject != null) {
-                                 descriptionHtml += '<p><b>Primary Publication</b>: '
-                                    + record.primaryPublicationCitationValueObject.citation
-                                    + ' '
-                                    + generatePublicationLinks(record.primaryPublicationCitationValueObject.pubmedAccession, record.primaryPublicationCitationValueObject.pubmedURL)
-                                    + '</p>';
-                              }
+                        	   descriptionHtml += '<p>';
 
-                              var relPub = record.relevantPublicationsCitationValueObjects;
-                              if (relPub != null && relPub.length > 0) {
-                                 descriptionHtml += '<p><b>Relevant Publication</b>: ';
+                    		   for (var i = 0; i < record.phenotypeAssPubVO.length; i++) {
 
-                                 for (var i = 0; i < relPub.length; i++) {
-                                    descriptionHtml += relPub[i].citation + ' ' + generatePublicationLinks(relPub[i].pubmedAccession, relPub[i].pubmedURL);
+                    			   descriptionHtml += '<b>'+record.phenotypeAssPubVO[i].type+' Publication</b>: ';
+                    			   descriptionHtml += record.phenotypeAssPubVO[i].citationValueObject.citation + ' ' + generatePublicationLinks(record.phenotypeAssPubVO[i].citationValueObject.pubmedAccession, record.phenotypeAssPubVO[i].citationValueObject.pubmedURL)+'<br />';
+                    		   }
 
-                                    if (i < relPub.length - 1) {
-                                       descriptionHtml += " | ";
-                                    }
-                                 }
-                                 descriptionHtml += '</p>';
-                              }
-
-                              var expChar = record.experimentCharacteristics;
-                              if (expChar != null && expChar.length > 0) {
-                                 var expCharMap = new Object();
-                                 for (var i = 0; i < expChar.length; i++) {
-                                    if (expCharMap[expChar[i].category] == null) {
-                                       expCharMap[expChar[i].category] = expChar[i].value;
-                                    } else {
-                                       expCharMap[expChar[i].category] += " | " + expChar[i].value;
-                                    }
-
-                                 }
-
-                                 descriptionHtml += '<p>';
-                                 Ext.iterate(expCharMap, function(key, value) {
-                                       descriptionHtml += '<b>' + key + "</b>: " + value + '<br />';
-                                    });
-                                 descriptionHtml += '</p>';
-                              }
-
+                    		   descriptionHtml += '</p>';
                               break;
 
                            case 'GenericEvidenceValueObject' :
                               break;
 
-                           case 'GroupEvidenceValueObject' :
-                              descriptionHtml += '<p>';
-
-                              for (var i = 0; i < record.literatureEvidences.length; i++) {
-                                 descriptionHtml += '<b>Publication '
-                                    + (i + 1)
-                                    + '</b>: '
-                                    + record.literatureEvidences[i].citationValueObject.citation
-                                    + ' '
-                                    + generatePublicationLinks(record.literatureEvidences[i].citationValueObject.pubmedAccession,
-                                       record.literatureEvidences[i].citationValueObject.pubmedURL) + '<br />';
-                              }
-
-                              descriptionHtml += '</p>';
-                              break;
-
                            case 'LiteratureEvidenceValueObject' :
-                              if (record.citationValueObject != null) {
-                                 descriptionHtml += '<p><b>Publication</b>: ' + record.citationValueObject.citation + ' '
-                                    + generatePublicationLinks(record.citationValueObject.pubmedAccession, record.citationValueObject.pubmedURL) + '</p>';
-                              }
+                        	   descriptionHtml += '<p>';
+                        	   
+                        	   if(record.phenotypeAssPubVO.length>1){
+                        	   
+                        		   for (var i = 0; i < record.phenotypeAssPubVO.length; i++) {
+                     
+                                   descriptionHtml += '<b>Publication '
+                                       + (i + 1)
+                                       + '</b>: '
+                                       + record.phenotypeAssPubVO[i].citationValueObject.citation
+                                       + ' '
+                                       + generatePublicationLinks(record.phenotypeAssPubVO[i].citationValueObject.pubmedAccession,
+                                          record.phenotypeAssPubVO[i].citationValueObject.pubmedURL) + '<br />';
+   
+                        		   }
+                                }
+                        	   else if(record.phenotypeAssPubVO.length==1){
+                                      descriptionHtml += '<p><b>Publication</b>: ' + record.phenotypeAssPubVO[0].citationValueObject.citation + ' '
+                                         + generatePublicationLinks(record.phenotypeAssPubVO[0].citationValueObject.pubmedAccession, record.phenotypeAssPubVO[0].citationValueObject.pubmedURL) + '</p>'; 
+                        	   }
+                        	   descriptionHtml += '<\p>';
+  
                               break;
 
                            case 'UrlEvidenceValueObject' :
@@ -618,10 +590,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                      }
                      break;
 
-                  case 'GroupEvidenceValueObject' :
-                     typeColumnHtml = '<b>' + record.data.literatureEvidences.length + 'x</b> Literature';
-                     break;
-
                   case 'LiteratureEvidenceValueObject' :
                      typeColumnHtml = 'Literature';
                      break;
@@ -671,37 +639,27 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
             renderer : function(value, metadata, record, rowIndex, colIndex, store) {
                var linkOutHtml = '';
 
-               switch (record.data.className) {
-                  case 'DiffExpressionEvidenceValueObject' :
-                     break;
+                	  var pubmeds = "";
+                	  
+                	   if(record.data.phenotypeAssPubVO.length>0){
+                    	   
+                		   for (var i = 0; i < record.data.phenotypeAssPubVO.length; i++) {
+   
+                			   	if(i==0){
+                				   pubmeds += record.data.phenotypeAssPubVO[i].citationValueObject.pubmedURL;
+                		   		}
+                		   		else{
+                			   		pubmeds += record.data.phenotypeAssPubVO[i].citationValueObject.pubmedAccession;
+                		   		}
+                		   		if(i!=record.data.phenotypeAssPubVO.length-1){
+                			   		pubmeds += ",";
+                		   		} 
+                		   }
+                        }
 
-                  case 'ExperimentalEvidenceValueObject' :
-                     if (record.data.primaryPublicationCitationValueObject != null) {
-                        linkOutHtml += generatePublicationLinks(null, record.data.primaryPublicationCitationValueObject.pubmedURL);
+                      if (record.data.phenotypeAssPubVO.size() > 0)  {
+                       linkOutHtml += generatePublicationLinks(null, pubmeds);
                      }
-                     break;
-
-                  case 'GenericEvidenceValueObject' :
-                     break;
-
-                  case 'GroupEvidenceValueObject' :
-                     var pubmedURL = record.data.literatureEvidences[0].citationValueObject.pubmedURL;
-                     for (var i = 1; i < record.data.literatureEvidences.length; i++) {
-                        pubmedURL += ',' + record.data.literatureEvidences[i].citationValueObject.pubmedAccession;
-                     }
-
-                     linkOutHtml += generatePublicationLinks(null, pubmedURL);
-                     break;
-
-                  case 'LiteratureEvidenceValueObject' :
-                     if (record.data.citationValueObject != null) {
-                        linkOutHtml += generatePublicationLinks(null, record.data.citationValueObject.pubmedURL);
-                     }
-                     break;
-
-                  case 'UrlEvidenceValueObject' :
-                     break;
-               }
 
                if (value != null && value.externalDatabase.name != null && value.externalUrl != null) {
                   if (linkOutHtml !== '') {

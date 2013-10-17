@@ -754,6 +754,10 @@
 			javascript="CharacteristicValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject"
 			javascript="ScoreValueObject" />
+			
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject"
+			javascript="PhenotypeAssPubValueObject" />
+			
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject"
 			javascript="SimpleTreeValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject" />
@@ -765,9 +769,6 @@
 
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject"
 			javascript="ExperimentalEvidenceValueObject" />
-
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.GroupEvidenceValueObject"
-			javascript="GroupEvidenceValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject"
 			javascript="LiteratureEvidenceValueObject" />

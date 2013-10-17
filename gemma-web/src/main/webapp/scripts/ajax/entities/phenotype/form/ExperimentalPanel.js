@@ -161,6 +161,7 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend(Ext.Panel, {
 
                   return {
                      primaryPublicationCitationValueObject : primaryLiteraturePanel.getCitationValueObject(),
+                     relevantPublicationsCitationValueObject : secondaryLiteraturePanel.getCitationValueObject(),
                      relevantPublicationsCitationValueObjects : secondaryCitationValueObject == null ? [] : [secondaryCitationValueObject],
                      experimentCharacteristics : experimentTagsPanel.getSelectedExperimentTags()
                   };

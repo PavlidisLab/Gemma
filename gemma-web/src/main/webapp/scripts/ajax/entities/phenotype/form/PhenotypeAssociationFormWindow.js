@@ -143,20 +143,39 @@ Gemma.PhenotypeAssociationForm.Panel = Ext.extend(Ext.FormPanel, {
             var evidenceType = evidenceTypeComboBox.getValue();
 
             var evidenceValueObject;
+            var publicationsTypes = [];
 
             if (evidenceType === 'ExperimentalEvidenceValueObject') {
                if (experimentalPanel.isValid()) {
                   var experimentalValues = experimentalPanel.getValues();
 
                   evidenceValueObject = new ExperimentalEvidenceValueObject();
-                  evidenceValueObject.primaryPublicationCitationValueObject = experimentalValues.primaryPublicationCitationValueObject;
-                  evidenceValueObject.relevantPublicationsCitationValueObjects = experimentalValues.relevantPublicationsCitationValueObjects;
                   evidenceValueObject.experimentCharacteristics = experimentalValues.experimentCharacteristics;
+                  
+                  var phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
+                  phenotypeAssPubValueObject.type= 'Primary';
+                  phenotypeAssPubValueObject.citationValueObject = experimentalValues.primaryPublicationCitationValueObject;
+                  publicationsTypes.push(phenotypeAssPubValueObject);
+
+                  if(experimentalValues.relevantPublicationsCitationValueObjects!=null && experimentalValues.relevantPublicationsCitationValueObjects.length!=0){            
+                     var phenotypeAssPubValueObjectRel = new PhenotypeAssPubValueObject();
+                     phenotypeAssPubValueObjectRel.type= 'Relevant';
+                     phenotypeAssPubValueObjectRel.citationValueObject = experimentalValues.relevantPublicationsCitationValueObject;
+                     publicationsTypes.push(phenotypeAssPubValueObjectRel); 
+                  }
+                  
+                  evidenceValueObject.phenotypeAssPubVO = publicationsTypes;  
                }
             } else if (evidenceType === 'LiteratureEvidenceValueObject') {
                if (literaturePanel.isValid()) {
                   evidenceValueObject = new LiteratureEvidenceValueObject();
-                  evidenceValueObject.citationValueObject = literaturePanel.getCitationValueObject();
+
+                  var phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
+                  phenotypeAssPubValueObject.type= 'Primary';
+                  phenotypeAssPubValueObject.citationValueObject = literaturePanel.getCitationValueObject();
+                  publicationsTypes.push(phenotypeAssPubValueObject);
+                  
+                  evidenceValueObject.phenotypeAssPubVO = publicationsTypes;
                }
             }
 
