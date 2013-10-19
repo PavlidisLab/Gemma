@@ -992,7 +992,7 @@
 
 		<dwr:convert type="standardQuantitationTypeConverter" class="ubic.gemma.model.common.quantitationtype.StandardQuantitationType" />
 
-		<dwr: convert type="directionConverter" class="ubic.gemma.model.analysis.expression.diff.Direction" />
+		<dwr:convert type="directionConverter" class="ubic.gemma.model.analysis.expression.diff.Direction" />
 		<dwr:convert type="scaleTypeConverter" class="ubic.gemma.model.common.quantitationtype.ScaleType" />
 
 		<dwr:convert type="exception" class="java.lang.Exception" />
