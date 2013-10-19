@@ -90,8 +90,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends
 
         List<ExpressionAnalysisResultSet> res = this.getHibernateTemplate().findByNamedParam(
                 "select r from ExpressionAnalysisResultSetImpl r left join fetch r.results res "
-                        + " left outer join fetch res.probe left join fetch res.contrasts where r = :rs ", "rs",
-                resultSet );
+                        + " left outer join fetch res.probe left join fetch res.contrasts "
+                        + "inner join fetch r.experimentalFactors ef inner join fetch ef.factorValues "
+                        + "where r = :rs ", "rs", resultSet );
 
         if ( timer.getTime() > 1000 ) {
             Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
@@ -115,8 +116,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         StopWatch timer = new StopWatch();
         timer.start();
 
-        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory().getCurrentSession().load(
-                DifferentialExpressionAnalysisImpl.class, differentialExpressionAnalysis.getId() );
+        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory()
+                .getCurrentSession()
+                .load( DifferentialExpressionAnalysisImpl.class, differentialExpressionAnalysis.getId() );
         // Hibernate.initialize( differentialExpressionAnalysis );
         // Hibernate.initialize( differentialExpressionAnalysis.getResultSets() );
         Collection<ExpressionAnalysisResultSet> thawed = new HashSet<ExpressionAnalysisResultSet>();
