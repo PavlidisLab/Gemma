@@ -604,9 +604,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 e.printStackTrace();
             }
             log.info( "Waiting for Gene Ontology to load ..." );
-            if ( ++n > 20 ) {
-                throw new RuntimeException( "Gave up on waiting for GO" );
-            }
         }
         log.info( "GO is ready." );
     }
