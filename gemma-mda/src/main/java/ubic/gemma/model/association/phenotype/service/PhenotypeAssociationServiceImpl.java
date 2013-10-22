@@ -185,8 +185,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find private evidence id that the user can modifiable or own */
     @Override
     @Transactional(readOnly = true)
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups ) {
-        return this.phenotypeAssociationDao.findPrivateEvidenceId( userName, groups );
+    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups,Integer limit ) {
+        return this.phenotypeAssociationDao.findPrivateEvidenceId( userName, groups, limit );
     }
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */

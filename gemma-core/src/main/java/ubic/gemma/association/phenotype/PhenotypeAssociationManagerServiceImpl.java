@@ -385,10 +385,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     paIds = null;
                 } else {
                     paIds = this.associationService.findPrivateEvidenceId( this.userManager.getCurrentUsername(),
-                            this.userManager.findAllGroups() );
+                            this.userManager.findAllGroups(),limit );
                 }
             } else {
-                paIds = this.associationService.findPrivateEvidenceId( userName, this.userManager.findAllGroups() );
+                paIds = this.associationService.findPrivateEvidenceId( userName, this.userManager.findAllGroups(),limit );
             }
 
             Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService

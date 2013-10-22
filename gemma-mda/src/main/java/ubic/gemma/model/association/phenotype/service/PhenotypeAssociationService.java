@@ -148,7 +148,7 @@ public interface PhenotypeAssociationService {
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** find private evidence id that the user can modifiable or own */
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups );
+    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Integer limit );
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,

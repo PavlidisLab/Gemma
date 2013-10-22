@@ -52,8 +52,8 @@ import ubic.gemma.persistence.AbstractDao;
  * deals with all basic queries used by Neurocarta
  * 
  * @author Nicolas
- * @version $Id$ TODO: change criteria queries to
- *          hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
+ * @version $Id$ TODO: change criteria queries
+ *          to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -318,7 +318,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * find private evidence id that the user can modifiable or own
      */
     @Override
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups ) {
+    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Integer limit ) {
 
         Set<Long> ids = new HashSet<Long>();
 
@@ -327,6 +327,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
 
+        if ( limit != null ) {
+            sqlQuery += "limit " + limit;
+        }
         SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
