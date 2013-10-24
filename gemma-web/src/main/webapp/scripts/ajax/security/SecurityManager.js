@@ -263,7 +263,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id, securityForm
                   securityPanel.destroy();
 
                   Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClazz, updatedInfo.entityId, updatedInfo.publiclyReadable, updatedInfo.shared,
-                     updatedInfo.currentUserOwns);
+                		  updatedInfo.currentUserCanwrite, updatedInfo.currentUserOwns);
                },
                errorHandler : function() {
                   securityPanel.destroy();
