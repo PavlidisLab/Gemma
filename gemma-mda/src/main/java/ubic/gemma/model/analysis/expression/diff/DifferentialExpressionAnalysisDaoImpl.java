@@ -345,7 +345,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     @Override
     public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
             Collection<Long> expressionExperimentIds ) {
-        Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<Long, Collection<DifferentialExpressionAnalysisValueObject>>();
+        Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
         for ( Long id : expressionExperimentIds ) {
 
             Collection<DifferentialExpressionAnalysisValueObject> analyses = this.getAnalysisValueObjects( id );
@@ -364,7 +364,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      */
     @Override
     public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId ) {
-        Collection<DifferentialExpressionAnalysisValueObject> summaries = new HashSet<DifferentialExpressionAnalysisValueObject>();
+        Collection<DifferentialExpressionAnalysisValueObject> summaries = new HashSet<>();
         Collection<DifferentialExpressionAnalysis> analyses = getAnalysesForExperiment( experimentId );
 
         // FIXME this can be made much faster with some query help.
@@ -384,16 +384,16 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
             }
 
-            for ( ExpressionAnalysisResultSet par : results ) {
+            for ( ExpressionAnalysisResultSet resultSet : results ) {
 
                 DifferentialExpressionSummaryValueObject desvo = new DifferentialExpressionSummaryValueObject();
                 desvo.setThreshold( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD );
-                desvo.setExperimentalFactors( par.getExperimentalFactors() );
-                desvo.setResultSetId( par.getId() );
+                desvo.setExperimentalFactors( resultSet.getExperimentalFactors() );
+                desvo.setResultSetId( resultSet.getId() );
                 desvo.setAnalysisId( analysis.getId() );
-                desvo.setFactorIds( EntityUtils.getIds( par.getExperimentalFactors() ) );
+                desvo.setFactorIds( EntityUtils.getIds( resultSet.getExperimentalFactors() ) );
 
-                for ( HitListSize hitList : par.getHitListSizes() ) {
+                for ( HitListSize hitList : resultSet.getHitListSizes() ) {
                     if ( hitList.getThresholdQvalue().equals(
                             DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
 
@@ -408,15 +408,15 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                     }
                 }
 
-                if ( par.getBaselineGroup() != null ) {
-                    desvo.setBaselineGroup( new FactorValueValueObject( par.getBaselineGroup() ) );
+                if ( resultSet.getBaselineGroup() != null ) {
+                    desvo.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
                 }
 
                 avo.getResultSets().add( desvo );
 
                 populateWhichFactorValuesUsed( avo, bioAssaySet );
 
-                par.getExperimentalFactors();
+                // Collection<ExperimentalFactor> experimentalFactors = par.getExperimentalFactors();
 
             }
 
@@ -713,12 +713,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                     continue;
                 }
 
-                String expFactorId = experimentalFactorId.toString();
                 if ( !avo.getFactorValuesUsed().containsKey( experimentalFactorId ) ) {
-                    avo.getFactorValuesUsed().put( expFactorId, new HashSet<FactorValueValueObject>() );
+                    avo.getFactorValuesUsed().put( experimentalFactorId, new HashSet<FactorValueValueObject>() );
                 }
 
-                avo.getFactorValuesUsed().get( expFactorId ).add( new FactorValueValueObject( fv ) );
+                avo.getFactorValuesUsed().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
 
             }
 

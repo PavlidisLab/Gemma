@@ -194,7 +194,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public ExpressionExperimentValueObject generateSummary( Long id ) {
         assert id != null;
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );
         if ( results.size() > 0 ) {
@@ -430,7 +430,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             }
 
             if ( troubledEEs.contains( id ) ) {
-                Collection<Long> tids = new HashSet<Long>();
+                Collection<Long> tids = new HashSet<>();
                 tids.add( id );
                 Map<Long, AuditEvent> troublM = expressionExperimentService.getLastTroubleEvent( tids );
                 if ( !troublM.isEmpty() ) {
@@ -456,10 +456,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos ) {
         StopWatch timer = new StopWatch();
-        Map<Long, Date> result = new HashMap<Long, Date>();
+        Map<Long, Date> result = new HashMap<>();
         timer.start();
 
-        List<Long> ids = new ArrayList<Long>();
+        List<Long> ids = new ArrayList<>();
         for ( ExpressionExperimentValueObject vo : vos ) {
             ids.add( vo.getId() );
         }
@@ -506,7 +506,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      */
     @Override
     public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
-        Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<>();
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
 
         int incache = 0;
@@ -550,7 +550,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @return
      */
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
-        Map<Long, Collection<AuditEvent>> result = new HashMap<Long, Collection<AuditEvent>>();
+        Map<Long, Collection<AuditEvent>> result = new HashMap<>();
         Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService
                 .getSampleRemovalEvents( ees );
         for ( ExpressionExperiment e : rawr.keySet() ) {

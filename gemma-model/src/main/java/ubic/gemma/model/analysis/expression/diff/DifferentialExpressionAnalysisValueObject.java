@@ -37,14 +37,12 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     private Long bioAssaySetId;
 
-    /*
-     * This is a map of Strings to avoid warnings about casting Longs to Strings in conversion to json.
-     */
-    private Map<String, Collection<FactorValueValueObject>> factorValuesUsed = new HashMap<String, Collection<FactorValueValueObject>>();
+    // DO NOT change the key type without first checking all places it is used!
+    private Map<Long, Collection<FactorValueValueObject>> factorValuesUsed = new HashMap<>();
 
     private Long id;
 
-    private Collection<DifferentialExpressionSummaryValueObject> resultSets = new HashSet<DifferentialExpressionSummaryValueObject>();
+    private Collection<DifferentialExpressionSummaryValueObject> resultSets = new HashSet<>();
 
     private ExperimentalFactorValueObject subsetFactor = null;
 
@@ -87,7 +85,7 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
      *         subset analysis, then this won't be important (so it may not be populated), but for subset analyses
      *         (subsetFactor != null), only the factorvalues present in the subset are relevant.
      */
-    public Map<String, Collection<FactorValueValueObject>> getFactorValuesUsed() {
+    public Map<Long, Collection<FactorValueValueObject>> getFactorValuesUsed() {
         return factorValuesUsed;
     }
 
@@ -119,7 +117,7 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
         this.bioAssaySetId = bioAssaySetId;
     }
 
-    public void setFactorValuesUsed( Map<String, Collection<FactorValueValueObject>> factorValuesUsed ) {
+    public void setFactorValuesUsed( Map<Long, Collection<FactorValueValueObject>> factorValuesUsed ) {
         this.factorValuesUsed = factorValuesUsed;
     }
 

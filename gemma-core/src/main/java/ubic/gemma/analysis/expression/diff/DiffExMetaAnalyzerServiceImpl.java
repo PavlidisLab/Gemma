@@ -49,6 +49,8 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
@@ -69,6 +71,9 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+
+    @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
@@ -525,7 +530,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 log.warn( "No diff ex result set with ID=" + analysisResultSetId );
                 throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
             }
-
+            expressionAnalysisResultSet = differentialExpressionResultService.thaw( expressionAnalysisResultSet );
             resultSets.add( expressionAnalysisResultSet );
         }
         return resultSets;
@@ -593,7 +598,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      */
     private Map<Gene, Collection<DifferentialExpressionAnalysisResult>> organizeResultsByGene(
             Collection<ExpressionAnalysisResultSet> resultSets, Collection<DifferentialExpressionAnalysisResult> res2set ) {
-        Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> probes = new HashSet<>();
 
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             validate( rs );
@@ -601,7 +606,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         }
         log.info( "Matching up by genes ..." );
         Map<CompositeSequence, Collection<Gene>> cs2genes = compositeSequenceService.getGenes( probes );
-        Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = new HashMap<Gene, Collection<DifferentialExpressionAnalysisResult>>();
+        Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = new HashMap<>();
 
         int numWithGenes = 0;
         int numWithoutGenes = 0;
@@ -676,17 +681,15 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
          */
         log.info( "Preparing to meta-analyze " + resultSets.size() + " resultSets ..." );
 
-        Collection<ExpressionAnalysisResultSet> updatedResultSets = new HashSet<ExpressionAnalysisResultSet>();
+        Collection<ExpressionAnalysisResultSet> updatedResultSets = new HashSet<>();
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            DifferentialExpressionAnalysis analysis = differentialExpressionResultService.getAnalysis( rs );
-            analysis = differentialExpressionAnalysisService.thawFully( analysis );
 
             if ( rs.getQvalueThresholdForStorage() != null && rs.getQvalueThresholdForStorage() < 1.0 ) {
 
                 /*
                  * We have to extend the analysis to include all probes, not just 'significant' ones.
                  */
-
+                DifferentialExpressionAnalysis analysis = differentialExpressionResultService.getAnalysis( rs );
                 rs = extendAnalysis( rs, analysis );
                 updatedResultSets.add( rs );
 
@@ -770,13 +773,33 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         }
 
         ExperimentalFactor factor = rs.getExperimentalFactors().iterator().next();
-        if ( factor.getFactorValues().size() > 2 ) {
-            /*
-             * Note that this doesn't account for continuous factors.
-             */
-            throw new IllegalArgumentException(
-                    "Cannot do a meta-analysis including a factor that has more than two levels: " + factor + " has "
-                            + factor.getFactorValues().size() + " levels" );
+
+        /*
+         * We need to check this just in the subset of samples actually used.
+         */
+        BioAssaySet experimentAnalyzed = rs.getAnalysis().getExperimentAnalyzed();
+        assert experimentAnalyzed != null;
+        if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
+
+            ExpressionExperimentSubSet eesubset = ( ExpressionExperimentSubSet ) experimentAnalyzed;
+            Collection<FactorValue> factorValuesUsed = expressionExperimentSubSetService.getFactorValuesUsed( eesubset,
+                    factor );
+            if ( factorValuesUsed.size() > 2 ) {
+                throw new IllegalArgumentException(
+                        "Cannot do a meta-analysis including a factor that has more than two levels: " + factor
+                                + " has " + factor.getFactorValues().size() + " levels from " + experimentAnalyzed );
+            }
+
+        } else {
+
+            if ( factor.getFactorValues().size() > 2 ) {
+                /*
+                 * Note that this doesn't account for continuous factors.
+                 */
+                throw new IllegalArgumentException(
+                        "Cannot do a meta-analysis including a factor that has more than two levels: " + factor
+                                + " has " + factor.getFactorValues().size() + " levels from " + experimentAnalyzed );
+            }
         }
     }
 }

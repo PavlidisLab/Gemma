@@ -54,8 +54,6 @@ public class FactorValueValueObject implements Serializable {
 
     private String categoryUri;
 
-    private Boolean isBaseline = false;
-
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
@@ -68,6 +66,8 @@ public class FactorValueValueObject implements Serializable {
     private Long factorId;
 
     private Long id;
+
+    private Boolean isBaseline = false;
 
     private boolean measurement = false;
 
@@ -270,6 +270,11 @@ public class FactorValueValueObject implements Serializable {
 
     public void setValueUri( String valueUri ) {
         this.valueUri = valueUri;
+    }
+
+    @Override
+    public String toString() {
+        return "FactorValueValueObject [factor=" + factor + ", value=" + value + "]";
     }
 
     /**

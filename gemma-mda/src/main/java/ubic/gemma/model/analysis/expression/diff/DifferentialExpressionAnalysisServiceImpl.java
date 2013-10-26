@@ -39,11 +39,10 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  */
 @Service
-public class DifferentialExpressionAnalysisServiceImpl implements
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService {
+public class DifferentialExpressionAnalysisServiceImpl implements DifferentialExpressionAnalysisService {
 
     @Autowired
-    private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+    private  DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Autowired
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;

@@ -1013,7 +1013,7 @@ public class ExpressionExperimentController {
      */
     public Collection<ExpressionExperimentValueObject> loadDetailedExpressionExperiments( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
-            return new HashSet<ExpressionExperimentValueObject>();
+            return new HashSet<>();
         }
         Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
                 false, null, true );
@@ -1413,7 +1413,7 @@ public class ExpressionExperimentController {
             }
         }
 
-        // FIXME this should be in a transaction!   
+        // FIXME this should be in a transaction!
         for ( BioMaterial bm : needToProcess ) {
             int i = 0;
             for ( BioAssay baU : bm.getBioAssaysUsedIn() ) {

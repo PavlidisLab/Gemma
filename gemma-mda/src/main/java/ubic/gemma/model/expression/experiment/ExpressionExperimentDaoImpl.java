@@ -546,15 +546,21 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return r.iterator().next();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadValueObjects(java.util.Collection,
+     * boolean)
+     */
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
 
         boolean isList = ( ids != null && ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
-                return new ArrayList<ExpressionExperimentValueObject>();
+                return new ArrayList<>();
             }
-            return new HashSet<ExpressionExperimentValueObject>();
+            return new HashSet<>();
         }
 
         String idRestrictionClause = "where ee.id in (:ids) ";
@@ -563,7 +569,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        List<Long> idl = new ArrayList<Long>( ids );
+        List<Long> idl = new ArrayList<>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
 
         queryObject.setParameterList( "ids", idl );
@@ -577,11 +583,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
          * Remove items we didn't get back out. This is defensiveness!
          */
 
-        Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<>();
 
         Set<Long> voIds = vo.keySet();
         if ( maintainOrder ) {
-            Set<Long> orderedVoIds = new LinkedHashSet<Long>( voIds.size() );
+            Set<Long> orderedVoIds = new LinkedHashSet<>( voIds.size() );
             for ( Long eeId : ids ) {
                 if ( voIds.contains( eeId ) ) {
                     orderedVoIds.add( eeId );
@@ -603,13 +609,19 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         if ( isList ) {
-            return new ArrayList<ExpressionExperimentValueObject>( finalValues );
+            return new ArrayList<>( finalValues );
         }
 
         return finalValues;
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadValueObjectsOrdered(java.lang.String,
+     * boolean, java.util.Collection)
+     */
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids ) {
