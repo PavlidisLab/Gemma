@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 
 /**
  * 
@@ -42,29 +43,17 @@ public abstract class PrincipalComponentAnalysis extends SingleExperimentAnalysi
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7305397084531510807L;
     private Integer numComponentsStored;
 
     private Integer maxNumProbesPerComponent;
 
-    private ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension;
+    private BioAssayDimension bioAssayDimension;
 
     private Collection<ProbeLoading> probeLoadings = new HashSet<ProbeLoading>();
 
     private Collection<Eigenvalue> eigenValues = new HashSet<Eigenvalue>();
 
     private Collection<Eigenvector> eigenVectors = new HashSet<Eigenvector>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public PrincipalComponentAnalysis() {
-    }
 
     /**
      * 
