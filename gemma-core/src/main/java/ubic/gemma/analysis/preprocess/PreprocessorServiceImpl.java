@@ -106,7 +106,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * ExpressionExperiment)
      */
     @Override
-    public void process( ExpressionExperiment ee ) throws PreprocessingException {
+    public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
 
         ee = expressionExperimentService.thawLite( ee );
 
@@ -117,6 +117,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
             // // refresh into context.
             ee = expressionExperimentService.thawLite( ee );
+
+            assert ee.getNumberOfDataVectors() != null;
 
             /*
              * Redo any old diff ex analyses
@@ -137,10 +139,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 }
 
             }
-
             processForSampleCorrelation( ee );
             processForMeanVarianceRelation( ee );
             processForPca( ee );
+
+            expressionExperimentService.update( ee );
+            assert ee.getNumberOfDataVectors() != null;
+            return ee;
         } catch ( Exception e ) {
             throw new PreprocessingException( e );
         }
@@ -153,7 +158,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * ExpressionExperiment, boolean)
      */
     @Override
-    public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
+    public ExpressionExperiment process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
         if ( light ) {
             try {
                 removeInvalidatedData( ee );
@@ -168,6 +173,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         } else {
             process( ee );
         }
+
+        return ee;
 
     }
 

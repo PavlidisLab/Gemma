@@ -26,15 +26,17 @@ public interface PreprocessorService {
 
     /**
      * @param ee
+     * @return
      * @throws PreprocessingException
      */
-    public abstract void process( ExpressionExperiment ee ) throws PreprocessingException;
+    public abstract ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException;
 
     /**
      * @param ee
      * @param light if true, just do the bare minimum. The following are skipped: two-channel missing values; redoing
      *        differential expression.
      */
-    public abstract void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException;
+    public abstract ExpressionExperiment process( ExpressionExperiment ee, boolean light )
+            throws PreprocessingException;
 
 }

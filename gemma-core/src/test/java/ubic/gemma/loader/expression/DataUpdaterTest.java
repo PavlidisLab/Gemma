@@ -265,6 +265,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
             assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
 
+            // Main step.
             dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
         }
         /*
@@ -272,9 +273,15 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
          */
         ExpressionExperiment updatedee = experimentService.thaw( ee );
 
+        // should have: counts, rpkm, and counts-masked ('preferred')
+        assertEquals( 3, updatedee.getQuantitationTypes().size() );
+
         for ( BioAssay ba : updatedee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
         }
+
+        assertNotNull( updatedee.getNumberOfDataVectors() );
+        assertEquals( 199, updatedee.getNumberOfDataVectors().intValue() );
 
         // GSM475204 GSM475205 GSM475206 GSM475207 GSM475208 GSM475209
         // 3949585 3929008 3712314 3693219 3574068 3579631

@@ -36,6 +36,7 @@ import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -45,28 +46,30 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
 
-    ExpressionExperiment ee;
+    private ExpressionExperiment ee;
 
     @Autowired
-    ExpressionExperimentService ees;
+    private ExpressionExperimentService ees;
 
-    Long firstProbeId;
-    Long secondProbeId;
-
-    @Autowired
-    Probe2ProbeCoexpressionService ppcs;
+    private Long firstProbeId;
+    private Long secondProbeId;
 
     @Autowired
-    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private Probe2ProbeCoexpressionService ppcs;
+
+    @Autowired
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Before
     public void setup() {
 
         ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        Collection<ProcessedExpressionDataVector> dvs = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
-
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        Collection<ProcessedExpressionDataVector> dvs = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
         List<ProcessedExpressionDataVector> dvl = new ArrayList<ProcessedExpressionDataVector>( dvs );
 
         assertTrue( dvs.size() > 1 );

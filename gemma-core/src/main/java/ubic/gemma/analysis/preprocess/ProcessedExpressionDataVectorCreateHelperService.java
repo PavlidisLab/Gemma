@@ -28,19 +28,18 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
 
     /**
      * @param ee
-     * @return
+     * @return updated ee
      */
-    public Collection<ProcessedExpressionDataVector> createProcessedExpressionData( ExpressionExperiment ee );
+    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee );
 
     /**
      * If possible, update the ranks for the processed data vectors. For data sets with only ratio expression values
      * provided, ranks will not be computable.
      * 
      * @param ee
-     * @return The vectors after updating them, or just the original vectors if ranks could not be computed. (The
-     *         vectors may be thawed in the process)
+     * @return updated experiment.
      */
-    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee );
+    public ExpressionExperiment updateRanks( ExpressionExperiment ee );
 
     /**
      * @param ee

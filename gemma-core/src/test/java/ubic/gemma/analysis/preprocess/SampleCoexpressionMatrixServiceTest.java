@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -38,13 +39,16 @@ public class SampleCoexpressionMatrixServiceTest extends BaseSpringContextTest {
 
     @Autowired
     ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Test
     public void test() {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 
-        Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
 
         DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionMatrixService.create( ee, vecs );
 

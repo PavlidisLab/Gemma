@@ -110,7 +110,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         boolean isTwoChannel = isTwoChannel( expressionExperiment );
 
-        Collection<RawExpressionDataVector> missingValueVectors = new HashSet<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> missingValueVectors = new HashSet<>();
         if ( isTwoChannel ) {
             missingValueVectors = this.getMissingValueVectors( expressionExperiment );
         }
@@ -160,6 +160,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         expressionExperiment.setNumberOfDataVectors( expressionExperiment.getProcessedExpressionDataVectors().size() );
 
         this.getHibernateTemplate().update( expressionExperiment );
+        assert expressionExperiment.getNumberOfDataVectors() != null;
 
         this.processedDataVectorCache.clearCache( expressionExperiment.getId() );
 
@@ -712,6 +713,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 expressionExperiment );
 
         if ( !qtsToRemove.isEmpty() ) {
+            log.info( "Deleting " + qtsToRemove + " old quantitation types" );
             expressionExperiment.getQuantitationTypes().removeAll( qtsToRemove );
             this.getHibernateTemplate().update( expressionExperiment );
             this.getHibernateTemplate().deleteAll( qtsToRemove );

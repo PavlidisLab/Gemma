@@ -105,9 +105,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         ee = eeService.thawLite( ee );
 
-        Collection<ProcessedExpressionDataVector> preferredVectors = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
-
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
         ee = eeService.thawLite( ee );
         int numQts = ee.getQuantitationTypes().size();
@@ -148,9 +148,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         ee = eeService.thawLite( ee );
 
-        Collection<ProcessedExpressionDataVector> preferredVectors = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
-
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
         ee = eeService.thawLite( ee );
 

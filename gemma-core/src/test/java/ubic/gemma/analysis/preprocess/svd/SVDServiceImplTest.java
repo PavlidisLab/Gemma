@@ -16,6 +16,7 @@ package ubic.gemma.analysis.preprocess.svd;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -23,6 +24,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.analysis.expression.AnalysisUtilService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -38,15 +40,18 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
     @Autowired
-    SVDService svdService;
+    private AnalysisUtilService analysisUtilService;
 
     @Autowired
-    protected GeoService geoService;
+    private SVDService svdService;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private GeoService geoService;
 
-    ExpressionExperiment ee;
+    @Autowired
+    private ExpressionExperimentService eeService;
+
+    private ExpressionExperiment ee;
 
     @Autowired
     ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
@@ -78,6 +83,9 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
         assertNotNull( svd.getvMatrix() );
         assertEquals( 5, svd.getFactorCorrelations().size() );
+
+        analysisUtilService.deleteOldAnalyses( ee );
+
     }
 
     /**

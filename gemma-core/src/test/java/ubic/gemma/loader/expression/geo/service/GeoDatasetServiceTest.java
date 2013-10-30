@@ -47,6 +47,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -65,6 +66,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private GeoService geoService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -249,8 +253,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 16, qts.size() );
 
-        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
+
         assertEquals( 10, dataVectors.size() );
 
         ee = eeService.load( ee.getId() );
@@ -286,8 +292,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         QuantitationType qt = qts.iterator().next();
         assertEquals( "Processed Affymetrix Rosetta intensity values", qt.getDescription() );
 
-        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
         assertEquals( 100, dataVectors.size() );
 
         ee = eeService.findByShortName( "GSE18707" );

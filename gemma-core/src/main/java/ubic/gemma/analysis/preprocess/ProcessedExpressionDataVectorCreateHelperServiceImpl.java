@@ -98,17 +98,15 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
      */
     @Override
     @Transactional
-    public Collection<ProcessedExpressionDataVector> createProcessedExpressionData( ExpressionExperiment ee ) {
+    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee ) {
         ee = processedDataService.createProcessedDataVectors( ee );
         ee = this.eeService.thawLite( ee );
 
-        Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
-
-        assert processedVectors.size() > 0;
+        assert ee.getNumberOfDataVectors() != null;
 
         audit( ee, "" );
 
-        return processedVectors;
+        return ee;
     }
 
     /**
@@ -332,7 +330,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
      * @return expression ranks based on computed intensities
      */
     @Override
-    public Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee ) {
+    public ExpressionExperiment updateRanks( ExpressionExperiment ee ) {
 
         Collection<ProcessedExpressionDataVector> processedVectors = this.processedDataService
                 .getProcessedDataVectors( ee );
@@ -342,7 +340,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         ExpressionDataDoubleMatrix intensities = loadIntensities( ee, processedVectors );
 
         if ( intensities == null ) {
-            return processedVectors;
+            return ee;
         }
 
         log.info( "Load intensities: " + timer.getTime() + "ms" );
@@ -350,13 +348,13 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         Collection<ProcessedExpressionDataVector> updatedVectors = computeRanks( processedVectors, intensities );
         if ( updatedVectors == null ) {
             log.info( "Could not get preferred data vectors, not updating ranks data" );
-            return processedVectors;
+            return ee;
         }
 
         log.info( "Updating ranks data for " + updatedVectors.size() + " vectors ..." );
         this.processedDataService.update( updatedVectors );
         log.info( "Done" );
-        return updatedVectors;
+        return ee;
     }
 
     /**

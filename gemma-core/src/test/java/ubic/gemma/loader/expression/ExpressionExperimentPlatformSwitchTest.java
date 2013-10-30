@@ -65,6 +65,7 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
         results = geoService.fetchAndLoad( "GPL13112", true, false, false, false );
         ArrayDesign arrayDesign = ( ArrayDesign ) results.iterator().next();
         arrayDesign = arrayDesignService.thaw( arrayDesign );
+
         ee = experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, arrayDesign );
         assertNotNull( ee );
         Collection<ArrayDesign> arrayDesignsUsed = experimentService.getArrayDesignsUsed( ee );

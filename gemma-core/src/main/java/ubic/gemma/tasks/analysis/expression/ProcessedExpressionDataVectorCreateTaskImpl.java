@@ -56,10 +56,12 @@ public class ProcessedExpressionDataVectorCreateTaskImpl extends
             // task for the correlation matrix computation.
             processedVectors = processedExpressionDataVectorService.getProcessedDataVectors( ee );
             if ( processedVectors.isEmpty() ) {
-                processedVectors = processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+                processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+                processedVectors = processedExpressionDataVectorService.getProcessedDataVectors( ee );
             }
         } else {
-            processedVectors = processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            processedVectors = processedExpressionDataVectorService.getProcessedDataVectors( ee );
         }
 
         coexpressionMatrixService.create( ee, processedVectors );

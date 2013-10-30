@@ -51,29 +51,51 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
-    private VectorMergingService vectorMergingService;
+    private ArrayDesignMergeService arrayDesignMergeService;
 
     @Autowired
-    private ArrayDesignMergeService arrayDesignMergeService;
+    private ArrayDesignService arrayDesignService;
+
+    private ExpressionExperiment ee;
 
     @Autowired
     private ExpressionExperimentPlatformSwitchService eePlatformSwitchService;
 
     @Autowired
-    private GeoService geoService;
-
-    @Autowired
     private ExpressionExperimentService eeService;
 
-    private ExpressionExperiment ee;
-
     @Autowired
-    private ArrayDesignService arrayDesignService;
+    private GeoService geoService;
+
+    private ArrayDesign mergedAA;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    private ArrayDesign mergedAA;
+    @Autowired
+    private VectorMergingService vectorMergingService;
+
+    @After
+    public void tearDown() {
+        try {
+            eeService.delete( ee );
+            Collection<ArrayDesign> mergees = mergedAA.getMergees();
+            mergedAA.setMergees( new HashSet<ArrayDesign>() );
+            arrayDesignService.update( mergedAA );
+
+            for ( ArrayDesign arrayDesign : mergees ) {
+                arrayDesign.setMergedInto( null );
+                arrayDesignService.update( arrayDesign );
+            }
+            arrayDesignService.remove( mergedAA );
+            for ( ArrayDesign arrayDesign : mergees ) {
+                arrayDesignService.remove( arrayDesign );
+            }
+        } catch ( Exception e ) {
+            // oh well.
+            log.info( e.getMessage() );
+        }
+    }
 
     @Test
     final public void test() throws Exception {
@@ -179,28 +201,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         assertEquals( 50, processedDataArrays.size() );
 
-    }
-
-    @After
-    public void tearDown() {
-        try {
-            eeService.delete( ee );
-            Collection<ArrayDesign> mergees = mergedAA.getMergees();
-            mergedAA.setMergees( new HashSet<ArrayDesign>() );
-            arrayDesignService.update( mergedAA );
-
-            for ( ArrayDesign arrayDesign : mergees ) {
-                arrayDesign.setMergedInto( null );
-                arrayDesignService.update( arrayDesign );
-            }
-            arrayDesignService.remove( mergedAA );
-            for ( ArrayDesign arrayDesign : mergees ) {
-                arrayDesignService.remove( arrayDesign );
-            }
-        } catch ( Exception e ) {
-            // oh well.
-            log.info( e.getMessage() );
-        }
     }
 
 }

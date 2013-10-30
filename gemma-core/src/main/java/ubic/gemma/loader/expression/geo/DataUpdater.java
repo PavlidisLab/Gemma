@@ -443,7 +443,9 @@ public class DataUpdater {
         experimentService.update( ee );
 
         if ( qt.getIsPreferred() ) {
-            postprocess( ee );
+            log.info( "Postprocessing preferred data" );
+            ee = postprocess( ee );
+            assert ee.getNumberOfDataVectors() != null;
         }
 
         return ee;
@@ -460,14 +462,17 @@ public class DataUpdater {
 
     /**
      * @param ee
+     * @return
      */
-    private void postprocess( ExpressionExperiment ee ) {
+    private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
         // several transactions
         try {
-            preprocessorService.process( ee );
+            ee = preprocessorService.process( ee );
+            assert ee.getNumberOfDataVectors() != null;
         } catch ( PreprocessingException e ) {
             log.error( "Error during postprocessing", e );
         }
+        return ee;
     }
 
     /**
@@ -533,15 +538,16 @@ public class DataUpdater {
         }
 
         audit( ee, "Data vector replacement for " + targetPlatform, true );
+        experimentService.update( ee );
 
-        postprocess( ee );
+        ee = postprocess( ee );
+
+        assert ee.getNumberOfDataVectors() != null;
 
         // debug code.
         for ( BioAssay ba : ee.getBioAssays() ) {
             assert ba.getArrayDesignUsed().equals( targetPlatform );
         }
-
-        experimentService.update( ee );
 
         return ee;
     }

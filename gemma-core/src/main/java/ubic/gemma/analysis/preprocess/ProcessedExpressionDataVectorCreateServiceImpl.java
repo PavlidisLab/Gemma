@@ -18,15 +18,12 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.util.Collection;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -53,17 +50,21 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
      * .gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
+    public void computeProcessedExpressionData( ExpressionExperiment ee ) {
         // WARNING long transactions.
         try {
 
             // should also delete any differential expression analyses.
 
             // second transaction
-            helperService.createProcessedExpressionData( ee );
+            ee = helperService.createProcessedExpressionData( ee );
+
+            assert ee.getNumberOfDataVectors() != null;
 
             // third transaction. We load the vectors again because otherwise we have a long dirty check? See bug 3597
-            return helperService.updateRanks( ee );
+            helperService.updateRanks( ee );
+
+            assert ee.getNumberOfDataVectors() != null;
 
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),
