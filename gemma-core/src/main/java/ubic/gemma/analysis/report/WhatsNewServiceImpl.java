@@ -71,19 +71,19 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     private static Log log = LogFactory.getLog( WhatsNewServiceImpl.class.getName() );
 
     @Autowired
-    ArrayDesignService arrayDesignService = null;
+    private ArrayDesignService arrayDesignService = null;
 
     @Autowired
-    AuditEventService auditEventService;
+    private AuditEventService auditEventService;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService = null;
+    private ExpressionExperimentService expressionExperimentService = null;
 
     @Autowired
-    SecurityService securityService = null;
+    private SecurityService securityService = null;
 
     @Autowired
-    TaxonService taxonService = null;
+    private TaxonService taxonService = null;
 
     @Autowired
     private CacheManager cacheManager = null;
