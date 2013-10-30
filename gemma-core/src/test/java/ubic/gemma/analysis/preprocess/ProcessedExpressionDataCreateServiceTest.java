@@ -153,6 +153,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
         ee = eeService.thawLite( ee );
+        processedExpressionDataVectorService.thaw( preferredVectors );
 
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( preferredVectors );
         assertEquals( 10, mat.columns() );
