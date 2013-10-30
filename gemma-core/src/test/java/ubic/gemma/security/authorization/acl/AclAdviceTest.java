@@ -23,11 +23,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclService;
 
+import java.util.Date;
+
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.Sid;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -46,6 +52,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.security.authentication.UserDetailsImpl;
+import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -80,6 +88,9 @@ public class AclAdviceTest extends BaseSpringContextTest {
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
     @Autowired
+    private UserManager userManager;
+
+    @Autowired
     private UserService userService;
 
     @Autowired
@@ -108,10 +119,46 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         aclTestUtils.checkHasAcl( ad );
         aclTestUtils.checkHasAces( ad );
+
+        Sid owner = securityService.getOwner( ad );
+        assertEquals( "administrator", ( ( AclPrincipalSid ) owner ).getPrincipal() );
+
         arrayDesignService.remove( ad );
 
         aclTestUtils.checkDeletedAcl( ad );
 
+    }
+
+    @Test
+    public void testArrayDesignAclsUser() throws Exception {
+
+        String userName = "testuser" + RandomStringUtils.randomAlphabetic( 3 );
+        this.makeUser( userName );
+        this.runAsUser( userName );
+        ArrayDesign ad = this.getTestPersistentArrayDesign( 2, true, false, false );
+
+        aclTestUtils.checkHasAcl( ad );
+        aclTestUtils.checkHasAces( ad );
+
+        Sid owner = securityService.getOwner( ad );
+        assertEquals( userName, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+
+        arrayDesignService.update( ad );
+        assertEquals( userName, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+
+        arrayDesignService.remove( ad );
+
+        aclTestUtils.checkDeletedAcl( ad );
+
+    }
+
+    private void makeUser( String username ) {
+        try {
+            this.userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
+                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+        }
     }
 
     /**
