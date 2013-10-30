@@ -129,6 +129,21 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     }
 
+    /**
+     * @throws Exception
+     */
+    @Test
+    public void testSignup() throws Exception {
+        try {
+            this.runAsAnonymous();
+            String userName = "testuser" + RandomStringUtils.randomAlphabetic( 3 );
+            this.makeUser( userName );
+            this.runAsUser( userName );
+        } finally {
+            this.runAsAdmin();
+        }
+    }
+
     @Test
     public void testArrayDesignAclsUser() throws Exception {
 
