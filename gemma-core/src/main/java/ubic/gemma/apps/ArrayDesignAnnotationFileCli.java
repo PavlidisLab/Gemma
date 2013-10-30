@@ -595,8 +595,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * @throws InterruptedException
      */
     private void waitForGeneOntologyReady() {
-        int n = 0;
-
         while ( !goService.isReady() ) {
             try {
                 Thread.sleep( 10000 );

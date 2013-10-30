@@ -80,7 +80,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
         try {
             Collection<Integer> ids = readIdsFromFile( file );
-            Collection<Integer> chunk = new ArrayList<Integer>();
+            Collection<Integer> chunk = new ArrayList<>();
             for ( Integer i : ids ) {
 
                 chunk.add( i );
@@ -113,17 +113,23 @@ public class MeshTermFetcherCli extends AbstractCLI {
         }
     }
 
+    /**
+     * @param inFile
+     * @return
+     * @throws IOException
+     */
     protected Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
         log.info( "Reading " + inFile );
 
         Collection<Integer> ids = new ArrayList<Integer>();
-        BufferedReader in = new BufferedReader( new FileReader( file ) );
-        String line;
-        while ( ( line = in.readLine() ) != null ) {
-            if ( line.startsWith( "#" ) ) continue;
+        try (BufferedReader in = new BufferedReader( new FileReader( file ) );) {
+            String line;
+            while ( ( line = in.readLine() ) != null ) {
+                if ( line.startsWith( "#" ) ) continue;
 
-            ids.add( Integer.parseInt( line ) );
+                ids.add( Integer.parseInt( line ) );
 
+            }
         }
         return ids;
     }

@@ -220,12 +220,11 @@ public class ShellDelegatingBlat implements Blat {
         String seqName = b.getName().replaceAll( " ", "_" );
         File querySequenceFile = File.createTempFile( seqName, ".fa" );
 
-        BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
-        String trimmed = SequenceManipulation.stripPolyAorT( b.getSequence(), POLY_AT_THRESHOLD );
-        out.write( ">" + seqName + "\n" + trimmed );
-        out.close();
-        log.info( "Wrote sequence to " + querySequenceFile.getPath() );
-
+        try (BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );) {
+            String trimmed = SequenceManipulation.stripPolyAorT( b.getSequence(), POLY_AT_THRESHOLD );
+            out.write( ">" + seqName + "\n" + trimmed );
+            log.info( "Wrote sequence to " + querySequenceFile.getPath() );
+        }
         String outputPath = getTmpPslFilePath( seqName );
 
         Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon, sensitive ) );

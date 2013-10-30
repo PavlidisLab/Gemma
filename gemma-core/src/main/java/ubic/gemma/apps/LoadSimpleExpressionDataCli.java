@@ -313,21 +313,21 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
         configureTaxon( fields, metaData );
 
-        InputStream data = new FileInputStream( new File( this.dirName, fields[DATAFILEI] ) );
+        try (InputStream data = new FileInputStream( new File( this.dirName, fields[DATAFILEI] ) );) {
 
-        metaData.setSourceUrl( fields[SOURCEI] );
+            metaData.setSourceUrl( fields[SOURCEI] );
 
-        String pubMedId = fields[PUBMEDI];
-        if ( StringUtils.isNotBlank( pubMedId ) ) {
-            metaData.setPubMedId( Integer.parseInt( pubMedId ) );
+            String pubMedId = fields[PUBMEDI];
+            if ( StringUtils.isNotBlank( pubMedId ) ) {
+                metaData.setPubMedId( Integer.parseInt( pubMedId ) );
+            }
+
+            configureQuantitationType( fields, metaData );
+
+            ExpressionExperiment ee = eeLoaderService.create( metaData, data );
+
+            ee = eeService.thawLite( ee );
         }
-
-        configureQuantitationType( fields, metaData );
-
-        ExpressionExperiment ee = eeLoaderService.create( metaData, data );
-
-        ee = eeService.thawLite( ee );
-
     }
 
 }

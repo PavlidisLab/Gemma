@@ -98,11 +98,11 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         if ( this.arrayDesignsToProcess.size() > 1 ) {
             throw new IllegalArgumentException( "Cannot be applied to more than one platform given to the '-a' option" );
         }
-        BufferedReader br = null;
+
         ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
-        try {
-            InputStream is = new FileInputStream( f );
-            br = new BufferedReader( new InputStreamReader( is ) );
+        try (InputStream is = new FileInputStream( f );
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+
             String line = null;
             int count = 0;
             while ( ( line = br.readLine() ) != null ) {
@@ -125,12 +125,6 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
             log.info( "Deleted " + count + " probes" );
         } catch ( IOException e ) {
             return e;
-        } finally {
-            try {
-                if ( br != null ) br.close();
-            } catch ( IOException e ) {
-                throw new RuntimeException( "Failed to close", e );
-            }
         }
 
         return null;
