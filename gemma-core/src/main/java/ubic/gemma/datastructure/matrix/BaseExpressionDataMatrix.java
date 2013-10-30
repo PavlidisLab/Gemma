@@ -529,7 +529,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         log.debug( "Setting up column elements" );
         assert this.bioAssayDimensions != null && this.bioAssayDimensions.size() > 0 : "No bioAssayDimensions defined";
 
-        Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
+        Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions.values() ) {
             Collection<BioAssay> bioAssays = dimension.getBioAssays(); // this should in fact be a list.
             log.debug( "Processing: " + dimension + " with " + bioAssays.size() + " assays" );
