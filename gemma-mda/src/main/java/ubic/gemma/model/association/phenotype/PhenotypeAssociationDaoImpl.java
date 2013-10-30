@@ -318,7 +318,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * find private evidence id that the user can modifiable or own
      */
     @Override
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Integer limit ) {
+    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit ) {
 
         Set<Long> ids = new HashSet<Long>();
 
@@ -327,9 +327,14 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
 
+        if ( taxonId != null ) {
+            sqlQuery += "and taxon.ID = " + taxonId + " ";
+        }
+
         if ( limit != null ) {
             sqlQuery += "limit " + limit;
         }
+
         SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
