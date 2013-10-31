@@ -21,6 +21,8 @@ package ubic.gemma.apps;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.math.RandomUtils;
+
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.util.AbstractCLIContextCLI;
@@ -59,8 +61,14 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
         log.info( "There are " + bibrefIds.size() + " to update" );
         for ( Long id : bibrefIds ) {
             BibliographicReference bibref = bibliographicReferenceService.load( id );
+            bibref = bibliographicReferenceService.thaw( bibref );
             log.info( bibref );
-            bibliographicReferenceService.update( bibref );
+            bibliographicReferenceService.refresh( bibref.getPubAccession().getAccession() );
+            try {
+                Thread.sleep( RandomUtils.nextInt( 1000 ) );
+            } catch ( InterruptedException e ) {
+                return e;
+            }
         }
 
         return null;
