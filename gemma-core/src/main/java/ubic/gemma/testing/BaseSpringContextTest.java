@@ -400,7 +400,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return
      */
     protected BioSequence getTestNonPersistentBioSequence( Taxon t ) {
-        return testHelper.getTestNonPersistentBioSequence( t );
+        return PersistentDummyObjectHelper.getTestNonPersistentBioSequence( t );
     }
 
     protected BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
@@ -563,6 +563,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         authenticationTestingUtil.switchToUser( this.applicationContext, userName );
     }
 
+    protected final void runAsAnonymous() {
+        authenticationTestingUtil.logOut( this.applicationContext );
+    }
+
     /**
      * Change the number of elements created in collections (basically controls the size of test data sets). This
      * needn't be called unless the test needs larger data sets. FCall {@link resetTestCollectionSize} after you are
@@ -612,6 +616,19 @@ final class AuthenticationTestingUtil {
         putTokenInContext( token );
     }
 
+    protected void logOut( ApplicationContext ctx ) {
+        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
+        providerManager.getProviders().add( new TestingAuthenticationProvider() );
+
+        TestingAuthenticationToken token = new TestingAuthenticationToken( AuthorityConstants.ANONYMOUS_USER_NAME,
+                null, Arrays.asList( new GrantedAuthority[] { new SimpleGrantedAuthority(
+                        AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) } ) );
+
+        token.setAuthenticated( false );
+
+        putTokenInContext( token );
+    }
+
     /**
      * Grant authority to a test user, with regular user privileges, and put the token in the context. This means your
      * tests will be authorized to do anything that user could do
@@ -620,7 +637,7 @@ final class AuthenticationTestingUtil {
 
         UserDetails user = userManager.loadUserByUsername( username );
 
-        List<GrantedAuthority> authrs = new ArrayList<GrantedAuthority>( user.getAuthorities() );
+        List<GrantedAuthority> authrs = new ArrayList<>( user.getAuthorities() );
 
         ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
