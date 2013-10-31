@@ -322,7 +322,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Set<Long> ids = new HashSet<Long>();
 
-        String sqlQuery = "select PHENOTYPE_ASSOCIATION.ID ";
+        String sqlQuery = "select distinct PHENOTYPE_ASSOCIATION.ID ";
         sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
 
         sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
@@ -340,8 +340,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
         while ( results.next() ) {
-            Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
-            ids.add( geneId );
+            Long phenotypeId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+            ids.add( phenotypeId );
         }
 
         results.close();
