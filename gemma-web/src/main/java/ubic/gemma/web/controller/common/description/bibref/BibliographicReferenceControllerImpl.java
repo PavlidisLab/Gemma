@@ -76,7 +76,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     private PhenotypeAssociationService phenotypeAssociationService;
 
     /*
-     * (non-Javadoc)
+     * (non-Javadoc) is this used?
      * 
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#add(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
@@ -90,21 +90,23 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         }
 
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
-
+        BibliographicReferenceValueObject vo;
         if ( bibRef == null ) {
             bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
             if ( bibRef == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
-            bibRef = ( BibliographicReference ) persisterHelper.persist( bibRef );
+            vo = new BibliographicReferenceValueObject( ( BibliographicReference ) persisterHelper.persist( bibRef ) );
             saveMessage( request, "Added " + pubMedId + " to the system." );
         } else if ( StringUtils.isNotBlank( request.getParameter( "refresh" ) ) ) {
-            bibRef = this.update( bibRef.getId(), pubMedId );
+            vo = this.update( pubMedId );
             saveMessage( request, "Updated record for pubmed id " + pubMedId );
+        } else {
+            throw new IllegalArgumentException( "Action not understood" );
         }
 
-        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReferenceId", bibRef.getId() )
-                .addObject( "existsInSystem", Boolean.TRUE ).addObject( "bibliographicReference", bibRef );
+        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReferenceId", vo.getId() )
+                .addObject( "existsInSystem", Boolean.TRUE ).addObject( "bibliographicReference", vo );
     }
 
     /*
@@ -351,45 +353,12 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
      * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#update(java.lang.Long)
      */
     @Override
-    public BibliographicReference update( Long id, String pubMedId ) {
-        BibliographicReference bibRef = bibliographicReferenceService.load( id );
+    public BibliographicReferenceValueObject update( String pubMedId ) {
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
             throw new EntityNotFoundException( "Could not locate reference with that id" );
         }
-        bibRef = bibliographicReferenceService.thaw( bibRef );
-
-        String oldAccession = bibRef.getPubAccession().getAccession();
-
-        if ( StringUtils.isNotBlank( oldAccession ) && !oldAccession.equals( pubMedId ) ) {
-            throw new IllegalArgumentException(
-                    "The pubmed accession is already set and doesn't match the one provided" );
-        }
-
-        bibRef.getPubAccession().setAccession( pubMedId );
-        BibliographicReference fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-
-        if ( fresh == null || fresh.getPublicationDate() == null ) {
-            throw new IllegalStateException( "Unable to retrive record from pubmed for id=" + pubMedId );
-        }
-
-        assert fresh.getPubAccession().getAccession().equals( pubMedId );
-
-        bibRef.setPublicationDate( fresh.getPublicationDate() );
-        bibRef.setAuthorList( fresh.getAuthorList() );
-        bibRef.setAbstractText( fresh.getAbstractText() );
-        bibRef.setIssue( fresh.getIssue() );
-        bibRef.setTitle( fresh.getTitle() );
-        bibRef.setFullTextUri( fresh.getFullTextUri() );
-        bibRef.setEditor( fresh.getEditor() );
-        bibRef.setPublisher( fresh.getPublisher() );
-        bibRef.setCitation( fresh.getCitation() );
-        bibRef.setPublication( fresh.getPublication() );
-        bibRef.setMeshTerms( fresh.getMeshTerms() );
-        bibRef.setChemicals( fresh.getChemicals() );
-        bibRef.setKeywords( fresh.getKeywords() );
-
-        bibliographicReferenceService.update( bibRef );
-        return bibRef;
+        return new BibliographicReferenceValueObject( this.bibliographicReferenceService.refresh( pubMedId ) );
     }
 
     /**

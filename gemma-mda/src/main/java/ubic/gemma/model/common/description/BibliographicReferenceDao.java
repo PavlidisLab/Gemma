@@ -46,8 +46,6 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
      */
     public BibliographicReference findByExternalId( DatabaseEntry externalId );
 
-  
-
     /**
      * 
      */
@@ -85,5 +83,10 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
      */
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records );
+
+    /**
+     * @return
+     */
+    public Collection<Long> listAll();
 
 }

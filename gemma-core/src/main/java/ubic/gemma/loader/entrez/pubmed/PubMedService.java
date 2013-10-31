@@ -19,7 +19,6 @@
 package ubic.gemma.loader.entrez.pubmed;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -48,10 +47,6 @@ public class PubMedService {
     @Autowired
     private Persister persisterHelper;
 
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
     /**
      * @param f
      */
@@ -66,19 +61,17 @@ public class PubMedService {
      * @param directory of XML files
      */
     public void loadFromDirectory( File directory ) {
-        try {
-            File[] files = directory.listFiles();
-            for ( File file : files ) {
-                if ( !file.getAbsolutePath().contains( ".xml" ) ) continue;
 
-                log.info( "Loading: " + file );
-                InputStream s = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+        File[] files = directory.listFiles();
+        for ( File file : files ) {
+            if ( !file.getAbsolutePath().contains( ".xml" ) ) continue;
+
+            log.info( "Loading: " + file );
+            try (InputStream s = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {
                 this.loadFromFile( s );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
             }
-        } catch ( FileNotFoundException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
         }
     }
 

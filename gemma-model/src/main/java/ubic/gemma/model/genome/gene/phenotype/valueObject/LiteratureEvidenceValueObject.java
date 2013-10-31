@@ -19,25 +19,16 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.SortedSet;
-
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 
+/**
+ * @author ?
+ * @version $Id$
+ */
 public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
     public LiteratureEvidenceValueObject() {
         super();
-    }
-
-    public LiteratureEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
-            String description, String evidenceCode, boolean isNegativeEvidence,
-            EvidenceSourceValueObject evidenceSource, String pubmedID ) {
-        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
-    }
-
-    public LiteratureEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
-            String pubmedID, String description, String evidenceCode, boolean isNegativeEvidence ) {
-        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, null );
     }
 
     /** Entity to Value Object */

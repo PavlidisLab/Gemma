@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -47,7 +46,7 @@ public interface BibliographicReferenceController {
      * @param response
      * @return
      */
-	@RequestMapping("/bibRefAdd.html")
+    @RequestMapping("/bibRefAdd.html")
     public abstract ModelAndView add( HttpServletRequest request, HttpServletResponse response );
 
     /**
@@ -134,7 +133,8 @@ public interface BibliographicReferenceController {
      * 
      * @param id
      * @return
+     * @throws exception if the record isn't already in the system.
      */
-    public abstract BibliographicReference update( Long id, String pubMedId );
+    public abstract BibliographicReferenceValueObject update( String pubMedId );
 
 }

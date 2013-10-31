@@ -38,9 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface BibliographicReferenceService {
 
     /**
-     * <p>
      * Adds a document (in PDF format) for the reference.
-     * </p>
      */
     @Secured({ "GROUP_USER" })
     public void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
@@ -58,24 +56,18 @@ public interface BibliographicReferenceService {
     public BibliographicReference create( BibliographicReference bibliographicReference );
 
     /**
-     * <p>
      * check to see if the object already exists
-     * </p>
      */
     public BibliographicReference find( BibliographicReference bibliographicReference );
 
     /**
-     * F
-     * 
      * @param accession
      * @return
      */
     public BibliographicReference findByExternalId( DatabaseEntry accession );
 
     /**
-     * <p>
      * Get a reference by the unqualified external id.
-     * </p>
      */
     public BibliographicReference findByExternalId( java.lang.String id );
 
@@ -117,6 +109,11 @@ public interface BibliographicReferenceService {
             Collection<BibliographicReference> records );
 
     /**
+     * @return all the IDs of bibliographic references in the system.
+     */
+    public Collection<Long> listAll();
+
+    /**
      * 
      */
     public BibliographicReference load( java.lang.Long id );
@@ -124,7 +121,7 @@ public interface BibliographicReferenceService {
     /**
      * 
      */
-    public java.util.Collection<BibliographicReference> loadMultiple( java.util.Collection<Long> ids );
+    public Collection<BibliographicReference> loadMultiple( Collection<Long> ids );
 
     /**
      * adds related experiments and phenotype associations
@@ -132,8 +129,14 @@ public interface BibliographicReferenceService {
      * @param ids
      * @return
      */
-    public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects(
-            java.util.Collection<Long> ids );
+    public Collection<BibliographicReferenceValueObject> loadMultipleValueObjects( Collection<Long> ids );
+
+    /**
+     * @param pubMedId
+     * @return the updated reference. If the reference does not exist in the system in the first place, return null.
+     */
+    @Secured({ "GROUP_ADMIN" })
+    public BibliographicReference refresh( String pubMedId );
 
     /**
      * 

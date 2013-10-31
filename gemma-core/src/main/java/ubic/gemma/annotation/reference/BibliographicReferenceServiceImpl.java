@@ -20,10 +20,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -47,6 +49,8 @@ import ubic.gemma.search.SearchService;
 public class BibliographicReferenceServiceImpl extends BibliographicReferenceServiceBase {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
+    private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+
     @Autowired
     private SearchService searchService;
 
@@ -121,6 +125,62 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
             Collection<BibliographicReference> records ) {
         return this.getBibliographicReferenceDao().getRelatedExperiments( records );
 
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> listAll() {
+        return getBibliographicReferenceDao().listAll();
+    }
+
+    @Override
+    @Transactional
+    public BibliographicReference refresh( String pubMedId ) {
+        if ( StringUtils.isBlank( pubMedId ) ) {
+            throw new IllegalArgumentException( "Must provide a pubmed ID" );
+        }
+
+        BibliographicReference existingBibRef = this.findByExternalId( pubMedId, PUB_MED_DATABASE_NAME );
+
+        if ( existingBibRef == null ) {
+            return null;
+        }
+
+        existingBibRef = thaw( existingBibRef );
+
+        String oldAccession = existingBibRef.getPubAccession().getAccession();
+
+        if ( StringUtils.isNotBlank( oldAccession ) && !oldAccession.equals( pubMedId ) ) {
+            throw new IllegalArgumentException(
+                    "The pubmed accession is already set and doesn't match the one provided" );
+        }
+
+        existingBibRef.getPubAccession().setAccession( pubMedId );
+        BibliographicReference fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+
+        if ( fresh == null || fresh.getPublicationDate() == null ) {
+            throw new IllegalStateException( "Unable to retrive record from pubmed for id=" + pubMedId );
+        }
+
+        assert fresh.getPubAccession().getAccession().equals( pubMedId );
+
+        existingBibRef.setPublicationDate( fresh.getPublicationDate() );
+        existingBibRef.setAuthorList( fresh.getAuthorList() );
+        existingBibRef.setAbstractText( fresh.getAbstractText() );
+        existingBibRef.setIssue( fresh.getIssue() );
+        existingBibRef.setTitle( fresh.getTitle() );
+        existingBibRef.setFullTextUri( fresh.getFullTextUri() );
+        existingBibRef.setEditor( fresh.getEditor() );
+        existingBibRef.setPublisher( fresh.getPublisher() );
+        existingBibRef.setCitation( fresh.getCitation() );
+        existingBibRef.setPublication( fresh.getPublication() );
+        existingBibRef.setMeshTerms( fresh.getMeshTerms() );
+        existingBibRef.setChemicals( fresh.getChemicals() );
+        existingBibRef.setKeywords( fresh.getKeywords() );
+
+        update( existingBibRef );
+
+        return existingBibRef;
     }
 
     /*

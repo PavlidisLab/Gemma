@@ -82,6 +82,17 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.persistence.BrowsingDao#count()
+     */
+    @Override
+    public Integer count() {
+        return ( ( Long ) getHibernateTemplate().find( "select count(*) from BibliographicReferenceImpl" ).iterator()
+                .next() ).intValue();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.common.description.BibliographicReferenceDaoBase#find(ubic.gemma.model.common.description.
      * BibliographicReference)
      */
@@ -139,17 +150,6 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
         return create( bibliographicReference );
     }
 
-    @Override
-    public Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
-        final String query = "select distinct e, b from ExpressionExperimentImpl e join e.primaryPublication b left join fetch b.pubAccession ";
-        Map<ExpressionExperiment, BibliographicReference> result = new HashMap<ExpressionExperiment, BibliographicReference>();
-        List<Object[]> os = this.getHibernateTemplate().find( query );
-        for ( Object[] o : os ) {
-            result.put( ( ExpressionExperiment ) o[0], ( BibliographicReference ) o[1] );
-        }
-        return result;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -175,6 +175,23 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
             }
         }
         return result;
+    }
+
+    @Override
+    public Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
+        final String query = "select distinct e, b from ExpressionExperimentImpl e join e.primaryPublication b left join fetch b.pubAccession ";
+        Map<ExpressionExperiment, BibliographicReference> result = new HashMap<ExpressionExperiment, BibliographicReference>();
+        List<Object[]> os = this.getHibernateTemplate().find( query );
+        for ( Object[] o : os ) {
+            result.put( ( ExpressionExperiment ) o[0], ( BibliographicReference ) o[1] );
+        }
+        return result;
+    }
+
+    @Override
+    public Collection<Long> listAll() {
+        return this.getSessionFactory().getCurrentSession().createQuery( "select id from BibliographicReferenceImpl" )
+                .list();
     }
 
     /*
@@ -222,17 +239,6 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     protected Collection<BibliographicReference> handleLoadMultiple( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from BibliographicReferenceImpl b where b.id in :bib",
                 "bib", ids );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BrowsingDao#count()
-     */
-    @Override
-    public Integer count() {
-        return ( ( Long ) getHibernateTemplate().find( "select count(*) from BibliographicReferenceImpl" ).iterator()
-                .next() ).intValue();
     }
 
 }
