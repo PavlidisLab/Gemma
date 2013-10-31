@@ -170,9 +170,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
     @Override
     @Transactional(readOnly = true)
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
-            Integer limit ) {
-        return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids, taxonId, limit );
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids) {
+        return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids);
     }
 
     @Override

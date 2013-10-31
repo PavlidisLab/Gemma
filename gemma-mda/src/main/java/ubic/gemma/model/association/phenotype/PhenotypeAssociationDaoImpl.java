@@ -182,7 +182,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         String sqlSelectQuery = "select distinct CHROMOSOME_FEATURE.ID, CHROMOSOME_FEATURE.NCBI_GENE_ID, CHROMOSOME_FEATURE.OFFICIAL_NAME, "
                 + "CHROMOSOME_FEATURE.OFFICIAL_SYMBOL, tax.ID, tax.COMMON_NAME, CHARACTERISTIC.VALUE_URI ";
 
-        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery();
+        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false );
 
         sqlQuery += addValuesUriToQuery( "and", phenotypesValueUri );
 
@@ -285,22 +285,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     @Override
     /** find PhenotypeAssociation satisfying the given filters: paIds, taxonId and limit */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds, Long taxonId,
-            Integer limit ) {
-        if ( limit == null ) throw new IllegalArgumentException( "Limit must not be null" );
-        if ( limit == 0 || ( paIds != null && paIds.size() == 0 ) ) return new ArrayList<PhenotypeAssociation>();
-        Session s = this.getSessionFactory().getCurrentSession();
-        String queryString = "select p from PhenotypeAssociation p fetch all properties " + "join p.status s "
-                + ( paIds != null || taxonId != null ? "where " : "" )
-                + ( paIds == null ? "" : "p.id in (:paIds) " + ( taxonId == null ? "" : "and " ) )
-                + ( taxonId == null ? "" : "p.gene.taxon.id = " + taxonId ) + " " + "order by s.lastUpdateDate "
-                + ( limit < 0 ? "asc" : "desc" );
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds ) {
 
-        Query q = s.createQuery( queryString );
-        if ( paIds != null ) {
-            q.setParameterList( "paIds", paIds );
+        if ( paIds == null || paIds.isEmpty() ) {
+            return new HashSet<PhenotypeAssociation>();
         }
-        q.setMaxResults( Math.abs( limit ) );
+
+        Session s = this.getSessionFactory().getCurrentSession();
+        Query q = s.createQuery( "select p from PhenotypeAssociation p fetch all properties where p.id in (:paIds) " );
+        q.setParameterList( "paIds", paIds );
+
         return q.list();
     }
 
@@ -320,20 +314,32 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit ) {
 
+        String limitAbs = "";
+        String orderBy = "";
+
+        if ( limit < 0 ) {
+            limitAbs = "limit " + limit * -1;
+            orderBy = "order by LAST_UPDATE_DATE asc ";
+        } else {
+            orderBy = "order by LAST_UPDATE_DATE desc ";
+            limitAbs = "limit " + limit;
+        }
+
         Set<Long> ids = new HashSet<Long>();
 
         String sqlQuery = "select distinct PHENOTYPE_ASSOCIATION.ID ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true );
 
-        sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
+        // if admin
+        if ( userName != null ) {
+            sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
+        }
 
         if ( taxonId != null ) {
-            sqlQuery += "and taxon.ID = " + taxonId + " ";
+            sqlQuery += "and tax.ID = " + taxonId + " ";
         }
 
-        if ( limit != null ) {
-            sqlQuery += "limit " + limit;
-        }
+        sqlQuery += orderBy + limitAbs;
 
         SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
@@ -360,7 +366,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
          * numbers. ACESID 4 is anonymous; MASK=1 is read.
          */
         String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
         sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
         sqlQuery += "and PHENOTYPE_ASSOCIATION.ID "
                 + "not in "
@@ -397,7 +403,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
 
         String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
 
         // rule to find public: anonymous, READ.
         sqlQuery += "and ace.MASK = 1 and ace.SID_FK = 4 ";
@@ -407,7 +413,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         if ( showOnlyEditable ) {
             sqlQuery += "and PHENOTYPE_ASSOCIATION.id in ( select PHENOTYPE_ASSOCIATION.id ";
-            sqlQuery += getPhenotypesGenesAssociationsBeginQuery();
+            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
             sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
             sqlQuery += ") ";
         }
@@ -736,11 +742,14 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** basic sql command to deal with security */
-    private String getPhenotypesGenesAssociationsBeginQuery() {
+    private String getPhenotypesGenesAssociationsBeginQuery( boolean addStatus ) {
         String queryString = "";
 
         queryString += "from CHARACTERISTIC ";
         queryString += "join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID ";
+        if ( addStatus ) {
+            queryString += "join STATUS on STATUS.ID = PHENOTYPE_ASSOCIATION.STATUS_FK ";
+        }
         queryString += "join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id = PHENOTYPE_ASSOCIATION.GENE_FK ";
         queryString += "join TAXON tax on tax.ID = CHROMOSOME_FEATURE.TAXON_FK ";
         queryString += "join ACLOBJECTIDENTITY aoi on PHENOTYPE_ASSOCIATION.id = aoi.OBJECT_ID ";

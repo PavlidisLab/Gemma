@@ -112,8 +112,7 @@ public interface PhenotypeAssociationService {
 
     /** find PhenotypeAssociations satisfying the given filters: paIds, taxonId and limit */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds, Long taxonId,
-            Integer limit );
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds);
 
     /** find all PhenotypeAssociation for a specific gene id */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

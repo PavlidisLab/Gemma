@@ -55,8 +55,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @param limit
      * @return
      */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids, Long taxonId,
-            Integer limit );
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids);
 
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
