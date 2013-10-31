@@ -376,24 +376,25 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         final Collection<EvidenceValueObject> evidenceValueObjects;
-        
+
         if ( SecurityUtil.isUserLoggedIn() ) {
             final Set<Long> paIds;
 
             if ( userName == null ) {
                 if ( SecurityUtil.isUserAdmin() ) {
-                    paIds = this.associationService.findPrivateEvidenceId( null, null,taxonId,limit );
+                    paIds = this.associationService.findPrivateEvidenceId( null, null, taxonId, limit );
                 } else {
                     paIds = this.associationService.findPrivateEvidenceId( this.userManager.getCurrentUsername(),
-                            this.userManager.findAllGroups(),taxonId, limit );
+                            this.userManager.findAllGroups(), taxonId, limit );
                 }
             } else {
-                paIds = this.associationService.findPrivateEvidenceId( userName, this.userManager.findAllGroups(),taxonId,limit );
+                paIds = this.associationService.findPrivateEvidenceId( userName, this.userManager.findAllGroups(),
+                        taxonId, limit );
             }
 
             Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
-                    .findPhenotypeAssociationWithIds( paIds);
-            
+                    .findPhenotypeAssociationWithIds( paIds );
+
             evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
         } else {
             evidenceValueObjects = new HashSet<EvidenceValueObject>();
@@ -1231,18 +1232,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     String pubmeds = "";
 
-                    if ( phenotypeAssociation instanceof LiteratureEvidence ) {
-                        LiteratureEvidence l = ( LiteratureEvidence ) phenotypeAssociation;
-                        if ( l.getPhenotypeAssociationPublications() != null ) {
+                    for ( PhenotypeAssociationPublication phenotypeAssociationPublication : phenotypeAssociation
+                            .getPhenotypeAssociationPublications() ) {
 
-                            for ( PhenotypeAssociationPublication phenotypeAssociationPublication : l
-                                    .getPhenotypeAssociationPublications() ) {
-
-                                pubmeds = phenotypeAssociationPublication.getCitation().getPubAccession()
-                                        .getAccession()
-                                        + ";";
-                            }
-                        }
+                        pubmeds = phenotypeAssociationPublication.getCitation().getPubAccession().getAccession() + ";";
                     }
 
                     String phenotypes = "";
