@@ -44,10 +44,9 @@ Gemma.BibliographicReference.DetailsPanel = Ext
                   }.createDelegate(this);
 
                   var errorHandler = function(data, e) {
-                     Ext.Msg.alert('Error', e);
                      this.loadMask.hide();
-
-                  };
+                     Ext.Msg.alert('Error', e.message);
+                  }.createDelegate(this);
 
                   callParams.push({ callback : successHandler, errorHandler : errorHandler });
 
