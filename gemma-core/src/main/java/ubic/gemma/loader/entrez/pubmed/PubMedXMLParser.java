@@ -231,11 +231,11 @@ public class PubMedXMLParser {
 
             result.add( bibRef );
 
-            if ( i > 0 && i % 1000 == 0 ) {
+            if ( i > 1 && i % 1000 == 0 ) {
                 log.info( "Processed " + i + " articles" );
             }
         }
-        log.info( "Processed " + i + " articles" );
+        if ( i > 1 ) log.info( "Processed " + i + " articles" );
 
         return result;
     }
