@@ -32,23 +32,27 @@ Gemma.BibliographicReference.DetailsPanel = Ext
                },
 
                doUpdate : function(button, event) {
+                  this.loadMask = new Ext.LoadMask(this.getEl());
+
                   var callParams = [];
                   callParams.push(button.pmid);
 
                   var successHandler = function(data) {
                      this.loadFromId(data.id);
-                     // FIXME hide throbber.
+                     this.loadMask.hide();
+
                   }.createDelegate(this);
 
                   var errorHandler = function(data, e) {
-                     // FIXME show the error message, hide the throbber.
+                     Ext.Msg.alert('Error', e);
+                     this.loadMask.hide();
+
                   };
 
                   callParams.push({ callback : successHandler, errorHandler : errorHandler });
 
                   BibliographicReferenceController.update.apply(this, callParams);
-                  // FIXME: show throbber.
-
+                  this.loadMask.show();
                },
 
                initComponent : function() {
