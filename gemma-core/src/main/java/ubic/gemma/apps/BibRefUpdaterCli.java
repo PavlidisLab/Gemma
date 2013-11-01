@@ -63,7 +63,11 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
             BibliographicReference bibref = bibliographicReferenceService.load( id );
             bibref = bibliographicReferenceService.thaw( bibref );
             log.info( bibref );
-            bibliographicReferenceService.refresh( bibref.getPubAccession().getAccession() );
+            try {
+                bibliographicReferenceService.refresh( bibref.getPubAccession().getAccession() );
+            } catch ( Exception e ) {
+                log.info( "Failed to upate: " + bibref + " (" + e.getMessage() + ")" );
+            }
             try {
                 Thread.sleep( RandomUtils.nextInt( 1000 ) );
             } catch ( InterruptedException e ) {
