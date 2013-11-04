@@ -591,12 +591,22 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                      break;
 
                   case 'LiteratureEvidenceValueObject' :
-                     typeColumnHtml = 'Literature';
+                     
+                     if(record.data.phenotypeAssPubVO.length>1){
+                          typeColumnHtml = '<b>' + record.data.phenotypeAssPubVO.length + 'x</b> Literature';
+                     }
+                     else{
+                    	 typeColumnHtml = 'Literature';
+                     }
+                     
                      break;
 
                   case 'UrlEvidenceValueObject' :
                      typeColumnHtml = 'Url';
                      break;
+                     
+                     
+                     
                }
 
                if (value !== 'GenericEvidenceValueObject' && externalSource !== '') {
