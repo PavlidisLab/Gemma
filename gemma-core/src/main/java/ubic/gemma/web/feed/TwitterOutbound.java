@@ -73,8 +73,8 @@ public class TwitterOutbound {
         String feed = generateDailyFeed();
         log.info( "Twitter is enabled. Checking if Twitter feed is empty." );
 
-        if ( !feed.isEmpty() ) {
-            log.info( "Sending out tweet: " + feed );
+        if ( StringUtils.isNotBlank( feed ) ) {
+            log.info( "Sending out tweet: '" + feed + "'" );
             String consumerKey = Settings.getString( "gemma.twitter.consumer-key" );
             String consumerSecret = Settings.getString( "gemma.twitter.consumer-secret" );
             String accessToken = Settings.getString( "gemma.twitter.access-token" );
@@ -93,7 +93,7 @@ public class TwitterOutbound {
      * 
      * @return
      */
-    protected String generateDailyFeed() {
+    String generateDailyFeed() {
 
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
@@ -124,13 +124,15 @@ public class TwitterOutbound {
             Collection<ExpressionExperiment> publicExperiments = securityService.choosePublic( latestExperiments );
 
             if ( publicExperiments.isEmpty() ) {
-                throw new IllegalStateException( "There are no valid experiments to tweet about" );
+                log.warn( "There are no valid experiments to tweet about" );
+                return null;
             }
 
             experiment = ( ExpressionExperiment ) publicExperiments.toArray()[rand.nextInt( publicExperiments.size() )];
         } else {
             if ( experiments.isEmpty() ) {
-                throw new IllegalStateException( "There are no valid experiments to tweet about" );
+                log.warn( "There are no valid experiments to tweet about" );
+                return null;
             }
 
             experiment = ( ExpressionExperiment ) experiments.toArray()[rand.nextInt( experiments.size() )];
@@ -138,7 +140,8 @@ public class TwitterOutbound {
 
         assert experiment != null;
 
-        String status = statusWithExperiment( StringUtils.abbreviate( experiment.getName(), 90 ),
+        String status = statusWithExperiment(
+                StringUtils.abbreviate( experiment.getShortName() + ": " + experiment.getName(), 90 ),
                 updatedExperimentsCount, newExperimentsCount );
 
         return StringUtils.abbreviate( status, 140 ); // this will look a bit weird, and might chop off the url...but
@@ -154,10 +157,18 @@ public class TwitterOutbound {
      */
     private String statusWithExperiment( String experimentName, int updatedExperimentsCount, int newExperimentsCount ) {
         if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
-            return "Experiment of the day: " + experimentName + "; See all latest at www.chibi.ubc.ca/Gemma/rssfeed";
+            return "Experiment of the day: " + experimentName + "; View all latest at www.chibi.ubc.ca/Gemma/rssfeed";
         }
-        return "Experiment of the day: " + experimentName + "; See all " + updatedExperimentsCount + " updated and "
-                + newExperimentsCount + " new at www.chibi.ubc.ca/Gemma/rssfeed";
 
+        if ( updatedExperimentsCount == 0 ) {
+            return "Experiment of the day: " + experimentName + "; View all " + newExperimentsCount
+                    + " new experiments at www.chibi.ubc.ca/Gemma/rssfeed";
+        } else if ( newExperimentsCount == 0 ) {
+            return "Experiment of the day: " + experimentName + "; View all " + updatedExperimentsCount
+                    + " updated experiments at www.chibi.ubc.ca/Gemma/rssfeed";
+        } else {
+            return "Experiment of the day: " + experimentName + "; View all " + updatedExperimentsCount
+                    + " updated and " + newExperimentsCount + " new at www.chibi.ubc.ca/Gemma/rssfeed";
+        }
     }
 }
