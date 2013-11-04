@@ -70,7 +70,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
             ExpressionExperiment e = entry.getKey();
 
             String title = e.getShortName() + " (" + entry.getValue() + "): " + e.getName();
-            String link = request.getServerName() + ":" + request.getServerPort()
+            String link = "http://" + request.getServerName()
                     + "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + e.getId().toString();
 
             int maxlength = 500;
