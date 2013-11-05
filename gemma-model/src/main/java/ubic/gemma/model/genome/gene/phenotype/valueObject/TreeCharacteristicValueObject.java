@@ -85,6 +85,9 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         this._id = this.urlId;
     }
 
+    // all geneNBCI associtaed with the node or children from publicEvidence, used to write dump file ermineJ way
+    private HashSet<Integer> publicGenesNBCI = new HashSet<Integer>();
+
     /** counts each private occurrence of genes for a phenotype */
     public void countPrivateGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
 
@@ -117,14 +120,12 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** counts each public occurrence of genes for a phenotype */
     public void countPublicGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
 
-        HashSet<Integer> allGenes = new HashSet<Integer>();
-
         for ( TreeCharacteristicValueObject tc : this.children ) {
 
             tc.countPublicGeneForEachNode( phenotypesGenesAssociations );
 
             if ( phenotypesGenesAssociations.get( tc.getValueUri() ) != null ) {
-                allGenes.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+                this.publicGenesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
 
                 if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
                     phenotypesGenesAssociations.get( getValueUri() ).addAll(
@@ -138,10 +139,10 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         }
 
         if ( phenotypesGenesAssociations.get( getValueUri() ) != null ) {
-            allGenes.addAll( phenotypesGenesAssociations.get( getValueUri() ) );
+            this.publicGenesNBCI.addAll( phenotypesGenesAssociations.get( getValueUri() ) );
         }
 
-        this.setPublicGeneCount( allGenes.size() );
+        this.setPublicGeneCount( this.publicGenesNBCI.size() );
     }
 
     public String get_id() {
@@ -234,6 +235,18 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         for ( TreeCharacteristicValueObject tree : this.getChildren() ) {
             tree.findAllChildPhenotypeURI( phenotypesToFind );
         }
+    }
+
+    public void setChildren( TreeSet<TreeCharacteristicValueObject> children ) {
+        this.children = children;
+    }
+
+    public HashSet<Integer> getPublicGenesNBCI() {
+        return publicGenesNBCI;
+    }
+
+    public void setPublicGenesNBCI( HashSet<Integer> publicGenesNBCI ) {
+        this.publicGenesNBCI = publicGenesNBCI;
     }
 
 }
