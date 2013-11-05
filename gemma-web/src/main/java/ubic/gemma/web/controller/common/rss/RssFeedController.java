@@ -74,7 +74,7 @@ public class RssFeedController {
 
         int updatedExperimentsCount = 0;
         int newExperimentsCount = 0;
-        Map<ExpressionExperiment, String> experiments = new HashMap<ExpressionExperiment, String>();
+        Map<ExpressionExperiment, String> experiments = new HashMap<>();
 
         if ( wn != null ) {
             Collection<ExpressionExperiment> updatedExperiments = wn.getUpdatedExpressionExperiments();

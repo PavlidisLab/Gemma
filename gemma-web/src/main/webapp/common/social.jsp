@@ -1,5 +1,6 @@
-<a href="https://twitter.com/GemmaSoftware" class="twitter-follow-button" data-show-count="false">Follow
-	@GemmaSoftware</a>
+<%-- see https://twitter.com/about/resources/buttons#follow --%>
+<a href="https://twitter.com/GemmaSoftware" class="twitter-follow-button" data-show-count="false"
+	data-show-screen-name="false">Follow @GemmaSoftware</a>
 <script>
    !function(d, s, id) {
       var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https';

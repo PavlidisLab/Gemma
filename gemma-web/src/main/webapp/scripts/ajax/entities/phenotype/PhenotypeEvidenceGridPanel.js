@@ -311,7 +311,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                   metaAnalysisId : metaAnalysisId,
                   metaAnalysis : metaAnalysis,
                   showActionButton : record.data.evidenceSecurityValueObject.writeableByUser,
-                  title : 'View Neurocarta evidence for ' + record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name,
+                  title : 'View Phenocarta evidence for ' + record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name,
                   diffExpressionEvidence : record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.diffExpressionEvidence,
                   modal : false,
                   listeners : {
@@ -414,9 +414,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                                  + record.numEvidenceFromSameMetaAnalysis
                                  + ' genes '
                                  + generateLink('eval(\'processMetaAnalysis(' + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.id + ', '
-                                       + '\\\'Cannot view Neurocarta evidence\\\', ' + 'showViewEvidenceWindow, ' + '[ ' + record.id + ', '
+                                       + '\\\'Cannot view Phenocarta evidence\\\', ' + 'showViewEvidenceWindow, ' + '[ ' + record.id + ', '
                                        + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.id + ' ])\');', '/Gemma/images/icons/magnifier.png',
-                                    'View Neurocarta evidence', 10, 10) + ')<br />';
+                                    'View Phenocarta evidence', 10, 10) + ')<br />';
 
                               descriptionHtml += '<b>p-value</b>: ' + record.metaPvalue.toExponential(2) + '; ' + '<b>q-value</b>: ' + record.metaQvalue.toExponential(2) + '; '
                                  + '<b>Direction</b>: ' + metaAnalysisUtilities.generateDirectionHtml(record.upperTail) + '<br />';
@@ -596,7 +596,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                           typeColumnHtml = '<b>' + record.data.phenotypeAssPubVO.length + 'x</b> Literature';
                      }
                      else{
-                    	 typeColumnHtml = 'Literature';
+                     typeColumnHtml = 'Literature';
                      }
                      
                      break;
@@ -604,9 +604,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                   case 'UrlEvidenceValueObject' :
                      typeColumnHtml = 'Url';
                      break;
-                     
-                     
-                     
                }
 
                if (value !== 'GenericEvidenceValueObject' && externalSource !== '') {

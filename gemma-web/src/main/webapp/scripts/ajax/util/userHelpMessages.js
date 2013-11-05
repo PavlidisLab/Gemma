@@ -447,12 +447,12 @@ Gemma.HelpText.WidgetDefaults = {
    },
    MetaAnalysisManagerGridPanel : {
       ErrorTitle : {
-         saveMetaAnalysisAsEvidence : 'Cannot save meta-analysis as Neurocarta evidence',
+         saveMetaAnalysisAsEvidence : 'Cannot save meta-analysis as Phenocarta evidence',
          removeMetaAnalysis : 'Cannot remove meta-analysis',
          viewMetaAnalysisDetail : 'Cannot view meta-analysis detail'
       },
       ErrorMessage : {
-         evidenceExist : 'Please remove Neurocarta evidence before removing meta-analysis.'
+         evidenceExist : 'Please remove Phenocarta evidence before removing meta-analysis.'
       }
    },
    MetaAnalysisShowResultPanel : {
@@ -467,7 +467,7 @@ Gemma.HelpText.WidgetDefaults = {
    },
    MetaAnalysisEvidenceWindow : {
       ErrorTitle : {
-         removeEvidence : 'Cannot remove Neurocarta evidence'
+         removeEvidence : 'Cannot remove Phenocarta evidence'
       },
       ErrorMessage : {
          qvalueThresholdOutOfRange : 'q-value threshold should be greater than {0}, and less than or equal to {1}.'

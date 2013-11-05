@@ -159,7 +159,7 @@ public class GenePickerController {
     /**
      * AJAX
      * 
-     * @return Taxon that are on NeuroCarta evidence
+     * @return Taxon that are on Phenocarta evidence
      */
     public Collection<TaxonValueObject> getTaxaWithEvidence() {
 
@@ -224,7 +224,7 @@ public class GenePickerController {
     }
 
     /**
-     * AJAX (used by neurocarta)
+     * AJAX (used by Phenocarta)
      * 
      * @param query
      * @param taxonId

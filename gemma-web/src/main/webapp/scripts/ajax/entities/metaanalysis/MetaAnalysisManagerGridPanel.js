@@ -93,7 +93,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
                      metaAnalysisId : id,
                      metaAnalysis : metaAnalysis,
                      showActionButton : record.data.editable,
-                     title : 'View Neurocarta evidence for ' + record.data.name,
+                     title : 'View Phenocarta evidence for ' + record.data.name,
                      diffExpressionEvidence : record.data.diffExpressionEvidence,
                      modal : false,
                      listeners : {
@@ -164,7 +164,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
                                  metaAnalysis : metaAnalysis,
                                  showActionButton : record.data.ownedByCurrentUser,
                                  defaultQvalueThreshold : DEFAULT_THRESHOLD,
-                                 title : 'Save ' + record.data.name + ' as Neurocarta evidence',
+                                 title : 'Save ' + record.data.name + ' as Phenocarta evidence',
                                  listeners : {
                                     evidenceSaved : function() {
                                        this.store.reload();
@@ -185,7 +185,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
                               hideLoadMask();
 
                               if (baseValueObject.errorFound) {
-                                 Gemma.alertUserToError(baseValueObject, 'Cannot save meta-analysis as Neurocarta evidence');
+                                 Gemma.alertUserToError(baseValueObject, 'Cannot save meta-analysis as Phenocarta evidence');
                               } else {
                                  metaAnalysisCache[id] = baseValueObject.valueObject;
                                  showSaveAsEvidenceWindowHelper(metaAnalysisCache[id]);
@@ -284,14 +284,14 @@ Gemma.MetaAnalysisManagerGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
                      if (record.data.diffExpressionEvidence == null) {
                         if (record.data.ownedByCurrentUser) {
-                           adminLinks += generateLink('showSaveAsEvidenceWindow(' + record.data.id + ');', '/Gemma/images/icons/neurocarta-add.png', 'Save as Neurocarta evidence');
+                           adminLinks += generateLink('showSaveAsEvidenceWindow(' + record.data.id + ');', '/Gemma/images/icons/neurocarta-add.png', 'Save as Phenocarta evidence');
                         } else {
                            adminLinks += generateLinkPlaceholder();
                         }
                      } else {
                         // FIXME: eval() evil.
-                        adminLinks += generateLink('eval(\'processMetaAnalysis(' + record.data.id + ', ' + '\\\'Cannot view Neurocarta evidence\\\', ' + 'showViewEvidenceWindow, '
-                              + '[ ' + record.data.id + ' ])\');', '/Gemma/images/icons/neurocarta-check.png', 'View Neurocarta evidence');
+                        adminLinks += generateLink('eval(\'processMetaAnalysis(' + record.data.id + ', ' + '\\\'Cannot view Phenocarta evidence\\\', ' + 'showViewEvidenceWindow, '
+                              + '[ ' + record.data.id + ' ])\');', '/Gemma/images/icons/neurocarta-check.png', 'View Phenocarta evidence');
                      }
                      adminLinks += ' ';
 

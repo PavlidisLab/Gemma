@@ -473,8 +473,10 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar, {
             xtype : 'box',
             autoEl : {
                tag : 'img',
-               src : '/Gemma/images/logo/neurocarta.png',
-               style : 'padding-left:10px'
+               src : '/Gemma/images/logo/phenocarta-45p.png',
+               style : 'padding-left:10px',
+               title : 'Previously known as Neurocarta',
+               alt : 'Phenocarta'
             },
             hidden : window.location.pathname.indexOf('/Gemma/phenotypes.html') < 0 && window.location.pathname.indexOf('/Gemma/phenotypeAssociationManager.html') < 0
          }, '->', {

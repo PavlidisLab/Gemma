@@ -1490,6 +1490,8 @@ public class ExpressionExperimentController {
     }
 
     /**
+     * FIXME change name of this to reflect that it updates more than just the correlation matrix.
+     * 
      * @param id
      * @return
      */
@@ -1497,6 +1499,7 @@ public class ExpressionExperimentController {
     public ModelAndView updateCorrelationMatrix( Long id ) {
         // TODO: make this an ajax background job
         updateCorrelationMatrixFile( id );
+        updateMV( id );
         return new ModelAndView(
                 new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
     }
@@ -2116,6 +2119,18 @@ public class ExpressionExperimentController {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
         sampleCoexpressionMatrixService.create( expressionExperiment, true );
+    }
+
+    /**
+     * @param id
+     */
+    private void updateMV( Long id ) {
+        ExpressionExperiment expressionExperiment;
+        expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) {
+            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
+        }
+        meanVarianceService.create( expressionExperiment, true );
     }
 
 }

@@ -59,7 +59,7 @@
 					<td class="slideImageTD"><img src="/Gemma/images/slideShow/neurocarta.png" style="padding: 15px"></td>
 					<td class="slideTextTD">
 						<div>
-							<img src="/Gemma/images/slideShow/neurocartaLogoWord.png">
+							<img src="/Gemma/images/logo/phenocarta-45p.png">
 						</div> Browse over 40,000 evidence-based <b>gene-to-phenotype associations</b> and create your own
 					</td>
 				</tr>

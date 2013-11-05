@@ -58,7 +58,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
                var selectedPhenotypes = phenotypesSearchPanel.getSelectedPhenotypes();
 
                if (selectedPhenotypes != null && selectedPhenotypes.length > 0) {
-                  showLoadMask('Saving Neurocarta evidence ...');
+                  showLoadMask('Saving Phenocarta evidence ...');
 
                   PhenotypeController.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(this.metaAnalysisId, selectedPhenotypes, thresholdTextField.getValue(),
                      function(validateEvidenceValueObject) {
@@ -84,10 +84,10 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
          var removeEvidence = function() {
             var numGenes = resultPanel.getTotalNumberOfResults();
 
-            Ext.MessageBox.confirm('Confirm', 'Are you sure you want to remove Neurocarta evidence for ' + (numGenes === 1 ? 'this 1 gene?' : 'these ' + numGenes + ' genes?'),
+            Ext.MessageBox.confirm('Confirm', 'Are you sure you want to remove Phenocarta evidence for ' + (numGenes === 1 ? 'this 1 gene?' : 'these ' + numGenes + ' genes?'),
                function(button) {
                   if (button === 'yes') {
-                     showLoadMask('Removing Neurocarta evidence ...');
+                     showLoadMask('Removing Phenocarta evidence ...');
 
                      PhenotypeController.removeAllEvidenceFromMetaAnalysis(this.metaAnalysisId, function(validateEvidenceValueObject) {
                            hideLoadMask();
@@ -203,7 +203,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext.extend(Ext.Window, {
 
          if (this.showActionButton) {
             formPanelButtons.splice(0, 0, {
-                  text : (this.diffExpressionEvidence ? 'Remove evidence' : 'Save as Neurocarta evidence'),
+                  text : (this.diffExpressionEvidence ? 'Remove evidence' : 'Save as Phenocarta evidence'),
                   formBind : true,
                   handler : function() {
                      if (this.diffExpressionEvidence) {

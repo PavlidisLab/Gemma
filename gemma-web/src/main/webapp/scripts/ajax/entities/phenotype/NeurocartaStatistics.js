@@ -1,7 +1,7 @@
 Ext.namespace('Gemma');
 
 Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
-	title: 'Neurocarta Statistics',
+	title: 'Phenocarta Statistics',
 	loadMask : true,
 	record : Ext.data.Record.create([ {
 		name : "name",

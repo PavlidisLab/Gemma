@@ -600,7 +600,7 @@ public class SecurityControllerImpl implements SecurityController {
             }
         }
 
-        // special case for neurocarta, changing the meta analysis, changes the permissions of all evidence linked
+        // special case for Phenocarta, changing the meta analysis, changes the permissions of all evidence linked
         if ( s instanceof GeneDifferentialExpressionMetaAnalysis ) {
 
             Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.phenotypeAssociationService
