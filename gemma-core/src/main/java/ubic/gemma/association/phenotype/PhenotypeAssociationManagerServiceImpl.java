@@ -1160,7 +1160,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    // TODO this method right now, is not accessible to the client
     /**
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
      * by Quartz
@@ -1174,7 +1173,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         try {
             // the root path of the folder named NeurocartaExport
             String neurocartaDataHome = Settings.getString( "gemma.appdata.home" ) + File.separator
-                    + "NeurocartaExport" + File.separator;
+                    + "PhenocartaExport" + File.separator;
 
             // path of the folder where the dump will be created and the data put
             String writeFolder = neurocartaDataHome + "EvidenceExport_" + DateUtil.getTodayDate( true )
@@ -1198,7 +1197,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     + DateUtil.getTodayDate( true )
                     + "\n"
                     + "# Fields are delimited by tabs\n "
-                    + "# If you use this file for your research, please cite PhenoCarta: Portales-Casamar, E., et al., Neurocarta: aggregating and sharing disease-gene relations for the neurosciences. BMC Genomics. 2013 Feb 26;14(1):129.\n";
+                    + "# If you use this file for your research, please cite PhenoCarta (previously known as Neurocarta): Portales-Casamar, E., et al., Neurocarta: aggregating and sharing disease-gene relations for the neurosciences. BMC Genomics. 2013 Feb 26;14(1):129.\n";
 
             // header of file
             String header = disclaimer
@@ -1230,7 +1229,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
 
                     if ( i++ % 5000 == 0 ) {
-                        log.info( "Neurocarta dump of evidence at evidence number: " + i );
+                        log.info( "Phenocarta dump of evidence at evidence number: " + i );
                     }
 
                     String pubmeds = "";
