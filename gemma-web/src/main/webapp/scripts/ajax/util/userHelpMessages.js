@@ -2,6 +2,7 @@ Ext.namespace('Gemma.HelpText', 'Gemma.StatusText');
 
 Gemma.CITATION = "Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.";
 Gemma.CITATION_DIRECTIONS = "If you use this file for your research, please cite: {0}" + Gemma.CITATION;
+Gemma.PHENOCARTA_CITATION = "If you use this file for your research, please cite PhenoCarta (previously known as Neurocarta): Portales-Casamar, E., et al., Neurocarta: aggregating and sharing disease-gene relations for the neurosciences. BMC Genomics. 2013 Feb 26;14(1):129.";
 
 // TT = tooltip
 Gemma.EvidenceCodeInfo = {

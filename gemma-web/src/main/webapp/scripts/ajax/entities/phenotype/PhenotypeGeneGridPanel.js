@@ -64,7 +64,7 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
                         downloadData : downloadData,
                         modal : true
                      });
-                  textWindow.convertToText();
+                  textWindow.convertToPhenocartaText();
                   textWindow.show();
                },
                scope : this
