@@ -75,8 +75,8 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    
-    private static String arbitraryMasterSetPrefix="Master set for";
+
+    private static String arbitraryMasterSetPrefix = "Master set for";
 
     /*
      * (non-Javadoc)
@@ -103,51 +103,48 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return experimentValueObjects;
     }
 
-	/**
-	 * if query is blank, return list of public sets, user-owned sets (if logged
-	 * in) and user's recent session-bound sets called by
-	 * ubic.gemma.web.controller
-	 * .expression.experiment.ExpressionExperimentController.
-	 * searchExperimentsAndExperimentGroup(String, Long) does not include
-	 * session bound sets
-	 * 
-	 * @param taxonId
-	 * @return
-	 */
-	private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery(
-			Long taxonId) {
-		boolean taxonLimited = taxonId != null;
+    /**
+     * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent session-bound
+     * sets called by ubic.gemma.web.controller .expression.experiment.ExpressionExperimentController.
+     * searchExperimentsAndExperimentGroup(String, Long) does not include session bound sets
+     * 
+     * @param taxonId
+     * @return
+     */
+    private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( Long taxonId ) {
+        boolean taxonLimited = taxonId != null;
 
-		List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
 
-		// These are widely considered to be the most important results and
-		// therefore need to be at the top
-		List<SearchResultDisplayObject> masterResults = new LinkedList<SearchResultDisplayObject>();
+        // These are widely considered to be the most important results and
+        // therefore need to be at the top
+        List<SearchResultDisplayObject> masterResults = new LinkedList<SearchResultDisplayObject>();
 
-		Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
-				.loadAllExperimentSetValueObjects();
+        Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
+                .loadAllExperimentSetValueObjects();
 
-		for (ExpressionExperimentSetValueObject evo : evos) {
-			SearchResultDisplayObject srdvo = new SearchResultDisplayObject(evo);
+        for ( ExpressionExperimentSetValueObject evo : evos ) {
+            SearchResultDisplayObject srdvo = new SearchResultDisplayObject( evo );
 
-			if (taxonLimited && !evo.getTaxonId().equals(taxonId)) {
-				continue;
-			}
-			// could be spoofed by other users 'Master sets'
-			if (evo.getName().startsWith(arbitraryMasterSetPrefix)) {
-				masterResults.add(srdvo);
-			} else {
-				displayResults.add(srdvo);
-			}
-		}
+            if ( taxonLimited && !evo.getTaxonId().equals( taxonId ) ) {
+                continue;
+            }
+            // could be spoofed by other users 'Master sets'
+            if ( evo.getName().startsWith( arbitraryMasterSetPrefix ) ) {
+                masterResults.add( srdvo );
+            } else {
+                displayResults.add( srdvo );
+            }
+        }
 
-		Collections.sort(displayResults);
+        Collections.sort( displayResults );
 
-		//should we also sort by which species is most important(humans obviously) or is that not politically correct???
-		displayResults.addAll(0, masterResults);
+        // should we also sort by which species is most important(humans obviously) or is that not politically
+        // correct???
+        displayResults.addAll( 0, masterResults );
 
-		return displayResults;
-	}
+        return displayResults;
+    }
 
     /*
      * (non-Javadoc)
@@ -193,7 +190,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     @Override
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
 
-        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> displayResults = new LinkedList<>();
 
         // if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent
         // session-bound sets (not autogen sets until handling of large searches is fixed)
@@ -218,8 +215,8 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         // if an experiment was returned by both experiment and experiment set search, don't count it twice
         // (managed by set)
-        Set<Long> eeIds = new HashSet<Long>();
-        Map<Long, HashSet<Long>> eeIdsByTaxonId = new HashMap<Long, HashSet<Long>>();
+        Set<Long> eeIds = new HashSet<>();
+        Map<Long, HashSet<Long>> eeIdsByTaxonId = new HashMap<>();
 
         // add every individual experiment to the set, grouped by taxon and also altogether.
         for ( SearchResultDisplayObject srdo : experiments ) {
@@ -242,21 +239,25 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         // if there's a group, get the number of members
         // assuming the taxon of the members is the same as that of the group
-        if ( experimentSets.size() > 0 ) {
-            // for each group
-            for ( SearchResultDisplayObject eesSRO : experimentSets ) {
-                ExpressionExperimentSetValueObject set = ( ExpressionExperimentSetValueObject ) eesSRO
-                        .getResultValueObject();
-                Collection<Long> ids = EntityUtils.getIds( expressionExperimentSetService
-                        .getExperimentValueObjectsInSet( set.getId() ) );
-                // get the ids of the experiment members
-                eeIds.addAll( ids );
 
-                if ( !eeIdsByTaxonId.containsKey( set.getTaxonId() ) ) {
-                    eeIdsByTaxonId.put( set.getTaxonId(), new HashSet<Long>() );
-                }
-                eeIdsByTaxonId.get( set.getTaxonId() ).addAll( ids );
+        // for each group
+        for ( SearchResultDisplayObject eesSRO : experimentSets ) {
+            ExpressionExperimentSetValueObject set = ( ExpressionExperimentSetValueObject ) eesSRO
+                    .getResultValueObject();
+
+            /*
+             * Small problem: this is not security-filtered. See bug 3385; if the set is public, but some of the
+             * experiments in the set are not, the ID will be included.
+             */
+            Collection<Long> ids = EntityUtils.getIds( expressionExperimentSetService
+                    .getExperimentValueObjectsInSet( set.getId() ) );
+            // get the ids of the experiment members
+            eeIds.addAll( ids );
+
+            if ( !eeIdsByTaxonId.containsKey( set.getTaxonId() ) ) {
+                eeIdsByTaxonId.put( set.getTaxonId(), new HashSet<Long>() );
             }
+            eeIdsByTaxonId.get( set.getTaxonId() ).addAll( ids );
         }
 
         // make an entry for each taxon

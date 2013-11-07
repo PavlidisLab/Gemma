@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
+import java.util.Collection;
 import java.util.List;
 
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -30,7 +31,7 @@ public interface PrincipalComponentAnalysisDao extends BaseDao<PrincipalComponen
      * @param ee
      * @return
      */
-    PrincipalComponentAnalysis findByExperiment( ExpressionExperiment ee );
+    Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee );
 
     /**
      * @param ee

@@ -1295,8 +1295,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         this.getSampleCoexpressionAnalysisDao().removeForExperiment( ee );
 
         // Remove PCA
-        PrincipalComponentAnalysis pca = this.getPrincipalComponentAnalysisDao().findByExperiment( ee );
-        if ( pca != null ) {
+        Collection<PrincipalComponentAnalysis> pcas = this.getPrincipalComponentAnalysisDao().findByExperiment( ee );
+        for ( PrincipalComponentAnalysis pca : pcas ) {
             this.getPrincipalComponentAnalysisDao().remove( pca );
         }
 

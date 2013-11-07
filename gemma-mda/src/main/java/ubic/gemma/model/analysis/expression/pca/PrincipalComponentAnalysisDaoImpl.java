@@ -71,18 +71,13 @@ public class PrincipalComponentAnalysisDaoImpl extends HibernateDaoSupport imple
      * .experiment.ExpressionExperiment)
      */
     @Override
-    public PrincipalComponentAnalysis findByExperiment( ExpressionExperiment ee ) {
+    public Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee ) {
         if ( ee == null || ee.getId() == null ) return null;
-        List<?> fetched = this.getHibernateTemplate().findByNamedParam(
-                "select p from PrincipalComponentAnalysisImpl as p fetch all properties where p.experimentAnalyzed = :ee", "ee", ee );
-        if ( fetched.isEmpty() ) return null;
-
-        if ( fetched.size() > 1 ) {
-            // throw new IllegalStateException( "There are multiple PCAs for experiment: " + ee );
-            // return fetch.get(0);
-        }
-
-        return ( PrincipalComponentAnalysis ) fetched.get( 0 );
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select p from PrincipalComponentAnalysisImpl as p fetch all properties where p.experimentAnalyzed = :ee",
+                        "ee", ee );
     }
 
     /*
@@ -91,7 +86,7 @@ public class PrincipalComponentAnalysisDaoImpl extends HibernateDaoSupport imple
      * @see
      * ubic.gemma.model.analysis.expression.PrincipalComponentAnalysisDao#getTopLoadedProbes(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment, int, int)
-     */ 
+     */
     @Override
     public List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count ) {
         if ( ee == null || ee.getId() == null ) return new ArrayList<ProbeLoading>();

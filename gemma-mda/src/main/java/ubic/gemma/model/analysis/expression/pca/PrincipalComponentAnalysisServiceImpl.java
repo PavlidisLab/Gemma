@@ -15,6 +15,7 @@
 package ubic.gemma.model.analysis.expression.pca;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -141,15 +142,23 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
     @Override
     @Transactional(readOnly = true)
     public PrincipalComponentAnalysis loadForExperiment( ExpressionExperiment ee ) {
-        return this.principalComponentAnalysisDao.findByExperiment( ee );
+        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisDao.findByExperiment( ee );
+        if ( pcas.size() > 1 ) log.warn( "Multiple PCAs found for " + ee + ", returning arbitrary one" );
+        if ( !pcas.isEmpty() ) {
+            return pcas.iterator().next();
+        }
+        return null;
     }
 
     @Override
     @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
-        while ( this.loadForExperiment( ee ) != null ) {
-            this.principalComponentAnalysisDao.remove( this.loadForExperiment( ee ) );
+        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisDao.findByExperiment( ee );
+        for ( PrincipalComponentAnalysis pca : pcas ) {
+            this.principalComponentAnalysisDao.remove( pca );
+
         }
+
     }
 
     PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
