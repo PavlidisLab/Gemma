@@ -379,8 +379,8 @@ public class CoexpressionSearchController {
         result.setKnownGeneResults( geneResults );
 
         // If this is not a cytoscape coex vis query, then get 'query-genes-only' results for the query genes (only do
-        // this if there is more than one query gene)
-        if ( queryGeneIds == null && searchOptions.getGeneIds().size() > 1 ) {
+        // this if there is more than one query gene), also don't do if you already did it
+        if (!searchOptions.getQueryGenesOnly() && queryGeneIds == null && searchOptions.getGeneIds().size() > 1 ) {
             log.info( "Coexpression search step 2: getting 'query genes only' results for " + genes.size() + " genes" );
             Collection<CoexpressionValueObjectExt> queryGenesOnlyResults = geneCoexpressionService
                     .coexpressionSearchQuick( searchOptions.getEeIds(), genes, 2, MAX_RESULTS, true,
