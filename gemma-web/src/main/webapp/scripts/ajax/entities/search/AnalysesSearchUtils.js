@@ -254,30 +254,6 @@ Gemma.AnalysesSearchUtils = {
          });
 
       return trimWindow;
-   },
-
-   /**
-    * @param result
-    * @param lastSearchCommand
-    * @param displayedResults
-    * @return {Gemma.CoexpressionSearchData}
-    */
-   constructCoexpressionSearchData : function(result, lastSearchCommand, displayedResults) {
-      var coexpressionSearchData = new Gemma.CoexpressionSearchData({
-            coexGridCoexCommand : lastSearchCommand,
-            cytoscapeCoexCommand : Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand(lastSearchCommand),
-            coexGridResults : result
-         });
-
-      // Sometimes initial display stringency is set higher than a stringency we have results for, check this
-      var highestResultStringency = Gemma.CoexValueObjectUtil.getHighestResultStringencyUpToInitialDisplayStringency(displayedResults,
-         coexpressionSearchData.coexGridCoexCommand.displayStringency);
-
-      if (coexpressionSearchData.coexGridCoexCommand.displayStringency > highestResultStringency) {
-         coexpressionSearchData.coexGridCoexCommand.displayStringency = highestResultStringency;
-         coexpressionSearchData.cytoscapeCoexCommand.displayStringency = highestResultStringency;
-         coexpressionSearchData.cytoscapeCoexCommand.stringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(highestResultStringency);
-      }
-      return coexpressionSearchData;
    }
+
 };

@@ -222,7 +222,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             var displayStringency = coexpressionGrid.observableDisplaySettings.getStringency();
 
             // Lower stringency until results are visible.
-            displayStringency = Gemma.CoexValueObjectUtil.getHighestResultStringencyUpToInitialDisplayStringency(coexpressionGrid.coexpressionSearchData.getDisplayedResults(),
+            displayStringency = Gemma.CoexVOUtil.getHighestResultStringencyUpToInitialDisplayStringency(coexpressionGrid.coexpressionSearchData.getDisplayedResults(),
                displayStringency);
 
             coexpressionGrid.observableDisplaySettings.setStringency(displayStringency);
@@ -576,19 +576,19 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
       var stringency = this.observableDisplaySettings.getStringency();
 
       if (queryGenesOnly) {
-         filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.coexpressionSearchData.getQueryGenesOnlyResults(), stringency);
+         filteredData = Gemma.CoexVOUtil.trimKnownGeneResults(this.coexpressionSearchData.getQueryGenesOnlyResults(), stringency);
       } else {
          var combinedData = this.coexpressionSearchData.getDisplayedResults();
          if (this.coexpressionSearchData.getQueryGenesOnlyResults()) {
-            combinedData = Gemma.CoexValueObjectUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(this.coexpressionSearchData.getDisplayedResults(),
+            combinedData = Gemma.CoexVOUtil.combineKnownGeneResultsAndQueryGeneOnlyResults(this.coexpressionSearchData.getDisplayedResults(),
                this.coexpressionSearchData.getQueryGenesOnlyResults());
          }
-         filteredData = Gemma.CoexValueObjectUtil.trimKnownGeneResults(combinedData, stringency);
+         filteredData = Gemma.CoexVOUtil.trimKnownGeneResults(combinedData, stringency);
       }
 
       var text = Ext.getCmp(this.id + '-search-in-grid').getValue();
       if (text.length > 1) {
-         filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByText(text, filteredData);
+         filteredData = Gemma.CoexVOUtil.filterGeneResultsByText(text, filteredData);
       }
 
       var win = new Gemma.CoexpressionDownloadWindow({
