@@ -108,12 +108,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
                      msg : msg
                   });
                errorPanel.show();
-            });
-
-         searchForm.on("coexpression_search_results_ready", function(formPanel, result) {
-               // in this case, searchForm == formPanel
-               this.showCoExResults(searchForm, result, coexResultsTabPanel, this.searchPanel);
-            }, this);
+            });         
 
          searchForm.on("showOptions", function(stringency, forceProbeLevelSearch, queryGenesOnly) {
                if (this.admin) {

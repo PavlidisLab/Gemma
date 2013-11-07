@@ -150,14 +150,14 @@ Gemma.CoexpressionSearchData = Ext.extend(Ext.util.Observable, {
             });
       },
 
-      searchWithGeneIds : function(geneIds) {
+      searchWithGeneIds : function(geneIds, queryGenesOnly) {
          var coexpressionSearchCommand = {
             geneIds : geneIds,
             eeIds : this.searchCommandUsed.eeIds,
             stringency : 2,
             forceProbeLevelSearch : false,
             useMyDatasets : false,
-            queryGenesOnly : false,
+            queryGenesOnly : queryGenesOnly,
             taxonId : this.searchCommandUsed.taxonId,
             eeSetName : null,
             eeSetId : null

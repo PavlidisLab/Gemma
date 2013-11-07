@@ -616,13 +616,14 @@ public class CoexpressionSearchController {
 
     private void restrictSearchOptionsQueryGenes( CoexpressionSearchCommand searchOptions, Collection<Long> queryGeneIds ) {
 
-        if ( queryGeneIds == null && searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY ) {
-
-            searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_QUERY ) );
-
-        } else if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) {
+      if ( queryGeneIds!=null && searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) {
             // this will be a 'my genes only' vis query since queryGeneIds !=null
             searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) );
+        }else if(searchOptions.getQueryGenesOnly()){
+        	
+        	//this will be the case where the user selects over 20 genes
+        }else{        	
+        	searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_QUERY ) );        	
         }
     }
 

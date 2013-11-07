@@ -288,7 +288,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
         this.clearError();
 
         var selectedGeneIds = this.display.getSelectedGeneIds();
-
+       
         if (selectedGeneIds.length === 0) {
             Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
                 Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
@@ -296,17 +296,27 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
         }
 
         if (selectedGeneIds.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-            Ext.Msg.alert(
+            Ext.Msg.confirm(
                 Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
                 String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany,
-                    Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY));
-            return;
+                    Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY),function (btn) {
+                    if (btn === 'yes') {
+                       
+                       
+                        this.updateSearchFormGenes(selectedGeneIds);
+                        this.loadMask.show();
+                        this.display.hideAll();
+                        this.coexpressionSearchData.searchWithGeneIds( selectedGeneIds, true );
+                    }
+                }, this);
+            
         }
-
-        this.updateSearchFormGenes(selectedGeneIds);
-        this.display.hideAll();
-        this.loadMask.show();
-        this.coexpressionSearchData.searchWithGeneIds(selectedGeneIds);
+        else{
+        	this.updateSearchFormGenes(selectedGeneIds);
+        	this.display.hideAll();
+        	this.loadMask.show();
+        	this.coexpressionSearchData.searchWithGeneIds(selectedGeneIds, false);
+        }
     },
 
     extendSelectedNodes: function () {
@@ -338,32 +348,26 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
         }
 
         var i;
+        for (i = 0; i < selectedGeneIds.length; i++) {
+            queryGeneIds.push(selectedGeneIds[i]);
+        }
+        
         if (( queryGeneIds.length + selectedGeneIds.length ) <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-            for (i = 0; i < selectedGeneIds.length; i++) {
-                queryGeneIds.push(selectedGeneIds[i]);
-            }
+            
             this.updateSearchFormGenes(queryGeneIds);
             this.loadMask.show();
             this.display.hideAll();
-            this.coexpressionSearchData.searchWithGeneIds( queryGeneIds );
+            this.coexpressionSearchData.searchWithGeneIds( queryGeneIds, false );
         } else {
             Ext.Msg.confirm(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
                 String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce,
                     Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY), function (btn) {
                     if (btn === 'yes') {
-                        // Ensure that selectedNodes includes the current query genes plus the newly selected genes
-                        // and that the number of querygeneids is less than the max
-                        queryGeneIds = selectedGeneIds.splice(selectedGeneIds.length - (Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY - selectedGeneIds.length));
-                        var i;
-                        for (i = 0; i < selectedGeneIds.length; i++) {
-                            if (queryGeneIds.indexOf(selectedGeneIds[i]) === -1) {
-                                queryGeneIds.push(selectedGeneIds[i]);
-                            }
-                        }
+                        //Do a query genes only search                       
                         this.updateSearchFormGenes(queryGeneIds);
                         this.loadMask.show();
                         this.display.hideAll();
-                        this.coexpressionSearchData.searchWithGeneIds( queryGeneIds );
+                        this.coexpressionSearchData.searchWithGeneIds( queryGeneIds, true );
                     }
                 }, this);
         }

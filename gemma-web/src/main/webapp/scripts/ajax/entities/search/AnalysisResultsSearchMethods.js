@@ -184,7 +184,7 @@ Gemma.AnalysisResultsSearchMethods = Ext
                },
 
                /**
-                * @private Do some more checks before running the coexpression search
+                * @private Do some more(mostly useless or unreachable) checks before running the coexpression search
                 * @private
                 * @param {Object}
                 *           coexSearchCommand
@@ -203,10 +203,9 @@ Gemma.AnalysisResultsSearchMethods = Ext
                   } else if ( coexSearchCommand.geneIds.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY ) {
                      // if trying to search for more than the allowed limit of genes -- show warning
                      // and trim the gene Ids
-                     coexSearchCommand.geneIds = coexSearchCommand.geneIds
-                           .slice(0, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY);
-                     this.fireEvent('warning', "Coexpression searches are limited to "
-                           + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY + " query genes. Your query has been trimmed.<br>");
+                     coexSearchCommand.queryGenesOnly = true;
+                     this.fireEvent('warning', "Complete Coexpression searches are limited to "
+                           + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY + " query genes. Results from your query have been limited to coexpression between query genes.<br>");
                      return "";
                   } else {
                      return "";
