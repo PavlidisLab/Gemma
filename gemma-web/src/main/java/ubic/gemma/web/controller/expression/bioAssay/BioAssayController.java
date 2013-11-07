@@ -56,8 +56,10 @@ public class BioAssayController {
 
     @Autowired
     private TaskRunningService taskRunningService;
+
     @Autowired
     private BioAssayService bioAssayService;
+
     @Autowired
     private ExpressionExperimentService eeService;
 
@@ -81,7 +83,7 @@ public class BioAssayController {
             result.add( bioAssayValueObject );
         }
 
-        log.info( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
+        log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
 
         return result;
     }
