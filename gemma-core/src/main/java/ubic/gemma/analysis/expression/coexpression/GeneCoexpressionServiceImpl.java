@@ -613,11 +613,16 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
       //  long sizeT = t.getNanoTime() - gsei;
 
         // for 1600 experiments, takes ~ 90ms
-        String datasetVector = getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
-                relevantEEIdList );
+        
+        if (relevantEEIdList != null){
+        	String datasetVector = getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
+        			relevantEEIdList );
+        	
+        	 cvo.setDatasetVector( datasetVector );
+        }
       //  long cvvosdv = t.getNanoTime() - sizeT;
 
-        cvo.setDatasetVector( datasetVector );
+       
 
         /*
          * SANITY CHECKS
@@ -1141,6 +1146,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
          */
+        
+        log.info( "Getting raw coexpression for "+queryGenes.size()+" genes, stringency:"+stringency+" queryGenesOnly="+queryGenesOnly );
         Map<Long, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly );
 
@@ -1254,7 +1261,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             List<Long> relevantEEIdList = null;
 
             if ( !skipDetails ) {
-                relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
+            	//this is currently unused
+                //relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
             }
             GeneValueObject queryGeneValueObject = new GeneValueObject( qGene );
 
@@ -1436,8 +1444,11 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             if ( queryGenes.size() < 2 ) {
                 throw new IllegalArgumentException( "Must have at least two genes to do 'my genes only'" );
             }
+            
+            log.info( "Entering findInterCoexpressionRelationship, i.e. queryGenesOnly=true, maxResults is ignored" );
             gg2gs = gene2GeneCoexpressionService.findInterCoexpressionRelationship( queryGenes, stringency, gA );
         } else {
+        	log.info( "Entering findCoexpressionRelationship, i.e. queryGenesOnly=false, maxResults is followed" );
             gg2gs = gene2GeneCoexpressionService.findCoexpressionRelationships( queryGenes, stringency, maxResults, gA );
         }
 

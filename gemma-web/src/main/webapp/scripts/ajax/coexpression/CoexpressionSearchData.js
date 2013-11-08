@@ -134,6 +134,19 @@ Gemma.CoexpressionSearchData = Ext.extend(Ext.util.Observable, {
          }
 
          this.fireEvent('search-started');
+         
+         //if the original grid search was query genes only, it means that we already have the results we need 
+         if (this.searchCommandUsed.queryGenesOnly){
+        	 
+        	 this.cytoscapeSearchResults = this.searchResults;
+             this.searchCommandUsed.stringency = searchStringency;
+             this.cytoscapeResultsUpToDate = true;
+             this.fireEvent('complete-search-results-ready', this.searchResults, coexpressionSearchCommand);
+             this.fireEvent('aftersearch');
+        	 return;
+        	 
+         }
+         
          ExtCoexpressionSearchController.doSearchQuick2Complete(coexpressionSearchCommand, this.searchCommandUsed.geneIds, {
                callback : function(results) {
                   this.cytoscapeSearchResults = results;

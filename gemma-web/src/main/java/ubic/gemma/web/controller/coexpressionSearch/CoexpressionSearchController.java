@@ -361,8 +361,13 @@ public class CoexpressionSearchController {
         boolean skipCoexpressionDetails = false;
 
         log.info( "Coexpression search for " + searchOptions.getGeneIds().size() + " genes" );
+        if (searchOptions.getQueryGenesOnly() && queryGeneIds == null){
+        	log.info("This is a 'query genes only' initiated as such because the user used more than MAX_GENES_PER_QUERY");
+        }
+        
+        
         if ( queryGeneIds != null ) {
-            log.debug( "This is a 'my genes only' Coexpression viz search original query gene ids: " + queryGeneIds );
+            log.info( "This is a 'my genes only' Coexpression viz search original query gene ids: " + queryGeneIds );
             // we don't need to populate all the coex details for the viz, so set skip flag to true
             skipCoexpressionDetails = true;
         }
