@@ -239,6 +239,16 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
      *
      */
     onPanelActivation: function () {
+    	
+    	if( this.coexpressionSearchData.searchCommandUsed.queryGenesOnly &&!this.coexpressionSearchData.cytoscapeResultsUpToDate){
+    		this.searchForCytoscapeData();
+            return;
+    	}
+    	
+    	if( this.coexpressionSearchData.searchCommandUsed.queryGenesOnly &&this.coexpressionSearchData.cytoscapeResultsUpToDate){
+    		return;
+    	}
+    	
         if (!this.coexpressionSearchData.cytoscapeResultsUpToDate) {
             this.searchForCytoscapeData();
             return;

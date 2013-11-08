@@ -381,8 +381,6 @@ public class CoexpressionSearchController {
 
         log.info( "Returned from coexpression search, size of results:" + geneResults.size() );
 
-        result.setKnownGeneResults( geneResults );
-
         // If this is not a cytoscape coex vis query, then get 'query-genes-only' results for the query genes (only do
         // this if there is more than one query gene), also don't do if you already did it
         if (!searchOptions.getQueryGenesOnly() && queryGeneIds == null && searchOptions.getGeneIds().size() > 1 ) {
@@ -394,7 +392,16 @@ public class CoexpressionSearchController {
             queryGenesOnlyResults = eliminateDuplicates( queryGenesOnlyResults );
 
             result.setQueryGenesOnlyResults( queryGenesOnlyResults );
+        }else if (searchOptions.getQueryGenesOnly()){
+        	//we need to elimanateDuplicates if this is query is a large 'query genes only' search
+        	geneResults = eliminateDuplicates(geneResults);
+        	
+        	log.info( "size of results after eliminating duplicates:" + geneResults.size() );
+        	
+        	
         }
+        
+        result.setKnownGeneResults( geneResults );
 
         int stringencyTrimLimit = searchOptions.getEeIds().size();
 
@@ -407,6 +414,9 @@ public class CoexpressionSearchController {
         if ( geneResults.size() > resultsLimit && queryGeneIds != null ) {
             trimGraphForFrontEndDisplay( result, stringencyTrimLimit, resultsLimit, searchOptions, queryGeneIds );
 
+        }else if (geneResults.size() > resultsLimit && queryGeneIds == null && searchOptions.getQueryGenesOnly()){
+        	
+        	trimQueryGenesOnlyGraphForFrontEndDisplay( result, stringencyTrimLimit, resultsLimit, searchOptions);
         }
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
@@ -711,6 +721,69 @@ public class CoexpressionSearchController {
                         && ( nodeIds.contains( cvoe.getFoundGene().getId() ) && nodeIds.contains( cvoe.getQueryGene()
                                 .getId() ) ) ) {
                     strippedGeneResults.add( cvoe );
+                }
+
+            }
+
+            if ( strippedGeneResults.size() < geneResults.size() ) {
+                displayTrimmedStringency = i;
+            }
+
+            geneResults = strippedGeneResults;
+
+            if ( geneResults.size() < resultsLimit ) {
+                log.info( "Breaking out of filter coex results loop after removing edges of stringency:" + i );
+                break;
+            }
+
+            strippedGeneResults = new HashSet<CoexpressionValueObjectExt>();
+
+        }
+
+        log.info( "Original results size: " + oldSize + " trimmed results size: " + geneResults.size()
+                + "  Total results removed: " + ( oldSize - geneResults.size() ) );
+
+        result.setKnownGeneResults( geneResults );
+
+        result.setNonQueryGeneTrimmedValue( displayTrimmedStringency );
+
+    }
+    
+    //As trimGraphForFrontEndDisplay only removes non-query gene edges, it is unsuitable for large 'query genes only' searches
+    //because in those searches there are no non-query gene edges.
+    //This method just removes low stringency results until it goes below the limit
+    private void trimQueryGenesOnlyGraphForFrontEndDisplay( CoexpressionMetaValueObject result, int stringencyTrimLimit,
+            int resultsLimit, CoexpressionSearchCommand searchOptions ) {
+
+        Collection<CoexpressionValueObjectExt> geneResults = result.getKnownGeneResults();
+
+        int displayTrimmedStringency = 0;
+
+        int oldSize = geneResults.size();
+
+        log.info( "Query Genes Only Coex Search for " + searchOptions.getGeneIds().size() + " genes: "
+                + searchOptions.getGeneIds().toString() + " returned " + geneResults.size()
+                + " results.  Stripping  low stringency results(possible up to a stringency of "
+                + stringencyTrimLimit + ")" );
+
+        Collection<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<CoexpressionValueObjectExt>();
+
+        for ( int i = 2; i <= stringencyTrimLimit; i++ ) {
+
+               
+            for ( CoexpressionValueObjectExt cvoe : geneResults ) {
+
+                if ( 
+                        ( cvoe.getPosSupp() > i || cvoe.getNegSupp() > i )
+                         ) {
+                    strippedGeneResults.add( cvoe );
+                    
+                    if ( geneResults.size() < resultsLimit ) {
+                        log.info( "Breaking out of adding results loop after removing some edges of stringency:" + i );
+                        break;
+                    }
+                    
+                    
                 }
 
             }
