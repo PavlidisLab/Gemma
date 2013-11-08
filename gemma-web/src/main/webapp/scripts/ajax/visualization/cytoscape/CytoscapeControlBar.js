@@ -304,7 +304,7 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
         var savedDisplayStringency = this.coexDisplaySettings.getStringency();
         var resultsStringency = this.coexpressionSearchData.getResultsStringency();
 
-        if (requestedDisplayStringency < resultsStringency) {
+        if (requestedDisplayStringency < resultsStringency && !this.cytoscapePanel.coexpressionSearchData.searchCommandUsed.queryGenesOnly) {
             Ext.Msg.show({
                 title: 'New Search',
                 msg: Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
@@ -322,7 +322,24 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                     }
                 }
             });
-        } else {
+        }else if(this.cytoscapePanel.coexpressionSearchData.searchCommandUsed.queryGenesOnly){
+        	/*
+        	 * not sure if alerting the user is the best idea
+        	Ext.Msg.show({
+                title: 'Low stringency results have been trimmed',
+                msg: 'Because of the number of genes in your search, low stringency results have been removed because of browser performance limitations, you cannot lower the stringency any lower',
+                buttons: {
+                    ok: 'Proceed'
+                    
+                },
+                fn: function (button) {
+                	controlBar.setStringencySpinnerValue( savedDisplayStringency );
+                }
+            });*/
+        	
+        	controlBar.coexDisplaySettings.setStringency(requestedDisplayStringency);
+        }        
+        else {
             controlBar.coexDisplaySettings.setStringency(requestedDisplayStringency);
         }
     },
