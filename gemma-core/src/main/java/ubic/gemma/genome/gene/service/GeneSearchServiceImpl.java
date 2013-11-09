@@ -472,7 +472,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     /**
      * Get all genes that are associated with phenotypes that match the query string param. If taxon is not specified
-     * (null), genes of all taxa will be returned.
+     * (null), genes of all taxa will be returned. FIXME not used?
      * 
      * @param phenptypeQuery
      * @param taxon can be null

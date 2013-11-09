@@ -179,8 +179,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             return genesWithPhenotypes.values();
         }
 
-        String sqlSelectQuery = "select distinct CHROMOSOME_FEATURE.ID, CHROMOSOME_FEATURE.NCBI_GENE_ID, CHROMOSOME_FEATURE.OFFICIAL_NAME, "
-                + "CHROMOSOME_FEATURE.OFFICIAL_SYMBOL, tax.ID, tax.COMMON_NAME, CHARACTERISTIC.VALUE_URI ";
+        String sqlSelectQuery = "select distinct CHROMOSOME_FEATURE.ID as gid, CHROMOSOME_FEATURE.NCBI_GENE_ID, CHROMOSOME_FEATURE.OFFICIAL_NAME, "
+                + "CHROMOSOME_FEATURE.OFFICIAL_SYMBOL, tax.ID as taxonid, tax.COMMON_NAME, CHARACTERISTIC.VALUE_URI ";
+        /*
+         * 0: gene id 1: ncbi id 2: name 3: symbol 4: taxon id 5: taxon name 6: characteristic value URI
+         */
 
         String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false );
 
@@ -813,7 +816,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
-
+            /* 0: gene id 1: ncbi id 2: name 3: symbol 4: taxon id 5: taxon name 6: characteristic value URI */
             Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
             Integer nbciGeneId = ( Integer ) results.get( 1 );
             String officialName = ( String ) results.get( 2 );
