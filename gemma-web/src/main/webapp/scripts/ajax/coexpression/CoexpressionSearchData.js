@@ -108,6 +108,21 @@ Gemma.CoexpressionSearchData = Ext.extend(Ext.util.Observable, {
       },
 
       searchForCytoscapeDataWithStringency : function(newStringency) {
+    	  
+    	//if the original grid search was query genes only, it means that we already have the results we need 
+          if (this.searchCommandUsed.queryGenesOnly){
+        	  this.stringency = newStringency;
+         	 this.fireEvent('search-started');
+         	 this.cytoscapeSearchResults = this.searchResults;
+              this.searchCommandUsed.stringency = newStringency;
+              this.cytoscapeResultsUpToDate = true;
+              this.fireEvent('complete-search-results-ready', this.searchResults, coexpressionSearchCommand);
+              this.fireEvent('aftersearch');
+         	 return;
+         	 
+          }
+    	  
+    	  
          var searchStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(newStringency);
          this.stringency = searchStringency; // FIXME: later
 
@@ -133,19 +148,8 @@ Gemma.CoexpressionSearchData = Ext.extend(Ext.util.Observable, {
             return;
          }
 
-         this.fireEvent('search-started');
+         this.fireEvent('search-started');         
          
-         //if the original grid search was query genes only, it means that we already have the results we need 
-         if (this.searchCommandUsed.queryGenesOnly){
-        	 
-        	 this.cytoscapeSearchResults = this.searchResults;
-             this.searchCommandUsed.stringency = searchStringency;
-             this.cytoscapeResultsUpToDate = true;
-             this.fireEvent('complete-search-results-ready', this.searchResults, coexpressionSearchCommand);
-             this.fireEvent('aftersearch');
-        	 return;
-        	 
-         }
          
          ExtCoexpressionSearchController.doSearchQuick2Complete(coexpressionSearchCommand, this.searchCommandUsed.geneIds, {
                callback : function(results) {
