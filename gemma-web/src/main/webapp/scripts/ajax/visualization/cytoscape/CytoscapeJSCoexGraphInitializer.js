@@ -34,7 +34,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,3)',
+			'border-width' : 'mapData(queryflag,0,1,0,8)',
 
 			// node color
 			'background-color' : '#000000',
@@ -53,7 +53,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,3)',
+			'border-width' : 'mapData(queryflag,0,1,0,8)',
 
 			// node color
 			'background-color' : Gemma.CytoscapeSettings.nodeColor,
@@ -66,13 +66,11 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'color' : Gemma.CytoscapeSettings.nodeColorOverlay,
 			'font-family' : Gemma.CytoscapeSettings.labelFontName,
 			'font-size' : Gemma.CytoscapeSettings.labelFontSize,
-
 			'text-valign' : 'center',
-
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,3)',
+			'border-width' : 'mapData(queryflag,0,1,0,8)',
 
 			// node color
 			'background-color' : Gemma.CytoscapeSettings.nodeColorOverlay,
@@ -85,10 +83,10 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'target-arrow-color' : '#000',
 			'text-outline-color' : '#000'
 		}).selector('edge.emphasis').css({
-			'width' : 'mapData(support,2,100,1,3)',
+			'width' : 'mapData(support,2,100,10,30)',
 			'opacity' : 'data(nodeDegreeOpacity)'
 		}).selector('edge.basic').css({
-			'width' : 'mapData(support,2,100,1,3)'
+			'width' : 'mapData(support,2,100,10,30)'
 		}).selector("edge[supportSign='positive']").css({
 			'line-color' : Gemma.CytoscapeSettings.supportColorPositive
 		}).selector("edge[supportSign='negative']").css({

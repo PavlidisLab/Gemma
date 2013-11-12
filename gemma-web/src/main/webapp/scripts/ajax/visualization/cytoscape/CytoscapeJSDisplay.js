@@ -81,7 +81,8 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 	    });
     	
     	ownerRef.cy.on('layoutstop', function(e){
-    		ownerRef.ready = true;    		
+    		ownerRef.ready = true;
+    		ownerRef.zoomToFit();
     		ownerRef.nodeDegreeEmphasize(true);    		
     		ownerRef.fireEvent('layout_complete');
 	    });

@@ -83,12 +83,17 @@ public class CoexpressionSearchController {
     private static final int DEFAULT_MAX_GENES_PER_QUERY = 20;
 
     private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = 200;
+    
+    private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY = 500;
 
     private static final int MAX_GENES_PER_QUERY = Settings.getInt( "gemma.coexpressionSearch.maxGenesPerQuery",
             DEFAULT_MAX_GENES_PER_QUERY );
 
     private static final int MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = Settings.getInt(
             "gemma.coexpressionSearch.maxGenesPerCoexVisQuery", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY );
+    
+    private static final int MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY = Settings.getInt(
+            "gemma.coexpressionSearch.maxGenesPerCoexLargeQuery", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY );
 
     private static final int DEFAULT_MAX_RESULTS = 200;
 
@@ -634,9 +639,10 @@ public class CoexpressionSearchController {
       if ( queryGeneIds!=null && searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) {
             // this will be a 'my genes only' vis query since queryGeneIds !=null
             searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) );
-        }else if(searchOptions.getQueryGenesOnly()){
-        	
+        }else if(searchOptions.getQueryGenesOnly()){        	
         	//this will be the case where the user selects over 20 genes
+        	
+        	searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY ) );
         }else{        	
         	searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_QUERY ) );        	
         }
