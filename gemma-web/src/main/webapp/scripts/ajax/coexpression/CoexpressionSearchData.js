@@ -116,7 +116,17 @@ Gemma.CoexpressionSearchData = Ext.extend(Ext.util.Observable, {
          	 this.cytoscapeSearchResults = this.searchResults;
               this.searchCommandUsed.stringency = newStringency;
               this.cytoscapeResultsUpToDate = true;
-              this.fireEvent('complete-search-results-ready', this.searchResults, coexpressionSearchCommand);
+              this.fireEvent('complete-search-results-ready', this.searchResults, {
+                  geneIds : this.searchCommandUsed.geneIds,
+                  eeIds : this.searchCommandUsed.eeIds,
+                  stringency : newStringency,
+                  forceProbeLevelSearch : false,
+                  useMyDatasets : false,
+                  queryGenesOnly : true,
+                  taxonId : this.searchCommandUsed.taxonId,
+                  eeSetName : null,
+                  eeSetId : null
+               });
               this.fireEvent('aftersearch');
          	 return;
          	 
