@@ -32,6 +32,16 @@ Gemma.CoexGraphData = function(coexpressionSearchData, cytoscapeCoexCommand ) {
 		
 		this.getTrimmedGraphData = function(resultsSizeLimit){
 			
+			//if this is a large 'query genes only ' search, then trimming the data is unnecessary
+			if (coexpressionSearchData.searchCommandUsed.queryGenesOnly){
+				var returnObject = {};
+				returnObject.geneResults = this.originalResults.geneResults;
+				returnObject.trimStringency = this.originalResults.trimStringency;
+				
+				return returnObject;
+				
+			}
+			
 			return Gemma.CoexVOUtil.trimKnownGeneResultsForReducedGraph(this.originalResults.geneResults, coexpressionSearchData.searchCommandUsed.geneIds,
 	    			cytoscapeCoexCommand.stringency, cytoscapeCoexCommand.eeIds.length,
 	    			resultsSizeLimit);
