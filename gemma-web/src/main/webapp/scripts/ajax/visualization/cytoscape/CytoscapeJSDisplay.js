@@ -16,9 +16,6 @@
 Ext.namespace('Gemma');
 
 Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
-	
-	//set on initialization:	
-	//initializeCytoscapejs: function to set CytoscapejsSettings    
 
     initComponent: function () {
         this.ready = false;
@@ -64,7 +61,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
     },    
     
     initializeGraph: function (graphData) {
-    	this.initializeCytoscapejs(jQuery('#cy'), graphData, this.onGraphReady, this);
+    	Gemma.CytoscapeJSCoexGraphInitializer(jQuery('#cy'), graphData, this.onGraphReady, this);
     },
     
     //ownerRef refers to this

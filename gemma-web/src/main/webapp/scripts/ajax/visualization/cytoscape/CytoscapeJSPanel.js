@@ -36,8 +36,6 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
         this.display = new Gemma.CytoscapeJSDisplay({
             id: 'cy',
             
-            initializeCytoscapejs: Gemma.CytoscapeJSCoexGraphInitializer,
-            
             cytoscapePanel: this,
             listeners: {
                 afterrender: {
@@ -306,19 +304,25 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
         }
 
         if (selectedGeneIds.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-            Ext.Msg.confirm(
-                Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
-                String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany,
-                    Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY),function (btn) {
-                    if (btn === 'yes') {
-                       
-                       
+        	
+            Ext.Msg.show({
+                title: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
+                msg: String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany,
+                        Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY),
+                buttons: {
+                    ok: 'Ok',
+                    cancel: 'Cancel'
+                },
+                fn: function (btn) {
+                    if (btn === 'ok') {
                         this.updateSearchFormGenes(selectedGeneIds);
                         this.loadMask.show();
                         this.display.hideAll();
                         this.coexpressionSearchData.searchWithGeneIds( selectedGeneIds, true );
                     }
-                }, this);
+                },
+                scope: this
+            });
             
         }
         else{
