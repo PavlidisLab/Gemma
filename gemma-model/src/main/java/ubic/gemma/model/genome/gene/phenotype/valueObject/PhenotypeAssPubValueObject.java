@@ -20,10 +20,27 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
                     .getCitation() );
         }
     }
-    
-    
-    
-    
+
+    public static PhenotypeAssPubValueObject createPrimaryPublication( String accession ) {
+
+        CitationValueObject citationValueObject = new CitationValueObject();
+        citationValueObject.setPubmedAccession( accession );
+        PhenotypeAssPubValueObject phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
+        phenotypeAssPubValueObject.setType( "Primary" );
+        phenotypeAssPubValueObject.setCitationValueObject( citationValueObject );
+
+        return phenotypeAssPubValueObject;
+    }
+
+    public static PhenotypeAssPubValueObject createRelevantPublication( String accession ) {
+        CitationValueObject citationValueObject = new CitationValueObject();
+        citationValueObject.setPubmedAccession( accession );
+        PhenotypeAssPubValueObject phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
+        phenotypeAssPubValueObject.setType( "Relevant" );
+        phenotypeAssPubValueObject.setCitationValueObject( citationValueObject );
+
+        return phenotypeAssPubValueObject;
+    }
 
     public String getType() {
         return type;
@@ -43,19 +60,17 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
 
     @Override
     public int compareTo( PhenotypeAssPubValueObject phenotypeAssociationPublicationValueObject ) {
-        
 
         int compare = this.type.compareTo( phenotypeAssociationPublicationValueObject.getType() );
-        
-        if(compare==0){
-            // TODO Auto-generated method stub
-            compare = this.citationValueObject.compareTo( phenotypeAssociationPublicationValueObject.getCitationValueObject() );
-        }
-        
-           return compare;
 
-        
-       
+        if ( compare == 0 ) {
+            // TODO Auto-generated method stub
+            compare = this.citationValueObject.compareTo( phenotypeAssociationPublicationValueObject
+                    .getCitationValueObject() );
+        }
+
+        return compare;
+
     }
 
     @Override
@@ -81,9 +96,5 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
         } else if ( !type.equals( other.type ) ) return false;
         return true;
     }
-
-
-    
-    
 
 }
