@@ -53,12 +53,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
             },
             coexpressionSearchData: this.coexpressionSearchData,
             coexDisplaySettings: this.coexDisplaySettings
-        });
-        
-        this.qtip = new Ext.BoxComponent({
-        	id:"qtip-div"     	
-        });
-        
+        });        
 
         this.controlBar = new Gemma.CytoscapeControlBar({
             coexpressionSearchData: this.coexpressionSearchData,
@@ -131,7 +126,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
                 bottom: 0,
                 left: 0
             },
-            items: [this.display,this.qtip]
+            items: [this.display]
         });
 
         Gemma.CytoscapeJSPanel.superclass.initComponent.apply(this, arguments);
@@ -206,6 +201,16 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
         
         this.display.on('layout_complete', function() {           
             this.loadMask.hide();
+            this.display.zoomToFit();
+            
+            //var task = new Ext.util.DelayedTask(function(){
+           //     alert(Ext.getDom('myInputField').value.length);
+            //});
+            // Wait 500ms before calling our function. If the user presses another key 
+            // during that 500ms, it will be cancelled and we'll wait another 500ms.
+            //Ext.get('myInputField').on('keypress', function(){
+            //    task.delay(500); 
+            
         }, this);
 
         this.addEvents('queryUpdateFromCoexpressionViz',
@@ -392,14 +397,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
     	this.display.initializeGraph(this.getJSONGraph(this.coexpressionSearchData));
     	//this.loadMask.hide();
     	
-    },    
-    
-    drawGraph: function () {
-    	
-        this.display.loadGraph(this.getJSONGraph(this.coexpressionSearchData));
-        
     },
-
    
     clearError: function () {
         if (Ext.get("analysis-results-search-form-messages")) {
@@ -538,6 +536,6 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
     	this.showUserMessageBar(graphData.trimStringency, true);   
     	this.loadMask.show();
     	this.display.hideAll();
-    	this.drawGraph(); 
+    	this.initializeGraph(); 
     }
 });

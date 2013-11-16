@@ -15,39 +15,29 @@
  */
 Ext.namespace('Gemma');
 
-//TODO remove unnecessary settings from old cytoscape web implementation
 
 Gemma.CytoscapeSettings = {
 
    backgroundColor : "#FFF7FB",
 
-   // node stuff
+   // node color stuff
    labelFontName : 'Arial',
    labelFontColor : "#252525",
-   labelFontColorFade : "#BDBDBD",
-   labelGlowStrength : 100,
-   labelFontWeight : "bold",
-   labelFontSize : 100,
-
-   nodeColor : "#969696",
-   nodeColorFade : "#FFF7FB",
+   nodeColor : "#969696",  
    nodeColorOverlay : "#000099",
-   defaultNodeBorderWidth : 0,
-   queryNodeBorderWidth : 5,
+      
+   //size stuff (edge size is in the cytoscapeJSCoexGraphInitializer
+   labelFontSize : 100,
    nodeSize : 120,
-   queryNodeSize : 125,
-
+  
    nodeQueryColorTrue : "#E41A1C",
-   nodeQueryColorFalse : "#6BAED6",
-
-   // edge stuff
+   
+   // edge color stuff
    supportColorBoth : "#CCCCCC",
    supportColorPositive : "#E66101",
    supportColorNegative : "#5E3C99",
 
    selectionGlowColor : "#00CC00",
-
-   selectionGlowOpacity : 1,
 
    maxGeneIdsPerCoexVisQuery : 200,
 
@@ -138,7 +128,7 @@ Gemma.CytoscapejsSettings = {
 			    //gravity: false,
 			    friction:0.2,			    
 			    simulationBounds: [0, 0, 7000, 5000],
-			    fit: false
+			    fit: true
 			    //dt:0.2
 		
 			    /*nodeMass: function(data){
@@ -190,22 +180,6 @@ Gemma.CytoscapejsSettings = {
 		
 };
 
-
-
-
-
-
-Gemma.CytoscapeSettings.defaultForceDirectedLayout = {
-   name : "ForceDirected"
-};
-
-Gemma.CytoscapeSettings.secondGeneListBypassOverlay = {
-   color : "#4D4DFF",
-   labelGlowStrength : 240,
-   labelFontColor : "#0000FF",
-   labelFontStyle : "italic",
-   labelFontWeight : "bold"
-};
 
 
 

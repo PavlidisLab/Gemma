@@ -34,7 +34,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,8)',
+			'border-width' : 'mapData(queryflag,0,1,0,13)',
 
 			// node color
 			'background-color' : '#000000',
@@ -53,7 +53,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,8)',
+			'border-width' : 'mapData(queryflag,0,1,0,13)',
 
 			// node color
 			'background-color' : Gemma.CytoscapeSettings.nodeColor,
@@ -70,7 +70,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'width' : Gemma.CytoscapeSettings.nodeSize,
 			'height' : Gemma.CytoscapeSettings.nodeSize,
 			'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
-			'border-width' : 'mapData(queryflag,0,1,0,8)',
+			'border-width' : 'mapData(queryflag,0,1,0,13)',
 
 			// node color
 			'background-color' : Gemma.CytoscapeSettings.nodeColorOverlay,
@@ -95,7 +95,8 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'line-color' : Gemma.CytoscapeSettings.supportColorBoth
 		}),
 
-		layout : Gemma.CytoscapejsSettings.arborLayout,
+		//use grid for initialization because firefox was bugging out in version 2.0.3 with arbor on init.  Set to arbor after grid finishes layout as workaround
+		layout: { name: 'grid' },
 
 		renderer : {
 			selectionToPanDelay : 500,

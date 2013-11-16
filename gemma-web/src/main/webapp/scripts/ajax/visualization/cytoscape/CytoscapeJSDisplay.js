@@ -44,18 +44,6 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
         });
     },
 
-    loadGraph: function (graphData){
-    	var ref=this;
-    	
-    	this.cy.load(graphData, function(e){
-    		//callback for load
-    		  
-    	}, function(e){
-    	  //callback for done(just after layout finishes)
-    		ref.fireEvent('layout_complete');
-    	});
-    },
-    
     hideAll: function (){
     	this.cy.elements().hide();    	
     },    
@@ -69,19 +57,28 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 	    
     	ownerRef.cy.on('done', function(e){
     		
-    		//make elements selectable
-    		
-    		ownerRef.cy.elements().selectify();//.show();    		
+    		console.log('cytoscape event: done');
     		ownerRef.cy.panningEnabled(true);
     		ownerRef.fireEvent('selection_available');
-	    	
+    		ownerRef.ready = true;
 	    });
     	
     	ownerRef.cy.on('layoutstop', function(e){
-    		ownerRef.ready = true;
-    		ownerRef.zoomToFit();
-    		ownerRef.nodeDegreeEmphasize(true);    		
-    		ownerRef.fireEvent('layout_complete');
+    		
+    		 //this is a hack because in firefox the cytoscape code fires off two 'layoutstop' events for arbor when you use it for initialization
+    		//workaround is use grid layout in initializer, then once it finishes use arbor
+    		if(e.cy._private.layout.options.name=='grid'){
+    			console.log('cytoscape event: layoutstop, layout name:grid');
+    			ownerRef.refreshLayout();
+    		}
+    		else{//should be arbor
+    			console.log('cytoscape event: layoutstop, layout name:');
+    			ownerRef.cytoscapePanel.loadMask.hide();
+    			ownerRef.nodeDegreeEmphasize(true); 
+    			ownerRef.zoomToFit();
+    			
+    		}
+    		
 	    });
     },
     
@@ -96,8 +93,6 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
          if (!this.ready) {return;}
          
          this.emphasized = isNodeDegreeEmphasis;
-         
-         this.applyDefaultGraphStyle(isNodeDegreeEmphasis);
          
          this.applyGeneListOverlay();
      },
@@ -181,7 +176,8 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
     
     zoomToFit: function () {
         if (!this.ready) {return;}        
-        this.cy.fit();        
+        this.cy.fit();      
+        
     },
     
     /**
@@ -190,6 +186,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
      */
     toggleNodeLabels: function (visible) {
         if (!this.ready) {return;}
+        console.log("toggleNodeLabels");
         var content="";
         if (visible){
         	content='data(name)';        	
@@ -227,6 +224,8 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
      */
     applyGeneListOverlay: function () {
         if (!this.ready) {return;}
+        
+        this.applyDefaultGraphStyle(this.emphasized);
 
         var overlayIds = this.coexDisplaySettings.getOverlayGeneIds();
         
@@ -243,7 +242,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
         	nodesToOverlay.toggleClass('overlay', true);
         }
     	
-    	this.applyDefaultGraphStyle(this.emphasized);
+    	
         
     },
 
