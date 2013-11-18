@@ -1055,7 +1055,7 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend(Gemma.GeneGrid, {
 
       afterLoadGenes : function(geneValueObjs, groupRecord) {
 
-         if (groupRecord.get('writeableByUser')) {
+         if (groupRecord.get('userCanWrite')) {
             Ext.util.Observable.releaseCapture(this.getStore());
             this.getTopToolbar().setDisabled(false);
          } else {

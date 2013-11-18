@@ -157,7 +157,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
                   this.cloneBut.enable();
                }
 
-               if (record.get('writeableByUser')) {
+               if (record.get('userCanWrite')) {
 
                   if (record.get('modifiable')) {
                      this.deleteBut.enable();

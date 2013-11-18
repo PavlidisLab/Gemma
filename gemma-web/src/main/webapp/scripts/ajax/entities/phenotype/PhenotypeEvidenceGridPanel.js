@@ -310,7 +310,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
             var viewEvidenceWindow = new Gemma.MetaAnalysisEvidenceWindow({
                   metaAnalysisId : metaAnalysisId,
                   metaAnalysis : metaAnalysis,
-                  showActionButton : record.data.evidenceSecurityValueObject.writeableByUser,
+                  showActionButton : record.data.evidenceSecurityValueObject.userCanWrite,
                   title : 'View Phenocarta evidence for ' + record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name,
                   diffExpressionEvidence : record.data.geneDifferentialExpressionMetaAnalysisSummaryValueObject.diffExpressionEvidence,
                   modal : false,

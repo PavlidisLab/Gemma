@@ -512,7 +512,7 @@ Gemma.EEReportGridColumnRenderers = {
       var id = record.get('id');
 
       var runurl = "";
-      if (record.get("writeableByUser")) {
+      if (record.get("userCanWrite")) {
          runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues(' + id
             + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></span>';
       }

@@ -349,7 +349,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
                description : rec.get("description"),
                size : rec.get("size"),
                geneIds : rec.get("geneIds"),
-               writeableByUser : true
+               userCanWrite : true
             });
 
          this.ownerCt.getStore().add(newRec);
