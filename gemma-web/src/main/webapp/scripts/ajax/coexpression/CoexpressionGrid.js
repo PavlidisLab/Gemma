@@ -236,8 +236,18 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
             var numQueryGenes = coexpressionGrid.coexpressionSearchData.getQueryGeneIds().length;
             coexpressionGrid.decideQueryColumn(numQueryGenes);
-            coexpressionGrid.loadData(coexpressionGrid.coexpressionSearchData.getDisplayedResults(), null);
+            var resultsData = coexpressionGrid.coexpressionSearchData.getDisplayedResults();
+            coexpressionGrid.loadData(resultsData, null);
+            
+            if (coexpressionGrid.coexpressionSearchData.getDisplayedResults()<1){
+            	var bbarText = coexpressionGrid.getBottomToolbar().getComponent('bbarStatus');
+                bbarText.setText("No Results to display");
+                coexpressionGrid.getBottomToolbar().show();
+     	   	}
+            
             coexpressionGrid.applyFilters();
+            
+            
          });
 
       this.coexpressionSearchData.on('query-genes-changed', function(queryGeneIds) {
@@ -283,7 +293,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
    },
 
    applyFilters : function() {
-      this.getStore().filterBy(this.filter(), this);
+	   this.getStore().filterBy(this.filter(), this);
    },
 
    hideBottomToolbar : function() {
