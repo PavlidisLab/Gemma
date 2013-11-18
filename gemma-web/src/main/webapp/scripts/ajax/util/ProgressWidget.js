@@ -23,7 +23,7 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
       stateful : false,
       collapsible : false,
       autoHeight : true,
-      width : 400,
+      width : 525,
 
       initComponent : function() {
          if (!Ext.isDefined(this.displayOptions)) {
@@ -63,9 +63,11 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
       resizable : false,
       bodyBorder : false,
       stateful : false,
+      width: 505,
+      
 
       // Default options  : buttons: Cancel(always shown), Background, Show Logs
-      showLogButton : false,
+      showLogButton : true,
       showBackgroundButton : false,
 
       // behaviours
@@ -86,18 +88,20 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
                items : [{
                      xtype : 'progress',
                      ref : 'progressBar',
-                     width : 400,
+                     width : 500,
                      text : "Initializing ..."
                   }, {
                      xtype : 'panel',
                      autoScroll : true,
                      hidden : true,
                      ref : 'logPanel',
+                     width: 500,
                      items : [{
-                           xtype : 'label',
+                           xtype : 'textarea',
                            ref : 'textLabel',
-                           boxMaxHeight : 400,
-                           autoScroll : true
+                           height : 400,
+                           width: 500,
+                           
                         }]
                   }],
                fbar : {
@@ -225,7 +229,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
           this.task.on("log-message-received", function (message) {
               this.progressBar.updateText(message);
               if (this.logPanel.rendered) {
-                  this.logPanel.textLabel.setText(this.task.logs);
+                  this.logPanel.textLabel.setValue(this.task.logs);
               }
           }, this);
 
@@ -252,7 +256,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
        */
       showLogMessages : function() {
          this.logPanel.show();
-         this.logPanel.textLabel.setText(this.task.logs);
+         this.logPanel.textLabel.setValue(this.task.logs);
       },
 
       /**
