@@ -1300,7 +1300,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             Files.createSymbolicLink( symbolicLink.toPath(), dataFolder.toPath() );
 
-            writeErmineJFile( writeFolder, disclaimer );
+            writeErmineJFile( writeFolder, disclaimer, this.taxonService.findByCommonName( "mouse" ) );
+            writeErmineJFile( writeFolder, disclaimer, this.taxonService.findByCommonName( "human" ) );
 
         } catch ( IOException e ) {
             log.error( ExceptionUtils.getStackTrace( e ) );
@@ -1308,7 +1309,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     // file ErmineJ style DOID --> Gene Sets
-    private void writeErmineJFile( String writeFolder, String disclaimer ) throws IOException {
+    private void writeErmineJFile( String writeFolder, String disclaimer, Taxon taxon ) throws IOException {
 
         BufferedWriter phenoCartageneSets = new BufferedWriter( new FileWriter( writeFolder
                 + "Phenocarta_ErmineJ_Genesets.tsv" ) );
@@ -1325,13 +1326,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         log.info( "ErmineJ file dump" );
 
         // ontologyTrees.iterator().next() is the disease Ontology, always at first position
-        writeForErmineJ( ontologyTrees.iterator().next(), this.taxonService.findByCommonName( "human" ), cacheMap,
-                phenoCartageneSets );
+        writeForErmineJ( ontologyTrees.iterator().next(), taxon, cacheMap, phenoCartageneSets );
 
         phenoCartageneSets.close();
     }
 
-    private void writeForErmineJ( TreeCharacteristicValueObject t, Taxon humanTaxon, HashMap<Integer, String> cacheMap,
+    private void writeForErmineJ( TreeCharacteristicValueObject t, Taxon taxon, HashMap<Integer, String> cacheMap,
             BufferedWriter phenoCartageneSets ) throws IOException {
 
         HashSet<String> humanGeneSymbol = new HashSet<String>();
@@ -1342,11 +1342,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 humanGeneSymbol.add( cacheMap.get( geneNCBI ) );
             } else {
                 Gene gene = this.geneService.findByNCBIId( geneNCBI );
-                if ( gene.getTaxon().equals( humanTaxon ) ) {
+                if ( gene.getTaxon().equals( taxon ) ) {
                     humanGeneSymbol.add( gene.getOfficialSymbol() );
                     cacheMap.put( geneNCBI, gene.getOfficialSymbol() );
                 } else {
-                    Gene homoGene = this.homologeneService.getHomologue( gene, humanTaxon );
+                    Gene homoGene = this.homologeneService.getHomologue( gene, taxon );
 
                     if ( homoGene != null ) {
                         humanGeneSymbol.add( homoGene.getOfficialSymbol() );
@@ -1367,7 +1367,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // do all children
         for ( TreeCharacteristicValueObject children : t.getChildren() ) {
-            writeForErmineJ( children, humanTaxon, cacheMap, phenoCartageneSets );
+            writeForErmineJ( children, taxon, cacheMap, phenoCartageneSets );
         }
 
     }
