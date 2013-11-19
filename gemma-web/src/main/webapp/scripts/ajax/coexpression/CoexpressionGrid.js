@@ -86,7 +86,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                   dataIndex : "foundGeneNodeDegree",
                   width : 60,
                   renderer : this.nodeDegreeStyler.createDelegate(this),
-                  tooltip : "The higher the specificity of link, the less its most specific coexpressed gene shows coexpression will all other genes in its taxon(i.e. the specificity measurement includes connections with genes that are not shown in the graph)",
+                  tooltip : "The higher the specificity of link, the less its most specific coexpressed gene shows coexpression with all other genes in its taxon(i.e. the specificity measurement includes connections with genes that are not shown in the graph)",
                   sortable : true
                }, {
                   id : 'visualize',
