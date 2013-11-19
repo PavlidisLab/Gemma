@@ -19,6 +19,7 @@ Ext.namespace('Gemma');
 Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
     title: 'Cytoscape',
     layout: 'fit',
+    autoScroll: false,
 
     // This is for a bug in ExtJS tabPanel that causes an unactivated Panel in a TabPanel to be rendered
     // when the Panel is removed from the tabPanel
@@ -35,7 +36,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
     initComponent: function () {
         this.display = new Gemma.CytoscapeJSDisplay({
             id: 'cy',
-            
+            autoScroll: false,
             cytoscapePanel: this,
             listeners: {
                 afterrender: {
@@ -91,7 +92,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
         });
         
         var bbar = new Ext.Toolbar({
-        	hidden: true,
+        	hidden: false,
         	items: [{
                 xtype: 'tbtext',
                 text: '',
@@ -160,7 +161,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
     				this.showUserMessageBar(this.coexpressionSearchData.cytoscapeSearchResults.nonQueryGeneTrimmedValue, false);
     			}else{
     				this.getBottomToolbar().hide();
-    	    		this.doLayout();				
+    	    		//this.doLayout();				
     			}
     			return;
     		}
@@ -180,7 +181,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
         	} else{
         		this.initializeGraph();
         		this.getBottomToolbar().hide();
-        		this.doLayout();
+        		//this.doLayout();
         	}
             
             
@@ -527,7 +528,7 @@ Gemma.CytoscapeJSPanel = Ext.extend(Ext.Panel, {
     	
     	this.getBottomToolbar().show();
             
-        this.doLayout();            
+                
     },
     
     graphSizeMenuHandler: function(graphSize){

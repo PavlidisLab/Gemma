@@ -83,10 +83,10 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 			'target-arrow-color' : '#000',
 			'text-outline-color' : '#000'
 		}).selector('edge.emphasis').css({
-			'width' : 'mapData(support,2,100,10,30)',
+			'width' : 'mapData(support,2,250,5,100)',
 			'opacity' : 'data(nodeDegreeOpacity)'
 		}).selector('edge.basic').css({
-			'width' : 'mapData(support,2,100,10,30)'
+			'width' : 'mapData(support,2,250,5,100)'
 		}).selector("edge[supportSign='positive']").css({
 			'line-color' : Gemma.CytoscapeSettings.supportColorPositive
 		}).selector("edge[supportSign='negative']").css({
@@ -99,7 +99,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function(visualization, graphData, ready
 		layout: { name: 'grid' },
 
 		renderer : {
-			selectionToPanDelay : 500,
+			selectionToPanDelay : 350,
 			dragToSelect : true,
 			dragToPan : true
 		},

@@ -61,7 +61,7 @@ Gemma.CytoscapePanelUtil.nodeDegreeOpacityMapper = function (nodeDegree) {
 
     // no data for some genes
     if (nodeDegree == null) {
-        return 0;
+        return Gemma.CytoscapeSettings.nodeDegreeOpacity.lightest;
     }
     
     if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest) {
@@ -84,7 +84,7 @@ Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
 
     // no data for some genes
     if (nodeDegree == null) {
-        return 0;
+        return 'not defined';
     }
 
 

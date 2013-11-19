@@ -51,12 +51,12 @@ Gemma.CytoscapeSettings = {
       lightest : 0.7,
       light : 0.6,
       moderate : 0.35,
-      dark : 0.2
+      dark : 0.25
    },
    
    nodeDegreeOpacity : {
-	      lightest : 0.1,
-	      light : 0.3,
+	      lightest : 0.15,
+	      light : 0.35,
 	      moderate : 0.5,
 	      dark : 0.65,
 	      darkest : 1
