@@ -113,8 +113,6 @@ import ubic.gemma.util.Settings;
 @Service
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
 
-    private static final String DISEASE_ONTOLOGY_ROOT = "DOID_4";
-
     private static Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
 
     private static final int MAX_PHENOTYPES_FROM_ONTOLOGY = 100;
@@ -534,7 +532,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         ArrayList<ExternalDatabaseValueObject> exDatabasesAsList = new ArrayList<ExternalDatabaseValueObject>(
                 exDatabases );
         // add manual curation type
-        ExternalDatabaseValueObject manualEvidence = new ExternalDatabaseValueObject( 1L, "Manual Curation", false );
+        ExternalDatabaseValueObject manualEvidence = new ExternalDatabaseValueObject( 1L,
+                PhenotypeAssociationConstants.MANUAL_CURATION, false );
         exDatabasesAsList.add( manualEvidence );
 
         return exDatabasesAsList;
@@ -707,12 +706,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new TreeSet<ExternalDatabaseStatisticsValueObject>();
 
-        // find statistics the external databases sources
-        externalDatabaseStatisticsValueObjects.addAll( this.associationService.loadStatisticsOnExternalDatabases() );
-        // manual curation
-        externalDatabaseStatisticsValueObjects.add( this.associationService.loadStatisticsOnManualCuration() );
+        // find statistics the external databases sources, each file download path depends on its name
+        externalDatabaseStatisticsValueObjects.addAll( this.associationService
+                .loadStatisticsOnExternalDatabases( PhenotypeAssociationConstants.GEMMA_PHENOCARTA_HOST_URL_DATASETS ) );
+        // manual curation and give path to download the file
+        externalDatabaseStatisticsValueObjects.add( this.associationService
+                .loadStatisticsOnManualCuration( PhenotypeAssociationConstants.MANUAL_CURATION_FILE_LOCATION ) );
         // total
-        externalDatabaseStatisticsValueObjects.add( this.associationService.loadStatisticsOnAllEvidence() );
+        externalDatabaseStatisticsValueObjects.add( this.associationService
+                .loadStatisticsOnAllEvidence( PhenotypeAssociationConstants.ALL_PHENOCARTA_ANNOTATIONS_FILE_LOCATION ) );
 
         return externalDatabaseStatisticsValueObjects;
     }
@@ -1178,24 +1180,32 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         int i = 0;
 
-        // the root path of the folder named NeurocartaExport
-        String neurocartaDataHome = Settings.getString( "gemma.appdata.home" ) + File.separator + "PhenocartaExport"
+        // path of the folder where the dump will be created and the data put
+        String mainFolderPath = PhenotypeAssociationConstants.PHENOCARTA_HOME_FOLDER_PATH
+                + PhenotypeAssociationConstants.PHENOCARTA_EXPORT + "_" + DateUtil.getTodayDate( true )
                 + File.separator;
 
-        // path of the folder where the dump will be created and the data put
-        String writeFolder = neurocartaDataHome + "EvidenceExport_" + DateUtil.getTodayDate( true ) + File.separator;
+        // folder where AnnotationByDatasets will be kept
+        String datasetsFolderPath = mainFolderPath + PhenotypeAssociationConstants.DATASET_FOLDER_NAME + File.separator;
+
+        // folder where ErmineJ Files are kept
+        String ermineJFolderPath = mainFolderPath + PhenotypeAssociationConstants.ERMINEJ_FOLDER_NAME + File.separator;
 
         // creates the folders if they dont exist
-        File mainFolder = new File( neurocartaDataHome );
+        File phenocartaHomeFolder = new File( PhenotypeAssociationConstants.PHENOCARTA_HOME_FOLDER_PATH );
+        phenocartaHomeFolder.mkdir();
+        File mainFolder = new File( mainFolderPath );
         mainFolder.mkdir();
-        File dataFolder = new File( writeFolder );
-        dataFolder.mkdir();
+        File datasetsFolder = new File( datasetsFolderPath );
+        datasetsFolder.mkdir();
+        File ermineJFolder = new File( ermineJFolderPath );
+        ermineJFolder.mkdir();
 
         // this writer will be used to write 1 file per resource
         BufferedWriter fileWriterDataSource = null;
         // this writer is the dump of all evidence
-        try (BufferedWriter fileWriterAllEvidence = new BufferedWriter( new FileWriter( writeFolder
-                + "ALL_EVIDENCE.tsv" ) );) {
+        try (BufferedWriter fileWriterAllEvidence = new BufferedWriter( new FileWriter( mainFolderPath
+                + PhenotypeAssociationConstants.FILE_ALL_PHENOCARTA_ANNOTATIONS ) );) {
             // header of file
             String header = disclaimer
                     + "Data Source\tGene NCBI\tGene Symbol\tTaxon\tPhenotype Names\tPhenotype URIs\tPubmeds\tWeb Link\tIs Negative\tNote\n";
@@ -1206,7 +1216,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             for ( ExternalDatabaseValueObject externalDatabaseValueObject : externalDatabaseValueObjects ) {
 
-                fileWriterDataSource = new BufferedWriter( new FileWriter( writeFolder
+                fileWriterDataSource = new BufferedWriter( new FileWriter( datasetsFolderPath
                         + externalDatabaseValueObject.getName().replaceAll( " ", "" ) + ".tsv" ) );
 
                 // header of file
@@ -1216,7 +1226,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 Collection<PhenotypeAssociation> phenotypeAssociations = null;
 
                 // this one is a special case, not actually linked to an external database
-                if ( externalDatabaseValueObject.getName().equalsIgnoreCase( "Manual Curation" ) ) {
+                if ( externalDatabaseValueObject.getName().equalsIgnoreCase(
+                        PhenotypeAssociationConstants.MANUAL_CURATION ) ) {
                     phenotypeAssociations = this.associationService.findEvidencesWithoutExternalDatabaseName();
                 } else {
                     phenotypeAssociations = this.associationService
@@ -1290,15 +1301,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             fileWriterAllEvidence.close();
 
             // LatestEvidenceExport ---> points to the latest dump
-            File symbolicLink = new File( neurocartaDataHome + "LatestEvidenceExport" );
+            File symbolicLink = new File( PhenotypeAssociationConstants.PHENOCARTA_HOME_FOLDER_PATH
+                    + PhenotypeAssociationConstants.LATEST_EVIDENCE_EXPORT );
 
             if ( symbolicLink.exists() ) {
                 Files.delete( symbolicLink.toPath() );
             }
-            Files.createSymbolicLink( symbolicLink.toPath(), dataFolder.toPath() );
+            Files.createSymbolicLink( symbolicLink.toPath(), mainFolder.toPath() );
 
-            writeErmineJFile( writeFolder, disclaimer, this.taxonService.findByCommonName( "mouse" ) );
-            writeErmineJFile( writeFolder, disclaimer, this.taxonService.findByCommonName( "human" ) );
+            writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ) );
+            writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ) );
         }
 
     }
@@ -2211,7 +2223,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        if ( geneSymbols.size() > 1 && !t.get_id().equalsIgnoreCase( DISEASE_ONTOLOGY_ROOT ) ) {
+        if ( geneSymbols.size() > 1
+                && !t.get_id().equalsIgnoreCase( PhenotypeAssociationConstants.DISEASE_ONTOLOGY_ROOT ) ) {
             phenoCartageneSets.write( t.get_id() + "\t" + t.getValue() + "\t" );
             phenoCartageneSets.write( StringUtils.join( geneSymbols, "\t" ) );
             phenoCartageneSets.write( "\n" );

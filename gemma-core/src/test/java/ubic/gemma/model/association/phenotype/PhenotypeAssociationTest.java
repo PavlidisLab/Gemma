@@ -186,10 +186,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadStatistics() {
-        ExternalDatabaseStatisticsValueObject a = this.phenotypeAssociationService.loadStatisticsOnAllEvidence();
+        ExternalDatabaseStatisticsValueObject a = this.phenotypeAssociationService.loadStatisticsOnAllEvidence("");
         assertNotNull( a );
         Collection<ExternalDatabaseStatisticsValueObject> b = this.phenotypeAssociationService
-                .loadStatisticsOnExternalDatabases();
+                .loadStatisticsOnExternalDatabases("");
         assertNotNull( b );
     }
 
