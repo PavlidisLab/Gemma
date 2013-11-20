@@ -50,7 +50,7 @@ public class PhenotypeAssociationConstants {
     // names of folder and files where things are kept
     public final static String FILE_ALL_PHENOCARTA_ANNOTATIONS = "AllPhenocartaAnnotations.tsv";
     public final static String FILE_MANUAL_CURATION = "ManualCuration.tsv";
-    public final static String DATASET_FOLDER_NAME = "AnnotationsByDatasets";
+    public final static String DATASET_FOLDER_NAME = "AnnotationsByDataset";
     public final static String ERMINEJ_FOLDER_NAME = "ErmineJ";
 
     // path to the final files on production
