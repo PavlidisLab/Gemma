@@ -26,13 +26,14 @@ public class ExternalDatabaseStatisticsValueObject implements Comparable<Externa
     private Long numPhenotypes = 0L;
     private Long numPublications = 0L;
     private Date lastUpdateDate = null;
+    private String pathToDownloadFile = "";
 
     public ExternalDatabaseStatisticsValueObject() {
         super();
     }
 
     public ExternalDatabaseStatisticsValueObject( String name, String description, String webUri, Long numEvidence,
-            Long numGenes, Long numPhenotypes, Long numPublications, Date lastUpdateDate ) {
+            Long numGenes, Long numPhenotypes, Long numPublications, Date lastUpdateDate, String pathToDownloadFile ) {
         super();
         this.name = name;
         this.description = description;
@@ -42,6 +43,7 @@ public class ExternalDatabaseStatisticsValueObject implements Comparable<Externa
         this.numPhenotypes = numPhenotypes;
         this.numPublications = numPublications;
         this.lastUpdateDate = lastUpdateDate;
+        this.pathToDownloadFile = pathToDownloadFile;
     }
 
     public void addNumPublications( Long addNumPublications ) {
@@ -120,6 +122,14 @@ public class ExternalDatabaseStatisticsValueObject implements Comparable<Externa
 
     public void setWebUri( String webUri ) {
         this.webUri = webUri;
+    }
+
+    public String getPathToDownloadFile() {
+        return pathToDownloadFile;
+    }
+
+    public void setPathToDownloadFile( String pathToDownloadFile ) {
+        this.pathToDownloadFile = pathToDownloadFile;
     }
 
 }
