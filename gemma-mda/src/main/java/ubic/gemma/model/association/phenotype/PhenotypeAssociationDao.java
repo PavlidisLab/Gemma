@@ -55,7 +55,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @param limit
      * @return
      */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids);
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids );
 
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
@@ -100,10 +100,10 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** finds all external databases statistics used in neurocarta */
-    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases();
+    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String folderPath );
 
     /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration();
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String filePath );
 
     /**
      * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
@@ -142,7 +142,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     public Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
 
     /** find statistics all evidences */
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence();
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String filePath );
 
     /** remove a PhenotypeAssociationPublication **/
     public void removePhenotypePublication( Long phenotypeAssociationPublicationId );

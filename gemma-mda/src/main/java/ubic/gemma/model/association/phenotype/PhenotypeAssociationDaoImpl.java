@@ -16,7 +16,6 @@ package ubic.gemma.model.association.phenotype;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,8 +51,8 @@ import ubic.gemma.persistence.AbstractDao;
  * deals with all basic queries used by Neurocarta
  * 
  * @author Nicolas
- * @version $Id$ TODO: change criteria queries
- *          to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
+ * @version $Id$ TODO: change criteria queries to
+ *          hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -498,7 +497,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find statistics all evidences */
     @Override
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence() {
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile ) {
 
         Long numEvidence = ( Long ) this.getHibernateTemplate()
                 .find( "select count (p) from PhenotypeAssociation as p" ).iterator().next();
@@ -519,13 +518,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Long numPublications = new Long( publications.size() );
 
         ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
-                "Total (unique)", "", "", numEvidence, numGenes, numPhenotypes, numPublications, null );
+                "Total (unique)", "", "", numEvidence, numGenes, numPhenotypes, numPublications, null, downloadFile );
 
         return externalDatabaseStatisticsValueObject;
     }
 
     @Override
-    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases() {
+    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String downloadPath ) {
 
         HashMap<String, ExternalDatabaseStatisticsValueObject> externalDatabasesStatistics = new HashMap<String, ExternalDatabaseStatisticsValueObject>();
 
@@ -541,6 +540,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             ExternalDatabaseStatisticsValueObject externalDatabaseStatistics = new ExternalDatabaseStatisticsValueObject();
             externalDatabaseStatistics.setDescription( externalDatabase.getDescription() );
             externalDatabaseStatistics.setName( externalDatabase.getName() );
+            externalDatabaseStatistics.setPathToDownloadFile( downloadPath
+                    + externalDatabase.getName().replaceAll( " ", "" ) + ".tsv" );
             externalDatabaseStatistics.setLastUpdateDate( ( Date ) o[2] );
             externalDatabaseStatistics.setWebUri( externalDatabase.getWebUri() );
             externalDatabaseStatistics.setNumEvidence( count );
@@ -581,7 +582,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
     @Override
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration() {
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String downloadFile ) {
 
         Long numEvidence = ( Long ) this.getHibernateTemplate()
                 .find( "select count (p) from PhenotypeAssociation as p where p.evidenceSource is null" ).iterator()
@@ -617,7 +618,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
                 "Manual Curation", "Evidence curated manually through literature review", "", numEvidence, numGenes,
-                numPhenotypes, numPublications, lastUpdatedDate );
+                numPhenotypes, numPublications, lastUpdatedDate, downloadFile );
 
         return externalDatabaseStatisticsValueObject;
     }

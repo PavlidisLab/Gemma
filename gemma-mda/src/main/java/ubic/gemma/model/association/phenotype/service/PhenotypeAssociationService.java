@@ -112,7 +112,7 @@ public interface PhenotypeAssociationService {
 
     /** find PhenotypeAssociations satisfying the given filters: paIds, taxonId and limit */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds);
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds );
 
     /** find all PhenotypeAssociation for a specific gene id */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -157,10 +157,10 @@ public interface PhenotypeAssociationService {
     public Collection<String> findEvidenceOwners();
 
     /** finds all external databases statistics used in neurocarta */
-    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases();
+    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String downloadPath );
 
     /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration();
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String downloadFile );
 
     /**
      * returns a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
@@ -183,8 +183,8 @@ public interface PhenotypeAssociationService {
     public Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
 
     /** find statistics all evidences */
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence();
-    
-    public void removePhenotypePublication(Long phenotypeAssociationPublicationId);
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile );
+
+    public void removePhenotypePublication( Long phenotypeAssociationPublicationId );
 
 }

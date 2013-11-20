@@ -170,8 +170,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
     @Override
     @Transactional(readOnly = true)
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids) {
-        return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids);
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids ) {
+        return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids );
     }
 
     @Override
@@ -270,22 +270,22 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find statistics all evidences */
     @Override
     @Transactional(readOnly = true)
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence() {
-        return this.phenotypeAssociationDao.loadStatisticsOnAllEvidence();
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile ) {
+        return this.phenotypeAssociationDao.loadStatisticsOnAllEvidence( downloadFile );
     }
 
     /** finds all external databases statistics used in neurocarta */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases() {
-        return this.phenotypeAssociationDao.loadStatisticsOnExternalDatabases();
+    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String downloadPath ) {
+        return this.phenotypeAssociationDao.loadStatisticsOnExternalDatabases( downloadPath );
     }
 
     /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
     @Override
     @Transactional(readOnly = true)
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration() {
-        return this.phenotypeAssociationDao.loadStatisticsOnManualCuration();
+    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String downloadFile ) {
+        return this.phenotypeAssociationDao.loadStatisticsOnManualCuration( downloadFile );
     }
 
     /**
@@ -304,10 +304,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public void update( PhenotypeAssociation evidence ) {
         this.phenotypeAssociationDao.update( evidence );
     }
-    
+
     @Override
     @Transactional
-    public void removePhenotypePublication(Long phenotypeAssociationPublicationId){
+    public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
         this.phenotypeAssociationDao.removePhenotypePublication( phenotypeAssociationPublicationId );
     }
 
