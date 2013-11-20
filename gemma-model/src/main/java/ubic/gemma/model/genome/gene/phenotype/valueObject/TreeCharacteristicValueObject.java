@@ -42,7 +42,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
         Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
 
-        TreeSet<TreeCharacteristicValueObject> childs = new TreeSet<TreeCharacteristicValueObject>();
+        TreeSet<TreeCharacteristicValueObject> childs = new TreeSet<>();
 
         for ( OntologyTerm ot : ontologyTerms ) {
 
@@ -64,15 +64,18 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         return treeCharacteristicVO;
     }
 
+    private String _id = "";
+
     private TreeSet<TreeCharacteristicValueObject> children = new TreeSet<TreeCharacteristicValueObject>();
 
     /** phenotype present in the database */
     private boolean dbPhenotype = false;
 
+    // all geneNBCI associtaed with the node or children from publicEvidence, used to write dump file ermineJ way
+    private HashSet<Integer> publicGenesNBCI = new HashSet<Integer>();
+
     // if we need to reconstruct part of the tree in the cache we need to know highest root parent
     private String rootOfTree = "";
-
-    private String _id = "";
 
     public TreeCharacteristicValueObject( String value, String valueUri ) {
         super( value, "", valueUri, "" );
@@ -84,9 +87,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         this.children = children;
         this._id = this.urlId;
     }
-
-    // all geneNBCI associtaed with the node or children from publicEvidence, used to write dump file ermineJ way
-    private HashSet<Integer> publicGenesNBCI = new HashSet<Integer>();
 
     /** counts each private occurrence of genes for a phenotype */
     public void countPrivateGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
@@ -163,6 +163,10 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         return this.children;
     }
 
+    public Set<Integer> getPublicGenesNBCI() {
+        return publicGenesNBCI;
+    }
+
     public String getRootOfTree() {
         return this.rootOfTree;
     }
@@ -196,8 +200,16 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         this._id = _id;
     }
 
+    public void setChildren( TreeSet<TreeCharacteristicValueObject> children ) {
+        this.children = children;
+    }
+
     public void setDbPhenotype( boolean dbPhenotype ) {
         this.dbPhenotype = dbPhenotype;
+    }
+
+    public void setPublicGenesNBCI( HashSet<Integer> publicGenesNBCI ) {
+        this.publicGenesNBCI = publicGenesNBCI;
     }
 
     public void setRootOfTree( String rootOfTree ) {
@@ -235,18 +247,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         for ( TreeCharacteristicValueObject tree : this.getChildren() ) {
             tree.findAllChildPhenotypeURI( phenotypesToFind );
         }
-    }
-
-    public void setChildren( TreeSet<TreeCharacteristicValueObject> children ) {
-        this.children = children;
-    }
-
-    public HashSet<Integer> getPublicGenesNBCI() {
-        return publicGenesNBCI;
-    }
-
-    public void setPublicGenesNBCI( HashSet<Integer> publicGenesNBCI ) {
-        this.publicGenesNBCI = publicGenesNBCI;
     }
 
 }

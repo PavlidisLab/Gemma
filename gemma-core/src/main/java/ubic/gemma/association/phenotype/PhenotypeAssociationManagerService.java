@@ -14,6 +14,7 @@
  */
 package ubic.gemma.association.phenotype;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -292,7 +293,9 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
      * by Quartz
+     * 
+     * @throws IOException
      */
     @Secured({ "GROUP_AGENT" })
-    public abstract void writeAllEvidenceToFile();
+    public abstract void writeAllEvidenceToFile() throws IOException;
 }
