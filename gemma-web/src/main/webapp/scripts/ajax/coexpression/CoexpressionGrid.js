@@ -34,7 +34,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
    autoScroll : true,
    stateful : false,
 
-   observableDisplaySettings : {},
+   coexDisplaySettings : {},
    coexpressionSearchData : {},
 
    viewConfig : {
@@ -135,7 +135,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                         minValue : Gemma.MIN_STRINGENCY,
                         maxValue : 999,
                         fieldLabel : 'Stringency ',
-                        value : this.observableDisplaySettings.getStringency(),
+                        value : this.coexDisplaySettings.getStringency(),
                         width : 60,
                         enableKeyEvents : true,
                         listeners : {
@@ -166,7 +166,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                         listeners : {
                            "keyup" : {
                               fn : function(textField) {
-                                 this.observableDisplaySettings.setSearchTextValue(textField.getValue());
+                                 this.coexDisplaySettings.setSearchTextValue(textField.getValue());
                               },
                               scope : this,
                               delay : 400
@@ -219,13 +219,13 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
       var coexpressionGrid = this;
 
       this.coexpressionSearchData.on("search-results-ready", function(results) {
-            var displayStringency = coexpressionGrid.observableDisplaySettings.getStringency();
+            var displayStringency = coexpressionGrid.coexDisplaySettings.getStringency();
 
             // Lower stringency until results are visible.
             displayStringency = Gemma.CoexVOUtil.getHighestResultStringencyUpToInitialDisplayStringency(coexpressionGrid.coexpressionSearchData.getDisplayedResults(),
                displayStringency);
 
-            coexpressionGrid.observableDisplaySettings.setStringency(displayStringency);
+            coexpressionGrid.coexDisplaySettings.setStringency(displayStringency);
 
             if (displayStringency > Gemma.MIN_STRINGENCY) {
                var bbarText = coexpressionGrid.getBottomToolbar().getComponent('bbarStatus');
@@ -259,17 +259,17 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             }
          });
 
-      this.observableDisplaySettings.on("stringency_change", function(displayStringency) {
+      this.coexDisplaySettings.on("stringency_change", function(displayStringency) {
             coexpressionGrid.getTopToolbar().getComponent('stringencySpinner').setValue(displayStringency);
             coexpressionGrid.applyFilters();
          });
 
-      this.observableDisplaySettings.on('query_genes_only_change', function(checked) {
+      this.coexDisplaySettings.on('query_genes_only_change', function(checked) {
             coexpressionGrid.getTopToolbar().getComponent('queryGenesOnly').setValue(checked);
             coexpressionGrid.applyFilters();
          });
 
-      this.observableDisplaySettings.on('search_text_change', function(text) {
+      this.coexDisplaySettings.on('search_text_change', function(text) {
             coexpressionGrid.getTopToolbar().getComponent(coexpressionGrid.id + '-search-in-grid').setValue(text);
             coexpressionGrid.applyFilters();
          });
@@ -281,14 +281,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
    onStringencyChange : function() {
       var spinnerValue = this.getTopToolbar().getComponent('stringencySpinner').getValue();
       if (Ext.isNumber(spinnerValue) && spinnerValue > 1) {
-         this.observableDisplaySettings.setStringency(spinnerValue);
+         this.coexDisplaySettings.setStringency(spinnerValue);
          this.applyFilters();
       }
    },
 
    // called from toolbar
    onQueryGenesOnlyChange : function() {
-      this.observableDisplaySettings.setQueryGenesOnly(this.getTopToolbar().getComponent('queryGenesOnly').getValue());
+      this.coexDisplaySettings.setQueryGenesOnly(this.getTopToolbar().getComponent('queryGenesOnly').getValue());
       this.applyFilters();
    },
 
@@ -373,8 +373,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
    filter : function() {
       var text = Ext.getCmp(this.id + '-search-in-grid').getValue();
 
-      var stringency = this.observableDisplaySettings.getStringency();
-      var queryGenesOnly = this.observableDisplaySettings.getQueryGenesOnly();
+      var stringency = this.coexDisplaySettings.getStringency();
+      var queryGenesOnly = this.coexDisplaySettings.getQueryGenesOnly();
       var queryGeneIds = this.coexpressionSearchData.getQueryGeneIds();
 
       var value;
@@ -582,10 +582,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
   
    exportData : function() {
       var filteredData;
-      var queryGenesOnly = this.observableDisplaySettings.getQueryGenesOnly();
-      var stringency = this.observableDisplaySettings.getStringency();
+      var queryGenesOnly = this.coexDisplaySettings.getQueryGenesOnly();
+      var stringency = this.coexDisplaySettings.getStringency();
 
-      if (queryGenesOnly) {
+      if (queryGenesOnly&&!this.coexpressionSearchData.searchCommandUsed.queryGenesOnly) {
          filteredData = Gemma.CoexVOUtil.trimKnownGeneResults(this.coexpressionSearchData.getQueryGenesOnlyResults(), stringency);
       } else {
          var combinedData = this.coexpressionSearchData.getDisplayedResults();

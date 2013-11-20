@@ -155,7 +155,7 @@ Ext.onReady(function() {
             layoutOnTabChange: true,
             hideMode: 'offsets',
             coexpressionSearchData: coexpressionSearchData,
-            observableDisplaySettings : coexDisplaySettings
+            coexDisplaySettings : coexDisplaySettings
         });
 
         var cytoscapePanel = new Gemma.CytoscapeJSPanel({

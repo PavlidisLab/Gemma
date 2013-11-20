@@ -184,9 +184,6 @@ Gemma.CoexVOUtil = {
 		var kglength = knowngenes.length;
 		for (i = 0; i < kglength; i++) {
 
-			// go in only if the query or known gene is contained in the
-			// original query geneids AND the stringency is >= the filter
-			// stringency
 			if ((knowngenes[i].posSupp >= filterStringency || knowngenes[i].negSupp >= filterStringency)) {
 				trimmedGeneResults.push(knowngenes[i]);
 			} // end if

@@ -72,7 +72,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
     			ownerRef.refreshLayout();
     		}
     		else{//should be arbor
-    			console.log('cytoscape event: layoutstop, layout name:');
+    			console.log('cytoscape event: layoutstop, layout name: arbor');
     			ownerRef.cytoscapePanel.loadMask.hide();
     			ownerRef.nodeDegreeEmphasize(true); 
     			ownerRef.zoomToFit();
@@ -330,7 +330,27 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
             autoScroll: true
         });
         win.show();
-    }
+    },
+    
+    exportText : function() {
+        var filteredData;
+        var queryGenesOnly = this.coexDisplaySettings.getQueryGenesOnly();
+        var stringency = this.coexDisplaySettings.getStringency();
+
+        if (queryGenesOnly  && !this.coexpressionSearchData.searchCommandUsed.queryGenesOnly) {
+           filteredData = Gemma.CoexVOUtil.trimKnownGeneResults(this.coexpressionSearchData.getQueryGenesOnlyResults(), stringency);
+        } 
+        else {
+        	filteredData = Gemma.CoexVOUtil.trimKnownGeneResults(this.coexpressionSearchData.getCytoscapeKnownGeneResults(), stringency);
+           
+        }
+
+        var win = new Gemma.CoexpressionDownloadWindow({
+              title : "Coexpression Data",
+              queryGenesOnlyResults: true
+           });
+        win.convertText(filteredData);
+     }
     
     
 });

@@ -17,8 +17,12 @@ Gemma.CoexpressionDownloadWindow = Ext.extend(Ext.Window, {
 
       makeHeaderRow : function() {
          var row = [];
-         row.push("Query Gene", "Query Gene NCBI Id", "Coexpressed Gene", "Coexpressed Gene NCBI Id", "Specificity", "Positive Support", "Negative Support", "Datasets tested");
-
+         if(!this.queryGenesOnlyResults){
+        	 row.push("Query Gene", "Query Gene NCBI Id", "Coexpressed Gene", "Coexpressed Gene NCBI Id", "Specificity", "Positive Support", "Negative Support", "Datasets tested");
+         }
+         else{
+        	 row.push("Query Gene", "Query Gene NCBI Id", "Coexpressed Gene", "Coexpressed Gene NCBI Id", "Specificity", "Positive Support", "Negative Support");
+         }
          return row.join('\t') + "\n";
       },
 
@@ -31,10 +35,18 @@ Gemma.CoexpressionDownloadWindow = Ext.extend(Ext.Window, {
 
       makeResultsRow : function(coexresult) {
          var row = [];
+         //query genes only searches(i.e. the viz search) don't populated numTestedIn for performance reasons.
+         if(!this.queryGenesOnlyResults){
+         
          row.push(coexresult.queryGene.officialSymbol, coexresult.queryGene.ncbiId, coexresult.foundGene.officialSymbol, coexresult.foundGene.ncbiId,
             coexresult.foundGeneNodeDegree > coexresult.queryGeneNodeDegree ? this.decimalPlaceRounder(coexresult.foundGeneNodeDegree) : this
                .decimalPlaceRounder(coexresult.queryGeneNodeDegree), coexresult.posSupp, coexresult.negSupp, coexresult.numTestedIn);
-
+         }
+         else{
+        	 row.push(coexresult.queryGene.officialSymbol, coexresult.queryGene.ncbiId, coexresult.foundGene.officialSymbol, coexresult.foundGene.ncbiId,
+        	            coexresult.foundGeneNodeDegree > coexresult.queryGeneNodeDegree ? this.decimalPlaceRounder(coexresult.foundGeneNodeDegree) : this
+        	               .decimalPlaceRounder(coexresult.queryGeneNodeDegree), coexresult.posSupp, coexresult.negSupp);
+         }
          return row.join('\t') + "\n";
       },
 

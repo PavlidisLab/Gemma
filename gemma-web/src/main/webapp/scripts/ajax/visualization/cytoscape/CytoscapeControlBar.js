@@ -208,7 +208,15 @@ Gemma.CytoscapeControlBar = Ext.extend(Ext.Toolbar, {
                                     this.display.exportPNG();
                                 },
                                 scope: this
-                            }/*,
+                            },
+                            {
+                                text: 'Save as text',
+                                handler: function () {
+                                    this.display.exportText();
+                                },
+                                scope: this
+                            }
+                            /*,
                             {
                                 text: 'Save as GraphML',
                                 handler: function () {
