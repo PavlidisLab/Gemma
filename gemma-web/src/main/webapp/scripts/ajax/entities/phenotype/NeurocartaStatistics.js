@@ -21,6 +21,9 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 	}, {
 		name : "lastUpdateDate",
 		type : "date"
+	}, {
+		name : "pathToDownloadFile",
+		type : "string"
 	} ]),
 	initComponent : function() {
 
@@ -34,7 +37,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 
 			reader : new Ext.data.JsonReader({
 				fields : [ 'name', 'description', 'webUri', 'numEvidence',
-						'numGenes', 'numPhenotypes', 'numPublications', 'lastUpdateDate' ]
+						'numGenes', 'numPhenotypes', 'numPublications', 'lastUpdateDate', 'pathToDownloadFile' ]
 			})
 		});
 		
@@ -64,6 +67,17 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 			}
 			else{
 				return val;
+			}
+		};
+		
+		
+		function renderDownload(val, metaData, record, row, col, store,
+				gridView) {
+			if( record.data.name.indexOf("Total") != -1){
+				return '<A HREF=\'' + val + '\' TARGET="_blank">'+'All'+'</A>';
+			}
+			else{
+				return '<A HREF=\'' + val + '\' TARGET="_blank">'+record.data.name+'</A>';
 			}
 		};
 
@@ -115,6 +129,11 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 					renderer : renderBold,
 					width : 0.55,
 					renderer : Ext.util.Format.dateRenderer('Y/M/d')
+				}, {
+					header : "Download annotations ",
+					dataIndex : "pathToDownloadFile",
+					renderer : renderDownload,
+					width : 0.55,
 				}
 				]
 			})
