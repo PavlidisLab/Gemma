@@ -127,7 +127,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
                     log.info( "teating line: " + lineNumber++ );
 
-                    // Case 1: lets use the Omim id to find the mapping phenotype, if it exists and not obsolote
+                    // Case 1: lets use the Omim id to find the mapping phenotype, if it exists and not obsolete
                     if ( diseaseFileMappingFound.get( omimId ) != null ) {
                         phenotypesUri = diseaseFileMappingFound.get( omimId );
                         conditionUsed = "Case 1: Found with OMIM ID";
@@ -166,7 +166,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
                             GenericEvidenceValueObject e = new GenericEvidenceValueObject( new Integer( ncbiGeneId ),
                                     phenotypes, description, evidenceCode, false, evidenceSource );
 
-                            // those 2 are wrong but doesnt matter much
+                            // those 2 are wrong but doesn't matter much
                             evidenceSource.setExternalUrl( conditionUsed );
                             e.setGeneOfficialName( omimGeneId );
                             e.setGeneOfficialSymbol( geneSymbol );
@@ -305,20 +305,26 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             // using the OMIM gene id and OMIM phenotype id keep what is common
             Collection<Long> commonsPubmeds = findCommonPubmed( new Long( omimGeneId ), new Long( omimPhenotypeId ) );
 
-            for ( Long pubmed : commonsPubmeds ) {
-                String evidenceLine = geneSymbol + "\t" + ncbiGeneId + "\t" + evidenceCode + "\t" + description + "\t"
-                        + omimPhenotypeId + "\t" + allValueUri + "\t" + phenotypeValue + "\t" + conditionUsed + "\t"
-                        + "\t" + OMIM + "\t" + pubmed + "\t" + omimGeneId + "\n";
-
-                outFinalResults.write( evidenceLine );
-            }
-
             if ( commonsPubmeds.isEmpty() ) {
                 String evidenceLine = geneSymbol + "\t" + ncbiGeneId + "\t" + evidenceCode + "\t" + description + "\t"
                         + omimPhenotypeId + "\t" + allValueUri + "\t" + phenotypeValue + "\t" + conditionUsed + "\t"
-                        + "\t" + OMIM + "\t" + "" + "\t" + omimGeneId + "\n";
+                         + OMIM + "\t" + "" + "\t" + omimGeneId + "\n";
 
                 outFinalResults.write( evidenceLine );
+            } else {
+
+                String allPubmeds = "";
+
+                for ( Long pubmed : commonsPubmeds ) {
+                    allPubmeds = allPubmeds + pubmed + "; ";
+                }
+
+                String evidenceLine = geneSymbol + "\t" + ncbiGeneId + "\t" + evidenceCode + "\t" + description + "\t"
+                        + omimPhenotypeId + "\t" + allValueUri + "\t" + phenotypeValue + "\t" + conditionUsed + "\t"
+                        + OMIM + "\t" + allPubmeds + "\t" + omimGeneId + "\n";
+
+                outFinalResults.write( evidenceLine );
+
             }
         }
     }

@@ -403,7 +403,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                     }
                 }
             }
-
         }
     }
 
@@ -411,7 +410,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected ArrayList<String> parseFileFindExcludeTerms() throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader(
-                OmimDatabaseImporter.class.getResourceAsStream( EXCLUDE_KEYWORDS ) ) );
+                ExternalDatabaseEvidenceImporterAbstractCLI.class.getResourceAsStream( EXCLUDE_KEYWORDS ) ) );
 
         String line = "";
 
@@ -600,7 +599,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
             valueUriForCondition = annotatorResponseFirst.getValueUri();
             valueForCondition = annotatorResponseFirst.getValue();
 
-            if ( annotatorResponseFirst.getOntologyUsed().equalsIgnoreCase( "DOID" ) ) {
+            if ( annotatorResponseFirst.getOntologyUsed().equalsIgnoreCase( "Human Disease Ontology" ) ) {
 
                 if ( annotatorResponseFirst.isExactMatch() ) {
 
@@ -609,7 +608,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                 } else if ( annotatorResponseFirst.isSynonym() ) {
                     conditionUsed = "Case 5: Found Synonym With Disease Annotator Synonym";
                 }
-            } else if ( annotatorResponseFirst.getOntologyUsed().equalsIgnoreCase( "HP" ) ) {
+            } else if ( annotatorResponseFirst.getOntologyUsed().equalsIgnoreCase( "Human Phenotype Ontology" ) ) {
 
                 if ( annotatorResponseFirst.isExactMatch() ) {
 
@@ -635,7 +634,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
         // headers of the final out file to write
         outFinalResults
-                .write( "GeneSymbol\tGeneId\tPrimaryPubMed\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
+                .write( "GeneSymbol\tGeneId\tPrimaryPubMeds\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
     }
 
     // many importers can have different headers, this is 1 possible case
@@ -643,20 +642,20 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
         // headers of the final file
         outFinalResults
-                .write( "GeneSymbol\tTaxon\tPrimaryPubMed\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
+                .write( "GeneSymbol\tTaxon\tPrimaryPubMeds\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypes\n" );
     }
 
     // many importers can have different headers, this is 1 possible case
     protected void writeOutputFileHeaders3() throws IOException {
         outFinalResults
-                .write( "GeneSymbol\tPrimaryPubMed\tEvidenceCode\tComments\tScore\tStrength\tScoreType\tExternalDatabase\tDatabaseLink\tPhenotypes\tTaxon\n" );
+                .write( "GeneSymbol\tPrimaryPubMeds\tEvidenceCode\tComments\tScore\tStrength\tScoreType\tExternalDatabase\tDatabaseLink\tPhenotypes\tTaxon\n" );
     }
 
     // many importers can have different headers, this is 1 possible case
     protected void writeOutputFileHeaders4() throws IOException {
         // headers of the final file
         outFinalResults
-                .write( "GeneSymbol\tGeneId\tEvidenceCode\tComments\tDatabaseLink\tPhenotypes\tExtraInfo\tExtraInfo\tExternalDatabase\tPrimaryPubMed\tExtraInfo\n" );
+                .write( "GeneSymbol\tGeneId\tEvidenceCode\tComments\tDatabaseLink\tPhenotypes\tExtraInfo\tExtraInfo\tExternalDatabase\tPrimaryPubMeds\tExtraInfo\n" );
     }
 
     // write all found in set to files and close files
@@ -738,7 +737,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     private HashSet<String> parseResultsToIgnore() throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader(
-                OmimDatabaseImporter.class.getResourceAsStream( RESULTS_TO_IGNORE ) ) );
+                ExternalDatabaseEvidenceImporterAbstractCLI.class.getResourceAsStream( RESULTS_TO_IGNORE ) ) );
 
         String line = "";
 
@@ -857,7 +856,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     private void parseDescriptionToIgnore() throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader(
-                OmimDatabaseImporter.class.getResourceAsStream( DESCRIPTION_TO_IGNORE ) ) );
+                ExternalDatabaseEvidenceImporterAbstractCLI.class.getResourceAsStream( DESCRIPTION_TO_IGNORE ) ) );
 
         String line = "";
 

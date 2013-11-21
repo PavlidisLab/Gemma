@@ -144,7 +144,7 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
         outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
 
         outFinalResults
-                .write( "GeneSymbol\tGeneId\tPrimaryPubMed\tEvidenceCode\tComments\tIsNegative\tExternalDatabase\tDatabaseLink\tPhenotypes\tScoreType\tScore\tStrength\n" );
+                .write( "GeneSymbol\tGeneId\tPrimaryPubMeds\tEvidenceCode\tComments\tIsNegative\tExternalDatabase\tDatabaseLink\tPhenotypes\tScoreType\tScore\tStrength\n" );
 
         BufferedReader brAutismGeneDataset = new BufferedReader( new FileReader( autismGeneDataset ) );
 
@@ -214,11 +214,17 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
                 descriptionInScore = " " + descriptionInScore;
             }
 
-            for ( String pudmed : literaturePubMed ) {
+            if ( !literaturePubMed.isEmpty() ) {
+
+                String allPubmeds = "";
+
+                for ( String pudmed : literaturePubMed ) {
+                    allPubmeds = allPubmeds + pudmed + ";";
+                }
 
                 outFinalResults.write( geneSymbol + "\t" );
                 outFinalResults.write( nbciID + "\t" );
-                outFinalResults.write( pudmed + "\t" );
+                outFinalResults.write( allPubmeds + "\t" );
 
                 outFinalResults.write( "TAS" + "\t" );
                 outFinalResults.write( description + descriptionInScore + "\t" );
@@ -230,13 +236,20 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
                 outFinalResults.write( "autism spectrum disorder" + "\t" );
                 writeScore( scoreVO );
                 outFinalResults.newLine();
+
             }
 
-            for ( String pudmed : literaturePubMedNegative ) {
+            if ( !literaturePubMedNegative.isEmpty() ) {
 
+                String allPubmeds = "";
+
+                for ( String pudmed : literaturePubMedNegative ) {
+                    allPubmeds = allPubmeds + pudmed + ";";
+                }
+                
                 outFinalResults.write( geneSymbol + "\t" );
                 outFinalResults.write( nbciID + "\t" );
-                outFinalResults.write( pudmed + "\t" );
+                outFinalResults.write( allPubmeds + "\t" );
 
                 outFinalResults.write( "TAS" + "\t" );
                 outFinalResults.write( description + descriptionInScore + "\t" );
@@ -249,7 +262,6 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
                 writeScore( scoreVO );
                 outFinalResults.newLine();
             }
-
         }
 
         brAutismGeneDataset.close();
