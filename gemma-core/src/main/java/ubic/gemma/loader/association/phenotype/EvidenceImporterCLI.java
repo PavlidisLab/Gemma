@@ -13,7 +13,7 @@
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.loader.association.phenotype;
-//TODO
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -42,6 +42,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject;
 
 /**
  * Class used to load evidence into Neurocarta The file used to import the evidence must have at least those columns:
@@ -65,7 +66,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         args[3] = "administrator";
         // the path of the file
         args[4] = "-f";
-        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/CTD_2013-08-30_11:38.tsv";
+        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/finalResults.tsv";
         // create the evidence in the database
         args[6] = "-c";
         args[7] = "true";
@@ -73,7 +74,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // true == production database
         // false == testDatabase, put gene not found to NCBI 1
         args[8] = "-e";
-        args[9] = "false";
+        args[9] = "true";
 
         return args;
     }
@@ -244,17 +245,13 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             try {
 
                 if ( evidenceType.equals( this.LITERATURE_EVIDENCE ) ) {
-                    String primaryReferencePubmed = tokens[this.mapColumns.get( "PrimaryPubMed" )].trim();
 
-                    if ( primaryReferencePubmed.equalsIgnoreCase( "" ) ) {
-                        evidenceValueObjects.add( convertFileLine2GenericValueObjects( tokens ) );
-                    } else {
-                        evidenceValueObjects.add( convertFileLine2LiteratureValueObjects( tokens ) );
-                    }
+                    evidenceValueObjects.add( convert2LiteratureOrGenereicVO( tokens ) );
+
                 } else if ( evidenceType.equals( this.EXPERIMENTAL_EVIDENCE ) ) {
                     evidenceValueObjects.add( convertFileLine2ExperimentalValueObjects( tokens ) );
-                } else if ( evidenceType.equals( this.GENERIC_EVIDENCE ) ) {
-                    evidenceValueObjects.add( convertFileLine2GenericValueObjects( tokens ) );
+                } else {
+                    throw new Exception( "unknow type" );
                 }
             } catch ( EntityNotFoundException e ) {
                 writeWarning( e.getMessage() );
@@ -274,6 +271,17 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     private void populateCommonFields( EvidenceValueObject evidence, String[] tokens ) throws IOException {
 
         boolean isNegativeEvidence = false;
+
+        String primaryReferencePubmeds = tokens[this.mapColumns.get( "PrimaryPubMeds" )].trim();
+
+        if ( !primaryReferencePubmeds.equalsIgnoreCase( "" ) ) {
+            String[] tokensPrimary = primaryReferencePubmeds.split( ";" );
+
+            for ( String primary : tokensPrimary ) {
+                evidence.getPhenotypeAssPubVO().add(
+                        PhenotypeAssPubValueObject.createPrimaryPublication( primary.trim() ) );
+            }
+        }
 
         String geneSymbol = tokens[this.mapColumns.get( "GeneSymbol" )].trim();
         String geneID = "";
@@ -344,30 +352,20 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     /**
-     * convert for GenericEvidenceValueObject
-     */
-    private GenericEvidenceValueObject convertFileLine2GenericValueObjects( String[] tokens ) throws IOException {
-
-        GenericEvidenceValueObject evidence = new GenericEvidenceValueObject();
-
-        populateCommonFields( evidence, tokens );
-
-        return evidence;
-    }
-
-    /**
      * convert for LiteratureEvidenceValueObject
      */
-    private LiteratureEvidenceValueObject convertFileLine2LiteratureValueObjects( String[] tokens ) throws IOException {
+    private EvidenceValueObject convert2LiteratureOrGenereicVO( String[] tokens ) throws IOException {
+        EvidenceValueObject evidence = null;
 
-        LiteratureEvidenceValueObject evidence = new LiteratureEvidenceValueObject();
+        String primaryReferencePubmeds = tokens[this.mapColumns.get( "PrimaryPubMeds" )].trim();
+
+        if ( primaryReferencePubmeds.equalsIgnoreCase( "" ) ) {
+            evidence = new GenericEvidenceValueObject();
+        } else {
+            evidence = new LiteratureEvidenceValueObject();
+        }
+
         populateCommonFields( evidence, tokens );
-
-        String primaryReferencePubmed = tokens[this.mapColumns.get( "PrimaryPubMed" )].trim();
-
-        CitationValueObject citationValueObject = new CitationValueObject();
-        citationValueObject.setPubmedAccession( primaryReferencePubmed );
-      //  evidence.setCitationValueObject( citationValueObject );
 
         return evidence;
     }
@@ -375,17 +373,12 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     /**
      * convert for ExperimentalEvidenceValueObject
      */
+    // TODO
     private ExperimentalEvidenceValueObject convertFileLine2ExperimentalValueObjects( String[] tokens )
             throws IOException {
 
         ExperimentalEvidenceValueObject evidence = new ExperimentalEvidenceValueObject();
         populateCommonFields( evidence, tokens );
-
-        String primaryReferencePubmed = tokens[this.mapColumns.get( "PrimaryPubMed" )].trim();
-
-        CitationValueObject citationValueObject = new CitationValueObject();
-        citationValueObject.setPubmedAccession( primaryReferencePubmed );
-      //  evidence.setPrimaryPublicationCitationValueObject( citationValueObject );
 
         String reviewReferencePubmed = tokens[this.mapColumns.get( "OtherPubMed" )].trim();
 
@@ -398,7 +391,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         for ( String relevantPubMedID : relevantPublicationsPubmed ) {
             CitationValueObject relevantPublicationValueObject = new CitationValueObject();
             relevantPublicationValueObject.setPubmedAccession( relevantPubMedID );
-         //   evidence.getRelevantPublicationsCitationValueObjects().add( relevantPublicationValueObject );
+            evidence.getPhenotypeAssPubVO().add(
+                    PhenotypeAssPubValueObject.createRelevantPublication( relevantPubMedID ) );
         }
 
         Set<String> developmentStage = trimArray( tokens[this.mapColumns.get( "DevelopmentalStage" )].split( ";" ) );
@@ -471,7 +465,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             ot = findExactTerm( ontologyTerms, phenotypeToSearch );
 
             if ( ot == null ) {
-
                 // search hp
                 ontologyTerms = this.humanPhenotypeOntologyService.findTerm( phenotypeToSearch );
                 ot = findExactTerm( ontologyTerms, phenotypeToSearch );
@@ -623,7 +616,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             String error = "Found more than 1 gene using Symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon;
 
             for ( Gene geneWithTaxon : genesWithTaxon ) {
-                writeError( error + "\tGene NCBI: " + geneWithTaxon.getNcbiId() );
+                writeError( error + "\tGene NCBI: " + geneWithTaxon.getNcbiGeneId() );
             }
         }
 

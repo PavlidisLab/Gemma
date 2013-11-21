@@ -147,10 +147,10 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
             log.info( "waiting for the Disease Ontology to load" );
         }
 
-        while ( this.mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
-            wait( 3000 );
-            log.info( "waiting for the MP Ontology to load" );
-        }
+        // while ( this.mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
+        // wait( 3000 );
+        // log.info( "waiting for the MP Ontology to load" );
+        // }
 
         while ( this.humanPhenotypeOntologyService.isOntologyLoaded() == false ) {
             wait( 3000 );
@@ -233,8 +233,8 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 this.mapColumns.put( "DatabaseLink", index );
             } else if ( header.equalsIgnoreCase( "Phenotypes" ) ) {
                 this.mapColumns.put( "Phenotypes", index );
-            } else if ( header.equalsIgnoreCase( "PrimaryPubMed" ) ) {
-                this.mapColumns.put( "PrimaryPubMed", index );
+            } else if ( header.equalsIgnoreCase( "PrimaryPubMeds" ) ) {
+                this.mapColumns.put( "PrimaryPubMeds", index );
             } else if ( header.equalsIgnoreCase( "OtherPubMed" ) ) {
                 this.mapColumns.put( "OtherPubMed", index );
             } else if ( header.equalsIgnoreCase( "Score" ) ) {
@@ -298,20 +298,16 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         if ( this.mapColumns.containsKey( "Experiment" ) && this.mapColumns.containsKey( "Treatment" )
                 && this.mapColumns.containsKey( "ExperimentDesign" ) && this.mapColumns.containsKey( "OrganismPart" )
                 && this.mapColumns.containsKey( "BioSource" ) && this.mapColumns.containsKey( "DevelopmentalStage" )
-                && this.mapColumns.containsKey( "OtherPubMed" ) && this.mapColumns.containsKey( "PrimaryPubMed" ) ) {
+                && this.mapColumns.containsKey( "OtherPubMed" ) && this.mapColumns.containsKey( "PrimaryPubMeds" ) ) {
 
             log.info( "The type of Evidence found is: " + this.EXPERIMENTAL_EVIDENCE );
             loadServices( true );
             return this.EXPERIMENTAL_EVIDENCE;
-        } else if ( this.mapColumns.containsKey( "PrimaryPubMed" ) ) {
-            log.info( "The type of Evidence found is: " + this.LITERATURE_EVIDENCE );
-            loadServices( false );
-            return this.LITERATURE_EVIDENCE;
         }
 
-        log.info( "The type of Evidence found is: " + this.GENERIC_EVIDENCE );
         loadServices( false );
-        return this.GENERIC_EVIDENCE;
+
+        return this.LITERATURE_EVIDENCE;
 
     }
 
