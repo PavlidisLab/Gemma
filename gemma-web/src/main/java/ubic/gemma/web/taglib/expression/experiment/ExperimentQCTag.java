@@ -40,6 +40,8 @@ public class ExperimentQCTag extends TagSupport {
 
     private boolean hasCorrMat = false;
 
+    private boolean hasOutliers = false;
+    
     @SuppressWarnings("unused")
     private boolean hasCorrDist = false;
 
@@ -126,7 +128,12 @@ public class ExperimentQCTag extends TagSupport {
                     + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
 
             buf.append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeCorrMat.html?id="
-                    + this.eeid + "&text=1\">Get data</a></li>" );
+                    + this.eeid + "&text=1\">Get data</a></li>");
+            
+            if ( hasOutliers ) {
+                buf.append( "<li><a title=\"Download a file containing the list of identified outlier samples\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/outliers.html?id="
+                        + this.eeid + "&text=1\">Identified outliers</a></li>");
+            }
 
             buf.append( "</ul></td>" );
         } else {
@@ -255,6 +262,13 @@ public class ExperimentQCTag extends TagSupport {
         this.hasCorrMat = value;
     }
 
+    /**
+     * @param value
+     */
+    public void setHasOutliers( boolean value ) {
+        this.hasOutliers = value;
+    }
+    
     /**
      * @param value
      */

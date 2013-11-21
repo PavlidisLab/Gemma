@@ -57,6 +57,16 @@ public interface OutlierDetectionService {
             boolean useRegression );
 
     /**
+     * @see OutlierDetectionService#identifyOutliers(ExpressionExperiment, DoubleMatrix, int, double) with default thresholds
+     * 
+     * @param ee
+     * @param cormat
+     * @return
+     */
+    public abstract Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee,
+            DoubleMatrix<BioAssay, BioAssay> cormat );
+    
+    /**
      * @param ee
      * @param cormat pre-computed correlation matrix.
      * @param quantileThreshold which quantile the correlation has to be in before it's considered potentially outlying
@@ -68,4 +78,11 @@ public interface OutlierDetectionService {
     public abstract Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee,
             DoubleMatrix<BioAssay, BioAssay> cormat, int quantileThreshold, double fractionThreshold );
 
+    /**
+     *  @see OutlierDetectionService#identifyOutliers(ExpressionExperiment, DoubleMatrix, int, double)
+     * 
+     * @param ee
+     * @return
+     */
+    public boolean hasOutliers( ExpressionExperiment ee );
 }

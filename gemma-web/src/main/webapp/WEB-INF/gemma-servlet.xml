@@ -411,6 +411,7 @@
 			<dwr:include method="markOutlier" />
 			<dwr:include method="unmarkOutlier" />
 			<dwr:include method="getBioAssays" />
+			<dwr:include method="getIdentifiedOutliers" />
 		</dwr:remote>
 	</bean>
 

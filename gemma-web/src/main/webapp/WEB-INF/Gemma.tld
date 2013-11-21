@@ -125,6 +125,11 @@
       </attribute> 
       <attribute>
          <description>default=false</description>
+         <name>hasOutliers</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=false</description>
          <name>hasCorrMat</name>
          <rtexprvalue>true</rtexprvalue>
       </attribute>

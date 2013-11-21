@@ -33,6 +33,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.analysis.preprocess.OutlierDetails;
+import ubic.gemma.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -63,6 +67,12 @@ public class BioAssayController {
     @Autowired
     private ExpressionExperimentService eeService;
 
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
+
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
     /**
      * @param eeId
      * @return
@@ -80,6 +90,38 @@ public class BioAssayController {
 
             BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
 
+            result.add( bioAssayValueObject );
+        }
+
+        log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
+
+        return result;
+    }
+
+    /**
+     * @param eeId
+     * @return
+     */
+    public Collection<BioAssayValueObject> getIdentifiedOutliers( Long eeId ) {
+        if ( eeId == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        ExpressionExperiment ee = eeService.load( eeId );
+        if ( ee == null ) {
+            log.warn( "Could not load experiment with id " + eeId );
+            return null;
+        }
+        ee = eeService.thawLite( ee );
+        Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
+
+        for ( OutlierDetails details : outliers ) {
+            BioAssay bioAssay = details.getBioAssay();
+            bioAssayService.thaw( bioAssay );
+            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( bioAssay );
             result.add( bioAssayValueObject );
         }
 

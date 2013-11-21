@@ -55,6 +55,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.preprocess.MeanVarianceService;
+import ubic.gemma.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -303,6 +304,9 @@ public class ExpressionExperimentController {
 
     @Autowired
     private MeanVarianceService meanVarianceService;
+
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -733,6 +737,7 @@ public class ExpressionExperimentController {
         qc.setEe( ee.getId() );
         qc.setEeManagerId( ee.getId() + "-eemanager" );
         qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
+        qc.setHasOutliers( outlierDetectionService.hasOutliers( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
@@ -1580,6 +1585,7 @@ public class ExpressionExperimentController {
     }
 
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
+        mav.addObject( "hasOutliers", outlierDetectionService.hasOutliers( expressionExperiment ) );
         mav.addObject( "hasCorrMat", sampleCoexpressionMatrixService.hasMatrix( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );

@@ -61,13 +61,30 @@ public class ExperimentalDesignWriter {
     public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader, boolean sortByDesign )
             throws IOException {
 
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+        boolean writeBaseHeader = writeHeader;
+        write( writer, ee, bioAssays, writeBaseHeader, writeHeader, sortByDesign );
+    }
+    
+    /**
+     * @param writer
+     * @param ExpressionExperiment ee
+     * @param writeBaseHeader comments
+     * @param writeHeader column names
+     * @param bioAssays
+     * @param sortByDesign whether the design should be arranged in the order defined by
+     *        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
+     * @throws IOException
+     */
+    public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader, boolean writeHeader, boolean sortByDesign )
+            throws IOException {
+
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
         /*
          * See BaseExpressionDataMatrix.setUpColumnElements() for how this is constructed for the DataMatrix, and for
          * some notes about complications.
          */
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
         Map<BioMaterial, Collection<BioAssay>> bioMaterials = new HashMap<BioMaterial, Collection<BioAssay>>();
         for ( BioAssay bioAssay : bioAssays ) {
             BioMaterial bm = bioAssay.getSampleUsed();
@@ -85,7 +102,7 @@ public class ExperimentalDesignWriter {
         StringBuffer buf = new StringBuffer();
 
         if ( writeHeader ) {
-            writeHeader( writer, ee, orderedFactors, writeHeader, buf );
+            writeHeader( writer, ee, orderedFactors, writeBaseHeader, buf );
         }
 
         for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
@@ -132,13 +149,15 @@ public class ExperimentalDesignWriter {
      * @param writer
      * @param expressionExperiment
      * @param factors
-     * @param writeHeader
+     * @param writeBaseHeader
      * @param buf
      */
     private void writeHeader( Writer writer, ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors, boolean writeHeader, StringBuffer buf ) {
+            Collection<ExperimentalFactor> factors, boolean writeBaseHeader, StringBuffer buf ) {
 
-        ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, buf );
+        if ( writeBaseHeader ) {
+            ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, buf );
+        }
 
         for ( ExperimentalFactor ef : factors ) {
             buf.append( ExperimentalDesignImporterImpl.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );

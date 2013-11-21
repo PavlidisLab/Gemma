@@ -97,6 +97,8 @@ import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
+import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -108,8 +110,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.view.TextView;
 import cern.colt.list.DoubleArrayList;
@@ -184,9 +186,10 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * @param id of experiment
+     * @throws IOException
      */
     @RequestMapping("/expressionExperiment/outliers.html")
-    public ModelAndView identifyOutliers( Long id ) {
+    public ModelAndView identifyOutliers( Long id ) throws IOException {
 
         if ( id == null ) {
             log.warn( "No id!" );
@@ -199,19 +202,31 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
+        // identify outliers
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
 
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix,
-                15, 0.9 );
-
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
         if ( !outliers.isEmpty() ) {
             for ( OutlierDetails details : outliers ) {
-                // TODO
-                details.getBioAssay();
+                bioAssays.add( details.getBioAssay() );
+
             }
         }
 
-        return null; // nothing to return;
+        // and write it out
+        StringWriter writer = new StringWriter();
+        StringBuffer buf = writer.getBuffer();
+
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", buf );
+
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ee = expressionExperimentService.thawLiter( ee );
+        edWriter.write( writer, ee, bioAssays, false, true, true );
+
+        ModelAndView mav = new ModelAndView( new TextView() );
+        mav.addObject( TextView.TEXT_PARAM, buf.toString() );
+        return mav;
     }
 
     /**

@@ -84,6 +84,9 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
     /*
      * Calculate index (rank) of desired quantile using R's method #8
      */
@@ -148,6 +151,17 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return identifyOutliers( ee, cormat, quantileThreshold, fractionThreshold );
     }
 
+    /**
+     * 
+     * @param ee
+     * @param cormat
+     * @return
+     */
+    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee,
+            DoubleMatrix<BioAssay, BioAssay> cormat ) {
+        return identifyOutliers(ee , cormat, DEFAULT_QUANTILE, DEFAULT_FRACTION);
+    }
+            
     /*
      * (non-Javadoc)
      * 
@@ -337,7 +351,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
             }
             if ( batch != null ) {
                 importantFactors.remove( batch );
-                System.out.println( "Removed 'batch' from the list of significant factors." );
+                log.info( "Removed 'batch' from the list of significant factors." );
             }
             if ( !importantFactors.isEmpty() ) {
                 /* If in test mode, make note of significant experimental factors */
@@ -510,6 +524,12 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     }
 
+    public boolean hasOutliers( ExpressionExperiment ee ) {
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        Collection<OutlierDetails> outliers = identifyOutliers( ee, sampleCorrelationMatrix, DEFAULT_QUANTILE, DEFAULT_FRACTION);
+        return !outliers.isEmpty();
+    }
+    
     // // Prints residual matrix to file. May be used for testing. Note: need to change path of output file.
     // private void printResidualMatrix( ExpressionDataDoubleMatrix resmat ) {
     //

@@ -87,6 +87,8 @@ BioAssayController.unmarkOutlier = function(p0, callback) {
 };
 BioAssayController.getBioAssays = function(p0, callback) {
 };
+BioAssayController.getIdentifiedOutliers = function(p0, callback) {
+};
 
 if (typeof BioMaterialController === 'undefined') {
     var BioMaterialController = {};

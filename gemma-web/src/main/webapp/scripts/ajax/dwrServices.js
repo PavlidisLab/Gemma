@@ -160,6 +160,9 @@ BioAssayController.unmarkOutlier = function(p0, callback) {
 BioAssayController.getBioAssays = function(p0, callback) {
    dwr.engine._execute(BioAssayController._path, 'BioAssayController', 'getBioAssays', p0, callback);
 };
+BioAssayController.getIdentifiedOutliers = function(p0, callback) {
+   dwr.engine._execute(BioAssayController._path, 'BioAssayController', 'getIdentifiedOutliers', p0, callback);
+};
 
 // ====================================================================================
 if ( typeof BioMaterialController === 'undefined' ) {
