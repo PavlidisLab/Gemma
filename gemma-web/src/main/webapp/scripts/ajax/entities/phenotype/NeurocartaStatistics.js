@@ -73,12 +73,11 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 		
 		function renderDownload(val, metaData, record, row, col, store,
 				gridView) {
-			if( record.data.name.indexOf("Total") != -1){
-				return '<A HREF=\'' + val + '\' TARGET="_blank">'+'All'+'</A>';
-			}
-			else{
-				return '<A HREF=\'' + val + '\' TARGET="_blank">'+record.data.name+'</A>';
-			}
+			
+			var imageSrc = '/Gemma/images/download.gif';
+			
+			return '<A HREF=\'' + val + '\' TARGET="_blank"><img src="' + imageSrc + '" /></A>';
+
 		};
 
 		Ext.apply(this, {
@@ -130,10 +129,10 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 					width : 0.55,
 					renderer : Ext.util.Format.dateRenderer('Y/M/d')
 				}, {
-					header : "Download annotations ",
+					header : "Download",
 					dataIndex : "pathToDownloadFile",
 					renderer : renderDownload,
-					width : 0.55,
+					width : 0.25,
 				}
 				]
 			})
