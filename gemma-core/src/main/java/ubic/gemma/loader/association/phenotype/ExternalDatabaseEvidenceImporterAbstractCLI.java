@@ -40,6 +40,7 @@ import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.Settings;
@@ -110,6 +111,8 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // for a search term we always get the answer, no reason to call the annotator again if it gave us the answer for
     // that request before
     private HashMap<String, Collection<AnnotatorResponse>> cacheAnswerFromAnnotator = new HashMap<String, Collection<AnnotatorResponse>>();
+
+    private HashMap<Integer, String> geneToSymbol = new HashMap<Integer, String>();
 
     // load all needed services
     protected synchronized void loadServices( String[] args ) throws Exception {
@@ -658,6 +661,12 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                 .write( "GeneSymbol\tGeneId\tEvidenceCode\tComments\tDatabaseLink\tPhenotypes\tExtraInfo\tExtraInfo\tExternalDatabase\tPrimaryPubMeds\tExtraInfo\n" );
     }
 
+    protected void writeOutputFileHeaders5() throws IOException {
+        // headers of the final file
+        outFinalResults
+                .write( "Phenotypes\tExtraInfo\tGeneSymbol\tGeneId\tPrimaryPubMeds\tComments\tEvidenceCode\tDatabaseLink\tExternalDatabase\n" );
+    }
+
     // write all found in set to files and close files
     // the reason this is done that way is to not have duplicates for 2 files
     protected void writeBuffersAndCloseFiles() throws IOException {
@@ -872,6 +881,22 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // the search key will only work if lower case, the key is always lower case, this method take care of it
     protected Collection<String> findManualMappingTermValueUri( String termId ) {
         return manualDescriptionToValuesUriMapping.get( termId.toLowerCase() );
+    }
+
+    protected String geneToSymbol( Integer geneId ) {
+        // little cache from previous results just to speed up things
+        if ( geneToSymbol.get( geneId ) != null ) {
+            return geneToSymbol.get( geneId );
+        }
+
+        Gene g = this.geneService.findByNCBIId( geneId );
+
+        if ( g != null ) {
+            geneToSymbol.put( geneId, g.getOfficialSymbol() );
+            return g.getOfficialSymbol();
+        }
+
+        return null;
     }
 
 }
