@@ -98,13 +98,14 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
         log.info( "Starting mean-variance computation" );
 
-        ExpressionExperiment updatedEe = expressionExperimentService.thawLiter( ee );
-        MeanVarianceRelation mvr = updatedEe.getMeanVarianceRelation();
+        MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
 
         if ( forceRecompute || mvr == null ) {
 
             log.info( "Recomputing mean-variance" );
 
+            ExpressionExperiment updatedEe = expressionExperimentService.thawLiter( ee );
+            
             ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( updatedEe );
             if ( intensities == null ) {
                 throw new IllegalStateException( "Could not locate intensity matrix for " + updatedEe.getShortName() );
@@ -128,7 +129,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
                 mvr = calculateMeanVariance( intensities, mvr );
 
-                meanVarianceServiceHelper.createMeanVariance( updatedEe, mvr );
+                meanVarianceServiceHelper.createMeanVariance( ee, mvr );
 
             }
         }
