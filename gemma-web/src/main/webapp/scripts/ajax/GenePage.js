@@ -15,9 +15,8 @@ Gemma.MAX_DIFF_RESULTS = 125;
 
 Gemma.GenePage = Ext.extend(Ext.TabPanel, {
 
-      autoScroll : true,
-      defaults : {
-         autoScroll : true,
+      
+      defaults : {         
          width : 850
       },
       deferredRender : true,
