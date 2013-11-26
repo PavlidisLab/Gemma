@@ -435,7 +435,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      */
     private void fillInNodeDegree( LinkAnalysis la ) {
 
-        Map<Long, Integer> pId2ND = new HashMap<Long, Integer>();
+        Map<Long, Integer> pId2ND = new HashMap<>();
         DoubleArrayList vals = new DoubleArrayList();
         int j = la.getDataMatrix().rows();
 
@@ -451,7 +451,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         DoubleArrayList ranks = Rank.rankTransform( vals );
 
         // convert to relative ranks.
-        Map<Long, Double> pId2NDRank = new HashMap<Long, Double>();
+        Map<Long, Double> pId2NDRank = new HashMap<>();
         for ( int i = 0; i < j; i++ ) {
             long id = la.getDataMatrix().getDesignElementForRow( i ).getId();
             double rank = ranks.get( i );
@@ -699,9 +699,13 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             deleteOldLinks( la );
             // Complete and persist the new analysis object.
             fillInNodeDegree( la );
+
             ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
 
+            analysisObj.setCoexpCorrelationDistribution( la.getCorrelationDistribution() );
+
             analysisObj = ( ProbeCoexpressionAnalysis ) persisterHelper.persist( analysisObj );
+
             la.setAnalysisObj( analysisObj );
         }
 

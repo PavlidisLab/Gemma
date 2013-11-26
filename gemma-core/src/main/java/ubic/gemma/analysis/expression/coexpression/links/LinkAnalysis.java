@@ -18,13 +18,9 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,18 +28,19 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.Link;
+import ubic.basecode.dataStructure.matrix.MatrixUtil;
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
-import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.Settings;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
@@ -112,106 +109,6 @@ public class LinkAnalysis {
 
         this.getLinks();
 
-        if ( expressionExperiment != null ) {// input is not from expression data file
-            this.writeCorrelationDistribution();
-            this.writeProbeDegreeDistribution();
-        }
-    }
-
-    /**
-     * Writes two flies: one the actual probe degrees, and the other a histogram (dist)
-     */
-    private void writeProbeDegreeDistribution() {
-
-        File outputDir = getOutputDir();
-
-        if ( outputDir == null ) return;
-
-        String distPath = outputDir + File.separator + expressionExperiment.getShortName() + ".degreeDist.txt";
-        String path = outputDir + File.separator + expressionExperiment.getShortName() + ".degrees.txt";
-
-        File outputFile = new File( path );
-        if ( outputFile.exists() ) {
-            outputFile.delete();
-        }
-
-        File outputDistFile = new File( distPath );
-        if ( outputDistFile.exists() ) {
-            outputDistFile.delete();
-        }
-
-        try {
-            FileWriter out = new FileWriter( outputFile );
-
-            out.write( "# Probe degree statistics (before filtering by probeDegreeThreshold)\n" );
-            out.write( "# date=" + ( new Date() ) + "\n" );
-            out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
-            out.write( "ProbeID\tProbeName\tNumLinks\n" );
-
-            for ( Integer i : probeDegreeMap.keySet() ) {
-                CompositeSequence probe = this.getProbe( i );
-                out.write( probe.getId() + "\t" + probe.getName() + "\t" + probeDegreeMap.get( i ) + "\n" );
-            }
-
-            out.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-
-        Histogram hist = new Histogram( "foo", 100, 0, 1000 );
-        for ( Integer i : probeDegreeMap.values() ) {
-            hist.fill( i.doubleValue() );
-        }
-
-        double[] counts = hist.getArray();
-        try {
-            FileWriter out = new FileWriter( outputDistFile );
-
-            int d = ( int ) hist.min();
-            int step = ( int ) hist.stepSize();
-
-            out.write( "# Probe degree histogram (before filtering by probeDegreeThreshold)\n" );
-            out.write( "# date=" + ( new Date() ) + "\n" );
-            out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
-            out.write( "Bin\tCount\n" );
-
-            for ( int i = 0; i < counts.length; i++ ) {
-                Double v = counts[i];
-                out.write( d + "\t" + v.intValue() + "\n" );
-                d += step;
-            }
-
-            out.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-
-    }
-
-    /**
-     * @return
-     */
-    private File getOutputDir() {
-        File outputDir = null;
-
-        if ( this.config.isUseDb() ) {
-            outputDir = new File( Settings.getAnalysisStoragePath() );
-        } else {
-            outputDir = new File( System.getProperty( "user.home" ) + File.separator + "gemma.output" );
-            if ( !outputDir.exists() ) {
-                boolean ok = outputDir.mkdirs();
-                if ( !ok ) {
-                    log.warn( "Cannot create " + outputDir );
-                    return null;
-                }
-            }
-        }
-
-        if ( !outputDir.canWrite() ) {
-            log.warn( "Cannot write to " + outputDir );
-            return null;
-        }
-        return outputDir;
     }
 
     /**
@@ -231,46 +128,16 @@ public class LinkAnalysis {
         this.taxon = taxon;
     }
 
-    /**
-     * Write histogram into file.
-     * 
-     * @throws IOException
-     */
-    public void writeCorrelationDistribution() {
+    public CoexpCorrelationDistribution getCorrelationDistribution() {
 
-        File outputDir = getOutputDir();
-
-        if ( outputDir == null ) return;
-
-        String path = outputDir + File.separator + expressionExperiment.getShortName() + ".correlDist.txt";
-
-        File outputFile = new File( path );
-        if ( outputFile.exists() ) {
-            outputFile.delete();
-        }
+        CoexpCorrelationDistribution result = CoexpCorrelationDistribution.Factory.newInstance();
 
         DoubleArrayList histogramArrayList = this.metricMatrix.getHistogramArrayList();
-        try {
-            FileWriter out = new FileWriter( outputFile );
+        result.setNumBins( histogramArrayList.size() );
+        ByteArrayConverter bac = new ByteArrayConverter();
+        result.setBinCounts( bac.doubleArrayToBytes( MatrixUtil.fromList( histogramArrayList ).toArray() ) );
 
-            double d = -1.0;
-            double step = 2.0 / histogramArrayList.size();
-
-            out.write( "# Correlation distribution\n" );
-            out.write( "# date=" + ( new Date() ) + "\n" );
-            out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
-            out.write( "Bin\tCount\n" );
-
-            for ( int i = 0; i < histogramArrayList.size(); i++ ) {
-                double v = histogramArrayList.get( i );
-                out.write( form.format( d ) + "\t" + ( int ) v + "\n" );
-                d += step;
-            }
-
-            out.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        return result;
     }
 
     /**
@@ -294,6 +161,7 @@ public class LinkAnalysis {
         metricMatrix.calculateMetrics();
         log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
                 + " values in the correlation matrix with values over " + config.getCorrelationCacheThreshold() );
+
     }
 
     /**

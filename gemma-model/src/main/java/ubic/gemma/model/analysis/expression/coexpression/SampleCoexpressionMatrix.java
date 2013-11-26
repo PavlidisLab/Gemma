@@ -18,56 +18,42 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+
 /**
- * <p>
  * This is only a separate entity to avoid having the blob stored in the ANALYSIS table.
- * </p>
  */
 public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix}.
+     * Constructs new instances of {@link SampleCoexpressionMatrix}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix}.
+         * Constructs a new instance of {@link SampleCoexpressionMatrix}.
          */
-        public static ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix newInstance() {
-            return new ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrixImpl();
+        public static SampleCoexpressionMatrix newInstance() {
+            return new SampleCoexpressionMatrixImpl();
         }
 
         /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix}, taking all possible
-         * properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link SampleCoexpressionMatrix}, taking all possible properties (except the
+         * identifier(s))as arguments.
          */
-        public static ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix newInstance(
-                byte[] coexpressionMatrix, ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
-            final ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix entity = new ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrixImpl();
+        public static SampleCoexpressionMatrix newInstance( byte[] coexpressionMatrix,
+                BioAssayDimension bioAssayDimension ) {
+            final SampleCoexpressionMatrix entity = new SampleCoexpressionMatrixImpl();
             entity.setCoexpressionMatrix( coexpressionMatrix );
             entity.setBioAssayDimension( bioAssayDimension );
             return entity;
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8168483585163161355L;
+    private BioAssayDimension bioAssayDimension;
+
     private byte[] coexpressionMatrix;
 
     private Long id;
-
-    private ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public SampleCoexpressionMatrix() {
-    }
 
     /**
      * Returns <code>true</code> if the argument is an SampleCoexpressionMatrix instance and all identifiers for this
@@ -91,7 +77,7 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension getBioAssayDimension() {
+    public BioAssayDimension getBioAssayDimension() {
         return this.bioAssayDimension;
     }
 
@@ -120,7 +106,7 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setBioAssayDimension( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
+    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         this.bioAssayDimension = bioAssayDimension;
     }
 

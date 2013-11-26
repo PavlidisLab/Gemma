@@ -157,8 +157,7 @@ public interface Probe2ProbeCoexpressionService {
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<ProbeLink> getProbeCoExpression(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon,
+    public Collection<ProbeLink> getProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon,
             boolean useWorkingTable );
 
     /**

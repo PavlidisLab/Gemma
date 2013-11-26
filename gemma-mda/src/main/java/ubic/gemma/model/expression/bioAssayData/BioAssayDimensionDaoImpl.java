@@ -152,6 +152,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
                     session.buildLockRequest( LockOptions.NONE ).lock( ba );
                     Hibernate.initialize( ba );
                     Hibernate.initialize( ba.getSampleUsed() );
+                    Hibernate.initialize( ba.getArrayDesignUsed() );
                     BioMaterial bm = ba.getSampleUsed();
                     session.buildLockRequest( LockOptions.NONE ).lock( bm );
                     Hibernate.initialize( bm );

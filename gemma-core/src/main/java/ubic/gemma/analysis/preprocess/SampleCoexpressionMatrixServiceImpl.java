@@ -16,6 +16,8 @@ package ubic.gemma.analysis.preprocess;
 
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +29,7 @@ import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -41,6 +44,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 @Component
 public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMatrixService {
+
+    private static Logger log = LoggerFactory.getLogger( SampleCoexpressionMatrixServiceImpl.class );
 
     /**
      * @param matrix
@@ -84,7 +89,7 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
         DoubleMatrix<BioAssay, BioAssay> mat = sampleCoexpressionMatrixHelperService.load( ee );
 
         if ( forceRecompute || mat == null ) {
-
+            log.info( "Computing sample coexpression" );
             Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorService
                     .getProcessedDataVectors( ee );
 
@@ -125,8 +130,13 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
         DoubleMatrix<BioAssay, BioAssay> mat = getMatrix( datamatrix );
         assert mat != null;
 
-        sampleCoexpressionMatrixHelperService.create( mat, datamatrix.getBestBioAssayDimension(),
-                datamatrix.getExpressionExperiment() );
+        BioAssayDimension bestBioAssayDimension = datamatrix.getBestBioAssayDimension();
+
+        if ( mat.rows() != bestBioAssayDimension.getBioAssays().size() ) {
+            throw new IllegalStateException( "Number of bioassays doesn't match length of the bioassaydimension" );
+        }
+
+        sampleCoexpressionMatrixHelperService.create( mat, bestBioAssayDimension, datamatrix.getExpressionExperiment() );
 
         return mat;
     }

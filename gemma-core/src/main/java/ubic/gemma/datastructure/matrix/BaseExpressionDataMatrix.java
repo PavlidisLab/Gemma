@@ -108,38 +108,51 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     @Override
     public BioAssayDimension getBestBioAssayDimension() {
 
-        Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>( this.bioAssayDimensions.values() );
+        Collection<BioAssayDimension> dims = new HashSet<>( this.bioAssayDimensions.values() );
 
         BioAssayDimension b = dims.iterator().next();
+
         if ( dims.size() > 1 ) {
+            /*
+             * Special complication if there is more than one bioassaydimension
+             */
+
             /* see bug 2139 */
             int s = -1;
-            Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+            Collection<BioMaterial> allBioMaterials = new HashSet<>();
+            // find the largest bioassaydimension
             for ( BioAssayDimension bioAssayDimension : dims ) {
                 if ( bioAssayDimension.getBioAssays().size() > s ) {
                     s = bioAssayDimension.getBioAssays().size();
                     b = bioAssayDimension;
+
                 }
 
-                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    bms.add( ba.getSampleUsed() );
+                for ( BioAssay ba : b.getBioAssays() ) {
+                    allBioMaterials.add( ba.getSampleUsed() );
                 }
             }
 
             /*
              * Sanity check: make sure all the biomaterials are accounted for by the chosen bioassaydimension.
              */
-            for ( BioAssayDimension bioAssayDimension : dims ) {
-                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    if ( !bms.contains( ba.getSampleUsed() ) ) {
-                        throw new IllegalStateException(
-                                "This data set seems to require further preprocessing before it can be used for SVD; Vector merge or sample match?" );
-                    }
+
+            for ( BioAssay ba : b.getBioAssays() ) {
+                if ( !allBioMaterials.contains( ba.getSampleUsed() ) ) {
+                    /*
+                     * In rare cases none of the usual ones has all the samples.
+                     * 
+                     * This can also happen if the data are not sample-matched or vector-merged
+                     */
+                    throw new IllegalStateException(
+                            "Could not find an appropriate bioassaydimension to represent the data matrix; data might need to be matched or merged" );
 
                 }
+
             }
 
         }
+
         return b;
 
     }
@@ -531,7 +544,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions.values() ) {
-            Collection<BioAssay> bioAssays = dimension.getBioAssays(); // this should in fact be a list.
+            List<BioAssay> bioAssays = dimension.getBioAssays();
             log.debug( "Processing: " + dimension + " with " + bioAssays.size() + " assays" );
             getBioMaterialGroupsForAssays( bioMaterialMap, bioAssays );
         }
@@ -588,7 +601,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @param bioAssays
      */
     private void getBioMaterialGroupsForAssays( Map<BioMaterial, Collection<BioAssay>> bioMaterialMap,
-            Collection<BioAssay> bioAssays ) {
+            List<BioAssay> bioAssays ) {
         for ( BioAssay ba : bioAssays ) {
             if ( log.isDebugEnabled() ) log.debug( "      " + ba );
             BioMaterial bm = ba.getSampleUsed();

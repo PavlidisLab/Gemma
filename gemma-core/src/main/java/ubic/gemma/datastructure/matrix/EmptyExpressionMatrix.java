@@ -46,6 +46,19 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
         throw new UnsupportedOperationException();
     }
 
+    public EmptyExpressionMatrix( Collection<BioAssayDimension> dims ) {
+        super();
+        super.init();
+        long i = -1;
+        for ( BioAssayDimension ba : dims ) {
+            CompositeSequence dummy = CompositeSequence.Factory.newInstance();
+            dummy.setId( i-- );
+            this.bioAssayDimensions.put( dummy, ba );
+        }
+
+        this.numCols = this.setUpColumnElements();
+    }
+
     /**
      * @param ba
      */
@@ -55,7 +68,6 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
         CompositeSequence dummy = CompositeSequence.Factory.newInstance();
         this.bioAssayDimensions.put( dummy, ba );
         this.numCols = this.setUpColumnElements();
-
     }
 
     @Override

@@ -583,11 +583,12 @@ public class ExpressionDataMatrixColumnSort {
             @Override
             public int compare( BioMaterialValueObject o1, BioMaterialValueObject o2 ) {
 
-                if ( o1.getBioAssay() == null || o2.getBioAssay() == null )
+                if ( o1.getBioAssays().isEmpty() || o2.getBioAssays().isEmpty() ) {
                     return o1.getName().compareTo( o1.getName() );
+                }
 
-                BioAssayValueObject ba1 = o1.getBioAssay();
-                BioAssayValueObject ba2 = o2.getBioAssay();
+                BioAssayValueObject ba1 = o1.getBioAssays().iterator().next();
+                BioAssayValueObject ba2 = o2.getBioAssays().iterator().next();
                 if ( ba1.getName() != null && ba2.getName() != null ) {
                     return ba1.getName().compareTo( ba2.getName() );
                 }

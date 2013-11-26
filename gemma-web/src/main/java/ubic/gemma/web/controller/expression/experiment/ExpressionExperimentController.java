@@ -742,6 +742,7 @@ public class ExpressionExperimentController {
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
         qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
+        qc.setHasCorrDist( true ); // FIXME     
         return qc.getQChtml();
     }
 
@@ -1327,40 +1328,11 @@ public class ExpressionExperimentController {
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" );
         ExpressionExperiment expExp = getExpressionExperimentFromRequest( request );
 
-        // This is only _really_ needed to get hasBatchInformation; we can get quantitation types by a service method.
-        // So if this is slow, we can supply a query for the batch information.
-
-        // expExp = expressionExperimentService.thawLite( expExp );
-
         mav.addObject( "expressionExperiment", expExp );
-        /*
-         * mav.addObject( "characteristics", expExp.getCharacteristics() );
-         * 
-         * Collection<QuantitationType> quantitationTypes = expExp.getQuantitationTypes(); mav.addObject(
-         * "quantitationTypes", quantitationTypes ); mav.addObject( "qtCount", quantitationTypes.size() );
-         * 
-         * //Check for multiple "preferred" qts. int countPreferred = 0; for ( QuantitationType qt : quantitationTypes )
-         * { if ( qt.getIsPreferred() ) { countPreferred++; } } mav.addObject( "hasMoreThanOnePreferredQt",
-         * countPreferred > 0 );
-         * 
-         * AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expExp, null );
-         * mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
-         */
+
         mav.addObject( "eeId", expExp.getId() );
         mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
-        /*
-         * boolean hasBatchInformation = false; for ( ExperimentalFactor ef :
-         * expExp.getExperimentalDesign().getExperimentalFactors() ) { if ( BatchInfoPopulationService.isBatchFactor( ef
-         * ) ) { hasBatchInformation = true; break; } }
-         * 
-         * mav.addObject( "hasBatchInformation", hasBatchInformation ); if ( hasBatchInformation ) { mav.addObject(
-         * "batchConfound", this.batchConfound( expExp ) ); mav.addObject( "batchArtifact", this.batchEffect( expExp )
-         * ); }
-         * 
-         * addQCInfo( expExp, mav );
-         * 
-         * boolean isPrivate = securityService.isPrivate( expExp ); mav.addObject( "isPrivate", isPrivate );
-         */
+
         if ( timer.getTime() > 200 ) {
             log.info( "Show Experiment was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
         }
@@ -1589,9 +1561,13 @@ public class ExpressionExperimentController {
         mav.addObject( "hasCorrMat", sampleCoexpressionMatrixService.hasMatrix( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
-        mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) );
         mav.addObject( "hasMeanVariance", meanVarianceService.hasMeanVariance( expressionExperiment ) );
+
+        // FIXME don't store in a file.
         mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );
+
+        mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) );
+        mav.addObject( "hasCorrDist", true ); // FIXME
     }
 
     /**

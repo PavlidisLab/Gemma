@@ -81,6 +81,10 @@
 						</key>
 						<one-to-many class="ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbeImpl" />
 					</set>
+					<many-to-one name="coexpCorrelationDistribution" class="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistributionImpl"
+						cascade="all" lazy="proxy" fetch="select">
+						<column name="COEXP_CORRELATION_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT" />
+					</many-to-one>
 				</subclass>
 				<subclass name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisImpl"
 					discriminator-value="SampleCoexpressionAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">

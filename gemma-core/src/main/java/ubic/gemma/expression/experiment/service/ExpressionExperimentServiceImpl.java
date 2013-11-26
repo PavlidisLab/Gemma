@@ -674,7 +674,13 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.getBioAssayDimensions( expressionExperiment );
+        Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
+                .getBioAssayDimensions( expressionExperiment );
+        Collection<BioAssayDimension> thawedbioAssayDimensions = new HashSet<>();
+        for ( BioAssayDimension bioAssayDimension : bioAssayDimensions ) {
+            thawedbioAssayDimensions.add( this.bioAssayDimensionDao.thaw( bioAssayDimension ) );
+        }
+        return thawedbioAssayDimensions;
     }
 
     /**

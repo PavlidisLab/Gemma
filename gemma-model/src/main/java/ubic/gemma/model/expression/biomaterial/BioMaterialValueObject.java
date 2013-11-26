@@ -41,7 +41,7 @@ public class BioMaterialValueObject implements Serializable {
 
     private String assayDescription;
     private String assayName;
-    private BioAssayValueObject bioAssay;
+    private Collection<BioAssayValueObject> bioAssays = new HashSet<>();
     private String characteristics;
 
     private String description;
@@ -99,7 +99,8 @@ public class BioMaterialValueObject implements Serializable {
 
     public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
         this( bm );
-        this.bioAssay = new BioAssayValueObject( ba );
+        BioAssayValueObject bavo = new BioAssayValueObject( ba );
+        this.bioAssays.add( bavo );
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
         this.assayName = ba.getName();
@@ -134,8 +135,8 @@ public class BioMaterialValueObject implements Serializable {
         return assayName;
     }
 
-    public BioAssayValueObject getBioAssay() {
-        return bioAssay;
+    public Collection<BioAssayValueObject> getBioAssays() {
+        return bioAssays;
     }
 
     public String getCharacteristics() {
@@ -188,8 +189,8 @@ public class BioMaterialValueObject implements Serializable {
         this.assayName = assayName;
     }
 
-    public void setBioAssay( BioAssayValueObject bioAssay ) {
-        this.bioAssay = bioAssay;
+    public void setBioAssays( Collection<BioAssayValueObject> bioAssays ) {
+        this.bioAssays = bioAssays;
     }
 
     public void setCharacteristics( String characteristics ) {

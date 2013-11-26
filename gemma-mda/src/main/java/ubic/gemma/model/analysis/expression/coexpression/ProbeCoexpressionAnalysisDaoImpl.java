@@ -64,6 +64,17 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
+    public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
+
+        String q = "select ccd from ProbeCoexpressionAnalysisImpl pca "
+                + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
+
+        return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession().createQuery( q )
+                .setParameter( "ee", expressionExperiment ).uniqueResult();
+
+    }
+
+    @Override
     protected Collection<ProbeCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
         final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a where :e = a.experimentAnalyzed";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );

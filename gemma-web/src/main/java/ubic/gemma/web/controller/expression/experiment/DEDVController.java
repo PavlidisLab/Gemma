@@ -493,7 +493,6 @@ public class DEDVController {
             dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, geneIds );
         }
 
-        // watch.stop();
         Long time = watch.getTime();
         watch.reset();
         watch.start();
@@ -504,8 +503,8 @@ public class DEDVController {
                     + " ms (times <100ms not reported)." );
         }
 
-        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
-        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
+                .sortVectorDataByDesign( dedvs );
 
         time = watch.getTime();
         watch.reset();
@@ -514,7 +513,6 @@ public class DEDVController {
             log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs" + " in "
                     + time + " ms (times <100ms not reported)." );
         }
-        // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts ); // required?
 
         watch.stop();
         time = watch.getTime();
@@ -837,9 +835,9 @@ public class DEDVController {
 
         watch.reset();
         watch.start();
-        Collection<DoubleVectorValueObject> processedDataArraysByProbe = processedExpressionDataVectorService.getProcessedDataArraysByProbe( ees, probes );
-        List<DoubleVectorValueObject> dedvs = new ArrayList<DoubleVectorValueObject>(
-                processedDataArraysByProbe );
+        Collection<DoubleVectorValueObject> processedDataArraysByProbe = processedExpressionDataVectorService
+                .getProcessedDataArraysByProbe( ees, probes );
+        List<DoubleVectorValueObject> dedvs = new ArrayList<DoubleVectorValueObject>( processedDataArraysByProbe );
 
         watch.stop();
         if ( watch.getTime() > 1000 ) {
@@ -1413,23 +1411,22 @@ public class DEDVController {
 
         Random random = new Random();
 
-        LinkedHashMap<String, LinkedHashMap<String, String>> factorToValueNames = new LinkedHashMap<String, LinkedHashMap<String, String>>();
+        LinkedHashMap<String, LinkedHashMap<String, String>> factorToValueNames = new LinkedHashMap<>();
         // list of maps with entries: key = factorName, value=array of factor values
         // 1 entry per sample
-        ArrayList<LinkedHashMap<String, String[]>> factorValueMaps = new ArrayList<LinkedHashMap<String, String[]>>();
+        ArrayList<LinkedHashMap<String, String[]>> factorValueMaps = new ArrayList<>();
 
-        Collection<String> factorsMissingValues = new HashSet<String>();
+        Collection<String> factorsMissingValues = new HashSet<>();
 
         Map<Long, FactorValue> fvs = new HashMap<Long, FactorValue>(); // avoid loading repeatedly.
-        Collection<ExperimentalFactor> seenFactors = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> seenFactors = new HashSet<>();
 
         for ( BioAssayValueObject ba : eeLayouts.keySet() ) {
             // double should be the factorValue id, defined in
             // ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment,
             // BioAssayDimension)
             LinkedHashMap<ExperimentalFactor, Double> factorMap = eeLayouts.get( ba );
-            LinkedHashMap<String, String[]> factorNamesToValueColourPairs = new LinkedHashMap<String, String[]>(
-                    factorNames.size() );
+            LinkedHashMap<String, String[]> factorNamesToValueColourPairs = new LinkedHashMap<>( factorNames.size() );
 
             // this is defensive, should only come into play when there's something messed up with the data.
             // for every factor, add a missing-value entry (guards against missing data messing up the layout)

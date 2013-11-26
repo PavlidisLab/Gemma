@@ -152,16 +152,15 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     }
 
     /**
-     * 
      * @param ee
      * @param cormat
      * @return
      */
-    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee,
-            DoubleMatrix<BioAssay, BioAssay> cormat ) {
-        return identifyOutliers(ee , cormat, DEFAULT_QUANTILE, DEFAULT_FRACTION);
+    @Override
+    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, DoubleMatrix<BioAssay, BioAssay> cormat ) {
+        return identifyOutliers( ee, cormat, DEFAULT_QUANTILE, DEFAULT_FRACTION );
     }
-            
+
     /*
      * (non-Javadoc)
      * 
@@ -231,14 +230,6 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return outliers;
 
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.OutlierDetectionService#identifyOutliers(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, boolean, int, double)
-     */
 
     /* Runs in testmode; returns OutlierDetectionTestDetails */
     @Override
@@ -524,104 +515,25 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     }
 
+    @Override
     public boolean hasOutliers( ExpressionExperiment ee ) {
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
-        Collection<OutlierDetails> outliers = identifyOutliers( ee, sampleCorrelationMatrix, DEFAULT_QUANTILE, DEFAULT_FRACTION);
-        return !outliers.isEmpty();
+
+        if ( !sampleCoexpressionMatrixService.hasMatrix( ee ) ) {
+            log.warn( "Experiment doesn't have correlation matrix computed (will not create right now)" );
+            return false;
+        }
+
+        try {
+            DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService
+                    .findOrCreate( ee );
+            Collection<OutlierDetails> outliers = identifyOutliers( ee, sampleCorrelationMatrix, DEFAULT_QUANTILE,
+                    DEFAULT_FRACTION );
+            return !outliers.isEmpty();
+        } catch ( Exception e ) {
+            // we can't compute the matrix for some reason. FIXME: make this
+            log.warn( "Correlation matrix could not be retrieved" );
+            return false;
+        }
     }
-    
-    // // Prints residual matrix to file. May be used for testing. Note: need to change path of output file.
-    // private void printResidualMatrix( ExpressionDataDoubleMatrix resmat ) {
-    //
-    // File file = new File( "/home/jhantula/validation/" + testDetails.getExperimentName() + "-residuals" );
-    //
-    // NumberFormat nf = NumberFormat.getInstance();
-    // nf.setMaximumFractionDigits( 4 );
-    //
-    // try {
-    // file.createNewFile();
-    //
-    // FileWriter fw = new FileWriter( file.getAbsoluteFile() );
-    // BufferedWriter bw = new BufferedWriter( fw );
-    //
-    // int columns = resmat.columns();
-    // int rows = resmat.rows();
-    //
-    // for ( int i = 0; i < columns; i++ ) {
-    // bw.write( resmat.getBioMaterialForColumn( i ).getName() + ":" );
-    // for ( BioAssay ba : resmat.getBioAssaysForColumn( i ) ) {
-    // bw.write( ba.getName() + "," );
-    // }
-    // if ( i < columns - 1 ) bw.write( "\t" );
-    // }
-    // bw.newLine();
-    //
-    // for ( int j = 0; j < rows; j++ ) {
-    // for ( int i = 0; i < columns - 1; i++ ) {
-    // Double val = resmat.get( j, i );
-    // if ( Double.isNaN( val ) ) {
-    // bw.write( val.toString() );
-    // } else {
-    // bw.write( nf.format( resmat.get( j, i ) ) + "\t" );
-    // }
-    // }
-    // bw.write( nf.format( resmat.get( j, columns - 1 ) ) );
-    // bw.newLine();
-    // }
-    // bw.close();
-    //
-    // } catch ( IOException e ) {
-    // log.error( "Error while writing results to file: " + e.getMessage() );
-    // }
-    //
-    // }
-    //
-    // //Prints correlation matrix based on residuals to file. May be used for testing. Note: need to change path of
-    // output file.
-    // private void printCorrelationMatrix( DoubleMatrix<BioAssay, BioAssay> cormat ) {
-    //
-    // File file = new File( "/home/jhantula/validation/" + testDetails.getExperimentName() + "-residual-cormat" );
-    //
-    // int rows = cormat.rows();
-    // int columns = cormat.columns();
-    //
-    // try {
-    // file.createNewFile();
-    //
-    // FileWriter fw = new FileWriter( file.getAbsoluteFile() );
-    // BufferedWriter bw = new BufferedWriter( fw );
-    //
-    // for ( int i = 0; i < columns; i++ ) {
-    // if ( cormat.hasColNames() ) {
-    // bw.write( "\t" + cormat.getColName( i ) );
-    // } else {
-    // bw.write( "\t" + i );
-    // }
-    // }
-    // bw.write( "\n" );
-    // for ( int j = 0; j < rows; j++ ) {
-    //
-    // if ( cormat.hasRowNames() ) {
-    // bw.write( "" + cormat.getRowName( j ) );
-    // } else {
-    // bw.write( j );
-    // }
-    // for ( int i = 0; i < columns; i++ ) {
-    // double value = cormat.get( j, i );
-    // if ( Double.isNaN( value ) ) {
-    // bw.write( "\t" );
-    // } else {
-    // bw.write( "\t" + String.format( "%.4g", value ) );
-    // }
-    // }
-    // bw.write( "\n" );
-    // }
-    // bw.close();
-    //
-    // } catch ( IOException e ) {
-    // log.error( "Error while writing results to file: " + e.getMessage() );
-    // }
-    //
-    // }
 
 }

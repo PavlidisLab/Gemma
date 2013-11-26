@@ -103,6 +103,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         assertEquals( analysisObj.getNumberOfElementsAnalyzed().intValue(), probesUsed.size() );
         assertTrue( analysisObj.getNumberOfLinks().intValue() > 0 );
 
+        assertNotNull( analysisObj.getCoexpCorrelationDistribution() );
+
         for ( CoexpressionProbe cp : probesUsed ) {
             assertNotNull( cp.getNodeDegree() );
             assertNotNull( cp.getNodeDegreeRank() );

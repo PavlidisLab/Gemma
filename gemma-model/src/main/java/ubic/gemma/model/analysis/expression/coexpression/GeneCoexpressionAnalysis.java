@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis.expression.coexpression;
 
 import ubic.gemma.model.analysis.MultiExperimentAnalysis;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * A coexpression analysis done at the level of genes, usually for all the genes associated with a taxon
@@ -38,23 +39,11 @@ public abstract class GeneCoexpressionAnalysis extends MultiExperimentAnalysis {
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7815753999347292175L;
     private Integer stringency;
 
     private Boolean enabled;
 
-    private ubic.gemma.model.genome.Taxon taxon;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public GeneCoexpressionAnalysis() {
-    }
+    private Taxon taxon;
 
     /**
      * Indicator of whether results from this analysis should be used. This should be set to 'false' while the analysis
@@ -76,7 +65,7 @@ public abstract class GeneCoexpressionAnalysis extends MultiExperimentAnalysis {
      * The taxon the experiments used came from. This is a denomalization but saves us from looking it up through the
      * experimentsAnalyzed.
      */
-    public ubic.gemma.model.genome.Taxon getTaxon() {
+    public Taxon getTaxon() {
         return this.taxon;
     }
 
@@ -88,7 +77,7 @@ public abstract class GeneCoexpressionAnalysis extends MultiExperimentAnalysis {
         this.stringency = stringency;
     }
 
-    public void setTaxon( ubic.gemma.model.genome.Taxon taxon ) {
+    public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
     }
 

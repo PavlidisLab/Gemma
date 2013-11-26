@@ -3,7 +3,7 @@
           "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-	<class name="ubic.gemma.model.analysis.expression.diff.PvalueDistributionImpl" table="PVALUE_DISTRIBUTION"
+	<class name="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistributionImpl" table="COEXP_CORRELATION_DISTRIBUTION"
 		dynamic-insert="false" dynamic-update="false">
 		<cache usage="read-write" />
 		<id name="id" type="java.lang.Long" unsaved-value="null">

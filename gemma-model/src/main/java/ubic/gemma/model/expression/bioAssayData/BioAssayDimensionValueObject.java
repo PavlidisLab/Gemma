@@ -38,13 +38,6 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
  */
 public class BioAssayDimensionValueObject {
 
-    @Override
-    public String toString() {
-        return "BioAssayDimensionValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + "isReordered="
-                + isReordered + ", " + ( bioAssays != null ? "bioAssays=" + StringUtils.join( bioAssays, "," ) : "" )
-                + "]";
-    }
-
     private BioAssayDimension bioAssayDimension = null;
 
     private List<BioAssayValueObject> bioAssays = new ArrayList<BioAssayValueObject>();
@@ -82,19 +75,6 @@ public class BioAssayDimensionValueObject {
         for ( BioAssay bv : entity.getBioAssays() ) {
             bioAssays.add( new BioAssayValueObject( bv ) );
         }
-    }
-
-    public BioAssayDimensionValueObject deepCopy() {
-        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject();
-        result.bioAssays.addAll( this.getBioAssays() );
-        result.bioAssayDimension = this.bioAssayDimension;
-        result.sourceBioAssayDimension = this.sourceBioAssayDimension;
-        result.id = this.id;
-        result.isSubset = this.isSubset;
-        result.isReordered = this.isReordered;
-        result.name = this.name;
-        result.description = this.description;
-        return result;
     }
 
     public List<BioAssayValueObject> getBioAssays() {
@@ -163,8 +143,18 @@ public class BioAssayDimensionValueObject {
                 this.sourceBioAssayDimension = this.deepCopy();
             }
 
-            assert newOrdering.size() == bioAssays.size();
-            assert newOrdering.containsAll( bioAssays );
+            // assert newOrdering.size() == bioAssays.size() : "Expected " + bioAssays.size() + " but new ordering had "
+            // + newOrdering.size() + " elements";
+            if ( !newOrdering.containsAll( bioAssays ) ) {
+                System.err.println( "Oh no!" );
+            }
+
+            if ( newOrdering.size() > bioAssays.size() ) {
+                /*
+                 * Means we have to pad?
+                 */
+                System.err.println( "New ordering is larger than vector" );
+            }
 
             this.bioAssays.clear();
             this.bioAssays.addAll( newOrdering );
@@ -195,6 +185,26 @@ public class BioAssayDimensionValueObject {
 
     public void setSourceBioAssayDimension( BioAssayDimensionValueObject source ) {
         this.sourceBioAssayDimension = source;
+    }
+
+    @Override
+    public String toString() {
+        return "BioAssayDimensionValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + "isReordered="
+                + isReordered + ", " + ( bioAssays != null ? "bioAssays=" + StringUtils.join( bioAssays, "," ) : "" )
+                + "]";
+    }
+
+    private BioAssayDimensionValueObject deepCopy() {
+        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject();
+        result.bioAssays.addAll( this.getBioAssays() );
+        result.bioAssayDimension = this.bioAssayDimension;
+        result.sourceBioAssayDimension = this.sourceBioAssayDimension;
+        result.id = this.id;
+        result.isSubset = this.isSubset;
+        result.isReordered = this.isReordered;
+        result.name = this.name;
+        result.description = this.description;
+        return result;
     }
 
     /**

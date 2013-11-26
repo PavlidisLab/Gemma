@@ -24,35 +24,23 @@ package ubic.gemma.model.analysis.expression.diff;
 public abstract class PvalueDistribution implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.diff.PvalueDistribution}.
+     * Constructs new instances of {@link PvalueDistribution}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.diff.PvalueDistribution}.
+         * Constructs a new instance of {@link PvalueDistribution}.
          */
-        public static ubic.gemma.model.analysis.expression.diff.PvalueDistribution newInstance() {
-            return new ubic.gemma.model.analysis.expression.diff.PvalueDistributionImpl();
+        public static PvalueDistribution newInstance() {
+            return new PvalueDistributionImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -9109001747827216092L;
     private Integer numBins;
 
     private byte[] binCounts;
 
     private Long id;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public PvalueDistribution() {
-    }
 
     /**
      * Returns <code>true</code> if the argument is an PvalueDistribution instance and all identifiers for this entity

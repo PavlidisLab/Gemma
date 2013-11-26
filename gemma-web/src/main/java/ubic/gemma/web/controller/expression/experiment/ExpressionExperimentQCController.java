@@ -89,7 +89,6 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
 import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
 import ubic.gemma.analysis.preprocess.OutlierDetectionService;
@@ -100,9 +99,9 @@ import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -146,12 +145,15 @@ public class ExpressionExperimentQCController extends BaseController {
     private static final int MAX_HEATMAP_CELLSIZE = 12;
 
     public static final int DEFAULT_QC_IMAGE_SIZE_PX = 200;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
     @Autowired
     private SVDService svdService;
+
     @Autowired
-    ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
+    private ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     @Autowired
     private MeanVarianceService meanVarianceService;
@@ -164,6 +166,9 @@ public class ExpressionExperimentQCController extends BaseController {
 
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
+
+    @Autowired
+    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
 
     /**
      * @param id
@@ -585,13 +590,53 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * @param ee
      * @return JFreeChart XYSeries representing the histogram.
-     * @throws FileNotFoundException
-     * @throws IOException
+     * @throws FileNotFoundException - only if the coexp dist is being read from a file; when migration to db storage is
+     *         complete this can be removed
+     * @throws IOException - only if the coexp dist is being read from a file; when migration to db storage is complete
+     *         this can be removed
      */
     private XYSeries getCorrelHist( ExpressionExperiment ee ) throws FileNotFoundException, IOException {
-        File f = this.locateProbeCorrFile( ee );
-        try (BufferedReader in = new BufferedReader( new FileReader( f ) );) {
+        CoexpCorrelationDistribution coexpCorrelationDistribution = probeCoexpressionAnalysisService
+                .getCoexpCorrelationDistribution( ee );
+
+        if ( coexpCorrelationDistribution == null ) {
+            // try to get it from the file.
+            return getCorrelHistFromFile( ee );
+        }
+
+        XYSeries series = new XYSeries( ee.getId(), true, true );
+
+        byte[] binCountsBytes = coexpCorrelationDistribution.getBinCounts();
+        ByteArrayConverter bac = new ByteArrayConverter();
+        double[] binCounts = bac.byteArrayToDoubles( binCountsBytes );
+        Integer numBins = coexpCorrelationDistribution.getNumBins();
+
+        double step = 2.0 / numBins;
+
+        double lim = -1.0;
+
+        for ( double d : binCounts ) {
+            series.add( lim, d );
+            lim += step;
+        }
+        return series;
+
+    }
+
+    /**
+     * For backwards compatibility - read from the file. Remove this method when no longer needed.
+     */
+    private XYSeries getCorrelHistFromFile( ExpressionExperiment ee ) throws IOException {
+
+        File file = this.locateProbeCorrFile( ee );
+
+        // Current format is to have just one file for each analysis.
+        if ( file == null ) {
+            return null;
+        }
+        try (BufferedReader in = new BufferedReader( new FileReader( file ) );) {
             XYSeries series = new XYSeries( ee.getId(), true, true );
+            DoubleArrayList counts = new DoubleArrayList();
 
             while ( in.ready() ) {
                 String line = in.readLine().trim();
@@ -602,11 +647,19 @@ public class ExpressionExperimentQCController extends BaseController {
                     double x = Double.parseDouble( split[0] );
                     double y = Double.parseDouble( split[1] );
                     series.add( x, y );
+                    counts.add( y );
                 } catch ( NumberFormatException e ) {
                     // line wasn't useable.. no big deal. Heading is included.
                 }
             }
+
+            if ( !counts.isEmpty() ) {
+                // Backfill.
+                corrDistFileToPersistent( file, ee, counts );
+            }
+
             return series;
+
         }
     }
 
@@ -640,72 +693,7 @@ public class ExpressionExperimentQCController extends BaseController {
             }
             return xySeries;
         }
-
-        /*
-         * Rest of this is for backwards compatibility - read from the file.
-         */
-        File file = this.locatePvalueDistFile( ee, analysisId );
-
-        // Current format is to have just one file for each analysis.
-        if ( file == null ) {
-            return null;
-        }
-        try (BufferedReader in = new BufferedReader( new FileReader( file ) );) {
-
-            int factorNameIndex = -1;
-
-            boolean readHeader = false;
-            PvalueDistribution pvalueDist = PvalueDistribution.Factory.newInstance();
-            DoubleArrayList counts = new DoubleArrayList();
-            while ( in.ready() ) {
-                String line = in.readLine().trim();
-                if ( line.startsWith( "#" ) ) continue;
-                String[] split = StringUtils.split( line, "\t" );
-                if ( split.length < 2 ) continue;
-
-                if ( !readHeader ) {
-                    for ( int i = 1; i < split.length; i++ ) {
-                        String currFactorName = split[i];
-
-                        // Note that currFactorName may have suffix such as __3
-                        // (DifferentialExpressionAnalyzerService.FACTOR_NAME_MANGLING_DELIMITER followed by the ID).
-                        if ( currFactorName.length() >= factorName.length()
-                                && factorName.equals( currFactorName.substring( 0, factorName.length() ) ) ) {
-                            factorNameIndex = i;
-                        }
-                    }
-                    readHeader = true;
-                    if ( factorNameIndex < 0 ) {
-                        // If factorName cannot be found, don't need to continue reading file.
-                        break;
-                    }
-                    continue;
-                }
-
-                try {
-                    double x = Double.parseDouble( split[0] );
-                    double y = Double.parseDouble( split[factorNameIndex] );
-                    if ( xySeries == null ) {
-                        xySeries = new XYSeries( factorName, true, true );
-                    }
-                    xySeries.add( x, y );
-
-                    /*
-                     * Update the result set.
-                     */
-                    counts.add( y );
-
-                } catch ( NumberFormatException e ) {
-                    // line wasn't useable.. no big deal. Heading is included.
-                }
-            }
-
-            if ( counts.size() > 0 ) {
-                pvalueDistFileToPersistent( file, rsId, pvalueDist, counts );
-            }
-
-            return xySeries;
-        }
+        return null;
     }
 
     /**
@@ -798,6 +786,8 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
+     * For backwards compatibility only; remove when no longer needed.
+     * 
      * @param ee
      * @return
      */
@@ -811,50 +801,28 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param ee
-     * @param analysisId
-     * @return
-     * @deprecated because we store this in the db now.
-     */
-    @Deprecated
-    private File locatePvalueDistFile( ExpressionExperiment ee, Long analysisId ) {
-        File file = null;
-
-        if ( ee != null && analysisId != null ) {
-            String shortName = ee.getShortName();
-            file = new File( DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName ), shortName
-                    + ".an" + analysisId + ".pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
-
-            if ( !file.exists() ) {
-                file = null;
-            }
-        }
-
-        return file;
-    }
-
-    /**
      * For conversion from legacy system.
-     * 
-     * @param file
-     * @param rsId
-     * @param pvalueDist
-     * @param counts
      */
-    private void pvalueDistFileToPersistent( File file, Long rsId, PvalueDistribution pvalueDist, DoubleArrayList counts ) {
+    private void corrDistFileToPersistent( File file, ExpressionExperiment ee, DoubleArrayList counts ) {
         log.info( "Converting from pvalue distribution file to persistent stored version" );
         ByteArrayConverter bac = new ByteArrayConverter();
         Double[] countArray = ( Double[] ) counts.toList().toArray( new Double[] {} );
         byte[] bytes = bac.doubleArrayToBytes( countArray );
-        pvalueDist.setBinCounts( bytes );
-        pvalueDist.setNumBins( countArray.length );
-        ExpressionAnalysisResultSet resultSet = differentialExpressionResultService.loadAnalysisResultSet( rsId );
-        resultSet.setPvalueDistribution( pvalueDist );
-        differentialExpressionResultService.update( resultSet );
-        if ( file.delete() ) {
-            log.info( "Old file deleted" );
-        } else {
-            log.info( "Old file could not be deleted" );
+
+        CoexpCorrelationDistribution coexpd = CoexpCorrelationDistribution.Factory.newInstance();
+        coexpd.setNumBins( counts.size() );
+        coexpd.setBinCounts( bytes );
+
+        try {
+            probeCoexpressionAnalysisService.addCoexpCorrelationDistribution( ee, coexpd );
+
+            if ( file.delete() ) {
+                log.info( "Old file deleted" );
+            } else {
+                log.info( "Old file could not be deleted" );
+            }
+        } catch ( Exception e ) {
+            log.info( "Could not save the corr dist: " + e.getMessage() );
         }
     }
 
@@ -1356,9 +1324,10 @@ public class ExpressionExperimentQCController extends BaseController {
     private boolean writeProbeCorrHistImage( OutputStream os, ExpressionExperiment ee ) throws IOException {
         XYSeries series = getCorrelHist( ee );
 
-        if ( series.getItemCount() == 0 ) {
+        if ( series == null || series.getItemCount() == 0 ) {
             return false;
         }
+
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( series );

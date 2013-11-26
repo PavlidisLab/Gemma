@@ -40,9 +40,15 @@ public abstract class ProbeCoexpressionAnalysis extends SingleExperimentAnalysis
 
     }
 
+    private CoexpCorrelationDistribution coexpCorrelationDistribution;
+
     private Integer numberOfLinks;
 
     private Collection<CoexpressionProbe> probesUsed = new java.util.HashSet<>();
+
+    public CoexpCorrelationDistribution getCoexpCorrelationDistribution() {
+        return coexpCorrelationDistribution;
+    }
 
     /**
      * The number of links which were stored for this analysis.
@@ -56,6 +62,10 @@ public abstract class ProbeCoexpressionAnalysis extends SingleExperimentAnalysis
      */
     public Collection<CoexpressionProbe> getProbesUsed() {
         return this.probesUsed;
+    }
+
+    public void setCoexpCorrelationDistribution( CoexpCorrelationDistribution coexpCorrelationDistribution ) {
+        this.coexpCorrelationDistribution = coexpCorrelationDistribution;
     }
 
     public void setNumberOfLinks( Integer numberOfLinks ) {

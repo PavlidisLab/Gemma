@@ -40,4 +40,10 @@ public interface ProbeCoexpressionAnalysisDao extends AnalysisDao<ProbeCoexpress
      */
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment );
 
+    /**
+     * @param expressionExperiment
+     * @return
+     */
+    public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
+
 }

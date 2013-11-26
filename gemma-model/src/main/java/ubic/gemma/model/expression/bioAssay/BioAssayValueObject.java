@@ -80,7 +80,7 @@ public class BioAssayValueObject implements Serializable {
 
         if ( bioAssay.getSampleUsed() != null ) {
             this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed() );
-            sample.setBioAssay( this );
+            sample.getBioAssays().add( this );
         }
 
         if ( bioAssay.getIsOutlier() != null ) {
@@ -205,7 +205,7 @@ public class BioAssayValueObject implements Serializable {
 
     @Override
     public String toString() {
-        return "BioAssay [" + ( id != null ? "id=" + id + ", " : "" ) + ( name != null ? "name=" + name + ", " : "" )
+        return "BioAssayVO [" + ( id != null ? "id=" + id + ", " : "" ) + ( name != null ? "name=" + name + ", " : "" )
                 + ( description != null ? "description=" + description : "" ) + "]";
     }
 

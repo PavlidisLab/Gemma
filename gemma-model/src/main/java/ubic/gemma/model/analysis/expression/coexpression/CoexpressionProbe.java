@@ -18,32 +18,30 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+
 /**
- * <p>
  * Details of a probe included in the analysis.
- * </p>
  */
 public abstract class CoexpressionProbe implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe}.
+     * Constructs new instances of {@link CoexpressionProbe}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe}.
+         * Constructs a new instance of {@link CoexpressionProbe}.
          */
-        public static ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe newInstance() {
-            return new ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbeImpl();
+        public static CoexpressionProbe newInstance() {
+            return new CoexpressionProbeImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe},
-         * taking all possible properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link CoexpressionProbe}, taking all possible properties (except the
+         * identifier(s))as arguments.
          */
-        public static ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe newInstance(
-                Integer nodeDegree, Double nodeDegreeRank,
-                ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
-            final ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe entity = new ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbeImpl();
+        public static CoexpressionProbe newInstance( Integer nodeDegree, Double nodeDegreeRank, CompositeSequence probe ) {
+            final CoexpressionProbe entity = new CoexpressionProbeImpl();
             entity.setNodeDegree( nodeDegree );
             entity.setNodeDegreeRank( nodeDegreeRank );
             entity.setProbe( probe );
@@ -51,36 +49,23 @@ public abstract class CoexpressionProbe implements java.io.Serializable {
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe},
-         * taking all required and/or read-only properties as arguments.
+         * Constructs a new instance of {@link CoexpressionProbe}, taking all required and/or read-only properties as
+         * arguments.
          */
-        public static ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe newInstance(
-                ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
-            final ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe entity = new ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbeImpl();
+        public static CoexpressionProbe newInstance( CompositeSequence probe ) {
+            final CoexpressionProbe entity = new CoexpressionProbeImpl();
             entity.setProbe( probe );
             return entity;
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -5084811170208064072L;
     private Integer nodeDegree;
 
     private Double nodeDegreeRank;
 
     private Long id;
 
-    private ubic.gemma.model.expression.designElement.CompositeSequence probe;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public CoexpressionProbe() {
-    }
+    private CompositeSequence probe;
 
     /**
      * Returns <code>true</code> if the argument is an CoexpressionProbe instance and all identifiers for this entity
@@ -109,9 +94,7 @@ public abstract class CoexpressionProbe implements java.io.Serializable {
     }
 
     /**
-     * <p>
      * How many other probes this probe was linked to. The filter applied may have removed it from consideration.
-     * </p>
      */
     public Integer getNodeDegree() {
         return this.nodeDegree;
@@ -129,7 +112,7 @@ public abstract class CoexpressionProbe implements java.io.Serializable {
     /**
      * 
      */
-    public ubic.gemma.model.expression.designElement.CompositeSequence getProbe() {
+    public CompositeSequence getProbe() {
         return this.probe;
     }
 
@@ -156,7 +139,7 @@ public abstract class CoexpressionProbe implements java.io.Serializable {
         this.nodeDegreeRank = nodeDegreeRank;
     }
 
-    public void setProbe( ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
+    public void setProbe( CompositeSequence probe ) {
         this.probe = probe;
     }
 

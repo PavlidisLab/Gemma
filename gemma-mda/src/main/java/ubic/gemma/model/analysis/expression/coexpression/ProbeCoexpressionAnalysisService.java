@@ -69,4 +69,17 @@ public interface ProbeCoexpressionAnalysisService extends
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ProbeCoexpressionAnalysis o );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
+
+    /**
+     * For backfilling of the coexpression distributions from flat files - remove when no longer needed.
+     * 
+     * @param expressionExperiment
+     * @param coexpd
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    public void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
+            CoexpCorrelationDistribution coexpd );
+
 }

@@ -42,6 +42,21 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
     @Autowired
     private ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
 
+    @Override
+    @Transactional
+    public void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
+            CoexpCorrelationDistribution coexpd ) {
+        Collection<ProbeCoexpressionAnalysis> analyses = findByInvestigation( expressionExperiment );
+        if ( analyses.size() > 1 ) {
+            throw new IllegalStateException( "Multiple coexpression analyses for one experiment" );
+        } else if ( analyses.isEmpty() ) {
+            throw new IllegalStateException( "No coexpression analysis" );
+        }
+        ProbeCoexpressionAnalysis analysis = analyses.iterator().next();
+        analysis.setCoexpCorrelationDistribution( coexpd );
+        this.update( analysis );
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysisService#createFromValueObject(ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysis)
      */
@@ -108,6 +123,12 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
         return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
+        return probeCoexpressionAnalysisDao.getCoexpCorrelationDistribution( expressionExperiment );
+    }
+
     public ProbeCoexpressionAnalysisDao getProbeCoexpressionAnalysisDao() {
         return probeCoexpressionAnalysisDao;
     }
@@ -118,9 +139,6 @@ public class ProbeCoexpressionAnalysisServiceImpl implements
         return this.getProbeCoexpressionAnalysisDao().load( id );
     }
 
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ProbeCoexpressionAnalysis> loadAll() {

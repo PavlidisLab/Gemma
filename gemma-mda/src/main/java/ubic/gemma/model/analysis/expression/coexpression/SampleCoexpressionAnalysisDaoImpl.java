@@ -160,7 +160,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<BioAssay, BioAssay>( rawMatrix );
+        DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
         try {
             result.setRowNames( bioAssays );
         } catch ( IllegalArgumentException e ) {

@@ -42,7 +42,6 @@ public class ExperimentQCTag extends TagSupport {
 
     private boolean hasOutliers = false;
     
-    @SuppressWarnings("unused")
     private boolean hasCorrDist = false;
 
     private boolean hasPCA = false;
@@ -95,7 +94,7 @@ public class ExperimentQCTag extends TagSupport {
                 + "<th valign=\"top\" align=\"center\"><strong>PCA Scree</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>PCA+Factors</strong></th>"
                 // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
-                // + + "<th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th>"
+                + "<th valign=\"top\" align=\"center\"><strong>Gene correlation</strong</th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Mean-Variance</strong</th>" + "</tr>" );
 
         buf.append( "<tr>" );
@@ -192,11 +191,14 @@ public class ExperimentQCTag extends TagSupport {
         // } else {
         // buf.append( placeHolder );
         // }
-        /*
-         * if ( hasCorrDist ) { buf.append(
-         * " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"/Gemma/expressionExperiment/visualizeProbeCorrDist.html?id="
-         * + this.eeid + "\" /></td>" ); } else { buf.append( placeHolder ); }
-         */
+
+        if ( hasCorrDist ) {
+            buf.append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"/Gemma/expressionExperiment/visualizeProbeCorrDist.html?id="
+                    + this.eeid + "\" /></td>" );
+        } else {
+            buf.append( placeHolder );
+        }
+
         if ( hasMeanVariance ) {
             /*
              * popupImage is defined in ExpressinExperimentDetails.js

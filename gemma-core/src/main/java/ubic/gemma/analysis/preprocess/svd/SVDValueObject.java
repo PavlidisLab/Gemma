@@ -109,7 +109,7 @@ public class SVDValueObject implements Serializable {
 
         eigenvectorArrays = pca.getEigenvectorArrays();
 
-        List<Long> bmids = new ArrayList<Long>();
+        List<Long> bmids = new ArrayList<>();
         for ( BioAssay ba : pca.getBioAssayDimension().getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             bmids.add( bm.getId() );
