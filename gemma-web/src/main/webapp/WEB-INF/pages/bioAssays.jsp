@@ -34,7 +34,7 @@
 </p>
 
 <Gemma:expressionQC ee="${expressionExperiment.id}" hasOutliers="${hasOutliers}" hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
-	hasPCA="${hasPCA}" numFactors="${numFactors}" hasMeanVariance="${hasMeanVariance }" hasCorrDist="false"
+	hasPCA="${hasPCA}" numFactors="${numFactors}" hasMeanVariance="${hasMeanVariance }" hasCorrDist="${hasCorrDist}"
 	eeManagerId="eemanager" />
 
 <div style="padding: 20px; margin: 10px;" id="bioAssayTable" />
