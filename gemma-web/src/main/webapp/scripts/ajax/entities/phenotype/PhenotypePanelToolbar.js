@@ -130,6 +130,7 @@ Gemma.PhenotypePanelToolbar = Ext.extend(Ext.Toolbar, {
             });
 
          var filterButton = new Ext.Button({
+        	   id : 'filterButton',
                text : DEFAULT_FILTERS_TITLE,
                menu : menu
             });

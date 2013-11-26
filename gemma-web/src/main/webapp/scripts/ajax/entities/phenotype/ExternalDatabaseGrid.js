@@ -44,6 +44,31 @@ Gemma.ExternalDatabaseGrid = Ext.extend(Ext.grid.GridPanel, {
 
 				var mydata = [[1, 'false', 'Manual Curation']];
 				store.loadData(mydata, false);
+				
+				store.on('load',function(store,records,opts){ 
+					
+					var txt = Ext.getCmp('filterButton').getText();
+					
+					txt = txt + ": <b>excluding:";
+					var excludeFound = false;
+
+					
+					var resultData = store.getRange();
+					
+					for(var i=0;i<resultData.length;i++){
+						if(resultData[i].data.checked){
+							excludeFound = true;
+							txt = txt + " " + resultData[i].data.name;
+						}
+					}
+
+					if(excludeFound){
+						Ext.getCmp('filterButton').setText(txt + "</b>");
+					}
+					
+					
+		            }, this // scope
+		            );
 
 				Ext.apply(this, {
 
@@ -132,10 +157,17 @@ Gemma.ExternalDatabaseGrid = Ext.extend(Ext.grid.GridPanel, {
 			// get all names of selected database
 			getChosenDatabasesName : function() {
 
-				var result = 'excluding:';
+				var first=true;
+				var result = '';
 
 				this.store.each(function(rec) {
 							if (rec.data.isChecked) {
+								
+								if(first){
+									result = result + 'excluding:';
+									first=false;
+								}
+								
 								result = result + " " + rec.data.name;
 							}
 						});
