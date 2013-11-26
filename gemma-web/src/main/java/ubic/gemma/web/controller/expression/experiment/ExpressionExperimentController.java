@@ -54,7 +54,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.MeanVarianceService;
+import ubic.gemma.analysis.preprocess.OutlierDetails;
 import ubic.gemma.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
@@ -737,13 +739,66 @@ public class ExpressionExperimentController {
         qc.setEe( ee.getId() );
         qc.setEeManagerId( ee.getId() + "-eemanager" );
         qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
-        qc.setHasOutliers( outlierDetectionService.hasOutliers( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
         qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
-        qc.setHasCorrDist( true ); // FIXME     
+        qc.setHasCorrDist( true ); // FIXME
+        qc.setNumOutliersRemoved( numOutliersRemoved( ee ) );
+        qc.setNumPossibleOutliers( numPossibleOutliers( ee ) );
         return qc.getQChtml();
+    }
+
+    /**
+     * How many possible sample outliers are detected?
+     * 
+     * @param value
+     */
+    private int numPossibleOutliers( ExpressionExperiment ee ) {
+        int count = 0;
+
+        if ( ee == null ) {
+            log.warn( " Experiment is null " );
+            return 0;
+        }
+
+        // identify outliers
+        if ( !sampleCoexpressionMatrixService.hasMatrix( ee ) ) {
+            return 0;
+        }
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
+        count = outliers.size();
+
+        log.info( count + " possible outliers detected." );
+
+        return count;
+    }
+
+    /**
+     * How many possible sample outliers were removed?
+     * 
+     * @param value
+     */
+    private int numOutliersRemoved( ExpressionExperiment ee ) {
+        int count = 0;
+
+        if ( ee == null ) {
+            log.warn( " Experiment is null " );
+            return 0;
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            if ( assay.getIsOutlier() ) {
+                count++;
+            }
+
+        }
+
+        log.info( count + " outliers were removed." );
+
+        return count;
     }
 
     /**
@@ -1557,7 +1612,6 @@ public class ExpressionExperimentController {
     }
 
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
-        mav.addObject( "hasOutliers", outlierDetectionService.hasOutliers( expressionExperiment ) );
         mav.addObject( "hasCorrMat", sampleCoexpressionMatrixService.hasMatrix( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
@@ -1568,6 +1622,9 @@ public class ExpressionExperimentController {
 
         mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) );
         mav.addObject( "hasCorrDist", true ); // FIXME
+
+        mav.addObject( "numPossibleOutliers", numPossibleOutliers( expressionExperiment ) );
+        mav.addObject( "numOutliersRemoved", numOutliersRemoved( expressionExperiment ) );
     }
 
     /**

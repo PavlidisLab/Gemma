@@ -122,11 +122,6 @@
          <name>eeManagerId</name>
          <required>true</required>
          <rtexprvalue>true</rtexprvalue>
-      </attribute> 
-      <attribute>
-         <description>default=false</description>
-         <name>hasOutliers</name>
-         <rtexprvalue>true</rtexprvalue>
       </attribute>
       <attribute>
          <description>default=false</description>
@@ -156,6 +151,16 @@
       <attribute>
          <description>default=3</description>
          <name>numFactors</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=0</description>
+         <name>numOutliersRemoved</name>
+         <rtexprvalue>true</rtexprvalue>
+      </attribute>
+      <attribute>
+         <description>default=0</description>
+         <name>numPossibleOutliers</name>
          <rtexprvalue>true</rtexprvalue>
       </attribute>
    </tag>

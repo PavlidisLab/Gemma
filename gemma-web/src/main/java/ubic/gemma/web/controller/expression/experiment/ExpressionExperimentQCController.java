@@ -193,8 +193,50 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param id of experiment
      * @throws IOException
      */
-    @RequestMapping("/expressionExperiment/outliers.html")
-    public ModelAndView identifyOutliers( Long id ) throws IOException {
+    @RequestMapping("/expressionExperiment/outliersRemoved.html")
+    public ModelAndView identifyOutliersRemoved( Long id ) throws IOException {
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            log.warn( "Could not load experiment with id " + id );
+            return null;
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            if ( assay.getIsOutlier() ) {
+                bioAssays.add( assay );
+            }
+
+        }
+
+        // and write it out
+        StringWriter writer = new StringWriter();
+        StringBuffer buf = writer.getBuffer();
+
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", buf );
+
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ee = expressionExperimentService.thawLiter( ee );
+        edWriter.write( writer, ee, bioAssays, false, true, true );
+
+        ModelAndView mav = new ModelAndView( new TextView() );
+        mav.addObject( TextView.TEXT_PARAM, buf.toString() );
+        return mav;
+    }
+
+    /**
+     * @param id of experiment
+     * @throws IOException
+     */
+    @RequestMapping("/expressionExperiment/possibleOutliers.html")
+    public ModelAndView identifyPossibleOutliers( Long id ) throws IOException {
 
         if ( id == null ) {
             log.warn( "No id!" );
@@ -208,6 +250,11 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         // identify outliers
+        if ( !sampleCoexpressionMatrixService.hasMatrix( ee ) ) {
+            log.warn( "Experiment doesn't have correlation matrix computed (will not create right now)" );
+            return null;
+        }
+
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
 

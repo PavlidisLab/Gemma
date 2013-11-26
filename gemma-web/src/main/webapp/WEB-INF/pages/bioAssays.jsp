@@ -33,7 +33,7 @@
 		design</a>
 </p>
 
-<Gemma:expressionQC ee="${expressionExperiment.id}" hasOutliers="${hasOutliers}" hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
+<Gemma:expressionQC ee="${expressionExperiment.id}" numOutliersRemoved="${numOutliersRemoved}" numPossibleOutliers="${numPossibleOutliers}" hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
 	hasPCA="${hasPCA}" numFactors="${numFactors}" hasMeanVariance="${hasMeanVariance }" hasCorrDist="${hasCorrDist}"
 	eeManagerId="eemanager" />
 

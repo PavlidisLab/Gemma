@@ -40,8 +40,6 @@ public class ExperimentQCTag extends TagSupport {
 
     private boolean hasCorrMat = false;
 
-    private boolean hasOutliers = false;
-    
     private boolean hasCorrDist = false;
 
     private boolean hasPCA = false;
@@ -54,6 +52,10 @@ public class ExperimentQCTag extends TagSupport {
     private boolean hasNodeDegreeDist = false;
 
     private int numFactors = 2;
+
+    private int numOutliersRemoved = 0;
+
+    private int numPossibleOutliers = 0;
 
     /*
      * (non-Javadoc)
@@ -127,11 +129,20 @@ public class ExperimentQCTag extends TagSupport {
                     + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
 
             buf.append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/visualizeCorrMat.html?id="
-                    + this.eeid + "&text=1\">Get data</a></li>");
-            
-            if ( hasOutliers ) {
-                buf.append( "<li><a title=\"Download a file containing the list of identified outlier samples\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/outliers.html?id="
-                        + this.eeid + "&text=1\">Identified outliers</a></li>");
+                    + this.eeid + "&text=1\">Get data</a></li>" );
+
+            if ( this.numOutliersRemoved > 0 ) {
+                buf.append( "<li><a title=\"Download a file containing the list of outlier samples that were removed\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/outliersRemoved.html?id="
+                        + this.eeid + "&text=1\">" + this.numOutliersRemoved + " outliers removed</a></li>" );
+            } else {
+                buf.append( "<li>No outliers removed</li>" );
+            }
+
+            if ( this.numPossibleOutliers > 0 ) {
+                buf.append( "<li><a title=\"Download a file containing the list of possible outlier samples\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/possibleOutliers.html?id="
+                        + this.eeid + "&text=1\">" + this.numPossibleOutliers + " possible outliers</a></li>" );
+            } else {
+                buf.append( "<li>No possible outliers</li>" );
             }
 
             buf.append( "</ul></td>" );
@@ -267,13 +278,6 @@ public class ExperimentQCTag extends TagSupport {
     /**
      * @param value
      */
-    public void setHasOutliers( boolean value ) {
-        this.hasOutliers = value;
-    }
-    
-    /**
-     * @param value
-     */
     public void setHasMeanVariance( boolean value ) {
         this.hasMeanVariance = value;
     }
@@ -298,4 +302,17 @@ public class ExperimentQCTag extends TagSupport {
         this.numFactors = value;
     }
 
+    /**
+     * @param value
+     */
+    public void setNumPossibleOutliers( int value ) {
+        this.numPossibleOutliers = value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setNumOutliersRemoved( int value ) {
+        this.numOutliersRemoved = value;
+    }
 }

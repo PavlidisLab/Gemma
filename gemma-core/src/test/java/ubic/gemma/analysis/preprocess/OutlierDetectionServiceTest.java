@@ -20,7 +20,6 @@
 package ubic.gemma.analysis.preprocess;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -75,16 +74,14 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
     public void testIdentifyOutliers() throws URISyntaxException {
         ExpressionExperiment ee = eeService.findByShortName( "GSE2982" );
 
-        if ( ee != null ) {
-            eeService.delete( ee ); // might work, but array designs might be in the way.
+        if ( ee == null ) {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "gse2982Short" ) ) );
+
+            Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
+
+            ee = ( ExpressionExperiment ) results.iterator().next();
         }
-
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse2982Short" ) ) );
-
-        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
-
-        ee = ( ExpressionExperiment ) results.iterator().next();
 
         ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
@@ -93,7 +90,6 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
         // no outliers initially
         Collection<OutlierDetails> output = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
         assertEquals( 0, output.size() );
-        assertFalse( outlierDetectionService.hasOutliers( ee ) );
 
         // modify a sample to be the outlier
         int outlierIdx = 0;
@@ -102,7 +98,7 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
             sampleCorrelationMatrix.set( outlierIdx, j, -0.5 + j / 100.0 );
         }
 
-        // now we expect one outlier
+        // now we expect one outlier from the modified matrix
         output = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
         assertEquals( 1, output.size() );
         assertEquals( sampleCorrelationMatrix.getColName( outlierIdx ), output.iterator().next().getBioAssay() );

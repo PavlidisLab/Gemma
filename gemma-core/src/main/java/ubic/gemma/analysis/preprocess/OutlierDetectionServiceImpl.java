@@ -515,25 +515,4 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     }
 
-    @Override
-    public boolean hasOutliers( ExpressionExperiment ee ) {
-
-        if ( !sampleCoexpressionMatrixService.hasMatrix( ee ) ) {
-            log.warn( "Experiment doesn't have correlation matrix computed (will not create right now)" );
-            return false;
-        }
-
-        try {
-            DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService
-                    .findOrCreate( ee );
-            Collection<OutlierDetails> outliers = identifyOutliers( ee, sampleCorrelationMatrix, DEFAULT_QUANTILE,
-                    DEFAULT_FRACTION );
-            return !outliers.isEmpty();
-        } catch ( Exception e ) {
-            // we can't compute the matrix for some reason. FIXME: make this
-            log.warn( "Correlation matrix could not be retrieved" );
-            return false;
-        }
-    }
-
 }
