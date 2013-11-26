@@ -421,11 +421,16 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             throw new IllegalArgumentException( "No data vectors in " + ee );
     }
 
-    // Delete old links for this expressionexperiment
+    // Delete old links for this expressionexperiment, old analyses
     private void deleteOldLinks( LinkAnalysis la ) {
         ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
         log.info( "Deleting any old links for " + expressionExperiment + " ..." );
         ppService.deleteLinks( expressionExperiment );
+        log.info( "Deleting old analysis object(s)" );
+        for ( ProbeCoexpressionAnalysis old : probeCoexpressionAnalysisService
+                .findByInvestigation( expressionExperiment ) ) {
+            probeCoexpressionAnalysisService.delete( old );
+        }
     }
 
     /**
