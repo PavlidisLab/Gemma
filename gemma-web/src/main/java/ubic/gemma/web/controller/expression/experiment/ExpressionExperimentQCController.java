@@ -520,7 +520,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @throws IOException
      */
     @RequestMapping("/expressionExperiment/eigenGenes.html")
-    public void writeEigenGenes( Long eeid, OutputStream os ) throws IOException {
+    public ModelAndView writeEigenGenes( Long eeid ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not load experiment with id " + eeid ); // or access deined.
@@ -532,10 +532,19 @@ public class ExpressionExperimentQCController extends BaseController {
         /*
          * FIXME put the biomaterial names in there instead of the IDs.
          */
+        /*
+        new DenseDoubleMatrix<String, String>()
+        DoubleMatrix<String, String> matrix = new DenseDoubleMatrix<String, String>( omatrix.getRawMatrix() );
+        matrix.setRowNames( stringNames );
+        matrix.setColumnNames( stringNames );
 
-        MatrixWriter<Long, Integer> mr = new MatrixWriter<Long, Integer>( os );
-
-        mr.writeMatrix( vMatrix, true );
+        */
+        StringWriter s = new StringWriter();
+        MatrixWriter<Long, Integer> mw = new MatrixWriter<Long, Integer>( s, new DecimalFormat( "#.######" ) );
+        mw.writeMatrix( vMatrix, true );
+        ModelAndView mav = new ModelAndView( new TextView() );
+        mav.addObject( TextView.TEXT_PARAM, s.toString() );
+        return mav;
 
     }
 
