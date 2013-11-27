@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.15-SNAPSHOT</version>
+			<version>1.0.15</version>
 			<type>jar</type>
 		</dependency>
 	</dependencies>
