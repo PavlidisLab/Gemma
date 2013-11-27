@@ -88,8 +88,10 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
             log.info( e.getMessage() );
         }
 
+        Integer limit = 10000;
+
         Collection<EvidenceValueObject> evidenceToDelete = this.phenotypeAssociationService
-                .loadEvidenceWithExternalDatabaseName( externalDatabaseName );
+                .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit );
         int i = 0;
 
         while ( evidenceToDelete.size() > 0 ) {
@@ -97,8 +99,8 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
                 this.phenotypeAssociationService.remove( e.getId() );
                 log.info( i++ );
             }
-            evidenceToDelete = this.phenotypeAssociationService
-                    .loadEvidenceWithExternalDatabaseName( externalDatabaseName );
+            evidenceToDelete = this.phenotypeAssociationService.loadEvidenceWithExternalDatabaseName(
+                    externalDatabaseName, limit );
         }
         System.exit( -1 );
         return null;
