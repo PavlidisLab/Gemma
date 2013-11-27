@@ -142,7 +142,7 @@ public class ExperimentQCTag extends TagSupport {
                 buf.append( "<li><a title=\"Download a file containing the list of possible outlier samples\" class=\"newpage\"  target=\"_blank\"  href=\"/Gemma/expressionExperiment/possibleOutliers.html?id="
                         + this.eeid + "&text=1\">" + this.numPossibleOutliers + " possible outliers</a></li>" );
             } else {
-                buf.append( "<li>No possible outliers</li>" );
+                buf.append( "<li>No outliers detected</li>" );
             }
 
             buf.append( "</ul></td>" );
