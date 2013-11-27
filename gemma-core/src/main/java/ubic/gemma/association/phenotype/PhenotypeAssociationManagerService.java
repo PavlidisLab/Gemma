@@ -193,7 +193,8 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @param externalDatabaseName
      */
-    public abstract Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName );
+    public abstract Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName,
+            Integer limit );
 
     /**
      * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to

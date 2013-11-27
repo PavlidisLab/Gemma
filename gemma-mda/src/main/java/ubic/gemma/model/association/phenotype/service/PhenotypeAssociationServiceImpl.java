@@ -106,8 +106,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find all evidences from a specific external database */
     @Override
     @Transactional(readOnly = true)
-    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
-        return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName );
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, Integer limit ) {
+        return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName, limit );
     }
 
     /** find all evidence that doesn't come from an external course */

@@ -136,7 +136,7 @@ public interface PhenotypeAssociationService {
 
     /** find all evidences from a specific external database */
     @Secured({ "GROUP_AGENT" })
-    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, Integer limit );
 
     /** find all evidences with no external database */
     @Secured({ "GROUP_AGENT" })

@@ -655,9 +655,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName ) {
+    public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName, Integer limit ) {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
-                .findEvidencesWithExternalDatabaseName( externalDatabaseName );
+                .findEvidencesWithExternalDatabaseName( externalDatabaseName, limit );
 
         return this.convert2ValueObjects( phenotypeAssociations );
     }
@@ -1231,7 +1231,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     phenotypeAssociations = this.associationService.findEvidencesWithoutExternalDatabaseName();
                 } else {
                     phenotypeAssociations = this.associationService
-                            .findEvidencesWithExternalDatabaseName( externalDatabaseValueObject.getName() );
+                            .findEvidencesWithExternalDatabaseName( externalDatabaseValueObject.getName(),null );
                 }
 
                 for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {

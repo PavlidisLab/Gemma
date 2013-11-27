@@ -80,7 +80,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
 
     /** find all evidences from a specific external database */
-    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName );
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
+            Integer limit );
 
     /** find all evidence that doesn't come from an external course */
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();

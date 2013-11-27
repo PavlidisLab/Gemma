@@ -51,8 +51,8 @@ import ubic.gemma.persistence.AbstractDao;
  * deals with all basic queries used by Neurocarta
  * 
  * @author Nicolas
- * @version $Id$ TODO: change criteria queries to
- *          hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
+ * @version $Id$ TODO: change criteria
+ *          queries to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -132,10 +132,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** loads all evidences from a specific external database */
     @Override
-    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName ) {
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
+            Integer limit ) {
 
-        return this
-                .getHibernateTemplate()
+        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+
+        if ( limit != null ) {
+            tpl.setMaxResults( 10000 );
+        }
+        return tpl
                 .findByNamedParam(
                         "select p from PhenotypeAssociation as p fetch all properties  join p.evidenceSource es join es.externalDatabase ed where ed.name=:name",
                         "name", externalDatabaseName );
