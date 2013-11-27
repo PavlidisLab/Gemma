@@ -66,7 +66,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         args[3] = "administrator";
         // the path of the file
         args[4] = "-f";
-        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/finalResults.tsv";
+        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/finalResults1.tsv";
         // create the evidence in the database
         args[6] = "-c";
         args[7] = "true";
@@ -873,13 +873,13 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) ) {
             evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
         } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" )
-                || externalDatabaseName.equalsIgnoreCase( "BDgene" ) ) {
+                || externalDatabaseName.equalsIgnoreCase( "BDgene" )  || externalDatabaseName.equalsIgnoreCase( "DGA" )) {
             return;
         }
 
         // no score set ?
         else if ( evidence.getScoreValueObject().getStrength() == null ) {
-            writeError( "no score found for a evidence using Symbol: " + evidence.getGeneOfficialSymbol()
+            writeError( "no score found for a evidence using NCBI: " + evidence.getGeneNCBI()
                     + "   and taxon: " + evidenceTaxon );
         }
     }
