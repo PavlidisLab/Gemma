@@ -84,14 +84,16 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                         // if deep >3 always keep
                         int howDeepIdTerm = findHowManyParents( o, 0 );
 
-                        // keep leaf or deep enough
-                        if ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 ) {
+                        // keep leaf or deep enough or uri=DOID_162(cancer)
+                        if ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2
+                                && o.getUri().indexOf( "DOID_162" ) != -1 ) {
                             outNotFound.write( o.getLabel() + "\t" + o.getUri() + "\n" );
                         }
 
                         else {
                             outFinalResults.write( o.getUri() + "\t" + o.getLabel() + "\t" + geneSymbol + "\t" + geneId
-                                    + "\t" + pubMedID + "\t" + "GeneRIF: "+geneRIF + "\t" + "IEA" + "\t" + "" + "\t" + DGA + "\n" );
+                                    + "\t" + pubMedID + "\t" + "GeneRIF: " + geneRIF + "\t" + "IEA" + "\t" + "" + "\t"
+                                    + DGA + "\n" );
                         }
                     } else {
                         log.info( "gene NCBI no found in Gemma discard this eidence: ncbi: " + geneId );
