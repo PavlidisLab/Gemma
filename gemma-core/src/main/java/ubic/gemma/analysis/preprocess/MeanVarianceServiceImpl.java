@@ -105,7 +105,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             log.info( "Recomputing mean-variance" );
 
             ExpressionExperiment updatedEe = expressionExperimentService.thawLiter( ee );
-            
+            mvr = updatedEe.getMeanVarianceRelation();
             ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( updatedEe );
             if ( intensities == null ) {
                 throw new IllegalStateException( "Could not locate intensity matrix for " + updatedEe.getShortName() );

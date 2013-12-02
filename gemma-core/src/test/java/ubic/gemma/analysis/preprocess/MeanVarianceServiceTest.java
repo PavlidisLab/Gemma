@@ -17,14 +17,17 @@ package ubic.gemma.analysis.preprocess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -88,6 +91,38 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     private static ByteArrayConverter bac = new ByteArrayConverter();
 
+    @Before
+    public void setUp() {
+        ee = eeService.findByShortName( "GSE2982" );
+        if ( ee != null ) {
+            eeService.delete( ee ); // might work, but array designs might be in the way.
+        }
+
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                    getTestFileBasePath( "gse2982Short" ) ) );
+        } catch ( URISyntaxException e1 ) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
+
+        ee = ( ExpressionExperiment ) results.iterator().next();
+
+        try {
+            qt = createOrUpdateQt( ScaleType.LINEAR );
+        } catch ( Exception e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        qt.setIsNormalized( true );
+        quantitationTypeService.update( qt );
+
+        // important bit, need to createProcessedVectors manually before using it
+        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
+    }
+
     @After
     public void after() {
         try {
@@ -99,25 +134,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Test
     final public void testServiceLinearNormalized() throws Exception {
-
-        ee = eeService.findByShortName( "GSE2982" );
-        if ( ee != null ) {
-            eeService.delete( ee ); // might work, but array designs might be in the way.
-        }
-
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse2982Short" ) ) );
-
-        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
-
-        ee = ( ExpressionExperiment ) results.iterator().next();
-
-        qt = createOrUpdateQt( ScaleType.LINEAR );
-        qt.setIsNormalized( true );
-        quantitationTypeService.update( qt );
-
-        // important bit, need to createProcessedVectors manually before using it
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
         assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
 
@@ -135,7 +151,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( lowessY );
 
         int expectedLength = 97; // after filtering
-        System.out.println( "means.length=" + means.length );
         assertEquals( expectedLength, means.length );
         assertEquals( expectedLength, variances.length );
         expectedLength = 95; // duplicate rows removed
@@ -159,24 +174,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     @Test
     final public void testServiceCreateTwoColor() throws Exception {
 
-        ee = eeService.findByShortName( "GSE2982" );
-        if ( ee != null ) {
-            eeService.delete( ee ); // might work, but array designs might be in the way.
-        }
-
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse2982Short" ) ) );
-
-        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
-
-        ee = ( ExpressionExperiment ) results.iterator().next();
-
         qt = createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
         quantitationTypeService.update( qt );
-
-        // important bit, need to createProcessedVectors manually before using it
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
         // update ArrayDesign to TWOCOLOR
         Collection<ArrayDesign> aas = eeService.getArrayDesignsUsed( ee );
@@ -257,24 +257,10 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Test
     final public void testServiceCreateOneColor() throws Exception {
-        ee = eeService.findByShortName( "GSE2982" );
-        if ( ee != null ) {
-            eeService.delete( ee ); // might work, but array designs might be in the way.
-        }
-
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse2982Short" ) ) );
-
-        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
-
-        ee = ( ExpressionExperiment ) results.iterator().next();
 
         qt = createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
         quantitationTypeService.update( qt );
-
-        // important bit, need to createProcessedVectors manually before using it
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
         // update ArrayDesign to ONECOLOR
         Collection<ArrayDesign> aas = eeService.getArrayDesignsUsed( ee );
@@ -414,4 +400,30 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         assertEquals( 0.96647, lowessY[idx], 0.0001 );
     }
 
+    @Test
+    final public void testServiceCreateExistingEe() throws Exception {
+
+        // no MeanVarianceRelation exists yet
+        ee = eeService.load( ee.getId() );
+        assertNotNull( ee.getId() );
+        MeanVarianceRelation oldMvr = ee.getMeanVarianceRelation();
+        assertNull( oldMvr );
+        Long oldEeId = ee.getId();
+
+        // first time we create a MeanVarianceRelation
+        ee = eeService.load( ee.getId() );
+        MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
+        assertEquals( oldEeId, ee.getId() );
+        assertNotNull( mvr );
+        oldMvr = mvr;
+
+        // now that the MeanVarianceRelation exists
+        // try loading ee again by just using an eeId
+        // and see if we get a no Session error
+        ee = eeService.load( ee.getId() );
+        mvr = meanVarianceService.create( ee, true );
+        assertEquals( oldEeId, ee.getId() );
+        assertTrue( oldMvr != mvr );
+
+    }
 }
