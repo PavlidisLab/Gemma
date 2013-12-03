@@ -246,7 +246,7 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
                 for ( String pudmed : literaturePubMedNegative ) {
                     allPubmeds = allPubmeds + pudmed + ";";
                 }
-                
+
                 outFinalResults.write( geneSymbol + "\t" );
                 outFinalResults.write( nbciID + "\t" );
                 outFinalResults.write( allPubmeds + "\t" );

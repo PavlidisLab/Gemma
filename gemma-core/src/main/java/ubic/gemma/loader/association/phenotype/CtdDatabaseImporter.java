@@ -131,7 +131,7 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                  * value make sense to add them to the manual mapping
                  **/
                 else {
-                    writeInPossibleMappingAndNotFound( diseaseId, diseaseName, line, CTD );
+                    writeInPossibleMappingAndNotFound( diseaseId, diseaseName, line, CTD, true );
                 }
             }
         }

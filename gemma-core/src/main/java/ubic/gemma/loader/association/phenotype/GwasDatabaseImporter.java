@@ -101,7 +101,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             if ( findManualMappingTermValueUri( description ) != null ) {
                 writeFinalFile( geneSymbol, tokens, findManualMappingTermValueUri( description ) );
             } else {
-                writeInPossibleMappingAndNotFound( description, removeParentheses( description ), line, GWAS );
+                writeInPossibleMappingAndNotFound( description, removeParentheses( description ), line, GWAS, false );
             }
         }
 

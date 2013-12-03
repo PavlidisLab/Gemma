@@ -38,6 +38,7 @@ import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MedicOntologyService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Gene;
@@ -87,6 +88,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected OntologyService ontologyService = null;
     protected GeneService geneService = null;
     protected TaxonService taxonService = null;
+    protected MedicOntologyService medicOntologyService = null;
 
     // *********************************************************************************************
     // the disease ontology file, we are interested in the MESH and OMIM Id in it ( we dont have this information in
@@ -136,6 +138,8 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
             wait( 3000 );
             log.info( "waiting for the HP Ontology to load" );
         }
+
+        this.medicOntologyService = new MedicOntologyService();
     }
 
     // the loadServices is in the constructor, we always need those
@@ -373,35 +377,38 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                         for ( String omimId : omimIds ) {
 
                             HashSet<String> h = new HashSet<String>();
+                            String key = "OMIM:" + omimId;
 
-                            if ( diseaseFileMappingFound.get( omimId ) == null ) {
+                            if ( diseaseFileMappingFound.get( key ) == null ) {
                                 if ( !isObsoleteOrNotExist( valueUri ) ) {
                                     h.add( valueUri );
                                 }
                             } else {
-                                h = diseaseFileMappingFound.get( omimId );
+                                h = diseaseFileMappingFound.get( key );
                                 if ( !isObsoleteOrNotExist( valueUri ) ) {
                                     h.add( valueUri );
                                 }
                             }
-                            diseaseFileMappingFound.put( "OMIM:" + omimId, h );
+                            diseaseFileMappingFound.put( key, h );
                         }
 
                         for ( String meshId : meshIds ) {
 
+                            String key = "MESH:" + meshId;
+
                             HashSet<String> h = new HashSet<String>();
 
-                            if ( diseaseFileMappingFound.get( meshId ) == null ) {
+                            if ( diseaseFileMappingFound.get( key ) == null ) {
                                 if ( !isObsoleteOrNotExist( valueUri ) ) {
                                     h.add( valueUri );
                                 }
                             } else {
-                                h = diseaseFileMappingFound.get( meshId );
+                                h = diseaseFileMappingFound.get( key );
                                 if ( !isObsoleteOrNotExist( valueUri ) ) {
                                     h.add( valueUri );
                                 }
                             }
-                            diseaseFileMappingFound.put( "MESH:" + meshId, h );
+                            diseaseFileMappingFound.put( key, h );
                         }
                     }
                 }
@@ -478,6 +485,27 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         }
 
         return allValueUri;
+    }
+
+    private Collection<OntologyTerm> findOntologyTermsUriWithDiseaseId( String diseaseId ) {
+
+        Collection<OntologyTerm> terms = new HashSet<OntologyTerm>();
+        Collection<String> valuesUri = diseaseFileMappingFound.get( diseaseId );
+
+        if ( valuesUri != null && !valuesUri.isEmpty() ) {
+
+            for ( String valueUri : valuesUri ) {
+
+                OntologyTerm on = this.ontologyService.getTerm( valueUri );
+
+                if ( on != null ) {
+
+                    terms.add( on );
+                }
+            }
+        }
+
+        return terms;
     }
 
     // special rule used to format the search term
@@ -671,6 +699,9 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // the reason this is done that way is to not have duplicates for 2 files
     protected void writeBuffersAndCloseFiles() throws IOException {
 
+        outMappingFound
+                .write( "Identifier (KEY)\tPhenotype valueUri (THE KEY MAP TO THIS)\tPhenotype value\tSearch Term used in annotator\tParent Mesh\tHow we found the mapping\tSource" );
+
         // write all possible mapping found
         for ( String lineMappinpFound : outMappingFoundBuffer ) {
             outMappingFound.write( lineMappinpFound );
@@ -777,7 +808,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         }
 
         if ( !values.isEmpty() ) {
-            String lineToWrite = identifier + "\t" + valuesUri + "\t" + values + "\t" + searchTerm + "\t"
+            String lineToWrite = identifier + "\t" + valuesUri + "\t" + values + "\t" + searchTerm + "\t\t"
                     + "Case 8: Found Mappings, No Match Detected" + "\t" + externalDatabaseName + "\n";
             // multiple mapping detected
             outMappingFoundBuffer.add( lineToWrite );
@@ -787,7 +818,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     }
 
     protected void writeInPossibleMappingAndNotFound( String identifier, String searchTerm, String line,
-            String externalDatabaseName ) {
+            String externalDatabaseName, boolean useMedicOntology ) {
 
         String searchTermWithOutKeywords = "";
 
@@ -837,27 +868,116 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
                 }
 
                 String lineToWrite = identifier + "\t" + valueUriForCondition + "\t" + valueForCondition + "\t"
-                        + searchTerms + "\t" + condition + "\t" + externalDatabaseName + "\n";
+                        + searchTerms + "\t\t" + condition + "\t" + externalDatabaseName + "\n";
 
                 outMappingFoundBuffer.add( lineToWrite );
 
-            } else if ( !ontologyTermsNormal.isEmpty() || !ontologyTermsWithOutKeywords.isEmpty() ) {
+            } else {
 
-                Collection<AnnotatorResponse> allAnnotatorResponse = new TreeSet<AnnotatorResponse>();
-                allAnnotatorResponse.addAll( ontologyTermsNormal );
-                allAnnotatorResponse.addAll( ontologyTermsWithOutKeywords );
-                // multiple mapping found without a specific condition
-                boolean found = writeInPossibleMapping( allAnnotatorResponse, identifier, searchTerm,
-                        externalDatabaseName );
+                boolean foundUsingParent = false;
+                String usingParent = "Using Parent";
 
-                if ( !found ) {
+                if ( useMedicOntology ) {
+
+                    OntologyTerm on = this.medicOntologyService.getTerm( changeMedicToUri( identifier ) );
+
+                    if ( on == null ) {
+                        on = this.medicOntologyService.findUsingAlternativeId( identifier );
+                    }
+
+                    if ( on != null ) {
+                        Collection<OntologyTerm> onParents = on.getParents( true );
+
+                        // here we have all parents try to do something with them
+                        for ( OntologyTerm onParent : onParents ) {
+                            String parentId = changeToId( onParent.getUri() );
+                            String parentUsed = "Parent used: " + onParent.getLabel() + "(" + parentId + ")";
+
+                            Collection<OntologyTerm> ontologyTermsAssociated = findOntologyTermsUriWithDiseaseId( parentId );
+
+                            if ( !ontologyTermsAssociated.isEmpty() ) {
+
+                                for ( OntologyTerm term : ontologyTermsAssociated ) {
+
+                                    String lineToWrite = identifier + "\t" + term.getUri() + "\t" + term.getLabel()
+                                            + "\t" + searchTerm + "\t" + parentUsed + "\t"
+                                            + "Case 1 : Mesh/Omim term mapped " + usingParent + "\t"
+                                            + externalDatabaseName + "\n";
+
+                                    outMappingFoundBuffer.add( lineToWrite );
+                                    foundUsingParent = true;
+                                }
+                            } else if ( findManualMappingTermValueUri( parentId ) != null ) {
+
+                                for ( String valueUriFound : findManualMappingTermValueUri( parentId ) ) {
+                                    // 2 - If we couldnt find it lets use the manual mapping file
+
+                                    OntologyTerm ontologyTerm = findOntologyTermExistAndNotObsolote( valueUriFound );
+
+                                    String lineToWrite = identifier + "\t" + ontologyTerm.getUri() + "\t"
+                                            + ontologyTerm.getLabel() + "\t" + searchTerm + "\t" + parentUsed + "\t"
+                                            + "Case 2 : Found in manual Mapping " + usingParent + "\t"
+                                            + externalDatabaseName + "\n";
+
+                                    outMappingFoundBuffer.add( lineToWrite );
+                                    foundUsingParent = true;
+
+                                }
+
+                            }
+
+                            // finally lets use the annotator
+                            else {
+
+                                Collection<AnnotatorResponse> ontologyTermsNormal1 = cacheAnswerFromAnnotator
+                                        .get( onParent.getLabel() );
+
+                                if ( ontologyTermsNormal1 == null ) {
+                                    ontologyTermsNormal1 = removeNotExistAndObsolete( anoClient.findTerm( onParent
+                                            .getLabel() ) );
+
+                                    // cache results
+                                    cacheAnswerFromAnnotator.put( onParent.getLabel(), ontologyTermsNormal1 );
+                                }
+
+                                if ( ontologyTermsNormal1 != null ) {
+
+                                    // did we find something ?
+                                    condition = findConditionUsed( ontologyTermsNormal1, false );
+
+                                    if ( condition != null ) {
+
+                                        String lineToWrite = identifier + "\t" + valueUriForCondition + "\t"
+                                                + valueForCondition + "\t" + searchTerm + "\t" + parentUsed + condition
+                                                + usingParent + "\t" + externalDatabaseName + "\n";
+
+                                        outMappingFoundBuffer.add( lineToWrite );
+                                        foundUsingParent = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if ( ( !ontologyTermsNormal.isEmpty() || !ontologyTermsWithOutKeywords.isEmpty() ) && !foundUsingParent ) {
+
+                    Collection<AnnotatorResponse> allAnnotatorResponse = new TreeSet<AnnotatorResponse>();
+                    allAnnotatorResponse.addAll( ontologyTermsNormal );
+                    allAnnotatorResponse.addAll( ontologyTermsWithOutKeywords );
+                    // multiple mapping found without a specific condition
+                    boolean found = writeInPossibleMapping( allAnnotatorResponse, identifier, searchTerm,
+                            externalDatabaseName );
+
+                    if ( !found ) {
+                        outNotFoundBuffer.add( line + "\n" );
+                    }
+                }
+
+                else {
+                    // nothing was found with the annotator, write the line in the not found file
                     outNotFoundBuffer.add( line + "\n" );
                 }
-            }
-
-            else {
-                // nothing was found with the annotator, write the line in the not found file
-                outNotFoundBuffer.add( line + "\n" );
             }
         }
     }
@@ -897,6 +1017,17 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
         }
 
         return null;
+    }
+
+    private String changeToId( String valueUri ) {
+        return valueUri.substring( valueUri.lastIndexOf( "/" ) + 1, valueUri.length() ).replace( '_', ':' );
+    }
+
+    private String changeMedicToUri( String medicTerm ) {
+
+        String randomUri = this.medicOntologyService.getAllURIs().iterator().next();
+
+        return randomUri.substring( 0, randomUri.lastIndexOf( "/" ) + 1 ) + medicTerm.replace( ':', '_' );
     }
 
 }

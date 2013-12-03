@@ -85,8 +85,8 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                         int howDeepIdTerm = findHowManyParents( o, 0 );
 
                         // keep leaf or deep enough or uri=DOID_162(cancer)
-                        if ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2
-                                && o.getUri().indexOf( "DOID_162" ) != -1 ) {
+                        if ( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 )
+                                || o.getUri().indexOf( "DOID_162" ) != -1 ) {
                             outNotFound.write( o.getLabel() + "\t" + o.getUri() + "\n" );
                         }
 

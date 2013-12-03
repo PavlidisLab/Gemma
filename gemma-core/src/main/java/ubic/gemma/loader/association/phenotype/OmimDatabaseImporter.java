@@ -192,7 +192,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
                     // if Case 1 and 2 fail, then lets use the annotator to try finding an answer
                     else {
-                        writeInPossibleMappingAndNotFound( omimId, description, line, OMIM );
+                        writeInPossibleMappingAndNotFound( omimId, description, line, OMIM, true );
                     }
                 }
             }
@@ -308,7 +308,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             if ( commonsPubmeds.isEmpty() ) {
                 String evidenceLine = geneSymbol + "\t" + ncbiGeneId + "\t" + evidenceCode + "\t" + description + "\t"
                         + omimPhenotypeId + "\t" + allValueUri + "\t" + phenotypeValue + "\t" + conditionUsed + "\t"
-                         + OMIM + "\t" + "" + "\t" + omimGeneId + "\n";
+                        + OMIM + "\t" + "" + "\t" + omimGeneId + "\n";
 
                 outFinalResults.write( evidenceLine );
             } else {

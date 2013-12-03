@@ -97,7 +97,6 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                 }
 
                 if ( !valuesUri.isEmpty() ) {
-
                     outFinalResults.write( geneSymbol + "\t" + taxon + "\t" + pubmed + "\t" + evidenceCode + "\t"
                             + comment + "\t" + RGD + "\t" + databaseLink + "\t" + valuesUri + "\n" );
                 }
@@ -114,7 +113,7 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                     String description = findDescriptionUsingTerm( diseaseId );
 
                     if ( description != null && !description.isEmpty() ) {
-                        writeInPossibleMappingAndNotFound( diseaseId, description, line, RGD );
+                        writeInPossibleMappingAndNotFound( diseaseId, description, line, RGD, true );
                     }
                 }
             }
