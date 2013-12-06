@@ -146,6 +146,16 @@ Gemma.PhenotypeEvidenceManagerGridPanel = Ext.extend(Gemma.PhenotypeEvidenceGrid
                });
 
             this.getTopToolbar().addButton(userNameCombo);
+            
+            
+            var numResults = new Ext.form.Label({
+            	text:'',
+           	 	id:'numResults'
+           	 });
+            
+            this.getTopToolbar().add(' ');
+            this.getTopToolbar().add(numResults);
+            
          }
       }
    });

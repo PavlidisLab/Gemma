@@ -492,6 +492,10 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
             }),
          sortInfo : this.storeSortInfo
       });
+      
+      evidenceStore.on('load',function(store,records,opts){	
+    	  Ext.getCmp('numResults').setText( this.getStore().getCount()+' results' );
+	   },this);
 
       var columns = [rowExpander, {
             dataIndex : 'containQueryPhenotype',
