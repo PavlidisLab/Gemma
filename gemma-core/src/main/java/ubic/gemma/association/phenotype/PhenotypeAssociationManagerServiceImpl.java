@@ -655,7 +655,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName, Integer limit ) {
+    public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName,
+            Integer limit ) {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName, limit );
 
@@ -1230,8 +1231,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         PhenotypeAssociationConstants.MANUAL_CURATION ) ) {
                     phenotypeAssociations = this.associationService.findEvidencesWithoutExternalDatabaseName();
                 } else {
-                    phenotypeAssociations = this.associationService
-                            .findEvidencesWithExternalDatabaseName( externalDatabaseValueObject.getName(),null );
+                    phenotypeAssociations = this.associationService.findEvidencesWithExternalDatabaseName(
+                            externalDatabaseValueObject.getName(), null );
                 }
 
                 for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
@@ -1673,6 +1674,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             showOnlyEditable = evidenceFilter.isShowOnlyEditable();
             externalDatabaseIds = evidenceFilter.getExternalDatabaseIds();
+
+            if ( externalDatabaseIds.size() == 1 && externalDatabaseIds.iterator().next() == 0 ) {
+                externalDatabaseIds.clear();
+                for ( String token : Settings.getString( "gemma.neurocarta.exluded_database_id" ).split( "," ) ) {
+                    externalDatabaseIds.add( new Long( token ) );
+                }
+            }
         }
 
         Map<String, Set<Integer>> publicPhenotypesGenesAssociations = new HashMap<>();
