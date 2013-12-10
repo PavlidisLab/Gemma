@@ -26,6 +26,7 @@ import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
@@ -64,6 +65,9 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
     private boolean containQueryPhenotype = false;
 
     private boolean testest = false;
+
+    private String originalPhenotype = "";
+    private String phenotypeMapping = "";
 
     private SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO = new TreeSet<PhenotypeAssPubValueObject>();
 
@@ -486,6 +490,37 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
 
     public void setPhenotypeAssPubVO( SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO ) {
         this.phenotypeAssPubVO = phenotypeAssPubVO;
+    }
+
+    public String getOriginalPhenotype() {
+        return originalPhenotype;
+    }
+
+    public void setOriginalPhenotype( String originalPhenotype ) {
+        this.originalPhenotype = originalPhenotype;
+    }
+
+    public String getPhenotypeMapping() {
+        return phenotypeMapping;
+    }
+
+    public void setPhenotypeMapping( String phenotypeMapping ) {
+        this.phenotypeMapping = phenotypeMapping;
+    }
+
+    public PhenotypeMappingType getPhenotypeMappingAsEnum() {
+
+        if ( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) ) {
+            return PhenotypeMappingType.XREF;
+        } else if ( phenotypeMapping.equalsIgnoreCase( "Curated" ) ) {
+            return PhenotypeMappingType.CURATED;
+        } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" ) ) {
+            return PhenotypeMappingType.INFERRED_XREF;
+        } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) ) {
+            return PhenotypeMappingType.INFERRED_CURATED;
+        } 
+        
+        return null;
     }
 
 }

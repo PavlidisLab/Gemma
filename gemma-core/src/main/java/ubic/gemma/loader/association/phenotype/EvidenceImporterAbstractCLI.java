@@ -263,6 +263,10 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 this.mapColumns.put( "ScoreType", index );
             } else if ( header.equalsIgnoreCase( "Taxon" ) ) {
                 this.mapColumns.put( "Taxon", index );
+            } else if ( header.equalsIgnoreCase( "PhenotypeMapping" ) ) {
+                this.mapColumns.put( "PhenotypeMapping", index );
+            } else if ( header.equalsIgnoreCase( "OrginalPhenotype" ) ) {
+                this.mapColumns.put( "OriginalPhenotype", index );
             }
             // not used by evidence importer, used to add extra information only human readable, let this header pass
             else if ( !header.equalsIgnoreCase( "ExtraInfo" ) ) {
@@ -274,7 +278,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         // Minimum fields any evidence should have, need a (taxon+geneSymbol) or (geneId+geneSymbol)
         if ( !( ( ( this.mapColumns.containsKey( "Taxon" ) ) || this.mapColumns.containsKey( "GeneId" ) )
                 && this.mapColumns.containsKey( "GeneSymbol" ) && this.mapColumns.containsKey( "EvidenceCode" )
-                && this.mapColumns.containsKey( "Comments" ) && this.mapColumns.containsKey( "Phenotypes" ) ) ) {
+                && this.mapColumns.containsKey( "Comments" ) && this.mapColumns.containsKey( "Phenotypes" )
+                && this.mapColumns.containsKey( "OriginalPhenotype" ) && this.mapColumns
+                    .containsKey( "PhenotypeMapping" ) ) ) {
             throw new Exception( "Headers not set correctly" );
         }
 

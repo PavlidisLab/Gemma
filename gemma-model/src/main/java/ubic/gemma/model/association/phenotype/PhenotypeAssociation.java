@@ -55,6 +55,10 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
 
     private Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications = new java.util.HashSet<PhenotypeAssociationPublication>();
 
+    private PhenotypeMappingType mappingType;
+
+    private String originalPhenotype;
+
     /**
      * No-arg constructor added to satisfy javabean contract
      * 
@@ -179,6 +183,22 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
     public void setPhenotypeAssociationPublications(
             Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications ) {
         this.phenotypeAssociationPublications = phenotypeAssociationPublications;
+    }
+
+    public PhenotypeMappingType getMappingType() {
+        return mappingType;
+    }
+
+    public void setMappingType( PhenotypeMappingType mappingType ) {
+        this.mappingType = mappingType;
+    }
+
+    public String getOriginalPhenotype() {
+        return originalPhenotype;
+    }
+
+    public void setOriginalPhenotype( String originalPhenotype ) {
+        this.originalPhenotype = originalPhenotype;
     }
 
 }

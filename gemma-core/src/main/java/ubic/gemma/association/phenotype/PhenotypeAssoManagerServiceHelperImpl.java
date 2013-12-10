@@ -240,6 +240,9 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         if ( evidenceValueObject.getEvidenceSource() != null ) {
             populateEvidenceSource( phe, evidenceValueObject );
         }
+        
+        phe.setOriginalPhenotype( evidenceValueObject.getOriginalPhenotype() );
+        phe.setMappingType( evidenceValueObject.getPhenotypeMappingAsEnum() );
 
         setScoreInformation( evidenceValueObject, phe );
     }

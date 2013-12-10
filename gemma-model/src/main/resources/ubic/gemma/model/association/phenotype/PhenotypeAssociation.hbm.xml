@@ -31,6 +31,12 @@
 			<column name="EVIDENCE_CODE" not-null="false" unique="false"
 				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
+		<property name="mappingType" type="ubic.gemma.association.phenotype.PhenotypeMappingType">
+            <column name="MAPPING_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+        </property>
+        <property name="originalPhenotype" type="java.lang.String">
+			<column name="ORIGINAL_PHENOTYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
 		<property name="isNegativeEvidence" type="java.lang.Boolean">
 			<column name="IS_NEGATIVE_EVIDENCE" not-null="false" unique="false" sql-type="TINYINT" />
 		</property>

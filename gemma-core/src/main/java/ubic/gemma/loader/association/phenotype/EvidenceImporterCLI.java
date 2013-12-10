@@ -66,7 +66,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         args[3] = "administrator";
         // the path of the file
         args[4] = "-f";
-        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/finalResults1.tsv";
+        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/finalResults2.tsv";
         // create the evidence in the database
         args[6] = "-c";
         args[7] = "true";
@@ -243,11 +243,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             log.info( "Reading evidence: " + i++ );
 
             try {
-
                 if ( evidenceType.equals( this.LITERATURE_EVIDENCE ) ) {
-
                     evidenceValueObjects.add( convert2LiteratureOrGenereicVO( tokens ) );
-
                 } else if ( evidenceType.equals( this.EXPERIMENTAL_EVIDENCE ) ) {
                     evidenceValueObjects.add( convertFileLine2ExperimentalValueObjects( tokens ) );
                 } else {
@@ -310,6 +307,11 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             evidenceTaxon = tokens[this.mapColumns.get( "Taxon" )].trim();
         }
 
+        String originalPhenotype = tokens[this.mapColumns.get( "OriginalPhenotype" )].trim();
+        String phenotypeMapping = tokens[this.mapColumns.get( "PhenotypeMapping" )].trim();
+
+        verifyMappingType( phenotypeMapping );
+
         Set<String> phenotypeFromArray = trimArray( tokens[this.mapColumns.get( "Phenotypes" )].split( ";" ) );
 
         int geneNcbiId = 0;
@@ -328,6 +330,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         evidence.setGeneNCBI( geneNcbiId );
         evidence.setPhenotypes( phenotypes );
         evidence.setIsNegativeEvidence( isNegativeEvidence );
+        evidence.setOriginalPhenotype( originalPhenotype );
+        evidence.setPhenotypeMapping( phenotypeMapping );
 
         if ( this.mapColumns.get( "Score" ) != null && this.mapColumns.get( "ScoreType" ) != null
                 && this.mapColumns.get( "Strength" ) != null ) {
@@ -546,6 +550,16 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             }
         }
         return g.getNcbiGeneId();
+    }
+
+    private void verifyMappingType( String phenotypeMapping ) {
+
+        if ( !( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) || phenotypeMapping.equalsIgnoreCase( "Curated" )
+                || phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" ) || phenotypeMapping
+                    .equalsIgnoreCase( "Inferred Curated" ) ) ) {
+            writeError( "Unsuported phenotypeMapping: " + phenotypeMapping );
+        }
+
     }
 
     private Set<CharacteristicValueObject> experiementTags2Ontology( Set<String> values, String category,
@@ -873,14 +887,14 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) ) {
             evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
         } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" )
-                || externalDatabaseName.equalsIgnoreCase( "BDgene" )  || externalDatabaseName.equalsIgnoreCase( "DGA" )) {
+                || externalDatabaseName.equalsIgnoreCase( "BDgene" ) || externalDatabaseName.equalsIgnoreCase( "DGA" ) ) {
             return;
         }
 
         // no score set ?
         else if ( evidence.getScoreValueObject().getStrength() == null ) {
-            writeError( "no score found for a evidence using NCBI: " + evidence.getGeneNCBI()
-                    + "   and taxon: " + evidenceTaxon );
+            writeError( "no score found for a evidence using NCBI: " + evidence.getGeneNCBI() + "   and taxon: "
+                    + evidenceTaxon );
         }
     }
 
