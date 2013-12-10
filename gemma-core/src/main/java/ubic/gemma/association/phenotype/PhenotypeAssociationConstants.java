@@ -42,8 +42,8 @@ public class PhenotypeAssociationConstants {
     public final static String MANUAL_CURATION = "Manual Curation";
 
     // path to where to place the files on the isntance running it
-    public final static String PHENOCARTA_HOME_FOLDER_PATH = Settings.getString( "gemma.appdata.home" ) + File.separator
-            + PhenotypeAssociationConstants.PHENOCARTA_EXPORT + File.separator;
+    public final static String PHENOCARTA_HOME_FOLDER_PATH = Settings.getString( "gemma.appdata.home" )
+            + File.separator + PhenotypeAssociationConstants.PHENOCARTA_EXPORT + File.separator;
 
     public final static String PHENOCARTA_NAME = "phenocarta";
     public final static String LATEST_EVIDENCE_EXPORT = "LatestEvidenceExport";
@@ -54,13 +54,18 @@ public class PhenotypeAssociationConstants {
     public final static String ERMINEJ_FOLDER_NAME = "ErmineJ";
 
     // path to the final files on production
-    public final static String GEMMA_PHENOCARTA_HOST_URL = Settings.getString( "gemma.hosturl" ) + Settings.getString( "gemma.appname" ) + File.separator
-            + PHENOCARTA_NAME + File.separator + LATEST_EVIDENCE_EXPORT + File.separator;
+    public final static String GEMMA_PHENOCARTA_HOST_URL = Settings.getString( "gemma.hosturl" )
+            + Settings.getString( "gemma.appname" ) + File.separator + PHENOCARTA_NAME + File.separator
+            + LATEST_EVIDENCE_EXPORT + File.separator;
     // those are folders
-    public final static String GEMMA_PHENOCARTA_HOST_URL_DATASETS = GEMMA_PHENOCARTA_HOST_URL + DATASET_FOLDER_NAME + File.separator;
-    public final static String GEMMA_PHENOCARTA_HOST_URL_ERMINEJ = GEMMA_PHENOCARTA_HOST_URL + ERMINEJ_FOLDER_NAME + File.separator;
+    public final static String GEMMA_PHENOCARTA_HOST_URL_DATASETS = GEMMA_PHENOCARTA_HOST_URL + DATASET_FOLDER_NAME
+            + File.separator;
+    public final static String GEMMA_PHENOCARTA_HOST_URL_ERMINEJ = GEMMA_PHENOCARTA_HOST_URL + ERMINEJ_FOLDER_NAME
+            + File.separator;
     // those are files
-    public final static String ALL_PHENOCARTA_ANNOTATIONS_FILE_LOCATION = GEMMA_PHENOCARTA_HOST_URL + FILE_ALL_PHENOCARTA_ANNOTATIONS;
-    public final static String MANUAL_CURATION_FILE_LOCATION = GEMMA_PHENOCARTA_HOST_URL_DATASETS + FILE_MANUAL_CURATION;
+    public final static String ALL_PHENOCARTA_ANNOTATIONS_FILE_LOCATION = GEMMA_PHENOCARTA_HOST_URL
+            + FILE_ALL_PHENOCARTA_ANNOTATIONS;
+    public final static String MANUAL_CURATION_FILE_LOCATION = GEMMA_PHENOCARTA_HOST_URL_DATASETS
+            + FILE_MANUAL_CURATION;
 
 }
