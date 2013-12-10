@@ -1675,7 +1675,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             showOnlyEditable = evidenceFilter.isShowOnlyEditable();
             externalDatabaseIds = evidenceFilter.getExternalDatabaseIds();
 
-            if ( externalDatabaseIds.size() == 1 && externalDatabaseIds.iterator().next() == 0 ) {
+            if ( externalDatabaseIds.size() == 1 && externalDatabaseIds.iterator().next() == 0
+                    && Settings.getString( "gemma.neurocarta.exluded_database_id" ) != null ) {
                 externalDatabaseIds.clear();
                 for ( String token : Settings.getString( "gemma.neurocarta.exluded_database_id" ).split( "," ) ) {
                     externalDatabaseIds.add( new Long( token ) );
