@@ -81,9 +81,6 @@ import cern.jet.random.engine.DRand;
 import cern.jet.random.engine.RandomEngine;
 import cern.jet.stat.Descriptive;
 
-import com.googlecode.javaewah.EWAHCompressedBitmap;
-import com.googlecode.javaewah.IntIterator;
-
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information
  * (including node degree). The results are tied to a specific Analysis that can be referred to by clients. In practice
