@@ -205,7 +205,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         try {
 
             Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
-
+            ee = eeService.thawLite( ee );
             qcCheck( ee ); // could have a 'force' option.
 
             /*
@@ -269,7 +269,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @throws UnsuitableForAnalysisException
      */
     private void qcCheck( ExpressionExperiment ee ) throws UnsuitableForAnalysisException {
-
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
         if ( !outliers.isEmpty() ) {
             throw new UnsuitableForAnalysisException( ee, "Potential outlier samples detected" );
