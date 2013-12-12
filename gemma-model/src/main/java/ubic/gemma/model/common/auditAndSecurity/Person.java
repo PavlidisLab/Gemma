@@ -21,35 +21,22 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * 
  */
-public abstract class Person extends ubic.gemma.model.common.auditAndSecurity.ContactImpl implements
-        gemma.gsec.model.Securable {
+public abstract class Person extends ContactImpl implements gemma.gsec.model.Securable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.Person}.
+     * Constructs new instances of {@link Person}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.Person}.
+         * Constructs a new instance of {@link Person}.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.Person newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.PersonImpl();
+        public static Person newInstance() {
+            return new PersonImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6182915976272745802L;
     private String lastName;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Person() {
-    }
 
     /**
      * 

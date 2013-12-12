@@ -25,7 +25,9 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 /**
  * @author pavlidis
  * @version $Id$
+ * @deprecated because we don't like to use the R integrationS
  */
+@Deprecated
 public class TwoColorArrayLoessNormalizer extends MarrayNormalizer {
 
     public TwoColorArrayLoessNormalizer() throws IOException {

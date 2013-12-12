@@ -28,7 +28,9 @@ import ubic.gemma.analysis.util.RCommander;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated because we don't like to use the R integration
  */
+@Deprecated
 public class PairwiseLoessNormalizer extends RCommander implements Normalizer<String, String> {
 
     public PairwiseLoessNormalizer() throws IOException {

@@ -24,10 +24,7 @@
 		</property>
 		<property access="field" name="datasetsSupportingVector" type="byte[]">
 			<column name="DATASETS_SUPPORTING_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB" />
-		</property>
-		<property access="field" name="specificityVector" type="byte[]">
-			<column name="SPECIFICITY_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB" />
-		</property>
+		</property> 
 		<many-to-one access="field" name="secondGene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select">
 			<column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT" />
 		</many-to-one>

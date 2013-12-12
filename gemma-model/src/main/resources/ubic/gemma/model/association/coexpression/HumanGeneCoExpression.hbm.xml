@@ -5,7 +5,7 @@
 
 <hibernate-mapping default-cascade="none">
 	<class name="ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl" table="HUMAN_GENE_CO_EXPRESSION"
-		dynamic-insert="false" dynamic-update="false"  mutable="false">
+		dynamic-insert="false" dynamic-update="false" mutable="false">
 		<cache usage="read-write" />
 		<id access="field" name="id" type="java.lang.Long" unsaved-value="null">
 			<column name="ID" sql-type="BIGINT" />
@@ -24,9 +24,6 @@
 		</property>
 		<property access="field" name="datasetsSupportingVector" type="byte[]">
 			<column name="DATASETS_SUPPORTING_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB" />
-		</property>
-		<property access="field" name="specificityVector" type="byte[]">
-			<column name="SPECIFICITY_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB" />
 		</property>
 		<many-to-one access="field" name="secondGene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select">
 			<column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT" />

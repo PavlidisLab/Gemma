@@ -406,7 +406,7 @@ public class UserManagerImpl implements UserManager {
     public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
         User user = loadUser( username );
 
-        Set<GrantedAuthority> dbAuthsSet = new HashSet<GrantedAuthority>();
+        Set<GrantedAuthority> dbAuthsSet = new HashSet<>();
 
         if ( enableAuthorities ) {
             dbAuthsSet.addAll( loadUserAuthorities( user.getUserName() ) );
@@ -416,13 +416,13 @@ public class UserManagerImpl implements UserManager {
             dbAuthsSet.addAll( loadGroupAuthorities( user ) );
         }
 
-        List<GrantedAuthority> dbAuths = new ArrayList<GrantedAuthority>( dbAuthsSet );
-
-        // addCustomAuthorities( user.getUsername(), dbAuths );
-
-        if ( dbAuths.size() == 0 ) {
+        if ( dbAuthsSet.isEmpty() ) {
             throw new UsernameNotFoundException( "User " + username + " has no GrantedAuthority" );
         }
+
+        List<GrantedAuthority> dbAuths = new ArrayList<>( dbAuthsSet );
+
+        // addCustomAuthorities( user.getUsername(), dbAuths );
 
         return createUserDetails( username, new UserDetailsImpl( user ), dbAuths );
     }
@@ -582,7 +582,7 @@ public class UserManagerImpl implements UserManager {
     protected List<GrantedAuthority> loadGroupAuthorities( User user ) {
         Collection<GroupAuthority> authorities = userService.loadGroupAuthorities( user );
 
-        List<GrantedAuthority> result = new ArrayList<GrantedAuthority>();
+        List<GrantedAuthority> result = new ArrayList<>();
         for ( GroupAuthority ga : authorities ) {
             String roleName = getRolePrefix() + ga.getAuthority();
             result.add( new SimpleGrantedAuthority( roleName ) );

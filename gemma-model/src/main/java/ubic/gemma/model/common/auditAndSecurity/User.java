@@ -21,30 +21,23 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.Collection;
 
 /**
- * <p>
  * A user of the software system, who is authenticated.
- * </p>
  */
-public abstract class User extends ubic.gemma.model.common.auditAndSecurity.PersonImpl implements
-        gemma.gsec.model.SecuredNotChild {
+public abstract class User extends PersonImpl implements gemma.gsec.model.SecuredNotChild {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.User}.
+     * Constructs new instances of {@link User}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.User}.
+         * Constructs a new instance of {@link User}.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.User newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.UserImpl();
+        public static User newInstance() {
+            return new UserImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -8345612050802728158L;
     private String userName;
 
     private String password;
@@ -57,19 +50,9 @@ public abstract class User extends ubic.gemma.model.common.auditAndSecurity.Pers
 
     private java.util.Date signupTokenDatestamp;
 
-    private Collection<UserRole> roles = new java.util.HashSet<ubic.gemma.model.common.auditAndSecurity.UserRole>();
-
     private Collection<JobInfo> jobs = new java.util.HashSet<JobInfo>();
 
     private Collection<UserQuery> savedQueries = new java.util.HashSet<UserQuery>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public User() {
-    }
 
     /**
      * 
@@ -81,7 +64,7 @@ public abstract class User extends ubic.gemma.model.common.auditAndSecurity.Pers
     /**
      * 
      */
-    public Collection<ubic.gemma.model.common.auditAndSecurity.JobInfo> getJobs() {
+    public Collection<JobInfo> getJobs() {
         return this.jobs;
     }
 
@@ -100,16 +83,9 @@ public abstract class User extends ubic.gemma.model.common.auditAndSecurity.Pers
     }
 
     /**
-     * 
+    *
      */
-    public Collection<ubic.gemma.model.common.auditAndSecurity.UserRole> getRoles() {
-        return this.roles;
-    }
-
-    /**
-     * 
-     */
-    public Collection<ubic.gemma.model.common.auditAndSecurity.UserQuery> getSavedQueries() {
+    public Collection<UserQuery> getSavedQueries() {
         return this.savedQueries;
     }
 
@@ -138,7 +114,7 @@ public abstract class User extends ubic.gemma.model.common.auditAndSecurity.Pers
         this.enabled = enabled;
     }
 
-    public void setJobs( Collection<ubic.gemma.model.common.auditAndSecurity.JobInfo> jobs ) {
+    public void setJobs( Collection<JobInfo> jobs ) {
         this.jobs = jobs;
     }
 
@@ -150,11 +126,7 @@ public abstract class User extends ubic.gemma.model.common.auditAndSecurity.Pers
         this.passwordHint = passwordHint;
     }
 
-    public void setRoles( Collection<ubic.gemma.model.common.auditAndSecurity.UserRole> roles ) {
-        this.roles = roles;
-    }
-
-    public void setSavedQueries( Collection<ubic.gemma.model.common.auditAndSecurity.UserQuery> savedQueries ) {
+    public void setSavedQueries( Collection<UserQuery> savedQueries ) {
         this.savedQueries = savedQueries;
     }
 

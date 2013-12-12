@@ -39,21 +39,9 @@ public abstract class AuditTrail implements java.io.Serializable {
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7011924047229497622L;
     private Long id;
 
     private Collection<AuditEvent> events = new java.util.ArrayList<AuditEvent>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public AuditTrail() {
-    }
 
     /**
      * Add an event to the AuditTrail
@@ -99,9 +87,7 @@ public abstract class AuditTrail implements java.io.Serializable {
     }
 
     /**
-     * <p>
      * Get the last (most recent) event in the AuditTrail.
-     * </p>
      */
     public abstract AuditEvent getLast();
 

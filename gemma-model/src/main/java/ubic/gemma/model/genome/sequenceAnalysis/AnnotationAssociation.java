@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import ubic.gemma.model.common.description.ExternalDatabase;
+
 /**
  * An association between BioSequence and GeneProduct that is provided through an external annotation source, rather
  * than our own sequence analysis. Importantly, the 'overlap', 'score' and other parameters will not be filled in. Also
@@ -29,42 +31,30 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 public abstract class AnnotationAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation}.
+     * Constructs new instances of {@link AnnotationAssociation}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation}.
+         * Constructs a new instance of {@link AnnotationAssociation}.
          */
-        public static ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation newInstance() {
-            return new ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationImpl();
+        public static AnnotationAssociation newInstance() {
+            return new AnnotationAssociationImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6885514937765078103L;
-    private ubic.gemma.model.common.description.ExternalDatabase source;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public AnnotationAssociation() {
-    }
+    private ExternalDatabase source;
 
     /**
      * <p>
      * The original source of the annotation, such as GEO or flyBase.
      * </p>
      */
-    public ubic.gemma.model.common.description.ExternalDatabase getSource() {
+    public ExternalDatabase getSource() {
         return this.source;
     }
 
-    public void setSource( ubic.gemma.model.common.description.ExternalDatabase source ) {
+    public void setSource( ExternalDatabase source ) {
         this.source = source;
     }
 

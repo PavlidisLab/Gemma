@@ -1,7 +1,7 @@
 /*
- * The Gemma project.
+ * The gemma-core project
  * 
- * Copyright (c) 2006-2010 University of British Columbia
+ * Copyright (c) 2013 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,19 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
-package ubic.gemma.model.common.auditAndSecurity;
+
+package ubic.gemma.analysis.preprocess;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.UserRole
+ * TODO Document Me
+ * 
+ * @author Paul
+ * @version $Id$
  */
-public class UserRoleImpl extends ubic.gemma.model.common.auditAndSecurity.UserRole {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -2319052170965055985L;
+public interface DataRefreshService {
+
+    public void refresh( ExpressionExperiment ee );
 
 }

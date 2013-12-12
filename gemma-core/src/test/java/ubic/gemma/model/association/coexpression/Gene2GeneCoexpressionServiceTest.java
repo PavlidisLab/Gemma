@@ -92,7 +92,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         secondGene = geneS.create( secondGene );
 
         Gene2GeneCoexpression g2gCoexpression = MouseGeneCoExpression.Factory.newInstance( analysis, secondGene,
-                firstGene, 0.9, 3, new byte[] { 2, 3, 8 }, new byte[] { 2, 9, 8 }, new byte[] { 2, 3, 8 } );
+                firstGene, 0.9, 3, new byte[] { 2, 3, 8 }, new byte[] { 2, 9, 8 } );
 
         g2gCoexpressionS.create( g2gCoexpression );
     }

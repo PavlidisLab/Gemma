@@ -107,10 +107,8 @@ public abstract class PrincipalComponentAnalysis extends SingleExperimentAnalysi
     }
 
     /**
-     * <p>
      * An array of values representing the fraction of the variance each component accounts for. Convenience method to
      * access the Eigenvalue data.
-     * </p>
      */
     public abstract Double[] getVarianceFractions();
 

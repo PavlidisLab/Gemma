@@ -42,7 +42,6 @@ import ubic.gemma.web.util.MockLongJobController;
  * @author pavlidis
  * @version $Id$
  */
-@SuppressWarnings("null")
 public class TaskRunningTest extends BaseSpringWebTest {
 
     @Autowired

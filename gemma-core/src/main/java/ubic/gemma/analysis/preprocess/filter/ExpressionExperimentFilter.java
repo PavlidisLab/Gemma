@@ -257,24 +257,8 @@ public class ExpressionExperimentFilter {
         }
 
         /*
-         * Note that variance filtering is a little tricky. For ratiometric arrays, you clearly should use the variance.
-         * For 'signal' arrays, we used the CV, but this has problems when the mean is near zero. We could use a
-         * regularized CV, but it not really clear how to do this. If the data are on a log scale, and furthermore
-         * variance-stabilized (RMA for example), this is less of an issue. The variance is probably the safest bet and
-         * seems to be what others use. For example see Hackstadt and Hess, BMC Bioinformatics 2009 10:11. Iny any case,
-         * Vaneet has not found variance filtering to be all that effective, at least for coexpression analysis.
+         * Filtering lowly expressed genes.
          */
-        if ( config.isLowVarianceCutIsSet() ) {
-            log.info( "Filtering for low variance " );
-            filteredMatrix = lowVarianceFilter( filteredMatrix );
-            afterLowVarianceCut = filteredMatrix.rows();
-            config.setAfterLowVarianceCut( afterLowVarianceCut );
-
-            if ( filteredMatrix.rows() == 0 ) {
-                throw new IllegalStateException( "No rows left after variance filtering" );
-            }
-        }
-
         if ( config.isLowExpressionCutIsSet() ) {
             log.info( "Filtering for low or too high expression" );
             Map<CompositeSequence, Double> ranks = eeDoubleMatrix.getRanks();
@@ -287,18 +271,41 @@ public class ExpressionExperimentFilter {
             }
         }
 
+        /*
+         * 
+         * Variance filtering is a little tricky. For ratiometric arrays, you clearly should use the variance. For
+         * 'signal' arrays, we tried using the CV, but this has problems when the mean is near zero (filtering by low
+         * expression first helps). If the data are on a log scale, and furthermore variance-stabilized (RMA for
+         * example), this is less of an issue.
+         * 
+         * The variance is probably the safest bet and seems to be what others use. For example see Hackstadt and Hess,
+         * BMC Bioinformatics 2009 10:11 (http://www.ncbi.nlm.nih.gov/pubmed/19133141)
+         */
+        if ( config.isLowVarianceCutIsSet() ) {
+            log.info( "Filtering for low variance " );
+            filteredMatrix = lowVarianceFilter( filteredMatrix );
+            afterLowVarianceCut = filteredMatrix.rows();
+            config.setAfterLowVarianceCut( afterLowVarianceCut );
+
+            if ( filteredMatrix.rows() == 0 ) {
+                throw new IllegalStateException( "No rows left after variance filtering" );
+            }
+        }
+
         if ( log.isInfoEnabled() ) {
             StringBuilder buf = new StringBuilder();
 
             buf.append( "================================================================\n" );
             buf.append( "Filter summary for " + eeDoubleMatrix.getExpressionExperiment() + ":\n" );
             buf.append( "Started with\t" + startingRows + "\n" );
-            buf.append( "After Sequence filtering\t" + afterSequenceRemovalRows + "\n" );
-            buf.append( "After removing Affy controls\t" + afterAffyControlsFilter + "\n" );
-            buf.append( "After MinPresent\t" + afterMinPresentFilter + "\n" );
+            if ( config.isRequireSequences() )
+                buf.append( "After Sequence filtering\t" + afterSequenceRemovalRows + "\n" );
+            if ( usesAffymetrix() ) buf.append( "After removing Affy controls\t" + afterAffyControlsFilter + "\n" );
+            if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() )
+                buf.append( "After MinPresent\t" + afterMinPresentFilter + "\n" );
             buf.append( "AFter ZeroVar\t" + afterZeroVarianceCut + "\n" );
-            buf.append( "After LowVar\t" + afterLowVarianceCut + "\n" );
-            buf.append( "After LowExpr\t" + afterLowExpressionCut + "\n" );
+            if ( config.isLowExpressionCutIsSet() ) buf.append( "After LowExpr\t" + afterLowExpressionCut + "\n" );
+            if ( config.isLowVarianceCutIsSet() ) buf.append( "After LowVar\t" + afterLowVarianceCut + "\n" );
             buf.append( "================================================================\n" );
             log.info( buf.toString() );
         }

@@ -36,8 +36,7 @@ import ubic.gemma.model.genome.Taxon;
  * @author paul
  */
 @Service
-public class ProbeCoexpressionAnalysisServiceImpl implements
-        ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService {
+public class ProbeCoexpressionAnalysisServiceImpl implements ProbeCoexpressionAnalysisService {
 
     @Autowired
     private ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;

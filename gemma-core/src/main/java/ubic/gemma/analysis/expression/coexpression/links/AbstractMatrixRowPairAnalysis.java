@@ -45,11 +45,15 @@ import cern.colt.list.ObjectArrayList;
  * @version $Id$
  */
 public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnalysis {
-
     protected static final int NUM_BINS = 2048;
     protected static final int HALF_BIN = NUM_BINS / 2;
     protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
 
+    /**
+     * Absolute lower limit to minNumUsed. (This used to be 3, and then 5). It doesn't make much sense to set this
+     * higher than ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT
+     */
+    private static final int HARD_LIMIT_MIN_NUM_USED = 15;
     protected ExpressionDataDoubleMatrix dataMatrix;
     protected int[] fastHistogram = new int[NUM_BINS];
     protected Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
@@ -59,13 +63,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected boolean[] hasMissing = null;
     protected boolean histogramIsFilled = false;
     protected ObjectArrayList keepers = null;
-    protected double lowerTailThreshold = 0.0;
 
-    /**
-     * Absolute lower limit to minNumUsed. (This used to be 3!). It doesn't make much sense to set this higher than
-     * ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT
-     */
-    private static final int HARD_LIMIT_MIN_NUM_USED = 5;
+    protected double lowerTailThreshold = 0.0;
 
     /**
      * If fewer than this number values are available, the correlation is rejected. This helps keep the correlation
@@ -84,7 +83,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
 
-    protected Map<ExpressionDataMatrixRowElement, CompositeSequence> rowMapCache = new HashMap<ExpressionDataMatrixRowElement, CompositeSequence>();
+    protected Map<ExpressionDataMatrixRowElement, CompositeSequence> rowMapCache = new HashMap<>();
 
     protected double storageThresholdValue;
 
@@ -95,10 +94,15 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected BitMatrix used = null;
 
     protected boolean usePvalueThreshold = true;
-    private int numUniqueGenes = 0;
+    private long crossHybridizationRejections = 0;
 
+    private Map<CompositeSequence, Collection<Gene>> flatProbe2GeneMap;
+    private int numUniqueGenes = 0;
     private boolean omitNegativeCorrelationLinks = false;
-    private HashMap<CompositeSequence, Collection<Gene>> flatProbe2GeneMap;
+
+    public long getCrossHybridizationRejections() {
+        return crossHybridizationRejections;
+    }
 
     /**
      * Read back the histogram as a DoubleArrayList of counts.
@@ -202,16 +206,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         return results.cardinality();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.coexpression.links.MatrixRowPairAnalysis#size()
-     */
-    @Override
-    public int size() {
-        return this.dataMatrix.rows();
-    }
-
     /**
      * 
      */
@@ -287,6 +281,16 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     @Override
     public void setUsePvalueThreshold( boolean usePvalueThreshold ) {
         this.usePvalueThreshold = usePvalueThreshold;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.expression.coexpression.links.MatrixRowPairAnalysis#size()
+     */
+    @Override
+    public int size() {
+        return this.dataMatrix.rows();
     }
 
     /**
@@ -465,25 +469,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
-     * Determine if the probes at this location in the matrix assay any of the same gene(s)
-     * 
-     * @param i
-     * @param j
-     * @return true if the probes hit the same gene; false otherwise.
-     */
-    private boolean crossHybridizes( int i, int j ) {
-        if ( this.dataMatrix == null ) return false; // can happen in tests.
-        ExpressionDataMatrixRowElement itemA = this.dataMatrix.getRowElement( i );
-        ExpressionDataMatrixRowElement itemB = this.dataMatrix.getRowElement( j );
-
-        Collection<Gene> genesA = this.flatProbe2GeneMap.get( itemA.getDesignElement() );
-        Collection<Gene> genesB = this.flatProbe2GeneMap.get( itemB.getDesignElement() );
-
-        return CollectionUtils.containsAny( genesA, genesB );
-
-    }
-
-    /**
      * Checks for valid values of correlation and encoding.
      * 
      * @param i int
@@ -492,6 +477,12 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * @param numused int
      */
     protected void setCorrel( int i, int j, double correl, int numused ) {
+
+        if ( crossHybridizes( i, j ) ) {
+            crossHybridizationRejections++;
+            return;
+        }
+
         if ( Double.isNaN( correl ) ) return;
 
         if ( correl < -1.00001 || correl > 1.00001 ) {
@@ -508,8 +499,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
         // it is possible, due to roundoff, to overflow the bins.
         int lastBinIndex = fastHistogram.length - 1;
-
-        if ( !histogramIsFilled && !crossHybridizes( i, j ) ) {
+        if ( !histogramIsFilled ) {
 
             if ( useAbsoluteValue ) {
                 int bin = Math.min( ( int ) ( ( 1.0 + acorrel ) * HALF_BIN ), lastBinIndex );
@@ -545,6 +535,27 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             throw new IllegalArgumentException( "Correlation must be given as between 0 and 1" );
         }
         storageThresholdValue = k;
+    }
+
+    /**
+     * Determine if the probes at this location in the matrix assay any of the same gene(s). This has nothing to do with
+     * whether the probes are specific. FIXME this is going to be too slow.
+     * 
+     * @param i
+     * @param j
+     * @return true if the probes hit the same gene; false otherwise. If the probes hit more than one gene, and any of
+     *         the genes are in common, the result is 'true'.
+     */
+    private boolean crossHybridizes( int i, int j ) {
+        if ( this.dataMatrix == null ) return false; // can happen in tests.
+        ExpressionDataMatrixRowElement itemA = this.dataMatrix.getRowElement( i );
+        ExpressionDataMatrixRowElement itemB = this.dataMatrix.getRowElement( j );
+
+        Collection<Gene> genesA = this.flatProbe2GeneMap.get( itemA.getDesignElement() );
+        Collection<Gene> genesB = this.flatProbe2GeneMap.get( itemB.getDesignElement() );
+
+        return CollectionUtils.containsAny( genesA, genesB );
+
     }
 
     /**

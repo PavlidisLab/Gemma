@@ -35,6 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+//import com.googlecode.javaewah.EWAHCompressedBitmap;
+
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -570,7 +572,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @param ecvos
      * @param stringency
      * @param supportCount
-     * @param allDatasetsWithSpecificProbes
      * @param allTestedDataSets
      * @param relevantEEIdList
      * @param g2g
@@ -582,58 +583,49 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      */
     private boolean fillDetails( Gene qGene, List<ExpressionExperimentValueObject> eevos, Set<Long> filteredEESet,
             List<Long> positionToIDMap, List<CoexpressionValueObjectExt> ecvos, int stringency,
-            CountingMap<Long> supportCount, Collection<Long> allDatasetsWithSpecificProbes,
-            Collection<Long> allTestedDataSets, List<Long> relevantEEIdList, Gene2GeneCoexpression g2g, Gene foundGene,
-            boolean testForDuplicate, Set<Long> supportingDatasets, CoexpressionValueObjectExt cvo ) {
+            CountingMap<Long> supportCount, Collection<Long> allTestedDataSets, List<Long> relevantEEIdList,
+            Gene2GeneCoexpression g2g, Gene foundGene, boolean testForDuplicate, Set<Long> supportingDatasets,
+            CoexpressionValueObjectExt cvo ) {
 
-//        StopWatch t = new StopWatch();
-//        t.start();
+        // StopWatch t = new StopWatch();
+        // t.start();
 
         // for 1600 experiments, takes ~50us.
         Set<Long> testingDatasets = Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g, positionToIDMap,
                 filteredEESet );
 
-    //    long gttei = t.getNanoTime();
+        // long gttei = t.getNanoTime();
 
         /*
          * Necessary in case any were filtered out (for example, if this is a virtual analysis; or there were 'troubled'
          * ees. Note that 'supporting' includes 'non-specific' if they were recorded by the analyzer.
          */
 
-        // for 1600 experiments, takes ~50us
-        Set<Long> specificDatasets = Gene2GenePopulationServiceImpl.getSpecificExperimentIds( g2g, positionToIDMap,
-                supportingDatasets );
-
-     //   long gsei = t.getNanoTime() - gttei;
+        // long gsei = t.getNanoTime() - gttei;
 
         int numTestingDatasets = testingDatasets.size();
         int numSupportingDatasets = supportingDatasets.size();
 
-        
-      //  long sizeT = t.getNanoTime() - gsei;
+        // long sizeT = t.getNanoTime() - gsei;
 
         // for 1600 experiments, takes ~ 90ms
-        
-        if (relevantEEIdList != null){
-        	String datasetVector = getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
-        			relevantEEIdList );
-        	
-        	 cvo.setDatasetVector( datasetVector );
-        }
-      //  long cvvosdv = t.getNanoTime() - sizeT;
 
-       
+        if ( relevantEEIdList != null ) {
+            String datasetVector = getDatasetVector( supportingDatasets, testingDatasets, relevantEEIdList );
+
+            cvo.setDatasetVector( datasetVector );
+        }
+        // long cvvosdv = t.getNanoTime() - sizeT;
 
         /*
          * SANITY CHECKS
          */
-        assert specificDatasets.size() <= numSupportingDatasets;
         assert numTestingDatasets >= numSupportingDatasets;
         assert numTestingDatasets <= eevos.size();
 
         if ( testForDuplicate ) {
             testAndModifyDuplicateResultForOppositeStringency( ecvos, qGene, foundGene, g2g.getEffect(),
-                    numSupportingDatasets, specificDatasets.size(), numTestingDatasets );
+                    numSupportingDatasets, numTestingDatasets );
 
             return false;
 
@@ -647,18 +639,12 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
         allTestedDataSets.addAll( testingDatasets );
 
-        int supportFromSpecificProbes = specificDatasets.size();
-
         if ( g2g.getEffect() < 0 ) {
             cvo.setPosSupp( 0 );
             cvo.setNegSupp( numSupportingDatasets );
-            if ( numSupportingDatasets != supportFromSpecificProbes )
-                cvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
 
         } else {
             cvo.setPosSupp( numSupportingDatasets );
-            if ( numSupportingDatasets != supportFromSpecificProbes )
-                cvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
             cvo.setNegSupp( 0 );
         }
         cvo.setSupportKey( Math.max( cvo.getPosSupp(), cvo.getNegSupp() ) );
@@ -668,9 +654,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             supportCount.increment( id );
         }
 
-        allDatasetsWithSpecificProbes.addAll( specificDatasets );
-
-    //    long lastpart = t.getNanoTime() - cvvosdv;
+        // long lastpart = t.getNanoTime() - cvvosdv;
 
         // if ( t.getNanoTime() > 2 * 1000 * 1000 ) {
         // log.info( gttei + " " + gsei + " " + sizeT + " " + cvvosdv + " " + lastpart + " total=" + t.getNanoTime() );
@@ -691,14 +675,14 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @return true if the result is usable.
      */
     private boolean fillWithoutDetails( Gene qGene, List<CoexpressionValueObjectExt> ecvos, int stringency,
-            Gene2GeneCoexpression g2g, Gene foundGene, boolean testForDuplicateFlag, Set<Long> supportingDatasets,
-            CoexpressionValueObjectExt cvo ) {
+            Gene2GeneCoexpression g2g, Gene foundGene, boolean testForDuplicateFlag,
+            Collection<Long> supportingDatasets, CoexpressionValueObjectExt cvo ) {
 
         int numSupportingDatasets = supportingDatasets.size();
 
         if ( testForDuplicateFlag ) {
             testAndModifyDuplicateResultForOppositeStringency( ecvos, qGene, foundGene, g2g.getEffect(),
-                    numSupportingDatasets, null, null );
+                    numSupportingDatasets, null );
             return false;
 
         } else if ( numSupportingDatasets < stringency ) {
@@ -796,20 +780,14 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      *         way). 0 = not tested; 1 = tested but not supporting; 2 = supporting but not specific; 3 supporting and
      *         specific.
      */
-    private String getDatasetVector( Set<Long> supporting, Set<Long> testing, Set<Long> specific, List<Long> allIds ) {
+    private String getDatasetVector( Set<Long> supporting, Set<Long> testing, List<Long> allIds ) {
         StringBuilder datasetVector = new StringBuilder();
         for ( Long id : allIds ) {
 
             boolean supported = supporting.contains( id );
 
             if ( supported ) {
-                boolean s = specific.contains( id );
-
-                if ( s ) {
-                    datasetVector.append( "3" );
-                } else {
-                    datasetVector.append( "2" );
-                }
+                datasetVector.append( "3" );
                 continue;
             }
 
@@ -888,10 +866,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             /*
              * For summary statistics
              */
-            CountingMap<Long> supportCount = new CountingMap<Long>();
-            Collection<Long> allSupportingDatasets = new HashSet<Long>();
-            Collection<Long> allDatasetsWithSpecificProbes = new HashSet<Long>();
-            Collection<Long> allTestedDataSets = new HashSet<Long>();
+            CountingMap<Long> supportCount = new CountingMap<>();
+            Collection<Long> allSupportingDatasets = new HashSet<>();
+            Collection<Long> allTestedDataSets = new HashSet<>();
 
             int linksMetPositiveStringency = 0;
             int linksMetNegativeStringency = 0;
@@ -970,17 +947,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                 cvo.setSupportingExperiments( supportingDatasets );
 
-                Collection<Long> specificDatasets = Gene2GenePopulationServiceImpl.getSpecificExperimentIds( g2g,
-                        positionToIDMap, filteredEeSet );
-
                 if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase II:" + timer2.getTime() + "ms" );
                 timer2.reset();
                 timer2.start();
-
-                /*
-                 * Specific probe EEids contains 1 even if the data set wasn't supporting.
-                 */
-                specificDatasets.retainAll( supportingDatasets );
 
                 int numTestingDatasets = testingDatasets.size();
                 int numSupportingDatasets = supportingDatasets.size();
@@ -988,7 +957,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 /*
                  * SANITY CHECKS
                  */
-                assert specificDatasets.size() <= numSupportingDatasets;
                 assert numTestingDatasets >= numSupportingDatasets;
                 assert numTestingDatasets <= eevos.size();
 
@@ -1006,18 +974,14 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                 allTestedDataSets.addAll( testingDatasets );
 
-                int supportFromSpecificProbes = specificDatasets.size();
                 if ( g2g.getEffect() < 0 ) {
                     cvo.setPosSupp( 0 );
                     cvo.setNegSupp( numSupportingDatasets );
-                    if ( numSupportingDatasets != supportFromSpecificProbes )
-                        cvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
 
                     ++linksMetNegativeStringency;
                 } else {
                     cvo.setPosSupp( numSupportingDatasets );
-                    if ( numSupportingDatasets != supportFromSpecificProbes )
-                        cvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
+
                     cvo.setNegSupp( 0 );
                     ++linksMetPositiveStringency;
                 }
@@ -1041,7 +1005,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 seen.add( g2g );
 
                 allSupportingDatasets.addAll( supportingDatasets );
-                allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
                 if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase III:" + timer2.getTime() + "ms" );
                 timer2.reset();
@@ -1079,8 +1042,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 }
             }
 
-            CoexpressionSummaryValueObject summary = makeSummary( eevos, allTestedDataSets,
-                    allDatasetsWithSpecificProbes, linksMetPositiveStringency, linksMetNegativeStringency );
+            CoexpressionSummaryValueObject summary = makeSummary( eevos, allTestedDataSets, linksMetPositiveStringency,
+                    linksMetNegativeStringency );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );
 
             generateDatasetSummary( eevos, result, supportCount, allSupportingDatasets, queryGene );
@@ -1146,8 +1109,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
          */
-        
-        log.info( "Getting raw coexpression for "+queryGenes.size()+" genes, stringency:"+stringency+" queryGenesOnly="+queryGenesOnly );
+
+        log.info( "Getting raw coexpression for " + queryGenes.size() + " genes, stringency:" + stringency
+                + " queryGenesOnly=" + queryGenesOnly );
         Map<Long, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly );
 
@@ -1233,6 +1197,14 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
         Set<Long> filteredEESet = new HashSet<>( filteredEeIds );
 
+//        EWAHCompressedBitmap filteredEESetBits = new EWAHCompressedBitmap();
+//        Collections.sort( filteredEeIds );
+//        for ( Long f : filteredEeIds ) {
+//            if ( !filteredEESetBits.set( f.intValue() ) ) {
+//                throw new IllegalStateException( "Bit set out of order" );
+//            }
+//        }
+
         for ( Long queryGid : queryGeneIds ) {
             timer.reset();
             timer.start();
@@ -1251,7 +1223,6 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
              */
             CountingMap<Long> supportCount = new CountingMap<Long>();
 
-            Collection<Long> allDatasetsWithSpecificProbes = new HashSet<Long>();
             Collection<Long> allTestedDataSets = new HashSet<Long>();
 
             Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGid );
@@ -1261,8 +1232,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             List<Long> relevantEEIdList = null;
 
             if ( !skipDetails ) {
-            	//this is currently unused
-                //relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
+                // this is currently unused
+                // relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
             }
             GeneValueObject queryGeneValueObject = new GeneValueObject( qGene );
 
@@ -1314,7 +1285,9 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
 
                 cvo.setQueryGene( queryGeneValueObject );
                 cvo.setFoundGene( new GeneValueObject( foundGene ) );
-
+                // FIXME
+                // Set<Long> supportingDatasets = Gene2GenePopulationServiceImpl.and( filteredEESetBits,
+                // g2g.getDatasetsSupportingVector() );
                 Set<Long> supportingDatasets = Gene2GenePopulationServiceImpl.getSupportingExperimentIds( g2g,
                         positionToIDMap, filteredEESet );
 
@@ -1324,8 +1297,8 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                 boolean ok = false;
                 if ( !skipDetails ) {
                     ok = fillDetails( qGene, eevos, filteredEESet, positionToIDMap, ecvos, stringency, supportCount,
-                            allDatasetsWithSpecificProbes, allTestedDataSets, relevantEEIdList, g2g, foundGene,
-                            testForDuplicateFlag, supportingDatasets, cvo );
+                            allTestedDataSets, relevantEEIdList, g2g, foundGene, testForDuplicateFlag,
+                            supportingDatasets, cvo );
                 } else {
                     ok = fillWithoutDetails( qGene, ecvos, stringency, g2g, foundGene, testForDuplicateFlag,
                             supportingDatasets, cvo );
@@ -1444,11 +1417,11 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
             if ( queryGenes.size() < 2 ) {
                 throw new IllegalArgumentException( "Must have at least two genes to do 'my genes only'" );
             }
-            
+
             log.info( "Entering findInterCoexpressionRelationship, i.e. queryGenesOnly=true, maxResults is ignored" );
             gg2gs = gene2GeneCoexpressionService.findInterCoexpressionRelationship( queryGenes, stringency, gA );
         } else {
-        	log.info( "Entering findCoexpressionRelationship, i.e. queryGenesOnly=false, maxResults is followed" );
+            log.info( "Entering findCoexpressionRelationship, i.e. queryGenesOnly=false, maxResults is followed" );
             gg2gs = gene2GeneCoexpressionService.findCoexpressionRelationships( queryGenes, stringency, maxResults, gA );
         }
 
@@ -1459,21 +1432,22 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
         return gg2gs;
     }
 
-    /**
-     * @param positionToIDMap
-     * @param g2gs
-     * @return
-     */
-    private List<Long> getRelevantEEidsForBitVector( List<Long> positionToIDMap, Collection<Gene2GeneCoexpression> g2gs ) {
-        Collection<Long> relevantEEIds = new HashSet<>();
-        List<Long> relevantEEIdList = new ArrayList<>();
-        for ( Gene2GeneCoexpression g2g : g2gs ) {
-            relevantEEIds.addAll( Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g, positionToIDMap, null ) );
-        }
-        relevantEEIdList.addAll( relevantEEIds );
-        Collections.sort( relevantEEIdList );
-        return relevantEEIdList;
-    }
+    // /**
+    // * @param positionToIDMap
+    // * @param g2gs
+    // * @return
+    // */
+    // private List<Long> getRelevantEEidsForBitVector( List<Long> positionToIDMap, Collection<Gene2GeneCoexpression>
+    // g2gs ) {
+    // Collection<Long> relevantEEIds = new HashSet<>();
+    // List<Long> relevantEEIdList = new ArrayList<>();
+    // for ( Gene2GeneCoexpression g2g : g2gs ) {
+    // relevantEEIds.addAll( Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g, positionToIDMap, null ) );
+    // }
+    // relevantEEIdList.addAll( relevantEEIds );
+    // Collections.sort( relevantEEIdList );
+    // return relevantEEIdList;
+    // }
 
     /**
      * @param eeIds
@@ -1536,12 +1510,10 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * @return
      */
     private CoexpressionSummaryValueObject makeSummary( List<ExpressionExperimentValueObject> eevos,
-            Collection<Long> datasetsTested, Collection<Long> datasetsWithSpecificProbes,
-            int linksMetPositiveStringency, int linksMetNegativeStringency ) {
+            Collection<Long> datasetsTested, int linksMetPositiveStringency, int linksMetNegativeStringency ) {
         CoexpressionSummaryValueObject summary = new CoexpressionSummaryValueObject();
         summary.setDatasetsAvailable( eevos.size() );
         summary.setDatasetsTested( datasetsTested.size() );
-        summary.setDatasetsWithSpecificProbes( datasetsWithSpecificProbes.size() );
         summary.setLinksFound( linksMetPositiveStringency + linksMetNegativeStringency );
         summary.setLinksMetPositiveStringency( linksMetPositiveStringency );
         summary.setLinksMetNegativeStringency( linksMetNegativeStringency );
@@ -1644,8 +1616,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
      * passed in
      */
     private boolean testAndModifyDuplicateResultForOppositeStringency( List<CoexpressionValueObjectExt> ecvos,
-            Gene queryGene, Gene foundGene, Double effect, Integer numSupportingDatasets,
-            Integer supportFromSpecificProbes, Integer numTestedIn ) {
+            Gene queryGene, Gene foundGene, Double effect, Integer numSupportingDatasets, Integer numTestedIn ) {
 
         for ( CoexpressionValueObjectExt ecvo : ecvos ) {
 
@@ -1653,9 +1624,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                     && ecvo.getQueryGene().getId().equals( queryGene.getId() ) ) {
                 if ( ecvo.getNegSupp() > 0 && effect > 0 ) {
                     ecvo.setPosSupp( numSupportingDatasets );
-                    if ( supportFromSpecificProbes != null && numSupportingDatasets != supportFromSpecificProbes ) {
-                        ecvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
-                    }
+
                     // this may not be necessary, putting in just in case of a
                     // difference
                     if ( numTestedIn != null ) {
@@ -1665,9 +1634,7 @@ public class GeneCoexpressionServiceImpl implements GeneCoexpressionService {
                     return true;
                 } else if ( ecvo.getPosSupp() > 0 && effect < 0 ) {
                     ecvo.setNegSupp( numSupportingDatasets );
-                    if ( supportFromSpecificProbes != null && numSupportingDatasets != supportFromSpecificProbes ) {
-                        ecvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
-                    }
+
                     // this may not be necessary, putting in just in case of a
                     // difference
                     if ( numTestedIn != null ) {

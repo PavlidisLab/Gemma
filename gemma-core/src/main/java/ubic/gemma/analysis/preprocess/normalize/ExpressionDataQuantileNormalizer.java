@@ -40,7 +40,7 @@ public class ExpressionDataQuantileNormalizer {
 
         DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = matrix.getMatrix();
 
-        QuantileNormalizer<CompositeSequence, BioMaterial> normalizer = new QuantileNormalizer<CompositeSequence, BioMaterial>();
+        QuantileNormalizer<CompositeSequence, BioMaterial> normalizer = new QuantileNormalizer<>();
         DoubleMatrix<CompositeSequence, BioMaterial> normalized = normalizer.normalize( rawMatrix );
 
         for ( int i = 0; i < normalized.rows(); i++ ) {

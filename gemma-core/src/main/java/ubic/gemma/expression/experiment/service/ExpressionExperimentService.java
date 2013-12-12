@@ -26,6 +26,7 @@ import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
+import ubic.gemma.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -315,7 +316,13 @@ public interface ExpressionExperimentService {
 
     public String getBatchConfound( ExpressionExperiment ee );
 
-    public String getBatchEffect( ExpressionExperiment ee );
+    /**
+     * @param ee
+     * @return details for the principal component most associated with batches (even if it isn't "significant"), or
+     *         null if there was no batch information available. Note that we don't look at every component, just the
+     *         first few.
+     */
+    public BatchEffectDetails getBatchEffect( ExpressionExperiment ee );
 
     /**
      * Retrieve the BioAssayDimensions for the study.
@@ -492,18 +499,18 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
     /**
+     * @param publicEEs
+     * @return
+     */
+    public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
+
+    /**
      * Returns the taxon of the given expressionExperiment.
      * 
      * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Taxon getTaxon( BioAssaySet bioAssaySet );
-
-    /**
-     * @param publicEEs
-     * @return
-     */
-    public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     /**
      * Of the given EE ids, get the ones which are not troubled.

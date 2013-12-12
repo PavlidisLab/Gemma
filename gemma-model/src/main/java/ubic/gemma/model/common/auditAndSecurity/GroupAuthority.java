@@ -19,9 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 /**
- * <p>
- * Like UserRole, but for groups
- * </p>
+ * Authority for groups (kind of like a "user role", but for group-based authorization)
  */
 public abstract class GroupAuthority implements java.io.Serializable {
 

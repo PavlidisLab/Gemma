@@ -21,6 +21,7 @@ package ubic.gemma.analysis.expression.coexpression;
 import gemma.gsec.SecurityService;
 import hep.aida.bin.QuantileBin1D;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +38,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.kahadb.util.DataByteArrayInputStream;
+import org.apache.kahadb.util.DataByteArrayOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -71,12 +74,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.Settings;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.random.engine.DRand;
 import cern.jet.random.engine.RandomEngine;
 import cern.jet.stat.Descriptive;
+
+import com.googlecode.javaewah.EWAHCompressedBitmap;
+import com.googlecode.javaewah.IntIterator;
 
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information
@@ -114,20 +120,6 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
     /**
      * @param ggc
-     * @param eePositionToIdMap
-     * @param limit to those in this set.
-     * @return
-     */
-    public static Set<Long> getSpecificExperimentIds( Gene2GeneCoexpression ggc, List<Long> eePositionToIdMap,
-            Set<Long> restraint ) {
-        if ( ggc.getSpecificityVector() == null ) {
-            return new HashSet<>();
-        }
-        return convertBitVector( eePositionToIdMap, ggc.getSpecificityVector(), restraint );
-    }
-
-    /**
-     * @param ggc
      * @param positionToIDMap
      * @param limit to those in this set.
      * @return
@@ -148,6 +140,28 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         return convertBitVector( eePositionToIdMap, ggc.getDatasetsTestedVector(), restraint );
     }
 
+    // /**
+    // * @param filteredEESetBits
+    // * @param vec
+    // * @return
+    // */
+    // public static Set<Long> and( EWAHCompressedBitmap referenceList, byte[] vec ) {
+    // EWAHCompressedBitmap b = new EWAHCompressedBitmap( vec.length );
+    // try {
+    // // FIXME if this call to 'new' is slow, the object is reusable (caution: thread safety)
+    // b.deserialize( new DataByteArrayInputStream( vec ) );
+    // } catch ( IOException e ) {
+    // throw new RuntimeException( e );
+    // }
+    // Set<Long> result = new HashSet<>();
+    // EWAHCompressedBitmap and = referenceList.and( b );
+    // for ( IntIterator it = and.intIterator(); it.hasNext(); ) {
+    // int id = it.next();
+    // result.add( new Long( id ) );
+    // }
+    // return result;
+    // }
+
     /**
      * @param positionToIDMap of same length as bits in the bitvector (ignoring padding)
      * @param bitvector that comes as binary from the database.
@@ -156,7 +170,14 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      */
     private static Set<Long> convertBitVector( List<Long> positionToIDMap, byte[] bitvector, Set<Long> restraint ) {
         Set<Long> ids = new HashSet<>(); // size should be ~1/10 of ptoidmap.
-
+        //
+        // EWAHCompressedBitmap b = new EWAHCompressedBitmap( bitvector.length );
+        // try {
+        // b.deserialize( new DataByteArrayInputStream( bitvector ) );
+        // } catch ( IOException e ) {
+        // throw new RuntimeException( e );
+        // }
+        //
         int i = 0;
         for ( Long id : positionToIDMap ) {
             if ( restraint != null && !restraint.contains( id ) ) {
@@ -500,68 +521,73 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         return true;
     }
 
-    /**
-     * Create a vector representing the datasets which had specific probes for the query and target genes. A '1' means
-     * it did, '0' means it did not.
-     * 
-     * @param nonspecificEE
-     * @param eeIdOrder
-     * @return
-     */
-    private byte[] computeSpecificityVector( Collection<Long> nonspecificEE, Map<Long, Integer> eeIdOrder ) {
+    // /**
+    // * Create a vector representing the datasets which had specific probes for the query and target genes. A '1' means
+    // * it did, '0' means it did not.
+    // *
+    // * @param nonspecificEE
+    // * @param eeIdOrder
+    // * @return
+    // */
+    // private byte[] computeSpecificityVector( Collection<Long> nonspecificEE, Map<Long, Integer> eeIdOrder ) {
+    //
+    // assert nonspecificEE.size() <= eeIdOrder.size();
+    //
+    // byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
+    // /*
+    // * Start initialized with 0's (might not be necessary...)
+    // */
+    // for ( int i = 0, j = result.length; i < j; i++ ) {
+    // result[i] = 0x0;
+    // }
+    //
+    // /*
+    // * Set the bits we're using to 1.
+    // */
+    // for ( int i = 0; i < eeIdOrder.size(); i++ ) {
+    // BitUtil.set( result, i );
+    // }
+    //
+    // /*
+    // * Set it so 1=specific 0=nonspecific
+    // */
+    // for ( Long id : nonspecificEE ) {
+    // BitUtil.clear( result, eeIdOrder.get( id ) );
+    // }
+    //
+    // assert BitUtil.count( result ) == eeIdOrder.size() - nonspecificEE.size() : "Got " + BitUtil.count( result )
+    // + " ones, expected " + ( eeIdOrder.size() - nonspecificEE.size() );
+    // return result;
+    // }
 
-        assert nonspecificEE.size() <= eeIdOrder.size();
-
-        byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
-        /*
-         * Start initialized with 0's (might not be necessary...)
-         */
-        for ( int i = 0, j = result.length; i < j; i++ ) {
-            result[i] = 0x0;
-        }
-
-        /*
-         * Set the bits we're using to 1.
-         */
-        for ( int i = 0; i < eeIdOrder.size(); i++ ) {
-            BitUtil.set( result, i );
-        }
-
-        /*
-         * Set it so 1=specific 0=nonspecific
-         */
-        for ( Long id : nonspecificEE ) {
-            BitUtil.clear( result, eeIdOrder.get( id ) );
-        }
-
-        assert BitUtil.count( result ) == eeIdOrder.size() - nonspecificEE.size() : "Got " + BitUtil.count( result )
-                + " ones, expected " + ( eeIdOrder.size() - nonspecificEE.size() );
-        return result;
-    }
-
-    /**
-     * Algorithm:
-     * <ol>
-     * <li>Initialize byte array large enough to hold all the EE information (ceil(numeeids /Byte.SIZE))
-     * <li>Flip the bit at the right location.
-     * </ol>
-     * 
-     * @param idsToFlip
-     * @param eeIdOrder
-     * @return
-     */
-    private byte[] computeSupportingDatasetVector( Collection<Long> idsToFlip, Map<Long, Integer> eeIdOrder ) {
-        byte[] supportVector = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
-        for ( int i = 0, j = supportVector.length; i < j; i++ ) {
-            supportVector[i] = 0x0;
-        }
-
-        for ( Long id : idsToFlip ) {
-            BitUtil.set( supportVector, eeIdOrder.get( id ) );
-        }
-        assert BitUtil.count( supportVector ) == idsToFlip.size();
-        return supportVector;
-    }
+    // /**
+    // * Algorithm:
+    // * <ol>
+    // * <li>Initialize byte array large enough to hold all the EE information (ceil(numeeids /Byte.SIZE))
+    // * <li>Flip the bit at the right location.
+    // * </ol>
+    // *
+    // * @param idsToFlip
+    // * @param eeIdOrder
+    // * @return
+    // */
+    // private byte[] computeSupportingDatasetVector( Collection<Long> idsToFlip, Map<Long, Integer> eeIdOrder ) {
+    // EWAHCompressedBitmap bm = new EWAHCompressedBitmap( idsToFlip.size() );
+    //
+    // List<Long> ids = new ArrayList<>();
+    // Collections.sort( ids );
+    // for ( Long id : ids ) {
+    // bm.set( id.intValue() );
+    // }
+    //
+    // try (DataByteArrayOutputStream o = new DataByteArrayOutputStream();) {
+    // bm.serialize( o );
+    // return o.getData();
+    // } catch ( IOException e ) {
+    // throw new RuntimeException( e );
+    // }
+    //
+    // }
 
     /**
      * @param expressionExperiments
@@ -738,22 +764,22 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
      * @param testedInVector
      * @return
      */
-    private Gene2GeneCoexpression getNewGGCOInstance( Taxon taxon, byte[] testedInVector, byte[] specificityVector,
+    private Gene2GeneCoexpression getNewGGCOInstance( Taxon taxon, byte[] testedInVector,
             GeneCoexpressionAnalysis analysis, Gene firstGene, Gene secondGene, int support, double score,
             byte[] supportVector ) {
         Gene2GeneCoexpression g2gCoexpression;
         if ( taxon.getCommonName().equalsIgnoreCase( "mouse" ) )
             g2gCoexpression = MouseGeneCoExpression.Factory.newInstance( analysis, secondGene, firstGene, score,
-                    support, testedInVector, supportVector, specificityVector );
+                    support, testedInVector, supportVector );
         else if ( taxon.getCommonName().equalsIgnoreCase( "rat" ) )
             g2gCoexpression = RatGeneCoExpression.Factory.newInstance( analysis, secondGene, firstGene, score, support,
-                    testedInVector, supportVector, specificityVector );
+                    testedInVector, supportVector );
         else if ( taxon.getCommonName().equalsIgnoreCase( "human" ) )
             g2gCoexpression = HumanGeneCoExpression.Factory.newInstance( analysis, secondGene, firstGene, score,
-                    support, testedInVector, supportVector, specificityVector );
+                    support, testedInVector, supportVector );
         else
             g2gCoexpression = OtherGeneCoExpression.Factory.newInstance( analysis, secondGene, firstGene, score,
-                    support, testedInVector, supportVector, specificityVector );
+                    support, testedInVector, supportVector );
         return g2gCoexpression;
     }
 
@@ -775,8 +801,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
         Taxon taxon = firstGene.getTaxon();
 
-        List<Gene2GeneCoexpression> all = new ArrayList<Gene2GeneCoexpression>();
-        Collection<Gene2GeneCoexpression> batch = new ArrayList<Gene2GeneCoexpression>();
+        List<Gene2GeneCoexpression> all = new ArrayList<>();
+        Collection<Gene2GeneCoexpression> batch = new ArrayList<>();
 
         for ( CoexpressedGenePairValueObject co : toPersist.getAllGeneCoexpressionData( stringency ) ) {
 
@@ -809,8 +835,8 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
             byte[] testedInVector = co.getDatasetsTestedInBytes();
             assert testedInVector != null;
-            byte[] specificityVector = computeSpecificityVector( co.getNonspecificEE(), eeIdOrder );
-            assert specificityVector != null;
+            // byte[] specificityVector = computeSpecificityVector( co.getNonspecificEE(), eeIdOrder );
+            // assert specificityVector != null;
 
             /*
              * Note that we are storing the 'raw' link support, which includes 'non-specific' probes. These can be
@@ -819,11 +845,12 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
             if ( co.getNegativeLinkSupport() >= stringency ) {
                 Collection<Long> contributing2NegativeLinks = co.getEEContributing2NegativeLinks();
                 assert contributing2NegativeLinks.size() == co.getNegativeLinkSupport();
-                byte[] supportVector = computeSupportingDatasetVector( contributing2NegativeLinks, eeIdOrder );
 
-                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon, testedInVector, specificityVector,
-                        analysis, firstGene, secondGene, co.getNegativeLinkSupport(), co.getNegativeScore(),
-                        supportVector );
+                // FIXME
+                byte[] supportVector = null;// = computeSupportingDatasetVector( contributing2NegativeLinks, eeIdOrder
+                                            // );
+                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon, testedInVector, analysis, firstGene,
+                        secondGene, co.getNegativeLinkSupport(), co.getNegativeScore(), supportVector );
 
                 // g2gCoexpression.setDatasetsTestedVector( testedInVector );
                 // g2gCoexpression.setSpecificityVector( specificityVector );
@@ -846,11 +873,13 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
 
                 Collection<Long> contributing2PositiveLinks = co.getEEContributing2PositiveLinks();
                 assert contributing2PositiveLinks.size() == co.getPositiveLinkSupport();
-                byte[] supportVector = computeSupportingDatasetVector( contributing2PositiveLinks, eeIdOrder );
 
-                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon, testedInVector, specificityVector,
-                        analysis, firstGene, secondGene, co.getPositiveLinkSupport(), co.getPositiveScore(),
-                        supportVector );
+                // FIXME
+                byte[] supportVector = null;// = computeSupportingDatasetVector( contributing2PositiveLinks, eeIdOrder
+                                            // );
+
+                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon, testedInVector, analysis, firstGene,
+                        secondGene, co.getPositiveLinkSupport(), co.getPositiveScore(), supportVector );
 
                 // g2gCoexpression.setDatasetsTestedVector( testedInVector );
                 // g2gCoexpression.setSpecificityVector( specificityVector );
@@ -862,6 +891,10 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
                 // g2gCoexpression.setEffect( co.getPositiveScore() );
                 // g2gCoexpression.setDatasetsSupportingVector( supportVector );
 
+                /*
+                 * FIXME FIXME FIXME we have to change this to _update_ the database, not create a new entry (unless it
+                 * is new).
+                 */
                 batch.add( g2gCoexpression );
                 if ( batch.size() == BATCH_SIZE ) {
                     all.addAll( this.gene2GeneCoexpressionService.create( batch ) );
@@ -946,4 +979,5 @@ public class Gene2GenePopulationServiceImpl implements Gene2GenePopulationServic
         coexpressions = null;
         return usedLinks;
     }
+
 }

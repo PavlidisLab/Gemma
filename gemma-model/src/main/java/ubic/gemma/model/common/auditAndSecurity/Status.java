@@ -19,30 +19,26 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 /**
- * <p>
  * Represents the basic status of an Auditable, with possible information about state in workflows etc.
- * </p>
  */
 public abstract class Status implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.Status}.
+     * Constructs new instances of {@link Status}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.Status}.
+         * Constructs a new instance of {@link Status}.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.Status newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.StatusImpl();
+        public static Status newInstance() {
+            return new StatusImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.Status}, taking all required
-         * and/or read-only properties as arguments.
+         * Constructs a new instance of {@link Status}, taking all required and/or read-only properties as arguments.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.Status newInstance( java.util.Date createDate,
-                Boolean troubled, Boolean validated ) {
-            final ubic.gemma.model.common.auditAndSecurity.Status entity = new ubic.gemma.model.common.auditAndSecurity.StatusImpl();
+        public static Status newInstance( java.util.Date createDate, Boolean troubled, Boolean validated ) {
+            final Status entity = new StatusImpl();
             entity.setCreateDate( createDate );
             entity.setTroubled( troubled );
             entity.setValidated( validated );
@@ -50,12 +46,12 @@ public abstract class Status implements java.io.Serializable {
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.Status}, taking all possible
-         * properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link Status}, taking all possible properties (except the identifier(s))as
+         * arguments.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.Status newInstance( java.util.Date createDate,
-                java.util.Date lastUpdateDate, Boolean troubled, Boolean validated ) {
-            final ubic.gemma.model.common.auditAndSecurity.Status entity = new ubic.gemma.model.common.auditAndSecurity.StatusImpl();
+        public static Status newInstance( java.util.Date createDate, java.util.Date lastUpdateDate, Boolean troubled,
+                Boolean validated ) {
+            final Status entity = new StatusImpl();
             entity.setCreateDate( createDate );
             entity.setLastUpdateDate( lastUpdateDate );
             entity.setTroubled( troubled );
@@ -64,10 +60,6 @@ public abstract class Status implements java.io.Serializable {
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -2167542308808900763L;
     private java.util.Date createDate;
 
     private java.util.Date lastUpdateDate;
@@ -77,14 +69,6 @@ public abstract class Status implements java.io.Serializable {
     private Boolean validated = Boolean.valueOf( false );
 
     private Long id;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Status() {
-    }
 
     /**
      * Returns <code>true</code> if the argument is an Status instance and all identifiers for this entity equal the

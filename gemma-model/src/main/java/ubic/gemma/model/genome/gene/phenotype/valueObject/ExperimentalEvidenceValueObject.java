@@ -19,8 +19,6 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
-import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
@@ -64,15 +62,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
                 }
             }
         }
-    }
-
-    public ExperimentalEvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
-            String description, String evidenceCode, boolean isNegativeEvidence,
-            EvidenceSourceValueObject evidenceSource, String primaryPublication, Set<String> relevantPublication,
-            Set<CharacteristicValueObject> experimentCharacteristics ) {
-        super( geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
-
-        this.experimentCharacteristics = experimentCharacteristics;
     }
 
     @Override

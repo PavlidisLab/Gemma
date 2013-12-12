@@ -1038,7 +1038,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         getHibernateTemplate().deleteAll(
                 getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
 
-        log.info( "Done deleting BlatResults for " + arrayDesign );
+        log.info( "Deleting BlatResults for " + arrayDesign );
 
     }
 
@@ -1070,7 +1070,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
         if ( !annotAssociations.isEmpty() ) {
             getHibernateTemplate().deleteAll( annotAssociations );
-            log.info( "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
+            log.info( "Deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
         }
     }
 

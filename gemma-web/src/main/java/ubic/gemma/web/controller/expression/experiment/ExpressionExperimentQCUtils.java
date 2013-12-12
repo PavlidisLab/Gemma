@@ -37,7 +37,7 @@ public class ExpressionExperimentQCUtils {
      */
     public static boolean hasNodeDegreeDistFile( ExpressionExperiment ee ) {
         if ( ee == null ) return false;
-        String shortName = ee.getShortName();
+        // String shortName = ee.getShortName();
         // TODO implement
         // String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
         // + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;

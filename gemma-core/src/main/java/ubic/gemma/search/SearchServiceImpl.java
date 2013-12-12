@@ -29,6 +29,7 @@ import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -93,6 +94,7 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 import javax.annotation.PostConstruct;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -2052,7 +2054,6 @@ public class SearchServiceImpl implements SearchService {
                     }
                 }
             }
-
         }
 
         // filterByTaxon( settings, combinedGeneList); // compass doesn't return filled gene objects, just ids, so do

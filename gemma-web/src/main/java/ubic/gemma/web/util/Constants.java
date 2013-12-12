@@ -35,16 +35,6 @@ public class Constants {
     public static final String BUNDLE_KEY = "messages";
 
     /**
-     * The name of the user's role list, a request-scoped attribute when adding/editing a user.
-     */
-    public static final String USER_ROLES = "userRoles";
-
-    /**
-     * The name of the available roles list, a request-scoped attribute when adding/editing a user.
-     */
-    public static final String AVAILABLE_ROLES = "availableRoles";
-
-    /**
      * The name of the configuration hashmap stored in application scope. Variables placed here (in the StartupListener)
      * are available in jsps using $appConfig['key'] synax.
      */

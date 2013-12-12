@@ -48,28 +48,28 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @version $Id$
  */
 public class BlatResultParser extends BasicLineParser<BlatResult> {
-    private static final int NUM_BLAT_FIELDS = 21;
+    private static final int BLOCKCOUNT_FIELD = 17;
 
+    private static final int BLOCKSIZES_FIELD = 18;
     private static final int MATCHES_FIELD = 0;
     private static final int MISMATCHES_FIELD = 1;
-    private static final int REPMATCHES_FIELD = 2;
     private static final int NS_FIELD = 3;
-    private static final int QGAPCOUNT_FIELD = 4; // number of gaps
+    private static final int NUM_BLAT_FIELDS = 21;
+    private static final int QEND_FIELD = 12;
     private static final int QGAPBASES_FIELD = 5; // bases in gaps
-    private static final int TGAPCOUNT_FIELD = 6;
-    private static final int TGAPBASES_FIELD = 7;
-    private static final int STRAND_FIELD = 8;
+    private static final int QGAPCOUNT_FIELD = 4; // number of gaps
     private static final int QNAME_FIELD = 9;
     private static final int QSIZE_FIELD = 10;
     private static final int QSTART_FIELD = 11;
-    private static final int QEND_FIELD = 12;
+    private static final int QSTARTS_FIELD = 19;
+    private static final int REPMATCHES_FIELD = 2;
+    private static final int STRAND_FIELD = 8;
+    private static final int TEND_FIELD = 16;
+    private static final int TGAPBASES_FIELD = 7;
+    private static final int TGAPCOUNT_FIELD = 6;
     private static final int TNAME_FIELD = 13;
     private static final int TSIZE_FIELD = 14;
     private static final int TSTART_FIELD = 15;
-    private static final int TEND_FIELD = 16;
-    private static final int BLOCKCOUNT_FIELD = 17;
-    private static final int BLOCKSIZES_FIELD = 18;
-    private static final int QSTARTS_FIELD = 19;
     private static final int TSTARTS_FIELD = 20;
 
     /**
@@ -83,18 +83,24 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
         return queryName;
     }
 
-    /**
-     * Reference to the taxon for that was searched.
-     */
-    private Taxon taxon;
+    private int numSkipped = 0;
+
+    private Collection<BlatResult> results = new ArrayList<BlatResult>();
+    private double scoreThreshold = 0.0;
 
     /**
      * Reference to the sequence database that was searched.
      */
     private ExternalDatabase searchedDatabase = null;
-    private Collection<BlatResult> results = new ArrayList<BlatResult>();
 
-    private double scoreThreshold = 0.0;
+    /**
+     * Reference to the taxon for that was searched.
+     */
+    private Taxon taxon;
+
+    public int getNumSkipped() {
+        return numSkipped;
+    }
 
     @Override
     public Collection<BlatResult> getResults() {
@@ -183,6 +189,7 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
                 }
             }
             if ( scoreThreshold > 0.0 && result.score() < scoreThreshold ) {
+                numSkipped++;
                 return null;
             }
             result.setTargetChromosome( Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(),

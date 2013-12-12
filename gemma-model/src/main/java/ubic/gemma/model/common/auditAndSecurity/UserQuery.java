@@ -19,42 +19,41 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.model.common.search.SearchSettings;
+
 /**
  * 
  */
 public abstract class UserQuery implements java.io.Serializable, gemma.gsec.model.SecuredNotChild {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.UserQuery}.
+     * Constructs new instances of {@link UserQuery}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.UserQuery}.
+         * Constructs a new instance of {@link UserQuery}.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.UserQuery newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.UserQueryImpl();
+        public static UserQuery newInstance() {
+            return new UserQueryImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.UserQuery}, taking all required
-         * and/or read-only properties as arguments.
+         * Constructs a new instance of {@link UserQuery}, taking all required and/or read-only properties as arguments.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.UserQuery newInstance( String url,
-                java.util.Date lastUsed ) {
-            final ubic.gemma.model.common.auditAndSecurity.UserQuery entity = new ubic.gemma.model.common.auditAndSecurity.UserQueryImpl();
+        public static UserQuery newInstance( String url, java.util.Date lastUsed ) {
+            final UserQuery entity = new UserQueryImpl();
             entity.setUrl( url );
             entity.setLastUsed( lastUsed );
             return entity;
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.UserQuery}, taking all possible
-         * properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link UserQuery}, taking all possible properties (except the identifier(s))as
+         * arguments.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.UserQuery newInstance( String url, String name,
-                java.util.Date lastUsed, Integer autoRunFrequencyHours,
-                ubic.gemma.model.common.search.SearchSettings searchSettings ) {
-            final ubic.gemma.model.common.auditAndSecurity.UserQuery entity = new ubic.gemma.model.common.auditAndSecurity.UserQueryImpl();
+        public static UserQuery newInstance( String url, String name, java.util.Date lastUsed,
+                Integer autoRunFrequencyHours, SearchSettings searchSettings ) {
+            final UserQuery entity = new UserQueryImpl();
             entity.setUrl( url );
             entity.setName( name );
             entity.setLastUsed( lastUsed );
@@ -64,10 +63,6 @@ public abstract class UserQuery implements java.io.Serializable, gemma.gsec.mode
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2773583208542401108L;
     private String url;
 
     private String name;
@@ -78,15 +73,7 @@ public abstract class UserQuery implements java.io.Serializable, gemma.gsec.mode
 
     private Long id;
 
-    private ubic.gemma.model.common.search.SearchSettings searchSettings;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public UserQuery() {
-    }
+    private SearchSettings searchSettings;
 
     /**
      * Returns <code>true</code> if the argument is an UserQuery instance and all identifiers for this entity equal the
@@ -141,7 +128,7 @@ public abstract class UserQuery implements java.io.Serializable, gemma.gsec.mode
     /**
      * 
      */
-    public ubic.gemma.model.common.search.SearchSettings getSearchSettings() {
+    public SearchSettings getSearchSettings() {
         return this.searchSettings;
     }
 
@@ -179,7 +166,7 @@ public abstract class UserQuery implements java.io.Serializable, gemma.gsec.mode
         this.name = name;
     }
 
-    public void setSearchSettings( ubic.gemma.model.common.search.SearchSettings searchSettings ) {
+    public void setSearchSettings( SearchSettings searchSettings ) {
         this.searchSettings = searchSettings;
     }
 

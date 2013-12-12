@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
@@ -104,8 +105,6 @@ import ubic.gemma.search.SearchService;
 public class ExpressionExperimentServiceImpl implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
-
-    private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
 
     @Autowired
     private AuditEventDao auditEventDao;
@@ -638,30 +637,38 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return result;
     }
 
-    /**
-     * @param ee
-     * @return String msg describing effect if it is present, null otherwise
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentService#getBatchEffect(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @Override
     @Transactional(readOnly = true)
-    public String getBatchEffect( ExpressionExperiment ee ) {
+    public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
                 if ( svd == null ) break;
+                double minp = 1.0;
+                BatchEffectDetails details = new BatchEffectDetails();
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
 
                     Double pval = cmpEffects.get( ef.getId() );
-                    if ( pval != null && pval < BATCH_EFFECT_PVALTHRESHOLD ) {
-                        return "This data set may have a batch artifact (PC" + ( component + 1 ) + "); p="
-                                + String.format( "%.2g", pval ) + "<br />";
+                    if ( pval != null && pval < minp ) {
+                        details.setPvalue( pval );
+                        details.setComponent( component + 1 );
+                        details.setComponentVarianceProportion( svd.getVariances()[component] );
+                        minp = pval;
                     }
+
                 }
+                return details;
             }
         }
         return null;
-
     }
 
     /*

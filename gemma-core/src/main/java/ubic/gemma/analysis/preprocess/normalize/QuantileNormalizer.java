@@ -40,11 +40,6 @@ import ubic.basecode.math.MatrixNormalizer;
  */
 public class QuantileNormalizer<R, C> implements Normalizer<R, C> {
 
-    public QuantileNormalizer() {
-        super();
-        // this.rc.voidEval( "library(preprocessCore)" );
-    }
-
     /*
      * (non-Javadoc)
      * 

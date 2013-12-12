@@ -252,9 +252,7 @@
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl.referenceLists" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl.roles" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+ 
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl.jobs" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -272,10 +270,7 @@
 	<!-- we would disable this entirely, not so easy with AndroMDA -->
 	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl.events" maxElementsInMemory="1" eternal="false"
 		timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserRoleImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
+ 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 

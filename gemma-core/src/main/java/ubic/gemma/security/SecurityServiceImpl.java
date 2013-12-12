@@ -60,6 +60,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -859,12 +860,17 @@ public class SecurityServiceImpl implements SecurityService {
                  * below), not a Principal, but this hasn't always been instituted.
                  */
                 if ( SecurityUtil.isUserAdmin() ) {
-                    Collection<? extends GrantedAuthority> authorities = userManager.loadUserByUsername( ownerName )
-                            .getAuthorities();
-                    for ( GrantedAuthority grantedAuthority : authorities ) {
-                        if ( grantedAuthority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
-                            return true;
+                    try {
+                        Collection<? extends GrantedAuthority> authorities = userManager.loadUserByUsername( ownerName )
+                                .getAuthorities();
+                        for ( GrantedAuthority grantedAuthority : authorities ) {
+                            if ( grantedAuthority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
+                                return true;
+                            }
                         }
+                    } catch ( UsernameNotFoundException e ) {
+                        log.warn( "Owner " + ownerName + " could not be retrieved to check role: " + e.getMessage() );
+                        return false;
                     }
 
                     return false;

@@ -32,18 +32,9 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  */
 public abstract class BioSequence2GeneProduct implements Serializable {
 
-    public static long getSerialversionuid() {
-        return serialVersionUID;
-    }
-
     private Long id = null;
 
     private Analysis sourceAnalysis = null;
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2445048138750980972L;
 
     private Integer overlap = null;
 
@@ -58,14 +49,6 @@ public abstract class BioSequence2GeneProduct implements Serializable {
     private BioSequence bioSequence = null;
 
     private GeneProduct geneProduct = null;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BioSequence2GeneProduct() {
-    }
 
     /**
      * 

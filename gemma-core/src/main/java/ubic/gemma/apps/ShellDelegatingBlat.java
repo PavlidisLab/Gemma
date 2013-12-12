@@ -247,7 +247,7 @@ public class ShellDelegatingBlat implements Blat {
     @Override
     public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
             Taxon taxon ) throws IOException {
-        Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
+        Map<BioSequence, Collection<BlatResult>> results = new HashMap<>();
 
         File querySequenceFile = File.createTempFile( "sequences-for-blat", ".fa" );
         int count = SequenceWriter.writeSequencesToFile( sequences, querySequenceFile );
@@ -397,26 +397,6 @@ public class ShellDelegatingBlat implements Blat {
         }
     }
 
-    // /**
-    // * @param future
-    // * @return
-    // * @throws InterruptedException
-    // * @throws ExecutionException
-    // * @throws IOException
-    // */
-    // private StringBuilder getErrOutput( FutureTask<Process> future ) throws InterruptedException, ExecutionException,
-    // IOException {
-    // InputStream result = future.get().getErrorStream();
-    // BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
-    // String l = null;
-    // StringBuilder buf = new StringBuilder();
-    // while ( ( l = br.readLine() ) != null ) {
-    // buf.append( l + "\n" );
-    // }
-    // br.close();
-    // return buf;
-    // }
-
     /*
      * (non-Javadoc)
      * 
@@ -434,6 +414,8 @@ public class ShellDelegatingBlat implements Blat {
         brp.setTaxon( taxon );
         brp.setScoreThreshold( this.blatScoreThreshold );
         brp.parse( inputStream );
+        log.info( brp.getNumSkipped() + " results were skipped as being below score= " + this.blatScoreThreshold + "; "
+                + brp.getResults().size() + " results retained" );
         return brp.getResults();
     }
 

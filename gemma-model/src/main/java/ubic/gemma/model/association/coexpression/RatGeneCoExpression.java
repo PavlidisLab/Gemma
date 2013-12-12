@@ -41,12 +41,10 @@ public abstract class RatGeneCoExpression extends Gene2GeneCoexpression {
          * @param numDataSets
          * @param datasetsTestedVector
          * @param datasetsSupportingVector
-         * @param specificityVector
          * @return
          */
         public static RatGeneCoExpression newInstance( Analysis sourceAnalysis, Gene secondGene, Gene firstGene,
-                Double effect, Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector,
-                byte[] specificityVector ) {
+                Double effect, Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector ) {
             final RatGeneCoExpression entity = new RatGeneCoExpressionImpl();
 
             try {
@@ -57,7 +55,6 @@ public abstract class RatGeneCoExpression extends Gene2GeneCoexpression {
                 FieldUtils.writeField( entity, "numDataSets", numDataSets, true );
                 FieldUtils.writeField( entity, "datasetsTestedVector", datasetsTestedVector, true );
                 FieldUtils.writeField( entity, "datasetsSupportingVector", datasetsSupportingVector, true );
-                FieldUtils.writeField( entity, "specificityVector", specificityVector, true );
 
             } catch ( IllegalAccessException e ) {
                 System.err.println( e );

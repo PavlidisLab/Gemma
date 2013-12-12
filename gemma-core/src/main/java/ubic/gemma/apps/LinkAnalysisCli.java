@@ -366,10 +366,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             this.linkAnalysisConfig.setTextOut( true );
         }
 
-        if ( hasOption( "knownGenesOnly" ) ) {
-            linkAnalysisConfig.setKnownGenesOnly( true );
-        }
-
         if ( hasOption( "noimages" ) ) {
             linkAnalysisConfig.setMakeSampleCorrMatImages( false );
         }
@@ -446,10 +442,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                                 + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION ).withLongOpt( "distinctValCut" )
                 .create( "dv" );
         addOption( distinctValueCut );
-
-        Option knownGenesOnlyOption = OptionBuilder.withDescription(
-                "Only save (or print) results for links between 'known genes'" ).create( "knownGenesOnly" );
-        addOption( knownGenesOnlyOption );
 
     }
 

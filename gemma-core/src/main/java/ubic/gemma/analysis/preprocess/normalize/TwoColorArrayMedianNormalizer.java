@@ -25,7 +25,9 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 /**
  * @author pavlidis
  * @version $Id$
+ * @deprecated because we don't like to use the R integration
  */
+@Deprecated
 public class TwoColorArrayMedianNormalizer extends MarrayNormalizer {
 
     public TwoColorArrayMedianNormalizer() throws IOException {
@@ -34,6 +36,7 @@ public class TwoColorArrayMedianNormalizer extends MarrayNormalizer {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
      * baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
@@ -51,6 +54,7 @@ public class TwoColorArrayMedianNormalizer extends MarrayNormalizer {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
      * baseCode.dataStructure.matrix.DoubleMatrixNamed)

@@ -59,6 +59,7 @@ import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
 import ubic.gemma.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
@@ -1731,14 +1732,22 @@ public class ExpressionExperimentController {
         return result;
     }
 
+    private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
+
     /**
      * @param ee
      * @return
      */
     private String batchEffect( ExpressionExperiment ee ) {
-        String result = expressionExperimentService.getBatchEffect( ee );
-        if ( result == null ) {
+        BatchEffectDetails batchEffectDetails = expressionExperimentService.getBatchEffect( ee );
+        String result = null;
+        if ( batchEffectDetails == null ) {
             result = "";
+        } else {
+            if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_PVALTHRESHOLD ) {
+                result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() )
+                        + "); p=" + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
+            }
         }
         return result;
 

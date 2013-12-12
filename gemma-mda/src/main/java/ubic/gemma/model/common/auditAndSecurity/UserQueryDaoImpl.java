@@ -106,7 +106,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
     @Override
     public UserQuery load( Long id ) {
         if ( id == null ) {
-            throw new IllegalArgumentException( "UserRole.load - 'id' can not be null" );
+            throw new IllegalArgumentException( "UserQuery.load - 'id' can not be null" );
         }
         return this.getHibernateTemplate().get( ubic.gemma.model.common.auditAndSecurity.UserQueryImpl.class, id );
     }
@@ -130,7 +130,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
     @Override
     public void remove( UserQuery userQuery ) {
         if ( userQuery == null ) {
-            throw new IllegalArgumentException( "UserQueryRole.remove - 'userQuery' can not be null" );
+            throw new IllegalArgumentException( "UserQuery.remove - 'userQuery' can not be null" );
         }
         this.getHibernateTemplate().delete( userQuery );
 

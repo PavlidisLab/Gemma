@@ -23,7 +23,6 @@ import java.util.Collection;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserRole;
 
 /**
  * Just like a regular user; but has 'new password' and 'confirm password' fields. It can be constructed from a user. To
@@ -38,17 +37,12 @@ public class UserUpdateCommand {
     private String newPassword = null;
     private String confirmNewPassword = null;
     private Boolean adminUser = false;
-    private Collection<UserRole> roles = null;
 
     // stored so this can be used to modify a persistent instance.
     private User user;
 
     public UserUpdateCommand() {
         this.user = User.Factory.newInstance();
-    }
-
-    public UserUpdateCommand( User user ) {
-        fromUser( user );
     }
 
     /**
@@ -190,15 +184,6 @@ public class UserUpdateCommand {
 
     /**
      * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#getRoles()
-     */
-    public Collection<UserRole> getRoles() {
-        roles = this.user.getRoles();
-        return roles;
-    }
-
-    /**
-     * @return
      * @see ubic.gemma.model.common.auditAndSecurity.User#getUserName()
      */
     public String getUserName() {
@@ -324,15 +309,6 @@ public class UserUpdateCommand {
     }
 
     /**
-     * @param roles
-     * @see ubic.gemma.model.common.auditAndSecurity.User#setRoles(java.util.Collection)
-     */
-    public void setRoles( Collection<UserRole> roles ) {
-        this.roles = roles;
-        this.user.setRoles( this.roles );
-    }
-
-    /**
      * @param userName
      * @see ubic.gemma.model.common.auditAndSecurity.User#setUserName(java.lang.String)
      */
@@ -364,7 +340,6 @@ public class UserUpdateCommand {
         this.setEmail( user.getEmail() );
         this.setName( user.getName() );
         this.setDescription( user.getDescription() );
-        this.setRoles( user.getRoles() );
         this.setJobs( user.getJobs() );
         this.setAuditTrail( user.getAuditTrail() );
 

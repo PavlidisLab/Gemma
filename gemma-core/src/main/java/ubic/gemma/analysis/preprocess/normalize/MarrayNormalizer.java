@@ -29,7 +29,9 @@ import ubic.gemma.analysis.util.RCommander;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated because we don't like to use the R integration
  */
+@Deprecated
 public abstract class MarrayNormalizer extends RCommander implements TwoChannelNormalizer {
 
     public MarrayNormalizer() throws IOException {

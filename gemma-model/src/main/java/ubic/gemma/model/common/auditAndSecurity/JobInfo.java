@@ -25,23 +25,21 @@ package ubic.gemma.model.common.auditAndSecurity;
 public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.SecuredNotChild {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.JobInfo}.
+     * Constructs new instances of {@link JobInfo}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.JobInfo}.
+         * Constructs a new instance of {@link JobInfo}.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.JobInfo newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.JobInfoImpl();
+        public static JobInfo newInstance() {
+            return new JobInfoImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.JobInfo}, taking all required
-         * and/or read-only properties as arguments.
+         * Constructs a new instance of {@link JobInfo}, taking all required and/or read-only properties as arguments.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.JobInfo newInstance( Boolean runningStatus,
-                java.util.Date startTime, Integer phases ) {
-            final ubic.gemma.model.common.auditAndSecurity.JobInfo entity = new ubic.gemma.model.common.auditAndSecurity.JobInfoImpl();
+        public static JobInfo newInstance( Boolean runningStatus, java.util.Date startTime, Integer phases ) {
+            final JobInfo entity = new JobInfoImpl();
             entity.setRunningStatus( runningStatus );
             entity.setStartTime( startTime );
             entity.setPhases( phases );
@@ -49,13 +47,12 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.JobInfo}, taking all possible
-         * properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link JobInfo}, taking all possible properties (except the identifier(s))as
+         * arguments.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.JobInfo newInstance( Boolean runningStatus,
-                String failedMessage, java.util.Date startTime, java.util.Date endTime, Integer phases,
-                String description, String messages, String taskId, ubic.gemma.model.common.auditAndSecurity.User user ) {
-            final ubic.gemma.model.common.auditAndSecurity.JobInfo entity = new ubic.gemma.model.common.auditAndSecurity.JobInfoImpl();
+        public static JobInfo newInstance( Boolean runningStatus, String failedMessage, java.util.Date startTime,
+                java.util.Date endTime, Integer phases, String description, String messages, String taskId, User user ) {
+            final JobInfo entity = new JobInfoImpl();
             entity.setRunningStatus( runningStatus );
             entity.setFailedMessage( failedMessage );
             entity.setStartTime( startTime );
@@ -69,10 +66,6 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7560802928119472871L;
     private Boolean runningStatus = Boolean.valueOf( true );
 
     private String failedMessage;
@@ -91,15 +84,7 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
 
     private Long id;
 
-    private ubic.gemma.model.common.auditAndSecurity.User user;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public JobInfo() {
-    }
+    private User user;
 
     /**
      * Returns <code>true</code> if the argument is an JobInfo instance and all identifiers for this entity equal the
@@ -193,7 +178,7 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
      * The user who started the job. Can be left null to indicate job was run by an anonymous user.
      * </p>
      */
-    public ubic.gemma.model.common.auditAndSecurity.User getUser() {
+    public User getUser() {
         return this.user;
     }
 
@@ -244,7 +229,7 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
         this.taskId = taskId;
     }
 
-    public void setUser( ubic.gemma.model.common.auditAndSecurity.User user ) {
+    public void setUser( User user ) {
         this.user = user;
     }
 

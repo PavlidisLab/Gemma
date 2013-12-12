@@ -39,9 +39,13 @@ import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.MatrixNormalizer;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -64,6 +68,12 @@ import ubic.gemma.util.EntityUtils;
 @Repository
 public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorDao {
+
+    /*
+     * Don't attempt to renormalize data that is smaller than this. This avoids unnecessary normalization in tests, and
+     * in data sets where normalization is more likely to harm than good.
+     */
+    private static final int MIN_SIZE_FOR_RENORMALIZATION = 4000;
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
 
@@ -126,12 +136,23 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         /*
          * Create the vectors. Do a sanity check that we don't have more than we should
          */
-        Collection<CompositeSequence> seenDes = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> seenDes = new HashSet<>();
         RawExpressionDataVector preferredDataVectorExemplar = preferredDataVectors.iterator().next();
         QuantitationType preferredMaskedDataQuantitationType = getPreferredMaskedDataQuantitationType( preferredDataVectorExemplar
                 .getQuantitationType() );
 
+        if ( !preferredMaskedDataQuantitationType.getType().equals( StandardQuantitationType.COUNT )
+                && !preferredMaskedDataQuantitationType.getIsRatio()
+                /* && !preferredMaskedDataQuantitationType.getIsNormalized() */
+                && maskedVectorObjects.size() > MIN_SIZE_FOR_RENORMALIZATION ) {
+            log.info( "Normalizing the data" );
+            renormalize( maskedVectorObjects );
+        } else {
+            log.info( "Normalization skipped for this data set (not suitable, or already normalized)" );
+        }
+
         int i = 0;
+
         for ( CompositeSequence cs : maskedVectorObjects.keySet() ) {
 
             DoubleVectorValueObject dvvo = maskedVectorObjects.get( cs );
@@ -860,6 +881,31 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
+     * This basically repeats a bit of code from the QuantileNormalizer, but that's in gemma-core.
+     * 
+     * @param matrix
+     * @param vectors
+     */
+    private void doQuantileNormaliztion( DoubleMatrix<CompositeSequence, Integer> matrix,
+            Map<CompositeSequence, DoubleVectorValueObject> vectors ) {
+
+        MatrixNormalizer<CompositeSequence, Integer> normalizer = new MatrixNormalizer<CompositeSequence, Integer>();
+
+        DoubleMatrix<CompositeSequence, Integer> normalized = normalizer.quantileNormalize( matrix );
+
+        for ( int i = 0; i < normalized.rows(); i++ ) {
+            double[] row = normalized.getRow( i );
+            CompositeSequence cs = normalized.getRowName( i );
+            DoubleVectorValueObject vec = vectors.get( cs );
+            double[] data = vec.getData();
+            for ( int j = 0; j < row.length; j++ ) {
+                data[j] = row[j];
+            }
+        }
+
+    }
+
+    /**
      * @param ees
      * @return
      */
@@ -935,7 +981,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private Map<BioAssayDimension, BioAssayDimensionValueObject> getBioAssayDimensionValueObjects(
             Collection<? extends DesignElementDataVector> data ) {
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = new HashMap<BioAssayDimension, BioAssayDimensionValueObject>();
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = new HashMap<>();
         for ( DesignElementDataVector v : data ) {
             BioAssayDimension bioAssayDimension = v.getBioAssayDimension();
             if ( !badvos.containsKey( bioAssayDimension ) ) {
@@ -971,7 +1017,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      *         Experiment
      */
     private Collection<ExpressionExperiment> getExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
-        Collection<ExpressionExperiment> result = new HashSet<ExpressionExperiment>();
+        Collection<ExpressionExperiment> result = new HashSet<>();
 
         for ( BioAssaySet bas : bioAssaySets ) {
             ExpressionExperiment e = getExperiment( bas );
@@ -987,16 +1033,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
         QuantitationType present = QuantitationType.Factory.newInstance();
-        present.setName( preferredQt.getName() + " - Masked " );
-        present.setDescription( "Data masked with missing values (Computed by Gemma)" );
+
+        // FIXME this name/description is confusing
+        present.setName( preferredQt.getName() + " - Processed data " );
+        present.setDescription( "Processed data (Computed by Gemma) for analysis" );
+
         present.setGeneralType( preferredQt.getGeneralType() );
-        present.setIsBackground( preferredQt.getIsBackground() );
-        present.setRepresentation( preferredQt.getRepresentation() );
+        present.setIsBackground( false );
+        present.setRepresentation( preferredQt.getRepresentation() ); // better be a number!
         present.setScale( preferredQt.getScale() );
-        present.setIsPreferred( false ); // I think this is the right thing to do.
+
+        present.setIsPreferred( false ); // I think this is the right thing to do (but doesn't really matter)
         present.setIsMaskedPreferred( true );
         present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
+
+        // FIXME. We might want to renormalize the data, so set this appropriately (that is, only to avoid
+        // renormalization?) Or add a new field.
+
         present.setIsNormalized( preferredQt.getIsNormalized() );
+
         present.setIsRatio( preferredQt.getIsRatio() );
         present.setType( preferredQt.getType() );
         Long id = ( Long ) this.getHibernateTemplate().save( present );
@@ -1041,13 +1096,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         // ees must be thawed first as currently implemented (?)
 
-        Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
+        Collection<DoubleVectorValueObject> results = new HashSet<>();
 
         /*
          * Check the cache.
          */
-        Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
-        Collection<Long> genesToSearch = new HashSet<Long>();
+        Collection<ExpressionExperiment> needToSearch = new HashSet<>();
+        Collection<Long> genesToSearch = new HashSet<>();
         checkCache( ees, genes, results, needToSearch, genesToSearch );
         log.info( "Using " + results.size() + " DoubleVectorValueObject(s) from cache" );
 
@@ -1213,7 +1268,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         Collection<BooleanVectorValueObject> unpackedMissingValueData = unpackBooleans( missingValueData );
-        Map<CompositeSequenceValueObject, BooleanVectorValueObject> missingValueMap = new HashMap<CompositeSequenceValueObject, BooleanVectorValueObject>();
+        Map<CompositeSequenceValueObject, BooleanVectorValueObject> missingValueMap = new HashMap<>();
         for ( BooleanVectorValueObject bv : unpackedMissingValueData ) {
             missingValueMap.put( bv.getDesignElement(), bv );
         }
@@ -1250,6 +1305,34 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
+     * Do not call this on ratiometric or count data.
+     */
+    private void renormalize( Map<CompositeSequence, DoubleVectorValueObject> vectors ) {
+        int cols = vectors.values().iterator().next().getBioAssayDimension().getBioAssays().size();
+        DoubleMatrix<CompositeSequence, Integer> mat = new DenseDoubleMatrix<>( vectors.size(), cols );
+        for ( int i = 0; i < cols; i++ ) {
+            mat.setColumnName( i, i );
+        }
+
+        int i = 0;
+        for ( CompositeSequence c : vectors.keySet() ) {
+            DoubleVectorValueObject v = vectors.get( c );
+            double[] data = v.getData();
+            assert data.length == cols;
+            for ( int j = 0; j < cols; j++ ) {
+                mat.set( i, j, data[j] );
+            }
+            mat.setRowName( c, i );
+            i++;
+        }
+
+        doQuantileNormaliztion( mat, vectors );
+
+        assert mat.rows() == vectors.size();
+
+    }
+
+    /**
      * Given an ExpressionExperimentSubset and vectors from the source experiment, give vectors that include just the
      * data for the subset.
      * 
@@ -1260,12 +1343,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     private Collection<DoubleVectorValueObject> sliceSubSet( ExpressionExperimentSubSet ee,
             Collection<DoubleVectorValueObject> obs ) {
 
-        Collection<DoubleVectorValueObject> sliced = new HashSet<DoubleVectorValueObject>();
+        Collection<DoubleVectorValueObject> sliced = new HashSet<>();
         if ( obs == null || obs.isEmpty() ) return sliced;
 
         this.getHibernateTemplate().lock( ee, LockMode.NONE );
         Hibernate.initialize( ee.getBioAssays() );
-        List<BioAssayValueObject> sliceBioAssays = new ArrayList<BioAssayValueObject>();
+        List<BioAssayValueObject> sliceBioAssays = new ArrayList<>();
 
         DoubleVectorValueObject exemplar = obs.iterator().next();
 
@@ -1304,7 +1387,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private Collection<DoubleVectorValueObject> sliceSubsets( Collection<? extends BioAssaySet> ees,
             Collection<DoubleVectorValueObject> vecs ) {
-        Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
+        Collection<DoubleVectorValueObject> results = new HashSet<>();
         if ( vecs == null || vecs.isEmpty() ) return results;
 
         for ( BioAssaySet bas : ees ) {
@@ -1314,7 +1397,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                     if ( d.getExpressionExperiment().getId()
                             .equals( ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment().getId() ) ) {
 
-                        Collection<DoubleVectorValueObject> ddvos = new HashSet<DoubleVectorValueObject>();
+                        Collection<DoubleVectorValueObject> ddvos = new HashSet<>();
                         ddvos.add( d );
                         results.addAll( sliceSubSet( ( ExpressionExperimentSubSet ) bas, ddvos ) );// coll
 
@@ -1339,7 +1422,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @return
      */
     private Map<CompositeSequence, DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data ) {
-        Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<CompositeSequence, DoubleVectorValueObject>();
+        Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data );
         for ( DesignElementDataVector v : data ) {
             result.put( v.getDesignElement(), new DoubleVectorValueObject( v, badvos.get( v.getBioAssayDimension() ) ) );
@@ -1372,7 +1455,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
             Map<Long, Collection<Long>> cs2GeneMap, BioAssayDimension longestBad ) {
-        Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+        Collection<DoubleVectorValueObject> result = new HashSet<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data );
         for ( DesignElementDataVector v : data ) {
             result.add( new DoubleVectorValueObject( v, badvos.get( v.getBioAssayDimension() ), cs2GeneMap.get( v
@@ -1386,7 +1469,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @return
      */
     private Collection<DoubleVectorValueObject> unpack( Map<? extends DesignElementDataVector, Collection<Long>> data ) {
-        Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+        Collection<DoubleVectorValueObject> result = new HashSet<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data.keySet() );
 
         for ( DesignElementDataVector v : data.keySet() ) {
@@ -1402,7 +1485,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private Collection<? extends DoubleVectorValueObject> unpack(
             Map<ProcessedExpressionDataVector, Collection<Long>> data, BioAssayDimension longestBad ) {
-        Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
+        Collection<DoubleVectorValueObject> result = new HashSet<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data.keySet() );
         for ( DesignElementDataVector v : data.keySet() ) {
             result.add( new DoubleVectorValueObject( v, badvos.get( v.getBioAssayDimension() ), data.get( v ),
@@ -1416,7 +1499,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @return
      */
     private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends DesignElementDataVector> data ) {
-        Collection<BooleanVectorValueObject> result = new HashSet<BooleanVectorValueObject>();
+        Collection<BooleanVectorValueObject> result = new HashSet<>();
 
         Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data );
 

@@ -38,13 +38,11 @@ public abstract class OtherGeneCoExpression extends Gene2GeneCoexpression {
          * @param numDataSets
          * @param datasetsTestedVector
          * @param datasetsSupportingVector
-         * @param specificityVector
-         * @return
+          * @return
          */
         public static OtherGeneCoExpression newInstance( ubic.gemma.model.analysis.Analysis sourceAnalysis,
                 ubic.gemma.model.genome.Gene secondGene, ubic.gemma.model.genome.Gene firstGene, Double effect,
-                Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector,
-                byte[] specificityVector ) {
+                Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector  ) {
             final OtherGeneCoExpression entity = new OtherGeneCoExpressionImpl();
             try {
                 FieldUtils.writeField( entity, "sourceAnalysis", sourceAnalysis, true );
@@ -54,8 +52,7 @@ public abstract class OtherGeneCoExpression extends Gene2GeneCoexpression {
                 FieldUtils.writeField( entity, "numDataSets", numDataSets, true );
                 FieldUtils.writeField( entity, "datasetsTestedVector", datasetsTestedVector, true );
                 FieldUtils.writeField( entity, "datasetsSupportingVector", datasetsSupportingVector, true );
-                FieldUtils.writeField( entity, "specificityVector", specificityVector, true );
-
+ 
             } catch ( IllegalAccessException e ) {
                 System.err.println( e );
             }

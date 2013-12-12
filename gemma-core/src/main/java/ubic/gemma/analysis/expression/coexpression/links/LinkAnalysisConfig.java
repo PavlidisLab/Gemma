@@ -25,7 +25,8 @@ import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalys
 import ubic.gemma.model.common.protocol.Protocol;
 
 /**
- * Holds parameters needed for LinkAnalysis.
+ * Holds parameters needed for LinkAnalysis. Note that many of these settings are not typically changed from the
+ * defaults; they are there for experimentation.
  * 
  * @author Paul
  * @version $Id$
@@ -46,20 +47,29 @@ public class LinkAnalysisConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = 500;
+    // probes with more links than this are ignored. Zero means this doesn't do anything.
+    public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = 0;
+
     private boolean absoluteValue = false;
 
     private String arrayName = null;
-    private double cdfCut = 0.01; // 1.0 means, keep everything.
+
+    // what proportion of links to keep (possibly subject to FWE statistical significance threshold). 1.0 means keep
+    // everything. 0.01 means 1%.
+    private double cdfCut = 0.01;
+
+    // only used for internal cache during calculations.
     private double correlationCacheThreshold = 0.8;
+
+    // family-wise error rate threshold we use to select links
     private double fwe = 0.01;
-    private boolean knownGenesOnly = false;
 
     private boolean lowerCdfCutUsed = false;
 
     private double lowerTailCut = 0.01;
 
     private boolean makeSampleCorrMatImages = true;
+
     private String metric = "pearson"; // spearman
 
     private NormalizationMethod normalizationMethod = NormalizationMethod.none;
@@ -70,17 +80,20 @@ public class LinkAnalysisConfig implements Serializable {
     private boolean omitNegLinks = false;
 
     /**
-     * Probes with more than this many links are removed.
+     * Probes with more than this many links are removed. Zero means no action is taken.
      */
     private int probeDegreeThreshold = DEFAULT_PROBE_DEGREE_THRESHOLD;
 
     private SingularThreshold singularThreshold = SingularThreshold.none; // fwe|cdfCut
+
     private boolean subset = false;
+
     private double subsetSize = 0.0;
 
     private boolean subsetUsed = false;
 
     private boolean textOut;
+
     private boolean upperCdfCutUsed = false;
 
     /**
@@ -150,10 +163,6 @@ public class LinkAnalysisConfig implements Serializable {
         return absoluteValue;
     }
 
-    public boolean isKnownGenesOnly() {
-        return knownGenesOnly;
-    }
-
     /**
      * @return the lowerCdfCutUsed
      */
@@ -213,10 +222,6 @@ public class LinkAnalysisConfig implements Serializable {
 
     public void setFwe( double fwe ) {
         this.fwe = fwe;
-    }
-
-    public void setKnownGenesOnly( boolean knownGenesOnly ) {
-        this.knownGenesOnly = knownGenesOnly;
     }
 
     /**
@@ -330,10 +335,8 @@ public class LinkAnalysisConfig implements Serializable {
         buf.append( "# uppercut:" + this.getUpperTailCut() + "\n" );
         buf.append( "# lowercut:" + this.getLowerTailCut() + "\n" );
         buf.append( "# useDB:" + this.isUseDb() + "\n" );
-        buf.append( "# knownGenesOnly:" + this.isKnownGenesOnly() + "\n" );
         buf.append( "# normalizationMethod:" + this.getNormalizationMethod() + "\n" );
         buf.append( "# omitNegLinks:" + this.isOmitNegLinks() + "\n" );
-
         buf.append( "# probeDegreeThreshold:" + this.getProbeDegreeThreshold() + "\n" );
         /*
          * if ( this.isSubsetUsed() ) { buf.append( "# subset:" + this.subsetSize + "\n" ); }
@@ -350,13 +353,6 @@ public class LinkAnalysisConfig implements Serializable {
         }
         buf.append( "# singularThreshold:" + this.getSingularThreshold() + "\n" );
         return buf.toString();
-    }
-
-    /**
-     * @return
-     */
-    public boolean useKnownGenesOnly() {
-        return knownGenesOnly;
     }
 
     private void checkValidMetric( String m ) {

@@ -78,7 +78,6 @@
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserRole.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/UserQuery.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml</value>
@@ -113,7 +112,6 @@
 				<value>classpath:ubic/gemma/model/association/coexpression/HumanProbeCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/RatProbeCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/OtherProbeCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/UserProbeCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/MouseGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/HumanGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml</value>

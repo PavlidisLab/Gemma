@@ -32,7 +32,8 @@ public class FilterConfig implements Serializable {
 
     public static final double DEFAULT_HIGHEXPRESSION_CUT = 0.0;
 
-    public static final double DEFAULT_LOWEXPRESSIONCUT = 0.3;
+    // changed from 0.3, because now we remove the "no-gene" probes by default.
+    public static final double DEFAULT_LOWEXPRESSIONCUT = 0.2;
 
     public static final double DEFAULT_LOWVARIANCECUT = 0.05;
 
@@ -50,7 +51,7 @@ public class FilterConfig implements Serializable {
      * 
      * @see ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT for a related setting.
      */
-    public final static int MINIMUM_SAMPLE = 7;
+    public final static int MINIMUM_SAMPLE = 20;
 
     /**
      * 

@@ -50,13 +50,6 @@
             <property name="signupTokenDatestamp" type="java.util.Date">
                <column name="SIGNUP_TOKEN_DATESTAMP" not-null="false" unique="false" sql-type="DATETIME"/>
             </property>
-            <set name="roles" lazy="true" fetch="select" inverse="false" cascade="all">
-               <cache usage="read-write" />
-               <key foreign-key="USER_ROLE_USERS_FKC">
-                  <column name="USERS_FK" sql-type="BIGINT"/>
-               </key>
-               <one-to-many class="ubic.gemma.model.common.auditAndSecurity.UserRoleImpl"/>
-            </set>
             <set name="jobs" lazy="true" fetch="select" inverse="true">
                <cache usage="read-write" />
                <key foreign-key="JOB_INFO_USER_FKC">

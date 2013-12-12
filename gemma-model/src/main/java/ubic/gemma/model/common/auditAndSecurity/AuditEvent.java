@@ -63,11 +63,6 @@ public abstract class AuditEvent implements Serializable {
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6713721089643871509L;
-
     private final AuditAction action = null;
 
     private final Date date = null;
@@ -81,14 +76,6 @@ public abstract class AuditEvent implements Serializable {
     private final String note = null;
 
     private final User performer = null;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public AuditEvent() {
-    }
 
     /**
      * Returns <code>true</code> if the argument is an AuditEvent instance and all identifiers for this entity equal the

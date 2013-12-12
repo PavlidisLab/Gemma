@@ -79,6 +79,9 @@ public class SVDValueObject implements Serializable {
      */
     private Long id;
 
+    /**
+     * An array of values representing the fraction of the variance each component accounts for
+     */
     private Double[] variances = null;
 
     private DoubleMatrix<Long, Integer> vMatrix = null;
@@ -189,6 +192,9 @@ public class SVDValueObject implements Serializable {
         return id;
     }
 
+    /**
+     * @return An array of values representing the fraction of the variance each component accounts for
+     */
     public Double[] getVariances() {
         return variances;
     }

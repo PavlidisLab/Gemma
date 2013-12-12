@@ -664,15 +664,7 @@
 			</nonstop>
 		</terracotta>
 	</cache>
-
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl.roles" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
+ 
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl.jobs" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
@@ -719,15 +711,7 @@
 			</nonstop>
 		</terracotta>
 	</cache>
-
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserRoleImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
+ 
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">

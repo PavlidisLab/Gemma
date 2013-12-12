@@ -45,8 +45,7 @@ public abstract class HumanGeneCoExpression extends Gene2GeneCoexpression {
          * @return
          */
         public static HumanGeneCoExpression newInstance( Analysis sourceAnalysis, Gene secondGene, Gene firstGene,
-                Double effect, Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector,
-                byte[] specificityVector ) {
+                Double effect, Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector ) {
             final HumanGeneCoExpression entity = new HumanGeneCoExpressionImpl();
             try {
                 FieldUtils.writeField( entity, "sourceAnalysis", sourceAnalysis, true );
@@ -56,8 +55,7 @@ public abstract class HumanGeneCoExpression extends Gene2GeneCoexpression {
                 FieldUtils.writeField( entity, "numDataSets", numDataSets, true );
                 FieldUtils.writeField( entity, "datasetsTestedVector", datasetsTestedVector, true );
                 FieldUtils.writeField( entity, "datasetsSupportingVector", datasetsSupportingVector, true );
-                FieldUtils.writeField( entity, "specificityVector", specificityVector, true );
-
+ 
             } catch ( IllegalAccessException e ) {
                 System.err.println( e );
             }

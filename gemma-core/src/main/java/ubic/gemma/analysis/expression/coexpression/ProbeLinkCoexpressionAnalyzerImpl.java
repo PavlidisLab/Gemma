@@ -409,6 +409,11 @@ public class ProbeLinkCoexpressionAnalyzerImpl implements ProbeLinkCoexpressionA
                 answer[i] = ( byte ) ( targetGeneEETestStatus[i] & queryGeneEETestStatusBytes[i] );
                 loopcount++;
             }
+
+            /*
+             * FIXME FIXME FIXME use EWAHCompressedBitmap
+             */
+
             cvo.setDatasetsTestedInBytes( answer );
         }
 

@@ -36,8 +36,6 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneAssociation {
 
     private final Analysis sourceAnalysis = null;
 
-    final private byte[] specificityVector = null;
-
     /**
      * 
      */
@@ -68,14 +66,6 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneAssociation {
 
     public Analysis getSourceAnalysis() {
         return sourceAnalysis;
-    }
-
-    /**
-     * A bit vector representing whether the experiments had probes specific to the query gene AND the target genes. A
-     * '1' means it had specific probes; a '0' mean it did not.
-     */
-    public byte[] getSpecificityVector() {
-        return this.specificityVector;
     }
 
 }

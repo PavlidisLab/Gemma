@@ -24,40 +24,28 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 public abstract class BlatAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation}.
+     * Constructs new instances of {@link BlatAssociation}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation}.
+         * Constructs a new instance of {@link BlatAssociation}.
          */
-        public static ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation newInstance() {
-            return new ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationImpl();
+        public static BlatAssociation newInstance() {
+            return new BlatAssociationImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2597672801248829739L;
-    private ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BlatAssociation() {
-    }
+    private BlatResult blatResult;
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult getBlatResult() {
+    public BlatResult getBlatResult() {
         return this.blatResult;
     }
 
-    public void setBlatResult( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
+    public void setBlatResult( BlatResult blatResult ) {
         this.blatResult = blatResult;
     }
 

@@ -129,7 +129,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
              * FIXME this can fail because 'find' methods are read-only; it will be okay if it is a nested call from a
              * read-write method.
              */
-            Collection<Gene> toDelete = new HashSet<Gene>();
+            Collection<Gene> toDelete = new HashSet<>();
             for ( Gene foundGene : results ) {
                 if ( StringUtils.isBlank( foundGene.getPreviousNcbiId() ) ) continue;
                 // Note hack we used to allow multiple previous ids.
@@ -434,7 +434,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         watch.stop();
         watch.start( "Post processs " + r.size() + " results" );
 
-        Map<Long, DoubleArrayList> interm = new HashMap<Long, DoubleArrayList>();
+        Map<Long, DoubleArrayList> interm = new HashMap<>();
         for ( Gene g : genes ) {
             interm.put( g.getId(), new DoubleArrayList() );
         }
@@ -551,7 +551,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( ids.isEmpty() ) return result;
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
+        for ( Collection<Long> batch : new BatchIterator<>( ids, BATCH_SIZE ) ) {
             result.addAll( doLoadThawedLite( batch ) );
         }
         if ( timer.getTime() > 1000 ) {
@@ -567,7 +567,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( ids.isEmpty() ) return result;
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
+        for ( Collection<Long> batch : new BatchIterator<>( ids, BATCH_SIZE ) ) {
             result.addAll( doLoadThawedLiter( batch ) );
         }
         if ( timer.getTime() > 1000 ) {
@@ -1324,10 +1324,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return
      */
     private String getP2PClassName( Gene givenG ) {
-        // if ( false ) // TODO - provide means of determining if we should use the 'UserProbeCoExpressionImpl'
-        // return "UserProbeCoExpressionImpl";
-        // else
-
         if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
             return "HumanProbeCoExpressionImpl";
         else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
