@@ -276,7 +276,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
 
-        if ( batchEffect.getPvalue() < 0.01 ) {
+        if ( batchEffect != null && batchEffect.getPvalue() < 0.01 ) {
             throw new UnsuitableForAnalysisException( ee, String.format( "Strong batch effect detected (%s)",
                     batchEffect ) );
         }
