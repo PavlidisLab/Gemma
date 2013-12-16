@@ -1,5 +1,20 @@
+/*
+ * The gemma-model project
+ * 
+ * Copyright (c) 2013 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.model.association.phenotype;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,7 +22,9 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 
-/** represents an enum of evidence mapping type, copied logic of GOEvidenceCodeEnum, unsure if best way **/
+/**
+ * represents an enum of evidence mapping type, copied logic of GOEvidenceCodeEnum
+ */
 public class PhenotypeMappingType implements java.io.Serializable, Comparable<PhenotypeMappingType>,
         org.hibernate.usertype.EnhancedUserType {
 
@@ -21,8 +38,7 @@ public class PhenotypeMappingType implements java.io.Serializable, Comparable<Ph
 
     private static final int[] SQL_TYPES = { Types.VARCHAR };
 
-    private static final java.util.Map<String, PhenotypeMappingType> values = new java.util.LinkedHashMap<String, PhenotypeMappingType>(
-            28, 1 );
+    private static final java.util.Map<String, PhenotypeMappingType> values = new java.util.LinkedHashMap<>();
 
     static {
         values.put( XREF.value, XREF );
@@ -77,17 +93,17 @@ public class PhenotypeMappingType implements java.io.Serializable, Comparable<Ph
      * @see org.hibernate.usertype.UserType#deepCopy(Object)
      */
     @Override
-    public Object deepCopy( Object value ) throws HibernateException {
+    public Object deepCopy( Object v ) throws HibernateException {
         // Enums are immutable - nothing to be done to deeply clone it
-        return value;
+        return v;
     }
 
     /**
      * @see org.hibernate.usertype.UserType#disassemble(Object value)
      */
     @Override
-    public java.io.Serializable disassemble( Object value ) {
-        return ( java.io.Serializable ) value;
+    public java.io.Serializable disassemble( Object v ) {
+        return ( Serializable ) v;
     }
 
     /**
@@ -103,14 +119,14 @@ public class PhenotypeMappingType implements java.io.Serializable, Comparable<Ph
      */
     @Override
     public Object fromXMLString( String string ) {
-        return ubic.gemma.model.association.GOEvidenceCode.fromString( String.valueOf( string ) );
+        return PhenotypeMappingType.fromString( String.valueOf( string ) );
     }
 
     /**
      * @see org.hibernate.usertype.UserType#hashCode(Object value)
      */
     @Override
-    public int hashCode( Object value ) {
+    public int hashCode( Object v ) {
         return value.hashCode();
     }
 
@@ -127,22 +143,20 @@ public class PhenotypeMappingType implements java.io.Serializable, Comparable<Ph
      * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], Object)
      */
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] values, Object owner ) throws HibernateException,
-            SQLException {
-        final String value = ( String ) resultSet.getObject( values[0] );
-        return resultSet.wasNull() ? null : fromString( value );
+    public Object nullSafeGet( ResultSet resultSet, String[] vs, Object owner ) throws HibernateException, SQLException {
+        final String v = ( String ) resultSet.getObject( vs[0] );
+        return resultSet.wasNull() ? null : fromString( v );
     }
 
     /**
      * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int)
      */
     @Override
-    public void nullSafeSet( PreparedStatement statement, Object value, int index ) throws HibernateException,
-            SQLException {
-        if ( value == null ) {
+    public void nullSafeSet( PreparedStatement statement, Object v, int index ) throws HibernateException, SQLException {
+        if ( v == null ) {
             statement.setNull( index, Types.VARCHAR );
         } else {
-            statement.setObject( index, String.valueOf( String.valueOf( value ) ) );
+            statement.setObject( index, String.valueOf( String.valueOf( v ) ) );
         }
     }
 
