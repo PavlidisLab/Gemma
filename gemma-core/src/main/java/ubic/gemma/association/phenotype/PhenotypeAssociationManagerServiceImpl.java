@@ -271,6 +271,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Transactional(readOnly = true)
     public Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri ) {
+        
+        addDefaultExcludedDatabases(evidenceFilter);
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
             throw new IllegalArgumentException( "No phenotypes values uri provided" );
@@ -432,6 +434,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
             EvidenceFilter evidenceFilter ) {
+
+        addDefaultExcludedDatabases( evidenceFilter );
 
         Collection<Long> externalDatabaseIds = null;
 
@@ -634,6 +638,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter ) {
+
+        addDefaultExcludedDatabases( evidenceFilter );
 
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
 
@@ -1674,13 +1680,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             showOnlyEditable = evidenceFilter.isShowOnlyEditable();
             externalDatabaseIds = evidenceFilter.getExternalDatabaseIds();
-
-            if ( externalDatabaseIds == null && Settings.getString( "gemma.neurocarta.exluded_database_id" ) != null ) {
-                externalDatabaseIds = new HashSet<Long>();
-                for ( String token : Settings.getString( "gemma.neurocarta.exluded_database_id" ).split( "," ) ) {
-                    externalDatabaseIds.add( new Long( token ) );
-                }
-            }
         }
 
         Map<String, Set<Integer>> publicPhenotypesGenesAssociations = new HashMap<>();
@@ -2243,6 +2242,19 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             writeForErmineJ( children, taxon, cacheMap, phenoCartageneSets );
         }
 
+    }
+
+    private void addDefaultExcludedDatabases( EvidenceFilter evidenceFilter ) {
+        if ( evidenceFilter != null ) {
+            if ( evidenceFilter.getExternalDatabaseIds() == null
+                    && Settings.getString( "gemma.neurocarta.exluded_database_id" ) != null ) {
+                Collection<Long> externalDatabaseIds = new HashSet<Long>();
+                for ( String token : Settings.getString( "gemma.neurocarta.exluded_database_id" ).split( "," ) ) {
+                    externalDatabaseIds.add( new Long( token ) );
+                }
+                evidenceFilter.setExternalDatabaseIds( externalDatabaseIds );
+            }
+        }
     }
 
 }
