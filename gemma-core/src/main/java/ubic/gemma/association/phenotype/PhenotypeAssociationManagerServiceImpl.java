@@ -1676,8 +1676,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             externalDatabaseIds = evidenceFilter.getExternalDatabaseIds();
 
             if ( externalDatabaseIds == null && Settings.getString( "gemma.neurocarta.exluded_database_id" ) != null ) {
+                externalDatabaseIds = new HashSet<Long>();
                 for ( String token : Settings.getString( "gemma.neurocarta.exluded_database_id" ).split( "," ) ) {
-                    externalDatabaseIds = new HashSet<Long>();
                     externalDatabaseIds.add( new Long( token ) );
                 }
             }
