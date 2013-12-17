@@ -3462,3 +3462,56 @@ MESH:C563477	http://purl.obolibrary.org/obo/DOID_585	nephrolithiasis	Nephrolithi
 MESH:C564148	http://purl.obolibrary.org/obo/DOID_11199	hypoparathyroidism	Hypoparathyroidism (Hypoparathyroidism, Autosomal Recessive)		A) Found Exact With Disease Annotator modified search 	RGD
 MESH:C564356	http://purl.obolibrary.org/obo/HP_0004729	Acute tubulointerstitial nephritis	Acute Tubulointerstitial Nephritis		C) Found Exact With HP Annotator	RGD
 MESH:C566366	http://purl.obolibrary.org/obo/DOID_0050332	enlarged vestibular aqueduct	Enlarged Vestibular Aqueduct		A) Found Exact With Disease Annotator	RGD
+MESH:C536079	http://purl.obolibrary.org/obo/DOID_0050779	hydrolethalus syndrome	Hydrolethalus syndrome		A) Found Exact With Disease Annotator	CTD
+MESH:C536238	http://purl.obolibrary.org/obo/DOID_0050679	blue cone monochromacy	Blue cone monochromatism		B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C536624	http://purl.obolibrary.org/obo/HP_0009054	Scapuloperoneal myopathy	Scapuloperoneal myopathy	OMIM:181430	C) Found Exact With HP Annotator	CTD
+MESH:C536816	http://purl.obolibrary.org/obo/DOID_3429	inclusion body myositis	Nonaka myopathy (Distal myopathy, Nonaka type)		B) Found Synonym With Disease Annotator Synonym modified search 	CTD
+MESH:C564288	http://purl.obolibrary.org/obo/DOID_543	dystonia	Dystonia (Dystonia 18)	OMIM:612126	A) Found Exact With Disease Annotator modified search 	CTD
+MESH:C565504	http://purl.obolibrary.org/obo/DOID_0050779	hydrolethalus syndrome	Hydrolethalus Syndrome (Hydrolethalus Syndrome 1)		A) Found Exact With Disease Annotator modified search 	CTD
+MESH:D000417	http://purl.obolibrary.org/obo/HP_0001022	Albinism	Albinism	MESH:C537042	C) Found Exact With HP Annotator	CTD
+MESH:D000699	http://purl.obolibrary.org/obo/HP_0007021	Pain insensitivity	Pain Insensitivity (Pain Insensitivity, Congenital)	MESH:C565467	C) Found Exact With HP Annotator modified search 	CTD
+MESH:D001264	http://purl.obolibrary.org/obo/HP_0002305	Athetosis	Athetosis	MESH:C567034	C) Found Exact With HP Annotator	CTD
+MESH:D004204	http://purl.obolibrary.org/obo/HP_0001373	Joint dislocation	Dislocations	MESH:C537872	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D004677	http://purl.obolibrary.org/obo/HP_0002084	Encephalocele	Encephalocele	MESH:C537209	C) Found Exact With HP Annotator	CTD
+MESH:D004688	http://purl.obolibrary.org/obo/HP_0002607	Bowel incontinence	Encopresis	MESH:C538254	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D005183	http://purl.obolibrary.org/obo/HP_0001508	Failure to thrive	Failure to Thrive	MESH:C535579	C) Found Exact With HP Annotator	CTD
+MESH:D005242	http://purl.obolibrary.org/obo/HP_0002607	Bowel incontinence	Fecal Incontinence	MESH:C538254	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D005530	http://purl.obolibrary.org/obo/HP_0001760	Abnormality of the foot	Foot Deformities	MESH:C535547	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D006618	http://purl.obolibrary.org/obo/HP_0002827	Hip dislocation	Hip Dislocation (Hip Dislocation, Congenital)	MESH:C535586	C) Found Exact With HP Annotator modified search 	CTD
+MESH:D006945	http://purl.obolibrary.org/obo/HP_0000975	Hyperhidrosis	Hyperhidrosis	MESH:C564791	C) Found Exact With HP Annotator	CTD
+MESH:D009506	http://purl.obolibrary.org/obo/HP_0003764	Nevus	Nevus	MESH:D054000	C) Found Exact With HP Annotator	CTD
+MESH:D011378	http://purl.obolibrary.org/obo/HP_0000303	Mandibular prognathia	Prognathism	MESH:C537686	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D012166	http://purl.obolibrary.org/obo/HP_0000573	Retinal hemorrhage	Retinal Hemorrhage	MESH:C564372	C) Found Exact With HP Annotator	CTD
+MESH:D014826	http://purl.obolibrary.org/obo/HP_0001605	Vocal cord paralysis	Vocal Cord Paralysis	MESH:C562861	C) Found Exact With HP Annotator	CTD
+MESH:D016117	http://purl.obolibrary.org/obo/HP_0001107	Ocular albinism	Albinism, Ocular	MESH:C537043	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D020795	http://purl.obolibrary.org/obo/HP_0000613	Photophobia	Photophobia	MESH:C536085	C) Found Exact With HP Annotator	CTD
+MESH:D050033	http://purl.obolibrary.org/obo/HP_0008188	Thyroid dysgenesis	Thyroid Dysgenesis	MESH:C566852	C) Found Exact With HP Annotator	CTD
+MESH:D051556	http://purl.obolibrary.org/obo/HP_0003265	Neonatal hyperbilirubinemia	Hyperbilirubinemia, Neonatal	MESH:C562692	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D054119	http://purl.obolibrary.org/obo/HP_0001166	Arachnodactyly	Arachnodactyly		C) Found Exact With HP Annotator	CTD
+MESH:D059041	http://purl.obolibrary.org/obo/HP_0001357	Plagiocephaly	Plagiocephaly	MESH:D049068	C) Found Exact With HP Annotator	CTD
+MESH:D060905	http://purl.obolibrary.org/obo/HP_0002812	Coxa vara	Coxa Vara	MESH:C537560	C) Found Exact With HP Annotator	CTD
+MESH:D061085	http://purl.obolibrary.org/obo/HP_0001274	Agenesis of corpus callosum	Agenesis of Corpus Callosum	MESH:C566468	C) Found Exact With HP Annotator	CTD
+MESH:C566099	http://purl.obolibrary.org/obo/HP_0001204	Distal symphalangism (hands)	Symphalangism, Distal	OMIM:186500	D) Found Synonym With HP Annotator Synonym	OMIM
+OMIM:121050	http://purl.obolibrary.org/obo/HP_0002804	Arthrogryposis multiplex congenita	ARTHROGRYPOSIS (ARTHROGRYPOSIS, DISTAL, TYPE 9)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:128100	http://purl.obolibrary.org/obo/HP_0001304	Torsion dystonia	TORSION DYSTONIA (DYSTONIA 1, TORSION, AUTOSOMAL DOMINANT)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:128235	http://purl.obolibrary.org/obo/DOID_543	dystonia	DYSTONIA (DYSTONIA 12)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:145001	http://purl.obolibrary.org/obo/DOID_13543	hyperparathyroidism	HYPERPARATHYROIDISM (HYPERPARATHYROIDISM 2)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:158300	http://purl.obolibrary.org/obo/HP_0002804	Arthrogryposis multiplex congenita	ARTHROGRYPOSIS (ARTHROGRYPOSIS, DISTAL, TYPE 7)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:160500	http://purl.obolibrary.org/obo/DOID_423	myopathy	MYOPATHY (MYOPATHY, DISTAL, 1)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:162350	http://purl.obolibrary.org/obo/DOID_14503	neuronal ceroid lipofuscinosis	NEURONAL CEROID LIPOFUSCINOSIS (CEROID LIPOFUSCINOSIS, NEURONAL, 4B, AUTOSOMAL DOMINANT)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:162900	http://purl.obolibrary.org/obo/HP_0010816	Epidermal nevus	EPIDERMAL NEVUS (NEVUS, EPIDERMAL)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:168000	http://purl.obolibrary.org/obo/HP_0002668	Paraganglioma	PARAGANGLIOMAS (PARAGANGLIOMAS 1)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:174300	http://purl.obolibrary.org/obo/DOID_4501	orofaciodigital syndrome	OROFACIODIGITAL SYNDROME (OROFACIODIGITAL SYNDROME V)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:180295	http://purl.obolibrary.org/obo/DOID_3246	embryonal rhabdomyosarcoma	EMBRYONAL RHABDOMYOSARCOMA (RHABDOMYOSARCOMA, EMBRYONAL, 2)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:213600	http://purl.obolibrary.org/obo/HP_0002135	Basal ganglia calcification	BASAL GANGLIA CALCIFICATION (BASAL GANGLIA CALCIFICATION, IDIOPATHIC, 1)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:242300	http://purl.obolibrary.org/obo/DOID_1699	congenital ichthyosiform erythroderma	LAMELLAR ICHTHYOSIS (ICHTHYOSIS, LAMELLAR, 1)		B) Found Synonym With Disease Annotator Synonym modified search 	OMIM
+OMIM:248000	http://purl.obolibrary.org/obo/HP_0000256	Macrocephaly	MACROCEPHALY		C) Found Exact With HP Annotator	OMIM
+OMIM:314250	http://purl.obolibrary.org/obo/HP_0001304	Torsion dystonia	TORSION DYSTONIA (DYSTONIA 3, TORSION, X-LINKED)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:600263	http://purl.obolibrary.org/obo/HP_0005202	Helicobacter pylori infection	HELICOBACTER PYLORI INFECTION (HELICOBACTER PYLORI INFECTION, SUSCEPTIBILITY TO)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:604320	http://purl.obolibrary.org/obo/DOID_12377	spinal muscular atrophy	SPINAL MUSCULAR ATROPHY (SPINAL MUSCULAR ATROPHY, DISTAL, AUTOSOMAL RECESSIVE, 1)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:607834	http://purl.obolibrary.org/obo/HP_0000739	Anxiety	ANXIETY		C) Found Exact With HP Annotator	OMIM
+OMIM:608224	http://purl.obolibrary.org/obo/HP_0000365	Hearing impairment	DEAFNESS (DEAFNESS, AUTOSOMAL DOMINANT 41)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:608629	http://purl.obolibrary.org/obo/DOID_0050777	Joubert syndrome	JOUBERT SYNDROME (JOUBERT SYNDROME 3)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:609313	http://purl.obolibrary.org/obo/DOID_0050467	erythrokeratodermia variabilis	ERYTHROKERATODERMIA VARIABILIS (ERYTHROKERATODERMIA VARIABILIS 3)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:612989	http://purl.obolibrary.org/obo/DOID_5723	optic atrophy	OPTIC ATROPHY (OPTIC ATROPHY 7)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:613029	http://purl.obolibrary.org/obo/DOID_3070	malignant glioma	GLIOMA (GLIOMA SUSCEPTIBILITY 3)		B) Found Synonym With Disease Annotator Synonym modified search 	OMIM
