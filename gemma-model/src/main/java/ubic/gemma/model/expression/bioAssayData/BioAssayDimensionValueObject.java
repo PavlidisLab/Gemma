@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +37,9 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
  * @author Paul
  * @version $Id$
  */
-public class BioAssayDimensionValueObject {
+public class BioAssayDimensionValueObject implements Serializable {
+
+    private static final long serialVersionUID = -8686807689616396835L;
 
     private BioAssayDimension bioAssayDimension = null;
 
