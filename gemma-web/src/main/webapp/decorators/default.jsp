@@ -22,7 +22,7 @@
 		script type='text/javascript' src='/Gemma/dwr/dtoall.js'></script>	--%>
 
 <%-- for registration, possible from any page--%>
-<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
+<script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"> </script>
 
 <%-- not bundled with JAWR, needs to be included *last* (at least after include.js & gemma-lib.js) --%>
 <jwr:script src='/scripts/app/valueObjectsInheritanceStructure.js' />
