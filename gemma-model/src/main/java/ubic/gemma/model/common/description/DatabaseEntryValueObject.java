@@ -14,11 +14,15 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.io.Serializable;
+
 /**
  * @author ??
  * @version $Id$
  */
-public class DatabaseEntryValueObject {
+public class DatabaseEntryValueObject implements Serializable {
+
+    private static final long serialVersionUID = -527323410580090L;
 
     public static DatabaseEntryValueObject fromEntity( DatabaseEntry de ) {
         if ( de == null ) return null;
