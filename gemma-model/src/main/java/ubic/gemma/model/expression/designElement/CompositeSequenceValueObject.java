@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import java.io.Serializable;
+
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
@@ -25,7 +27,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
  * @author anton
  * @version $Id$
  */
-public class CompositeSequenceValueObject {
+public class CompositeSequenceValueObject implements Serializable {
+
+    private static final long serialVersionUID = 4915680501039784666L;
 
     private Long id;
 

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,7 +29,9 @@ import java.util.List;
  * @version $Id$
  * @author thea
  */
-public class QuantitationTypeValueObject {
+public class QuantitationTypeValueObject implements Serializable {
+
+    private static final long serialVersionUID = 7537853492100102404L;
 
     public static Collection<QuantitationTypeValueObject> convert2ValueObjects( Collection<QuantitationType> qts ) {
         List<QuantitationTypeValueObject> results = new ArrayList<QuantitationTypeValueObject>();
