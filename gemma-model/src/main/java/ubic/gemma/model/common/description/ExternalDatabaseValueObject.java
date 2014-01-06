@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.TreeSet;
 
@@ -21,7 +22,9 @@ import java.util.TreeSet;
  * @author Paul
  * @version $Id$
  */
-public class ExternalDatabaseValueObject implements Comparable<ExternalDatabaseValueObject> {
+public class ExternalDatabaseValueObject implements Serializable, Comparable<ExternalDatabaseValueObject> {
+
+    private static final long serialVersionUID = -1714429166594162374L;
 
     public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {
         if ( eds == null ) return null;
