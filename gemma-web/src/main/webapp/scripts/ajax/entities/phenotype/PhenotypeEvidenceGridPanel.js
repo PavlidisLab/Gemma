@@ -434,6 +434,26 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                     		   }
 
                     		   descriptionHtml += '</p>';
+          
+                    		   var expChar = record.experimentCharacteristics;
+					           if (expChar != null && expChar.length > 0) {
+									var expCharMap = new Object();
+									for (var i = 0; i < expChar.length; i++) {
+										if (expCharMap[expChar[i].category] == null) {
+											expCharMap[expChar[i].category] = expChar[i].value;	
+										} else {
+											expCharMap[expChar[i].category] += " | " + expChar[i].value;
+										}
+										  
+									}
+					
+									descriptionHtml += '<p>';
+									Ext.iterate(expCharMap, function(key, value) {
+									  descriptionHtml += '<b>' + key + "</b>: " + value + '<br />';
+									});
+									descriptionHtml += '</p>';
+					           }
+                    		   
                               break;
 
                            case 'GenericEvidenceValueObject' :
@@ -565,7 +585,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                   case 'DiffExpressionEvidenceValueObject' :
                      typeColumnHtml = 'Differential Expression Meta-analysis';
                      break;
-
+                     
                   case 'ExperimentalEvidenceValueObject' :
                      var experimentValues = '';
                      var experimentCharacteristics = record.data.experimentCharacteristics;
@@ -577,11 +597,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                            }
                         }
                         if (experimentValues.length > 0) {
-                           experimentValues = ' [ ' + experimentValues.substr(0, experimentValues.length - 3) + ' ]'; // remove
-                           // ' |
-                           // ' at
-                           // the
-                           // end
+                           experimentValues = ' [ ' + experimentValues.substr(0, experimentValues.length - 3) + ' ]';
                         }
                      }
 
