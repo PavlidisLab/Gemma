@@ -64,8 +64,8 @@ import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -92,6 +92,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatis
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
@@ -271,8 +272,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Transactional(readOnly = true)
     public Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri ) {
-        
-        addDefaultExcludedDatabases(evidenceFilter);
+
+        addDefaultExcludedDatabases( evidenceFilter );
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
             throw new IllegalArgumentException( "No phenotypes values uri provided" );
@@ -1251,9 +1252,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     for ( PhenotypeAssociationPublication phenotypeAssociationPublication : phenotypeAssociation
                             .getPhenotypeAssociationPublications() ) {
-
-                        pubmeds = pubmeds
-                                + phenotypeAssociationPublication.getCitation().getPubAccession().getAccession() + ";";
+                        String pubId = phenotypeAssociationPublication.getCitation().getPubAccession().getAccession()
+                                + ";";
+                        // primary should be order first
+                        if ( phenotypeAssociationPublication.getType().equals( PhenotypeAssPubValueObject.PRIMARY ) ) {
+                            pubmeds = pubId + pubmeds;
+                        } else {
+                            pubmeds = pubmeds + pubId;
+                        }
                     }
 
                     String phenotypes = "";
