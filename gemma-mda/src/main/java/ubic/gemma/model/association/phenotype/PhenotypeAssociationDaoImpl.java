@@ -573,7 +573,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         }
 
         List<Object[]> numPublications = this.getHibernateTemplate().find(
-                "select p.evidenceSource.externalDatabase.name, count (pub.citation.pubAccession.accession) "
+                "select p.evidenceSource.externalDatabase.name, count (distinct pub.citation.pubAccession.accession) "
                         + "from PhenotypeAssociation as p join p.phenotypeAssociationPublications as pub"
                         + " group by p.evidenceSource.externalDatabase" );
 
