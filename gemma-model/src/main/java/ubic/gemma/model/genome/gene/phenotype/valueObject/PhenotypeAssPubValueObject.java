@@ -8,6 +8,8 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
 
     private String type = null;
     private CitationValueObject citationValueObject = null;
+    public static String PRIMARY = "Primary";
+    public static String RELEVANT = "Relevant";
 
     public PhenotypeAssPubValueObject() {
 
@@ -26,7 +28,7 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
         CitationValueObject citationValueObject = new CitationValueObject();
         citationValueObject.setPubmedAccession( accession );
         PhenotypeAssPubValueObject phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
-        phenotypeAssPubValueObject.setType( "Primary" );
+        phenotypeAssPubValueObject.setType( PRIMARY );
         phenotypeAssPubValueObject.setCitationValueObject( citationValueObject );
 
         return phenotypeAssPubValueObject;
@@ -36,7 +38,7 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
         CitationValueObject citationValueObject = new CitationValueObject();
         citationValueObject.setPubmedAccession( accession );
         PhenotypeAssPubValueObject phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
-        phenotypeAssPubValueObject.setType( "Relevant" );
+        phenotypeAssPubValueObject.setType( RELEVANT );
         phenotypeAssPubValueObject.setCitationValueObject( citationValueObject );
 
         return phenotypeAssPubValueObject;
