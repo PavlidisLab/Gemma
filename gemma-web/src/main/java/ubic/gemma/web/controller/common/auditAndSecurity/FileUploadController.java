@@ -122,7 +122,7 @@ public class FileUploadController extends AbstractController {
                     model.put( "size", multipartFile.getSize() );
 
                 } catch ( Exception e ) {
-                    log.error( "Error in upload: " + e.getMessage() );
+                    log.error( "Error in upload: " + e.getMessage(), e );
                     model.put( "success", false );
                     model.put( "error", e.getMessage() );
                 }
