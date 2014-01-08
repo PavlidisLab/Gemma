@@ -24,6 +24,7 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Statistics;
 import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.TerracottaClientConfiguration;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -96,6 +97,15 @@ public class CacheMonitorImpl implements CacheMonitor {
         String[] cacheNames = cacheManager.getCacheNames();
         Arrays.sort( cacheNames );
 
+        // Terracotta clustered?
+        TerracottaClientConfiguration terracottaConfig = cacheManager.getConfiguration().getTerracottaConfiguration();
+        buf.append( "Distributed caching is " );
+        buf.append( terracottaConfig != null ? "enabled" : "disabled" );
+        buf.append( " in the configuration file" );
+        buf.append( terracottaConfig != null ? ". The cache server's configuration URL is at ["
+                + terracottaConfig.getUrl() + "]" : "" );
+        buf.append( ".<br/>" );
+        
         buf.append( cacheNames.length + " caches; only non-empty caches listed below." );
         // FIXME make these sortable.
         buf.append( "<br/>&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
