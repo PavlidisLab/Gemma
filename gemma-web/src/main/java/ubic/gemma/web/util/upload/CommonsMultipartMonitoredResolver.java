@@ -46,6 +46,8 @@ import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
 import org.springframework.web.util.WebUtils;
 
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+
 /**
  * An adaptation of the standard Spring CommonsMultipartResolver that uses a MonitoredOutputStream. This allows
  * asynchronous client-side monitoring of the upload process.

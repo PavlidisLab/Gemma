@@ -43,6 +43,7 @@ import org.springframework.web.multipart.commons.CommonsMultipartResolver;
  * @since 29.09.2003
  * @see CommonsMultipartResolver
  */
+@Deprecated
 public class CommonsMultipartFile implements MultipartFile, Serializable {
 
     /**
