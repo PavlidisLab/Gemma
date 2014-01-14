@@ -3515,3 +3515,63 @@ OMIM:608629	http://purl.obolibrary.org/obo/DOID_0050777	Joubert syndrome	JOUBERT
 OMIM:609313	http://purl.obolibrary.org/obo/DOID_0050467	erythrokeratodermia variabilis	ERYTHROKERATODERMIA VARIABILIS (ERYTHROKERATODERMIA VARIABILIS 3)		A) Found Exact With Disease Annotator modified search 	OMIM
 OMIM:612989	http://purl.obolibrary.org/obo/DOID_5723	optic atrophy	OPTIC ATROPHY (OPTIC ATROPHY 7)		A) Found Exact With Disease Annotator modified search 	OMIM
 OMIM:613029	http://purl.obolibrary.org/obo/DOID_3070	malignant glioma	GLIOMA (GLIOMA SUSCEPTIBILITY 3)		B) Found Synonym With Disease Annotator Synonym modified search 	OMIM
+MESH:D005221	http://purl.obolibrary.org/obo/HP_0012378	Fatigue	Fatigue		C) Found Exact With HP Annotator	CTD
+MESH:D006935	http://purl.obolibrary.org/obo/HP_0012416	Hypercapnia	Hypercapnia		C) Found Exact With HP Annotator	CTD
+MESH:D009298	http://purl.obolibrary.org/obo/HP_0100582	Nasal polyposis	Nasal Polyps		D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D010146	http://purl.obolibrary.org/obo/HP_0012531	Pain	Pain	MESH:D058447	C) Found Exact With HP Annotator	CTD
+MESH:D014103	http://purl.obolibrary.org/obo/HP_0000473	Torticollis	Torticollis		C) Found Exact With HP Annotator	CTD
+OMIM:613856	http://purl.obolibrary.org/obo/DOID_13911	achromatopsia	ACHROMATOPSIA (ACHROMATOPSIA 4)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:252160	http://purl.obolibrary.org/obo/HP_0003570	Molybdenum cofactor deficiency	Molybdenum cofactor deficiency (Molybdenum cofactor deficiency B)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:300912	http://purl.obolibrary.org/obo/HP_0001249	Intellectual disability	Mental retardation (Mental retardation, X-linked 98)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:615481	http://purl.obolibrary.org/obo/DOID_9562	primary ciliary dyskinesia	primary Ciliary dyskinesia (Ciliary dyskinesia, primary, 24)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615482	http://purl.obolibrary.org/obo/DOID_9562	primary ciliary dyskinesia	primary Ciliary dyskinesia (Ciliary dyskinesia, primary, 25)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615483	http://purl.obolibrary.org/obo/HP_0002135	Basal ganglia calcification	Basal ganglia calcification (Basal ganglia calcification, idiopathic, 5)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615500	http://purl.obolibrary.org/obo/DOID_9562	primary ciliary dyskinesia	primary Ciliary dyskinesia (Ciliary dyskinesia, primary, 26)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615501	http://purl.obolibrary.org/obo/HP_0003570	Molybdenum cofactor deficiency	Molybdenum cofactor deficiency (Molybdenum cofactor deficiency C)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615502	http://purl.obolibrary.org/obo/HP_0001249	Intellectual disability	Mental retardation (Mental retardation, autosomal dominant 21)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:615504	http://purl.obolibrary.org/obo/DOID_9562	primary ciliary dyskinesia	primary Ciliary dyskinesia (Ciliary dyskinesia, primary, 27)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615505	http://purl.obolibrary.org/obo/DOID_9562	primary ciliary dyskinesia	primary Ciliary dyskinesia (Ciliary dyskinesia, primary, 28)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615506	http://purl.obolibrary.org/obo/DOID_1270	hereditary hemorrhagic telangiectasia	hereditary hemorrhagic Telangiectasia (Telangiectasia, hereditary hemorrhagic, type 5)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615515	http://purl.obolibrary.org/obo/DOID_332	amyotrophic lateral sclerosis	Amyotrophic lateral sclerosis (Amyotrophic lateral sclerosis 19)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615516	http://purl.obolibrary.org/obo/HP_0001249	Intellectual disability	Mental retardation (Mental retardation, autosomal recessive 38)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:615524	http://purl.obolibrary.org/obo/DOID_10629	microphthalmia	Microphthalmia (Microphthalmia, syndromic 12)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615540	http://purl.obolibrary.org/obo/HP_0000365	Hearing impairment	Deafness (Deafness, autosomal recessive 76)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:615541	http://purl.obolibrary.org/obo/HP_0001249	Intellectual disability	Mental retardation (Mental retardation, autosomal recessive 39)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:615548	http://purl.obolibrary.org/obo/DOID_0050548	hereditary sensory neuropathy	hereditary sensory and autonomic Neuropathy (Neuropathy, hereditary sensory and autonomic, type VII)		B) Found Synonym With Disease Annotator Synonym modified search 	OMIM
+OMIM:615558	http://purl.obolibrary.org/obo/DOID_1390	hypobetalipoproteinemia	Hypobetalipoproteinemia		A) Found Exact With Disease Annotator	OMIM
+OMIM:615573	http://purl.obolibrary.org/obo/DOID_1184	nephrotic syndrome	Nephrotic syndrome (Nephrotic syndrome, type 9)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615577	http://purl.obolibrary.org/obo/DOID_12177	common variable immunodeficiency	common variable Immunodeficiency (Immunodeficiency, common variable, 10)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:135853	http://purl.obolibrary.org/obo/HP_0005978	Type II diabetes mellitus	Diabetes mellitus, noninsulin-dependent		D) Found Synonym With HP Annotator Synonym	OMIM
+OMIM:609306	http://purl.obolibrary.org/obo/DOID_1441	spinocerebellar ataxia	Spinocerebellar ataxia   (?Spinocerebellar ataxia 26)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:612337	http://purl.obolibrary.org/obo/HP_0001249	Intellectual disability	Mental retardation   (?Mental retardation, autosomal dominant 22)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:615043	http://purl.obolibrary.org/obo/HP_0001258	Spastic paraplegia	Spastic paraplegia   (?Spastic paraplegia 43, autosomal recessive)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615468	http://purl.obolibrary.org/obo/HP_0002721	Immunodeficiency	Immunodeficiency   (?Immunodeficiency 12)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615490	http://purl.obolibrary.org/obo/DOID_10595	Charcot-Marie-Tooth disease	Charcot-Marie-Tooth disease   (?Charcot-Marie-Tooth disease, type 2R)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615493	http://purl.obolibrary.org/obo/HP_0001249	Intellectual disability	Mental retardation   (?Mental retardation, autosomal recessive, 37)		D) Found Synonym With HP Annotator Synonym modified search 	OMIM
+OMIM:615517	http://purl.obolibrary.org/obo/DOID_2352	hemochromatosis	Hemochromatosis   (?Hemochromatosis, type 5)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615518	http://purl.obolibrary.org/obo/HP_0002721	Immunodeficiency	Immunodeficiency   (?Immunodeficiency 13)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615527	http://purl.obolibrary.org/obo/DOID_1508	candidiasis	Candidiasis   (?Candidiasis, familial, 8)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615529	http://purl.obolibrary.org/obo/DOID_2340	craniosynostosis	Craniosynostosis   ({Craniosynostosis 5, susceptibility to})		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615544	http://purl.obolibrary.org/obo/DOID_0050454	periventricular nodular heterotopia	Periventricular nodular heterotopia   (?Periventricular nodular heterotopia 6)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615550	http://purl.obolibrary.org/obo/DOID_1339	Diamond-Blackfan anemia	Diamond-Blackfan anemia   (?Diamond-Blackfan anemia 12)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615555	http://purl.obolibrary.org/obo/DOID_12700	hyperprolactinemia	Hyperprolactinemia		A) Found Exact With Disease Annotator	OMIM
+OMIM:615559	http://purl.obolibrary.org/obo/DOID_12177	common variable immunodeficiency	common variable Immunodeficiency   (?Immunodeficiency, common variable, 9)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615565	http://purl.obolibrary.org/obo/DOID_10584	retinitis pigmentosa	Retinitis pigmentosa   (?Retinitis pigmentosa 67)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615590	http://purl.obolibrary.org/obo/HP_0002511	Alzheimer disease	Alzheimer disease   ({Alzheimer disease 18, susceptibility to})		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615592	http://purl.obolibrary.org/obo/HP_0002721	Immunodeficiency	Immunodeficiency   (Immunodeficiency 15)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:300884	http://purl.obolibrary.org/obo/DOID_5212	congenital disorder of glycosylation	Congenital disorder of glycosylation   (Congenital disorder of glycosylation, type Is)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:600638	http://purl.obolibrary.org/obo/HP_0001491	Congenital fibrosis of extraocular muscles	congenital Fibrosis of extraocular muscles   (Fibrosis of extraocular muscles, congenital, 3A)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:602078	http://purl.obolibrary.org/obo/HP_0001491	Congenital fibrosis of extraocular muscles	congenital Fibrosis of extraocular muscles   (Fibrosis of extraocular muscles, congenital, 2)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:613812	http://purl.obolibrary.org/obo/DOID_0050674	congenital bile acid synthesis defect	congenital Bile acid synthesis defect   (Bile acid synthesis defect, congenital, 3)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615224	http://purl.obolibrary.org/obo/DOID_0050628	advanced sleep phase syndrome	familial Advanced sleep-phase syndrome   (Advanced sleep-phase syndrome, familial, 2)		B) Found Synonym With Disease Annotator Synonym modified search 	OMIM
+OMIM:615249	http://purl.obolibrary.org/obo/DOID_0050588	muscular dystrophy-dystroglycanopathy	Muscular dystrophy-dystroglycanopathy   (?Muscular dystrophy-dystroglycanopathy (congenital with brain and eye anomalies), type A, 12)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615273	http://purl.obolibrary.org/obo/DOID_5212	congenital disorder of glycosylation	Congenital disorder of glycosylation   (?Congenital disorder of glycosylation, type Iv)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615287	http://purl.obolibrary.org/obo/DOID_0050588	muscular dystrophy-dystroglycanopathy	Muscular dystrophy-dystroglycanopathy   (Muscular dystrophy-dystroglycanopathy (congenital with brain and eye anomalies), type A, 13)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615350	http://purl.obolibrary.org/obo/DOID_0050588	muscular dystrophy-dystroglycanopathy	Muscular dystrophy-dystroglycanopathy   (Muscular dystrophy-dystroglycanopathy (congenital with brain and eye anomalies), type A, 14)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615351	http://purl.obolibrary.org/obo/DOID_0050588	muscular dystrophy-dystroglycanopathy	Muscular dystrophy-dystroglycanopathy   (Muscular dystrophy-dystroglycanopathy (congenital with mental retardation), type B, 14)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615352	http://purl.obolibrary.org/obo/DOID_0050588	muscular dystrophy-dystroglycanopathy	Muscular dystrophy-dystroglycanopathy   (Muscular dystrophy-dystroglycanopathy (limb-girdle), type C, 14)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615360	http://purl.obolibrary.org/obo/DOID_14791	Leber congenital amaurosis	Leber congenital amaurosis   (Leber congenital amaurosis 17)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615596	http://purl.obolibrary.org/obo/DOID_5212	congenital disorder of glycosylation	Congenital disorder of glycosylation   (?Congenital disorder of glycosylation, type Iw)		A) Found Exact With Disease Annotator modified search 	OMIM
+MESH:C562642	http://purl.obolibrary.org/obo/DOID_0050639	primary cutaneous amyloidosis	primary cutaneous amyloidosis   (Amyloidosis, Primary Cutaneous)		A) Found Exact With Disease Annotator modified search 	RGD
+MESH:D017676	http://purl.obolibrary.org/obo/DOID_9201	lichen planus	lichen planus   (Lichen Planus, Oral)		A) Found Exact With Disease Annotator modified search 	RGD
+MESH:D059350	http://purl.obolibrary.org/obo/HP_0012532	Chronic pain	chronic pain		C) Found Exact With HP Annotator	RGD
