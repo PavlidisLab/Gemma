@@ -3575,3 +3575,11 @@ OMIM:615596	http://purl.obolibrary.org/obo/DOID_5212	congenital disorder of glyc
 MESH:C562642	http://purl.obolibrary.org/obo/DOID_0050639	primary cutaneous amyloidosis	primary cutaneous amyloidosis   (Amyloidosis, Primary Cutaneous)		A) Found Exact With Disease Annotator modified search 	RGD
 MESH:D017676	http://purl.obolibrary.org/obo/DOID_9201	lichen planus	lichen planus   (Lichen Planus, Oral)		A) Found Exact With Disease Annotator modified search 	RGD
 MESH:D059350	http://purl.obolibrary.org/obo/HP_0012532	Chronic pain	chronic pain		C) Found Exact With HP Annotator	RGD
+Glioblastoma	http://purl.obolibrary.org/obo/DOID_3068	glioblastoma multiforme	glioblastoma		A) Found Exact With Disease Annotator	GWAS_Catalog
+Insomnia	http://purl.obolibrary.org/obo/HP_0100785	Insomnia	insomnia		C) Found Exact With HP Annotator	GWAS_Catalog
+Migraine with aura	http://purl.obolibrary.org/obo/DOID_10024	migraine with aura	migraine with aura		A) Found Exact With Disease Annotator	GWAS_Catalog
+Migraine without aura	http://purl.obolibrary.org/obo/DOID_12783	migraine without aura	migraine without aura		A) Found Exact With Disease Annotator	GWAS_Catalog
+Osteosarcoma	http://purl.obolibrary.org/obo/DOID_3347	osteosarcoma	osteosarcoma		A) Found Exact With Disease Annotator	GWAS_Catalog
+Post-traumatic stress disorder	http://purl.obolibrary.org/obo/DOID_2055	post-traumatic stress disorder	post-traumatic stress disorder		A) Found Exact With Disease Annotator	GWAS_Catalog
+Post-traumatic stress disorder (asjusted for relatedness)	http://purl.obolibrary.org/obo/DOID_2055	post-traumatic stress disorder	post-traumatic stress disorder		A) Found Exact With Disease Annotator	GWAS_Catalog
+Weight loss (gastric bypass surgery)	http://purl.obolibrary.org/obo/HP_0001824	Weight loss	weight loss		C) Found Exact With HP Annotator	GWAS_Catalog
