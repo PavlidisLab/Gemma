@@ -34,6 +34,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.util.monitor.CacheMonitor;
 import ubic.gemma.util.monitor.HibernateMonitor;
+import ubic.gemma.web.feed.TwitterOutbound;
 
 /**
  * Provide statistics about the system: hibernate, caches etc.
@@ -50,6 +51,8 @@ public class SystemMonitorController {
     HibernateMonitor hibernateMonitor;
     @Autowired
     JMSBrokerMonitor jmsBrokerMonitor;
+    @Autowired
+    TwitterOutbound twitterOutbound;
 
     /**
      * Flush (clear) all caches. Exposed to AJAX
@@ -170,5 +173,12 @@ public class SystemMonitorController {
     @RequestMapping(value = "/admin/systemStats.html", method = RequestMethod.GET)
     public String show() {
         return "/admin/systemStats";
+    }
+    
+    /**
+     * manually send out a tweet. Exposed to AJAX
+     */
+    public void tweetManually(String message) {
+    	twitterOutbound.sendManualTweet(message);
     }
 }

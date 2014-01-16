@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.social.twitter.api.StatusDetails;
+import org.springframework.social.twitter.api.Tweet;
 import org.springframework.social.twitter.api.Twitter;
 import org.springframework.social.twitter.api.impl.TwitterTemplate;
 import org.springframework.stereotype.Component;
@@ -83,7 +84,45 @@ public class TwitterOutbound {
             Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
             StatusDetails metadata = new StatusDetails();
             metadata.setWrapLinks( true );
-            twitter.timelineOperations().updateStatus( feed, metadata );
+            try{
+                Tweet tweet = twitter.timelineOperations().updateStatus( feed, metadata );
+                log.info("tweet info:" + tweet.toString());
+            }
+            catch(Exception e){
+              	log.info(e.toString());
+            }
+        }
+
+    }
+    
+    @Secured({ "GROUP_ADMIN" })
+    public void sendManualTweet(String feed) {
+        log.debug( "Checking if Twitter is enabled" );
+        if ( !Settings.getBoolean( "gemma.twitter.enabled" ) ) {
+        	
+        	log.info( "Twitter is disabled." );
+            return;
+        }
+
+        
+
+        if ( StringUtils.isNotBlank( feed ) ) {
+            log.info( "Sending out tweet: '" + feed + "'" );
+            String consumerKey = Settings.getString( "gemma.twitter.consumer-key" );
+            String consumerSecret = Settings.getString( "gemma.twitter.consumer-secret" );
+            String accessToken = Settings.getString( "gemma.twitter.access-token" );
+            String accessTokenSecret = Settings.getString( "gemma.twitter.access-token-secret" );
+
+            Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
+            StatusDetails metadata = new StatusDetails();
+            metadata.setWrapLinks( true );
+            try{
+                Tweet tweet = twitter.timelineOperations().updateStatus( feed, metadata );
+                log.info("tweet info:" + tweet.toString());
+            }
+            catch(Exception e){
+              	log.info(e.toString());
+            }
         }
 
     }

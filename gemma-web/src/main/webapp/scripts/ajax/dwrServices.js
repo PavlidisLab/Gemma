@@ -1060,6 +1060,10 @@ SystemMonitorController.disableStatistics = function(callback) {
 SystemMonitorController.resetHibernateStatus = function(callback) {
    dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'resetHibernateStatus', callback);
 };
+
+SystemMonitorController.tweetManually = function(p0, callback) {
+	   dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'tweetManually', p0, callback);
+};
 // ====================================================================================
 if ( typeof LinkAnalysisController === 'undefined' ) {
    var LinkAnalysisController = {};

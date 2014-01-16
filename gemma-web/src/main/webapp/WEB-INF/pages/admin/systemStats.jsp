@@ -32,6 +32,16 @@
 	</h2>
 	<div id="spaceStats">
 		Waiting ...
+	</div>	
+	
+	<h2>
+		Test twitter
+	</h2>
+	
+	<div id="twitter-admin-div" ></div>
+	<div>
+		<input id="test-twitter-button" type="button" name="Test twitter" value="Test twitter"
+			onClick="tweetManuallyConfirm();" />
 	</div>
 
 </body>
