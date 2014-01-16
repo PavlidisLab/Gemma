@@ -17,8 +17,8 @@ package ubic.gemma.loader.association.phenotype;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.model.genome.Gene;
 
 public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
@@ -51,8 +51,6 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     }
 
     private void processRGDFiles( String rgdHuman, String rgdMouse, String rgdRat ) throws Exception {
-
-        writeOutputFileHeaders2();
         processRGDFile( "human", rgdHuman );
         processRGDFile( "mouse", rgdMouse );
         processRGDFile( "rat", rgdRat );
@@ -80,59 +78,19 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
             String evidenceCode = tokens[6].trim();
             String comment = tokens[3].trim();
             String databaseLink = "?term=" + tokens[4].trim() + "&id=" + tokens[1].trim();
-            String diseaseId = tokens[10].trim();
+            String meshOrOmimId = tokens[10].trim();
 
             if ( !evidenceCode.equalsIgnoreCase( "ISS" ) && !evidenceCode.equalsIgnoreCase( "NAS" )
-                    && !evidenceCode.equalsIgnoreCase( "IEA" ) && !diseaseId.equals( "" ) && !pubmed.equals( "" ) ) {
+                    && !evidenceCode.equalsIgnoreCase( "IEA" ) && !meshOrOmimId.equals( "" ) && !pubmed.equals( "" ) ) {
 
-                // 1- using the disease ontology first look is a mapping is found
-                String valuesUri = findValueUriWithDiseaseId( diseaseId );
+                Gene gene = findGeneUsingSymbolandTaxon( geneSymbol, taxon );
 
-                if ( valuesUri.isEmpty() && findManualMappingTermValueUri( diseaseId ) != null ) {
+                if ( gene != null ) {
 
-                    for ( String valueUriFound : findManualMappingTermValueUri( diseaseId ) ) {
-                        // 2 - If we couldnt find it lets use the manual mapping file
-                        valuesUri = valuesUri + valueUriFound + ";";
-                    }
-                }
-
-                if ( !valuesUri.isEmpty() ) {
-                    outFinalResults.write( geneSymbol + "\t" + taxon + "\t" + pubmed + "\t" + evidenceCode + "\t"
-                            + comment + "\t" + RGD + "\t" + databaseLink + "\t" + valuesUri + "\n" );
-                }
-                /**
-                 * nothing was found in 1- or 2-, in this case lets use the annotator and check later if the returned
-                 * value make sense to add them to the manual mapping
-                 **/
-                else {
-                    /**
-                     * we dont have any description of those mesh and omim term we need to use a web service to find
-                     * them
-                     **/
-
-                    String description = findDescriptionUsingTerm( diseaseId );
-
-                    if ( description != null && !description.isEmpty() ) {
-                        writeInPossibleMappingAndNotFound( diseaseId, description, line, RGD, true );
-                    }
+                    findMapping( meshOrOmimId, gene, pubmed, evidenceCode, comment, null, RGD, databaseLink );
                 }
             }
         }
-    }
-
-    // we are not given the phenotype description, use a web service to find it
-    private String findDescriptionUsingTerm( String diseaseId ) throws Exception {
-
-        String conceptId = diseaseId.substring( diseaseId.indexOf( ":" ) + 1, diseaseId.length() );
-
-        if ( diseaseId.indexOf( "OMIM:" ) != -1 ) {
-            return AnnotatorClient.findLabelUsingIdentifier( AnnotatorClient.OMIM_ONTOLOGY, conceptId );
-        } else if ( diseaseId.indexOf( "MESH:" ) != -1 ) {
-            return AnnotatorClient.findLabelUsingIdentifier( AnnotatorClient.MESH_ONTOLOGY, conceptId );
-        } else {
-            throw new Exception( "diseaseId not OMIM or MESH: " + diseaseId );
-        }
-
     }
 
     public RgdDatabaseImporter( String[] args ) throws Exception {

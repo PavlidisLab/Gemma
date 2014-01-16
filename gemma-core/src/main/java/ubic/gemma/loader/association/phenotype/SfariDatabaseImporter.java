@@ -1,10 +1,8 @@
 package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,6 +63,7 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
 
     private void processSfariScoreFile() throws Exception {
 
+        @SuppressWarnings("resource")
         BufferedReader brGeneScore = new BufferedReader( new FileReader( geneScore ) );
 
         // read headers
@@ -140,11 +139,7 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
 
     private void processSfariGeneFile() throws Exception {
 
-        // the results
-        outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
-
-        outFinalResults
-                .write( "GeneSymbol\tGeneId\tPrimaryPubMeds\tEvidenceCode\tComments\tIsNegative\tExternalDatabase\tDatabaseLink\tPhenotypes\tScoreType\tScore\tStrength\n" );
+        initFinalOutputFile( true, true );
 
         BufferedReader brAutismGeneDataset = new BufferedReader( new FileReader( autismGeneDataset ) );
 
@@ -215,57 +210,46 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
             }
 
             if ( !literaturePubMed.isEmpty() ) {
-
-                String allPubmeds = "";
-
-                for ( String pudmed : literaturePubMed ) {
-                    allPubmeds = allPubmeds + pudmed + ";";
-                }
-
-                outFinalResults.write( geneSymbol + "\t" );
-                outFinalResults.write( nbciID + "\t" );
-                outFinalResults.write( allPubmeds + "\t" );
-
-                outFinalResults.write( "TAS" + "\t" );
-                outFinalResults.write( description + descriptionInScore + "\t" );
-                outFinalResults.write( "" + "\t" );
-
-                outFinalResults.write( "SFARI" + "\t" );
-                outFinalResults.write( geneSymbol + "\t" );
-
-                outFinalResults.write( "autism spectrum disorder" + "\t" );
-                writeScore( scoreVO );
-                outFinalResults.newLine();
-
+                writeFinalSfari( literaturePubMed, geneSymbol, nbciID, description, descriptionInScore, scoreVO, false );
             }
 
             if ( !literaturePubMedNegative.isEmpty() ) {
-
-                String allPubmeds = "";
-
-                for ( String pudmed : literaturePubMedNegative ) {
-                    allPubmeds = allPubmeds + pudmed + ";";
-                }
-
-                outFinalResults.write( geneSymbol + "\t" );
-                outFinalResults.write( nbciID + "\t" );
-                outFinalResults.write( allPubmeds + "\t" );
-
-                outFinalResults.write( "TAS" + "\t" );
-                outFinalResults.write( description + descriptionInScore + "\t" );
-                outFinalResults.write( "1" + "\t" );
-
-                outFinalResults.write( "SFARI" + "\t" );
-                outFinalResults.write( geneSymbol + "\t" );
-
-                outFinalResults.write( "autism spectrum disorder" + "\t" );
-                writeScore( scoreVO );
-                outFinalResults.newLine();
+                writeFinalSfari( literaturePubMedNegative, geneSymbol, nbciID, description, descriptionInScore,
+                        scoreVO, true );
             }
         }
 
         brAutismGeneDataset.close();
         outFinalResults.close();
+    }
+
+    private void writeFinalSfari( Set<String> literaturePubMed, String geneSymbol, String nbciID, String description,
+            String descriptionInScore, ScoreValueObject scoreVO, boolean isNegative ) throws IOException {
+
+        String negative = "";
+
+        if ( isNegative ) {
+            negative = "1";
+        }
+
+        String allPubmeds = "";
+
+        for ( String pudmed : literaturePubMed ) {
+            allPubmeds = allPubmeds + pudmed + ";";
+        }
+
+        outFinalResults.write( geneSymbol + "\t" );
+        outFinalResults.write( nbciID + "\t" );
+        outFinalResults.write( allPubmeds + "\t" );
+        outFinalResults.write( "TAS" + "\t" );
+        outFinalResults.write( description + descriptionInScore + "\t" );
+        outFinalResults.write( "SFARI" + "\t" );
+        outFinalResults.write( geneSymbol + "\t" );
+        outFinalResults.write( "\t\t" );
+        outFinalResults.write( "autism spectrum disorder" + "\t" );
+        outFinalResults.write( negative + "\t" );
+        writeScore( scoreVO );
+        outFinalResults.newLine();
     }
 
     private void checkForSfariFiles() throws Exception {

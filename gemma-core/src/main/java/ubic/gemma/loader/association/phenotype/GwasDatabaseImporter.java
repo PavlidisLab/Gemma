@@ -16,8 +16,8 @@ package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
-import java.util.Collection;
+
+import ubic.gemma.model.genome.Gene;
 
 public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
@@ -73,9 +73,6 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     // process the gwas file, line by line
     private void processGwasFile( String gwasFile ) throws Exception {
 
-        // headers of the final file
-        writeOutputFileHeaders3();
-
         BufferedReader br = new BufferedReader( new FileReader( gwasFile ) );
 
         // check if we have correct headers and organ
@@ -98,38 +95,26 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             // case 1: can we map the description with the static file
             String description = tokens[DISEASE_TRAIT_INDEX].trim();
 
-            if ( findManualMappingTermValueUri( description ) != null ) {
-                writeFinalFile( geneSymbol, tokens, findManualMappingTermValueUri( description ) );
-            } else {
-                writeInPossibleMappingAndNotFound( description, removeParentheses( description ), line, GWAS, false );
+            String comment = DISEASE_TRAIT + ": " + tokens[DISEASE_TRAIT_INDEX] + "; " + INITIAL_SAMPLE_SIZE + ": "
+                    + tokens[INITIAL_SAMPLE_SIZE_INDEX] + "; " + REPLICATION_SAMPLE_SIZE + ": "
+                    + tokens[REPLICATION_SAMPLE_SIZE_INDEX] + "; " + STRONGEST_SNP + ": " + tokens[STRONGEST_SNP_INDEX]
+                    + "; " + SNPS + ": " + tokens[SNPS_INDEX] + "; " + CONTEXT + ": " + tokens[CONTEXT_INDEX] + "; "
+                    + RISK_ALLELE_FREQUENCY + ": " + tokens[RISK_ALLELE_FREQUENCY_INDEX] + "; " + P_VALUE + ": "
+                    + tokens[P_VALUE_INDEX] + "; " + OR_OR_BETA + ": " + tokens[OR_OR_BETA_INDEX] + "; " + PLATFORM
+                    + ": " + tokens[PLATFORM_INDEX];
+
+            String pubmed = tokens[PUBMED_ID_INDEX];
+
+            Gene gene = findGeneUsingSymbolandTaxon( geneSymbol, "human" );
+
+            if ( gene != null ) {
+                findMapping( null, gene, pubmed, "TAS", comment, description, GWAS, "?gene=" + geneSymbol );
             }
         }
 
         br.close();
         writeBuffersAndCloseFiles();
 
-    }
-
-    // the final file format
-    private void writeFinalFile( String geneSymbol, String[] tokens, Collection<String> valuesUri ) throws IOException {
-
-        String comment = DISEASE_TRAIT + ": " + tokens[DISEASE_TRAIT_INDEX] + "; " + INITIAL_SAMPLE_SIZE + ": "
-                + tokens[INITIAL_SAMPLE_SIZE_INDEX] + "; " + REPLICATION_SAMPLE_SIZE + ": "
-                + tokens[REPLICATION_SAMPLE_SIZE_INDEX] + "; " + STRONGEST_SNP + ": " + tokens[STRONGEST_SNP_INDEX]
-                + "; " + SNPS + ": " + tokens[SNPS_INDEX] + "; " + CONTEXT + ": " + tokens[CONTEXT_INDEX] + "; "
-                + RISK_ALLELE_FREQUENCY + ": " + tokens[RISK_ALLELE_FREQUENCY_INDEX] + "; " + P_VALUE + ": "
-                + tokens[P_VALUE_INDEX] + "; " + OR_OR_BETA + ": " + tokens[OR_OR_BETA_INDEX] + "; " + PLATFORM + ": "
-                + tokens[PLATFORM_INDEX];
-
-        String valuesUrisFormated = "";
-
-        for ( String v : valuesUri ) {
-            valuesUrisFormated += v + ";";
-        }
-
-        outFinalResults.write( geneSymbol + "\t" + tokens[PUBMED_ID_INDEX] + "\tTAS\t" + comment + "\t"
-                + tokens[P_VALUE_INDEX] + "\t0.4\tP-value\t" + GWAS + "\t?gene=" + geneSymbol + "\t"
-                + valuesUrisFormated + "\t" + "human" + "\n" );
     }
 
     // the rules to choose the gene symbol
@@ -145,45 +130,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
             }
         }
 
-        if ( geneSymbol == null ) {
-            return null;
-        }
-
-        // does this gene exist in gemma ?
-        if ( this.geneService.findByOfficialSymbol( geneSymbol, taxonService.findByCommonName( "human" ) ) != null ) {
-            return geneSymbol;
-        }
-
-        else if ( geneSymbol.equalsIgnoreCase( "AGPHD1" ) ) {
-            geneSymbol = "HYKK";
-        } else if ( geneSymbol.equalsIgnoreCase( "C8orf42" ) ) {
-            geneSymbol = "TDRP";
-        } else if ( geneSymbol.equalsIgnoreCase( "CCBP2" ) ) {
-            geneSymbol = "ACKR2";
-        } else if ( geneSymbol.equalsIgnoreCase( "DBC1" ) ) {
-            geneSymbol = "BRINP1";
-        } else if ( geneSymbol.equalsIgnoreCase( "EFHA2" ) ) {
-            geneSymbol = "MICU3";
-        } else if ( geneSymbol.equalsIgnoreCase( "FAM108C1" ) ) {
-            geneSymbol = "ABHD17C";
-        } else if ( geneSymbol.equalsIgnoreCase( "GLT25D2" ) ) {
-            geneSymbol = "COLGALT2";
-        } else if ( geneSymbol.equalsIgnoreCase( "LOC729852" ) ) {
-            return null;
-        } else if ( geneSymbol.equalsIgnoreCase( "TRA@" ) ) {
-            geneSymbol = "TRA";
-        } else if ( geneSymbol.equalsIgnoreCase( "UTS2D" ) ) {
-            geneSymbol = "UTS2B";
-        }
-
-        // try a second time, might have been changed
-        if ( this.geneService.findByOfficialSymbol( geneSymbol, taxonService.findByCommonName( "human" ) ) != null ) {
-            return geneSymbol;
-        }
-
-        this.errorMessages.add( "Gene found in the file but not in Gemma: " + geneSymbol );
-
-        return null;
+        return geneSymbol;
     }
 
     private void verifyHeaders( String[] headers ) throws Exception {
@@ -213,6 +160,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         super( args );
     }
 
+    @SuppressWarnings("unused")
     private String removeParentheses( String txt ) {
 
         int index1 = txt.indexOf( "(" );

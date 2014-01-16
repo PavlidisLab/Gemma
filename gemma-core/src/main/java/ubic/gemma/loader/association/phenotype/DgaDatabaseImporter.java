@@ -1,10 +1,8 @@
 package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 
@@ -52,15 +50,13 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     private void processDGAFile() throws Exception {
 
-        outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
-        outNotFound = new BufferedWriter( new FileWriter( writeFolder + "/notFound.tsv" ) );
-        outNotFound.write( "Term is not a leaf and have < 2 parent" );
+        initFinalOutputFile( false, false );
+
+        // outNotFound = new BufferedWriter( new FileWriter( writeFolder + "/notFound.tsv" ) );
+        // outNotFound.write( "Term is not a leaf and have < 2 parent" );
 
         BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );
         String line = "";
-
-        // write the correct header in the output File
-        writeOutputFileHeaders5();
 
         while ( ( line = dgaReader.readLine() ) != null ) {
 
@@ -87,13 +83,15 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                         // keep leaf or deep enough or uri=DOID_162(cancer)
                         if ( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 )
                                 || o.getUri().indexOf( "DOID_162" ) != -1 ) {
-                            outNotFound.write( o.getLabel() + "\t" + o.getUri() + "\n" );
+                            // outNotFound.write( o.getLabel() + "\t" + o.getUri() + "\n" );
                         }
 
                         else {
-                            outFinalResults.write( o.getUri() + "\t" + o.getLabel() + "\t" + geneSymbol + "\t" + geneId
-                                    + "\t" + pubMedID + "\t" + "GeneRIF: " + geneRIF + "\t" + "IEA" + "\t" + "" + "\t"
-                                    + DGA + "\n" );
+                            outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA" + "\t"
+                                    + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t" + "" + "\t"
+                                    + o.getUri() + "\n" );
+
+                            outFinalResults.flush();
                         }
                     } else {
                         log.info( "gene NCBI no found in Gemma discard this eidence: ncbi: " + geneId );
@@ -107,7 +105,7 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
         dgaReader.close();
         outFinalResults.close();
-        outNotFound.close();
+        // outNotFound.close();
     }
 
     // find string between first > and <

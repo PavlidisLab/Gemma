@@ -57,7 +57,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)
     private static String[] initArguments() {
 
-        String[] args = new String[10];
+        String[] args = new String[8];
         // user
         args[0] = "-u";
         args[1] = "administrator";
@@ -66,15 +66,10 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         args[3] = "administrator";
         // the path of the file
         args[4] = "-f";
-        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/finalResults2.tsv";
-        // create the evidence in the database
+        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/finalResults.tsv";
+        // create the evidence in the database, can be set to false for testing
         args[6] = "-c";
         args[7] = "true";
-        // environment we dont have all genes on a test database, if we are using the production let it know should find
-        // true == production database
-        // false == testDatabase, put gene not found to NCBI 1
-        args[8] = "-e";
-        args[9] = "true";
 
         return args;
     }
@@ -118,11 +113,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
             log.info( "File: " + this.inputFile );
             log.info( "Create in Database: " + this.createInDatabase );
-            if ( this.prodDatabase ) {
-                log.info( "Connection read or write to Production Database" );
-            } else {
-                log.info( "Using a test database" );
-            }
 
             this.br = new BufferedReader( new FileReader( this.inputFile ) );
 
@@ -198,8 +188,9 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                                             + e.getGeneNCBI() );
                                     // something is wrong with the pubmed api, wait it out more 4 hours, this often
                                     // run at night so make it wait doesn't matter
-                                    log.info( "tring again 3: waiting 15000 sec" );
+                                    log.info( "tring again 4: waiting 15000 sec" );
                                     Thread.sleep( 15000000 );
+                                    this.phenotypeAssociationService.makeEvidence( e );
                                 }
                             }
                         }
@@ -213,9 +204,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             log.info( "Import of evidence is finish" );
             // when we import a file in production we keep a copy of the imported file and keep track of when the file
             // was imported in a log file
-            if ( this.prodDatabase && this.createInDatabase ) {
-                createImportLog( evidenceValueObjects.iterator().next() );
-            }
+
+            // createImportLog( evidenceValueObjects.iterator().next() );
 
         } catch ( Exception e ) {
             return e;
@@ -281,10 +271,10 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         }
 
         String geneSymbol = tokens[this.mapColumns.get( "GeneSymbol" )].trim();
-        String geneID = "";
+        String geneNcbiId = "";
 
         if ( this.mapColumns.get( "GeneId" ) != null ) {
-            geneID = tokens[this.mapColumns.get( "GeneId" )].trim();
+            geneNcbiId = tokens[this.mapColumns.get( "GeneId" )].trim();
         }
 
         String evidenceCode = tokens[this.mapColumns.get( "EvidenceCode" )].trim();
@@ -302,11 +292,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         String databaseID = tokens[this.mapColumns.get( "DatabaseLink" )].trim();
 
-        String evidenceTaxon = "";
-        if ( this.mapColumns.get( "Taxon" ) != null ) {
-            evidenceTaxon = tokens[this.mapColumns.get( "Taxon" )].trim();
-        }
-
         String originalPhenotype = tokens[this.mapColumns.get( "OriginalPhenotype" )].trim();
         String phenotypeMapping = tokens[this.mapColumns.get( "PhenotypeMapping" )].trim();
 
@@ -314,20 +299,14 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         Set<String> phenotypeFromArray = trimArray( tokens[this.mapColumns.get( "Phenotypes" )].split( ";" ) );
 
-        int geneNcbiId = 0;
-
-        if ( geneID.equals( "" ) && !evidenceTaxon.equals( "" ) ) {
-            geneNcbiId = findGeneId( geneSymbol, evidenceTaxon );
-        } else {
-            geneNcbiId = verifyGeneIdExist( geneID, geneSymbol );
-        }
+        Gene g = verifyGeneIdExist( geneNcbiId, geneSymbol );
 
         SortedSet<CharacteristicValueObject> phenotypes = toValuesUri( phenotypeFromArray );
 
         evidence.setDescription( description );
         evidence.setEvidenceCode( evidenceCode );
         evidence.setEvidenceSource( makeEvidenceSource( databaseID, externalDatabaseName ) );
-        evidence.setGeneNCBI( geneNcbiId );
+        evidence.setGeneNCBI( new Integer( geneNcbiId ) );
         evidence.setPhenotypes( phenotypes );
         evidence.setIsNegativeEvidence( isNegativeEvidence );
         evidence.setOriginalPhenotype( originalPhenotype );
@@ -351,7 +330,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             }
 
         } else if ( !externalDatabaseName.equalsIgnoreCase( "" ) ) {
-            setScoreDependingOnExternalSource( externalDatabaseName, evidence, evidenceTaxon );
+            setScoreDependingOnExternalSource( externalDatabaseName, evidence, g.getTaxon().getCommonName() );
         }
     }
 
@@ -502,14 +481,10 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
      * @throws IOException
      * @throws Exception
      */
-    private int verifyGeneIdExist( String geneId, String geneName ) throws IOException {
+    private Gene verifyGeneIdExist( String geneId, String geneName ) throws IOException {
 
         Gene g = this.geneService.findByNCBIId( new Integer( geneId ) );
 
-        // no gene found but we are on a test database so its fine
-        if ( g == null && this.prodDatabase == false ) {
-            return 1;
-        }
         // we found a gene
         if ( g != null ) {
             if ( !g.getOfficialSymbol().equalsIgnoreCase( geneName ) ) {
@@ -549,7 +524,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                         + " was not found in Gemma, this evidence wont be imported" );
             }
         }
-        return g.getNcbiGeneId();
+        return g;
     }
 
     private void verifyMappingType( String phenotypeMapping ) {
@@ -603,19 +578,17 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         }
 
         if ( genesWithTaxon.isEmpty() ) {
-            if ( this.prodDatabase ) {
 
-                Integer geneNCBi = checkForSymbolChange( officialSymbol, evidenceTaxon );
+            Integer geneNCBi = checkForSymbolChange( officialSymbol, evidenceTaxon );
 
-                if ( geneNCBi != null ) {
-                    return geneNCBi;
-                }
-
-                writeError( "Gene not found using symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon );
-
-                return -1;
+            if ( geneNCBi != null ) {
+                return geneNCBi;
             }
-            return 1;
+
+            writeError( "Gene not found using symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon );
+
+            return -1;
+
         }
 
         // too many results found, to check why
@@ -884,7 +857,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // TODO move SFARIImporter to ExternalDatabaseImporter
         else if ( externalDatabaseName.equalsIgnoreCase( "SFARI" ) ) {
             return;
-        } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) ) {
+        } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" )
+                || externalDatabaseName.equalsIgnoreCase( "GWAS_Catalog" ) ) {
             evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
         } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" )
                 || externalDatabaseName.equalsIgnoreCase( "BDgene" ) || externalDatabaseName.equalsIgnoreCase( "DGA" ) ) {
@@ -902,6 +876,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
      * once we imported some evidence in Neurocarta, we want to copy a copy of what was imported and when, those files
      * are committed in Gemma, so its possible to see over time all that was imported
      */
+    @SuppressWarnings("unused")
     private void createImportLog( EvidenceValueObject evidenceValueObject ) {
 
         // default

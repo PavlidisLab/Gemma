@@ -16,10 +16,10 @@ package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.model.genome.Gene;
 
 public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
@@ -51,8 +51,6 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
         findOmimAndMeshMappingUsingOntologyFile();
 
-        // write headers of the final file
-        writeOutputFileHeaders1();
     }
 
     private void downloadCTDFileIfDoesntExist() {
@@ -69,7 +67,7 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
     }
 
-    private void processCTDFile() throws IOException {
+    private void processCTDFile() throws Exception {
 
         // read the ctd file
         BufferedReader br = new BufferedReader( new InputStreamReader(
@@ -79,59 +77,50 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
         // for each line of the file treat it
         while ( ( line = br.readLine() ) != null ) {
+
             if ( line.indexOf( '#' ) != -1 ) {
                 continue;
             }
 
             String[] tokens = line.split( "\t" );
-            // structure of the file
-            String geneSymbol = tokens[0].trim();
-            String geneId = tokens[1].trim();
-            String diseaseName = tokens[2].trim();
-            String diseaseId = tokens[3].trim();
-            String directEvidence = tokens[4].trim();
-            String pubmedIds = "";
 
-            if ( tokens.length < 9 ) {
-                pubmedIds = tokens[7].trim();
-            } else {
+            if ( tokens.length == 9 ) {
+
+                // structure of the file
+                String geneSymbol = tokens[0].trim();
+                String geneId = tokens[1].trim();
+                String diseaseName = tokens[2].trim();
+                String diseaseId = tokens[3].trim();
+                String directEvidence = tokens[4].trim();
+                String pubmedIds = "";
+
                 pubmedIds = tokens[8].trim();
-            }
 
-            // the evidence must be marker/mechanism or therapeutic to be imported into Neurocarta
-            if ( ( directEvidence.equalsIgnoreCase( "marker/mechanism" ) || directEvidence
-                    .equalsIgnoreCase( "therapeutic" ) ) && !pubmedIds.equalsIgnoreCase( "" ) ) {
+                // the evidence must be marker/mechanism or therapeutic to be imported into Phenocarta
+                if ( ( directEvidence.equalsIgnoreCase( "marker/mechanism" ) || directEvidence
+                        .equalsIgnoreCase( "therapeutic" ) ) && !pubmedIds.equalsIgnoreCase( "" ) ) {
 
-                // 1- using the disease ontology first look is a mapping is found
-                String valuesUri = findValueUriWithDiseaseId( diseaseId );
+                    String[] tokensPubmed = pubmedIds.split( "\\|" );
 
-                if ( valuesUri.isEmpty() && findManualMappingTermValueUri( diseaseId ) != null ) {
+                    for ( String pubmed : tokensPubmed ) {
 
-                    for ( String valueUriFound : findManualMappingTermValueUri( diseaseId ) ) {
-                        // 2 - If we couldnt find it lets use the manual mapping file
-                        valuesUri = valuesUri + valueUriFound + ";";
+                        Integer.parseInt( pubmed );
+
+                        Gene gene = this.geneService.findByNCBIId( new Integer( geneId ) );
+
+                        if ( gene != null ) {
+
+                            if ( !gene.getOfficialSymbol().equalsIgnoreCase( geneSymbol ) ) {
+                                logMessages.add( "!gene.getOfficialSymbol().equalsIgnoreCase( geneSymbol )???? :"
+                                        + "Gemma: " + gene.getOfficialSymbol() + " File: " + geneSymbol );
+                            }
+
+                            findMapping( diseaseId, gene, pubmed, "TAS", "DiseaseName: " + diseaseName + " ("
+                                    + diseaseId + "); DirectEvidence: " + directEvidence, diseaseName, CTD,
+                                    "/detail.go?type=relationship&geneAcc=" + geneId + "&diseaseAcc=" + diseaseId
+                                            + "&view=reference" );
+                        }
                     }
-                }
-
-                // those 2 cases represent final values that can be imported
-                if ( !valuesUri.isEmpty() ) {
-
-                    String[] pubmedsIdArray = pubmedIds.split( "\\|" );
-
-                    // for each pubmed id found
-                    for ( String pubmed : pubmedsIdArray ) {
-                        outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubmed + "\t" + "TAS" + "\t"
-                                + "DiseaseName: " + diseaseName + " (" + diseaseId + "); DirectEvidence: "
-                                + directEvidence + "\t" + CTD + "\t" + "/detail.go?type=relationship&geneAcc=" + geneId
-                                + "&diseaseAcc=" + diseaseId + "&view=reference" + "\t" + valuesUri + "\n" );
-                    }
-                }
-                /**
-                 * nothing was found in 1- or 2-, in this case lets use the annotator and check later if the returned
-                 * value make sense to add them to the manual mapping
-                 **/
-                else {
-                    writeInPossibleMappingAndNotFound( diseaseId, diseaseName, line, CTD, true );
                 }
             }
         }

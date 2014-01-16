@@ -69,7 +69,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     protected String inputFile = "";
     protected BufferedReader br = null;
     protected boolean createInDatabase = false;
-    protected boolean prodDatabase = false;
 
     protected final String EXPERIMENTAL_EVIDENCE = "EXPERIMENTAL";
     protected final String LITERATURE_EVIDENCE = "LITERATURE";
@@ -98,10 +97,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         Option createOption = OptionBuilder.withDescription( "Create in Database (false or true)" ).hasArg()
                 .withArgName( "create in Database" ).isRequired().create( "c" );
         addOption( createOption );
-        @SuppressWarnings("static-access")
-        Option prodOption = OptionBuilder.withDescription( "Using production database (false or true)" ).hasArg()
-                .withArgName( "indicate if Prod database" ).isRequired().create( "e" );
-        addOption( prodOption );
     }
 
     @Override
@@ -109,7 +104,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         super.processOptions();
         this.inputFile = getOptionValue( 'f' );
         this.createInDatabase = new Boolean( getOptionValue( 'c' ) );
-        this.prodDatabase = new Boolean( getOptionValue( 'e' ) );
     }
 
     protected EvidenceSourceValueObject makeEvidenceSource( String databaseID, String externalDatabaseName ) {
@@ -147,11 +141,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
             log.info( "waiting for the Disease Ontology to load" );
         }
 
-        // while ( this.mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
-        // wait( 3000 );
-        // log.info( "waiting for the MP Ontology to load" );
-        // }
-
         while ( this.humanPhenotypeOntologyService.isOntologyLoaded() == false ) {
             wait( 3000 );
             log.info( "waiting for the HP Ontology to load" );
@@ -163,6 +152,11 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
             this.nifstdOntologyService = this.ontologyService.getNifstfOntologyService();
             this.obiService = this.ontologyService.getObiService();
             this.fmaOntologyService = this.ontologyService.getFmaOntologyService();
+
+            while ( this.mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
+                wait( 3000 );
+                log.info( "waiting for the MP Ontology to load" );
+            }
 
             while ( this.obiService.isOntologyLoaded() == false ) {
                 wait( 3000 );
@@ -261,8 +255,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 this.mapColumns.put( "Score", index );
             } else if ( header.equalsIgnoreCase( "ScoreType" ) ) {
                 this.mapColumns.put( "ScoreType", index );
-            } else if ( header.equalsIgnoreCase( "Taxon" ) ) {
-                this.mapColumns.put( "Taxon", index );
             } else if ( header.equalsIgnoreCase( "PhenotypeMapping" ) ) {
                 this.mapColumns.put( "PhenotypeMapping", index );
             } else if ( header.equalsIgnoreCase( "OrginalPhenotype" ) ) {
@@ -276,10 +268,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         }
 
         // Minimum fields any evidence should have, need a (taxon+geneSymbol) or (geneId+geneSymbol)
-        if ( !( ( ( this.mapColumns.containsKey( "Taxon" ) ) || this.mapColumns.containsKey( "GeneId" ) )
-                && this.mapColumns.containsKey( "GeneSymbol" ) && this.mapColumns.containsKey( "EvidenceCode" )
-                && this.mapColumns.containsKey( "Comments" ) && this.mapColumns.containsKey( "Phenotypes" )
-                && this.mapColumns.containsKey( "OriginalPhenotype" ) && this.mapColumns
+        if ( !( ( this.mapColumns.containsKey( "GeneId" ) ) && this.mapColumns.containsKey( "GeneSymbol" )
+                && this.mapColumns.containsKey( "EvidenceCode" ) && this.mapColumns.containsKey( "Comments" )
+                && this.mapColumns.containsKey( "Phenotypes" ) && this.mapColumns.containsKey( "OriginalPhenotype" ) && this.mapColumns
                     .containsKey( "PhenotypeMapping" ) ) ) {
             throw new Exception( "Headers not set correctly" );
         }
