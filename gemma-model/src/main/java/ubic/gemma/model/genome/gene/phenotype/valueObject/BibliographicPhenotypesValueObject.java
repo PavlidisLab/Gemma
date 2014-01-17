@@ -99,6 +99,17 @@ public class BibliographicPhenotypesValueObject implements Comparable<Bibliograp
     @Override
     public int compareTo( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject ) {
 
-        return this.geneName.compareTo( bibliographicPhenotypesValueObject.getGeneName() );
+        if ( this.geneName.compareTo( bibliographicPhenotypesValueObject.getGeneName() ) == 0
+                && this.evidenceId.compareTo( bibliographicPhenotypesValueObject.getEvidenceId() ) == 0 ) {
+            return 0;
+        } else if ( this.geneName.compareTo( bibliographicPhenotypesValueObject.getGeneName() ) != 0 ) {
+            return this.geneName.compareTo( bibliographicPhenotypesValueObject.getGeneName() );
+        } else if ( this.evidenceId.compareTo( bibliographicPhenotypesValueObject.getEvidenceId() ) != 0 ) {
+            return this.evidenceId.compareTo( bibliographicPhenotypesValueObject.getEvidenceId() );
+        }
+
+        return -1;
+
     }
+
 }
