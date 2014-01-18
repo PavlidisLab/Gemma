@@ -76,10 +76,10 @@ public class TwitterOutbound {
 
         if ( StringUtils.isNotBlank( feed ) ) {
             log.info( "Sending out tweet: '" + feed + "'" );
-            String consumerKey = Settings.getString( "gemma.twitter.consumer-key" );
-            String consumerSecret = Settings.getString( "gemma.twitter.consumer-secret" );
-            String accessToken = Settings.getString( "gemma.twitter.access-token" );
-            String accessTokenSecret = Settings.getString( "gemma.twitter.access-token-secret" );
+            String consumerKey = Settings.getString( "twitter.consumer-key" );
+            String consumerSecret = Settings.getString( "twitter.consumer-secret" );
+            String accessToken = Settings.getString( "twitter.access-token" );
+            String accessTokenSecret = Settings.getString( "twitter.access-token-secret" );
 
             Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
             StatusDetails metadata = new StatusDetails();
@@ -102,27 +102,19 @@ public class TwitterOutbound {
         	
         	log.info( "Twitter is disabled." );
             return;
-        }
-
-        
+        }        
 
         if ( StringUtils.isNotBlank( feed ) ) {
             log.info( "Sending out tweet: '" + feed + "'" );
-            /*
-            String consumerKey = Settings.getString( "gemma.twitter.consumer-key" );
-            String consumerSecret = Settings.getString( "gemma.twitter.consumer-secret" );
-            String accessToken = Settings.getString( "gemma.twitter.access-token" );
-            String accessTokenSecret = Settings.getString( "gemma.twitter.access-token-secret" );
-            */
-            String consumerKey = "Ib5GJVyXIdKa3iECVurA";
-            String consumerSecret = "66roFaVk4HTmrivbOtx5YvtFRH8VMUdOK8vvuipQWs";
-            String accessToken = "322289197-qf41g0gqlepSBW1fYsaXHZ5Sspxauiw734e5TPu2";
-            String accessTokenSecret = "3o4HWskvacU4OCNiZRR97Y1REL8prAHh8pxmg5nVp7iPQ";
+            
+            String consumerKey = Settings.getString( "twitter.consumer-key" );
+            String consumerSecret = Settings.getString( "twitter.consumer-secret" );
+            String accessToken = Settings.getString( "twitter.access-token" );
+            String accessTokenSecret = Settings.getString( "twitter.access-token-secret" );            
 
             Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
             StatusDetails metadata = new StatusDetails();
-            metadata.setWrapLinks( true );
-            
+            metadata.setWrapLinks( true );            
             
             try{
                 Tweet tweet = twitter.timelineOperations().updateStatus( feed, metadata);
