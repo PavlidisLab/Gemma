@@ -98,6 +98,11 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
         this.taxonCommonName = phenotypeAssociation.getGene().getTaxon().getCommonName();
+        this.originalPhenotype = phenotypeAssociation.getOriginalPhenotype();
+
+        if ( phenotypeAssociation.getMappingType() != null ) {
+            this.phenotypeMapping = phenotypeAssociation.getMappingType().getValue();
+        }
 
         if ( phenotypeAssociation.getEvidenceSource() != null ) {
             this.evidenceSource = new EvidenceSourceValueObject( phenotypeAssociation.getEvidenceSource() );
@@ -518,8 +523,8 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
             return PhenotypeMappingType.INFERRED_XREF;
         } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) ) {
             return PhenotypeMappingType.INFERRED_CURATED;
-        } 
-        
+        }
+
         return null;
     }
 
