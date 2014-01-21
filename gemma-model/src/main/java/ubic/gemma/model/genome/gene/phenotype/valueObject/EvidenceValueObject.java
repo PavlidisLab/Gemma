@@ -513,7 +513,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         this.phenotypeMapping = phenotypeMapping;
     }
 
-    public PhenotypeMappingType getPhenotypeMappingAsEnum() {
+    public PhenotypeMappingType findPhenotypeMappingAsEnum() {
 
         if ( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) ) {
             return PhenotypeMappingType.XREF;

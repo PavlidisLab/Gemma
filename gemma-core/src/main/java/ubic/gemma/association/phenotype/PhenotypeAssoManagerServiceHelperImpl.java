@@ -242,7 +242,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         }
         
         phe.setOriginalPhenotype( evidenceValueObject.getOriginalPhenotype() );
-        phe.setMappingType( evidenceValueObject.getPhenotypeMappingAsEnum() );
+        phe.setMappingType( evidenceValueObject.findPhenotypeMappingAsEnum() );
 
         setScoreInformation( evidenceValueObject, phe );
     }
