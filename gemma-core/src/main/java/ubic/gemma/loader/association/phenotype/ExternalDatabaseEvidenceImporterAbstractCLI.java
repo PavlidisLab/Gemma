@@ -847,17 +847,17 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
 
             if ( !childTermUri.isEmpty() ) {
                 mappingType = PhenotypeMappingType.INFERRED_XREF.toString();
-                originalPhenotype = childTermUri + "(" + childTermValue.toLowerCase() + ") PARENT: "
+                originalPhenotype = childTermUri + " (" + childTermValue.toLowerCase() + ") PARENT: "
                         + originalPhenotype;
             } else {
                 String meshOrOmimIdValue = findDescriptionUsingTerm( meshOrOmimId );
                 // use the ontology to find description
                 if ( meshOrOmimIdValue != null ) {
-                    originalPhenotype = originalPhenotype + "(" + meshOrOmimIdValue.toLowerCase() + ")";
+                    originalPhenotype = originalPhenotype + " (" + meshOrOmimIdValue.toLowerCase() + ")";
                 }
                 // use the given description
                 else if ( description != null ) {
-                    originalPhenotype = originalPhenotype + "(" + description.toLowerCase() + ")";
+                    originalPhenotype = originalPhenotype + " (" + description.toLowerCase() + ")";
                 }
             }
 
@@ -892,7 +892,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
             // used parent
             if ( !childTermUri.isEmpty() ) {
                 mappingType = PhenotypeMappingType.INFERRED_CURATED.toString();
-                originalPhenotype = childTermUri + "(" + childTermValue.toLowerCase() + ") PARENT: "
+                originalPhenotype = childTermUri + " (" + childTermValue.toLowerCase() + ") PARENT: "
                         + originalPhenotype;
             } else if ( meshOrOmimId != null ) {
 
@@ -900,15 +900,15 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
 
                 // use the ontology to find description
                 if ( meshOrOmimIdValue != null ) {
-                    originalPhenotype = originalPhenotype + "(" + meshOrOmimIdValue.toLowerCase() + ")";
+                    originalPhenotype = originalPhenotype + " (" + meshOrOmimIdValue.toLowerCase() + ")";
                 }
                 // use the given description
                 else if ( description != null ) {
-                    originalPhenotype = originalPhenotype + "(" + description.toLowerCase() + ")";
+                    originalPhenotype = originalPhenotype + " (" + description.toLowerCase() + ")";
                 }
                 // look in the manual mapping file for the description
                 else {
-                    originalPhenotype = originalPhenotype + "(" + keyToDescription.get( meshOrOmimId ).toLowerCase()
+                    originalPhenotype = originalPhenotype + " (" + keyToDescription.get( meshOrOmimId ).toLowerCase()
                             + ")";
                 }
             }
