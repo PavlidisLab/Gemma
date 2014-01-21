@@ -63,17 +63,22 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
       var phenotypeAssociationFormWindow;
 
       var metaAnalysisCache = [];
-
+   
       var loggedInColumns = [{
-            columnId : 'owner',
-            isAdminColumn : true
-         }, {
-            columnId : 'lastUpdated',
-            isAdminColumn : false
-         }, {
-            columnId : 'adminLinks',
-            isAdminColumn : false
-         }];
+  	  	columnId : 'originalPhenotype',
+	  	isAdminColumn : true
+       }, {
+          columnId : 'owner',
+          isAdminColumn : true
+       }, {
+          columnId : 'lastUpdated',
+          isAdminColumn : false
+       }, {
+          columnId : 'adminLinks',
+          isAdminColumn : false
+       }];
+      
+      
       var setColumnsVisible = function(isAdmin, isVisible) {
          var columnModel = this.getColumnModel();
 
@@ -374,7 +379,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                   // for
                   // EvidenceValueObject
                   'id', 'className', 'description', 'evidenceCode', 'evidenceSecurityValueObject', 'evidenceSource', 'isNegativeEvidence', 'lastUpdated', 'phenotypes',
-                  'containQueryPhenotype', 'scoreValueObject.strength', 'phenotypeAssPubVO',
+                  'containQueryPhenotype', 'scoreValueObject.strength', 'originalPhenotype','phenotypeMapping', 'phenotypeAssPubVO',
                   // for
                   // GroupEvidenceValueObject
                   'literatureEvidences',
@@ -701,12 +706,32 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
             },
             sortable : false
          }, {
+        	 header : "Original Phenotype",
+             id : 'originalPhenotype',
+             dataIndex : 'originalPhenotype',
+             width : 0.2,
+             renderer : function(value, metadata, record, rowIndex, colIndex, store) {
+             	
+             	var originalPhe = '';
+             	
+             	if(record.data.originalPhenotype!=null){
+             		originalPhe += record.data.originalPhenotype;
+             	}
+             	if(record.data.phenotypeMapping!=null && record.data.phenotypeMapping.length!=0){
+             		originalPhe += '<br> Mapping Type: '+record.data.phenotypeMapping;
+             	}
+
+                 return originalPhe;
+              },
+             hidden : !this.hasAdminLoggedIn(),
+             sortable : true
+          }, {
             header : 'Owner',
             id : 'owner', // Used by my function
             // setColumnsVisible() to
             // locate this column
             dataIndex : 'evidenceSecurityValueObject',
-            width : 0.15,
+            width : 0.2,
             renderer : function(value, metadata, record, rowIndex, colIndex, store) {
                return value.owner;
             },
@@ -718,7 +743,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
             // setColumnsVisible()
             // to locate this column
             dataIndex : 'lastUpdated',
-            width : 0.15,
+            width : 0.2,
             renderer : function(value, metadata, record, rowIndex, colIndex, store) {
                return new Date(value).format("y/M/d");
             },
