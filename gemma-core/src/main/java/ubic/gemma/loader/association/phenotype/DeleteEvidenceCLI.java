@@ -89,6 +89,8 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
         }
 
         Integer limit = 1000;
+        
+        log.info( "Loading "+limit+" evidence (this takes some time)" );
 
         Collection<EvidenceValueObject> evidenceToDelete = this.phenotypeAssociationService
                 .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit );
