@@ -87,9 +87,29 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                         }
 
                         else {
-                            outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA" + "\t"
-                                    + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t" + "" + "\t"
-                                    + o.getUri() + "\n" );
+
+                            // negative
+                            if ( ( geneRIF.indexOf( " is not " ) != -1 || geneRIF.indexOf( " not associated " ) != -1
+                                    || geneRIF.indexOf( " no significant " ) != -1
+                                    || geneRIF.indexOf( " no association " ) != -1
+                                    || geneRIF.indexOf( " not significant " ) != -1 || geneRIF
+                                    .indexOf( " not expressed " ) != -1 )
+                                    && geneRIF.indexOf( "is associated" ) == -1
+                                    && geneRIF.indexOf( "is significant" ) == -1
+                                    && geneRIF.indexOf( "is not only" ) == -1
+                                    && geneRIF.indexOf( "is expressed" ) == -1) {
+
+                                outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
+                                        + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t"
+                                        + "1" + "\t" + o.getUri() + "\n" );
+
+                            }
+                            // positive
+                            else {
+                                outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
+                                        + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t" + ""
+                                        + "\t" + o.getUri() + "\n" );
+                            }
 
                             outFinalResults.flush();
                         }
