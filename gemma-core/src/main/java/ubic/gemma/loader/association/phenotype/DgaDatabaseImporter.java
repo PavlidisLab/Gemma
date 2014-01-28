@@ -50,7 +50,7 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     private void processDGAFile() throws Exception {
 
-        initFinalOutputFile( false, false );
+        initFinalOutputFile( false, true );
 
         // outNotFound = new BufferedWriter( new FileWriter( writeFolder + "/notFound.tsv" ) );
         // outNotFound.write( "Term is not a leaf and have < 2 parent" );
@@ -97,18 +97,18 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                                     && geneRIF.indexOf( "is associated" ) == -1
                                     && geneRIF.indexOf( "is significant" ) == -1
                                     && geneRIF.indexOf( "is not only" ) == -1
-                                    && geneRIF.indexOf( "is expressed" ) == -1) {
+                                    && geneRIF.indexOf( "is expressed" ) == -1 ) {
 
                                 outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
-                                        + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t"
-                                        + "1" + "\t" + o.getUri() + "\n" );
+                                        + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t" + ""
+                                        + "\t" + o.getUri() + "\t" + "1" + "\n" );
 
                             }
                             // positive
                             else {
                                 outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
                                         + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t" + ""
-                                        + "\t" + o.getUri() + "\n" );
+                                        + "\t" + o.getUri() + "\t" + "" + "\n" );
                             }
 
                             outFinalResults.flush();
@@ -138,8 +138,6 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     }
 
     private String findStringBetweenSpecialCharacter( String line, String keyword ) throws Exception {
-
-        // System.out.println( line );
 
         if ( line.indexOf( keyword ) == -1 ) {
             throw new Exception( keyword + " not found in File ??? " + line );
