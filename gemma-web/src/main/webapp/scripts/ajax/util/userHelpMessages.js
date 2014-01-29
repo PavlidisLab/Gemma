@@ -401,6 +401,7 @@ Gemma.HelpText.WidgetDefaults = {
       sameGeneAndOnePhenotypeAnnotated : 'A similar annotation (same gene and related phenotype(s)) already exists for this PubMed Id.',
       sameGeneAndPhenotypeChildOrParentAnnotated : 'A similar annotation (same gene and related phenotype(s)) already exists for this PubMed Id.',
       sameEvidenceFound : 'The same evidence already exists.',
+      descriptionInvalidSymbol : 'The description contains invalid symbols.',
       // The followings are NOT from ValidateEvidenceValueObject.
       errorUnknown : 'System error has occurred. Please contact the system administrator for assistance.',
       pubMedIdsDuplicate : '{0} and {1} should not be the same.',

@@ -41,6 +41,9 @@ Gemma.convertToEvidenceError = function(validateEvidenceValueObject) {
    } else if (validateEvidenceValueObject.sameEvidenceFound) {
       isWarning = false;
       errorMessage = Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.sameEvidenceFound;
+   } else if (validateEvidenceValueObject.descriptionInvalidSymbol) {
+	      isWarning = false;
+	      errorMessage = Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.descriptionInvalidSymbol;
    } else {
       isWarning = false;
       errorMessage = Gemma.HelpText.WidgetDefaults.PhenotypeAssociationForm.ErrorMessage.errorUnknown;
