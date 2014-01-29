@@ -15,6 +15,7 @@ public class ValidateEvidenceValueObject {
     private boolean accessDenied = false;
     private boolean userNotLoggedIn = false;
     private boolean sameEvidenceFound = false;
+    private boolean descriptionInvalidSymbol = false;
 
     // this is used to indicate the gene-phenotype conflicts while validating
     private Set<Long> problematicEvidenceIds = new HashSet<Long>();
@@ -106,5 +107,15 @@ public class ValidateEvidenceValueObject {
     public void setUserNotLoggedIn( boolean userNotLoggedIn ) {
         this.userNotLoggedIn = userNotLoggedIn;
     }
+
+    public boolean isDescriptionInvalidSymbol() {
+        return descriptionInvalidSymbol;
+    }
+
+    public void setDescriptionInvalidSymbol( boolean descriptionInvalidSymbol ) {
+        this.descriptionInvalidSymbol = descriptionInvalidSymbol;
+    }
+    
+    
 
 }

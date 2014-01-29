@@ -50,6 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.DateUtil;
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -811,6 +812,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             validateEvidenceValueObject.setSameEvidenceFound( true );
             log.info( "The evidence is already in the database: " + evidence.getGeneNCBI() + " to "
                     + StringUtils.join( evidence.getPhenotypes(), "," ) + ", no change will be made" );
+            return validateEvidenceValueObject;
+        }
+        
+        if(!StringUtil.containsValidCharacter( evidence.getDescription())){
+            validateEvidenceValueObject = new ValidateEvidenceValueObject();
+            validateEvidenceValueObject.setDescriptionInvalidSymbol( true );
             return validateEvidenceValueObject;
         }
 
