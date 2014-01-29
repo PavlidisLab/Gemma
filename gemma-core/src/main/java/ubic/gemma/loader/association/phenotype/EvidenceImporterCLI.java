@@ -34,6 +34,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -283,7 +284,12 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         String description = tokens[this.mapColumns.get( "Comments" )].trim();
 
-        if ( this.mapColumns.get( "IsNegative" ) != null
+        if ( !StringUtil.containsValidCharacter( description ) ) {
+            writeError( description
+                    + " Ivalid character found (if character is ok add it to StringUtil.containsValidCharacter)" );
+        }
+
+        if ( this.mapColumns.get( "IsNegative" ) != null && this.mapColumns.get( "IsNegative" ) < tokens.length
                 && tokens[this.mapColumns.get( "IsNegative" )].trim().equals( "1" ) ) {
             isNegativeEvidence = true;
         }
@@ -530,8 +536,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     private void verifyMappingType( String phenotypeMapping ) {
 
         if ( !( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) || phenotypeMapping.equalsIgnoreCase( "Curated" )
-                || phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" ) || phenotypeMapping
-                    .equalsIgnoreCase( "Inferred Curated" ) ) ) {
+                || phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" )
+                || phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) || phenotypeMapping.isEmpty() ) ) {
             writeError( "Unsuported phenotypeMapping: " + phenotypeMapping );
         }
 
