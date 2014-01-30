@@ -515,7 +515,14 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
                      }
                   }]
             }),
-         sortInfo : this.storeSortInfo
+         sortInfo : this.storeSortInfo,
+         
+         listeners : {
+             load : function(store, records, options) {
+            	   Ext.getCmp("evidenceGrid").setTitle(store.getCount()+" Evidence for " + Ext.getCmp("evidenceGrid").currentGene.officialSymbol); 
+             	} 
+             }
+         
       });
       
       evidenceStore.on('load',function(store,records,opts){	
@@ -796,7 +803,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
             eval : function(request) {
                eval(request);
             },
-            setCurrentData : function(currentFilters, currentPhenotypes, currentGene) {
+            setCurrentData : function(currentFilters, currentPhenotypes, currentGene, count) {
                this.currentPhenotypes = currentPhenotypes;
 
                createPhenotypeAssociationButton.setDisabled(currentGene == null);

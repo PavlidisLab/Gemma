@@ -156,6 +156,9 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
                         // changed, we should
                         // load back previous gene data.
                         load : function(store, records, options) {
+                        	
+                        	this.setCurrentPhenotypes(this.currentFilters,this.currentPhenotypes,store.getCount());
+                        	
                            // options.params can be null if we use loadData() to fix the problem.
                            if (options.params != null) {
                               var haveSameParams = (options.params.phenotypeValueUris.length === this.currentPhenotypes.length);
@@ -229,7 +232,8 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
                      }
                   }),
                tbar : [geneSearchField, createPhenotypeAssociationButton, downloadButton],
-               setCurrentPhenotypes : function(currentFilters, currentPhenotypes) {
+               setCurrentPhenotypes : function(currentFilters, currentPhenotypes, count) {
+            	  this.currentFilters = currentFilters;
                   this.currentPhenotypes = currentPhenotypes;
 
                   var hasCurrentPhenotypes = (currentPhenotypes != null && currentPhenotypes.length > 0);
@@ -242,6 +246,14 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
                      var currentPhenotypeValueUris = [];
 
                      var selectedPhenotypePrefix = 'Genes associated with';
+                     
+                     if(count!=null && count!=0){  	 
+                    	 selectedPhenotypePrefix = count + " Genes associated with";
+                     }
+                     else if(count==1){
+                    	 selectedPhenotypePrefix = '1 Gene associated with';
+                     }
+                     
                      var selectedPhenotypeHeader = selectedPhenotypePrefix + ' "';
                      var selectedPhenotypeTooltip = '&nbsp;&nbsp;&nbsp;';
 
@@ -260,16 +272,18 @@ Gemma.PhenotypeGeneGridPanel = Ext.extend(Ext.grid.GridPanel, {
                            selectedPhenotypeHeader += '"';
                         }
                      }
-
-                     this.getStore().reload({
+                     if(count==null){  	 
+                     
+                    	 this.getStore().reload({
                            params : {
                               taxonId : currentFilters.taxonId,
                               showOnlyEditable : currentFilters.showOnlyEditable,
                               phenotypeValueUris : currentPhenotypeValueUris,
                               databaseIds : currentFilters.databaseIds
-                           }
-                        });
-                     this.getSelectionModel().clearSelections(false);
+                          }
+                    	 	});
+                    	 this.getSelectionModel().clearSelections(false);
+                     }
 
                      this.setTitle("<div style='height: 15px; overflow: hidden;' " + // Make the header one line only.
                         "ext:qtitle='" + selectedPhenotypePrefix + "' " + "ext:qtip='" + selectedPhenotypeTooltip + "'>" + selectedPhenotypeHeader + "</div>");

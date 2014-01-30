@@ -94,6 +94,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
             this.relayEvents(geneGrid, ['phenotypeAssociationChanged']);
 
             var evidenceGrid = new Gemma.PhenotypeEvidenceGridPanel({
+            	  id : 'evidenceGrid',
                   region : 'center',
                   evidenceStoreProxy : this.evidenceStoreProxy,
                   getGeneLink : this.getGeneLink
