@@ -519,7 +519,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
          
          listeners : {
              load : function(store, records, options) {
+            	 if(Ext.getCmp("evidenceGrid")!=null){
             	   Ext.getCmp("evidenceGrid").setTitle(store.getCount()+" Evidence for " + Ext.getCmp("evidenceGrid").currentGene.officialSymbol); 
+            	 }
              	} 
              }
          
