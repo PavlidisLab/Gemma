@@ -1,7 +1,12 @@
 Ext.namespace('Gemma');
 
 Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
-	title: 'Phenocarta Statistics',
+	title: 'Phenocarta Statistics',	
+	tbar : [
+	         '->',
+	         '<a target="_blank" alt="Archived Files" href="http://www.chibi.ubc.ca/Gemma/phenocarta/ArchivedEvidenceExport"><b>Archives</b></a> ',
+	         { xtype: 'tbspacer', width: 40 }, 
+	       ],
 	loadMask : true,
 	record : Ext.data.Record.create([ {
 		name : "name",
@@ -40,7 +45,6 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 						'numGenes', 'numPhenotypes', 'numPublications', 'lastUpdateDate', 'pathToDownloadFile' ]
 			})
 		});
-		
 
 		function renderDatabase(val, metaData, record, row, col, store,
 				gridView) {
@@ -63,7 +67,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 				gridView) {
 			
 			if( record.data.name.indexOf("Total") != -1){
-				return "<b><i>"+val+"<i/></b>";
+				return "<b><i>"+val+"</i></b>";
 			}
 			else{
 				return val;
@@ -135,7 +139,8 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 					width : 0.25,
 				}
 				]
-			})
+				
+			}),
 		});
 	}
 });
