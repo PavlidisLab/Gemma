@@ -3,6 +3,10 @@ package ubic.gemma.loader.association.phenotype;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 
@@ -12,22 +16,93 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     // to find to file go to : http://dga.nubic.northwestern.edu/pages/download.php
 
     // name of the external database
-    protected static final String DGA = "DGA";
+    private static final String DGA = "DGA";
 
-    // ********************************************************************************
     public static final String DGA_FILE_NAME = "IDMappings.rdf";
 
     private File dgaFile = null;
 
+    private HashMap<String, HashSet<OntologyTerm>> commonLines = new HashMap<String, HashSet<OntologyTerm>>();
+
+    private HashSet<String> linesToExclude = new HashSet<String>();
+
     public DgaDatabaseImporter( String[] args ) throws Exception {
         super( args );
         checkForDGAFile();
+        findTermsWithParents();
         processDGAFile();
     }
 
     public static void main( String[] args ) throws Exception {
         @SuppressWarnings("unused")
         DgaDatabaseImporter databaseImporter = new DgaDatabaseImporter( args );
+    }
+
+    // extra step to take out redundant terms, if a child term is more specific dont keep the parent, if 2 lines share
+    // same pubmed, gene and gene RIF take the most specific uri
+    // example: same pubed, same gene 1-leukemia 2-myeloid leukemia 3-acute myeloid leukemia, keep only 3-
+    private void findTermsWithParents() throws NumberFormatException, IOException, Exception {
+
+        BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );
+        String line = "";
+
+        while ( ( line = dgaReader.readLine() ) != null ) {
+
+            // found a term
+            if ( line.indexOf( "DOID" ) != -1 ) {
+                // this being of the url could change make sure its still correct if something doesn't work
+                String valueUri = "http://purl.obolibrary.org/obo/DOID_" + findStringBetweenSpecialCharacter( line );
+
+                String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
+                String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
+                String geneRIF = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
+
+                OntologyTerm o = findOntologyTermExistAndNotObsolote( valueUri );
+
+                if ( o != null ) {
+
+                    String key = geneId + pubMedID + geneRIF;
+                    HashSet<OntologyTerm> valuesUri = new HashSet<OntologyTerm>();
+
+                    if ( commonLines.get( key ) != null ) {
+                        valuesUri = commonLines.get( key );
+                    }
+
+                    valuesUri.add( o );
+
+                    commonLines.put( key, valuesUri );
+                }
+            }
+        }
+        dgaReader.close();
+
+        for ( String key : commonLines.keySet() ) {
+
+            log.info( "Checking for lines that are ontology duplicated: " + key );
+
+            HashSet<OntologyTerm> ontologyTerms = commonLines.get( key );
+
+            HashSet<String> allUri = new HashSet<String>();
+
+            for ( OntologyTerm o : ontologyTerms ) {
+                allUri.add( o.getUri() );
+            }
+
+            for ( OntologyTerm o : ontologyTerms ) {
+
+                // get all kids terms
+                Collection<OntologyTerm> childrenOntology = o.getChildren( false );
+
+                for ( OntologyTerm onChil : childrenOntology ) {
+
+                    // then this line is a parent dont keep it there is more specific child term
+                    if ( allUri.contains( onChil.getUri() ) ) {
+                        // result of this method, set of lines to exclude in the checkForDGAFile() step :
+                        linesToExclude.add( key + o.getUri() );
+                    }
+                }
+            }
+        }
     }
 
     /* this importer cannot automatically download files it expects the files to already be there */
@@ -52,9 +127,6 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
         initFinalOutputFile( false, true );
 
-        // outNotFound = new BufferedWriter( new FileWriter( writeFolder + "/notFound.tsv" ) );
-        // outNotFound.write( "Term is not a leaf and have < 2 parent" );
-
         BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );
         String line = "";
 
@@ -77,16 +149,14 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                     // gene do exist
                     if ( geneSymbol != null ) {
 
+                        String key = geneId + pubMedID + geneRIF + o.getUri();
+
                         // if deep >3 always keep
                         int howDeepIdTerm = findHowManyParents( o, 0 );
 
                         // keep leaf or deep enough or uri=DOID_162(cancer)
-                        if ( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 )
-                                || o.getUri().indexOf( "DOID_162" ) != -1 ) {
-                            // outNotFound.write( o.getLabel() + "\t" + o.getUri() + "\n" );
-                        }
-
-                        else {
+                        if ( !( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 ) || o.getUri().indexOf(
+                                "DOID_162" ) != -1 ) ) {
 
                             // negative
                             if ( ( geneRIF.indexOf( " is not " ) != -1 || geneRIF.indexOf( " not associated " ) != -1
@@ -99,16 +169,20 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                                     && geneRIF.indexOf( "is not only" ) == -1
                                     && geneRIF.indexOf( "is expressed" ) == -1 ) {
 
-                                outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
-                                        + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t" + ""
-                                        + "\t" + o.getUri() + "\t" + "1" + "\n" );
+                                if ( !lineToExclude( key ) ) {
+                                    outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
+                                            + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t"
+                                            + "" + "\t" + o.getUri() + "\t" + "1" + "\n" );
+                                }
 
                             }
                             // positive
                             else {
-                                outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
-                                        + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t" + ""
-                                        + "\t" + o.getUri() + "\t" + "" + "\n" );
+                                if ( !lineToExclude( key ) ) {
+                                    outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
+                                            + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t"
+                                            + "" + "\t" + o.getUri() + "\t" + "" + "\n" );
+                                }
                             }
 
                             outFinalResults.flush();
@@ -125,7 +199,6 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
         dgaReader.close();
         outFinalResults.close();
-        // outNotFound.close();
     }
 
     // find string between first > and <
@@ -153,6 +226,14 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
 
         return increment;
+    }
+
+    private boolean lineToExclude( String key ) {
+
+        if ( linesToExclude.contains( key ) ) {
+            return true;
+        }
+        return false;
     }
 
 }
