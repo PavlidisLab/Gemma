@@ -364,7 +364,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+            boolean noElectronicAnnotation ) {
 
         Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
 
@@ -389,6 +390,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
 
+        if ( noElectronicAnnotation ) {
+            sqlQuery += addNoIEAEvidenceCodeQuery();
+        }
+
         populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
 
         return phenotypesGenesAssociations;
@@ -405,7 +410,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     @Override
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+            boolean noElectronicAnnotation ) {
 
         Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
 
@@ -417,9 +423,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
+        
+        if ( noElectronicAnnotation ) {
+            sqlQuery += addNoIEAEvidenceCodeQuery();
+        }
 
         if ( showOnlyEditable ) {
-            sqlQuery += "and PHENOTYPE_ASSOCIATION.id in ( select PHENOTYPE_ASSOCIATION.id ";
+            sqlQuery += "and PHENOTYPE_ASSOCIATION.ID in ( select PHENOTYPE_ASSOCIATION.ID ";
             sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
             sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
             sqlQuery += ") ";
@@ -477,6 +487,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return new HashSet<String>( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct c.valueUri from PhenotypeAssociation p join p.phenotypes c" )
                 .setCacheable( true ).setCacheRegion( null ).list() );
+    }
+
+    @Override
+    public Collection<String> loadAllDescription() {
+
+        return this.getHibernateTemplate().find( "select distinct p.description from PhenotypeAssociation as p " );
+
     }
 
     /**
@@ -857,5 +874,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
         this.getHibernateTemplate().bulkUpdate( "delete from PhenotypeAssociationPublicationImpl p where p.id = ?",
                 phenotypeAssociationPublicationId );
+    }
+    
+    
+    private String addNoIEAEvidenceCodeQuery(){
+        return " and PHENOTYPE_ASSOCIATION.EVIDENCE_CODE != 'IEA'";
     }
 }

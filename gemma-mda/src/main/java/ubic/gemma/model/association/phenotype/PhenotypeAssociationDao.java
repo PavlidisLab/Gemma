@@ -98,7 +98,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @return
      */
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+            boolean noElectronicAnnotation );
 
     /** finds all external databases statistics used in neurocarta */
     public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String folderPath );
@@ -118,7 +119,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * @return
      */
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+            boolean noElectronicAnnotation );
 
     /** find private evidence id that the user can modifiable or own */
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit );
@@ -147,5 +149,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** remove a PhenotypeAssociationPublication **/
     public void removePhenotypePublication( Long phenotypeAssociationPublicationId );
+
+    Collection<String> loadAllDescription();
 
 }

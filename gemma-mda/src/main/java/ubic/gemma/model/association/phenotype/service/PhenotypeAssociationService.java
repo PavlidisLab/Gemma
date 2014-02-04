@@ -136,7 +136,8 @@ public interface PhenotypeAssociationService {
 
     /** find all evidences from a specific external database */
     @Secured({ "GROUP_AGENT" })
-    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, Integer limit );
+    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
+            Integer limit );
 
     /** find all evidences with no external database */
     @Secured({ "GROUP_AGENT" })
@@ -144,14 +145,16 @@ public interface PhenotypeAssociationService {
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+            boolean noElectronicAnnotation );
 
     /** find private evidence id that the user can modifiable or own */
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit );
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
+            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
+            boolean noElectronicAnnotation );
 
     /** return the list of the owners that have evidence in the system */
     public Collection<String> findEvidenceOwners();
@@ -186,5 +189,7 @@ public interface PhenotypeAssociationService {
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile );
 
     public void removePhenotypePublication( Long phenotypeAssociationPublicationId );
+
+    public Collection<String> loadAllDescription();
 
 }

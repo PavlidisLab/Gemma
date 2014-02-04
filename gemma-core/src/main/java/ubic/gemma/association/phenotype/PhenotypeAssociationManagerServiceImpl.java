@@ -646,7 +646,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
 
         Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true,
-                evidenceFilter ) );
+                evidenceFilter, SecurityUtil.isUserAdmin(), false ) );
 
         // undo the tree in a simple structure
         for ( TreeCharacteristicValueObject t : ontologyTrees ) {
@@ -814,8 +814,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     + StringUtils.join( evidence.getPhenotypes(), "," ) + ", no change will be made" );
             return validateEvidenceValueObject;
         }
-        
-        if(!StringUtil.containsValidCharacter( evidence.getDescription())){
+
+        if ( !StringUtil.containsValidCharacter( evidence.getDescription() ) ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setDescriptionInvalidSymbol( true );
             return validateEvidenceValueObject;
@@ -1221,6 +1221,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // this writer is the dump of all evidence
         try (BufferedWriter fileWriterAllEvidence = new BufferedWriter( new FileWriter( mainFolderPath
                 + PhenotypeAssociationConstants.FILE_ALL_PHENOCARTA_ANNOTATIONS ) );) {
+
             // header of file
             String header = disclaimer
                     + "Data Source\tGene NCBI\tGene Symbol\tTaxon\tPhenotype Names\tPhenotype URIs\tPubmeds\tWeb Link\tIs Negative\tNote\n";
@@ -1329,10 +1330,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             Files.createSymbolicLink( symbolicLink.toPath(), mainFolder.toPath() );
 
-            writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ) );
-            writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ) );
-        }
+            writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ), false );
+            writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ), true );
+            writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ), false );
+            writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ), true );
 
+        }
     }
 
     /**
@@ -1676,10 +1679,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @param withParentTerms if we want to include the parents terms from the Ontology
      * @param taxonCommonName if we only want a certain taxon
+     * @param isAdmin, can see everything
+     * @param noElectronicAnnotation, if true don't include evidence code IEA
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
     private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( boolean withParentTerms,
-            EvidenceFilter evidenceFilter ) {
+            EvidenceFilter evidenceFilter, boolean isAdmin, boolean noElectronicAnnotation ) {
 
         StopWatch sw = new StopWatch();
         sw.start();
@@ -1703,7 +1708,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         boolean isUserLoggedIn = SecurityUtil.isUserLoggedIn();
         String userName = "";
         Collection<String> groups = new HashSet<String>();
-        boolean isAdmin = false;
 
         log.info( "Starting loading phenotype tree" );
         if ( isUserLoggedIn ) {
@@ -1711,18 +1715,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             // groups the user belong to
             groups = this.userManager.findGroupsForUser( userName );
 
-            isAdmin = SecurityUtil.isUserAdmin();
-
             // show only my annotation was chosen
             if ( showOnlyEditable ) {
                 // log.info( "Loading editable" );
                 // show public owned by the user
                 publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
-                        taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds );
+                        taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds, noElectronicAnnotation );
 
                 // show all private owned by the user or shared by a group
                 privatePhenotypesGenesAssociations = this.associationService.findPrivatePhenotypesGenesAssociations(
-                        taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds );
+                        taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds, noElectronicAnnotation );
                 // log.info( "Loaded editable: " + sw.getTime() + "ms" );
             }
             // default case to build the tree
@@ -1730,7 +1732,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // log.info( "Loading all public" );
                 // all public evidences
                 publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
-                        taxon, null, null, groups, false, externalDatabaseIds );
+                        taxon, null, null, groups, false, externalDatabaseIds, noElectronicAnnotation );
 
                 // log.info( "Loaded public: " + sw.getTime() + "ms" );
                 if ( isAdmin ) {
@@ -1738,7 +1740,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
                             .findPrivatePhenotypesGenesAssociations( taxon, null, null, null, false,
-                                    externalDatabaseIds );
+                                    externalDatabaseIds, noElectronicAnnotation );
                     // log.info( "Loaded private: total time=" + sw.getTime() + "ms" );
                 } else {
                     // show all private owned by the user or shared by a group
@@ -1746,7 +1748,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
                             .findPrivatePhenotypesGenesAssociations( taxon, null, userName, groups, false,
-                                    externalDatabaseIds );
+                                    externalDatabaseIds, noElectronicAnnotation );
                     // log.info( "Loaded owned: total time=" + sw.getTime() + "ms" );
                 }
             }
@@ -1756,7 +1758,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         else if ( !showOnlyEditable ) {
             // log.info( "Loading editable" );
             publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations( taxon,
-                    null, null, null, false, externalDatabaseIds );
+                    null, null, null, false, externalDatabaseIds, noElectronicAnnotation );
             // log.info( "Loaded editable: total time=" + sw.getTime() + "ms" );
         }
 
@@ -2028,7 +2030,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // Phenotype ---> Genes
         Map<String, Set<Integer>> publicPhenotypesGenesAssociations = this.associationService
-                .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren, null, null, false, null );
+                .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren, null, null, false, null,
+                        false );
 
         // for each Ontoly Term find in the search
         for ( OntologyTerm ontologyTerm : ontologyTermsFound ) {
@@ -2189,16 +2192,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param taxon
      * @throws IOException
      */
-    private void writeErmineJFile( String writeFolder, String disclaimer, Taxon taxon ) throws IOException {
+    private void writeErmineJFile( String writeFolder, String disclaimer, Taxon taxon, boolean noElectronicAnnotation )
+            throws IOException {
+
+        String noElectronicA = "";
+
+        if ( noElectronicAnnotation ) {
+            noElectronicA = "NoIEA";
+        }
 
         try (BufferedWriter phenoCartageneSets = new BufferedWriter( new FileWriter( writeFolder
-                + "Phenocarta_ErmineJ_" + taxon.getCommonName() + "Genesets.tsv" ) );) {
+                + "Phenocarta_ErmineJ_" + taxon.getCommonName() + "Genesets" + noElectronicA + ".tsv" ) );) {
 
             phenoCartageneSets.write( disclaimer );
 
             // gets all : DOID id ---> gene NBCI
             Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree(
-                    true, null ) );
+                    true, null, false, noElectronicAnnotation ) );
 
             // cache the results, for a gene found
             HashMap<Integer, String> cacheMap = new HashMap<>();
