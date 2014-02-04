@@ -79,6 +79,14 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 				gridView) {
 			
 			var imageSrc = '/Gemma/images/download.gif';
+			var imageSrcErmineJ = '/Gemma/images/logo/ermineJ.png';
+			
+			if( record.data.name.indexOf("Total") != -1){
+				// add ermineJ files
+				return '<A HREF=\'' + val + '\' TARGET="_blank"><img src="' + imageSrc + '" ext:qtip="Download '+ record.data.name +' file" /></A> '+
+				'<A href="http://www.chibi.ubc.ca/Gemma/phenocarta/LatestEvidenceExport/ErmineJ" TARGET="_blank"><img src="' + imageSrcErmineJ + '" ext:qtip="Download ErmineJ files" /></A> ';
+			}
+			
 			
 			return '<A HREF=\'' + val + '\' TARGET="_blank"><img src="' + imageSrc + '" ext:qtip="Download '+ record.data.name +' file" /></A>';
 
