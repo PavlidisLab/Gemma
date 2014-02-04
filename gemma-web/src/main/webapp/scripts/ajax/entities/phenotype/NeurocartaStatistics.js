@@ -80,7 +80,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 			
 			var imageSrc = '/Gemma/images/download.gif';
 			
-			return '<A HREF=\'' + val + '\' TARGET="_blank"><img src="' + imageSrc + '" /></A>';
+			return '<A HREF=\'' + val + '\' TARGET="_blank"><img src="' + imageSrc + '" ext:qtip="Download '+ record.data.name +' file" /></A>';
 
 		};
 
