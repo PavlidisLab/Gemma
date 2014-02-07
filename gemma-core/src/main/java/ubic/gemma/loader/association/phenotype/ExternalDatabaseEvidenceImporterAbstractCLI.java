@@ -741,7 +741,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
 
         // do without parents
         mappingFound = findMapping( meshOrOmimId, gene, pubmed, evidenceCode, description, annotatorKeyword,
-                externalDatabase, databaseLink, "", "" );
+                externalDatabase, databaseLink, null );
 
         if ( mappingFound == false && meshOrOmimId != null ) {
 
@@ -750,19 +750,16 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
             if ( on != null ) {
                 Collection<OntologyTerm> onParents = on.getParents( true );
 
-                for ( OntologyTerm parent : onParents ) {
-
-                    // use omim/mesh parents
-                    findMapping( changeToId( parent.getUri() ), gene, pubmed, evidenceCode, description,
-                            annotatorKeyword, externalDatabase, databaseLink, changeToId( on.getUri() ), on.getLabel() );
-                }
+                // use omim/mesh parents
+                findMapping( meshOrOmimId, gene, pubmed, evidenceCode, description, annotatorKeyword, externalDatabase,
+                        databaseLink, onParents );
             }
         }
     }
 
     private boolean findMapping( String meshOrOmimId, Gene gene, String pubmed, String evidenceCode,
             String description, String annotatorKeyword, String externalDatabase, String databaseLink,
-            String childTermValueUri, String childTermValue ) throws Exception {
+            Collection<OntologyTerm> onParents ) throws Exception {
 
         boolean mappingFound = false;
 
@@ -771,13 +768,13 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
         if ( meshOrOmimId != null && !meshOrOmimId.isEmpty() ) {
             // step 1 using omim or mesh id look in the disease file for annotation
             mappingFound = findOmimMeshInDiseaseOntology( meshOrOmimId, gene, pubmed, evidenceCode, description,
-                    externalDatabase, databaseLink, childTermValueUri, childTermValue );
+                    externalDatabase, databaseLink, onParents );
         }
 
         // step 2, the manual mapping file, by OMIM id, MESH or by description if no mesh was given
         if ( mappingFound == false ) {
             mappingFound = findUsingManualMappingFile( meshOrOmimId, annotatorKeyword, gene, pubmed, evidenceCode,
-                    description, externalDatabase, databaseLink, childTermValueUri, childTermValue );
+                    description, externalDatabase, databaseLink, onParents );
         }
 
         // search with the given keyword, usually the description
@@ -786,7 +783,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
             // step 3a, use the annotator
             if ( mappingFound == false ) {
                 mappingFound = findWithAnnotator( meshOrOmimId, annotatorKeyword, pubmed, evidenceCode,
-                        externalDatabase, databaseLink, false, childTermValueUri );
+                        externalDatabase, databaseLink, false, onParents, null );
             }
 
             // step 3b, use the annotator modify the search
@@ -794,7 +791,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
 
                 // same thing but lets modify the search
                 findWithAnnotator( meshOrOmimId, annotatorKeyword, pubmed, evidenceCode, externalDatabase,
-                        databaseLink, true, childTermValueUri );
+                        databaseLink, true, onParents, null );
             }
         }
 
@@ -811,7 +808,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
             // step 3a, use the annotator
             if ( mappingFound == false ) {
                 mappingFound = findWithAnnotator( meshOrOmimId, keywordSearchMeshOrOmimIdLabel, pubmed, evidenceCode,
-                        externalDatabase, databaseLink, false, childTermValueUri );
+                        externalDatabase, databaseLink, false, onParents, null );
             }
 
             // step 3b, use the annotator modify the search
@@ -819,7 +816,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
 
                 // same thing but lets modify the search
                 findWithAnnotator( meshOrOmimId, keywordSearchMeshOrOmimIdLabel, pubmed, evidenceCode,
-                        externalDatabase, databaseLink, true, childTermValueUri );
+                        externalDatabase, databaseLink, true, onParents, null );
             }
         }
 
@@ -829,109 +826,139 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
 
     // step 1 using an OMIM or MESH to link to a disease id
     private boolean findOmimMeshInDiseaseOntology( String meshOrOmimId, Gene gene, String pubmed, String evidenceCode,
-            String description, String externalDatabase, String databaseLink, String childTermUri, String childTermValue )
+            String description, String externalDatabase, String databaseLink, Collection<OntologyTerm> onParents )
             throws Exception {
 
-        String mappingType = PhenotypeMappingType.XREF.toString();
-
-        Collection<OntologyTerm> ontologyTerms = findOntologyTermsUriWithDiseaseId( meshOrOmimId );
+        String mappingType = "";
+        String valuesUri = "";
         String originalPhenotype = meshOrOmimId;
 
-        String valuesUri = "";
+        String meshOrOmimIdValue = findDescriptionUsingTerm( meshOrOmimId );
+        // use the ontology to find description
+        if ( meshOrOmimIdValue != null ) {
+            originalPhenotype = originalPhenotype + " (" + meshOrOmimIdValue.toLowerCase() + ")";
+        }
 
-        for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-            valuesUri = valuesUri + ontologyTerm.getUri() + ";";
+        // using parents
+        if ( onParents != null ) {
+
+            mappingType = PhenotypeMappingType.INFERRED_XREF.toString();
+
+            HashMap<String, Collection<OntologyTerm>> dieaseOn = meshToDiseaseTerms( onParents );
+
+            originalPhenotype = originalPhenotype + " PARENT: (";
+
+            for ( String key : dieaseOn.keySet() ) {
+                originalPhenotype = originalPhenotype + key + ",";
+            }
+
+            originalPhenotype = StringUtils.removeEnd( originalPhenotype, "," ) + ")";
+
+            for ( Collection<OntologyTerm> colOn : dieaseOn.values() ) {
+
+                for ( OntologyTerm o : colOn ) {
+                    valuesUri = valuesUri + o.getUri() + ";";
+                }
+            }
+
+        } else {
+
+            mappingType = PhenotypeMappingType.XREF.toString();
+
+            Collection<OntologyTerm> ontologyTerms = findOntologyTermsUriWithDiseaseId( meshOrOmimId );
+
+            for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+                valuesUri = valuesUri + ontologyTerm.getUri() + ";";
+            }
         }
 
         if ( !valuesUri.isEmpty() ) {
-
-            if ( !childTermUri.isEmpty() ) {
-                mappingType = PhenotypeMappingType.INFERRED_XREF.toString();
-                originalPhenotype = childTermUri + " (" + childTermValue.toLowerCase() + ") PARENT: "
-                        + originalPhenotype;
-            } else {
-                String meshOrOmimIdValue = findDescriptionUsingTerm( meshOrOmimId );
-                // use the ontology to find description
-                if ( meshOrOmimIdValue != null ) {
-                    originalPhenotype = originalPhenotype + " (" + meshOrOmimIdValue.toLowerCase() + ")";
-                }
-                // use the given description
-                else if ( description != null ) {
-                    originalPhenotype = originalPhenotype + " (" + description.toLowerCase() + ")";
-                }
-            }
 
             outFinalResults.write( gene.getOfficialSymbol() + "\t" + gene.getNcbiGeneId() + "\t" + pubmed + "\t"
                     + evidenceCode + "\t" + description + "\t" + externalDatabase + "\t" + databaseLink + "\t"
                     + mappingType + "\t" + originalPhenotype + "\t" + valuesUri + "\n" );
             return true;
-        }
 
+        }
         return false;
     }
 
     // step 2 manual mapping file
     private boolean findUsingManualMappingFile( String meshOrOmimId, String annotatorKeyword, Gene gene, String pubmed,
-            String evidenceCode, String description, String externalDatabase, String databaseLink, String childTermUri,
-            String childTermValue ) throws Exception {
+            String evidenceCode, String description, String externalDatabase, String databaseLink,
+            Collection<OntologyTerm> onParents ) throws Exception {
 
-        String mappingType = PhenotypeMappingType.CURATED.toString();
+        String mappingType = "";
         String originalPhenotype = null;
+        Collection<String> phenotypesUri = new HashSet<String>();
 
-        if ( meshOrOmimId != null ) {
-            originalPhenotype = meshOrOmimId;
+        if ( onParents != null ) {
+            mappingType = PhenotypeMappingType.INFERRED_CURATED.toString();
+
+            originalPhenotype = meshOrOmimId + findExtraInfoMeshDescription( meshOrOmimId ) + " PARENT: (";
+
+            for ( OntologyTerm o : onParents ) {
+
+                String meshId = changeToId( o.getUri() );
+                Collection<String> uri = findManualMappingTermValueUri( meshId );
+                if ( uri != null && !uri.isEmpty() ) {
+                    phenotypesUri.addAll( uri );
+                    originalPhenotype = originalPhenotype + meshId + ",";
+                }
+            }
+            originalPhenotype = StringUtils.removeEnd( originalPhenotype, "," ) + ")";
 
         } else {
-            originalPhenotype = annotatorKeyword;
-        }
 
-        Collection<String> phenotypesUri = findManualMappingTermValueUri( originalPhenotype );
+            mappingType = PhenotypeMappingType.CURATED.toString();
+
+            if ( meshOrOmimId != null ) {
+                originalPhenotype = meshOrOmimId;
+
+            } else {
+                originalPhenotype = annotatorKeyword;
+            }
+
+            phenotypesUri = findManualMappingTermValueUri( originalPhenotype );
+
+            originalPhenotype = originalPhenotype + findExtraInfoMeshDescription( originalPhenotype );
+
+        }
 
         if ( phenotypesUri != null && !phenotypesUri.isEmpty() ) {
 
-            // used parent
-            if ( !childTermUri.isEmpty() ) {
-                mappingType = PhenotypeMappingType.INFERRED_CURATED.toString();
-                originalPhenotype = childTermUri + " (" + childTermValue.toLowerCase() + ") PARENT: "
-                        + originalPhenotype;
-            } else if ( meshOrOmimId != null ) {
-
-                String meshOrOmimIdValue = findDescriptionUsingTerm( meshOrOmimId );
-
-                // use the ontology to find description
-                if ( meshOrOmimIdValue != null ) {
-                    originalPhenotype = originalPhenotype + " (" + meshOrOmimIdValue.toLowerCase() + ")";
-                }
-                // use the given description
-                else if ( description != null ) {
-                    originalPhenotype = originalPhenotype + " (" + description.toLowerCase() + ")";
-                }
-                // look in the manual mapping file for the description
-                else {
-                    originalPhenotype = originalPhenotype + " (" + keyToDescription.get( meshOrOmimId ).toLowerCase()
-                            + ")";
-                }
-            }
-            try {
-                outFinalResults
-                        .write( gene.getOfficialSymbol() + "\t" + gene.getNcbiGeneId() + "\t" + pubmed + "\t"
-                                + evidenceCode + "\t" + description + "\t" + externalDatabase + "\t" + databaseLink
-                                + "\t" + mappingType + "\t" + originalPhenotype + "\t"
-                                + StringUtils.join( phenotypesUri, ";" ) + "\n" );
-            } catch ( Exception e ) {
-
-                System.out.println( "why" );
-            }
+            outFinalResults.write( gene.getOfficialSymbol() + "\t" + gene.getNcbiGeneId() + "\t" + pubmed + "\t"
+                    + evidenceCode + "\t" + description + "\t" + externalDatabase + "\t" + databaseLink + "\t"
+                    + mappingType + "\t" + originalPhenotype + "\t" + StringUtils.join( phenotypesUri, ";" ) + "\n" );
             return true;
-        }
 
+        }
         return false;
     }
 
     // step 3
     private boolean findWithAnnotator( String meshOrOmimId, String keywordSearchAnnotator, String pubmed,
-            String evidenceCode, String externalDatabase, String databaseLink, boolean modifySearch, String childTerm )
-            throws Exception {
+            String evidenceCode, String externalDatabase, String databaseLink, boolean modifySearch,
+            Collection<OntologyTerm> onParents, String child ) throws Exception {
+
+        String usedChild = "";
+
+        if ( child == null ) {
+            usedChild = child;
+        }
+
+        if ( onParents != null ) {
+
+            for ( OntologyTerm o : onParents ) {
+                boolean found = findWithAnnotator( o.getLabel(), keywordSearchAnnotator, pubmed, evidenceCode,
+                        externalDatabase, databaseLink, modifySearch, null, meshOrOmimId );
+                if ( found ) {
+                    return true;
+                }
+            }
+            return false;
+
+        }
 
         String searchTerm = keywordSearchAnnotator.toLowerCase();
         Collection<AnnotatorResponse> annotatorResponses = null;
@@ -991,7 +1018,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
                         }
 
                         String lineToWrite = key + "\t" + on.getUri() + "\t" + on.getLabel() + "\t" + searchTerm + "\t"
-                                + childTerm + "\t" + condition + "\t" + externalDatabase + "\n";
+                                + usedChild + "\t" + condition + "\t" + externalDatabase + "\n";
 
                         outMappingFoundBuffer.add( lineToWrite );
 
@@ -1097,6 +1124,38 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
         omimIDToLabel.put( conceptId, label );
 
         return label;
+    }
+
+    private HashMap<String, Collection<OntologyTerm>> meshToDiseaseTerms( Collection<OntologyTerm> meshTerms ) {
+
+        HashMap<String, Collection<OntologyTerm>> diseaseTerms = new HashMap<String, Collection<OntologyTerm>>();
+
+        for ( OntologyTerm m : meshTerms ) {
+
+            String meshId = changeToId( m.getUri() );
+
+            Collection<OntologyTerm> onDisease = findOntologyTermsUriWithDiseaseId( meshId );
+
+            if ( !onDisease.isEmpty() ) {
+                diseaseTerms.put( meshId, onDisease );
+
+            }
+        }
+
+        return diseaseTerms;
+    }
+
+    private String findExtraInfoMeshDescription( String keyword ) throws Exception {
+
+        // use the given description
+        if ( findDescriptionUsingTerm( keyword ) != null ) {
+            return " (" + findDescriptionUsingTerm( keyword ) + ")";
+        }
+        // look in the manual mapping file for the description
+        else if ( keyToDescription.get( keyword.toLowerCase() ) != null ) {
+            return " (" + keyToDescription.get( keyword.toLowerCase() ).toLowerCase() + ")";
+        }
+        return "";
 
     }
 
