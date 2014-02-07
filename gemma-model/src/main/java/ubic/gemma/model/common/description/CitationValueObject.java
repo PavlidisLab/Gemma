@@ -86,6 +86,8 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
     private String pubmedAccession;
     private String pubmedURL;
 
+    private boolean isRetracted = false;
+
     /* needed for java bean contract */
     public CitationValueObject() {
         super();
@@ -132,6 +134,17 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
         this.setPubmedAccession( ref.getPubAccession().getAccession() );
         this.setPubmedURL( PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
         this.setId( ref.getId() );
+        if ( ref.getPublicationTypes() != null ) {
+
+            for ( PublicationType pt : ref.getPublicationTypes() ) {
+                if ( pt.getType() != null
+                        && ( pt.getType().indexOf( "Retraction of Publication" ) != -1 || pt.getType().indexOf(
+                                "Retracted Publication" ) != -1 ) ) {
+                    isRetracted = true;
+                }
+
+            }
+        }
 
     }
 
@@ -218,5 +231,15 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
     public void setPubmedURL( String pubmedURL ) {
         this.pubmedURL = pubmedURL;
     }
+
+    public boolean isRetracted() {
+        return isRetracted;
+    }
+
+    public void setRetracted( boolean isRetracted ) {
+        this.isRetracted = isRetracted;
+    }
+    
+    
 
 }
