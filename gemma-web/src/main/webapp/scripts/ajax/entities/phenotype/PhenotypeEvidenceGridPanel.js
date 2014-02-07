@@ -544,6 +544,15 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
             width : 0.35,
 
             renderer : function(value, metadata, record, rowIndex, colIndex, store) {
+            	
+
+          	  for (var i = 0; i < record.data.phenotypeAssPubVO.length; i++) {
+                  
+          		  if( record.data.phenotypeAssPubVO[i].citationValueObject.retracted){
+                        return "Retracted Publication";
+                  }
+         	   }
+ 
 
                if (value == null) {
                   return '';
