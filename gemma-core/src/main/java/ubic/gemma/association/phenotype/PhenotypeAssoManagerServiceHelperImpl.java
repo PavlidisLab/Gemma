@@ -240,7 +240,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         if ( evidenceValueObject.getEvidenceSource() != null ) {
             populateEvidenceSource( phe, evidenceValueObject );
         }
-        
+
         phe.setOriginalPhenotype( evidenceValueObject.getOriginalPhenotype() );
         phe.setMappingType( evidenceValueObject.findPhenotypeMappingAsEnum() );
 
@@ -646,7 +646,10 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
                     && !evidenceValueObject.getScoreValueObject().getStrength().equals( "" ) ) {
                 phenotypeAssociation.setStrength( evidenceValueObject.getScoreValueObject().getStrength() );
             }
+        } else if ( evidenceValueObject.getIsNegativeEvidence() ) {
+            phenotypeAssociation.setStrength( 0.0 );
         }
+
     }
 
 }
