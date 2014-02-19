@@ -64,8 +64,6 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
 
     private boolean containQueryPhenotype = false;
 
-    private boolean testest = false;
-
     private String originalPhenotype = "";
     private String phenotypeMapping = "";
 
@@ -479,14 +477,6 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
         }
 
         return 0;
-    }
-
-    public boolean isTestest() {
-        return testest;
-    }
-
-    public void setTestest( boolean testest ) {
-        this.testest = testest;
     }
 
     public SortedSet<PhenotypeAssPubValueObject> getPhenotypeAssPubVO() {
