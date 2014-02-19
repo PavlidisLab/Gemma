@@ -98,6 +98,8 @@ public class BibliographicReferenceValueObject {
 
     private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<BibliographicPhenotypesValueObject>();
 
+    private boolean retracted = false;
+
     public BibliographicReferenceValueObject() {
         super();
     }
@@ -124,6 +126,7 @@ public class BibliographicReferenceValueObject {
 
         this.meshTerms = extractTermsfromHeadings( ref.getMeshTerms() );
         this.chemicalsTerms = extractChemfromHeadings( ref.getChemicals() );
+        this.retracted = checkIfRetracted( ref );
     }
 
     public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String issue,
@@ -348,6 +351,14 @@ public class BibliographicReferenceValueObject {
         this.volume = volume;
     }
 
+    public boolean isRetracted() {
+        return retracted;
+    }
+
+    public void setRetracted( boolean retracted ) {
+        this.retracted = retracted;
+    }
+
     /**
      * Extract the Chemicals terms from the BibliographicReference
      */
@@ -372,6 +383,17 @@ public class BibliographicReferenceValueObject {
             meshTermList.add( msh.getTerm() );
         }
         return meshTermList;
+    }
+
+    private boolean checkIfRetracted( BibliographicReference ref ) {
+        for ( PublicationType pt : ref.getPublicationTypes() ) {
+            if ( pt.getType() != null
+                    && ( pt.getType().indexOf( "Retraction of Publication" ) != -1 || pt.getType().indexOf(
+                            "Retracted Publication" ) != -1 ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -66,6 +66,15 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel({
             header : "Title",
             dataIndex : 'title',
             id : 'title',
+            renderer : function(val, metaData, record, row, col, store,gridView) {
+               
+            	if(record.data.retracted){
+                	return '<font color=\'red\'><b>RETRACTED</b></font> '+val;
+                }
+               
+                return val;
+             },
+            
             width : 350
          }, {
             header : "Journal",

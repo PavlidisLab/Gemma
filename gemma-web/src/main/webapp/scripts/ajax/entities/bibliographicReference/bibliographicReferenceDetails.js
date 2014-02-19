@@ -102,8 +102,15 @@ Gemma.BibliographicReference.DetailsPanel = Ext
                         }
 
                         if ( bibRefRecord.get('citation') ) {
-                           this.citation.setValue(bibRefRecord.get('citation').citation + ' '
-                                 + getPudmedAnchor(bibRefRecord.get('citation').pubmedURL));
+                        	
+                        	if(bibRefRecord.get('citation').retracted==true){
+                        		  this.citation.setValue('<font color=\'red\'><b>RETRACTED</b><br></font>'+bibRefRecord.get('citation').citation + ' '
+                                          + getPudmedAnchor(bibRefRecord.get('citation').pubmedURL));
+                        	}
+                        	else{
+                        		  this.citation.setValue('NOT'+bibRefRecord.get('citation').citation + ' '
+                                          + getPudmedAnchor(bibRefRecord.get('citation').pubmedURL));
+                        	}           
                         }
 
                         var allExperiments = '';
