@@ -3583,3 +3583,21 @@ Osteosarcoma	http://purl.obolibrary.org/obo/DOID_3347	osteosarcoma	osteosarcoma	
 Post-traumatic stress disorder	http://purl.obolibrary.org/obo/DOID_2055	post-traumatic stress disorder	post-traumatic stress disorder		A) Found Exact With Disease Annotator	GWAS_Catalog
 Post-traumatic stress disorder (asjusted for relatedness)	http://purl.obolibrary.org/obo/DOID_2055	post-traumatic stress disorder	post-traumatic stress disorder		A) Found Exact With Disease Annotator	GWAS_Catalog
 Weight loss (gastric bypass surgery)	http://purl.obolibrary.org/obo/HP_0001824	Weight loss	weight loss		C) Found Exact With HP Annotator	GWAS_Catalog
+OMIM:108145	http://purl.obolibrary.org/obo/DOID_0050646	distal arthrogryposis	distal arthrogryposis   (Arthrogryposis, distal, type 5)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:116400	http://purl.obolibrary.org/obo/DOID_83	cataract	cataract   (?Cataract 41)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:300914	http://purl.obolibrary.org/obo/DOID_0050566	X-linked nonsyndromic deafness	x-linked deafness   (Deafness, X-linked 6)		B) Found Synonym With Disease Annotator Synonym modified search 	OMIM
+OMIM:615593	http://purl.obolibrary.org/obo/HP_0002721	Immunodeficiency	immunodeficiency   (?Immunodeficiency 16)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615597	http://purl.obolibrary.org/obo/DOID_5212	congenital disorder of glycosylation	congenital disorder of glycosylation   (?Congenital disorder of glycosylation, type Ix)		A) Found Exact With Disease Annotator modified search 	OMIM
+MESH:D000419	http://purl.obolibrary.org/obo/HP_0012592	Albuminuria	albuminuria		C) Found Exact With HP Annotator	RGD
+MESH:D058186	http://purl.obolibrary.org/obo/HP_0001919	Acute kidney injury	acute kidney injury		C) Found Exact With HP Annotator	RGD
+MESH:C535443	http://purl.obolibrary.org/obo/DOID_0050674	congenital bile acid synthesis defect	congenital bile acid synthesis defect   (Bile acid synthesis defect, congenital, 2)		A) Found Exact With Disease Annotator modified search 	CTD
+MESH:D000419	http://purl.obolibrary.org/obo/HP_0012592	Albuminuria	albuminuria		C) Found Exact With HP Annotator	CTD
+MESH:D058186	http://purl.obolibrary.org/obo/HP_0001919	Acute kidney injury	acute kidney injury		C) Found Exact With HP Annotator	CTD
+MESH:D000783	http://purl.obolibrary.org/obo/HP_0002617	Aneurysm	aneurysm		C) Found Exact With HP Annotator	CTD
+MESH:D020521	http://purl.obolibrary.org/obo/HP_0001297	Stroke	stroke		C) Found Exact With HP Annotator	CTD
+OMIM:234810	http://purl.obolibrary.org/obo/DOID_5453	pulmonary venoocclusive disease	pulmonary venoocclusive disease   (Pulmonary venoocclusive disease 2)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:601367	http://purl.obolibrary.org/obo/HP_0002140	Ischemic stroke	ischemic stroke   (STROKE, ISCHEMIC)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615615	http://purl.obolibrary.org/obo/HP_0002721	Immunodeficiency	immunodeficiency   (Immunodeficiency 18)		C) Found Exact With HP Annotator modified search 	OMIM
+OMIM:615629	http://purl.obolibrary.org/obo/DOID_0050564	autosomal dominant nonsyndromic deafness	autosomal dominant deafness   (Deafness, autosomal dominant 56)		B) Found Synonym With Disease Annotator Synonym modified search 	OMIM
+OMIM:615631	http://purl.obolibrary.org/obo/DOID_1338	congenital dyserythropoietic anemia	congenital dyserythropoietic anemia   (Dyserythropoietic anemia, congenital, type Ib)		A) Found Exact With Disease Annotator modified search 	OMIM
+OMIM:615632	http://purl.obolibrary.org/obo/DOID_0050548	hereditary sensory neuropathy	hereditary sensory neuropathy   (Neuropathy, hereditary sensory, type IF)		A) Found Exact With Disease Annotator modified search 	OMIM
