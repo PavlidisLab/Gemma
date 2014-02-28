@@ -837,8 +837,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
                + ((data.officialName && data.officialName !== null) ? data.officialName : '');
          } else if (clazz === "BibliographicReferenceValueObject") {
             return data.citation.citation + (new Ext.Template(Gemma.Common.tpl.pubmedLink.simple)).apply({
-                  pubmedURL : data.pubAccession
-               });
+						pubmedURL : data.citation.pubmedURL
+					});
          } else if (clazz === "ExpressionExperimentSetValueObject") {
             return "<a href=\"" + Gemma.LinkRoots.expressionExperimentSetPage + data.id + "\">" + data.name + "</a><span style='color:grey'> " + data.taxonName + "</span> ("
                + data.numExperiments + ")";
