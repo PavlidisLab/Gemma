@@ -18,16 +18,34 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
+import org.hibernate.Query;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -48,8 +66,6 @@ import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.ChannelUtils;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
-
-import java.util.*;
 
 /**
  * @author pavlidis
@@ -2101,12 +2117,14 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             Hibernate.initialize( expressionExperiment.getPrimaryPublication() );
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
+            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
         }
         if ( expressionExperiment.getOtherRelevantPublications() != null ) {
             Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
             for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
                 Hibernate.initialize( bf.getPubAccession() );
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
+                Hibernate.initialize( bf.getPublicationTypes() );
             }
         }
     }
