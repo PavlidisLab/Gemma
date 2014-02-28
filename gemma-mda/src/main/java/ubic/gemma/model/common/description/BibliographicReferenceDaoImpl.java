@@ -179,7 +179,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
 
     @Override
     public Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
-        final String query = "select distinct e, b from ExpressionExperimentImpl e join e.primaryPublication b left join fetch b.pubAccession ";
+        final String query = "select distinct e, b from ExpressionExperimentImpl e join e.primaryPublication b left join fetch b.pubAccession left join fetch b.publicationTypes ";
         Map<ExpressionExperiment, BibliographicReference> result = new HashMap<ExpressionExperiment, BibliographicReference>();
         List<Object[]> os = this.getHibernateTemplate().find( query );
         for ( Object[] o : os ) {
@@ -207,7 +207,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
                 .getHibernateTemplate()
                 .findByNamedParam(
                         "select b from BibliographicReferenceImpl b left join fetch b.pubAccession left join fetch b.chemicals "
-                                + "left join fetch b.meshTerms left join fetch b.keywords where b.id = :id ", "id",
+                                + "left join fetch b.meshTerms left join fetch b.keywords left join fetch b.publicationTypes where b.id = :id ", "id",
                         bibliographicReference.getId() ).iterator().next();
     }
 
@@ -221,7 +221,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
         if ( bibliographicReferences.isEmpty() ) return bibliographicReferences;
         return this.getHibernateTemplate().findByNamedParam(
                 "select b from BibliographicReferenceImpl b left join fetch b.pubAccession left join fetch b.chemicals "
-                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) ", "ids",
+                        + "left join fetch b.meshTerms left join fetch b.keywords left join fetch b.publicationTypes where b.id in (:ids) ", "ids",
                 EntityUtils.getIds( bibliographicReferences ) );
     }
 
