@@ -339,9 +339,11 @@ public class SecurityControllerImpl implements SecurityController {
      * EntityDelegator)
      */
     @Override
-    @Transactional(readOnly = true)
+    //@Transactional(readOnly = true)
     public SecurityInfoValueObject getSecurityInfo( EntityDelegator ed ) {
 
+        //TODO Figure out why Transaction(readOnly = true) throws an error when this method is called from SecurityManager.js (Bug 3941)
+        
         Securable s = getSecurable( ed );
 
         SecurityInfoValueObject result = securable2VO( s );
