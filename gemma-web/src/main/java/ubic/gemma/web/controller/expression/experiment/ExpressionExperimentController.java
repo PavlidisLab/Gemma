@@ -1740,7 +1740,7 @@ public class ExpressionExperimentController {
      */
     private String batchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails batchEffectDetails = expressionExperimentService.getBatchEffect( ee );
-        String result = null;
+        String result = "";
         if ( batchEffectDetails == null ) {
             result = "";
         } else {
