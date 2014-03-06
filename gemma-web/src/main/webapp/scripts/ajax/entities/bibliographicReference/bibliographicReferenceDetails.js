@@ -108,7 +108,7 @@ Gemma.BibliographicReference.DetailsPanel = Ext
                                           + getPudmedAnchor(bibRefRecord.get('citation').pubmedURL));
                         	}
                         	else{
-                        		  this.citation.setValue('NOT'+bibRefRecord.get('citation').citation + ' '
+                        		  this.citation.setValue(bibRefRecord.get('citation').citation + ' '
                                           + getPudmedAnchor(bibRefRecord.get('citation').pubmedURL));
                         	}           
                         }
