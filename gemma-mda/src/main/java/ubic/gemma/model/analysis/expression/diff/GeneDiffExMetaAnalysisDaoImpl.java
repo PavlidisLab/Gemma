@@ -189,6 +189,11 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     }
 
     @Override
+    public GeneDifferentialExpressionMetaAnalysis load( Long id ) {
+        return this.getHibernateTemplate().get( GeneDifferentialExpressionMetaAnalysisImpl.class, id );
+    }
+
+    @Override
     public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
             long analysisId ) {
         final String queryString = "select ra.experimentAnalyzed.id, ra.experimentAnalyzed.sourceExperiment.id, ra.id, rs.id "
