@@ -1148,7 +1148,7 @@ public class ExpressionExperimentController {
      *        recently updated; if 0, or null, return all.
      * @param filter if non-null, limit data sets to ones meeting criteria.
      * @param showPublic return user's public datasets too
-     * @param sIds - ids
+     * @param sIds - ids already sorted if limit != null
      * @return
      */
     public Collection<ExpressionExperimentValueObject> loadStatusSummaries( Long taxonId, Collection<Long> ids,
@@ -1826,7 +1826,7 @@ public class ExpressionExperimentController {
 
         if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
 
-        return eeValObjectCol.subList( 0, Math.min( limit, eeValObjectCol.size() ) );
+        return eeValObjectCol;
 
     }
 
@@ -2084,6 +2084,7 @@ public class ExpressionExperimentController {
      * 
      * @param eeIds
      * @param taxon
+     * @param descending - if eeIds != null, descending param is ignored and will follow the order of eeIds
      * @return
      */
     private List<ExpressionExperimentValueObject> loadInitialSetOfValueObjects( Collection<Long> eeIds, Taxon taxon,
