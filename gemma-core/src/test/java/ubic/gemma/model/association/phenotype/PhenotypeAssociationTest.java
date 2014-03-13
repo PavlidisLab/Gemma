@@ -186,10 +186,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadStatistics() {
-        ExternalDatabaseStatisticsValueObject a = this.phenotypeAssociationService.loadStatisticsOnAllEvidence("");
+        ExternalDatabaseStatisticsValueObject a = this.phenotypeAssociationService.loadStatisticsOnAllEvidence( "" );
         assertNotNull( a );
         Collection<ExternalDatabaseStatisticsValueObject> b = this.phenotypeAssociationService
-                .loadStatisticsOnExternalDatabases("");
+                .loadStatisticsOnExternalDatabases( "" );
         assertNotNull( b );
     }
 
@@ -258,6 +258,14 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertTrue( evidenceVO != null && evidenceVO.size() != 0 );
     }
 
+    @Test
+    public void testLoadEvidenceWithExternalDatabaseName() {
+        assertTrue( !this.phenotypeAssociationManagerService.loadEvidenceWithExternalDatabaseName(
+                TEST_EXTERNAL_DATABASE, null ).isEmpty() );
+
+        assertTrue( this.phenotypeAssociationManagerService.loadEvidenceWithoutExternalDatabaseName().isEmpty() );
+    }
+
     /**
      * 
      */
@@ -301,6 +309,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         this.litEvidence.setPhenotypeAssPubVO( phenotypeAssPubVO );
         this.litEvidence.setEvidenceSource( evidenceSourceValueObject );
+        // those extra fields tell us where the phenotype came from if different than the one given
+        this.litEvidence.setPhenotypeMapping( PhenotypeMappingType.INFERRED_CURATED.toString() );
+        this.litEvidence.setOriginalPhenotype( "Original Value Test" );
 
         ValidateEvidenceValueObject e = this.phenotypeAssociationManagerService.makeEvidence( this.litEvidence );
         assertNull( e );
