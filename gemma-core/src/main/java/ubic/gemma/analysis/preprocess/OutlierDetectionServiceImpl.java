@@ -148,6 +148,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
         DoubleMatrix<BioAssay, BioAssay> cormat = getCorrelationMatrix( ee, useRegression );
 
+        if ( cormat == null || cormat.rows() == 0 ) {
+            log.warn( "Correlation matrix is empty, cannot check for outliers" );
+            return new HashSet<>();
+        }
+
         return identifyOutliers( ee, cormat, quantileThreshold, fractionThreshold );
     }
 
@@ -181,6 +186,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
          * First pass: Determine the threshold
          */
         DoubleArrayList cors = getCorrelationList( cormat );
+
+        if ( cors.isEmpty() ) {
+            log.warn( "No correlations" );
+            return new HashSet<>();
+        }
 
         /*
          * TODO sanity checks to make sure correlations aren't all the same, etc.
@@ -260,6 +270,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
         DoubleMatrix<BioAssay, BioAssay> cormat = getCorrelationMatrix( ee, useRegression );
 
+        if ( cormat == null || cormat.rows() == 0 ) {
+            log.warn( "Correlation matrix is empty, cannot check for outliers" );
+            return new HashSet<>();
+        }
+
         return identifyOutliersByMedianCorrelation( ee, cormat );
     }
 
@@ -313,6 +328,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
          */
         Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
+
+        if ( vectos.isEmpty() ) {
+            log.warn( "Experiment has no processed data vectors" );
+            return null;
+        }
 
         /*
          * Work with filtered data
