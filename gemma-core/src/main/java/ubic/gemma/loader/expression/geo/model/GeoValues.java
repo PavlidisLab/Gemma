@@ -334,6 +334,16 @@ public class GeoValues implements Serializable {
                 return;
                 // throw new IllegalStateException( "Samples must have a platform assigned." );
             }
+
+            // rarely (once?) exon array data sets are missing the data, which we compute later anyway from CEL files.
+            // See bug 3981 and GSE28383
+            if ( platform.getTitle().toLowerCase().contains( "affymetrix" )
+                    && platform.getTitle().toLowerCase().contains( "exon" ) ) {
+                addSample( sample, 0 );
+                log.warn( "Adding dummy quantitation type" );
+                return;
+            }
+
             throw new UnsupportedOperationException(
                     "Can't deal with empty samples when that sample is the first one on its platform." );
 

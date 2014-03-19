@@ -456,6 +456,30 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     }
 
+    @Test
+    public void testLoadGSE28383ExonArray() throws Exception {
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE28383", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.info( "Test skipped because GSE28383 was already loaded - clean the DB before running the test" );
+            return;
+        }
+        ee = eeService.thawLite( ee );
+
+        /*
+         * Should load okay, even though it has no data. See bug 3981.
+         */
+        try {
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            fail( "Should not have any data vectors for exon arrays on first loading" );
+        } catch ( Exception e ) {
+            // OK
+        }
+
+    }
+
     /*
      * Please leave this here, we use it to load data sets for chopping.
      */
@@ -466,7 +490,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     // @Test
     // public void test() {
-    // fetchASeries( "GSE3443" );
+    // fetchASeries( "GSE28383" );
     // }
 
 }
