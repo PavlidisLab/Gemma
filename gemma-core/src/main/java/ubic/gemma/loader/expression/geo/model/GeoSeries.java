@@ -45,29 +45,29 @@ public class GeoSeries extends GeoData {
      * @return
      */
     public static SeriesType convertStringToSeriesType( String string ) {
-        if ( string.equals( "Expression profiling by array" ) ) {
+        if ( string.equalsIgnoreCase( "Expression profiling by array" ) ) {
             return SeriesType.geneExpressionByArray;
-        } else if ( string.equals( "Methylation profiling by high throughput sequencing" ) ) {
+        } else if ( string.equalsIgnoreCase( "Methylation profiling by high throughput sequencing" ) ) {
             return SeriesType.methylationArraybased;
-        } else if ( string.equals( "Genome binding/occupancy profiling by high throughput sequencing" ) ) {
+        } else if ( string.equalsIgnoreCase( "Genome binding/occupancy profiling by high throughput sequencing" ) ) {
             return SeriesType.genomeBindingBySequencing;
-        } else if ( string.equals( "Expression profiling by high throughput sequencing" ) ) {
+        } else if ( string.equalsIgnoreCase( "Expression profiling by high throughput sequencing" ) ) {
             return SeriesType.geneExpressionBySequencing;
-        } else if ( string.equals( "Non-coding RNA profiling by array" ) ) {
+        } else if ( string.equalsIgnoreCase( "Non-coding RNA profiling by array" ) ) {
             return SeriesType.nonCodingRNAProfilingArraybased;
-        } else if ( string.equals( "Other" ) ) {
+        } else if ( string.equalsIgnoreCase( "Other" ) ) {
             return SeriesType.other;
-        } else if ( string.equals( "Third-party reanalysis" ) ) {
+        } else if ( string.equalsIgnoreCase( "Third-party reanalysis" ) ) {
             return SeriesType.thirdPartyReanalysis;
-        } else if ( string.equals( "Genome binding/occupancy profiling by genome tiling array" ) ) {
+        } else if ( string.equalsIgnoreCase( "Genome binding/occupancy profiling by genome tiling array" ) ) {
             return SeriesType.genomeBindingByArray;
-        } else if ( string.equals( "Genome variation profiling by array" ) ) {
+        } else if ( string.equalsIgnoreCase( "Genome variation profiling by array" ) ) {
             return SeriesType.genomeVariationByArray;
-        } else if ( string.equals( "Non-coding RNA profiling by high throughput sequencing" ) ) {
+        } else if ( string.equalsIgnoreCase( "Non-coding RNA profiling by high throughput sequencing" ) ) {
             return SeriesType.nonCodingRNAProfilingBySequencing;
-        } else if ( string.equals( "Methylation profiling by genome tiling array" ) ) {
+        } else if ( string.equalsIgnoreCase( "Methylation profiling by genome tiling array" ) ) {
             return SeriesType.methylationByGenomeTiling;
-        } else if ( string.equals( "Genome variation profiling by genome tiling array" ) ) {
+        } else if ( string.equalsIgnoreCase( "Genome variation profiling by genome tiling array" ) ) {
             return SeriesType.genomeVariationByGenomeTiling;
         } else {
             throw new IllegalArgumentException( "Unknown series type " + string );
