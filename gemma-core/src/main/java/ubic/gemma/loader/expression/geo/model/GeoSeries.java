@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
 
 /**
@@ -35,8 +38,10 @@ import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
 public class GeoSeries extends GeoData {
 
     public enum SeriesType {
-        geneExpressionByArray, geneExpressionBySequencing, genomeBindingByArray, genomeBindingBySequencing, genomeVariationByArray, methylationArraybased, nonCodingRNAProfilingArraybased, other, thirdPartyReanalysis, nonCodingRNAProfilingBySequencing, methylationByGenomeTiling, genomeVariationByGenomeTiling,
+        geneExpressionByArray, geneExpressionBySAGE, geneExpressionBySequencing, genomeBindingByArray, genomeBindingBySequencing, genomeVariationByArray, genomeVariationByGenomeTiling, methylationArraybased, methylationByGenomeTiling, nonCodingRNAProfilingArraybased, nonCodingRNAProfilingBySequencing, other, thirdPartyReanalysis,
     };
+
+    private static Logger log = LoggerFactory.getLogger( GeoSeries.class );
 
     private static final long serialVersionUID = -1058350558444775537L;
 
@@ -69,16 +74,33 @@ public class GeoSeries extends GeoData {
             return SeriesType.methylationByGenomeTiling;
         } else if ( string.equalsIgnoreCase( "Genome variation profiling by genome tiling array" ) ) {
             return SeriesType.genomeVariationByGenomeTiling;
+        } else if ( string.equalsIgnoreCase( "different tissues" )
+                || string.equalsIgnoreCase( "cell_type_comparison_design" ) ) {
+            return SeriesType.other;
+        } else if ( string.equalsIgnoreCase( "different tissues" )
+                || string.equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" )
+                || string.equalsIgnoreCase( "time-course" ) || string.equalsIgnoreCase( "Dual-label cDNA microarray" )
+                || string.equalsIgnoreCase( "SuperSeries" ) || string.equalsIgnoreCase( "Logical set" )
+                || string.equalsIgnoreCase( "DNA Oligonucleotide Array" )
+                || string.equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
+            // these are possibilities that linger in tests.
+            return SeriesType.geneExpressionByArray;
+        } else if ( string.equalsIgnoreCase( "Expression profiling by SAGE" ) ) {
+            return SeriesType.geneExpressionBySAGE;
         } else {
-            throw new IllegalArgumentException( "Unknown series type " + string );
+            // there are too many hanging around, it's actually not so bad to guess.
+            log.warn( "Unknown series type, assuming is expression arrays" );
+            return SeriesType.geneExpressionByArray;
+            //
+            // throw new IllegalArgumentException( "Unknown series type '" + string + "'" );
         }
     }
 
-    private boolean isSubSeries = false;
-    private boolean isSuperSeries = false;
     private Collection<GeoContact> contributers;
-
     private Collection<GeoDataset> dataSets;
+    private boolean isSubSeries = false;
+
+    private boolean isSuperSeries = false;
 
     private Collection<String> keyWords;
     private String lastUpdateDate = "";
@@ -235,6 +257,10 @@ public class GeoSeries extends GeoData {
         return this.samples;
     }
 
+    public SeriesType getSeriesType() {
+        return seriesType;
+    }
+
     /**
      * @return the subSeries
      */
@@ -374,6 +400,10 @@ public class GeoSeries extends GeoData {
         this.sampleCorrespondence = sampleCorrespondence;
     }
 
+    public void setSeriesType( SeriesType seriesType ) {
+        this.seriesType = seriesType;
+    }
+
     /**
      * @param summaries The summaries to set.
      */
@@ -397,14 +427,6 @@ public class GeoSeries extends GeoData {
      */
     public void setWebLinks( Collection<String> webLinks ) {
         this.webLinks = webLinks;
-    }
-
-    public SeriesType getSeriesType() {
-        return seriesType;
-    }
-
-    public void setSeriesType( SeriesType seriesType ) {
-        this.seriesType = seriesType;
     }
 
 }
