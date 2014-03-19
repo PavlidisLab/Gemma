@@ -85,6 +85,12 @@ public class QuantitationTypeParameterGuesserTest {
     }
 
     @Test
+    public void testrma() {
+        ScaleType s = QuantitationTypeParameterGuesser.guessScaleType( "VALUE", "Signals calculated by RMA" );
+        assertEquals( "got " + s, ScaleType.LOG2, s );
+    }
+
+    @Test
     public void testbackgroundB() {
         String a = "CH1_BKD_+2SD";
         String b = "Percent of feature pixels that were greater than two standard deviations of the background over the background signal";

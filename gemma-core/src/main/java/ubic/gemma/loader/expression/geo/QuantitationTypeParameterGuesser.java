@@ -151,6 +151,7 @@ public class QuantitationTypeParameterGuesser {
         scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "log (base 2)" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma(\\W.*)?" );
+        scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*?\\brma\\b.*?" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "mas(\\s)?[56](\\.[0-9])? signal.*" );
 
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "^%.*" );
