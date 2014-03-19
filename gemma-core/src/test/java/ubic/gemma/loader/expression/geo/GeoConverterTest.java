@@ -39,8 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.loader.expression.geo.fetcher.GeoFetcher;
-import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -218,6 +216,31 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Object result = this.gc.convert( series );
         assertNotNull( result );
     }
+
+    /**
+     * for bug 3977
+     * 
+     * @throws Exception
+     */
+    // @Test
+    // public void testGSE11504RMALog2() throws Exception {
+    // InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+    // "/data/loader/expression/geo/GSE11504.soft.gz" ) );
+    // GeoFamilyParser parser = new GeoFamilyParser();
+    // parser.parse( is );
+    // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE11504" );
+    // DatasetCombiner datasetCombiner = new DatasetCombiner();
+    // GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+    // series.setSampleCorrespondence( correspondence );
+    // ExpressionExperiment result = ( ExpressionExperiment ) ( ( Set<?> ) this.gc.convert( series ) ).iterator()
+    // .next();
+    // Collection<QuantitationType> quantitationTypes = result.getQuantitationTypes();
+    //
+    // assertEquals( 1, quantitationTypes.size() );
+    // QuantitationType qt = quantitationTypes.iterator().next();
+    // assertTrue( qt.getIsPreferred() );
+    // assertEquals( ScaleType.LOG2, qt.getScale() );
+    // }
 
     /**
      * caused "GSM3059 had no platform assigned"
