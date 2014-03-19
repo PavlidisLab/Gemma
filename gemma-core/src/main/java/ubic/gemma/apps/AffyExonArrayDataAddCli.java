@@ -121,6 +121,7 @@ public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI
 
                 }
             } catch ( Exception e ) {
+                log.error( e, e );
                 this.errorObjects.add( ee + " " + e.getLocalizedMessage() );
             }
         }
