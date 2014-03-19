@@ -39,6 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.loader.expression.geo.fetcher.GeoFetcher;
+import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -883,6 +885,20 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         assertEquals( 1, ees.size() );
+    }
+
+    /**
+     * Bug 3976: make sure we skip non-expression data sets.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public final void test5C() throws Exception {
+        // GSE35721
+        GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();
+        GeoSeries series = ( GeoSeries ) g.generate( "GSE35721" ).iterator().next();
+        Object result = this.gc.convert( series );
+        assertEquals( null, result );
     }
 
     /**

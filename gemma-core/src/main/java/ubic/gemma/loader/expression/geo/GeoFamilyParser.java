@@ -1581,10 +1581,12 @@ public class GeoFamilyParser implements Parser<Object> {
             // noop.
         } else if ( startsWithIgnoreCase( line, "!Sample_relation" ) ) {
             // noop, for now. Example is "!Sample_relation = Reanalyzed by: GSE26971" in GSE12093
+            // also SRA: http://www.ncbi.nlm.nih.gov/sra?term=SRX119472; or BioSample:
+            // http://www.ncbi.nlm.nih.gov/biosample/SAMN00788643
         } else if ( startsWithIgnoreCase( line, "!Sample_instrument_model" ) ) {
             // e.g. Illumina HiSeq 2000
         } else if ( startsWithIgnoreCase( line, "!Sample_library_selection" ) ) {
-            // e.g. 'cDNA'
+            // e.g. 'cDNA', 'other'
         } else if ( startsWithIgnoreCase( line, "!Sample_library_source" ) ) {
             // e.g. 'transcriptomic'
         } else if ( startsWithIgnoreCase( line, "!Sample_library_strategy" ) ) {
@@ -1625,7 +1627,7 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!Series_pubmed_id" ) ) {
             seriesAddTo( currentSeriesAccession, "pubmedIds", value );
         } else if ( startsWithIgnoreCase( line, "!Series_overall_design" ) ) {
-            // FIXME add support for this description.
+            seriesSet( currentSeriesAccession, "overallDesign", value );
         } else if ( startsWithIgnoreCase( line, "!Series_relation" ) ) {
 
             if ( value.toLowerCase().startsWith( "superseries" ) ) {
@@ -1655,7 +1657,8 @@ public class GeoFamilyParser implements Parser<Object> {
                 seriesAddTo( currentSeriesAccession, "summary", value );
             }
         } else if ( startsWithIgnoreCase( line, "!Series_type" ) ) {
-            seriesSet( currentSeriesAccession, "overallDesign", value );
+            // currently there is no spec for what values Series_type can take
+            seriesSet( currentSeriesAccession, "seriesType", GeoSeries.convertStringToSeriesType( value ) );
         } else if ( startsWithIgnoreCase( line, "!Series_contributor" ) ) {
             GeoContact contributer = new GeoContact();
             String[] nameFields = StringUtils.split( value, "," );

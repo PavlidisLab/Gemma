@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
 public class GeoDataset extends GeoData {
 
     public enum ExperimentType {
-        geneExpressionArraybased, geneExpressionSAGEbased, geneExpressionMPSSBased, geneExpressionRTPCRbased, proteinExpressionArraybased, proteinExpressionMSBased, arrayCGH, ChIPChip, SNP
+        geneExpressionArraybased, geneExpressionSAGEbased, geneExpressionMPSSBased, geneExpressionRTPCRbased, proteinExpressionArraybased, proteinExpressionMSBased, arrayCGH, ChIPChip, SNP, Other
     }
 
     public enum PlatformType {
@@ -87,6 +87,9 @@ public class GeoDataset extends GeoData {
         } else if ( string.equals( "single channel" ) ) { // legacy term
             log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
             return ExperimentType.geneExpressionArraybased;
+        } else if ( string.equals( "Other" ) ) {
+            // 5C experiments, etc.
+            return ExperimentType.Other;
         } else {
             throw new IllegalArgumentException( "Unknown experiment type " + string );
         }

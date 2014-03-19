@@ -52,6 +52,7 @@ import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoReplication;
 import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
+import ubic.gemma.loader.expression.geo.model.GeoSeries.SeriesType;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
@@ -643,10 +644,11 @@ public class GeoConverterImpl implements GeoConverter {
 
         for ( GeoDataset dataset : series.getDatasets() ) {
             // This doesn't cover every possibility...
-            if ( dataset.getExperimentType() == ExperimentType.arrayCGH
-                    || dataset.getExperimentType() == ExperimentType.ChIPChip
-                    || dataset.getExperimentType() == ExperimentType.geneExpressionSAGEbased ) {
-                log.warn( "Gemma does not know how to handle " + dataset.getExperimentType() );
+            if ( dataset.getExperimentType().equals( ExperimentType.arrayCGH )
+                    || dataset.getExperimentType().equals( ExperimentType.ChIPChip )
+                    || dataset.getExperimentType().equals( ExperimentType.geneExpressionSAGEbased )
+                    || dataset.getExperimentType().equals( ExperimentType.Other ) ) {
+                log.warn( "Gemma does not know how to handle experiment type=" + dataset.getExperimentType() );
 
                 if ( series.getDatasets().size() == 1 ) {
                     log.warn( "Because the experiment type cannot be handled, "
@@ -1847,6 +1849,11 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         }
 
+        if ( !isUsable( series ) ) {
+            log.warn( "Series was not usable: type=" + series.getSeriesType() );
+            return null;
+        }
+
         ExpressionExperiment expExp;
 
         if ( resultToAddTo == null ) {
@@ -2017,6 +2024,33 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         return expExp;
+    }
+
+    /**
+     * @param series
+     * @return
+     */
+    private boolean isUsable( GeoSeries series ) {
+        if ( series.getSeriesType() == SeriesType.genomeBindingByArray ) {
+            return false;
+        }
+        if ( series.getSeriesType() == SeriesType.other ) {
+            return false;
+        }
+        if ( series.getSeriesType() == SeriesType.genomeBindingBySequencing ) {
+            return false;
+        }
+        if ( series.getSeriesType() == SeriesType.methylationArraybased ) {
+            return false;
+        }
+        if ( series.getSeriesType() == SeriesType.methylationByGenomeTiling ) {
+            return false;
+        }
+        if ( series.getSeriesType() == SeriesType.thirdPartyReanalysis ) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

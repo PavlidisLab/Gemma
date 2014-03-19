@@ -38,7 +38,11 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.*;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -87,90 +91,6 @@ public class GeoBrowser {
     private XPathExpression xnumSamples;
     private XPathExpression xreleaseDate;
     private XPathExpression xorganisms;
-
-    /**
-     * Retrieves and parses tab delimited file from GEO. File contains pageSize GEO records starting from startPage.
-     * 
-     * @param startPage
-     * @param pageSize
-     * @return list of GeoRecords
-     * @throws IOException
-     * @throws ParseException
-     */
-    public List<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException, ParseException {
-
-        if ( startPage < 0 || pageSize < 0 ) throw new IllegalArgumentException( "Values must be greater than zero " );
-
-        List<GeoRecord> records = new ArrayList<GeoRecord>();
-        URL url = null;
-        try {
-            url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( "Invalid URL " + url, e );
-        }
-
-        URLConnection conn = url.openConnection();
-        conn.connect();
-        try (InputStream is = conn.getInputStream();
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
-
-            // We are getting a tab delimited file.
-
-            // Read columns headers.
-            String headerLine = br.readLine();
-            String[] headers = StringUtil.csvSplit( headerLine );
-
-            // Map column names to their indices (handy later).
-            Map<String, Integer> columnNameToIndex = new HashMap<String, Integer>();
-            for ( int i = 0; i < headers.length; i++ ) {
-                columnNameToIndex.put( headers[i], i );
-            }
-
-            // Read the rest of the file.
-            String line = null;
-            while ( ( line = br.readLine() ) != null ) {
-                String[] fields = StringUtil.csvSplit( line );
-
-                GeoRecord geoRecord = new GeoRecord();
-                geoRecord.setGeoAccession( fields[columnNameToIndex.get( "Accession" )] );
-                geoRecord.setTitle( StringUtils.strip( fields[columnNameToIndex.get( "Title" )].replaceAll(
-                        FLANKING_QUOTES_REGEX, "" ) ) );
-
-                String sampleCountS = fields[columnNameToIndex.get( "Sample Count" )];
-                if ( StringUtils.isNotBlank( sampleCountS ) ) {
-                    try {
-                        geoRecord.setNumSamples( Integer.parseInt( sampleCountS ) );
-                    } catch ( NumberFormatException e ) {
-                        throw new RuntimeException( "Could not parse sample count: " + sampleCountS );
-                    }
-                } else {
-                    log.warn( "No sample count for " + geoRecord.getGeoAccession() );
-                }
-                geoRecord.setContactName( fields[columnNameToIndex.get( "Contact" )].replaceAll( FLANKING_QUOTES_REGEX,
-                        "" ) );
-
-                String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )].replaceAll( FLANKING_QUOTES_REGEX, "" )
-                        .split( ";" );
-                geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
-
-                Date date = DateUtils.parseDate(
-                        fields[columnNameToIndex.get( "Release Date" )].replaceAll( FLANKING_QUOTES_REGEX, "" ),
-                        DATE_FORMATS );
-                geoRecord.setReleaseDate( date );
-
-                geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
-
-                records.add( geoRecord );
-            }
-
-        }
-
-        if ( records.isEmpty() ) {
-            log.warn( "No records obtained" );
-        }
-        return records;
-
-    }
 
     /**
      * Performs an E-utilities query of the GEO database with the given searchTerms. Returns at most pageSize records
@@ -283,6 +203,90 @@ public class GeoBrowser {
             }
         } catch ( ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
             throw new IOException( "Could not parse data: " + searchUrl, e );
+        }
+        return records;
+
+    }
+
+    /**
+     * Retrieves and parses tab delimited file from GEO. File contains pageSize GEO records starting from startPage.
+     * 
+     * @param startPage
+     * @param pageSize
+     * @return list of GeoRecords
+     * @throws IOException
+     * @throws ParseException
+     */
+    public List<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException, ParseException {
+
+        if ( startPage < 0 || pageSize < 0 ) throw new IllegalArgumentException( "Values must be greater than zero " );
+
+        List<GeoRecord> records = new ArrayList<GeoRecord>();
+        URL url = null;
+        try {
+            url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( "Invalid URL " + url, e );
+        }
+
+        URLConnection conn = url.openConnection();
+        conn.connect();
+        try (InputStream is = conn.getInputStream();
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+
+            // We are getting a tab delimited file.
+
+            // Read columns headers.
+            String headerLine = br.readLine();
+            String[] headers = StringUtil.csvSplit( headerLine );
+
+            // Map column names to their indices (handy later).
+            Map<String, Integer> columnNameToIndex = new HashMap<String, Integer>();
+            for ( int i = 0; i < headers.length; i++ ) {
+                columnNameToIndex.put( headers[i], i );
+            }
+
+            // Read the rest of the file.
+            String line = null;
+            while ( ( line = br.readLine() ) != null ) {
+                String[] fields = StringUtil.csvSplit( line );
+
+                GeoRecord geoRecord = new GeoRecord();
+                geoRecord.setGeoAccession( fields[columnNameToIndex.get( "Accession" )] );
+                geoRecord.setTitle( StringUtils.strip( fields[columnNameToIndex.get( "Title" )].replaceAll(
+                        FLANKING_QUOTES_REGEX, "" ) ) );
+
+                String sampleCountS = fields[columnNameToIndex.get( "Sample Count" )];
+                if ( StringUtils.isNotBlank( sampleCountS ) ) {
+                    try {
+                        geoRecord.setNumSamples( Integer.parseInt( sampleCountS ) );
+                    } catch ( NumberFormatException e ) {
+                        throw new RuntimeException( "Could not parse sample count: " + sampleCountS );
+                    }
+                } else {
+                    log.warn( "No sample count for " + geoRecord.getGeoAccession() );
+                }
+                geoRecord.setContactName( fields[columnNameToIndex.get( "Contact" )].replaceAll( FLANKING_QUOTES_REGEX,
+                        "" ) );
+
+                String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )].replaceAll( FLANKING_QUOTES_REGEX, "" )
+                        .split( ";" );
+                geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
+
+                Date date = DateUtils.parseDate(
+                        fields[columnNameToIndex.get( "Release Date" )].replaceAll( FLANKING_QUOTES_REGEX, "" ),
+                        DATE_FORMATS );
+                geoRecord.setReleaseDate( date );
+
+                geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
+
+                records.add( geoRecord );
+            }
+
+        }
+
+        if ( records.isEmpty() ) {
+            log.warn( "No records obtained" );
         }
         return records;
 

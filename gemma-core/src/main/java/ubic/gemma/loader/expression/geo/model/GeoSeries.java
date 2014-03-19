@@ -34,24 +34,66 @@ import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
  */
 public class GeoSeries extends GeoData {
 
+    public enum SeriesType {
+        geneExpressionByArray, geneExpressionBySequencing, genomeBindingByArray, genomeBindingBySequencing, genomeVariationByArray, methylationArraybased, nonCodingRNAProfilingArraybased, other, thirdPartyReanalysis, nonCodingRNAProfilingBySequencing, methylationByGenomeTiling, genomeVariationByGenomeTiling,
+    };
+
     private static final long serialVersionUID = -1058350558444775537L;
-    private String summary = "";
-    private String overallDesign = "";
-    private Collection<String> keyWords;
-    private Collection<String> pubmedIds;
-    private GeoValues values;
-    private Collection<String> webLinks;
+
+    /**
+     * @param string
+     * @return
+     */
+    public static SeriesType convertStringToSeriesType( String string ) {
+        if ( string.equals( "Expression profiling by array" ) ) {
+            return SeriesType.geneExpressionByArray;
+        } else if ( string.equals( "Methylation profiling by high throughput sequencing" ) ) {
+            return SeriesType.methylationArraybased;
+        } else if ( string.equals( "Genome binding/occupancy profiling by high throughput sequencing" ) ) {
+            return SeriesType.genomeBindingBySequencing;
+        } else if ( string.equals( "Expression profiling by high throughput sequencing" ) ) {
+            return SeriesType.geneExpressionBySequencing;
+        } else if ( string.equals( "Non-coding RNA profiling by array" ) ) {
+            return SeriesType.nonCodingRNAProfilingArraybased;
+        } else if ( string.equals( "Other" ) ) {
+            return SeriesType.other;
+        } else if ( string.equals( "Third-party reanalysis" ) ) {
+            return SeriesType.thirdPartyReanalysis;
+        } else if ( string.equals( "Genome binding/occupancy profiling by genome tiling array" ) ) {
+            return SeriesType.genomeBindingByArray;
+        } else if ( string.equals( "Genome variation profiling by array" ) ) {
+            return SeriesType.genomeVariationByArray;
+        } else if ( string.equals( "Non-coding RNA profiling by high throughput sequencing" ) ) {
+            return SeriesType.nonCodingRNAProfilingBySequencing;
+        } else if ( string.equals( "Methylation profiling by genome tiling array" ) ) {
+            return SeriesType.methylationByGenomeTiling;
+        } else if ( string.equals( "Genome variation profiling by genome tiling array" ) ) {
+            return SeriesType.genomeVariationByGenomeTiling;
+        } else {
+            throw new IllegalArgumentException( "Unknown series type " + string );
+        }
+    }
+
+    private boolean isSubSeries = false;
+    private boolean isSuperSeries = false;
     private Collection<GeoContact> contributers;
-    private Map<Integer, GeoVariable> variables;
+
+    private Collection<GeoDataset> dataSets;
+
+    private Collection<String> keyWords;
+    private String lastUpdateDate = "";
+    private String overallDesign = "";
+    private Collection<String> pubmedIds;
     private Map<Integer, GeoReplication> replicates;
     private GeoSampleCorrespondence sampleCorrespondence;
-    private Collection<GeoDataset> dataSets;
     private Collection<GeoSample> samples;
-    private String supplementaryFile = "";
-    private String lastUpdateDate = "";
-    boolean isSuperSeries = false;
-    boolean isSubSeries = false;
+    private SeriesType seriesType;
     private Collection<String> subSeries;
+    private String summary = "";
+    private String supplementaryFile = "";
+    private GeoValues values;
+    private Map<Integer, GeoVariable> variables;
+    private Collection<String> webLinks;
 
     public GeoSeries() {
         keyWords = new HashSet<String>();
@@ -355,6 +397,14 @@ public class GeoSeries extends GeoData {
      */
     public void setWebLinks( Collection<String> webLinks ) {
         this.webLinks = webLinks;
+    }
+
+    public SeriesType getSeriesType() {
+        return seriesType;
+    }
+
+    public void setSeriesType( SeriesType seriesType ) {
+        this.seriesType = seriesType;
     }
 
 }

@@ -26,18 +26,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 public interface GeoService {
 
     /**
-     * @param geoAccession
-     * @param loadPlatformOnly
-     * @param doSampleMatching
-     * @param aggressiveQuantitationTypeRemoval
-     * @param splitIncompatiblePlatforms
-     * @param allowSuperSeriesImport Allow loading if the Series is a SuperSeries
-     * @param allowSubSeriesImport Allow loading if the Series is a SubSeries
-     * @return
+     * For the rare cases (Exon arrays) where we load the platform in two stages.
+     * 
+     * @param targetPlatform already persistent array design.
+     * @return updated (persistent) array design
      */
-    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
-            boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
+    public abstract ArrayDesign addElements( ArrayDesign targetPlatform );
 
     /**
      * Load data, no restrictions on superseries or subseries
@@ -53,6 +47,20 @@ public interface GeoService {
             boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
 
     /**
+     * @param geoAccession
+     * @param loadPlatformOnly
+     * @param doSampleMatching
+     * @param aggressiveQuantitationTypeRemoval
+     * @param splitIncompatiblePlatforms
+     * @param allowSuperSeriesImport Allow loading if the Series is a SuperSeries
+     * @param allowSubSeriesImport Allow loading if the Series is a SubSeries
+     * @return
+     */
+    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
+            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
+            boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
+
+    /**
      * This is supplied to allow clients to check that the generator has been set correctly.
      * 
      * @return
@@ -60,13 +68,5 @@ public interface GeoService {
     public abstract GeoDomainObjectGenerator getGeoDomainObjectGenerator();
 
     public abstract void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator );
-
-    /**
-     * For the rare cases (Exon arrays) where we load the platform in two stages.
-     * 
-     * @param targetPlatform already persistent array design.
-     * @return updated (persistent) array design
-     */
-    public abstract ArrayDesign addElements( ArrayDesign targetPlatform );
 
 }

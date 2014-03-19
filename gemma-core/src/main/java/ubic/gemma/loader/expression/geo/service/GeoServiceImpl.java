@@ -245,11 +245,10 @@ public class GeoServiceImpl extends AbstractGeoService {
         log.debug( "Converted " + seriesAccession );
         assert persisterHelper != null;
 
-        Collection<ExpressionExperiment> persistedResult = new HashSet<ExpressionExperiment>();
+        Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
             ee = persisterHelper.persist( ee, c );
-            // securityService.makePrivate( ee ); // this now happens in the AclAdvice.
             persistedResult.add( ee );
             log.debug( "Persisted " + seriesAccession );
 
