@@ -60,7 +60,7 @@ public class GeoSeries extends GeoData {
             return SeriesType.geneExpressionBySequencing;
         } else if ( string.equalsIgnoreCase( "Non-coding RNA profiling by array" ) ) {
             return SeriesType.nonCodingRNAProfilingArraybased;
-        } else if ( string.equalsIgnoreCase( "Other" ) ) {
+        } else if ( string.equals( "Other" ) ) {
             return SeriesType.other;
         } else if ( string.equalsIgnoreCase( "Third-party reanalysis" ) ) {
             return SeriesType.thirdPartyReanalysis;
@@ -77,13 +77,14 @@ public class GeoSeries extends GeoData {
         } else if ( string.equalsIgnoreCase( "different tissues" )
                 || string.equalsIgnoreCase( "cell_type_comparison_design" ) ) {
             return SeriesType.other;
-        } else if ( string.equalsIgnoreCase( "different tissues" )
+        } else if ( string.equals( "other" ) || string.equalsIgnoreCase( "different tissues" )
                 || string.equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" )
                 || string.equalsIgnoreCase( "time-course" ) || string.equalsIgnoreCase( "Dual-label cDNA microarray" )
                 || string.equalsIgnoreCase( "SuperSeries" ) || string.equalsIgnoreCase( "Logical set" )
                 || string.equalsIgnoreCase( "DNA Oligonucleotide Array" )
                 || string.equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
-            // these are possibilities that linger in tests.
+            // these are possibilities that linger in tests. A pesky one is 'other', since that used to mean something
+            // different than 'Other' (note capitalization). The old meaning is still expression arrays.
             return SeriesType.geneExpressionByArray;
         } else if ( string.equalsIgnoreCase( "Expression profiling by SAGE" ) ) {
             return SeriesType.geneExpressionBySAGE;
