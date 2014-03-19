@@ -459,6 +459,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     @Test
     public void testLoadGSE28383ExonArray() throws Exception {
         try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<?> results = geoService.fetchAndLoad( "GSE28383", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -489,7 +490,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     // @Test
     // public void test() {
-    // fetchASeries( "GSE28383" );
+    // fetchASeries( "GSE11504" );
     // }
 
 }
