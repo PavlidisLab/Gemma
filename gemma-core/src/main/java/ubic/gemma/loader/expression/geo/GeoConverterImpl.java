@@ -1825,7 +1825,8 @@ public class GeoConverterImpl implements GeoConverter {
                 i++;
             }
         } else {
-            converted.add( this.convertSeries( series, null ) );
+            ExpressionExperiment ee = this.convertSeries( series, null );
+            if ( ee != null ) converted.add( ee );
         }
 
         return converted;

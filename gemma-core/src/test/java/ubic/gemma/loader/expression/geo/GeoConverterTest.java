@@ -897,8 +897,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         // GSE35721
         GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();
         GeoSeries series = ( GeoSeries ) g.generate( "GSE35721" ).iterator().next();
-        Object result = this.gc.convert( series );
-        assertEquals( null, result );
+        Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc.convert( series );
+        assertTrue( r.isEmpty() );
     }
 
     /**
