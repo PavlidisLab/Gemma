@@ -1,15 +1,17 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.analysis.service.SampleRemoveService;
+import ubic.gemma.analysis.service.OutlierFlaggingService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.tasks.AbstractTask;
 
 /**
@@ -27,7 +29,7 @@ public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<TaskResult, 
     BioAssayService bioAssayService;
 
     @Autowired
-    SampleRemoveService sampleRemoveService;
+    OutlierFlaggingService sampleRemoveService;
 
     @Override
     public TaskResult execute() {
@@ -41,6 +43,12 @@ public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<TaskResult, 
         } else {
             sampleRemoveService.markAsMissing( bioAssays );
         }
-        return new TaskResult( taskCommand, bioAssays );
+
+        Collection<BioAssayValueObject> flagged = new HashSet<>();
+        for ( BioAssay ba : bioAssays ) {
+            flagged.add( new BioAssayValueObject( ba ) );
+        }
+
+        return new TaskResult( taskCommand, flagged );
     }
 }
