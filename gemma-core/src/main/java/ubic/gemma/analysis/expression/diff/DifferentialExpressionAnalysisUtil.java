@@ -107,7 +107,8 @@ public class DifferentialExpressionAnalysisUtil {
                 }
             }
             if ( !match ) {
-                log.warn( "No replicate found for biomaterial " + firstBm + "." );
+                log.warn( "No replicate found for biomaterial " + firstBm + ", with factor values"
+                        + StringUtils.join( factorValuesToCheck, "," ) );
                 return false;
             }
         }
@@ -155,7 +156,7 @@ public class DifferentialExpressionAnalysisUtil {
          * Check to make sure more than one factor value is actually used.
          */
         boolean replicatesok = false;
-        Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
+        Map<FactorValue, Integer> counts = new HashMap<>();
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             for ( FactorValue fv : bm.getFactorValues() ) {
@@ -194,9 +195,9 @@ public class DifferentialExpressionAnalysisUtil {
      */
     public static List<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix<?> matrix ) {
 
-        List<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
+        List<BioMaterial> biomaterials = new ArrayList<>();
 
-        Collection<BioAssay> assays = new ArrayList<BioAssay>();
+        Collection<BioAssay> assays = new ArrayList<>();
         for ( int i = 0; i < matrix.columns(); i++ ) {
             Collection<BioAssay> bioassays = matrix.getBioAssaysForColumn( i );
             /*
@@ -230,7 +231,7 @@ public class DifferentialExpressionAnalysisUtil {
     public static List<String> getRFactorsFromFactorValuesForOneWayAnova( Collection<FactorValue> factorValues,
             List<BioMaterial> samplesUsed ) {
 
-        List<String> rFactors = new ArrayList<String>();
+        List<String> rFactors = new ArrayList<>();
 
         for ( BioMaterial biomaterial : samplesUsed ) {
             Collection<FactorValue> factorValuesFromBioMaterial = biomaterial.getFactorValues();
@@ -282,7 +283,7 @@ public class DifferentialExpressionAnalysisUtil {
     public static List<String> getRFactorsFromFactorValuesForTwoWayAnova( ExperimentalFactor experimentalFactor,
             List<BioMaterial> samplesUsed ) {
 
-        List<String> rFactors = new ArrayList<String>();
+        List<String> rFactors = new ArrayList<>();
 
         for ( BioMaterial sampleUsed : samplesUsed ) {
             Collection<FactorValue> factorValuesFromBioMaterial = sampleUsed.getFactorValues();
@@ -321,7 +322,7 @@ public class DifferentialExpressionAnalysisUtil {
         Collection<Set<FactorValue>> factorValuePairings = generateFactorValuePairings( experimentalFactors );
 
         /* check to see if the biomaterial's factor value pairing is one of the possible combinations */
-        Map<Collection<FactorValue>, BioMaterial> seenPairings = new HashMap<Collection<FactorValue>, BioMaterial>();
+        Map<Collection<FactorValue>, BioMaterial> seenPairings = new HashMap<>();
         for ( BioMaterial m : biomaterials ) {
 
             Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
@@ -373,20 +374,20 @@ public class DifferentialExpressionAnalysisUtil {
     protected static Collection<Set<FactorValue>> generateFactorValuePairings(
             Collection<ExperimentalFactor> experimentalFactors ) {
         /* set up the possible pairings */
-        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
+        Collection<FactorValue> allFactorValues = new HashSet<>();
         for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
             allFactorValues.addAll( experimentalFactor.getFactorValues() );
         }
 
         Collection<FactorValue> allFactorValuesCopy = allFactorValues;
 
-        Collection<Set<FactorValue>> factorValuePairings = new HashSet<Set<FactorValue>>();
+        Collection<Set<FactorValue>> factorValuePairings = new HashSet<>();
 
         for ( FactorValue factorValue : allFactorValues ) {
             for ( FactorValue f : allFactorValuesCopy ) {
                 if ( f.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) ) continue;
 
-                HashSet<FactorValue> factorValuePairing = new HashSet<FactorValue>();
+                HashSet<FactorValue> factorValuePairing = new HashSet<>();
                 factorValuePairing.add( factorValue );
                 factorValuePairing.add( f );
 
@@ -414,16 +415,16 @@ public class DifferentialExpressionAnalysisUtil {
         assert !biomaterials.isEmpty();
         assert !factors.isEmpty();
 
-        Collection<FactorValue> allFactorValuesFromGivenFactors = new HashSet<FactorValue>();
+        Collection<FactorValue> allFactorValuesFromGivenFactors = new HashSet<>();
         for ( ExperimentalFactor ef : factors ) {
             allFactorValuesFromGivenFactors.addAll( ef.getFactorValues() );
         }
 
-        Collection<BioMaterial> biomaterialsWithGivenFactorValues = new HashSet<BioMaterial>();
+        Collection<BioMaterial> biomaterialsWithGivenFactorValues = new HashSet<>();
         int numHaveAny = 0;
         for ( BioMaterial b : biomaterials ) {
             Collection<FactorValue> biomaterialFactorValues = b.getFactorValues();
-            Collection<FactorValue> factorValuesToConsider = new HashSet<FactorValue>();
+            Collection<FactorValue> factorValuesToConsider = new HashSet<>();
             factorValuesToConsider.addAll( biomaterialFactorValues );
             for ( FactorValue biomaterialFactorValue : biomaterialFactorValues ) {
                 numHaveAny++;
@@ -450,7 +451,7 @@ public class DifferentialExpressionAnalysisUtil {
      */
     private static List<BioMaterial> getBioMaterials( BioAssaySet ee ) {
 
-        List<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
+        List<BioMaterial> biomaterials = new ArrayList<>();
 
         /* look for 1 bioassay/matrix column and 1 biomaterial/bioassay */
         for ( BioAssay assay : ee.getBioAssays() ) {
@@ -472,7 +473,7 @@ public class DifferentialExpressionAnalysisUtil {
             BioMaterial biomaterial ) {
         Collection<FactorValue> factorValues = biomaterial.getFactorValues();
 
-        Collection<FactorValue> factorValuesToCheck = new HashSet<FactorValue>();
+        Collection<FactorValue> factorValuesToCheck = new HashSet<>();
         for ( FactorValue factorValue : factorValues ) {
             if ( factors.contains( factorValue.getExperimentalFactor() ) ) {
                 factorValuesToCheck.add( factorValue );

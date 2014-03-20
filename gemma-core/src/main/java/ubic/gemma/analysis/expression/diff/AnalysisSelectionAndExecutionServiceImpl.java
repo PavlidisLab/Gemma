@@ -199,14 +199,15 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                     log.info( "One of the two factors is 'batch', not using it for an interaction" );
                     okForInteraction = false;
                 }
+
             }
             /* Check for block design and execute two way ANOVA (with or without interactions). */
             if ( !includeInteractionsIfPossible
                     || !DifferentialExpressionAnalysisUtil.blockComplete( bioAssaySet, experimentalFactors )
                     || !okForInteraction ) {
-                return AnalysisType.TWANI; // NO interactions
+                return AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION; // NO interactions
             }
-            return AnalysisType.TWA;
+            return AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION;
         } else {
             /*
              * Upstream we bail if there are too many factors.
@@ -231,7 +232,17 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         }
 
         if ( config.getAnalysisType() == null ) {
-            return determineAnalysis( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(), true );
+            AnalysisType type = determineAnalysis( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(),
+                    true );
+            if ( type.equals( AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION ) ) {
+                /*
+                 * Ensure the config does not have interactions.
+                 */
+                log.info( "Any interaction term will be dropped from the configuration as it cannot be analyzed (no replicates? block incomplete?)" );
+                config.getInteractionsToInclude().clear();
+                // config.setAnalysisType( type ); // don't need this side-effect.
+            }
+            return type;
         }
 
         if ( config.getSubsetFactor() != null ) {
@@ -248,17 +259,17 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                     throw new IllegalArgumentException( "Cannot run One-way ANOVA on more than one factor" );
                 }
                 return AnalysisType.OWA;
-            case TWA:
+            case TWO_WAY_ANOVA_WITH_INTERACTION:
                 validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
                 if ( !DifferentialExpressionAnalysisUtil.blockComplete( bioAssaySet, config.getFactorsToInclude() ) ) {
                     throw new IllegalArgumentException(
                             "Experimental design must be block complete to run Two-way ANOVA with interactions" );
                 }
-                return AnalysisType.TWA;
-            case TWANI:
+                return AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION;
+            case TWO_WAY_ANOVA_NO_INTERACTION:
                 // NO interactions.
                 validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
-                return AnalysisType.TWANI;
+                return AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION;
             case TTEST:
                 if ( config.getFactorsToInclude().size() != 1 ) {
                     throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );

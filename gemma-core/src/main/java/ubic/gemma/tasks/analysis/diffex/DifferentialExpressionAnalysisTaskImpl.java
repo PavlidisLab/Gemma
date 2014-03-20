@@ -163,7 +163,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends
             }
 
             config.addInteractionToInclude( factors );
-            config.setAnalysisType( DifferentialExpressionAnalyzerServiceImpl.AnalysisType.TWA );
+            config.setAnalysisType( DifferentialExpressionAnalyzerServiceImpl.AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION );
         } else {
             config.setInteractionsToInclude( new HashSet<Collection<ExperimentalFactor>>() );
         }

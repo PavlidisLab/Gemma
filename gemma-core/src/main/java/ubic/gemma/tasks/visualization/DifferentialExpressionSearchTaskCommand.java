@@ -25,7 +25,7 @@ public class DifferentialExpressionSearchTaskCommand extends TaskCommand {
 
     /**
      * @param geneGroups - the sets of genes to query
-     * @param experimentGroups - the sets of experiments to query
+     * @param experimentGroups - the sets of experiments to query   
      * @param geneGroupNames - metadata
      * @param experimentGroupNames
      */

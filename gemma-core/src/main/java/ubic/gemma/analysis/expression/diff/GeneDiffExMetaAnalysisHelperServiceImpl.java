@@ -162,7 +162,7 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
                         // nothing to do
                     }
 
-                    // these should get set automatically by the security interceptor.
+                    // FIXME these should get set automatically by the security interceptor.
                     vo.setEditable( isEditable );
                     vo.setOwnedByCurrentUser( this.securityService.isOwnedByCurrentUser( metaAnalysis ) );
                     vo.setPublic( this.securityService.isPublic( metaAnalysis ) );

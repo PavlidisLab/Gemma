@@ -643,7 +643,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param config
      * @param label2Factors
      * @param interceptFactor
-     * @param interactionFactorLists
+     * @param interactionFactorLists gets populated
      * @return
      */
     private String buildModelFormula( final DifferentialExpressionAnalysisConfig config,
@@ -671,7 +671,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 List<String> interactionFactorNames = new ArrayList<String>();
                 for ( ExperimentalFactor factor : interactionTerms ) {
-
                     interactionFactorNames.add( ExperimentalDesignUtils.nameForR( factor ) );
                 }
 

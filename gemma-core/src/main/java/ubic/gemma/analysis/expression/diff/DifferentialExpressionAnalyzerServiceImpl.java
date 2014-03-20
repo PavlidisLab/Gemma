@@ -94,7 +94,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * @version $Id$
      */
     public enum AnalysisType {
-        GENERICLM, OSTTEST /* one-sample */, OWA /* one-way ANOVA */, TTEST, TWA /* with interactions */, TWANI /*
+        GENERICLM, OSTTEST /* one-sample */, OWA /* one-way ANOVA */, TTEST, TWO_WAY_ANOVA_WITH_INTERACTION /* with interactions */, TWO_WAY_ANOVA_NO_INTERACTION /*
                                                                                                                  * no
                                                                                                                  * interactions
                                                                                                                  */
