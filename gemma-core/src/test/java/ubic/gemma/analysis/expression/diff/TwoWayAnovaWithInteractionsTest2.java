@@ -80,7 +80,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
         AnalysisType aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(),
                 null, true );
 
-        assertEquals( AnalysisType.TWA, aa );
+        assertEquals( AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION, aa );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setAnalysisType( aa );
