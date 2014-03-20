@@ -76,10 +76,16 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
 
             // ees.thawLite( experiment );
             log.info( "Processing: " + experiment );
-
-            expressionExperimentAnnotator.annotate( experiment, force );
-
+            try {
+                expressionExperimentAnnotator.annotate( experiment, force );
+                successObjects.add( bas.toString() );
+            } catch ( Exception e ) {
+                errorObjects.add( bas + ": " + e.getMessage() );
+                log.error( "**** Exception while processing " + bas + ": " + e.getMessage() + " ********" );
+                log.error( e, e );
+            }
         }
+        summarizeProcessing();
         log.info( "Total Time:" + ( System.currentTimeMillis() - time ) + "ms" );
         return null;
     }

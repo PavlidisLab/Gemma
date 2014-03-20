@@ -39,6 +39,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.GEOMMTx.GEOMMTXException;
 import ubic.GEOMMTx.ProjectRDFModelTools;
 import ubic.GEOMMTx.Text2Owl;
 import ubic.GEOMMTx.Vocabulary;
@@ -173,7 +174,11 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
         Set<String> predictedAnnotations;
 
         // business.
-        annotateAll( model, e );
+        try {
+            annotateAll( model, e );
+        } catch ( GEOMMTXException e1 ) {
+            throw new RuntimeException( e1 );
+        }
 
         // all the above calls for each text source builds a RDF model
         predictedAnnotations = ProjectRDFModelTools.getURLsFromSingle( model );
@@ -314,8 +319,9 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     /**
      * @param model
      * @param experiment
+     * @throws GEOMMTXException
      */
-    private void annotateAll( Model model, ExpressionExperiment experiment ) {
+    private void annotateAll( Model model, ExpressionExperiment experiment ) throws GEOMMTXException {
         log.info( "Examining name" );
         annotateName( model, experiment );
 
@@ -343,12 +349,16 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
         timer.start();
         for ( BioAssay ba : experiment.getBioAssays() ) {
             String nameSpaceBase = "bioAssay/" + ba.getId() + "/";
-            if ( ba.getName() != null ) {
-                doRDF( model, experiment.getId(), ba.getName().replace( "Expr(", "Expr " ), nameSpaceBase + "name" );
-            }
+            try {
+                if ( ba.getName() != null ) {
+                    doRDF( model, experiment.getId(), ba.getName().replace( "Expr(", "Expr " ), nameSpaceBase + "name" );
+                }
 
-            if ( ba.getDescription() != null ) {
-                doRDF( model, experiment.getId(), ba.getDescription(), nameSpaceBase + "description" );
+                if ( ba.getDescription() != null ) {
+                    doRDF( model, experiment.getId(), ba.getDescription(), nameSpaceBase + "description" );
+                }
+            } catch ( GEOMMTXException e ) {
+                log.error( "Failed to process " + ba, e );
             }
 
             if ( ++i % 10 == 0 && timer.getTime() > 10000 ) {
@@ -363,8 +373,9 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     /**
      * @param model
      * @param experiment
+     * @throws GEOMMTXException
      */
-    private void annotateDescription( Model model, ExpressionExperiment experiment ) {
+    private void annotateDescription( Model model, ExpressionExperiment experiment ) throws GEOMMTXException {
         String description = experiment.getDescription();
         doRDF( model, experiment.getId(), description, "experiment/" + experiment.getId() + "/description" );
     }
@@ -372,8 +383,9 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     /**
      * @param model
      * @param experiment
+     * @throws GEOMMTXException
      */
-    private void annotateExperimentalDesign( Model model, ExpressionExperiment experiment ) {
+    private void annotateExperimentalDesign( Model model, ExpressionExperiment experiment ) throws GEOMMTXException {
         ExperimentalDesign design = experiment.getExperimentalDesign();
 
         // Special case
@@ -400,8 +412,9 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     /**
      * @param model
      * @param experiment
+     * @throws GEOMMTXException
      */
-    private void annotateName( Model model, ExpressionExperiment experiment ) {
+    private void annotateName( Model model, ExpressionExperiment experiment ) throws GEOMMTXException {
         // experiment then desc then name
         doRDF( model, experiment.getId(), experiment.getName(), "experiment/" + experiment.getId() + "/name" );
 
@@ -410,8 +423,9 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     /**
      * @param model
      * @param experiment
+     * @throws GEOMMTXException
      */
-    private void annotateReferences( Model model, ExpressionExperiment experiment ) {
+    private void annotateReferences( Model model, ExpressionExperiment experiment ) throws GEOMMTXException {
         BibliographicReference ref = experiment.getPrimaryPublication();
         if ( ref != null ) {
             String nameSpaceBase = "primaryReference/" + ref.getId() + "/";
@@ -450,8 +464,9 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
      * 
      * @param text the text to be annotated
      * @param desc the description of the text, its appended on to the URI
+     * @throws GEOMMTXException
      */
-    private void doRDF( Model model, Long eeId, String text, String desc ) {
+    private void doRDF( Model model, Long eeId, String text, String desc ) throws GEOMMTXException {
         if ( StringUtils.isBlank( text ) ) return;
         String textToProcess = text;
 
@@ -471,7 +486,9 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
         if ( text2Owl == null ) return;
 
         // a bit strange here, since it takes in the root
+
         text2Owl.processText( textToProcess, thisResource );
+
     }
 
     /**
@@ -513,10 +530,11 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
      * @param experiment
      */
     private void writeModel( Model model, ExpressionExperiment experiment ) {
-        try {
-            File f = new File( MODEL_OUTPUT_PATH );
+        File f = new File( MODEL_OUTPUT_PATH );
+        try (FileWriter fout = new FileWriter( MODEL_OUTPUT_PATH + File.separator + experiment.getId() + ".rdf" )) {
+
             if ( !f.exists() ) f.mkdirs();
-            FileWriter fout = new FileWriter( MODEL_OUTPUT_PATH + File.separator + experiment.getId() + ".rdf" );
+
             model.write( fout );
             fout.close();
         } catch ( IOException e ) {
