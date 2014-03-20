@@ -51,11 +51,10 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
     @Override
     public Date extract( InputStream is ) {
 
-        DataInputStream str = new DataInputStream( is );
-        BufferedReader reader = null;
-        Date date = null;
+        try (DataInputStream str = new DataInputStream( is )) {
+            BufferedReader reader = null;
+            Date date = null;
 
-        try {
             int magic = readByteLittleEndian( str );
             if ( magic == 64 ) {
 
@@ -155,15 +154,6 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
-        } finally {
-            try {
-                str.close();
-                if ( reader != null ) {
-                    reader.close();
-                }
-            } catch ( IOException e ) {
-                log.error( "Failed to close open file handle: " + e.getMessage() );
-            }
         }
 
     }

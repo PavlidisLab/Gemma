@@ -40,8 +40,7 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
     @Override
     public Date extract( InputStream is ) {
         Date date = null;
-        try {
-            BufferedReader reader = new BufferedReader( new InputStreamReader( is ) );
+        try (BufferedReader reader = new BufferedReader( new InputStreamReader( is ) )) {
             String line = null;
             int count = 0;
             while ( ( line = reader.readLine() ) != null ) {

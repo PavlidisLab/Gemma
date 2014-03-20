@@ -22,10 +22,10 @@ package ubic.gemma.analysis.preprocess.batcheffects;
  */
 public class UnsupportedRawdataFileFormatException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     public UnsupportedRawdataFileFormatException( String string ) {
         super( string );
     }
-
-    private static final long serialVersionUID = 1L;
 
 }
