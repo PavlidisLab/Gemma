@@ -247,8 +247,8 @@ public class ExpressionExperimentController {
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject();
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             result.setId( expressionExperiment.getId() );
-            result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( expressionExperiment
-                    .getPrimaryPublication() ) );
+            result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( bibliographicReferenceService
+                    .thaw( publication ) ) );
             return new TaskResult( taskCommand, result );
         }
 
