@@ -92,7 +92,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         linkAnalysisConfig.setCdfCut( 0.1 );
         linkAnalysisConfig.setSingularThreshold( SingularThreshold.cdfcut );
         linkAnalysisConfig.setProbeDegreeThreshold( 25 );
-
+	filterConfig.setIgnoreMinimumSampleThreshold( true );
         ExpressionExperiment eeTemp = linkAnalysisService.loadDataForAnalysis( ee.getId() );
         LinkAnalysis la = linkAnalysisService.doAnalysis( eeTemp, linkAnalysisConfig, filterConfig );
         linkAnalysisService.saveResults( eeTemp, la, linkAnalysisConfig, filterConfig );
