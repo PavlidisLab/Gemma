@@ -39,10 +39,16 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
+/**
+ * for bug 3927
+ * 
+ * @author Paul
+ * @version $Id$
+ */
+public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
 
     @Autowired
-    private AnalysisSelectionAndExecutionService analyzer;
+    private DifferentialExpressionAnalyzerService analyzer;
 
     @Autowired
     private ExperimentalDesignImporter designImporter;
@@ -68,7 +74,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
                 .resourceToPath( "/data/analysis/expression" ) ) );
 
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE50664", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE37301", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
@@ -92,7 +98,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
         ee = expressionExperimentService.thaw( ee );
 
         designImporter.importDesign( ee,
-                this.getClass().getResourceAsStream( "/data/analysis/expression/8165_GSE50664_expdesign.data.txt" ) );
+                this.getClass().getResourceAsStream( "/data/analysis/expression/7737_GSE37301_expdesign.data.txt" ) );
 
     }
 
@@ -101,12 +107,6 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
         if ( ee != null ) expressionExperimentService.delete( ee );
     }
 
-    /**
-     * This should automatically drop the interaction. If it fails on a 'no residual degrees of freedom' it means we're
-     * not detecting thatS
-     * 
-     * @throws Exception
-     */
     @Test
     public void test() throws Exception {
 
@@ -119,26 +119,25 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
             assertEquals( 3, ba.getSampleUsed().getFactorValues().size() );
         }
 
-        ExperimentalFactor timepoint = null;
-        ExperimentalFactor treatment = null;
+        ExperimentalFactor strain = null;
+        ExperimentalFactor cell_type = null;
         for ( ExperimentalFactor ef : factors ) {
-            if ( ef.getCategory().getValue().equals( "timepoint" ) ) {
-                timepoint = ef;
-            } else if ( ef.getCategory().getValue().equals( "treatment" ) ) {
-                treatment = ef;
+            if ( ef.getCategory().getValue().equals( "strain" ) ) {
+                strain = ef;
+            } else if ( ef.getCategory().getValue().equals( "cell type" ) ) {
+                cell_type = ef;
             }
         }
-        assertNotNull( treatment );
-        assertNotNull( timepoint );
+        assertNotNull( cell_type );
+        assertNotNull( strain );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.getFactorsToInclude().add( timepoint );
-        config.getFactorsToInclude().add( treatment );
-        config.addInteractionToInclude( treatment, timepoint );
+        config.getFactorsToInclude().add( strain );
+        config.getFactorsToInclude().add( cell_type );
+        config.addInteractionToInclude( cell_type, strain );
         config.setQvalueThreshold( null );
 
-        analyzer = this.getBean( AnalysisSelectionAndExecutionService.class );
-        Collection<DifferentialExpressionAnalysis> result = analyzer.analyze( ee, config );
+        Collection<DifferentialExpressionAnalysis> result = analyzer.runDifferentialExpressionAnalyses( ee, config );
         assertEquals( 1, result.size() );
     }
 

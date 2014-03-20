@@ -183,6 +183,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
             if ( probe.getName().equals( "probe_0" ) ) {
                 assertEquals( 1.48e-13, pvalue, 1e-15 );
+                assertNotNull( stat );
                 assertEquals( -277.4, stat, 0.1 );
             } else if ( probe.getName().equals( "probe_4" ) ) {
                 assertEquals( 0.0001523, pvalue, 0.000001 );
