@@ -88,6 +88,11 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
 
     private final static String MODEL_OUTPUT_PATH = Settings.getAnalysisStoragePath();
 
+    /**
+     * There is apparently a limit in MMtx for string lengths.
+     */
+    private static final int MAX_STRING = 1000;
+
     private static AtomicBoolean ready = new AtomicBoolean( false );
 
     private static Text2Owl text2Owl;
@@ -377,6 +382,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
      */
     private void annotateDescription( Model model, ExpressionExperiment experiment ) throws GEOMMTXException {
         String description = experiment.getDescription();
+
         doRDF( model, experiment.getId(), description, "experiment/" + experiment.getId() + "/description" );
     }
 
@@ -462,7 +468,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
     /**
      * So this calls mmtx get the phrases, concepts and mappings and links them to the root node (the experiment)
      * 
-     * @param text the text to be annotated
+     * @param text the text to be annotated. It will be trimmed if the
      * @param desc the description of the text, its appended on to the URI
      * @throws GEOMMTXException
      */
@@ -472,7 +478,10 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
 
         // FIXME these strings should be obtained from GeoConverter, not hardcoded here.
         textToProcess = textToProcess.replaceAll( "Source GEO sample is GSM[0-9]+", "" );
+
         textToProcess = textToProcess.replaceAll( "Last updated [(]according to GEO[)].+[\\d]{4}", "" );
+        // remove extra info that we stick in the description; this can cause lengths to go over limit.
+        textToProcess = textToProcess.replaceAll( "The following samples were removed.+", "" );
 
         String cleanText = desc.replaceAll( "[()]", "" );
         String thisObjectURI = gemmaNamespace + cleanText;
@@ -487,7 +496,7 @@ public class ExpressionExperimentAnnotatorImpl implements InitializingBean, Expr
 
         // a bit strange here, since it takes in the root
 
-        text2Owl.processText( textToProcess, thisResource );
+        text2Owl.processText( textToProcess.substring( 0, MAX_STRING ), thisResource );
 
     }
 
