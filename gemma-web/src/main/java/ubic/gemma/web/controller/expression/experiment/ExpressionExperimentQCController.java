@@ -100,7 +100,7 @@ import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -168,7 +168,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
-    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
+    private CoexpressionAnalysisService probeCoexpressionAnalysisService;
 
     /**
      * @param id
@@ -533,12 +533,9 @@ public class ExpressionExperimentQCController extends BaseController {
          * FIXME put the biomaterial names in there instead of the IDs.
          */
         /*
-        new DenseDoubleMatrix<String, String>()
-        DoubleMatrix<String, String> matrix = new DenseDoubleMatrix<String, String>( omatrix.getRawMatrix() );
-        matrix.setRowNames( stringNames );
-        matrix.setColumnNames( stringNames );
-
-        */
+         * new DenseDoubleMatrix<String, String>() DoubleMatrix<String, String> matrix = new DenseDoubleMatrix<String,
+         * String>( omatrix.getRawMatrix() ); matrix.setRowNames( stringNames ); matrix.setColumnNames( stringNames );
+         */
         StringWriter s = new StringWriter();
         MatrixWriter<Long, Integer> mw = new MatrixWriter<Long, Integer>( s, new DecimalFormat( "#.######" ) );
         mw.writeMatrix( vMatrix, true );
@@ -689,7 +686,10 @@ public class ExpressionExperimentQCController extends BaseController {
         // Current format is to have just one file for each analysis.
         if ( file == null ) {
             return null;
+        } else if ( !file.canRead() ) {
+            return null;
         }
+
         try (BufferedReader in = new BufferedReader( new FileReader( file ) );) {
             XYSeries series = new XYSeries( ee.getId(), true, true );
             DoubleArrayList counts = new DoubleArrayList();
