@@ -471,8 +471,9 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
                         'showLogButton' : true,
                         'showBackgroundButton' : true
                      } );
+                     Ext.getBody().unmask();
                   },
-                  errorHandler : eeManager.onTaskSubmissionError()
+                  errorHandler : eeManager.onTaskSubmissionError
                } );
             }
          },
