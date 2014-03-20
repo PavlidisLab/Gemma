@@ -29,33 +29,54 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  */
 public class OutlierDetails {
 
+    /**
+     * Compare outliers by first quartile Note: this comparator imposes orderings that are inconsistent with equals
+     */
+    public static Comparator<OutlierDetails> FirstQuartileComparator = new Comparator<OutlierDetails>() {
+
+        @Override
+        public int compare( OutlierDetails o1, OutlierDetails o2 ) {
+            return Double.compare( o2.getFirstQuartile(), o2.getFirstQuartile() );
+        }
+    };
+
+    /**
+     * Compare outliers by median correlation Note: this comparator imposes orderings that are inconsistent with equals
+     */
+    public static Comparator<OutlierDetails> MedianComparator = new Comparator<OutlierDetails>() {
+
+        @Override
+        public int compare( OutlierDetails o1, OutlierDetails o2 ) {
+
+            return Double.compare( o1.getMedianCorrelation(), o2.getMedianCorrelation() );
+        }
+    };
+
+    /**
+     * Compare outliers by third quartile Note: this comparator imposes orderings that are inconsistent with equals
+     */
+    public static Comparator<OutlierDetails> ThirdQuartileComparator = new Comparator<OutlierDetails>() {
+        @Override
+        public int compare( OutlierDetails o1, OutlierDetails o2 ) {
+            return Double.compare( o1.getThirdQuartile(), o2.getThirdQuartile() );
+        }
+    };
+
     private BioAssay bioAssay;
-
-    private double score = Double.MIN_VALUE;
-
-    private double thresholdCorrelation = Double.MIN_VALUE;
-
-    private double median = Double.MIN_VALUE;
 
     private double firstQuartile = Double.MIN_VALUE;
 
+    private double median = Double.MIN_VALUE;
+
+    private double score = Double.MIN_VALUE;
+
     private double thirdQuartile = Double.MIN_VALUE;
+
+    private double thresholdCorrelation = Double.MIN_VALUE;
 
     public OutlierDetails( BioAssay bioAssay ) {
         super();
         this.bioAssay = bioAssay;
-    }
-
-    /**
-     * @param bioAssay
-     * @param score fraction of correlations this bioAssay has that are lower than the threshold
-     * @param thresholdCorrelation correlation at the quantile that was set.
-     */
-    public OutlierDetails( BioAssay bioAssay, double score, double thresholdCorrelation ) {
-        super();
-        this.bioAssay = bioAssay;
-        this.score = score;
-        this.thresholdCorrelation = thresholdCorrelation;
     }
 
     /**
@@ -70,98 +91,16 @@ public class OutlierDetails {
         this.median = medianCorrelation;
     }
 
-    public double getThresholdCorrelation() {
-        return thresholdCorrelation;
-    }
-
-    public void setThresholdCorrelation( double thresholdCorrelation ) {
-        this.thresholdCorrelation = thresholdCorrelation;
-    }
-
-    public BioAssay getBioAssay() {
-        return bioAssay;
-    }
-
-    public double getScore() {
-        return score;
-    }
-
-    public void setOutlierScore( double score ) {
+    /**
+     * @param bioAssay
+     * @param score fraction of correlations this bioAssay has that are lower than the threshold
+     * @param thresholdCorrelation correlation at the quantile that was set.
+     */
+    public OutlierDetails( BioAssay bioAssay, double score, double thresholdCorrelation ) {
+        super();
+        this.bioAssay = bioAssay;
         this.score = score;
-    }
-
-    public double getMedianCorrelation() {
-        return median;
-    }
-
-    public void setMedianCorrelation( double medianCorrelation ) {
-        this.median = medianCorrelation;
-    }
-
-    public double getFirstQuartile() {
-        return firstQuartile;
-    }
-
-    public void setFirstQuartile( double quartile ) {
-        firstQuartile = quartile;
-    }
-
-    public double getThirdQuartile() {
-        return thirdQuartile;
-    }
-
-    public void setThirdQuartile( double quartile ) {
-        thirdQuartile = quartile;
-    }
-
-    /**
-     * Compare outliers by median correlation Note: this comparator imposes orderings that are inconsistent with equals
-     */
-    @SuppressWarnings("rawtypes")
-    public static Comparator MedianComparator = new Comparator() {
-
-        @Override
-        public int compare( Object o1, Object o2 ) {
-            OutlierDetails outlier1 = ( OutlierDetails ) o1;
-            OutlierDetails outlier2 = ( OutlierDetails ) o2;
-
-            return Double.compare( outlier1.getMedianCorrelation(), outlier2.getMedianCorrelation() );
-        }
-    };
-
-    /**
-     * Compare outliers by first quartile Note: this comparator imposes orderings that are inconsistent with equals
-     */
-    @SuppressWarnings("rawtypes")
-    public static Comparator FirstQuartileComparator = new Comparator() {
-
-        @Override
-        public int compare( Object o1, Object o2 ) {
-            OutlierDetails outlier1 = ( OutlierDetails ) o1;
-            OutlierDetails outlier2 = ( OutlierDetails ) o2;
-
-            return Double.compare( outlier1.getFirstQuartile(), outlier2.getFirstQuartile() );
-        }
-    };
-
-    /**
-     * Compare outliers by third quartile Note: this comparator imposes orderings that are inconsistent with equals
-     */
-    @SuppressWarnings("rawtypes")
-    public static Comparator ThirdQuartileComparator = new Comparator() {
-
-        @Override
-        public int compare( Object o1, Object o2 ) {
-            OutlierDetails outlier1 = ( OutlierDetails ) o1;
-            OutlierDetails outlier2 = ( OutlierDetails ) o2;
-
-            return Double.compare( outlier1.getThirdQuartile(), outlier2.getThirdQuartile() );
-        }
-    };
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder( 17, 31 ).append( bioAssay ).toHashCode();
+        this.thresholdCorrelation = thresholdCorrelation;
     }
 
     @Override
@@ -174,6 +113,55 @@ public class OutlierDetails {
         OutlierDetails outlier = ( OutlierDetails ) obj;
         return new EqualsBuilder().append( bioAssay, outlier.bioAssay ).isEquals();
 
+    }
+
+    public BioAssay getBioAssay() {
+        return bioAssay;
+    }
+
+    public double getFirstQuartile() {
+        return firstQuartile;
+    }
+
+    public double getMedianCorrelation() {
+        return median;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public double getThirdQuartile() {
+        return thirdQuartile;
+    }
+
+    public double getThresholdCorrelation() {
+        return thresholdCorrelation;
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder( 17, 31 ).append( bioAssay ).toHashCode();
+    }
+
+    public void setFirstQuartile( double quartile ) {
+        firstQuartile = quartile;
+    }
+
+    public void setMedianCorrelation( double medianCorrelation ) {
+        this.median = medianCorrelation;
+    }
+
+    public void setOutlierScore( double score ) {
+        this.score = score;
+    }
+
+    public void setThirdQuartile( double quartile ) {
+        thirdQuartile = quartile;
+    }
+
+    public void setThresholdCorrelation( double thresholdCorrelation ) {
+        this.thresholdCorrelation = thresholdCorrelation;
     }
 
 }
