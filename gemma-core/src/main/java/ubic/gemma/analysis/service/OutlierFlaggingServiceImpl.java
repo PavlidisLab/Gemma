@@ -48,10 +48,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 @Component
-public class SampleRemoveServiceImpl extends ExpressionExperimentVectorManipulatingService implements
-        SampleRemoveService {
+public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipulatingService implements
+        OutlierFlaggingService {
 
-    private static Log log = LogFactory.getLog( SampleRemoveServiceImpl.class );
+    private static Log log = LogFactory.getLog( OutlierFlaggingServiceImpl.class );
 
     @Autowired
     private BioAssayService bioAssayService;

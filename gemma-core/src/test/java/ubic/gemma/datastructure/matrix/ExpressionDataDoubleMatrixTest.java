@@ -41,7 +41,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
-import ubic.gemma.analysis.service.SampleRemoveService;
+import ubic.gemma.analysis.service.OutlierFlaggingService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -98,7 +98,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     private ExpressionDataFileService expressionDataFileService = null;
 
     @Autowired
-    private SampleRemoveService sampleRemoveService;
+    private OutlierFlaggingService sampleRemoveService;
 
     /*
      * (non-Javadoc)

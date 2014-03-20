@@ -22,7 +22,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  * @author paul
  * @version $Id$
  */
-public interface SampleRemoveService {
+public interface OutlierFlaggingService {
 
     /**
      * This does not actually remove the sample; rather, it sets all values to "missing" in the processed data.
