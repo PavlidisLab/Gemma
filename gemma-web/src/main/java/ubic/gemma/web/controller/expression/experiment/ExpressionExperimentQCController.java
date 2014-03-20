@@ -100,7 +100,7 @@ import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -168,7 +168,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
-    private CoexpressionAnalysisService probeCoexpressionAnalysisService;
+    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
 
     /**
      * @param id
