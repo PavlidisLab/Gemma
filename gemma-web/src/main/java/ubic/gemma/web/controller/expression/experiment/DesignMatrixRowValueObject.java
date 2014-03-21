@@ -95,6 +95,8 @@ public class DesignMatrixRowValueObject implements Serializable {
 
     private List<String> factors;
 
+    private List<String> factorTypes;
+
     private Map<String, String> factorValueMap;
 
     /**
@@ -103,11 +105,15 @@ public class DesignMatrixRowValueObject implements Serializable {
      */
     public DesignMatrixRowValueObject( FactorValueVector factorValues, int n ) {
         factors = new ArrayList<String>();
+        factorTypes = new ArrayList<String>();
         factorValueMap = new HashMap<String, String>();
         for ( ExperimentalFactor factor : factorValues.getFactors() ) {
             factors.add( getFactorString( factor ) );
+            factorTypes.add( factor.getType().toString().toUpperCase() );
+
             factorValueMap.put( getFactorString( factor ),
                     getFactorValueString( factorValues.getValuesForFactor( factor ) ) );
+
         }
         count = n;
     }
@@ -124,6 +130,10 @@ public class DesignMatrixRowValueObject implements Serializable {
      */
     public List<String> getFactors() {
         return factors;
+    }
+
+    public List<String> getFactorTypes() {
+        return factorTypes;
     }
 
     /**
