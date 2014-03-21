@@ -60,8 +60,8 @@ public class VisualizationValueObject {
     private Collection<FactorProfile> factorProfiles;
 
     // (for labels)
-    private ArrayList<LinkedHashMap<String, String[]>> factorValueMaps; // list of factor name to value-colour maps (for
-                                                                        // colouring column headers)
+    private List<LinkedHashMap<String, String[]>> factorValueMaps; // list of factor name to value-colour maps (for
+                                                                   // colouring column headers)
 
     /**
      * used for displaying factor info in heatmap
@@ -226,7 +226,7 @@ public class VisualizationValueObject {
         return factorValues;
     }
 
-    public ArrayList<LinkedHashMap<String, String[]>> getFactorValuesToNames() {
+    public List<LinkedHashMap<String, String[]>> getFactorValuesToNames() {
         return factorValueMaps;
     }
 
@@ -265,7 +265,7 @@ public class VisualizationValueObject {
         this.factorValues = factorValues;
     }
 
-    public void setFactorValuesToNames( ArrayList<LinkedHashMap<String, String[]>> factorValueMaps2 ) {
+    public void setFactorValuesToNames( List<LinkedHashMap<String, String[]>> factorValueMaps2 ) {
         this.factorValueMaps = factorValueMaps2;
     }
 
