@@ -444,10 +444,10 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
                   }, {
                      sortable : true,
                      id : 'probe',
-                     header : "Probe Name",
+                     header : "Element Name",
                      width : 130,
                      dataIndex : "compositeSequenceName",
-                     tooltip : "Name of probe"
+                     tooltip : "Element or probe name"
                   }, {
                      sortable : true,
                      id : 'sequence',
@@ -470,7 +470,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
                      header : "Genes",
                      width : 200,
                      dataIndex : "genes",
-                     tooltip : "Symbols of genes this probe potentially targets; if there are more than 3, the total count is provided in parentheses",
+                     tooltip : "Genes this element potentially targets; if there are more than 3, the total count is provided in parentheses",
                      renderer : this.convertgenes.createDelegate(this)
                   }],
                store : new Ext.data.Store({
@@ -488,7 +488,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
                   tbar : [{
                         xtype : 'textfield',
                         name : 'search-field',
-                        emptyText : 'Search for probes',
+                        emptyText : 'Search for elements',
                         id : 'search-field',
                         listeners : {
                            'specialkey' : {
@@ -505,7 +505,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
                         xtype : 'button',
                         name : 'Search',
                         text : 'Search',
-                        tooltip : 'Search for probes on this platform',
+                        tooltip : 'Search for elements on this platform',
                         id : 'search-button',
                         handler : this.search.createDelegate(this)
 
@@ -564,7 +564,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
                params : [ids],
                callback : function(r, options, success, scope) {
                   if (success) {
-                     Ext.DomHelper.overwrite("messages", this.getCount() + " probes shown");
+                     Ext.DomHelper.overwrite("messages", this.getCount() + " elements shown");
                   } else {
                      Ext.DomHelper.overwrite("messages", "There was an error.");
                   }
