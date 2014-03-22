@@ -98,7 +98,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedvs ) {
 
-        cachedLayouts.clear(); // uncomment FOR DEBUGGING.
+        // cachedLayouts.clear(); // uncomment FOR DEBUGGING.
 
         if ( dedvs == null ) {
             return new HashMap<>( 0 );
@@ -448,27 +448,12 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 continue;
             }
 
-            // if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
-            // continuousRanges.put( ef, new HashMap<FactorValue, Double>() );
-            // }
-
             for ( FactorValue fv : ef.getFactorValues() ) {
                 assert fv.getId() != null;
                 // the id is just used as a convenience.
                 fvV.put( fv.getId(), new Double( fv.getId() ) );
 
-                // if ( ExperimentalDesignUtils.isContinuous( ef ) && fv.getMeasurement() != null ) {
-                // try {
-                // continuousRanges.get( ef ).put( fv, Double.parseDouble( fv.getMeasurement().getValue() ) );
-                // } catch ( NumberFormatException e ) {
-                // // nothing can be done.
-                // }
-                // }
             }
-            //
-            // if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
-            // continuousRanges.put( ef, Rank.rankTransform( continuousRanges.get( ef ) ) );
-            // }
 
         }
 
@@ -496,11 +481,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                     Double value = null;
                     if ( fv.getMeasurement() != null ) {
                         try {
-                            /*
-                             * FIXME For continuous factors, we need to map the values to a reasonable range, e.g.
-                             * ranks. 'Batch' might be another special case.
-                             */
-                            // value = continuousRanges.get( ef ).get( fv );
                             value = Double.parseDouble( fv.getMeasurement().getValue() );
                         } catch ( NumberFormatException e ) {
                             value = fvV.get( fv.getId() ); // not good.
@@ -522,7 +502,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     /**
      * @param vec
      * @param ee
-     * @return
+     * @return the experiment; if the vector is for a subset, we return the source experiment
      */
     private ExpressionExperiment getExperimentForVector( DoubleVectorValueObject vec, ExpressionExperimentValueObject ee ) {
         /*
@@ -598,8 +578,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             assert bioAssayDimension != null;
             LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> experimentalDesignLayout = getExperimentalDesignLayout(
-                    actualee,
-                    expressionExperimentService.getBioAssayDimensions( expressionExperimentService.load( ee.getId() ) ) );
+                    actualee, expressionExperimentService.getBioAssayDimensions( actualee ) );
 
             cachedLayouts.put( ee.getId(), experimentalDesignLayout );
 
