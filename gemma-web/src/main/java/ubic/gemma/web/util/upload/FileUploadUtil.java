@@ -70,7 +70,7 @@ public class FileUploadUtil {
      */
     public static File copyUploadedFile( MultipartFile multipartFile, HttpServletRequest request ) throws IOException,
             FileNotFoundException {
-
+        log.info( "Copying the file:" + multipartFile );
         String copiedFilePath = getLocalUploadLocation( request, multipartFile );
 
         File copiedFile = new File( copiedFilePath );
@@ -129,15 +129,16 @@ public class FileUploadUtil {
      * @throws IOException
      */
     private static void copy( File copiedFile, InputStream stream ) throws FileNotFoundException, IOException {
-        OutputStream bos = new FileOutputStream( copiedFile );
-        int bytesRead = 0;
-        byte[] buffer = new byte[BUF_SIZE];
-        while ( ( bytesRead = stream.read( buffer, 0, BUF_SIZE ) ) != -1 ) {
-            bos.write( buffer, 0, bytesRead );
-        }
+        try (OutputStream bos = new FileOutputStream( copiedFile );) {
+            int bytesRead = 0;
+            byte[] buffer = new byte[BUF_SIZE];
+            while ( ( bytesRead = stream.read( buffer, 0, BUF_SIZE ) ) != -1 ) {
+                bos.write( buffer, 0, bytesRead );
+            }
 
-        bos.close();
-        stream.close();
+            bos.close();
+            stream.close();
+        }
     }
 
     /**
@@ -150,7 +151,6 @@ public class FileUploadUtil {
         log.info( "Copying file " + file + " (" + file.getSize() + " bytes)" );
         // write the file to the file specified
         try (InputStream stream = file.getInputStream();) {
-
             copy( copiedFile, stream );
             log.info( "Done copying to " + copiedFile );
         }
