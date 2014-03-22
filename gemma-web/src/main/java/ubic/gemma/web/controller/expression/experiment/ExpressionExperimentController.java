@@ -768,6 +768,9 @@ public class ExpressionExperimentController {
             return 0;
         }
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        if ( sampleCorrelationMatrix.rows() < 3 ) {
+            return 0;
+        }
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
         count = outliers.size();
 
