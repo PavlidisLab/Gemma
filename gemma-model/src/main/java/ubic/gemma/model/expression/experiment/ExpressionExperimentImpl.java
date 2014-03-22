@@ -21,7 +21,7 @@ import org.hibernate.proxy.HibernateProxyHelper;
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experiment.ExpressionExperiment {
+public class ExpressionExperimentImpl extends ExpressionExperiment {
 
     /**
      *  
