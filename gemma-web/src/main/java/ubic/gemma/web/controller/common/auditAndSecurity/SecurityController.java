@@ -84,7 +84,7 @@ public interface SecurityController {
     public abstract Collection<SidValueObject> getAvailablePrincipalSids();
 
     /**
-     * AJAX, but administrator-only!geneCoexpressionAnalysisService
+     * AJAX, but administrator-only!
      * 
      * @return
      */

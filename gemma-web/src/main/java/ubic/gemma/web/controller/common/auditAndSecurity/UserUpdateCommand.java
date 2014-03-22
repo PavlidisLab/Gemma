@@ -325,24 +325,24 @@ public class UserUpdateCommand {
         return this.user.toString();
     }
 
-    /**
-     * @param user
-     */
-    private void fromUser( User newUser ) {
-        this.user = newUser;
-
-        this.setUserName( user.getUserName() );
-        this.setPassword( user.getPassword() );
-        this.setPasswordHint( user.getPasswordHint() );
-        this.setEnabled( user.getEnabled() );
-        this.setLastName( user.getLastName() );
-        this.setName( user.getName() );
-        this.setEmail( user.getEmail() );
-        this.setName( user.getName() );
-        this.setDescription( user.getDescription() );
-        this.setJobs( user.getJobs() );
-        this.setAuditTrail( user.getAuditTrail() );
-
-        this.setId( user.getId() );
-    }
+    // /**
+    // * @param user
+    // */
+    // private void fromUser( User newUser ) {
+    // this.user = newUser;
+    //
+    // this.setUserName( user.getUserName() );
+    // this.setPassword( user.getPassword() );
+    // this.setPasswordHint( user.getPasswordHint() );
+    // this.setEnabled( user.getEnabled() );
+    // this.setLastName( user.getLastName() );
+    // this.setName( user.getName() );
+    // this.setEmail( user.getEmail() );
+    // this.setName( user.getName() );
+    // this.setDescription( user.getDescription() );
+    // this.setJobs( user.getJobs() );
+    // this.setAuditTrail( user.getAuditTrail() );
+    //
+    // this.setId( user.getId() );
+    // }
 }

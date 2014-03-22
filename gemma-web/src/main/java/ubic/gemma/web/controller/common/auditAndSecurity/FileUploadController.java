@@ -110,7 +110,7 @@ public class FileUploadController extends AbstractController {
                 model.put( "error", "Sorry, can't upload more than one file at a time yet" );
             }
 
-            for ( String key : fileMap.keySet() ) {
+            for ( String key : fileMap.keySet() ) { 
                 MultipartFile multipartFile = fileMap.get( key );
                 File copiedFile = null;
                 try {
