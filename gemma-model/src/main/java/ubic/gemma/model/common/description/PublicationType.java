@@ -18,11 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
-/**
- * @deprecated as far as I know, not used (we save it for pubmed refs, but we don't read it?). if we need it we can
- *             store it as a component of the bibliographic reference.
+/** 
  */
-@Deprecated
 public abstract class PublicationType implements java.io.Serializable {
 
     /**
