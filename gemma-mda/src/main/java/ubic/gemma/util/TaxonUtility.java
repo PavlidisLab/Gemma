@@ -34,6 +34,7 @@ public class TaxonUtility {
      * @return boolean
      */
     public static boolean isHuman( Taxon tax ) {
+        assert tax != null;
         if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 9606 ) ) return true;
         if ( ( tax.getScientificName() != null ) && ( tax.getScientificName().equalsIgnoreCase( "homo sapiens" ) ) )
             return true;
@@ -47,6 +48,7 @@ public class TaxonUtility {
      * @return boolean
      */
     public static boolean isMouse( Taxon tax ) {
+        assert tax != null;
 
         if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 10090 ) ) return true;
         if ( ( tax.getScientificName() != null ) && ( tax.getScientificName().equalsIgnoreCase( "mus musculus" ) ) )
@@ -61,6 +63,7 @@ public class TaxonUtility {
      * @return boolean
      */
     public static boolean isRat( Taxon tax ) {
+        assert tax != null;
 
         if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 10116 ) ) return true;
         if ( ( tax.getScientificName() != null ) && ( tax.getScientificName().equalsIgnoreCase( "Rattus norvegicus" ) ) )
