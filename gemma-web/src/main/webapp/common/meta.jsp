@@ -14,7 +14,7 @@
 	content="Database of gene expression data and other genomics data in a meta-analysis framework, running under open source software." />
 
 <meta name="keywords"
-	content="genomics,bioinformatics,genetics,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software" />
+	content="genomics,bioinformatics,genetics,transcriptomes,rnaseq,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software" />
 
 <c:set var="ctxPath" value="${pageContext.request.contextPath}" scope="request" />
 
