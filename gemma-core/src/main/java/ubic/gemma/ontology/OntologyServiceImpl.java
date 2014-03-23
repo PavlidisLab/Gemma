@@ -770,8 +770,8 @@ public class OntologyServiceImpl implements OntologyService {
         }
     }
 
-    void sort( List<CharacteristicValueObject> sortedResultsExact ) {
-        Collections.sort( sortedResultsExact, new CharacteristicComparator() );
+    void sort( List<CharacteristicValueObject> characteristics ) {
+        Collections.sort( characteristics, new CharacteristicComparator() );
     }
 
     /**
@@ -908,7 +908,7 @@ public class OntologyServiceImpl implements OntologyService {
 
     private String foundValueKey( CharacteristicValueObject c ) {
         if ( c.getValueUri() != null && c.getValueUri() != null ) {
-            return c.getValueUri();
+            return c.getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
     }
@@ -1062,7 +1062,7 @@ public class OntologyServiceImpl implements OntologyService {
 
             if ( c.getValue().equalsIgnoreCase( searchTerm ) ) {
                 sortedResultsExact.add( c );
-            } else if ( c.getValue().startsWith( searchTerm ) || c.getValueUri() != null ) {
+            } else if ( c.getValue().toLowerCase().startsWith( searchTerm.toLowerCase() ) || c.getValueUri() != null ) {
                 // second tier: other ontology terms, or things that prefix match our query.
                 sortedResultsStartsWith.add( c );
             } else {
@@ -1075,10 +1075,12 @@ public class OntologyServiceImpl implements OntologyService {
             assert c.getValueUri() != null;
             String key = foundValueKey( c );
             if ( foundValues.contains( key ) ) continue;
+
             foundValues.add( key );
+
             if ( c.getValue().equalsIgnoreCase( searchTerm ) ) {
                 sortedResultsExact.add( c );
-            } else if ( c.getValue().startsWith( searchTerm ) || c.getValueUri() != null ) {
+            } else if ( c.getValue().toLowerCase().startsWith( searchTerm.toLowerCase() ) || c.getValueUri() != null ) {
                 sortedResultsStartsWith.add( c );
             } else {
                 sortedResultsBottom.add( c );
