@@ -78,9 +78,9 @@ public class HibernateStringClobType implements UserType {
     public Object nullSafeGet( ResultSet resultSet, String[] names, Object owner ) throws HibernateException,
             SQLException {
         final StringBuffer buffer = new StringBuffer();
-        try {
+        try (Reader inputStream = resultSet.getCharacterStream( names[0] );) {
             // First we get the stream
-            Reader inputStream = resultSet.getCharacterStream( names[0] );
+
             if ( inputStream == null ) {
                 return null;
             }
