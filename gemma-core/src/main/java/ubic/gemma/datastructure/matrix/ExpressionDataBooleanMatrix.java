@@ -47,18 +47,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     private static final long serialVersionUID = 1L;
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
 
-    /**
-     * @param vectors
-     * @param dimensions
-     * @param qtypes
-     */
-    public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors,
-            List<QuantitationType> qtypes ) {
-        init();
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, qtypes );
-        vectorsToMatrix( selectedVectors );
-    }
-
     public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         init();
 
@@ -72,9 +60,176 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         vectorsToMatrix( vectors );
     }
 
+    /**
+     * @param vectors
+     * @param dimensions
+     * @param qtypes
+     */
+    public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors,
+            List<QuantitationType> qtypes ) {
+        init();
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, qtypes );
+        vectorsToMatrix( selectedVectors );
+    }
+
     @Override
     public int columns() {
         return matrix.columns();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     * ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    @Override
+    public Boolean get( CompositeSequence designElement, BioAssay bioAssay ) {
+        return this.matrix.get( matrix.getRowIndexByName( designElement ),
+                matrix.getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
+    }
+
+    @Override
+    public Boolean get( int row, int column ) {
+        return matrix.get( row, column );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
+     */
+    @Override
+    public Boolean[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
+        // TODO Implement me
+        throw new UnsupportedOperationException();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    @Override
+    public Boolean[] getColumn( BioAssay bioAssay ) {
+        int index = this.columnAssayMap.get( bioAssay );
+        return getColumn( index );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
+     */
+    @Override
+    public Boolean[] getColumn( Integer index ) {
+        ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
+        Boolean[] res = new Boolean[rawResult.size()];
+        int i = 0;
+        for ( Object o : rawResult.toArray() ) {
+            res[i] = ( Boolean ) o;
+            i++;
+        }
+        return res;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
+     */
+    @Override
+    public Boolean[][] getColumns( List<BioAssay> bioAssays ) {
+        // TODO Implement me
+        throw new UnsupportedOperationException();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
+     */
+    @Override
+    public Boolean[][] getRawMatrix() {
+        Boolean[][] dMatrix = new Boolean[matrix.rows()][matrix.columns()];
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            Object[] rawRow = matrix.getRow( i );
+            for ( int j = 0; j < rawRow.length; j++ ) {
+                dMatrix[i][j] = ( Boolean ) rawRow[i];
+            }
+        }
+
+        return dMatrix;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
+     * )
+     */
+    @Override
+    public Boolean[] getRow( CompositeSequence designElement ) {
+        Integer row = this.rowElementMap.get( designElement );
+        if ( row == null ) return null;
+        Object[] rawRow = matrix.getRow( row );
+        Boolean[] result = new Boolean[rawRow.length];
+        for ( int i = 0, k = rawRow.length; i < k; i++ ) {
+            assert rawRow[i] instanceof Boolean : "Got a " + rawRow[i].getClass().getName();
+            result[i] = ( Boolean ) rawRow[i];
+        }
+        return result;
+    }
+
+    @Override
+    public Boolean[] getRow( Integer index ) {
+        return matrix.getRow( index );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
+     */
+    @Override
+    public Boolean[][] getRows( List<CompositeSequence> designElements ) {
+        if ( designElements == null ) {
+            return null;
+        }
+
+        Boolean[][] result = new Boolean[designElements.size()][];
+        int i = 0;
+        for ( CompositeSequence element : designElements ) {
+            Boolean[] rowResult = getRow( element );
+            result[i] = rowResult;
+            i++;
+        }
+        return result;
+    }
+
+    @Override
+    public int rows() {
+        return matrix.rows();
+    }
+
+    @Override
+    public void set( int row, int column, Boolean value ) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+        if ( vectors == null || vectors.size() == 0 ) {
+            throw new IllegalArgumentException();
+        }
+
+        int maxSize = setUpColumnElements();
+
+        this.matrix = createMatrix( vectors, maxSize );
+
     }
 
     /**
@@ -186,161 +341,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
             }
         }
         return vals;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
-     * ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    @Override
-    public Boolean get( CompositeSequence designElement, BioAssay bioAssay ) {
-        return this.matrix.get( matrix.getRowIndexByName( designElement ),
-                matrix.getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
-     */
-    @Override
-    public Boolean[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        // TODO Implement me
-        throw new UnsupportedOperationException();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    @Override
-    public Boolean[] getColumn( BioAssay bioAssay ) {
-        int index = this.columnAssayMap.get( bioAssay );
-        return getColumn( index );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
-     */
-    @Override
-    public Boolean[] getColumn( Integer index ) {
-        ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
-        Boolean[] res = new Boolean[rawResult.size()];
-        int i = 0;
-        for ( Object o : rawResult.toArray() ) {
-            res[i] = ( Boolean ) o;
-            i++;
-        }
-        return res;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
-     */
-    @Override
-    public Boolean[][] getColumns( List<BioAssay> bioAssays ) {
-        // TODO Implement me
-        throw new UnsupportedOperationException();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
-     */
-    @Override
-    public Boolean[][] getRawMatrix() {
-        Boolean[][] dMatrix = new Boolean[matrix.rows()][matrix.columns()];
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            Object[] rawRow = matrix.getRow( i );
-            for ( int j = 0; j < rawRow.length; j++ ) {
-                dMatrix[i][j] = ( Boolean ) rawRow[i];
-            }
-        }
-
-        return dMatrix;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
-     * )
-     */
-    @Override
-    public Boolean[] getRow( CompositeSequence designElement ) {
-        Integer row = this.rowElementMap.get( designElement );
-        if ( row == null ) return null;
-        Object[] rawRow = matrix.getRow( row );
-        Boolean[] result = new Boolean[rawRow.length];
-        for ( int i = 0, k = rawRow.length; i < k; i++ ) {
-            assert rawRow[i] instanceof Boolean : "Got a " + rawRow[i].getClass().getName();
-            result[i] = ( Boolean ) rawRow[i];
-        }
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
-     */
-    @Override
-    public Boolean[][] getRows( List<CompositeSequence> designElements ) {
-        if ( designElements == null ) {
-            return null;
-        }
-
-        Boolean[][] result = new Boolean[designElements.size()][];
-        int i = 0;
-        for ( CompositeSequence element : designElements ) {
-            Boolean[] rowResult = getRow( element );
-            result[i] = rowResult;
-            i++;
-        }
-        return result;
-    }
-
-    @Override
-    public int rows() {
-        return matrix.rows();
-    }
-
-    @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) {
-            throw new IllegalArgumentException();
-        }
-
-        int maxSize = setUpColumnElements();
-
-        this.matrix = createMatrix( vectors, maxSize );
-
-    }
-
-    @Override
-    public void set( int row, int column, Boolean value ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Boolean get( int row, int column ) {
-        return matrix.get( row, column );
-    }
-
-    @Override
-    public Boolean[] getRow( Integer index ) {
-        return matrix.getRow( index );
     }
 
 }
