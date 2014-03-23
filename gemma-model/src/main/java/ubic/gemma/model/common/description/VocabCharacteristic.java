@@ -28,36 +28,22 @@ package ubic.gemma.model.common.description;
  * an object (either another Characteristic or a DataProperty to hold a literal value).
  * </p>
  */
-public abstract class VocabCharacteristic extends ubic.gemma.model.common.description.CharacteristicImpl {
+public abstract class VocabCharacteristic extends CharacteristicImpl {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.VocabCharacteristic}.
+     * Constructs new instances of {@link VocabCharacteristic}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.VocabCharacteristic}.
+         * Constructs a new instance of {@link VocabCharacteristic}.
          */
-        public static ubic.gemma.model.common.description.VocabCharacteristic newInstance() {
-            return new ubic.gemma.model.common.description.VocabCharacteristicImpl();
+        public static VocabCharacteristic newInstance() {
+            return new VocabCharacteristicImpl();
         }
 
     }
 
     private String valueUri;
-
-    private String categoryUri;
-
-    /**
-     * The URI of the class that this is an instance of. Will only be different from the termUri when the class is
-     * effectively abstract, and this is a concrete instance. By putting the abstract class URI in the object we can
-     * more readily group together Characteristics that are instances of the same class. For example: If the classUri is
-     * "Sex", then the termUri might be "male" or "female" for various instances. Otherwise, the classUri and the
-     * termUri can be the same; for example, for "Age", if the "Age" is defined through its properties declared as
-     * associations with this.
-     */
-    public String getCategoryUri() {
-        return this.categoryUri;
-    }
 
     /**
      * This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL ontology
@@ -66,10 +52,6 @@ public abstract class VocabCharacteristic extends ubic.gemma.model.common.descri
      */
     public String getValueUri() {
         return this.valueUri;
-    }
-
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
     }
 
     public void setValueUri( String valueUri ) {

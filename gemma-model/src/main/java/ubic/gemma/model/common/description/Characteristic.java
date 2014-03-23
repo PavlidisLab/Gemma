@@ -20,33 +20,34 @@
 package ubic.gemma.model.common.description;
 
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Status;
 
 /**
  * Instances of this are used to describe other entities. This base class is just a characteristic that is simply a
  * 'tag' of free text.
  */
-public abstract class Characteristic extends ubic.gemma.model.common.Auditable {
+public abstract class Characteristic extends Auditable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.Characteristic}.
+     * Constructs new instances of {@link Characteristic}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.Characteristic}.
+         * Constructs a new instance of {@link Characteristic}.
          */
-        public static ubic.gemma.model.common.description.Characteristic newInstance() {
-            return new ubic.gemma.model.common.description.CharacteristicImpl();
+        public static Characteristic newInstance() {
+            return new CharacteristicImpl();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.Characteristic}, taking all possible
-         * properties (except the identifier(s))as arguments.
+         * Constructs a new instance of {@link Characteristic}, taking all possible properties (except the
+         * identifier(s))as arguments.
          */
-        public static ubic.gemma.model.common.description.Characteristic newInstance( String name, String description,
-                ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail,
-                ubic.gemma.model.common.auditAndSecurity.Status status, String value, String category,
-                ubic.gemma.model.association.GOEvidenceCode evidenceCode ) {
-            final ubic.gemma.model.common.description.Characteristic entity = new ubic.gemma.model.common.description.CharacteristicImpl();
+        public static Characteristic newInstance( String name, String description, AuditTrail auditTrail,
+                Status status, String value, String category, GOEvidenceCode evidenceCode ) {
+            final Characteristic entity = new CharacteristicImpl();
             entity.setName( name );
             entity.setDescription( description );
             entity.setAuditTrail( auditTrail );
@@ -58,11 +59,13 @@ public abstract class Characteristic extends ubic.gemma.model.common.Auditable {
         }
     }
 
-    private String value;
-
     private String category;
 
+    private String categoryUri;
+
     private GOEvidenceCode evidenceCode;
+
+    private String value;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -77,6 +80,18 @@ public abstract class Characteristic extends ubic.gemma.model.common.Auditable {
      */
     public String getCategory() {
         return this.category;
+    }
+
+    /**
+     * The URI of the class that this is an instance of. Will only be different from the termUri when the class is
+     * effectively abstract, and this is a concrete instance. By putting the abstract class URI in the object we can
+     * more readily group together Characteristics that are instances of the same class. For example: If the classUri is
+     * "Sex", then the termUri might be "male" or "female" for various instances. Otherwise, the classUri and the
+     * termUri can be the same; for example, for "Age", if the "Age" is defined through its properties declared as
+     * associations with this.
+     */
+    public String getCategoryUri() {
+        return this.categoryUri;
     }
 
     /**
@@ -95,6 +110,10 @@ public abstract class Characteristic extends ubic.gemma.model.common.Auditable {
 
     public void setCategory( String category ) {
         this.category = category;
+    }
+
+    public void setCategoryUri( String categoryUri ) {
+        this.categoryUri = categoryUri;
     }
 
     public void setEvidenceCode( GOEvidenceCode evidenceCode ) {

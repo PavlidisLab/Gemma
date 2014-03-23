@@ -4,42 +4,49 @@
           "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-    <class name="ubic.gemma.model.common.description.CharacteristicImpl" table="CHARACTERISTIC" dynamic-insert="false" dynamic-update="false" discriminator-value="CharacteristicImpl">
-        <cache usage="read-write" />
-        <id name="id" type="java.lang.Long" unsaved-value="null">
-            <column name="ID" sql-type="BIGINT"/>
-            <generator class="native">
-            </generator>
-        </id>
-        <discriminator column="class" type="string"/>
-        <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
-            <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-        </many-to-one>
-        <many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl"  cascade="all" lazy="proxy" fetch="select">
-            <column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-        </many-to-one>
-        <property name="name" type="java.lang.String">
-            <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-        </property>
-        <property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
-            <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
-        </property>
-        <property name="value" type="java.lang.String">
-            <column name="VALUE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-        </property>
-        <property name="category" type="java.lang.String">
-            <column name="CATEGORY" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-        </property>
-        <property name="evidenceCode" type="ubic.gemma.model.association.GOEvidenceCodeEnum">
-            <column name="EVIDENCE_CODE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-        </property>
-        <subclass name="ubic.gemma.model.common.description.VocabCharacteristicImpl" discriminator-value="VocabCharacteristicImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-            <property name="valueUri" type="java.lang.String">
-                <column name="VALUE_URI" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-            </property>
-            <property name="categoryUri" type="java.lang.String">
-                <column name="CATEGORY_URI" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-            </property>
-        </subclass>
-    </class>
+	<class name="ubic.gemma.model.common.description.CharacteristicImpl" table="CHARACTERISTIC" dynamic-insert="false"
+		dynamic-update="false" discriminator-value="CharacteristicImpl">
+		<cache usage="read-write" />
+		<id name="id" type="java.lang.Long" unsaved-value="null">
+			<column name="ID" sql-type="BIGINT" />
+			<generator class="native">
+			</generator>
+		</id>
+		<discriminator column="class" type="string" />
+		<many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
+			lazy="proxy" fetch="select">
+			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true" />
+		</many-to-one>
+		<many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl" cascade="all" lazy="proxy"
+			fetch="select">
+			<column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true" />
+		</many-to-one>
+		<property name="name" type="java.lang.String">
+			<column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
+		<property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+			<column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci" />
+		</property>
+		<property name="value" type="java.lang.String">
+			<column name="VALUE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
+		<property name="category" type="java.lang.String">
+			<column name="CATEGORY" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
+		<property name="categoryUri" type="java.lang.String">
+			<column name="CATEGORY_URI" not-null="false" unique="false"
+				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
+		<property name="evidenceCode" type="ubic.gemma.model.association.GOEvidenceCodeEnum">
+			<column name="EVIDENCE_CODE" not-null="false" unique="false"
+				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
+		<subclass name="ubic.gemma.model.common.description.VocabCharacteristicImpl" discriminator-value="VocabCharacteristicImpl"
+			dynamic-insert="false" dynamic-update="false" abstract="false">
+			<property name="valueUri" type="java.lang.String">
+				<column name="VALUE_URI" not-null="false" unique="false"
+					sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+			</property>
+		</subclass>
+	</class>
 </hibernate-mapping>

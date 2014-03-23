@@ -30,31 +30,23 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
+    /**
+     * @param characteristics
+     * @return
+     */
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
-            Collection<Characteristic> characteristics ) {
+            Collection<? extends Characteristic> characteristics ) {
 
         Collection<CharacteristicValueObject> characteristicValueObjects;
 
         if ( characteristics instanceof List )
-            characteristicValueObjects = new ArrayList<CharacteristicValueObject>();
+            characteristicValueObjects = new ArrayList<>();
         else
-            characteristicValueObjects = new HashSet<CharacteristicValueObject>();
+            characteristicValueObjects = new HashSet<>();
 
         for ( Characteristic characteristic : characteristics ) {
-
-            CharacteristicValueObject characteristicValueObject = null;
-
-            if ( characteristic instanceof VocabCharacteristic ) {
-                characteristicValueObject = new CharacteristicValueObject( ( VocabCharacteristic ) characteristic );
-            } else {
-                characteristicValueObject = new CharacteristicValueObject( characteristic );
-            }
-
+            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( characteristic );
             characteristicValueObjects.add( characteristicValueObject );
-
-            if ( characteristic.getDescription() != null && characteristic.getDescription().indexOf( " -USED- " ) != -1 ) {
-                characteristicValueObject.setAlreadyPresentInDatabase( true );
-            }
         }
         return characteristicValueObjects;
     }
@@ -65,8 +57,18 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private boolean alreadyPresentInDatabase = false;
     private boolean alreadyPresentOnGene = false;
 
+    private int numTimesUsed = 0;
+
+    public int getNumTimesUsed() {
+        return numTimesUsed;
+    }
+
+    public void setNumTimesUsed( int numTimesUsed ) {
+        this.numTimesUsed = numTimesUsed;
+    }
+
     private String category = "";
-    private String categoryUri = "";
+    private String categoryUri = null;
 
     /** child term from a root */
     private boolean child = false;
@@ -85,14 +87,18 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     private String value = "";
 
-    private String valueUri = "";
+    private String valueUri = null;
 
     public CharacteristicValueObject() {
         super();
     }
 
     public CharacteristicValueObject( Characteristic characteristic ) {
+        if ( characteristic instanceof VocabCharacteristic ) {
+            this.valueUri = ( ( VocabCharacteristic ) characteristic ).getValueUri();
+        }
         this.category = characteristic.getCategory();
+        this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
         this.id = characteristic.getId();
     }
@@ -121,16 +127,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.value = value;
     }
 
-    public CharacteristicValueObject( VocabCharacteristic vocabCharacteristic ) {
-        this( vocabCharacteristic.getValueUri() );
-        this.category = vocabCharacteristic.getCategory();
-        this.categoryUri = vocabCharacteristic.getCategoryUri();
-        this.value = vocabCharacteristic.getValue();
-        if ( vocabCharacteristic.getId() != null ) {
-            this.id = vocabCharacteristic.getId();
-        }
-    }
-
     @Override
     public int compareTo( CharacteristicValueObject o ) {
 
@@ -143,7 +139,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         } else if ( this.valueUri != null ) {
             return this.valueUri.compareToIgnoreCase( o.valueUri );
         } else {
-            return -1;
+            return 1;
         }
     }
 
@@ -157,11 +153,10 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             if ( other.valueUri != null ) return false;
         } else if ( !this.valueUri.equals( other.valueUri ) ) return false;
 
-        if ( this.valueUri == null && other.valueUri == null ) {
-            if ( this.value == null ) {
-                if ( other.value != null ) return false;
-            } else if ( !this.value.equals( other.value ) ) return false;
-        }
+        if ( this.value == null ) {
+            if ( other.value != null ) return false;
+        } else if ( !this.value.equals( other.value ) ) return false;
+
         return true;
     }
 
@@ -286,12 +281,22 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     }
 
     public void setValueUri( String valueUri ) {
-        this.valueUri = valueUri;
+        if ( valueUri == null )
+            this.valueUri = null;
+        else
+            this.valueUri = valueUri.toLowerCase();
     }
 
     @Override
     public String toString() {
-        return "Category= " + category + " Value=" + value + " (" + valueUri + ")";
+        return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
+    }
+
+    /**
+     * 
+     */
+    public void incrementOccurrenceCount() {
+        this.numTimesUsed++;
     }
 
 }
