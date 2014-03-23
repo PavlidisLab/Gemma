@@ -24,7 +24,7 @@ Gemma.PhenotypeAssociationForm.GeneSearchComboBox = Ext.extend(Ext.form.ComboBox
       displayField : 'officialSymbol',
       typeAhead : false,
       loadingText : 'Searching...',
-      emptyText : 'Search genes by keyword',
+      emptyText : 'Search by keyword, ID or symbol',
       minChars : 2,
       width : 150,
       listWidth : 400,
