@@ -55,15 +55,7 @@ public interface OntologyService extends InitializingBean {
      * @param taxon Only used if we're going to search for genes or taxon is otherwise relevant.
      * @return
      */
-    public abstract Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri, Taxon taxon );
-
-    /**
-     * @param givenQueryString
-     * @param categoryUri
-     * @param taxon
-     * @return
-     */
-    public Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri,
+    public abstract Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, String categoryUri,
             Taxon taxon );
 
     /**
@@ -197,13 +189,5 @@ public interface OntologyService extends InitializingBean {
      * @param ee
      */
     public abstract void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
-
-    /**
-     * Sorts characteristics in a manner reflecting their likely importance to the user. Ones which are already used in
-     * the system are listed first.
-     * 
-     * @param s to be sorted
-     */
-    public void sort( List<Characteristic> s );
 
 }

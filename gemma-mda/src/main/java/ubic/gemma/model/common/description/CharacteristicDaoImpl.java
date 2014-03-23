@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -184,7 +185,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
      */
     @Override
     public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
-        HashSet<Characteristic> result = new HashSet<Characteristic>();
+        Set<Characteristic> result = new HashSet<>();
 
         if ( classes.isEmpty() ) {
             return result;
@@ -286,12 +287,13 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
      */
     @Override
     protected Collection<Characteristic> handleFindByValue( String search ) {
-        final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
+        final String queryString = "select char from CharacteristicImpl as char where char.value like :search ";
         StopWatch timer = new StopWatch();
         timer.start();
 
         try {
-            return getHibernateTemplate().findByNamedParam( queryString, "search", search + "%" );
+            return getHibernateTemplate().findByNamedParam( queryString, "search",
+                    search.endsWith( "%" ) ? search : search + "%" );
         } finally {
             if ( timer.getTime() > 100 ) {
                 log.info( "Characteristic search for " + search + ": " + timer.getTime() + "ms" );

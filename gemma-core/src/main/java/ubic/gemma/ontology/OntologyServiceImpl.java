@@ -121,12 +121,9 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * Sorts Characteristics in our preferred ordering:
-     * <ol>
-     * <li>
-     * </ol>
+     * Sorts Characteristics in our preferred ordering
      */
-    private class CharacteristicComparator implements Comparator<Characteristic> {
+    private class CharacteristicComparator implements Comparator<CharacteristicValueObject> {
 
         /*
          * (non-Javadoc)
@@ -134,47 +131,62 @@ public class OntologyServiceImpl implements OntologyService {
          * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
          */
         @Override
-        public int compare( Characteristic o1, Characteristic o2 ) {
+        public int compare( CharacteristicValueObject o1, CharacteristicValueObject o2 ) {
+            // sort by whether used or not, and then by URI; terms without URIs are listed later; break ties by length
+            if ( o1.getValueUri() != null ) {
+                if ( o2.getValueUri() != null ) {
 
-            if ( o1.getValue().length() == o2.getValue().length() ) {
-                if ( o1.getDescription().startsWith( USED ) ) {
-                    if ( o2.getDescription().startsWith( USED ) ) {
-                        // both are used, break tie.
-                        return compareByUri( o1, o2 );
+                    // both have uri, break tie.
+                    if ( o1.isAlreadyPresentInDatabase() ) {
+                        if ( o2.isAlreadyPresentInDatabase() ) {
+
+                            // both are used, break tie by who is used most.
+                            if ( o1.getNumTimesUsed() > o2.getNumTimesUsed() ) {
+                                return -1;
+                            } else if ( o2.getNumTimesUsed() > o1.getNumTimesUsed() ) {
+                                return 1;
+                            }
+
+                            // both are used same number of times, compare by length (shorter better, typically...)
+                            if ( o1.getValue().length() < o2.getValue().length() ) {
+                                return -1;
+                            } else if ( o1.getValue().length() > o2.getValue().length() ) {
+                                return 1;
+                            }
+
+                            // equal length, compare by lexig. value.
+                            return o1.getValue().toLowerCase().compareTo( o2.getValue().toLowerCase() );
+                        }
+
+                        // o1 is used, o2 is not; o1 should be first.
+                        return -1;
+
+                    } else if ( o2.isAlreadyPresentInDatabase() ) {
+                        // o2 is used and o1 is not; o2 should be first.
+                        return 1;
                     }
-                    // o1 is used, o2 is not; o1 should be first.
-                    return -1;
 
-                } else if ( o2.getDescription().startsWith( USED ) ) {
-                    // o2 is used and o1 is not; o2 should be first.
-                    return 1;
-                } else {
-                    // neither is used.
-                    return compareByUri( o1, o2 );
                 }
-            }
 
-            // we don't use the actual text, because we've already declared these matches, so we just put shorter ones
-            // first.
-            return o1.getValue().length() < o2.getValue().length() ? -1 : 1;
-        }
+                // o1 has uri, o2 does not.
+                return -1;
 
-        // break ties by uri and/or value.
-        private int compareByUri( Characteristic o1, Characteristic o2 ) {
-            // both are used. Break tie based on whether it has a URI
-            if ( o1 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o1 ).getValueUri() != null ) {
-                if ( !( o2 instanceof VocabCharacteristic ) || ( ( VocabCharacteristic ) o2 ).getValueUri() == null ) {
-                    return -1;
-                }
-                // both have URIs, sort by value
-                return o1.getValue().toLowerCase().compareTo( o2.getValue().toLowerCase() );
-            } else if ( o2 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o2 ).getValueUri() != null ) {
-                // we know o1 does not have a uri.
+            } else if ( o2.getValueUri() != null ) {
+                // we know o1 does not have a uri, o2 goes first.
                 return 1;
             }
-            // both not having uris
+
+            // neither has URI. By definition these are in the database, so we just rank by length/text
+            if ( o1.getValue().length() < o2.getValue().length() ) {
+                return -1;
+            } else if ( o1.getValue().length() > o2.getValue().length() ) {
+                return 1;
+            }
+
+            // equal length, compare by lexig. value.
             return o1.getValue().toLowerCase().compareTo( o2.getValue().toLowerCase() );
         }
+
     }
 
     /**
@@ -252,7 +264,8 @@ public class OntologyServiceImpl implements OntologyService {
      * ubic.gemma.model.genome.Taxon)
      */
     @Override
-    public Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri, Taxon taxon ) {
+    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, String categoryUri,
+            Taxon taxon ) {
 
         if ( StringUtils.isBlank( givenQueryString ) ) return null;
 
@@ -269,36 +282,38 @@ public class OntologyServiceImpl implements OntologyService {
             log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
         }
 
-        Collection<? extends OntologyResource> results;
-        Collection<Characteristic> searchResults = new HashSet<>();
+        Collection<? extends OntologyResource> results = new HashSet<>();
+        Collection<CharacteristicValueObject> searchResults = new HashSet<>();
 
-        Collection<String> foundValues = new HashSet<>();
-
-        Collection<Characteristic> previouslyUsedInSystem = new HashSet<>();
+        Map<String, CharacteristicValueObject> previouslyUsedInSystem = new HashMap<>();
 
         // this should be very fast.
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
         /*
-         * remove duplicates
+         * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category
+         * is always ignored; remove duplicates.)
          */
-        if ( foundChars != null ) {
-            for ( Characteristic characteristic : foundChars ) {
-                if ( foundValues.contains( foundValueKey( characteristic ) ) ) continue;
-                /*
-                 * Want to flag in the web interface that these are already used by Gemma; value object will turn this
-                 * into a proper flag.
-                 */
-                characteristic.setDescription( USED + characteristic.getDescription() );
-                previouslyUsedInSystem.add( characteristic );
-                foundValues.add( foundValueKey( characteristic ) );
+        for ( Characteristic characteristic : foundChars ) {
+            // count up number of usages; see bug 3897
+            String key = foundValueKey( characteristic );
+            if ( previouslyUsedInSystem.containsKey( key ) ) {
+                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
+                continue;
             }
+            // log.info( "saw " + key + " (" + key + ")" );
+            CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
+            vo.setAlreadyPresentInDatabase( true );
+            vo.incrementOccurrenceCount();
+            previouslyUsedInSystem.put( key, vo );
         }
 
         if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
             log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
-                    + " in " + watch.getTime() + " ms" );
+                    + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars.size() );
 
+        // FIXME these are not going in the right order. But that's usually okay because if we are returning genes,
+        // that's probably all we are returning (?)
         searchForGenes( queryString, categoryUri, taxon, searchResults );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
@@ -309,34 +324,28 @@ public class OntologyServiceImpl implements OntologyService {
             if ( log.isDebugEnabled() )
                 log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
                         + watch.getTime() + " ms" );
-            searchResults.addAll( filter( results, queryString ) );
+            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( filter( results,
+                    queryString ) ) );
 
             if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
                 break;
             }
         }
 
+        // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         if ( searchResults.size() < MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
-            searchResults.addAll( filter( geneOntologyService.findTerm( queryString ), queryString ) );
+            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( filter(
+                    geneOntologyService.findTerm( queryString ), queryString ) ) );
         }
 
-        // Sort the individual results.
-        Collection<Characteristic> sortedResults = sort( previouslyUsedInSystem, searchResults, queryString,
-                foundValues );
+        // Sort the results rather elaborately.
+        Collection<CharacteristicValueObject> sortedResults = sort( previouslyUsedInSystem, searchResults, queryString );
 
         if ( watch.getTime() > 1000 ) {
             log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
         }
 
         return sortedResults;
-
-    }
-
-    @Override
-    public Collection<CharacteristicValueObject> findExactTermValueObject( String givenQueryString, String categoryUri,
-            Taxon taxon ) {
-        Collection<Characteristic> terms = findExactTerm( givenQueryString, categoryUri, taxon );
-        return CharacteristicValueObject.characteristic2CharacteristicVO( terms );
 
     }
 
@@ -761,11 +770,7 @@ public class OntologyServiceImpl implements OntologyService {
         }
     }
 
-    /**
-     * @param sortedResultsExact
-     */
-    @Override
-    public void sort( List<Characteristic> sortedResultsExact ) {
+    void sort( List<CharacteristicValueObject> sortedResultsExact ) {
         Collections.sort( sortedResultsExact, new CharacteristicComparator() );
     }
 
@@ -895,10 +900,17 @@ public class OntologyServiceImpl implements OntologyService {
      * @return
      */
     private String foundValueKey( Characteristic c ) {
-        if ( c instanceof VocabCharacteristic ) {
-            return ( ( VocabCharacteristic ) c ).getValueUri();
+        if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
+            return ( ( VocabCharacteristic ) c ).getValueUri().toLowerCase();
         }
-        return c.getValue();
+        return c.getValue().toLowerCase();
+    }
+
+    private String foundValueKey( CharacteristicValueObject c ) {
+        if ( c.getValueUri() != null && c.getValueUri() != null ) {
+            return c.getValueUri();
+        }
+        return c.getValue().toLowerCase();
     }
 
     /**
@@ -996,7 +1008,7 @@ public class OntologyServiceImpl implements OntologyService {
      * @param searchResults added to this
      */
     private void searchForGenes( String queryString, String categoryUri, Taxon taxon,
-            Collection<Characteristic> searchResults ) {
+            Collection<CharacteristicValueObject> searchResults ) {
         if ( categoryUri == null ) return;
 
         // genotype, genetic modification, molecular entity.
@@ -1015,52 +1027,61 @@ public class OntologyServiceImpl implements OntologyService {
                 for ( SearchResult sr : geneResults.get( Gene.class ) ) {
                     Gene g = ( Gene ) sr.getResultObject();
                     log.debug( "Search for " + queryString + " returned: " + g );
-                    searchResults.add( gene2Characteristic( g ) );
+                    searchResults.add( new CharacteristicValueObject( gene2Characteristic( g ) ) );
                 }
             }
         }
     }
 
     /**
-     * @param alreadyUsedResults items already in the system
-     * @param searchResults
+     * @param alreadyUsedResults items already in the system; remove singleton free-text terms.
+     * @param otherResults other results
      * @param searchTerm the query
-     * @param foundValues
      * @return
      */
-    private Collection<Characteristic> sort( Collection<Characteristic> alreadyUsedResults,
-            Collection<Characteristic> searchResults, String searchTerm, Collection<String> foundValues ) {
-
+    private Collection<CharacteristicValueObject> sort( Map<String, CharacteristicValueObject> alreadyUsedResults,
+            Collection<CharacteristicValueObject> otherResults, String searchTerm ) {
         /*
-         * Organize the list into 3 parts. Want to get the exact match showing up on top But close matching
-         * individualResults and alreadyUsedResults should get priority over jena's search results. Each result's order
-         * should be preserved.
+         * Organize the list into 3 parts. Want to get the exact match showing up on top
          */
 
-        List<Characteristic> sortedResultsExact = new ArrayList<>();
-        List<Characteristic> sortedResultsStartsWith = new ArrayList<>();
-        List<Characteristic> sortedResultsBottom = new ArrayList<>();
+        List<CharacteristicValueObject> sortedResultsExact = new ArrayList<>();
+        List<CharacteristicValueObject> sortedResultsStartsWith = new ArrayList<>();
+        List<CharacteristicValueObject> sortedResultsBottom = new ArrayList<>();
+        Set<String> foundValues = new HashSet<>();
+        for ( String key : alreadyUsedResults.keySet() ) {
+            CharacteristicValueObject c = alreadyUsedResults.get( key );
 
-        for ( Characteristic characteristic : alreadyUsedResults ) {
-            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) ) {
-                sortedResultsExact.add( characteristic );
-            } else if ( characteristic.getValue().startsWith( searchTerm ) ) {
-                sortedResultsStartsWith.add( characteristic );
+            if ( foundValues.contains( key ) ) continue;
+            foundValues.add( key );
+
+            // don't show singletons of free-text terms.
+            if ( c.getValueUri() == null && c.getNumTimesUsed() < 2 ) {
+                continue;
+            }
+
+            if ( c.getValue().equalsIgnoreCase( searchTerm ) ) {
+                sortedResultsExact.add( c );
+            } else if ( c.getValue().startsWith( searchTerm ) || c.getValueUri() != null ) {
+                // second tier: other ontology terms, or things that prefix match our query.
+                sortedResultsStartsWith.add( c );
             } else {
-                sortedResultsBottom.add( characteristic );
+                // other matches.
+                sortedResultsBottom.add( c );
             }
         }
 
-        for ( Characteristic characteristic : searchResults ) {
-            String key = foundValueKey( characteristic );
+        for ( CharacteristicValueObject c : otherResults ) {
+            assert c.getValueUri() != null;
+            String key = foundValueKey( c );
             if ( foundValues.contains( key ) ) continue;
             foundValues.add( key );
-            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) ) {
-                sortedResultsExact.add( characteristic );
-            } else if ( characteristic.getValue().startsWith( searchTerm ) ) {
-                sortedResultsStartsWith.add( characteristic );
+            if ( c.getValue().equalsIgnoreCase( searchTerm ) ) {
+                sortedResultsExact.add( c );
+            } else if ( c.getValue().startsWith( searchTerm ) || c.getValueUri() != null ) {
+                sortedResultsStartsWith.add( c );
             } else {
-                sortedResultsBottom.add( characteristic );
+                sortedResultsBottom.add( c );
             }
         }
 
@@ -1068,7 +1089,7 @@ public class OntologyServiceImpl implements OntologyService {
         sort( sortedResultsStartsWith );
         sort( sortedResultsBottom );
 
-        List<Characteristic> sortedTerms = new ArrayList<>( foundValues.size() );
+        List<CharacteristicValueObject> sortedTerms = new ArrayList<>( foundValues.size() );
         sortedTerms.addAll( sortedResultsExact );
         sortedTerms.addAll( sortedResultsStartsWith );
         sortedTerms.addAll( sortedResultsBottom );

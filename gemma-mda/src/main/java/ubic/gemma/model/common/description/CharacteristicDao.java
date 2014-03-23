@@ -31,37 +31,6 @@ import ubic.gemma.persistence.BrowsingDao;
 public interface CharacteristicDao extends BrowsingDao<Characteristic> {
 
     /**
-     * Finds all characteristics whose parent object is of the specified class. Returns a map of characteristics to
-     * parent objects.
-     */
-    public Map<Characteristic, Object> findByParentClass( java.lang.Class<?> parentClass );
-
-    /**
-     * 
-     */
-    public Collection<Characteristic> findByUri( java.lang.String searchString );
-
-    /**
-     * 
-     */
-    public Collection<Characteristic> findByUri( Collection<String> uris );
-
-    /**
-     * <p>
-     * Finds all Characteristics whose value match the given search term
-     * </p>
-     */
-    public Collection<Characteristic> findByValue( java.lang.String search );
-
-    /**
-     * <p>
-     * Returns a map of the specified characteristics to their parent objects.
-     * </p>
-     */
-    public Map<Characteristic, Object> getParents( java.lang.Class<?> parentClass,
-            Collection<Characteristic> characteristics );
-
-    /**
      * Browse through the characteristics, excluding GO annotations.
      * 
      * @param start How far into the list to start
@@ -89,11 +58,16 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
     public Integer count();
 
     /**
-     * @param classesToFilterOn constraint of who the 'owner' of the Characteristic has to be.
-     * @param uriString
+     * @param valuePrefix
      * @return
      */
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
+    public Collection<? extends Characteristic> findByCategory( String query );
+
+    /**
+     * Finds all characteristics whose parent object is of the specified class. Returns a map of characteristics to
+     * parent objects.
+     */
+    public Map<Characteristic, Object> findByParentClass( java.lang.Class<?> parentClass );
 
     /**
      * @param classes constraint of who the 'owner' of the Characteristic has to be.
@@ -103,6 +77,23 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
     public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
 
     /**
+     * @param classesToFilterOn constraint of who the 'owner' of the Characteristic has to be.
+     * @param uriString
+     * @return
+     */
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
+
+    /**
+     * 
+     */
+    public Collection<Characteristic> findByUri( Collection<String> uris );
+
+    /**
+     * 
+     */
+    public Collection<Characteristic> findByUri( java.lang.String searchString );
+
+    /**
      * @param classes constraint of who the 'owner' of the Characteristic has to be.
      * @param string
      * @return
@@ -110,10 +101,15 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
     public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
     /**
-     * @param valuePrefix
-     * @return
+     * Finds all Characteristics whose value match the given search term
      */
-    public Collection<? extends Characteristic> findByCategory( String query );
+    public Collection<Characteristic> findByValue( java.lang.String search );
+
+    /**
+     * Returns a map of the specified characteristics to their parent objects.
+     */
+    public Map<Characteristic, Object> getParents( java.lang.Class<?> parentClass,
+            Collection<Characteristic> characteristics );
 
     /**
      * @return URIs of categories that are used.

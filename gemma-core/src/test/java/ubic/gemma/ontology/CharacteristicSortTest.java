@@ -22,6 +22,7 @@ import java.util.List;
 import org.junit.Test;
 
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 /**
  * @author Paul
@@ -36,32 +37,38 @@ public class CharacteristicSortTest {
     public final void testSortCharacteristics() throws Exception {
         // does not use spring context
         OntologyService os = new OntologyServiceImpl();
-        List<Characteristic> cl = new ArrayList<Characteristic>();
-        cl.add( Characteristic.Factory.newInstance( "g", "gggg", null, null, "gggg_", "g", null ) );
+        List<CharacteristicValueObject> cl = new ArrayList<>();
+        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "g", "gggg", null, null, "gggg_",
+                "g", null ) ) );
 
-        cl.add( Characteristic.Factory.newInstance( "xused", OntologyServiceImpl.USED + "x", null, null, "xused", "x",
-                null ) );
+        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "xused", "x", null, null, "xused",
+                "x", null ) ) );
 
         // will be first
-        cl.add( Characteristic.Factory
-                .newInstance( "a", OntologyServiceImpl.USED + "a", null, null, "aused", "a", null ) );
+        CharacteristicValueObject a = new CharacteristicValueObject( Characteristic.Factory.newInstance( "a", "a",
+                null, null, "aused", "a", null ) );
+        a.setNumTimesUsed( 3 );
+        cl.add( a );
 
-        cl.add( Characteristic.Factory.newInstance( "b", "bbbb", null, null, "bbbbb", "b", null ) );
-        cl.add( Characteristic.Factory.newInstance( "a", "aaaa", null, null, "aaaa_", "a", null ) );
+        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "b", "bbbb", null, null, "bbbbb",
+                "b", null ) ) );
+        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "a", "aaaa", null, null, "aaaa_",
+                "a", null ) ) );
 
-        cl.add( Characteristic.Factory.newInstance( "d", "dddd", null, null, "dddd_", "d", null ) );
-        cl.add( Characteristic.Factory.newInstance( "af", "aaaf", null, null, "aaaff", "af", null ) );
+        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "d", "dddd", null, null, "dddd_",
+                "d", null ) ) );
+        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "af", "aaaf", null, null, "aaaff",
+                "af", null ) ) );
 
-        os.sort( cl );
+        ( ( OntologyServiceImpl ) os ).sort( cl );
 
-        assertEquals( OntologyServiceImpl.USED + "a", cl.get( 0 ).getDescription() );
-        assertEquals( OntologyServiceImpl.USED + "x", cl.get( 1 ).getDescription() );
-        assertEquals( "aaaa", cl.get( 2 ).getDescription() );
-        assertEquals( "aaaf", cl.get( 3 ).getDescription() );
-        assertEquals( "bbbb", cl.get( 4 ).getDescription() );
-        assertEquals( "d", cl.get( 5 ).getName() );
-        assertEquals( "gggg", cl.get( 6 ).getDescription() );
+        assertEquals( "aused", cl.get( 0 ).getValue() );
+        assertEquals( "x", cl.get( 1 ).getValue() );
+        assertEquals( "aaaa", cl.get( 2 ).getValue() );
+        assertEquals( "aaaf", cl.get( 3 ).getValue() );
+        assertEquals( "bbbb", cl.get( 4 ).getValue() );
+        assertEquals( "d", cl.get( 5 ).getValue() );
+        assertEquals( "gggg", cl.get( 6 ).getValue() );
 
     }
-
 }

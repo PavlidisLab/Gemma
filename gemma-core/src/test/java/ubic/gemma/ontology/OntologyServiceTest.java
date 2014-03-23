@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -59,7 +59,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
                 fail( "Ontology load timeout" );
             }
         }
-        Collection<Characteristic> name = os.findExactTerm( "diarrhea", null, null );
+        Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null, null );
 
         assertTrue( name.size() > 0 );
 

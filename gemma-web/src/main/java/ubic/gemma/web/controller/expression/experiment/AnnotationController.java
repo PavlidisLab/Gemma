@@ -119,7 +119,7 @@ public class AnnotationController {
     }
 
     /**
-     * AJAX
+     * AJAX. Find terms for tagging, etc.
      * 
      * @param givenQueryString
      * @param categoryUri
@@ -134,7 +134,7 @@ public class AnnotationController {
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
         }
-        return ontologyService.findExactTermValueObject( givenQueryString, categoryUri, taxon );
+        return ontologyService.findTermsInexact( givenQueryString, categoryUri, taxon );
     }
 
     /**

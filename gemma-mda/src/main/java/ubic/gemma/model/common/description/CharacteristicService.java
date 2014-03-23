@@ -92,28 +92,22 @@ public interface CharacteristicService {
      */
     public Collection<? extends Object> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
 
-    /*
-     * FIXME add findByUri(Class<?>...) and use in SearchService.
-     */
-
     /**
-     * <p>
      * given a collection of strings that represent URI's will find all the characteristics that are used in the system
      * with URI's matching anyone in the given collection
-     * </p>
      */
     public Collection<Characteristic> findByUri( Collection<String> uris );
 
     /**
      * Looks for an exact match of the give string to a valueUri in the characteristic database
      */
-    public Collection<Characteristic> findByUri( java.lang.String searchString );
+    public Collection<Characteristic> findByUri( String searchString );
 
     /**
      * Returns a collection of characteristics that have a Value that match the given search string. The value is
      * usually a human readable form of the termURI
      */
-    public Collection<Characteristic> findByValue( java.lang.String search );
+    public Collection<Characteristic> findByValue( String search );
 
     /**
      * Returns a map of the specified characteristics to their parent objects.
