@@ -51,6 +51,11 @@ public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
     private Collection<ArrayDesign> results = new HashSet<ArrayDesign>();
 
     @Override
+    public Collection<ArrayDesign> getResults() {
+        return results;
+    }
+
+    @Override
     public ArrayDesign parseOneLine( String line ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
@@ -75,11 +80,6 @@ public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
     protected void addResult( ArrayDesign obj ) {
         results.add( obj );
 
-    }
-
-    @Override
-    public Collection<ArrayDesign> getResults() {
-        return results;
     }
 
 }

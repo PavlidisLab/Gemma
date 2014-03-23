@@ -57,7 +57,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     public String getShortDesc() {
         return "Start worker application for processing tasks sent by Gemma webapp.";
     }
- 
+
     @Override
     protected void buildOptions() {
         // Option mmtxOption = OptionBuilder.withDescription( "Set to force MMTX to be initialized" ).create( "mmtx" );

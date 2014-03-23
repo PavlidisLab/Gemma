@@ -1,16 +1,17 @@
 package ubic.gemma.job.executor.webapp;
 
+import java.util.Collection;
+import java.util.Date;
+
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskResult;
-
-import java.util.Collection;
-import java.util.Date;
 
 /**
  * TODO: finish! Remove entries that's been executing or waiting for their results to be picked up for too long. monitor
@@ -24,12 +25,10 @@ public class SubmittedTasksMaintenance {
     @Autowired
     private TaskRunningService taskRunningService;
 
-    // private static final int MAX_QUEUE_MINUTES = 60;
-
     /**
      * How long we will hold onto results after a task has finished before removing it from task list.
      */
-    private static final int MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES = 120;
+    private static final int MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES = 10;
 
     /**
      * Check if a task has been running or queued for too long, and cancel it if necessary. Email alert will always be
@@ -40,8 +39,10 @@ public class SubmittedTasksMaintenance {
         // Assumes collection implementing weakly consistent iterator with remove support.
         Collection<SubmittedTask<? extends TaskResult>> tasks = taskRunningService.getSubmittedTasks();
 
-        if ( tasks.size() > 0 ) log.info( "Submitted tasks maintenance: " + tasks.size() + " tasks monitored." );
-
+        int numQueued = 0;
+        int numRunning = 0;
+        int numDone = 0;
+        int numCancelled = 0;
         for ( SubmittedTask<?> task : tasks ) {
             if ( !task.getStatus().equals( SubmittedTask.Status.COMPLETED ) ) {
                 log.info( "Checking task: " + task.getTaskCommand().getClass().getSimpleName() + task.getTaskId()
@@ -49,6 +50,7 @@ public class SubmittedTasksMaintenance {
             }
             switch ( task.getStatus() ) {
                 case QUEUED:
+                    numQueued++;
                     Date submissionTime = task.getSubmissionTime();
                     Integer maxQueueWait = task.getTaskCommand().getMaxQueueMinutes();
                     assert submissionTime != null;
@@ -66,6 +68,7 @@ public class SubmittedTasksMaintenance {
                     }
                     break;
                 case RUNNING:
+                    numRunning++;
                     Date startTime = task.getStartTime();
                     int maxRunTime = task.getTaskCommand().getMaxRuntime();
                     assert startTime != null;
@@ -80,14 +83,17 @@ public class SubmittedTasksMaintenance {
                     }
                     break;
                 case CANCELLING:
+                    numCancelled++;
                     break;
                 case FAILED:
                     // fall through
                 case COMPLETED:
+                    numDone++;
                     if ( task.getFinishTime().before(
                             DateUtils.addMinutes( new Date(), -MAX_KEEP_TRACK_AFTER_COMPLETED_MINUTES ) ) ) {
                         log.debug( task.getStatus().name() + " task result not retrieved, timing out: "
                                 + task.getTaskId() + " " + task.getTaskCommand().getClass().getSimpleName() );
+                        // concurrent modification.
                         tasks.remove( task );
                     }
                     break;
@@ -97,5 +103,9 @@ public class SubmittedTasksMaintenance {
                     break;
             }
         }
+
+        if ( tasks.size() > 0 && numDone != tasks.size() )
+            log.info( tasks.size() + " tasks monitored; Done: " + numDone + "; Running: " + numRunning
+                    + "; Cancelled: " + numCancelled + "; Queued: " + numQueued );
     }
 }

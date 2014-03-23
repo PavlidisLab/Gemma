@@ -1,7 +1,7 @@
 package ubic.gemma.loader.expression.arrayExpress.util;
 
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.NetDatasourceUtil;
+import ubic.gemma.util.Settings;
 
 /**
  * @author pavlidis
