@@ -46,7 +46,7 @@ public abstract class Characteristic extends Auditable {
          * identifier(s))as arguments.
          */
         public static Characteristic newInstance( String name, String description, AuditTrail auditTrail,
-                Status status, String value, String category, GOEvidenceCode evidenceCode ) {
+                Status status, String value, String category, String categoryUri, GOEvidenceCode evidenceCode ) {
             final Characteristic entity = new CharacteristicImpl();
             entity.setName( name );
             entity.setDescription( description );
@@ -54,6 +54,7 @@ public abstract class Characteristic extends Auditable {
             entity.setStatus( status );
             entity.setValue( value );
             entity.setCategory( category );
+            entity.setCategoryUri( categoryUri );
             entity.setEvidenceCode( evidenceCode );
             return entity;
         }

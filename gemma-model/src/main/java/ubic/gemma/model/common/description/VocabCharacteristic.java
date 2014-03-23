@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Status;
+
 /**
  * <p>
  * A Characteristic that uses terms from ontologies or controlled vocabularies. These Characteristics can be chained
@@ -39,6 +43,22 @@ public abstract class VocabCharacteristic extends CharacteristicImpl {
          */
         public static VocabCharacteristic newInstance() {
             return new VocabCharacteristicImpl();
+        }
+
+        public static VocabCharacteristic newInstance( String name, String description, AuditTrail auditTrail,
+                Status status, String value, String valueUri, String category, String categoryUri,
+                GOEvidenceCode evidenceCode ) {
+            final VocabCharacteristic entity = new VocabCharacteristicImpl();
+            entity.setName( name );
+            entity.setDescription( description );
+            entity.setAuditTrail( auditTrail );
+            entity.setStatus( status );
+            entity.setCategoryUri( categoryUri );
+            entity.setValueUri( valueUri );
+            entity.setValue( value );
+            entity.setCategory( category );
+            entity.setEvidenceCode( evidenceCode );
+            return entity;
         }
 
     }
