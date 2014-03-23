@@ -35,46 +35,15 @@ import ubic.gemma.tasks.Task;
 public class TwoChannelMissingValueTaskCommand extends TaskCommand {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * @return the s2n
-     */
-    public double getS2n() {
-        return s2n;
-    }
-
-    /**
-     * @param s2n the s2n to set
-     */
-    public void setS2n( double s2n ) {
-        this.s2n = s2n;
-    }
-
-    /**
-     * @return the extraMissingValueIndicators
-     */
-    public Collection<Double> getExtraMissingValueIndicators() {
-        return extraMissingValueIndicators;
-    }
-
-    /**
-     * @param extraMissingValueIndicators the extraMissingValueIndicators to set
-     */
-    public void setExtraMissingValueIndicators( Collection<Double> extraMissingValueIndicators ) {
-        this.extraMissingValueIndicators = extraMissingValueIndicators;
-    }
-
     private ExpressionExperiment expressionExperiment = null;
 
     private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
 
     private Collection<Double> extraMissingValueIndicators = new HashSet<Double>();
 
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
+    public TwoChannelMissingValueTaskCommand( ExpressionExperiment ee ) {
+        super();
+        this.expressionExperiment = ee;
     }
 
     /**
@@ -91,13 +60,44 @@ public class TwoChannelMissingValueTaskCommand extends TaskCommand {
         this.expressionExperiment = expressionExperiment;
     }
 
-    public TwoChannelMissingValueTaskCommand( ExpressionExperiment ee ) {
-        super();
-        this.expressionExperiment = ee;
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
+    }
+
+    /**
+     * @return the extraMissingValueIndicators
+     */
+    public Collection<Double> getExtraMissingValueIndicators() {
+        return extraMissingValueIndicators;
+    }
+
+    /**
+     * @return the s2n
+     */
+    public double getS2n() {
+        return s2n;
     }
 
     @Override
     public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return TwoChannelMissingValueTask.class;
+    }
+
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
+    /**
+     * @param extraMissingValueIndicators the extraMissingValueIndicators to set
+     */
+    public void setExtraMissingValueIndicators( Collection<Double> extraMissingValueIndicators ) {
+        this.extraMissingValueIndicators = extraMissingValueIndicators;
+    }
+
+    /**
+     * @param s2n the s2n to set
+     */
+    public void setS2n( double s2n ) {
+        this.s2n = s2n;
     }
 }
