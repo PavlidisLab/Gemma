@@ -74,24 +74,30 @@ a.external {
 	padding-left: 15px;
 	padding-right: 10px;
 }
+
 a.external:hover {
-	background: transparent url(../../images/icons/link_external_icon_hover.gif)
-		no-repeat scroll right center;
+	background: transparent
+		url(../../images/icons/link_external_icon_hover.gif) no-repeat scroll
+		right center;
 	padding-left: 15px;
 	margin-right: 10px;
 }
+
 a.internal {
 	background: transparent url(../../images/icons/link_internal_icon.gif)
 		no-repeat scroll right center;
 	padding-left: 15px;
 	margin-right: 10px;
 }
+
 a.internal:hover {
-	background: transparent url(../../images/icons/link_internal_icon_hover.gif)
-		no-repeat scroll right center;
+	background: transparent
+		url(../../images/icons/link_internal_icon_hover.gif) no-repeat scroll
+		right center;
 	padding-left: 15px;
 	margin-right: 10px;
 }
+
 span.link {
 	cursor: pointer;
 	text-decoration: underline;
@@ -103,7 +109,7 @@ h1,h2,h3,h4,h5,h6 {
 	font-weight: bold;
 }
 
-h1, .big {
+h1,.big {
 	font-size: 2.2em;
 	letter-spacing: -1px;
 	line-height: 1.3em;
@@ -111,8 +117,7 @@ h1, .big {
 	padding: 0;
 }
 
-
-h2, .medium {
+h2,.medium {
 	font-size: 1.6em;
 	line-height: 1.4em;
 	margin: 0 0 0.5em 0;
@@ -326,13 +331,13 @@ h2.helpstep,h3.helpstep {
 	line-height: 13px;
 }
 
-.blue-text-not-link{
-	color:#15428B;
+.blue-text-not-link {
+	color: #15428B;
 }
 
-.front-page-header-text{
-	color:#15428B;
-	font: 18px tahoma,arial,verdana,sans-serif;
+.front-page-header-text {
+	color: #15428B;
+	font: 18px tahoma, arial, verdana, sans-serif;
 }
 
 /* reduced font size elements */
@@ -382,7 +387,8 @@ a.info {
 }
 
 .usedNoUri {
-	font-weight: bold;
+	/*	font-weight: bold; */
+	
 }
 
 .unusedWithUri {
@@ -469,7 +475,6 @@ a.tooltip:hover .tooltiptext {
 	
 }
 
-
 .disabled-plain {
 	color: black;
 }
@@ -486,7 +491,7 @@ a.tooltip:hover .tooltiptext {
 	position: absolute;
 	right: 0;
 	-moz-opacity: 0;
-	filter: alpha(opacity :                   0);
+	filter: alpha(opacity :                    0);
 	opacity: 0;
 	z-index: 2;
 	height: 22px;
@@ -592,107 +597,107 @@ a.tooltip:hover .tooltiptext {
 	background: url('../../images/icons/add.png') no-repeat 0 0 !important;
 }
 
-.right-align-btn .x-btn-mc{
- 	text-align: right;
- }
- 
- .unstyledTitle .x-panel-header{
- 	background: none repeat-x scroll 0 -1px transparent;
-	color:black;
+.right-align-btn .x-btn-mc {
+	text-align: right;
+}
+
+.unstyledTitle .x-panel-header {
+	background: none repeat-x scroll 0 -1px transparent;
+	color: black;
 	border: 0px solid;
- }
- 
- .unstyledTitle .x-tool-toggle{
+}
+
+.unstyledTitle .x-tool-toggle {
 	background-position: 0 -255px;
-	float:left;
-	margin-right:5px;
- }
-   
- .unstyledTitle .x-tool-toggle-over{
+	float: left;
+	margin-right: 5px;
+}
+
+.unstyledTitle .x-tool-toggle-over {
 	background-position: -15px -255px;
- }
- .x-panel, .unstyledTitle, .x-panel-collapsed .x-tool-toggle{
+}
+
+.x-panel,.unstyledTitle,.x-panel-collapsed .x-tool-toggle {
 	background-position: 0 -240px;
- }
-  
- .x-panel, .unstyledTitle, .x-panel-collapsed .x-tool-toggle-over{
+}
+
+.x-panel,.unstyledTitle,.x-panel-collapsed .x-tool-toggle-over {
 	background-position: -15px -240px;
- }
+}
 
 .x-tool-delete {
-    background-image:url('/Gemma/images/icons/cross.png');
-	margin-left:10px;
-	
+	background-image: url('/Gemma/images/icons/cross.png');
+	margin-left: 10px;
 }
+
 .x-tool-delete-over {
-    background-image:url('/Gemma/images/icons/cross.png');
-	margin-left:10px;
+	background-image: url('/Gemma/images/icons/cross.png');
+	margin-left: 10px;
 }
 
 .x-tool-saveEdit {
-    background-image:url('/Gemma/images/icons/diskEdit2.png');
-	margin-left:10px;
-	
+	background-image: url('/Gemma/images/icons/diskEdit2.png');
+	margin-left: 10px;
 }
+
 .x-tool-saveEdit-over {
-    background-image:url('/Gemma/images/icons/diskEdit2.png');
-	margin-left:10px;
+	background-image: url('/Gemma/images/icons/diskEdit2.png');
+	margin-left: 10px;
 }
 
 /* hover thumbnails */
 /*Credits: Dynamic Drive CSS Library */
 /*URL: http://www.dynamicdrive.com/style/ */
-
-.thumbnail{
-position: relative;
-z-index: 0;
+.thumbnail {
+	position: relative;
+	z-index: 0;
 }
 
-.thumbnail:hover{
-background-color: transparent;
-z-index: 50;
+.thumbnail:hover {
+	background-color: transparent;
+	z-index: 50;
 }
 
-.thumbnail span{ /*CSS for enlarged image*/
-position: absolute;
-background-color: lightyellow;
-padding: 5px;
-left: -1000px;
-border: 1px dashed gray;
-visibility: hidden;
-color: black;
-text-decoration: none;
+.thumbnail span { /*CSS for enlarged image*/
+	position: absolute;
+	background-color: lightyellow;
+	padding: 5px;
+	left: -1000px;
+	border: 1px dashed gray;
+	visibility: hidden;
+	color: black;
+	text-decoration: none;
 }
 
-.thumbnail span img{ /*CSS for enlarged image*/
-border-width: 0;
-padding: 2px;
+.thumbnail span img { /*CSS for enlarged image*/
+	border-width: 0;
+	padding: 2px;
 }
 
-.thumbnail:hover span{ /*CSS for enlarged image on hover*/
-visibility: visible;
-top: 0;
-left: 60px; /*position where enlarged image should offset horizontally */
-
+.thumbnail:hover span { /*CSS for enlarged image on hover*/
+	visibility: visible;
+	top: 0;
+	left: 60px;
+	/*position where enlarged image should offset horizontally */
 }
 /* end of hover thumbnails*/
-
-.x-form-trigger-paste-genes{
+.x-form-trigger-paste-genes {
 	background-image: url("/Gemma/images/icons/page_upload.png")
 }
 
-.absolute-position-loading-mask{
-	top:70px !important
+.absolute-position-loading-mask {
+	top: 70px !important
 }
-.inline-help-form-q-tip{
-	line-height:1.1em;
+
+.inline-help-form-q-tip {
+	line-height: 1.1em;
 	font-size: 1.0em;
 }
-.indent20, .indent20 p, .indent20 ul{
-	padding-left:20px
+
+.indent20,.indent20 p,.indent20 ul {
+	padding-left: 20px
 }
 
 .buttonBold {
 	font-weight: bold;
 }
-
