@@ -376,8 +376,8 @@ public class GeoConverterImpl implements GeoConverter {
 
         ExperimentalFactor experimentalFactor = ExperimentalFactor.Factory.newInstance();
         experimentalFactor.setName( geoSubSet.getType().toString() );
-        VocabCharacteristic term = convertVariableType( geoSubSet.getType() );
-        assert term != null;
+        VocabCharacteristic term = VocabCharacteristic.Factory.newInstance();
+        convertVariableType( term, geoSubSet.getType() );
         term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
         term.setValue( term.getCategory() );
         term.setValueUri( term.getCategoryUri() );
@@ -799,8 +799,9 @@ public class GeoConverterImpl implements GeoConverter {
                 String value = fields[1].trim();
 
                 try {
-                    VocabCharacteristic gemmaChar = convertVariableType( GeoVariable.convertStringToType( category ) );
-                    if ( gemmaChar == null ) {
+                    Characteristic gemmaChar = Characteristic.Factory.newInstance();
+                    convertVariableType( gemmaChar, GeoVariable.convertStringToType( category ) );
+                    if ( gemmaChar.getCategory() == null ) {
                         continue;
                     }
                     gemmaChar.setDescription( defaultDescription );
@@ -828,7 +829,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         if ( StringUtils.isNotBlank( channel.getSourceName() ) ) {
-            VocabCharacteristic sourceChar = VocabCharacteristic.Factory.newInstance();
+            Characteristic sourceChar = Characteristic.Factory.newInstance();
             sourceChar.setDescription( "GEO Sample source" );
             String characteristic = trimString( channel.getSourceName() );
             sourceChar.setCategory( "BioSource" );
@@ -870,7 +871,7 @@ public class GeoConverterImpl implements GeoConverter {
         if ( StringUtils.isNotBlank( channel.getLabel() ) ) {
             String characteristic = trimString( channel.getLabel() );
             // This is typically something like "biotin-labeled nucleotides", which we can convert later.
-            VocabCharacteristic labelChar = VocabCharacteristic.Factory.newInstance();
+            Characteristic labelChar = Characteristic.Factory.newInstance();
             labelChar.setDescription( "GEO Sample label" );
             labelChar.setCategory( "LabelCompound" );
             labelChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000562" /* labeling; used to be LabelCompound */);
@@ -878,7 +879,6 @@ public class GeoConverterImpl implements GeoConverter {
             labelChar.setEvidenceCode( GOEvidenceCode.IIA );
             bioMaterial.getCharacteristics().add( labelChar );
         }
-
         return bioMaterial;
     }
 
@@ -2199,8 +2199,10 @@ public class GeoConverterImpl implements GeoConverter {
             ExperimentalFactor experimentalFactor ) {
         // By definition each subset defines a new factor value.
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        Characteristic term = convertVariableType( geoSubSet.getType() );
-        if ( term != null ) {
+
+        Characteristic term = Characteristic.Factory.newInstance();
+        convertVariableType( term, geoSubSet.getType() );
+        if ( term.getCategory() != null ) {
             term.setValue( geoSubSet.getDescription() );
             term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
             factorValue.getCharacteristics().add( term );
@@ -2228,8 +2230,9 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private FactorValue convertTypeToFactorValue( VariableType type, String value ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        Characteristic term = convertVariableType( type );
-        if ( term == null ) {
+        Characteristic term = Characteristic.Factory.newInstance();
+        convertVariableType( term, type );
+        if ( term.getCategory() != null ) {
             factorValue.setValue( value );
             return factorValue;
         }
@@ -2251,10 +2254,10 @@ public class GeoConverterImpl implements GeoConverter {
         result.setName( variable.getType().toString() );
         result.setType( FactorType.CATEGORICAL );
         result.setDescription( variable.getDescription() );
-        Characteristic term = convertVariableType( variable.getType() );
+        Characteristic term = Characteristic.Factory.newInstance();
+        convertVariableType( term, variable.getType() );
 
-        result.setCategory( term ); // could be null
-
+        if ( term.getCategory() != null ) result.setCategory( term );
         return result;
     }
 
@@ -2279,15 +2282,15 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * Convert a variable
+     * Convert a variable, category URI and category filled in. Will not be filled in (null) the case of "Other" or
+     * "Organism"
      * 
+     * @param c to be modified
      * @param variable
-     * @return a VocabCharacteristic with the category URI and category filled in. Will be null in the case of "Other"
-     *         or "Organism"
      * @throw IllegalStateException if it's a variable type we don't know how to handle.
      */
-    private VocabCharacteristic convertVariableType( VariableType varType ) {
-
+    private void convertVariableType( Characteristic c, VariableType varType ) {
+        c.setCategory( null );
         String term = null;
         String uri = null;
         if ( varType.equals( VariableType.age ) ) {
@@ -2333,7 +2336,6 @@ public class GeoConverterImpl implements GeoConverter {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000651";
             term = "phenotype";
         } else if ( varType.equals( VariableType.other ) ) {
-            return null;
         } else if ( varType.equals( VariableType.protocol ) ) {
             uri = "http://purl.obolibrary.org/obo/OBI_0000272";
             term = "protocol";
@@ -2341,7 +2343,6 @@ public class GeoConverterImpl implements GeoConverter {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000470";
             term = "environmental stress";
         } else if ( varType.equals( VariableType.species ) ) {
-            return null;
         } else if ( varType.equals( VariableType.specimen ) ) {
             uri = "http://purl.obolibrary.org/obo/OBI_0100051";
             term = "specimen";
@@ -2364,8 +2365,10 @@ public class GeoConverterImpl implements GeoConverter {
             throw new IllegalStateException();
         }
 
-        log.debug( "Category term: " + term + " " );
-        return setCategory( term, uri );
+        if ( log.isDebugEnabled() ) log.debug( "Category term: " + term + " " );
+        c.setCategory( term );
+        c.setCategoryUri( uri );
+        c.setEvidenceCode( GOEvidenceCode.IIA );
 
     }
 
@@ -3157,18 +3160,6 @@ public class GeoConverterImpl implements GeoConverter {
         if ( someDidntMatch ) {
             log.warn( "Samples do not have consistent quantification type names. Last error was: " + lastError );
         }
-    }
-
-    /**
-     * @param mgedTerm
-     * @return
-     */
-    private VocabCharacteristic setCategory( String term, String uri ) {
-        VocabCharacteristic categoryTerm = VocabCharacteristic.Factory.newInstance();
-        categoryTerm.setCategory( term );
-        categoryTerm.setCategoryUri( uri );
-        categoryTerm.setEvidenceCode( GOEvidenceCode.IIA );
-        return categoryTerm;
     }
 
     /**
