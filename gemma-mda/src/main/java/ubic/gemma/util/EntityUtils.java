@@ -61,13 +61,17 @@ public class EntityUtils {
         session.buildLockRequest( LockOptions.NONE ).lock( obj );
     }
 
+    public static Long getId( Object entity ) {
+        return getId( entity, "getId" );
+    }
+
     /**
      * @param entity
      * @return
      */
-    public static Long getId( Object entity ) {
+    public static Long getId( Object entity, String methodName ) {
         try {
-            Method m = entity.getClass().getMethod( "getId", new Class[] {} );
+            Method m = entity.getClass().getMethod( methodName, new Class[] {} );
             return ( Long ) m.invoke( entity, new Object[] {} );
         } catch ( SecurityException e ) {
             throw new RuntimeException( e );
@@ -85,18 +89,33 @@ public class EntityUtils {
     /**
      * Given a set of entities, create a map of their ids to the entities.
      * 
-     * @param entities
+     * @param entities where id is called "id"
      * @return
      */
     public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities ) {
         Map<Long, T> result = new HashMap<Long, T>();
 
         for ( T object : entities ) {
-            result.put( getId( object ), object );
+            result.put( getId( object, "getId" ), object );
         }
 
         return result;
 
+    }
+
+    /**
+     * @param list
+     * @param fieldName e.g. "id"
+     * @return
+     */
+    public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities, String fieldName ) {
+        Map<Long, T> result = new HashMap<Long, T>();
+
+        for ( T object : entities ) {
+            result.put( getId( object, fieldName ), object );
+        }
+
+        return result;
     }
 
     /**
@@ -120,17 +139,16 @@ public class EntityUtils {
     }
 
     /**
-     * Obtain the implementation for a proxy. If target is not an instanceof HibernateProxy, target is returned.
+     * Convenience method for pushing an ID into a collection (encapsulates a common idiom)
      * 
-     * @param target The object to be unproxied.
-     * @return the underlying implementation.
+     * @param gene
+     * @return a collection with one item in it.
      */
-    public static Object getImplementationForProxy( Object target ) {
-        if ( isProxy( target ) ) {
-            HibernateProxy proxy = ( HibernateProxy ) target;
-            return proxy.getHibernateLazyInitializer().getImplementation();
-        }
-        return target;
+    public static Collection<Long> getIds( Object entity ) {
+        Collection<Long> r;
+        r = new HashSet<Long>();
+        r.add( getId( entity ) );
+        return r;
     }
 
     public static Class<?> getImplClass( Class<?> type ) {
@@ -142,6 +160,20 @@ public class EntityUtils {
             // not all our mapped classes end with Impl any more.
             return type;
         }
+    }
+
+    /**
+     * Obtain the implementation for a proxy. If target is not an instanceof HibernateProxy, target is returned.
+     * 
+     * @param target The object to be unproxied.
+     * @return the underlying implementation.
+     */
+    public static Object getImplementationForProxy( Object target ) {
+        if ( isProxy( target ) ) {
+            HibernateProxy proxy = ( HibernateProxy ) target;
+            return proxy.getHibernateLazyInitializer().getImplementation();
+        }
+        return target;
     }
 
     /**
