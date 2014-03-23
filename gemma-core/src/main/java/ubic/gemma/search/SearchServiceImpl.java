@@ -1352,7 +1352,8 @@ public class SearchServiceImpl implements SearchService {
      * Takes a list of ontology terms, and classes of objects of interest to be returned. Looks through the
      * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
      * 
-     * @param clazz Class of objects to restrict the search to (typically ExpressionExperimentImpl.class, for example).
+     * @param data.clazz Class of objects to restrict the search to (typically ExpressionExperimentImpl.class, for
+     *        example).
      * @param terms A list of ontololgy terms to search for
      * @return Collection of search results for the objects owning the found characteristics, where the owner is of
      *         class clazz
@@ -1932,7 +1933,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
-     * @param clazz
+     * @param data.clazz
      * @param characteristic2entity
      * @return
      */
@@ -2105,10 +2106,11 @@ public class SearchServiceImpl implements SearchService {
      * @return List of ids for the entities held by the search results.
      */
     private List<Long> getIds( List<SearchResult> searchResults ) {
-        List<Long> list = new ArrayList<Long>();
-        for ( SearchResult ee : searchResults ) {
-            list.add( ee.getId() );
+        List<Long> list = new ArrayList<>();
+        for ( SearchResult r : searchResults ) {
+            list.add( r.getId() );
         }
+        assert list.size() == searchResults.size();
         return list;
     }
 
@@ -2214,7 +2216,7 @@ public class SearchServiceImpl implements SearchService {
              */
             for ( Class<? extends Object> clazz : results.keySet() ) {
                 List<SearchResult> r = results.get( clazz );
-                if ( r.size() == 0 ) continue;
+                if ( r.isEmpty() ) continue;
                 Map<Long, SearchResult> rMap = new HashMap<Long, SearchResult>();
                 for ( SearchResult searchResult : r ) {
                     if ( !rMap.containsKey( searchResult.getId() )

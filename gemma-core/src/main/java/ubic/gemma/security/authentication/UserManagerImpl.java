@@ -18,6 +18,15 @@
  */
 package ubic.gemma.security.authentication;
 
+import gemma.gsec.AuthorityConstants;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -46,10 +55,6 @@ import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-
-import gemma.gsec.AuthorityConstants;
-
-import java.util.*;
 
 /**
  * Implementation for Spring Security, plus some other handy methods.
