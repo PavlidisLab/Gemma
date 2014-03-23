@@ -14,6 +14,13 @@
  */
 package ubic.gemma.tasks.maintenance;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.model.Securable;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -22,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -35,13 +43,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.tasks.AbstractTask;
-
-import gemma.gsec.SecurityService;
-import gemma.gsec.model.Securable;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
 
 /**
  * @author paul
@@ -66,17 +67,17 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
     private SecurityService securityService;
 
     @Override
-    public void setTaskCommand( CharacteristicUpdateCommand command ) {
-        assert command != null;
-        super.setTaskCommand( command );
-    }
-
-    @Override
     public TaskResult execute() {
         if ( taskCommand.isRemove() ) {
             return this.doRemove();
         }
         return this.doUpdate();
+    }
+
+    @Override
+    public void setTaskCommand( CharacteristicUpdateCommand command ) {
+        assert command != null;
+        super.setTaskCommand( command );
     }
 
     private void addToParent( Characteristic c, Object parent ) {
@@ -278,12 +279,11 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 addToParent( vcFromDatabase, parent );
                 cFromDatabase = vcFromDatabase;
             } else if ( vcFromClient == null && vcFromDatabase != null ) {
+                // don't copy AuditTrail or Status to avoid cascade error... vcFromDatabase.getAuditTrail()
                 cFromDatabase = characteristicService.create( Characteristic.Factory.newInstance(
-                        vcFromDatabase.getValue(), vcFromDatabase.getCategory(), null, null, vcFromDatabase.getName(),
-                        vcFromDatabase.getDescription() // don't copy AuditTrail or Status to avoid
-                        // cascade
-                        // error... vcFromDatabase.getAuditTrail()
-                        , vcFromDatabase.getEvidenceCode() ) );
+                        vcFromDatabase.getName(), vcFromDatabase.getDescription(), null, null,
+                        vcFromDatabase.getValue(), vcFromDatabase.getCategory(), vcFromDatabase.getCategoryUri(),
+                        vcFromDatabase.getEvidenceCode() ) );
                 removeFromParent( vcFromDatabase, parent );
                 characteristicService.delete( vcFromDatabase );
                 addToParent( cFromDatabase, parent );
