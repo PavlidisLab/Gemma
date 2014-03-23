@@ -149,8 +149,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .hasArg()
                 .withDescription(
                         "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
-                                + "Choices are : TWA (two-way anova with interaction), "
-                                + "TWANI (two-way ANOVA without interactions), OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
+                                + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
+                                + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
                                 + " GENERICLM (generic LM, no interactions)" ).create( "type" );
 
         super.addOption( analysisType );

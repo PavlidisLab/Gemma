@@ -35,6 +35,18 @@ import ubic.gemma.util.AbstractCLIContextCLI;
  */
 public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        BibRefUpdaterCli e = new BibRefUpdaterCli();
+        Exception ex = e.doWork( args );
+        if ( ex != null ) {
+            log.fatal( ex, ex );
+        }
+
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -76,18 +88,6 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
         }
 
         return null;
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        BibRefUpdaterCli e = new BibRefUpdaterCli();
-        Exception ex = e.doWork( args );
-        if ( ex != null ) {
-            log.fatal( ex, ex );
-        }
-
     }
 
 }

@@ -42,7 +42,10 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        super.addOption( OptionBuilder.isRequired().withLongOpt( "file" ).hasArg().create( 'f' ) );
+        OptionBuilder.isRequired();
+        OptionBuilder.withLongOpt( "file" );
+        OptionBuilder.hasArg();
+        super.addOption( OptionBuilder.create( 'f' ) );
     }
 
     @Override

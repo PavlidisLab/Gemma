@@ -18,13 +18,14 @@
  */
 package ubic.gemma.apps;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import ubic.gemma.analysis.report.DatabaseViewGenerator;
-import ubic.gemma.util.AbstractCLIContextCLI;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+
+import ubic.gemma.analysis.report.DatabaseViewGenerator;
+import ubic.gemma.util.AbstractCLIContextCLI;
 
 /**
  * Simple driver of DatabaseViewGenerator. Developed to support NIF and other external data consumers.
@@ -64,23 +65,26 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     protected void buildOptions() {
         super.buildStandardOptions();
 
-        Option datasetSummary = OptionBuilder
-                .withDescription( "Will generate a zip file containing a summary of all accessible datasets in gemma" )
-                .withLongOpt( "dataset" ).create( 'd' );
+        OptionBuilder
+                .withDescription( "Will generate a zip file containing a summary of all accessible datasets in gemma" );
+        OptionBuilder.withLongOpt( "dataset" );
+        Option datasetSummary = OptionBuilder.create( 'd' );
 
-        Option datasetTissueSummary = OptionBuilder
-                .withDescription(
-                        "Will generate a zip file containing a summary of all the tissues in accesable datasets" )
-                .withLongOpt( "tissue" ).create( 't' );
+        OptionBuilder
+                .withDescription( "Will generate a zip file containing a summary of all the tissues in accesable datasets" );
+        OptionBuilder.withLongOpt( "tissue" );
+        Option datasetTissueSummary = OptionBuilder.create( 't' );
 
-        Option diffExpSummary = OptionBuilder
-                .withDescription(
-                        "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" )
-                .withLongOpt( "diffexpression" ).create( 'x' );
+        OptionBuilder
+                .withDescription( "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" );
+        OptionBuilder.withLongOpt( "diffexpression" );
+        Option diffExpSummary = OptionBuilder.create( 'x' );
 
-        Option limitOpt = OptionBuilder.hasArg().withArgName( "Limit number of datasets" )
-                .withDescription( "will impose a limit on how many datasets to process" ).withLongOpt( "limit" )
-                .create( 'l' );
+        OptionBuilder.hasArg();
+        OptionBuilder.withArgName( "Limit number of datasets" );
+        OptionBuilder.withDescription( "will impose a limit on how many datasets to process" );
+        OptionBuilder.withLongOpt( "limit" );
+        Option limitOpt = OptionBuilder.create( 'l' );
 
         addOption( datasetSummary );
         addOption( datasetTissueSummary );
