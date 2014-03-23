@@ -69,8 +69,8 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
 
             for ( int j = 0; j < 3; j++ ) {
                 FactorValue fv = FactorValue.Factory.newInstance();
-                fv.setValue( "fv" + j * ( i + 1 ) );
-                fv.setId( ( long ) j * ( i + 1 ) );
+                fv.setValue( "fv" + ( j + 1 ) * ( i + 1 ) );
+                fv.setId( ( long ) ( j + 1 ) * ( i + 1 ) );
                 fv.setExperimentalFactor( ef );
                 ef.getFactorValues().add( fv );
 
