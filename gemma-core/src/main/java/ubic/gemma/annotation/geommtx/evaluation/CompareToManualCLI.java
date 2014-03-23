@@ -932,9 +932,8 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     private void saveHumanMappingsToDisk() {
         log.info( "Saved mappings" );
-        try {
-            ObjectOutputStream o = new ObjectOutputStream( new FileOutputStream(
-                    SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );
+        try (ObjectOutputStream o = new ObjectOutputStream( new FileOutputStream(
+                SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) )) {
             o.writeObject( manualURLs );
             o.close();
 
