@@ -183,8 +183,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     log.debug( "No NCBI ID for " + gene + ", skipping" );
                     continue;
                 }
-                if ( existingSymbolmap.containsKey( gene.getNcbiGeneId() ) ) {
-                    csForGene = existingSymbolmap.get( gene.getNcbiGeneId() );
+                if ( existingSymbolmap.containsKey( gene.getNcbiGeneId().toString() ) ) {
+                    csForGene = existingSymbolmap.get( gene.getNcbiGeneId().toString() );
                 }
             } else if ( useEnsemblIds ) {
                 if ( gene.getEnsemblId() == null ) {
@@ -411,7 +411,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
      */
     private Map<Gene, CompositeSequence> getExistingGeneMap( ArrayDesign arrayDesign ) {
 
-        Map<Gene, CompositeSequence> existingElements = new HashMap<Gene, CompositeSequence>();
+        Map<Gene, CompositeSequence> existingElements = new HashMap<>();
 
         if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
 
@@ -451,7 +451,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
      */
     private Map<String, CompositeSequence> getExistingProbeNameMap( ArrayDesign arrayDesign ) {
 
-        Map<String, CompositeSequence> existingElements = new HashMap<String, CompositeSequence>();
+        Map<String, CompositeSequence> existingElements = new HashMap<>();
 
         if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
 
