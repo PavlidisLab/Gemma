@@ -25,7 +25,7 @@ Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
          var g = d.replace("_", ":");
          // FIXME make this a separate icon, make it clear it goes out; or make it something internal that is more
          // useful.
-         return "<a target='_blank' href='http://amigo.geneontology.org/cgi-bin/amigo/go.cgi?view=details&query=" + g + "'>" + g + "</a>";
+         return "<a target='_blank' href='http://amigo.geneontology.org/amigo/term/" + g + "'>" + g + "</a>";
       },
 
       initComponent : function() {
