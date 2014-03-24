@@ -1814,7 +1814,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
-                        log.error( "A valueUri found in the database was not found in the ontology; This can happen when a valueUri is updated in the ontology; valueUri: "
+                        log.warn( "A valueUri found in the database was not found in the ontology; This can happen when a valueUri is updated in the ontology; valueUri: "
                                 + valueUri );
                     } else {
                         throw new RuntimeException( "Ontologies are not fully loaded yet, try again soon ("
