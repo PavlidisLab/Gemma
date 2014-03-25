@@ -72,7 +72,8 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     /** child term from a root */
     private boolean child = false;
-    private Long id = null; // MUST be initialized with null or have equality problems in javascript.
+    private Long id = null; // MUST be initialized with null or have equality
+                            // problems in javascript.
 
     /** what Ontology uses this term */
     private String ontologyUsed = null;
@@ -101,18 +102,13 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
         this.id = characteristic.getId();
+        this.urlId = parseUrlId( valueUri );
     }
 
     public CharacteristicValueObject( String valueUri ) {
         super();
         this.valueUri = valueUri;
-        if ( this.valueUri != null ) {
-            if ( !this.valueUri.equals( "" ) && this.valueUri.indexOf( "#" ) > 0 ) {
-                this.urlId = this.valueUri.substring( this.valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
-            } else if ( this.valueUri.lastIndexOf( "/" ) > 0 ) {
-                this.urlId = this.valueUri.substring( this.valueUri.lastIndexOf( "/" ) + 1, this.valueUri.length() );
-            }
-        }
+        this.urlId = parseUrlId( valueUri );
     }
 
     public CharacteristicValueObject( String value, String valueUri ) {
@@ -125,6 +121,18 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.category = category;
         this.categoryUri = categoryUri;
         this.value = value;
+    }
+
+    private String parseUrlId( String valueUri ) {
+        String urlId = "";
+        if ( valueUri != null ) {
+            if ( !valueUri.equals( "" ) && valueUri.indexOf( "#" ) > 0 ) {
+                urlId = valueUri.substring( valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
+            } else if ( valueUri.lastIndexOf( "/" ) > 0 ) {
+                urlId = valueUri.substring( valueUri.lastIndexOf( "/" ) + 1, this.valueUri.length() );
+            }
+        }
+        return urlId;
     }
 
     @Override
