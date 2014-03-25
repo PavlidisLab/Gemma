@@ -3,7 +3,7 @@
 <title>Home</title>
 
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/ajax/analysisSearch/AnalysisResultsSearchNonWidget.js' />
+<jwr:script src='/scripts/app/AnalysisResultsSearchNonWidget.js' />
 <jwr:script src='/scripts/app/generalSearchSimple.js' />
 
 <jwr:script src='/scripts/scriptsnonjawr/arbor.js' />
