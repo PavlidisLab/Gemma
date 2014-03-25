@@ -19,6 +19,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.logging.LogFactory;
+
+import org.apache.commons.logging.Log;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 
@@ -90,6 +93,8 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     private String valueUri = null;
 
+    private static Log log = LogFactory.getLog( CharacteristicValueObject.class );
+
     public CharacteristicValueObject() {
         super();
     }
@@ -109,6 +114,13 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         super();
         this.valueUri = valueUri;
         this.urlId = parseUrlId( valueUri );
+
+        try {
+            // we don't always populate from the database, give it an id anyway
+            this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
+        } catch ( Exception e ) {
+            log.error( "Problem making an id for Phenotype: " + this.urlId );
+        }
     }
 
     public CharacteristicValueObject( String value, String valueUri ) {
