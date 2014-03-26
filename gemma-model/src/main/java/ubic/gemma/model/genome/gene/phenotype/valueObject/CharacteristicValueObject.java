@@ -115,11 +115,13 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.valueUri = valueUri;
         this.urlId = parseUrlId( valueUri );
 
-        try {
-            // we don't always populate from the database, give it an id anyway
-            this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
-        } catch ( Exception e ) {
-            log.error( "Problem making an id for Phenotype: " + this.urlId );
+        // we don't always populate from the database, attemt to create an id using the valueURI
+        if ( this.urlId != null ) {
+            try {
+                this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
+            } catch ( Exception e ) {
+                log.error( "Problem making an id for Phenotype: " + this.urlId );
+            }
         }
     }
 
