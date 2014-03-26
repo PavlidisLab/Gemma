@@ -41,7 +41,7 @@ public class BibliographicPhenotypesValueObject implements Comparable<Bibliograp
         this.geneName = phenotypeAssociation.getGene().getName();
         this.evidenceId = phenotypeAssociation.getId();
         for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-            this.phenotypesValues.add( new CharacteristicValueObject( ( VocabCharacteristic ) cha ) );
+            this.phenotypesValues.add( new CharacteristicValueObject( cha ) );
         }
     }
 
