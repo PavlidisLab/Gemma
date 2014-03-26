@@ -110,7 +110,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
-            CharacteristicValueObject characteristicVO = new CharacteristicValueObject( ( VocabCharacteristicImpl ) c );
+            CharacteristicValueObject characteristicVO = new CharacteristicValueObject( c );
             characteristicVO.setId( c.getId() );
             this.phenotypes.add( characteristicVO );
         }
