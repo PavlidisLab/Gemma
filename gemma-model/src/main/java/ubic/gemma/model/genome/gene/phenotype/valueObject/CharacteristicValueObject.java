@@ -116,7 +116,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.urlId = parseUrlId( valueUri );
 
         // we don't always populate from the database, attemt to create an id using the valueURI
-        if ( this.urlId != null ) {
+        if ( this.urlId != null && !this.urlId.trim().isEmpty() ) {
             try {
                 this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
             } catch ( Exception e ) {
