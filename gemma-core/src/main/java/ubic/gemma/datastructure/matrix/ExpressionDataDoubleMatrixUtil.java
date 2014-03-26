@@ -40,6 +40,11 @@ import cern.colt.matrix.DoubleMatrix1D;
  */
 public class ExpressionDataDoubleMatrixUtil {
 
+    /**
+     * 
+     */
+    private static final int LARGEST_EXPECTED_LOGGED_VALUE = 20;
+
     private static final double LOGARITHM_BASE = 2.0;
 
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
@@ -102,7 +107,7 @@ public class ExpressionDataDoubleMatrixUtil {
     /**
      * @param quantitationType
      * @param namedMatrix
-     * @return
+     * @return ScaleType
      * @see ExpressionExperimentFilter for a related implementation.
      */
     public static ScaleType findScale( QuantitationType quantitationType,
@@ -125,18 +130,21 @@ public class ExpressionDataDoubleMatrixUtil {
             }
         }
 
+        if ( namedMatrix.rows() == 0 || namedMatrix.columns() == 0 ) {
+            throw new UnknownLogScaleException( "Cannot figure out scale without data (" + quantitationType + ")" );
+        }
+
         for ( int i = 0; i < namedMatrix.rows(); i++ ) {
             for ( int j = 0; j < namedMatrix.columns(); j++ ) {
                 double v = namedMatrix.get( i, j );
-                if ( v > 20 ) {
+                if ( v > LARGEST_EXPECTED_LOGGED_VALUE ) {
                     log.debug( "Data has large values, doesn't look log transformed" );
                     return ScaleType.LINEAR;
                 }
             }
         }
 
-        throw new UnknownLogScaleException( "Data look log tranformed, not sure about base (" + quantitationType
-                + ")" );
+        throw new UnknownLogScaleException( "Data look log tranformed, not sure about base (" + quantitationType + ")" );
 
     }
 
