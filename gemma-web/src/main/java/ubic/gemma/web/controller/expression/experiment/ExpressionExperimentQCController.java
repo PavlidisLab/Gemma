@@ -100,7 +100,7 @@ import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -118,6 +118,7 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.doublealgo.Formatter;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
+//
 /**
  * @author paul
  * @version $Id$
@@ -168,7 +169,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
-    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
+    private CoexpressionAnalysisService coexpressionAnalysisService;
 
     /**
      * @param id
@@ -649,7 +650,7 @@ public class ExpressionExperimentQCController extends BaseController {
      *         this can be removed
      */
     private XYSeries getCorrelHist( ExpressionExperiment ee ) throws FileNotFoundException, IOException {
-        CoexpCorrelationDistribution coexpCorrelationDistribution = probeCoexpressionAnalysisService
+        CoexpCorrelationDistribution coexpCorrelationDistribution = coexpressionAnalysisService
                 .getCoexpCorrelationDistribution( ee );
 
         if ( coexpCorrelationDistribution == null ) {
@@ -870,7 +871,7 @@ public class ExpressionExperimentQCController extends BaseController {
         coexpd.setBinCounts( bytes );
 
         try {
-            probeCoexpressionAnalysisService.addCoexpCorrelationDistribution( ee, coexpd );
+            coexpressionAnalysisService.addCoexpCorrelationDistribution( ee, coexpd );
 
             if ( file.delete() ) {
                 log.info( "Old file deleted" );
