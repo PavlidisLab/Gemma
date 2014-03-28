@@ -34,92 +34,90 @@ import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * Class to test BioMartEnsemblNcbiObjectGeneration. 
- * Simple class but there is some logic connected to the many to many relationship between
- * ensembl genes and entrez genes and map manipulation.
- * Using awk on the file validate the numbers.
+ * Class to test BioMartEnsemblNcbiObjectGeneration. Simple class but there is some logic connected to the many to many
+ * relationship between ensembl genes and entrez genes and map manipulation. Using awk on the file validate the numbers.
  * 
  * @author ldonnison
  * @version $Id$
  */
-public class BioMartEnsemblNcbiObjectGeneratorTest  {
+public class BioMartEnsemblNcbiObjectGeneratorTest {
     BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = null;
-    Taxon taxon =null;
-    Collection<Taxon> taxa =null;
+    Taxon taxon = null;
+    Collection<Taxon> taxa = null;
     File taxonBiomartFile = null;
-    
+
     @Before
-    public void setUp()  {      
-      biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator(  );       
-      taxon = Taxon.Factory.newInstance(  );
-      taxon.setIsGenesUsable( true );
-      taxon.setNcbiId( 10090 );
-      taxon.setScientificName( "Mus musculus" );
-      taxon.setIsSpecies( true );
-      taxa = new ArrayList<Taxon>();
-      taxa.add( taxon );   
-      
-      
-      String fileNameBiomartmouse = "/data/loader/protein/biomart/biomartmmusculusShort.txt";   
-      URL fileNameBiomartmouseURL = this.getClass().getResource(fileNameBiomartmouse);
-      taxonBiomartFile = new File(fileNameBiomartmouseURL.getFile());      
-      
+    public void setUp() {
+        biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
+        taxon = Taxon.Factory.newInstance();
+        taxon.setIsGenesUsable( true );
+        taxon.setNcbiId( 10090 );
+        taxon.setScientificName( "Mus musculus" );
+        taxon.setIsSpecies( true );
+        taxa = new ArrayList<Taxon>();
+        taxa.add( taxon );
+
+        String fileNameBiomartmouse = "/data/loader/protein/biomart/biomartmmusculusShort.txt";
+        URL fileNameBiomartmouseURL = this.getClass().getResource( fileNameBiomartmouse );
+        taxonBiomartFile = new File( fileNameBiomartmouseURL.getFile() );
+
     }
 
     /**
-     * Tests that given a taxon biomart file a BioMartEnsembleNcbi can be returned
-     * and that the genes are correctly mapped. Could be done through parser but
-     * thought do a quick test here. AWk commands are given to help give the counts to check validity of the numbers
+     * Tests that given a taxon biomart file a BioMartEnsembleNcbi can be returned and that the genes are correctly
+     * mapped. Could be done through parser but thought do a quick test here. AWk commands are given to help give the
+     * counts to check validity of the numbers
      */
     @Test
-    public void testGenerate() {           
-      
-        try{
+    public void testGenerate() {
+
+        try {
             biomartEnsemblNcbiObjectGenerator.setBioMartFileName( taxonBiomartFile );
-            Map<String,Ensembl2NcbiValueObject> map = biomartEnsemblNcbiObjectGenerator.generate( taxa );           
-          
-            long counterEnsemblToManyGeneids =0;
-            long counterEnsemblToOneGeneids =0;
-            long counterNumberGenes =0;
-            long countHowManyNoGenes =0;
-            // awk -F'\t' 'length($3)>1' test.txt |  awk -F'\t' '{print $4}' | uniq |sort | wc -l -1  
-            //there are 510 records which have one or more gene mapping
-            assertEquals(510, map.keySet().size());
-            for(Ensembl2NcbiValueObject biomart: map.values()){
-                //count how many have duplicate genes
-                if(biomart.getEntrezgenes().size()>1){
-                    counterEnsemblToManyGeneids++;                   
+            Map<String, Ensembl2NcbiValueObject> map = biomartEnsemblNcbiObjectGenerator.generate( taxa );
+
+            long counterEnsemblToManyGeneids = 0;
+            long counterEnsemblToOneGeneids = 0;
+            long counterNumberGenes = 0;
+            long countHowManyNoGenes = 0;
+            // awk -F'\t' 'length($3)>1' test.txt | awk -F'\t' '{print $4}' | uniq |sort | wc -l -1
+            // there are 510 records which have one or more gene mapping
+            assertEquals( 510, map.keySet().size() );
+            for ( Ensembl2NcbiValueObject biomart : map.values() ) {
+                // count how many have duplicate genes
+                if ( biomart.getEntrezgenes().size() > 1 ) {
+                    counterEnsemblToManyGeneids++;
                 }
-                //count how many 1
-                else if(biomart.getEntrezgenes().size() ==1){
+                // count how many 1
+                else if ( biomart.getEntrezgenes().size() == 1 ) {
                     counterEnsemblToOneGeneids++;
-                }//how many 0- should be null
-                else{
+                }// how many 0- should be null
+                else {
                     countHowManyNoGenes++;
                 }
-                
-                //count how many genes in total
-                for(String geneE: biomart.getEntrezgenes()){
-                    if(!geneE.isEmpty()){
+
+                // count how many genes in total
+                for ( String geneE : biomart.getEntrezgenes() ) {
+                    if ( !geneE.isEmpty() ) {
                         counterNumberGenes++;
                     }
                 }
-                
+
             }
-            //awk -F'\t' 'length($3)>1' test.txt | awk -F"\t" '{if (a[$4]) { print $4 } a[$4] = $0}'  | sort | uniq | wc -l
-            assertEquals(75, counterEnsemblToManyGeneids);
-            //awk -F'\t' 'length($3)>1' test.txt | awk -F"\t" '{if (a[$4]==null) { print $4 } a[$4] = $0}'  | sort | uniq | wc -l -75
-            assertEquals(435, counterEnsemblToOneGeneids );
-            //there should be none with no genes as they are filtered out
-            assertEquals(0, countHowManyNoGenes );
-            //test the file   awk -F'\t' 'length($3)>1' test.txt |  awk -F'\t' '{print $3}' | uniq |sort | wc -l
-            assertEquals(638, counterNumberGenes) ;
-        }catch(Exception e){           
+            // awk -F'\t' 'length($3)>1' test.txt | awk -F"\t" '{if (a[$4]) { print $4 } a[$4] = $0}' | sort | uniq | wc
+            // -l
+            assertEquals( 75, counterEnsemblToManyGeneids );
+            // awk -F'\t' 'length($3)>1' test.txt | awk -F"\t" '{if (a[$4]==null) { print $4 } a[$4] = $0}' | sort |
+            // uniq | wc -l -75
+            assertEquals( 435, counterEnsemblToOneGeneids );
+            // there should be none with no genes as they are filtered out
+            assertEquals( 0, countHowManyNoGenes );
+            // test the file awk -F'\t' 'length($3)>1' test.txt | awk -F'\t' '{print $3}' | uniq |sort | wc -l
+            assertEquals( 638, counterNumberGenes );
+        } catch ( Exception e ) {
             e.printStackTrace();
             fail();
-        }       
-        
-    }          
- 
+        }
+
+    }
 
 }

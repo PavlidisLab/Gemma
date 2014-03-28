@@ -29,8 +29,14 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  */
 public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implements SecuredChild {
 
+    /**
+     * 
+     */
     private BioAssaySet experimentAnalyzed;
 
+    /**
+     * # of genes etc.
+     */
     private Integer numberOfElementsAnalyzed;
 
     /**

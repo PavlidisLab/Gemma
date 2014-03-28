@@ -21,7 +21,7 @@ package ubic.gemma.analysis.expression.coexpression.links;
 import java.io.File;
 import java.io.Serializable;
 
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.common.protocol.Protocol;
 
 /**
@@ -42,13 +42,13 @@ public class LinkAnalysisConfig implements Serializable {
      * dual-threshold, or choose 'fwe' or 'cdfcut' to use only one of those.
      */
     public enum SingularThreshold {
-        none, fwe, cdfcut
+        cdfcut, fwe, none
     }
-
-    private static final long serialVersionUID = 1L;
 
     // probes with more links than this are ignored. Zero means this doesn't do anything.
     public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = 0;
+
+    private static final long serialVersionUID = 1L;
 
     private boolean absoluteValue = false;
 
@@ -57,6 +57,8 @@ public class LinkAnalysisConfig implements Serializable {
     // what proportion of links to keep (possibly subject to FWE statistical significance threshold). 1.0 means keep
     // everything. 0.01 means 1%.
     private double cdfCut = 0.01;
+
+    private boolean checkCorrelationDistribution = true;
 
     // only used for internal cache during calculations.
     private double correlationCacheThreshold = 0.8;
@@ -72,12 +74,22 @@ public class LinkAnalysisConfig implements Serializable {
 
     private String metric = "pearson"; // spearman
 
+    /**
+     * How many samples must be present in a correlation pair to keep the data, taking into account missing values.
+     */
+    private int minNumPresent = AbstractMatrixRowPairAnalysis.HARD_LIMIT_MIN_NUM_USED;
+
     private NormalizationMethod normalizationMethod = NormalizationMethod.none;
 
     /**
      * Remove negative correlated values at the end.
      */
     private boolean omitNegLinks = false;
+
+    /**
+     * Only used if textOut = true; if null, just write to stdout.
+     */
+    private File outputFile = null;
 
     /**
      * Probes with more than this many links are removed. Zero means no action is taken.
@@ -95,11 +107,6 @@ public class LinkAnalysisConfig implements Serializable {
     private boolean textOut;
 
     private boolean upperCdfCutUsed = false;
-
-    /**
-     * Only used if textOut = true; if null, just write to stdout.
-     */
-    private File outputFile = null;
 
     private double upperTailCut = 0.01;
 
@@ -127,6 +134,10 @@ public class LinkAnalysisConfig implements Serializable {
 
     public String getMetric() {
         return metric;
+    }
+
+    public int getMinNumPresent() {
+        return minNumPresent;
     }
 
     /**
@@ -161,6 +172,10 @@ public class LinkAnalysisConfig implements Serializable {
 
     public boolean isAbsoluteValue() {
         return absoluteValue;
+    }
+
+    public boolean isCheckCorrelationDistribution() {
+        return this.checkCorrelationDistribution;
     }
 
     /**
@@ -216,6 +231,10 @@ public class LinkAnalysisConfig implements Serializable {
         this.cdfCut = cdfCut;
     }
 
+    public void setCheckCorrelationDistribution( boolean checkCorrelationDistribution ) {
+        this.checkCorrelationDistribution = checkCorrelationDistribution;
+    }
+
     public void setCorrelationCacheThreshold( double correlationCacheThreshold ) {
         this.correlationCacheThreshold = correlationCacheThreshold;
     }
@@ -242,6 +261,10 @@ public class LinkAnalysisConfig implements Serializable {
     public void setMetric( String metric ) {
         checkValidMetric( metric );
         this.metric = metric;
+    }
+
+    public void setMinNumPresent( int minNumPresent ) {
+        this.minNumPresent = minNumPresent;
     }
 
     /**
@@ -315,8 +338,8 @@ public class LinkAnalysisConfig implements Serializable {
     /**
      * @return representation of this analysis (not completely filled in - only the basic parameters)
      */
-    public ProbeCoexpressionAnalysis toAnalysis() {
-        ProbeCoexpressionAnalysis analysis = ProbeCoexpressionAnalysis.Factory.newInstance();
+    public CoexpressionAnalysis toAnalysis() {
+        CoexpressionAnalysis analysis = CoexpressionAnalysis.Factory.newInstance();
         Protocol protocol = Protocol.Factory.newInstance();
         protocol.setName( "Link analysis settings" );
         protocol.setDescription( this.toString() );

@@ -13,178 +13,202 @@
  * specific language governing permissions and limitations under the License.
  * 
  */
-Ext.namespace('Gemma');
-
+Ext.namespace( 'Gemma' );
+var Color = net.brehaut.Color;
 Gemma.CytoscapePanelUtil = {};
 
-Gemma.CytoscapePanelUtil.ttSubstring = function (tString) {
+/**
+ * For tool tips, abbreviate.
+ */
+Gemma.CytoscapePanelUtil.ttSubstring = function( tString ) {
 
-    if (!tString) {
-        return null;
-    }
+   if ( !tString ) {
+      return null;
+   }
 
-    var maxLength = 60;
-
-    if (tString.length > maxLength) {
-        return tString.substr(0, maxLength) + "...";
-    }
-
-    return tString;
+   var maxLength = 60;
+   var endOnWord = true;
+   return Ext.util.Format.ellipsis( tString, maxLength, endOnWord );
 };
 
-
-// inputs should be two node degrees between 0 and 1, if
-// null(missing data) return 1 as nodes/edges with 1 fade
-// into the background
-Gemma.CytoscapePanelUtil.getMaxWithNull = function (n1, n2) {
-
-    // missing data check
-    if (n1 == null || n2 == null) {
-        return 1;
-    }
-
-    return Math.max(n1, n2);
-
+/**
+ * 
+ */
+Gemma.CytoscapePanelUtil.getMaxWithNull = function( n1, n2 ) {
+   // missing data check
+   if ( n1 === null || n2 === null ) {
+      return 1.0;
+   }
+   return Math.max( n1, n2 );
 };
 
-Gemma.CytoscapePanelUtil.decimalPlaceRounder = function (number) {
-
-    if (number == null) {
-        return null;
-    }
-    return Ext.util.Format.round(number, 4);
-
+Gemma.CytoscapePanelUtil.decimalPlaceRounder = function( number ) {
+   if ( number == null ) {
+      return null;
+   }
+   return Ext.util.Format.round( number, 4 );
 };
 
-Gemma.CytoscapePanelUtil.nodeDegreeOpacityMapper = function (nodeDegree) {
-	
+/**
+ * Given a node degree rank, decide what color it should be (hex value)
+ * 
+ * @param nodeDegree,
+ *           a relative ranking such that low values represent low node degrees.
+ * @param type
+ *           either for nodes, either 'node' or 'overlay', or for edges one of ['positive', 'negative', 'both'].
+ */
+Gemma.CytoscapePanelUtil.nodeDegreeColorMapper = function( nodeDegree, type ) {
 
-    // no data for some genes
-    if (nodeDegree == null) {
-        return Gemma.CytoscapeSettings.nodeDegreeOpacity.lightest;
-    }
-    
-    if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest) {
-        return Gemma.CytoscapeSettings.nodeDegreeOpacity.lightest;
-    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light) {
-        return Gemma.CytoscapeSettings.nodeDegreeOpacity.light;
-    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.moderate) {
-        return Gemma.CytoscapeSettings.nodeDegreeOpacity.moderate;
-    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark) {
-        return Gemma.CytoscapeSettings.nodeDegreeOpacity.dark;
-    } else {
-    	//darkest
-        return Gemma.CytoscapeSettings.nodeDegreeOpacity.darkest;
-    }
+   // no data for some genes
+   if ( nodeDegree == null ) {
+      return Gemma.CytoscapeSettings.nodeDegreeColor.lightest;
+   }
 
-};
+   var base = {};
+   var blend = Color( "rgb(255,255,255)" );
 
-Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
-	
+   // figure out base colour
+   if ( type === 'node' ) {
+      base = Color( Gemma.CytoscapeSettings.nodeColor );
+   } else if ( type === 'overlay' ) {
+      // not used yet - might be okay to just always use the overlay as is
+      base = Color( Gemma.CytoscapeSettings.nodeColorOverlay );
+   } else if ( type === 'positive' ) {
+      base = Color( Gemma.CytoscapeSettings.supportColorPositive );
+   } else if ( type === 'negative' ) {
+      base = Color( Gemma.CytoscapeSettings.supportColorNegative );
+   } else if ( type === 'both' ) {
+      base = Color( Gemma.CytoscapeSettings.supportColorBoth );
+   } else {
+      // assume the worst.
+      return Gemma.CytoscapeSettings.nodeDegreeColor.lightest;
+   }
 
-    // no data for some genes
-    if (nodeDegree == null) {
-        return 'not defined';
-    }
-
-
-    if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest) {
-        return Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name;
-    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light) {
-        return Gemma.CytoscapeSettings.nodeDegreeColor.light.name;
-    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.moderate) {
-        return Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name;
-    } else if (nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark) {
-        return Gemma.CytoscapeSettings.nodeDegreeColor.dark.name;
-    } else {
-        return Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name;
-    }
-    
+   // return tint - so worst rank gets lightest color; low values are "good". The nodeDegreeColors are alpha values
+   // we're going to use.
+   if ( nodeDegree < Gemma.CytoscapeSettings.nodeDegreeValue.lowest ) {
+      return base.toCSS();
+   } else if ( nodeDegree < Gemma.CytoscapeSettings.nodeDegreeValue.low ) {
+      return base.blend( blend, Gemma.CytoscapeSettings.nodeDegreeColor.dark ).toCSS();
+   } else if ( nodeDegree < Gemma.CytoscapeSettings.nodeDegreeValue.moderage ) {
+      return base.blend( blend, Gemma.CytoscapeSettings.nodeDegreeColor.moderate ).toCSS();
+   } else if ( nodeDegree < Gemma.CytoscapeSettings.nodeDegreeValue.high ) {
+      return base.blend( blend, Gemma.CytoscapeSettings.nodeDegreeColor.light ).toCSS();
+   } else { // highest
+      return base.blend( blend, Gemma.CytoscapeSettings.nodeDegreeColor.lightest ).toCSS();
+   }
 
 };
 
-Gemma.CytoscapePanelUtil.restrictResultsStringency = function (displayStringency) {
-    if (displayStringency > 5) {
-        return displayStringency - Math.round(displayStringency / 4);
-    }
+// Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function( nodeDegree ) {
+//
+// // no data for some genes
+// if ( nodeDegree == null ) {
+// return 'not defined';
+// }
+//
+// if ( nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest ) {
+// return Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name;
+// } else if ( nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light ) {
+// return Gemma.CytoscapeSettings.nodeDegreeColor.light.name;
+// } else if ( nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.moderate ) {
+// return Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name;
+// } else if ( nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark ) {
+// return Gemma.CytoscapeSettings.nodeDegreeColor.dark.name;
+// } else {
+// return Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name;
+// }
+//
+// };
 
-    return 2;
+/**
+ * @param {int}
+ *           displayStringency
+ */
+Gemma.CytoscapePanelUtil.restrictResultsStringency = function( displayStringency ) {
+   if ( displayStringency > 5 ) {
+      return displayStringency - Math.round( displayStringency / 4 );
+   }
+   return Gemma.MIN_STRINGENCY;
 };
 
-Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand = function (csc) {
-    var newCsc = {};
+/**
+ * 
+ */
+Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand = function( csc ) {
+   var newCsc = {};
 
-    Ext.apply( newCsc, {
-        geneIds: csc.geneIds,
-        eeIds: csc.eeIds,
-        stringency: Gemma.CytoscapePanelUtil.restrictResultsStringency(csc.displayStringency),
-        displayStringency: csc.displayStringency,
-        forceProbeLevelSearch: csc.forceProbeLevelSearch,
-        useMyDatasets: csc.useMyDatasets,
-        queryGenesOnly: csc.queryGenesOnly,
-        taxonId: csc.taxonId
-    });
+   Ext.apply( newCsc, {
+      geneIds : csc.geneIds,
+      eeIds : csc.eeIds,
+      stringency : Gemma.CytoscapePanelUtil.restrictResultsStringency( csc.displayStringency ),
+      displayStringency : csc.displayStringency,
+      useMyDatasets : csc.useMyDatasets,
+      queryGenesOnly : csc.queryGenesOnly,
+      taxonId : csc.taxonId
+   } );
 
-    return newCsc;
+   return newCsc;
 };
 
-Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function (searchResults) {
-    function meetsStringency (coexPair, stringency) {
-        return coexPair.posSupp >= stringency || coexPair.negSupp >= stringency;
-    }
+/**
+ * 
+ */
+Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function( searchResults ) {
+   function meetsStringency( coexPair, stringency ) {
+      return coexPair.posSupp >= stringency || coexPair.negSupp >= stringency;
+   }
 
-    function absent(element, array) {
-        return array.indexOf(element) === -1;
-    }
+   function absent( element, array ) {
+      return array.indexOf( element ) === -1;
+   }
 
-    var originalQueryGeneIds = searchResults.getQueryGeneIds();
-    var originalCoexpressionPairs = searchResults.getDisplayedResults();
+   var originalQueryGeneIds = searchResults.getQueryGeneIds();
+   var originalCoexpressionPairs = searchResults.getResults();
 
-    // Genes to get complete results for.
-    var geneIds = [];
-//    coexpressionSearchData.cytoscapeCoexCommand.geneIds = [];
+   // Genes to get complete results for.
+   var geneIds = [];
+   // coexpressionSearchData.cytoscapeCoexCommand.geneIds = [];
 
-    var qlength = originalQueryGeneIds.length;
-    var resultsPerQueryGene = Gemma.CytoscapeSettings.maxGeneIdsPerCoexVisQuery / qlength;
+   var qlength = originalQueryGeneIds.length;
+   var resultsPerQueryGene = Gemma.CytoscapeSettings.maxGeneIdsPerCoexVisQuery / qlength;
 
-    var queryGeneCountHash = {};
+   var queryGeneCountHash = {};
 
-    var i;
-    for (i = 0; i < qlength; i++) {
-        geneIds.push( originalQueryGeneIds[i] );
-        queryGeneCountHash[ originalQueryGeneIds[i] ] = 0;
-    }
+   for ( var i = 0; i < qlength; i++) {
+      geneIds.push( originalQueryGeneIds[i] );
+      queryGeneCountHash[originalQueryGeneIds[i]] = 0;
+   }
 
-    var kglength = originalCoexpressionPairs.length;
+   // This needs to take in account the stringency of the forthcoming cytoscape query
+   // so that nodes that are connected at lower stringency to the query gene are not included
+   // only add to cytoscapeCoexCommand.geneIds if current query gene has room in its 'resultsPerQueryGeneCount' entry
+   for (i = 0; i < originalCoexpressionPairs.length; i++) {
+      if ( meetsStringency( originalCoexpressionPairs[i], searchResults.getResultsStringency() )
+         && absent( originalCoexpressionPairs[i].foundGene.id, geneIds )
+         && queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] < resultsPerQueryGene ) {
 
-    // This needs to take in account the stringency of the forthcoming cytoscape query
-    // so that nodes that are connected at lower stringency to the query gene are not included
-    // only add to cytoscapeCoexCommand.geneIds if current query gene has room in its 'resultsPerQueryGeneCount' entry
-    for (i = 0; i < kglength; i++) {
+         geneIds.push( originalCoexpressionPairs[i].foundGene.id );
+         queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] = queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] + 1;
 
-        if (meetsStringency(originalCoexpressionPairs[i], searchResults.getResultsStringency()) &&
-            absent(originalCoexpressionPairs[i].foundGene.id, geneIds) &&
-            queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] < resultsPerQueryGene )
-        {
-            geneIds.push(originalCoexpressionPairs[i].foundGene.id);
-            queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] = queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] + 1;
-        }
-    }
+      }
+   }
 
-    return geneIds;
+   return geneIds;
 };
 
+/**
+ * 
+ */
+Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects = function( selectedNodes ) {
 
-Gemma.CytoscapePanelUtil.getGeneIdArrayFromCytoscapeJSONNodeObjects = function (selectedNodes) {
+   var selectedNodesGeneIdArray = [];
+   var sNodesLength = selectedNodes.length;
+   var i;
+   for (i = 0; i < sNodesLength; i++) {
+      selectedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
+   }
 
-    var selectedNodesGeneIdArray = [];
-    var sNodesLength = selectedNodes.length;
-    var i;
-    for (i = 0; i < sNodesLength; i++) {
-        selectedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
-    }
-
-    return selectedNodesGeneIdArray;
+   return selectedNodesGeneIdArray;
 
 };
-

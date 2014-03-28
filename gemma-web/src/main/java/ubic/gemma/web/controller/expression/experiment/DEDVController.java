@@ -59,7 +59,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.association.coexpression.CoexpressionService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -196,7 +196,7 @@ public class DEDVController {
     private FactorValueService factorValueService;
 
     @Autowired
-    private Probe2ProbeCoexpressionService geneCoexpressionService;
+    private CoexpressionService geneCoexpressionService;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;

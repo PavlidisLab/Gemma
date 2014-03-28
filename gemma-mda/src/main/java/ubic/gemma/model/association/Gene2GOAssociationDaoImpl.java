@@ -87,7 +87,38 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             throw super.convertHibernateAccessException( ex );
         }
     }
-   
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGenes(java.util.Collection)
+     */
+    @Override
+    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind ) {
+        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<Gene, Collection<VocabCharacteristic>>();
+        StopWatch timer = new StopWatch();
+        timer.start();
+        int batchSize = 200;
+        Set<Gene> batch = new HashSet<Gene>();
+        int i = 0;
+        for ( Gene gene : needToFind ) {
+            batch.add( gene );
+            if ( batch.size() == batchSize ) {
+                result.putAll( fetchBatch( batch ) );
+                batch.clear();
+            }
+            if ( ++i % 1000 == 0 ) {
+                log.info( "Fetched GO associations for " + i + "/" + needToFind.size() + " genes" );
+            }
+        }
+        if ( !batch.isEmpty() ) result.putAll( fetchBatch( batch ) );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Fetched GO annotations for " + needToFind.size() + " genes in " + timer.getTime() + "ms" );
+        }
+        return result;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -138,62 +169,25 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGenes(java.util.Collection)
-     */
     @Override
-    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind ) {
-        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<Gene, Collection<VocabCharacteristic>>();
-        StopWatch timer = new StopWatch();
-        timer.start();
-        int batchSize = 200;
-        Set<Gene> batch = new HashSet<Gene>();
-        int i = 0;
-        for ( Gene gene : needToFind ) {
-            batch.add( gene );
-            if ( batch.size() == batchSize ) {
-                result.putAll( fetchBatch( batch ) );
-                batch.clear();
-            }
-            if ( ++i % 1000 == 0 ) {
-                log.info( "Fetched GO associations for " + i + "/" + needToFind.size() + " genes" );
-            }
+    protected Collection<Gene> handleFindByGoTerm( String goId ) {
+
+        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+                + "where geneAss.ontologyEntry.value = :goID";
+
+        // need to turn the collection of goTerms into a collection of GOId's
+
+        Collection<Gene> results;
+
+        try {
+            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+            queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
+
+            results = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
         }
-        if ( !batch.isEmpty() ) result.putAll( fetchBatch( batch ) );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Fetched GO annotations for " + needToFind.size() + " genes in " + timer.getTime() + "ms" );
-        }
-        return result;
-    }
-
-    /**
-     * @param batch
-     * @return
-     */
-    private Map<? extends Gene, ? extends Collection<VocabCharacteristic>> fetchBatch( Set<Gene> batch ) {
-        Map<Long, Gene> gimap = EntityUtils.getIdMap( batch );
-        final String queryString = "select g.id, geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss join geneAss.gene g where g.id in (:genes)";
-        Map<Gene, Collection<VocabCharacteristic>> results = new HashMap<Gene, Collection<VocabCharacteristic>>();
-        Query query = this.getHibernateTemplate().getSessionFactory().getCurrentSession().createQuery( queryString );
-        query.setFetchSize( batch.size() );
-        query.setParameterList( "genes", gimap.keySet() );
-        List<?> o = query.list();
-
-        for ( Object object : o ) {
-            Object[] oa = ( Object[] ) object;
-            Long g = ( Long ) oa[0];
-            VocabCharacteristic vc = ( VocabCharacteristic ) oa[1];
-            Gene gene = gimap.get( g );
-            assert gene != null;
-            if ( !results.containsKey( gene ) ) {
-                results.put( gene, new HashSet<VocabCharacteristic>() );
-            }
-            results.get( gene ).add( vc );
-        }
-
         return results;
     }
 
@@ -211,28 +205,6 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
             queryObject.setParameter( "taxon", taxon );
-
-            results = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return results;
-    }
-
-    @Override
-    protected Collection<Gene> handleFindByGoTerm( String goId ) {
-
-        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
-                + "where geneAss.ontologyEntry.value = :goID";
-
-        // need to turn the collection of goTerms into a collection of GOId's
-
-        Collection<Gene> results;
-
-        try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
 
             results = queryObject.list();
 
@@ -285,6 +257,34 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
         log.info( "Deleted: " + total );
 
+    }
+
+    /**
+     * @param batch
+     * @return
+     */
+    private Map<? extends Gene, ? extends Collection<VocabCharacteristic>> fetchBatch( Set<Gene> batch ) {
+        Map<Long, Gene> gimap = EntityUtils.getIdMap( batch );
+        final String queryString = "select g.id, geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss join geneAss.gene g where g.id in (:genes)";
+        Map<Gene, Collection<VocabCharacteristic>> results = new HashMap<Gene, Collection<VocabCharacteristic>>();
+        Query query = this.getHibernateTemplate().getSessionFactory().getCurrentSession().createQuery( queryString );
+        query.setFetchSize( batch.size() );
+        query.setParameterList( "genes", gimap.keySet() );
+        List<?> o = query.list();
+
+        for ( Object object : o ) {
+            Object[] oa = ( Object[] ) object;
+            Long g = ( Long ) oa[0];
+            VocabCharacteristic vc = ( VocabCharacteristic ) oa[1];
+            Gene gene = gimap.get( g );
+            assert gene != null;
+            if ( !results.containsKey( gene ) ) {
+                results.put( gene, new HashSet<VocabCharacteristic>() );
+            }
+            results.get( gene ).add( vc );
+        }
+
+        return results;
     }
 
 }

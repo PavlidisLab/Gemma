@@ -35,7 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -53,6 +54,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -192,7 +194,7 @@ public class PersistentDummyObjectHelper {
         /*
          * Add analyses
          */
-        ProbeCoexpressionAnalysis pca = ProbeCoexpressionAnalysis.Factory.newInstance();
+        CoexpressionAnalysis pca = CoexpressionAnalysis.Factory.newInstance();
         pca.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
 
         pca.setExperimentAnalyzed( ee );
@@ -244,6 +246,77 @@ public class PersistentDummyObjectHelper {
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies() {
         return this.getTestExpressionExperimentWithAllDependencies( true );
     }
+
+    /**
+     * @param prototype
+     * @return another experiment using the same platform (assumed to be generated using
+     *         getTestExpressionExperimentWithAllDependencies(true)
+     */
+    public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( ExpressionExperiment prototype ) {
+
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+        ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+        ee.setDescription( "A test expression experiment" );
+        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
+        ee.setAccession( de1 );
+
+        LocalFile file = LocalFile.Factory.newInstance();
+        try {
+            file.setLocalURL( new URL( "file:///just/a/placeholder/" + ee.getShortName() ) );
+        } catch ( MalformedURLException e ) {
+        }
+
+        ee.setRawDataFile( file );
+        Collection<FactorValue> allFactorValues = new HashSet<>();
+
+        ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
+        Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
+
+        ee.setExperimentalDesign( ed );
+        ee.setOwner( this.getTestPersistentContact() );
+        List<ArrayDesign> arrayDesignsUsed = new ArrayList<>( eeService.getArrayDesignsUsed( prototype ) );
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+
+        Collection<QuantitationType> quantitationTypes = new HashSet<>();
+        for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
+            QuantitationType q = getTestNonPersistentQuantitationType();
+            if ( quantitationTypes.size() == 0 ) {
+                q.setIsPreferred( true );
+            }
+            quantitationTypes.add( q );
+        }
+
+        prototype = eeService.thaw( prototype );
+        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            List<BioAssay> bas = getBioAssays( bioMaterials, ad );
+            bioAssays.addAll( bas );
+            ad = this.adService.thaw( ad );
+            vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bas, ad ) );
+
+        }
+
+        ee.setBioAssays( bioAssays );
+
+        assert quantitationTypes.size() > 0;
+
+        ee.setQuantitationTypes( quantitationTypes );
+
+        ee.setRawExpressionDataVectors( vectors );
+
+        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
+        ee = persisterHelper.persist( ee, c );
+
+        return ee;
+    }
+
+    @Autowired
+    private ExpressionExperimentService eeService;
+
+    @Autowired
+    private ArrayDesignService adService;
 
     /**
      * Add an expressionExperiment to the database for testing purposes. Includes associations

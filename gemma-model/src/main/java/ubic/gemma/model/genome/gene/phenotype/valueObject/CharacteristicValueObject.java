@@ -102,26 +102,25 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     public CharacteristicValueObject( Characteristic characteristic ) {
         if ( characteristic instanceof VocabCharacteristic ) {
             this.valueUri = ( ( VocabCharacteristic ) characteristic ).getValueUri();
+            parseUrlId();
         }
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
         this.id = characteristic.getId();
-        this.urlId = parseUrlId( valueUri );
+
     }
 
     public CharacteristicValueObject( String valueUri ) {
         super();
         this.valueUri = valueUri;
-        this.urlId = parseUrlId( valueUri );
+        parseUrlId();
 
-        // we don't always populate from the database, attemt to create an id using the valueURI
-        if ( this.urlId != null && !this.urlId.trim().isEmpty() ) {
-            try {
-                this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
-            } catch ( Exception e ) {
-                log.error( "Problem making an id for Phenotype: " + this.urlId );
-            }
+        try {
+            // we don't always populate from the database, give it an id anyway
+            this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
+        } catch ( Exception e ) {
+            log.error( "Problem making an id for Phenotype: " + this.urlId );
         }
     }
 
@@ -137,16 +136,17 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.value = value;
     }
 
-    private String parseUrlId( String valueUri ) {
-        String urlId = "";
+    /**
+     * 
+     */
+    private void parseUrlId() {
         if ( valueUri != null ) {
             if ( !valueUri.equals( "" ) && valueUri.indexOf( "#" ) > 0 ) {
-                urlId = valueUri.substring( valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
+                this.urlId = valueUri.substring( valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
             } else if ( valueUri.lastIndexOf( "/" ) > 0 ) {
-                urlId = valueUri.substring( valueUri.lastIndexOf( "/" ) + 1, this.valueUri.length() );
+                this.urlId = valueUri.substring( valueUri.lastIndexOf( "/" ) + 1, this.valueUri.length() );
             }
         }
-        return urlId;
     }
 
     @Override

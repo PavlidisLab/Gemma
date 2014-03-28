@@ -347,19 +347,8 @@ public class DifferentialExpressionSearchTaskImpl extends
 
         // Main query for results; often the main time sink.
         Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults = differentialExpressionResultService
-                .findDifferentialExpressionAnalysisResultIdsInResultSet( resultSetIdsToArrayDesignsUsed, geneIds );
+                .findDiffExAnalysisResultIdsInResultSets( resultSetIdsToArrayDesignsUsed, geneIds );
         watch.stop();
-
-        for ( Long rsid : resultSetToGeneResults.keySet() ) {
-            for ( Long gid : resultSetToGeneResults.get( rsid ).keySet() ) {
-
-                DiffExprGeneSearchResult rrr = resultSetToGeneResults.get( rsid ).get( gid );
-                if ( !rrr.getResultSetId().equals( rsid ) ) {
-                    throw new IllegalStateException( "how the fuck did that happen" );
-                }
-
-            }
-        }
 
         Collection<DiffExprGeneSearchResult> aggregatedResults = aggregateAcrossResultSets( resultSetToGeneResults );
 

@@ -488,9 +488,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         geoService.fetchAndLoad( accession, false, false, false, false );
     }
 
-    // @Test
-    // public void test() {
-    // fetchASeries( "GSE11504" );
-    // }
+    @Test
+    public void test() {
+        fetchASeries( "GSE45405" );
+    }
 
 }

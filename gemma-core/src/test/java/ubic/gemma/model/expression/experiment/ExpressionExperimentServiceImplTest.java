@@ -48,6 +48,24 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
     private ExpressionExperimentDao eeDao;
 
+    public void testExpressionExperimentFindAll() {
+        reset( eeDao );
+        eeDao.loadAll();
+        expectLastCall().andReturn( c );
+        replay( eeDao );
+        svc.loadAll();
+        verify( eeDao );
+    }
+
+    public void testExpressionExperimentFindByInvestigator() {
+        reset( eeDao );
+        eeDao.findByInvestigator( nobody );
+        expectLastCall().andReturn( cJustTwelve );
+        replay( eeDao );
+        svc.findByInvestigator( nobody );
+        verify( eeDao );
+    }
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -94,24 +112,6 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         cJustTwelve = new HashSet<ExpressionExperiment>();
         cJustTwelve.add( numberTwelve );
 
-    }
-
-    public void testExpressionExperimentFindByInvestigator() {
-        reset( eeDao );
-        eeDao.findByInvestigator( nobody );
-        expectLastCall().andReturn( cJustTwelve );
-        replay( eeDao );
-        svc.findByInvestigator( nobody );
-        verify( eeDao );
-    }
-
-    public void testExpressionExperimentFindAll() {
-        reset( eeDao );
-        eeDao.loadAll();
-        expectLastCall().andReturn( c );
-        replay( eeDao );
-        svc.loadAll();
-        verify( eeDao );
     }
 
     @Override

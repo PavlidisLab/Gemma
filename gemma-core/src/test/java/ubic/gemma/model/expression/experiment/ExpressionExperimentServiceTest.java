@@ -81,7 +81,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
             expressionExperimentService.update( ee );
             ee = expressionExperimentService.thaw( ee );
-            
+
             persisted = true;
         } else {
             log.debug( "Skipping making new ee for test" );
@@ -96,6 +96,42 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Collection<ExpressionExperiment> expressionExperiment = expressionExperimentService
                 .findByAccession( accessionEntry );
         assertTrue( expressionExperiment.size() > 0 );
+    }
+
+    @Test
+    public void testFindByFactor() {
+        ExperimentalDesign design = ee.getExperimentalDesign();
+        assertNotNull( design.getExperimentalFactors() );
+        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
+        assertNotNull( ef );
+        ExpressionExperiment eeFound = expressionExperimentService.findByFactor( ef );
+        assertNotNull( eeFound );
+        assertEquals( eeFound.getId(), ee.getId() );
+    }
+
+    @Test
+    public void testFindByFactorValue() {
+        ExperimentalDesign design = ee.getExperimentalDesign();
+        assertNotNull( design.getExperimentalFactors() );
+        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
+        FactorValue fv = ef.getFactorValues().iterator().next();
+        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv );
+        assertNotNull( eeFound );
+        assertEquals( eeFound.getId(), ee.getId() );
+
+    }
+
+    @Test
+    public void testFindByFactorValueId() {
+        ExperimentalDesign design = ee.getExperimentalDesign();
+        assertNotNull( design.getExperimentalFactors() );
+        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
+        FactorValue fv = ef.getFactorValues().iterator().next();
+        assertNotNull( fv.getId() );
+        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv.getId() );
+        assertNotNull( eeFound );
+        assertEquals( eeFound.getId(), ee.getId() );
+
     }
 
     @Test
@@ -179,42 +215,6 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( ids, false );
         assertNotNull( list );
         assertEquals( 1, list.size() );
-    }
-
-    @Test
-    public void testFindByFactor() {
-        ExperimentalDesign design = ee.getExperimentalDesign();
-        assertNotNull( design.getExperimentalFactors() );
-        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
-        assertNotNull( ef );
-        ExpressionExperiment eeFound = expressionExperimentService.findByFactor( ef );
-        assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), ee.getId() );
-    }
-    
-    @Test
-    public void testFindByFactorValue() {
-        ExperimentalDesign design = ee.getExperimentalDesign();
-        assertNotNull( design.getExperimentalFactors() );
-        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
-        FactorValue fv = ef.getFactorValues().iterator().next();
-        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv );
-        assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), ee.getId() );
-
-    }
-
-    @Test
-    public void testFindByFactorValueId() {
-        ExperimentalDesign design = ee.getExperimentalDesign();
-        assertNotNull( design.getExperimentalFactors() );
-        ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
-        FactorValue fv = ef.getFactorValues().iterator().next();
-        assertNotNull( fv.getId() );
-        ExpressionExperiment eeFound = expressionExperimentService.findByFactorValue( fv.getId() );
-        assertNotNull( eeFound );
-        assertEquals( eeFound.getId(), ee.getId() );
-
     }
 
 }

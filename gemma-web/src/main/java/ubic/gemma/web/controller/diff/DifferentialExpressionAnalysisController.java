@@ -189,7 +189,7 @@ public class DifferentialExpressionAnalysisController {
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
                 .getExperimentalFactors() ) );
-        cmd.setIncludeInteractions( true ); // if possible
+        cmd.setIncludeInteractions( true ); // if possible, might get dropped.
 
         return taskRunningService.submitRemoteTask( cmd );
     }

@@ -79,7 +79,7 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
     }
 
     /**
-     * @see diff.DifferentialExpressionResultService#thaw(ExpressionAnalysisResultSet)
+     * @see DifferentialExpressionResultService.DifferentialExpressionResultService#thaw(ExpressionAnalysisResultSet)
      */
     @Override
     @Transactional(readOnly = true)

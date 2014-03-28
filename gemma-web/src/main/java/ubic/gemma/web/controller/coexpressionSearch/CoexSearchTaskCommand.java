@@ -19,6 +19,7 @@
 
 package ubic.gemma.web.controller.coexpressionSearch;
 
+import ubic.gemma.analysis.expression.coexpression.CoexpressionSearchCommand;
 import ubic.gemma.job.TaskCommand;
 
 /**

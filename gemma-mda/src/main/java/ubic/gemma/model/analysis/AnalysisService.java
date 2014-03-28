@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
@@ -41,31 +42,26 @@ public interface AnalysisService<T extends Analysis> {
      * find all the analyses that involved the given investigation
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<T> findByInvestigation( Investigation investigation );
+    public Collection<T> findByInvestigation( Investigation investigation );
 
     /**
      * <p>
      * Given a collection of investigations returns a Map of Analysis --> collection of Investigations
-     * </p>
      * <p>
      * The collection of investigations returned by the map will include all the investigations for the analysis key iff
      * one of the investigations for that analysis was in the given collection started with
-     * </p>
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public java.util.Map<Investigation, Collection<T>> findByInvestigations(
-            java.util.Collection<? extends Investigation> investigations );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ", "AFTER_ACL_MAP_READ" })
+    public Map<Investigation, Collection<T>> findByInvestigations( Collection<? extends Investigation> investigations );
 
     /**
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<T> findByName( java.lang.String name );
+    public Collection<T> findByName( String name );
 
     /**
-     * <p>
-     * An analysis is uniquely determined by its set of investigations. Only returns an analyis if the collection of
+     * An analysis is uniquely determined by its set of investigations. Only returns an analysis if the collection of
      * investigations given exacly matches other wise returns null
-     * </p>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public T findByUniqueInvestigations( Collection<? extends Investigation> investigations );
@@ -74,13 +70,13 @@ public interface AnalysisService<T extends Analysis> {
      * Returns the analysis with the specified ID
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public T load( java.lang.Long id );
+    public T load( Long id );
 
     /**
      * Returns all of the analysis objects
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<T> loadAll();
+    public Collection<T> loadAll();
 
     /**
      * Returns the {@link Analyses}s for the currently logged in {@link User} - i.e, ones for which the current user has

@@ -85,11 +85,11 @@
 			<filter>src/main/filters/project.properties</filter>
 		</filters>
 		<plugins>
-		 
+
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				 
+
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -191,30 +191,18 @@
 									<srcFiles>
 										<srcFile>target/schema/gemma-ddl.sql</srcFile>
 										<srcFile>target/schema/gsec-acl-ddl.sql</srcFile>
+										<scrFile>target/schema/sql/init-acl-indices.sql</scrFile>
 										<srcFile>src/main/resources/sql/init-acls.sql</srcFile>
 										<scrFile>src/main/resources/sql/init-indices.sql</scrFile>
 										<srcFile>src/main/resources/sql/init-entities.sql</srcFile>
-										<scrFile>target/schema/sql/init-acl-indices.sql</scrFile>
 									</srcFiles>
 									<onError>abort</onError>
 								</configuration>
 							</execution>
 
-							<execution>
-								<id>install-triggers</id>
-								<phase>test-compile</phase>
-								<goals>
-									<goal>execute</goal>
-								</goals>
-								<configuration>
-									<url>${gemma.testdb.build.url}</url>
-									<delimiter>|</delimiter>
-									<srcFiles>
-										<srcFile>src/main/resources/sql/init-triggers.sql</srcFile>
-									</srcFiles>
-									<onError>abort</onError>
-								</configuration>
-							</execution>
+							<!-- <execution> <id>install-triggers</id> <phase>test-compile</phase> <goals> <goal>execute</goal> </goals> <configuration> 
+								<url>${gemma.testdb.build.url}</url> <delimiter>|</delimiter> <srcFiles> <srcFile>src/main/resources/sql/init-triggers.sql</srcFile> 
+								</srcFiles> <onError>abort</onError> </configuration> </execution> -->
 						</executions>
 					</plugin>
 				</plugins>

@@ -14,6 +14,9 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -24,21 +27,22 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DataRefreshServiceImpl implements DataRefreshService {
 
+    @Autowired
+    private DataUpdater dataUpdater;
+
     @Override
     public void refresh( ExpressionExperiment ee ) {
+
         /*
          * 1. figure out what kind of experiment it is
          * 
-         * 2. If Affymetrix, RMA
+         * 2. If Affymetrix, RMA - need to figure out CDF file name.
          * 
          * 3. If Not: maybe quantile normalize data
          * 
-         * 4. 
-         * 
-         * 
-         * 
+         * 4.
          */
-        
+
     }
 
 }

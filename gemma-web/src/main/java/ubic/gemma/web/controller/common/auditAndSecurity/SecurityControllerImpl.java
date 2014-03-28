@@ -41,14 +41,11 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
@@ -67,7 +64,6 @@ import ubic.gemma.web.remote.EntityDelegator;
 /**
  * Manages data-level security (ie. can make data private).
  * 
- * @author keshav
  * @version $Id$
  */
 @Component
@@ -81,8 +77,7 @@ public class SecurityControllerImpl implements SecurityController {
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired
-    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
     @Autowired
@@ -339,11 +334,12 @@ public class SecurityControllerImpl implements SecurityController {
      * EntityDelegator)
      */
     @Override
-    //@Transactional(readOnly = true)
+    // @Transactional(readOnly = true)
     public SecurityInfoValueObject getSecurityInfo( EntityDelegator ed ) {
 
-        //TODO Figure out why Transaction(readOnly = true) throws an error when this method is called from SecurityManager.js (Bug 3941)
-        
+        // TODO Figure out why Transaction(readOnly = true) throws an error when this method is called from
+        // SecurityManager.js (Bug 3941)
+
         Securable s = getSecurable( ed );
 
         SecurityInfoValueObject result = securable2VO( s );
@@ -362,9 +358,6 @@ public class SecurityControllerImpl implements SecurityController {
 
         // Add experiments.
         secs.addAll( getUsersExperiments( privateOnly ) );
-
-        // Add Analyses
-        secs.addAll( getUsersAnalyses( privateOnly ) );
 
         Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
 
@@ -679,8 +672,6 @@ public class SecurityControllerImpl implements SecurityController {
         }
         if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
             s = expressionExperimentService.load( ed.getId() );
-        } else if ( GeneCoexpressionAnalysis.class.isAssignableFrom( clazz ) ) {
-            s = geneCoexpressionAnalysisService.load( ed.getId() );
         } else if ( GeneSet.class.isAssignableFrom( clazz ) ) {
             s = geneSetService.load( ed.getId() );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( clazz ) ) {
@@ -697,27 +688,6 @@ public class SecurityControllerImpl implements SecurityController {
             throw new IllegalArgumentException( "Entity does not exist or user does not have access." );
         }
         return s;
-    }
-
-    /**
-     * @param privateOnly
-     * @return
-     */
-    private Collection<Securable> getUsersAnalyses( boolean privateOnly ) {
-        Collection<Securable> secs = new HashSet<Securable>();
-
-        Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService.loadMySharedAnalyses();
-        if ( privateOnly ) {
-            try {
-                secs.addAll( securityService.choosePrivate( analyses ) );
-            } catch ( AccessDeniedException e ) {
-                // okay, they just aren't allowed to see those.
-            }
-        } else {
-            secs.addAll( analyses );
-        }
-
-        return secs;
     }
 
     /**

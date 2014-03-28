@@ -28,7 +28,6 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 /**
  * Parent class of all evidence value objects

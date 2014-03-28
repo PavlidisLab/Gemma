@@ -207,8 +207,6 @@ public class ExpressionExperimentFilter {
 
         int afterSequenceRemovalRows = filteredMatrix.rows();
 
-        // boolean twoColor = isTwoColor();
-
         int afterAffyControlsFilter = afterSequenceRemovalRows;
         int afterMinPresentFilter = afterSequenceRemovalRows;
         int afterLowVarianceCut = afterSequenceRemovalRows;
@@ -217,14 +215,14 @@ public class ExpressionExperimentFilter {
         int afterDistinctValueCut = afterSequenceRemovalRows;
 
         if ( usesAffymetrix() ) {
-            log.info( "Filtering Affymetrix controls" );
+            log.debug( "Filtering Affymetrix controls" );
             filteredMatrix = affyControlProbeFilter( filteredMatrix );
             afterAffyControlsFilter = filteredMatrix.rows();
         }
         config.setAfterInitialFilter( afterAffyControlsFilter );
 
         if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() ) {
-            log.info( "Filtering for missing data" );
+            log.debug( "Filtering for missing data" );
             filteredMatrix = minPresentFilter( filteredMatrix );
             afterMinPresentFilter = filteredMatrix.rows();
             config.setAfterMinPresentFilter( afterMinPresentFilter );
@@ -237,7 +235,7 @@ public class ExpressionExperimentFilter {
         /*
          * Always remove rows that have a variance of zero.
          */
-        log.info( "Filtering rows with zero variance" );
+        log.debug( "Filtering rows with zero variance" );
         filteredMatrix = zeroVarianceFilter( filteredMatrix );
         afterZeroVarianceCut = filteredMatrix.rows();
         config.setAfterZeroVarianceCut( afterZeroVarianceCut );
@@ -246,7 +244,7 @@ public class ExpressionExperimentFilter {
         }
 
         if ( config.isDistinctValueThresholdSet() ) {
-            log.info( "Filtering rows that have too few distincti values" );
+            log.debug( "Filtering rows that have too few distinct values" );
             filteredMatrix = lowDistinctValueFilter( filteredMatrix );
             afterDistinctValueCut = filteredMatrix.rows();
             config.setAfterDistinctValueCut( afterDistinctValueCut );
@@ -260,7 +258,7 @@ public class ExpressionExperimentFilter {
          * Filtering lowly expressed genes.
          */
         if ( config.isLowExpressionCutIsSet() ) {
-            log.info( "Filtering for low or too high expression" );
+            log.debug( "Filtering for low or too high expression" );
             Map<CompositeSequence, Double> ranks = eeDoubleMatrix.getRanks();
             filteredMatrix = lowExpressionFilter( filteredMatrix, ranks );
             afterLowExpressionCut = filteredMatrix.rows();
@@ -282,7 +280,7 @@ public class ExpressionExperimentFilter {
          * BMC Bioinformatics 2009 10:11 (http://www.ncbi.nlm.nih.gov/pubmed/19133141)
          */
         if ( config.isLowVarianceCutIsSet() ) {
-            log.info( "Filtering for low variance " );
+            log.debug( "Filtering for low variance " );
             filteredMatrix = lowVarianceFilter( filteredMatrix );
             afterLowVarianceCut = filteredMatrix.rows();
             config.setAfterLowVarianceCut( afterLowVarianceCut );
@@ -295,15 +293,14 @@ public class ExpressionExperimentFilter {
         if ( log.isInfoEnabled() ) {
             StringBuilder buf = new StringBuilder();
 
-            buf.append( "================================================================\n" );
+            buf.append( "Filter summary:\n" );
             buf.append( "Filter summary for " + eeDoubleMatrix.getExpressionExperiment() + ":\n" );
             buf.append( "Started with\t" + startingRows + "\n" );
-            if ( config.isRequireSequences() )
-                buf.append( "After Sequence filtering\t" + afterSequenceRemovalRows + "\n" );
+            if ( config.isRequireSequences() ) buf.append( "After Seq\t" + afterSequenceRemovalRows + "\n" );
             if ( usesAffymetrix() ) buf.append( "After removing Affy controls\t" + afterAffyControlsFilter + "\n" );
             if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() )
                 buf.append( "After MinPresent\t" + afterMinPresentFilter + "\n" );
-            buf.append( "AFter ZeroVar\t" + afterZeroVarianceCut + "\n" );
+            buf.append( "After ZeroVar\t" + afterZeroVarianceCut + "\n" );
             if ( config.isLowExpressionCutIsSet() ) buf.append( "After LowExpr\t" + afterLowExpressionCut + "\n" );
             if ( config.isLowVarianceCutIsSet() ) buf.append( "After LowVar\t" + afterLowVarianceCut + "\n" );
             buf.append( "================================================================\n" );

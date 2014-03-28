@@ -99,40 +99,6 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertEquals( 12, ee.getBioAssays().size() );
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public final void testLoadDuplicatedRow() throws Exception {
-
-        Taxon taxon = this.getTaxon( "mouse" );
-
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
-
-        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
-        ad.setPrimaryTaxon( taxon );
-        ad.setTechnologyType( TechnologyType.ONECOLOR );
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-
-        ads.add( ad );
-        metaData.setArrayDesigns( ads );
-
-        metaData.setTaxon( taxon );
-        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
-        metaData.setShortName( metaData.getName() );
-        metaData.setQuantitationTypeName( "testing" );
-        metaData.setGeneralType( GeneralType.QUANTITATIVE );
-        metaData.setScale( ScaleType.LOG2 );
-        metaData.setType( StandardQuantitationType.AMOUNT );
-        metaData.setIsRatio( true );
-
-        try (InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" );) {
-
-            ee = service.create( metaData, data );
-            fail( "Should have gotten an exception about duplicated row" );
-
-        }
-    }
-
     /**
      *  
      */
@@ -173,6 +139,40 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertEquals( 200, ee.getRawExpressionDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
         //
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public final void testLoadDuplicatedRow() throws Exception {
+
+        Taxon taxon = this.getTaxon( "mouse" );
+
+        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
+
+        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setPrimaryTaxon( taxon );
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
+
+        metaData.setTaxon( taxon );
+        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setShortName( metaData.getName() );
+        metaData.setQuantitationTypeName( "testing" );
+        metaData.setGeneralType( GeneralType.QUANTITATIVE );
+        metaData.setScale( ScaleType.LOG2 );
+        metaData.setType( StandardQuantitationType.AMOUNT );
+        metaData.setIsRatio( true );
+
+        try (InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" );) {
+
+            ee = service.create( metaData, data );
+            fail( "Should have gotten an exception about duplicated row" );
+
+        }
     }
 
 }

@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Main entry point to retrieve differential expression data.
+ * 
  * @author kelsey
  * @version $Id$
  */
@@ -107,7 +109,7 @@ public interface DifferentialExpressionResultService {
      * @param genes
      * @return map of resultset IDs to map of gene id to differential expression results.
      */
-    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds );
 
     public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
@@ -186,7 +188,9 @@ public interface DifferentialExpressionResultService {
      */
     public void thawLite( ExpressionAnalysisResultSet resultSet );
 
-    // this is here for 'cleanup' purposes, usually we would consider these immutable.
+    /**
+     * @param resultSet
+     */
     @Secured({ "GROUP_ADMIN" })
     public void update( ExpressionAnalysisResultSet resultSet );
 

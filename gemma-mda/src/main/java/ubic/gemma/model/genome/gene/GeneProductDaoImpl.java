@@ -41,7 +41,7 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  */
 @Repository
-public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProductDaoBase {
+public class GeneProductDaoImpl extends GeneProductDaoBase {
 
     private static Log log = LogFactory.getLog( GeneProductDaoImpl.class.getName() );
 

@@ -284,6 +284,7 @@ public class ExpressionDataMatrixColumnSort {
 
         // Abort ordering, so we are ordered only by the first continuous factor.
         if ( ExperimentalDesignUtils.isContinuous( simplest ) ) {
+            assert ordered != null;
             return ordered;
         }
 
@@ -313,7 +314,7 @@ public class ExpressionDataMatrixColumnSort {
         /*
          * Process each chunk.
          */
-        List<BioMaterial> result = new ArrayList<BioMaterial>();
+        List<BioMaterial> result = new ArrayList<>();
         for ( FactorValue fv : chunks.keySet() ) {
             List<BioMaterial> chunk = chunks.get( fv );
 
@@ -440,10 +441,12 @@ public class ExpressionDataMatrixColumnSort {
      */
     public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix<?> mat ) {
         List<BioMaterial> start = getBms( mat );
+        assert start != null;
 
         List<BioMaterial> ordered = orderByExperimentalDesign( start, null );
 
         // log.info( "AFTER" );
+        assert ordered != null;
         assert ordered.size() == start.size() : "Expected " + start.size() + ", got " + ordered.size();
         // StringBuilder buf2 = new StringBuilder();
         //

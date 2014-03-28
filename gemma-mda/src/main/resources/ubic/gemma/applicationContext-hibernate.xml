@@ -60,6 +60,8 @@
 				<value>classpath:ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/gene/GeneAlias.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/gene/Multifunctionality.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/gene/GeneSet.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/CytogeneticLocation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/PhysicalLocation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/ChromosomeFeature.hbm.xml</value>
@@ -90,10 +92,6 @@
 				<value>classpath:ubic/gemma/model/common/search/SearchSettings.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvalue.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/diff/PvalueDistribution.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml</value>
@@ -106,12 +104,14 @@
 				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/biomaterial/Compound.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/Gene2GOAssociation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/MouseProbeCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/HumanProbeCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/RatProbeCoExpression.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/coexpression/OtherProbeCoExpression.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/HumanExperimentCoexpressionLink.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/MouseExperimentCoexpressionLink.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/RatExperimentCoexpressionLink.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/OtherExperimentCoexpressionLink.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/MouseGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/HumanGeneCoExpression.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/RatGeneCoExpression.hbm.xml</value>
@@ -120,21 +120,27 @@
 				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociationPublication.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/pca/ProbeLoading.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/CoexpressionProbe.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/Investigation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvalue.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/ProbeLoading.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/PvalueDistribution.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml</value>
+				<value>
+					classpath:ubic/gemma/model/analysis/expression/diff/GeneDifferentialExpressionMetaAnalysisResult.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/HumanSupportDetails.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/MouseSupportDetails.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/RatSupportDetails.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/OtherSupportDetails.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/GeneCoexpressionTestedIn.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/GeneCoexpressedGenes.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/SampleCoexpressionMatrix.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/CoexpCorrelationDistribution.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/analysis/expression/diff/GeneDifferentialExpressionMetaAnalysisResult.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/genome/gene/GeneSet.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
 			</list>
 		</property>
 		<property name="hibernateProperties">

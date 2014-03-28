@@ -86,18 +86,21 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * <li>OSTTEST - one sample t-test
      * <li>OWA - one-way ANOVA
      * <li>TTEST - two sample t-test
-     * <li>TWA - two way ANOVA with interaction
-     * <li>TWANI - two-way ANOVA with no interaction
+     * <li>TWO_WAY_ANOVA_WITH_INTERACTION
+     * <li>TWO_WAY_ANOVA_NO_INTERACTION
      * </ul>
      * 
      * @author Paul
      * @version $Id$
      */
     public enum AnalysisType {
-        GENERICLM, OSTTEST /* one-sample */, OWA /* one-way ANOVA */, TTEST, TWO_WAY_ANOVA_WITH_INTERACTION /* with interactions */, TWO_WAY_ANOVA_NO_INTERACTION /*
-                                                                                                                 * no
-                                                                                                                 * interactions
-                                                                                                                 */
+        GENERICLM, OSTTEST /* one-sample */, OWA /* one-way ANOVA */, TTEST, TWO_WAY_ANOVA_WITH_INTERACTION /*
+                                                                                                             * with
+                                                                                                             * interactions
+                                                                                                             */, TWO_WAY_ANOVA_NO_INTERACTION /*
+                                                                                                                                               * no
+                                                                                                                                               * interactions
+                                                                                                                                               */
     }
 
     public static final String FACTOR_NAME_MANGLING_DELIMITER = "__";

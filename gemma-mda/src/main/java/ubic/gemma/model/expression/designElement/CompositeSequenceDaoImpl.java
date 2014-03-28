@@ -43,6 +43,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
 import org.springframework.stereotype.Repository;
 
+import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -58,7 +59,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @version $Id$
  */
 @Repository
-public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase {
+public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
     private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2000;
 
@@ -412,30 +413,24 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             Collection<CompositeSequence> compositeSequences ) {
 
         log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size() + " composite sequences" );
-        Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
-        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results = new HashMap<CompositeSequence, Collection<BioSequence2GeneProduct>>();
+        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results = new HashMap<>();
+
+        BatchIterator<CompositeSequence> it = BatchIterator.batches( compositeSequences, PROBE_TO_GENE_MAP_BATCH_SIZE );
 
         StopWatch timer = new StopWatch();
         timer.start();
         int total = 0;
-        for ( CompositeSequence cs : compositeSequences ) {
-            batch.add( cs );
-            if ( batch.size() == PROBE_TO_GENE_MAP_BATCH_SIZE ) {
-                batchGetGenesWithSpecificity( batch, results );
-                total += batch.size();
-                batch.clear();
-                timer.split();
-                if ( timer.getSplitTime() > 10000 ) {
-                    log.info( "Probe to gene map: " + total + " retrieved in " + timer.getSplitTime() + "ms" );
-                }
-                timer.unsplit();
-            }
-        }
-        // finish up any leftovers
-        if ( batch.size() > 0 ) {
+        for ( ; it.hasNext(); ) {
+            Collection<CompositeSequence> batch = it.next();
             batchGetGenesWithSpecificity( batch, results );
+            total += batch.size();
+            timer.split();
+            if ( timer.getSplitTime() > 10000 ) {
+                log.info( "Probe to gene map: " + total + " retrieved in " + timer.getSplitTime() + "ms" );
+            }
+            timer.unsplit();
         }
-        total += batch.size();
+
         timer.stop();
         if ( timer.getTime() > 10000 ) {
             log.info( "Probe to gene map finished: " + total + " retrieved in " + timer.getTime() + "ms" );

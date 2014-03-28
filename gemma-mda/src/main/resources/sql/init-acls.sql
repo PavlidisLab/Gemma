@@ -42,3 +42,8 @@ insert into ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) 
 
 -- give agent admin priv on himself.(sid=6). (no group privileges)
 insert into ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) values (8, 2, 16, 1, 5, 6);
+
+-- start our ID sequences properly.
+insert into ACLHIBERNATESEQUENCES (sequence_name,sequence_next_hi_value) values ('ACLOBJECTIDENTITY', 1);
+insert into ACLHIBERNATESEQUENCES (sequence_name,sequence_next_hi_value) values ('ACLENTRY', 1);
+

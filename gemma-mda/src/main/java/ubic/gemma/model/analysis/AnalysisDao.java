@@ -35,19 +35,14 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
     /**
      * <p>
      * Given a collection of investigations returns a Map of Analysis --> collection of Investigations
-     * </p>
      * <p>
      * The collection of investigations returned by the map will include all the investigations for the analysis key iff
      * one of the investigations for that analysis was in the given collection started with
-     * </p>
      */
-    public java.util.Map<Investigation, Collection<T>> findByInvestigations(
-            java.util.Collection<Investigation> investigations );
+    public java.util.Map<Investigation, Collection<T>> findByInvestigations( Collection<Investigation> investigations );
 
     /**
-     * <p>
      * Returns a collection of anaylsis that have a name that starts with the given name
-     * </p>
      */
     public java.util.Collection<T> findByName( java.lang.String name );
 

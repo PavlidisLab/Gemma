@@ -85,7 +85,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param geneIds
      * @return map of resultsetId to map of gene to DiffExprGeneSearchResult
      */
-    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds );
 
     public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,

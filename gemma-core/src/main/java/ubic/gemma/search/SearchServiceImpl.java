@@ -1,5 +1,5 @@
 /*
- ompass* The Gemma project
+ * The Gemma project
  * 
  * Copyright (c) 2006 University of British Columbia
  * 
@@ -2475,7 +2475,7 @@ public class SearchServiceImpl implements SearchService {
             return new ArrayList<SearchResult>();
 
         CompassQuery compassQuery = session.queryBuilder().queryString( enhancedQuery ).toQuery();
-        log.info( "Parsed query: " + compassQuery );
+        log.debug( "Parsed query: " + compassQuery );
 
         CompassHits hits = compassQuery.hits();
 

@@ -35,12 +35,12 @@ public class InsufficientProbesException extends InsufficientDataException {
         super();
     }
 
-    public InsufficientProbesException( String arg0, Throwable arg1 ) {
-        super( arg0, arg1 );
-    }
-
     public InsufficientProbesException( String message ) {
         super( message );
+    }
+
+    public InsufficientProbesException( String arg0, Throwable arg1 ) {
+        super( arg0, arg1 );
     }
 
     public InsufficientProbesException( Throwable arg0 ) {

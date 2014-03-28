@@ -21,8 +21,9 @@ package ubic.gemma.model.association.coexpression;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,13 +31,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
-import ubic.gemma.model.common.protocol.Protocol;
-import ubic.gemma.model.common.protocol.ProtocolService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author klc
@@ -45,13 +44,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    private Gene2GeneCoexpressionService g2gCoexpressionS;
-
-    @Autowired
-    private GeneCoexpressionAnalysisService analysisS;
-
-    @Autowired
-    private ProtocolService protocolS;
+    private CoexpressionService g2gCoexpressionService;
 
     @Autowired
     private GeneService geneS;
@@ -59,26 +52,12 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     @Autowired
     private TaxonService taxonS;
 
-    private GeneCoexpressionAnalysis analysis;
     private Gene firstGene;
+
+    private ExpressionExperiment ee;
 
     @Before
     public void setup() {
-
-        analysis = GeneCoexpressionAnalysis.Factory.newInstance();
-        // analysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );
-        analysis.setDescription( "test" );
-
-        analysis.setName( "Test: " + new Date() );
-
-        Protocol protocol = Protocol.Factory.newInstance();
-        protocol.setName( "Stored Gene2GeneCoexpressions" );
-        protocol.setDescription( "Test" );
-        protocol = protocolS.findOrCreate( protocol );
-
-        analysis.setProtocol( protocol );
-        analysis.setEnabled( true );
-        analysis = analysisS.create( analysis );
 
         Taxon mouseTaxon = taxonS.findByCommonName( "mouse" );
 
@@ -91,19 +70,25 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         secondGene.setName( "test_gene2geneCoexpression2" );
         secondGene = geneS.create( secondGene );
 
-        Gene2GeneCoexpression g2gCoexpression = MouseGeneCoExpression.Factory.newInstance( analysis, secondGene,
-                firstGene, 0.9, 3, new byte[] { 2, 3, 8 }, new byte[] { 2, 9, 8 } );
+        Gene2GeneCoexpression g2gCoexpression = MouseGeneCoExpression.Factory.newInstance( 0.9, secondGene, firstGene );
+        g2gCoexpression.setNumDatasetsSupporting( 3 );
 
-        g2gCoexpressionS.create( g2gCoexpression );
+        List<NonPersistentNonOrderedCoexpLink> links = new ArrayList<>();
+        links.add( new NonPersistentNonOrderedCoexpLink( g2gCoexpression ) );
+
+        ee = this.getTestPersistentBasicExpressionExperiment();
+
+        g2gCoexpressionService.createOrUpdate( ee, links, new LinkCreator( mouseTaxon ), null );
+
     }
 
     @Test
     public void testFindCoexpressionRelationships() {
 
-        Collection<Gene2GeneCoexpression> results = g2gCoexpressionS.findCoexpressionRelationships( firstGene, 3, 100,
-                analysis );
+        Collection<Long> ees = EntityUtils.getIds( ee );
+        Collection<CoexpressionValueObject> results = g2gCoexpressionService.findCoexpressionRelationships( firstGene,
+                ees, 3, 100, true );
         assertEquals( 1, results.size() );
 
     }
-
 }

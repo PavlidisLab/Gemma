@@ -18,21 +18,38 @@
  */
 package ubic.gemma.analysis.expression.coexpression;
 
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
+
 /**
  * @author luke
  * @version $Id$
  */
 public class CoexpressionSummaryValueObject {
 
+    // node degree info for this gene, genomewide.
+    private GeneCoexpressionNodeDegreeValueObject coexpNodeDegree = null;
     private int datasetsAvailable;
     private int datasetsTested;
-    private int datasetsWithSpecificProbes;
+    private long geneId;
+
+    // useless
+    // private int linksMetNegativeStringency;
+
+    // useless
+    // private int linksMetPositiveStringency;
 
     private int linksFound;
 
-    private int linksMetNegativeStringency;
+    public CoexpressionSummaryValueObject( Long geneId ) {
+        this.geneId = geneId;
+    }
 
-    private int linksMetPositiveStringency;
+    /**
+     * @returnnode degree info for this gene, genomewide.
+     */
+    public GeneCoexpressionNodeDegreeValueObject getCoexpNodeDegree() {
+        return coexpNodeDegree;
+    }
 
     public int getDatasetsAvailable() {
         return datasetsAvailable;
@@ -42,20 +59,30 @@ public class CoexpressionSummaryValueObject {
         return datasetsTested;
     }
 
-    public int getDatasetsWithSpecificProbes() {
-        return datasetsWithSpecificProbes;
+    public long getGeneId() {
+        return geneId;
     }
 
     public int getLinksFound() {
         return linksFound;
     }
 
-    public int getLinksMetNegativeStringency() {
-        return linksMetNegativeStringency;
-    }
+    // public int getLinksMetNegativeStringency() {
+    // return linksMetNegativeStringency;
+    // }
+    //
+    // public int getLinksMetPositiveStringency() {
+    // return linksMetPositiveStringency;
+    // }
 
-    public int getLinksMetPositiveStringency() {
-        return linksMetPositiveStringency;
+    /**
+     * @param coexpNodeDegree node degree info for this gene, genomewide.
+     */
+    public void setCoexpNodeDegree( GeneCoexpressionNodeDegreeValueObject coexpNodeDegree ) {
+        /*
+         * FIXME this value object is a bit complex for use in the client...
+         */
+        this.coexpNodeDegree = coexpNodeDegree;
     }
 
     public void setDatasetsAvailable( int datasetsAvailable ) {
@@ -66,20 +93,16 @@ public class CoexpressionSummaryValueObject {
         this.datasetsTested = datasetsTested;
     }
 
-    public void setDatasetsWithSpecificProbes( int datasetsWithSpecificProbes ) {
-        this.datasetsWithSpecificProbes = datasetsWithSpecificProbes;
-    }
+    // public void setLinksMetNegativeStringency( int linksMetNegativeStringency ) {
+    // this.linksMetNegativeStringency = linksMetNegativeStringency;
+    // }
+    //
+    // public void setLinksMetPositiveStringency( int linksMetPositiveStringency ) {
+    // this.linksMetPositiveStringency = linksMetPositiveStringency;
+    // }
 
     public void setLinksFound( int linksFound ) {
         this.linksFound = linksFound;
-    }
-
-    public void setLinksMetNegativeStringency( int linksMetNegativeStringency ) {
-        this.linksMetNegativeStringency = linksMetNegativeStringency;
-    }
-
-    public void setLinksMetPositiveStringency( int linksMetPositiveStringency ) {
-        this.linksMetPositiveStringency = linksMetPositiveStringency;
     }
 
 }

@@ -22,14 +22,26 @@
 //
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * @see ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree
  */
-public class GeneCoexpressionNodeDegreeImpl extends
-        ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree {
+public class GeneCoexpressionNodeDegreeImpl extends GeneCoexpressionNodeDegree {
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 5947391450315581639L;
+
+    GeneCoexpressionNodeDegreeImpl() {
+
+    }
+
+    GeneCoexpressionNodeDegreeImpl( Gene g ) {
+        this.setGeneId( g.getId() );
+        this.setLinkCounts( new byte[] {} );
+        this.setRelativeLinkRanks( new byte[] {} );
+    }
 
 }

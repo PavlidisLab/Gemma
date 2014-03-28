@@ -109,7 +109,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         /*
          * Create genes
          */
-        Collection<Gene> genes = new HashSet<Gene>();
+        Collection<Gene> genes = new HashSet<>();
         for ( int i = 0; i < 120; i++ ) {
             Gene gene = getTestPeristentGene( testTaxon );
             genes.add( gene );

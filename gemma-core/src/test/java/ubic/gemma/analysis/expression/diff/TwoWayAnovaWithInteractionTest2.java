@@ -52,55 +52,56 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
     @Autowired
-    SimpleExpressionDataLoaderService dataLoaderService;
+    private SimpleExpressionDataLoaderService dataLoaderService;
 
     @Autowired
-    ExperimentalDesignImporter designImporter;
+    private ExperimentalDesignImporter designImporter;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    DiffExAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     @Autowired
-    AnalysisSelectionAndExecutionService analysisService = null;
+    private AnalysisSelectionAndExecutionService analysisService = null;
 
     @Autowired
-    DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
     @Autowired
-    DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService = null;
 
-    ExpressionExperiment ee;
+    private ExpressionExperiment ee;
 
     @Before
     public void setup() throws IOException {
-        InputStream io = this.getClass().getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" );
+        try (InputStream io = this.getClass().getResourceAsStream(
+                "/data/analysis/expression/GSE8441_expmat_8probes.txt" );) {
 
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
-        metaData.setTaxon( taxonService.findByCommonName( "mouse" ) );
-        metaData.setQuantitationTypeName( "whatever" );
-        // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
-        metaData.setScale( ScaleType.LINEAR );
+            SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+            metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
+            metaData.setTaxon( taxonService.findByCommonName( "mouse" ) );
+            metaData.setQuantitationTypeName( "whatever" );
+            // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
+            metaData.setScale( ScaleType.LINEAR );
 
-        ArrayDesign f = ArrayDesign.Factory.newInstance();
-        f.setShortName( "GSE8441_test" );
-        f.setTechnologyType( TechnologyType.ONECOLOR );
-        f.setPrimaryTaxon( metaData.getTaxon() );
-        metaData.getArrayDesigns().add( f );
+            ArrayDesign f = ArrayDesign.Factory.newInstance();
+            f.setShortName( "GSE8441_test" );
+            f.setTechnologyType( TechnologyType.ONECOLOR );
+            f.setPrimaryTaxon( metaData.getTaxon() );
+            metaData.getArrayDesigns().add( f );
 
-        ee = dataLoaderService.create( metaData, io );
+            ee = dataLoaderService.create( metaData, io );
 
-        designImporter.importDesign( ee,
-                this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );
+            designImporter.importDesign( ee,
+                    this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );
 
-        ee = expressionExperimentService.thaw( ee );
-
+            ee = expressionExperimentService.thaw( ee );
+        }
     }
 
     /**

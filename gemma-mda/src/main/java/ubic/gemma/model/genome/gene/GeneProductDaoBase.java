@@ -25,15 +25,12 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.gene.GeneProduct</code>.
- * </p>
  * 
  * @see ubic.gemma.model.genome.gene.GeneProduct
  */
-public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.genome.gene.GeneProductDao {
+public abstract class GeneProductDaoBase extends HibernateDaoSupport implements GeneProductDao {
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#countAll()

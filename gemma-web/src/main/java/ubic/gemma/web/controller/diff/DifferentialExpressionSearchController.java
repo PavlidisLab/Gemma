@@ -312,35 +312,35 @@ public class DifferentialExpressionSearchController {
 
         log.info( "Starting gene x condition search..." );
         // Load experiments
-        List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
-        List<String> datasetGroupNames = new ArrayList<String>();
+        List<Collection<ExpressionExperiment>> experiments = new ArrayList<>();
+        List<String> datasetGroupNames = new ArrayList<>();
         for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
-            if ( eevo != null ) {
-                // fixme temporary workaroud.
-                if ( eevo.getExpressionExperimentIds().isEmpty() ) {
-                    if ( eevo.getId() != null ) {
-                        experiments.add( expressionExperimentSetService.getExperimentsInSet( eevo.getId() ) );
-                    } else {
-                        throw new IllegalArgumentException(
-                                "Experiment group should either have an id or a list of ee ids." );
-                    }
+            if ( eevo == null ) continue;
+
+            if ( eevo.getExpressionExperimentIds().isEmpty() ) {
+                if ( eevo.getId() != null ) {
+                    experiments.add( expressionExperimentSetService.getExperimentsInSet( eevo.getId() ) );
                 } else {
-                    experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
+                    throw new IllegalArgumentException(
+                            "Experiment group should either have an id or a list of ee ids." );
                 }
-                datasetGroupNames.add( eevo.getName() );
+            } else {
+                experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
             }
+            datasetGroupNames.add( eevo.getName() );
+
         }
 
-        log.info( "Got experiments for set" );
+        // log.info( "Got experiments for set" );
 
         // Load genes
-        List<List<Gene>> genes = new ArrayList<List<Gene>>();
-        List<String> geneGroupNames = new ArrayList<String>();
+        List<List<Gene>> genes = new ArrayList<>();
+        List<String> geneGroupNames = new ArrayList<>();
 
         for ( GeneSetValueObject gsvo : geneValueObjects ) {
             if ( gsvo != null ) {
                 geneGroupNames.add( gsvo.getName() );
-                genes.add( new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
+                genes.add( new ArrayList<>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
             }
         }
 

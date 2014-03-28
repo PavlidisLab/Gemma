@@ -13,80 +13,97 @@
  * specific language governing permissions and limitations under the License.
  * 
  */
-Ext.namespace('Gemma');
+Ext.namespace( 'Gemma' );
 
-Gemma.CoexGraphData = function(coexpressionSearchData, cytoscapeCoexCommand ) {		
-			
-		this.originalResults={};
-		this.originalResults.geneResults = coexpressionSearchData.cytoscapeSearchResults.knownGeneResults;
-		this.originalResults.trimStringency = coexpressionSearchData.cytoscapeSearchResults.nonQueryGeneTrimmedValue;
-	
-		this.defaultSize = "medium";
-		
-		this.mediumGraphMaxSize = coexpressionSearchData.cytoscapeSearchResults.maxEdges * 3 / 4;
-		this.smallGraphMaxSize = coexpressionSearchData.cytoscapeSearchResults.maxEdges / 2;
-		
-		this.largeGraphDataEnabled=false;
-		this.mediumGraphDataEnabled=false;
-		this.smallGraphDataEnabled=false;
-		
-		this.getTrimmedGraphData = function(resultsSizeLimit){
-			
-			//if this is a large 'query genes only ' search, then trimming the data is unnecessary
-			if (coexpressionSearchData.searchCommandUsed.queryGenesOnly){
-				var returnObject = {};
-				returnObject.geneResults = this.originalResults.geneResults;
-				returnObject.trimStringency = this.originalResults.trimStringency;
-				
-				return returnObject;
-				
-			}
-			
-			return Gemma.CoexVOUtil.trimKnownGeneResultsForReducedGraph(this.originalResults.geneResults, coexpressionSearchData.searchCommandUsed.geneIds,
-	    			cytoscapeCoexCommand.stringency, cytoscapeCoexCommand.eeIds.length,
-	    			resultsSizeLimit);
-			
-		};
-		
-		if (this.mediumGraphMaxSize > this.originalResults.geneResults.length ){
-			this.graphDataMedium = this.originalResults;
-		}else {
-			this.graphDataMedium = this.getTrimmedGraphData(this.mediumGraphMaxSize);
-			if (this.graphDataMedium.geneResults.length < this.originalResults.geneResults.length){
-				this.mediumGraphDataEnabled = true;
-				this.largeGraphDataEnabled = true;
-			}
-		}
-		
-		if (this.smallGraphMaxSize > this.graphDataMedium.geneResults.length ){
-			this.graphDataSmall = this.graphDataMedium;
-		}else{
-			this.graphDataSmall = this.getTrimmedGraphData(this.smallGraphMaxSize);
-			if (this.graphDataSmall.geneResults.length < this.graphDataMedium.geneResults.length){
-				this.smallGraphDataEnabled = true;
-				this.mediumGraphDataEnabled = true;
-			}
-		}
-		
-		this.getGraphData = function(graphSize){
-			
-			if (!graphSize){
-				graphSize = this.defaultSize;
-			}
-			
-			if(graphSize=="medium"){
-				
-				return this.graphDataMedium;
-				
-			} else if (graphSize=="small"){
-				
-				return this.graphDataSmall;
-			}
-			
-			return this.originalResults;
-			
-		};		
-		
-		
+/**
+ * 
+ * @param coexpressionSearchData
+ *           Gemma.CoexGraphData
+ * @param cytoscapeCoexCommand
+ * @returns {Gemma.CoexGraphData}
+ */
+Gemma.CoexGraphData = function( coexpressionSearchData, cytoscapeCoexCommand ) {
+
+   this.originalResults = {};
+   this.originalResults.geneResults = coexpressionSearchData.getCytoscapeResults();
+   this.originalResults.trimStringency = coexpressionSearchData.getNonQueryGeneTrimmedValue();
+
+   this.defaultSize = "medium";
+
+   /*
+    * Heuristic thresholds. MaxEdges is a server-side limit meant to keep huge graphs from coming down. Default is 850
+    * (or some such; see CoexpressionMetaValueObject).
+    */
+   this.mediumGraphMaxSize = coexpressionSearchData.cytoscapeSearchResults.maxEdges * 0.75;
+   this.smallGraphMaxSize = coexpressionSearchData.cytoscapeSearchResults.maxEdges * 0.5;
+
+   this.largeGraphDataEnabled = false;
+   this.mediumGraphDataEnabled = false;
+   this.smallGraphDataEnabled = false;
+
+   /**
+    * Trim graph to match (more or less) the given resultsSizeLimit. See Gemma.CoexVOUtil.trimResultsForReducedGraph for
+    * details.
+    * 
+    * @param {number}
+    *           resultsSizeLimit
+    */
+   this.getTrimmedGraphData = function( resultsSizeLimit ) {
+
+      // if this is a large 'query genes only ' search, then trimming the data is unnecessary
+      if ( coexpressionSearchData.searchCommandUsed.queryGenesOnly ) {
+         var returnObject = {};
+         returnObject.geneResults = this.originalResults.geneResults;
+         returnObject.trimStringency = this.originalResults.trimStringency;
+         return returnObject;
+      }
+
+      /*
+       * 
+       */
+      return Gemma.CoexVOUtil.trimResultsForReducedGraph( this.originalResults.geneResults,
+         coexpressionSearchData.searchCommandUsed.geneIds, cytoscapeCoexCommand.stringency,
+         this.originalResults.numDatasetsQueried, resultsSizeLimit );
+
+   };
+
+   /*
+    * Establish the data for the different graph sizes.
+    */
+   if ( this.mediumGraphMaxSize > this.originalResults.geneResults.length ) {
+      this.graphDataMedium = this.originalResults;
+   } else {
+      this.graphDataMedium = this.getTrimmedGraphData( this.mediumGraphMaxSize );
+      if ( this.graphDataMedium && this.graphDataMedium.geneResults.length < this.originalResults.geneResults.length ) {
+         this.mediumGraphDataEnabled = true;
+         this.largeGraphDataEnabled = true;
+      }
+   }
+
+   if ( this.graphDataMedium && this.smallGraphMaxSize > this.graphDataMedium.geneResults.length ) {
+      this.graphDataSmall = this.graphDataMedium;
+   } else {
+      this.graphDataSmall = this.getTrimmedGraphData( this.smallGraphMaxSize );
+      if ( this.graphDataMedium && this.graphDataSmall.geneResults.length < this.graphDataMedium.geneResults.length ) {
+         this.smallGraphDataEnabled = true;
+         this.mediumGraphDataEnabled = true;
+      }
+   }
+
+   this.getGraphData = function( graphSize ) {
+
+      if ( !graphSize ) {
+         graphSize = this.defaultSize;
+      }
+
+      if ( graphSize === "medium" ) {
+         return this.graphDataMedium;
+      } else if ( graphSize === "small" ) {
+         return this.graphDataSmall;
+      }
+
+      return this.originalResults;
+
+   };
 
 };

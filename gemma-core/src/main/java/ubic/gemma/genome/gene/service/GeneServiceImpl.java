@@ -33,17 +33,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.association.coexpression.CoexpressionService;
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
@@ -77,6 +76,9 @@ public class GeneServiceImpl implements GeneService {
 
     @Autowired
     private AnnotationAssociationService annotationAssociationService;
+
+    @Autowired
+    private CoexpressionService coexpressionService;
 
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
@@ -263,25 +265,25 @@ public class GeneServiceImpl implements GeneService {
         return this.getGeneDao().findNearest( physicalLocation, useStrand );
     }
 
-    /**
-     * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( final Collection<Gene> genes,
-            final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
-        return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, interGenesOnly );
-    }
-
-    /**
-     * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public QueryGeneCoexpression getCoexpressedGenes( final Gene gene, final Collection<? extends BioAssaySet> ees,
-            final Integer stringency ) {
-        return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
-    }
+    // /**
+    // * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
+    // */
+    // @Override
+    // @Transactional(readOnly = true)
+    // public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( final Collection<Gene> genes,
+    // final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
+    // return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, interGenesOnly );
+    // }
+    //
+    // /**
+    // * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
+    // */
+    // @Override
+    // @Transactional(readOnly = true)
+    // public QueryGeneCoexpression getCoexpressedGenes( final Gene gene, final Collection<? extends BioAssaySet> ees,
+    // final Integer stringency ) {
+    // return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
+    // }
 
     /**
      * @see GeneService#getCompositeSequenceCountById(Long)
@@ -308,35 +310,6 @@ public class GeneServiceImpl implements GeneService {
     @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequencesById( final Long id ) {
         return this.getGeneDao().getCompositeSequencesById( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneService#getGeneCoexpressionNodeDegree(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes ) {
-        return this.getGeneDao().getGeneCoexpressionNodeDegree( genes );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene ) {
-        return this.getGeneDao().getGeneCoexpressionNodeDegree( gene );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees ) {
-        return this.getGeneDao().getGeneCoexpressionNodeDegree( gene, ees );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
-        return this.getGeneDao().getGeneIdCoexpressionNodeDegree( geneIds );
     }
 
     /**
@@ -531,8 +504,9 @@ public class GeneServiceImpl implements GeneService {
             }
         }
 
-        GeneCoexpressionNodeDegree nodeDegree = getGeneCoexpressionNodeDegree( g );
-        if ( nodeDegree != null ) gvo.setNodeDegreeRank( nodeDegree.getRankNumLinks() );
+        GeneCoexpressionNodeDegreeValueObject nodeDegree = coexpressionService.getNodeDegree( g );
+
+        if ( nodeDegree != null ) gvo.setNodeDegrees( nodeDegree.asIntArray() );
 
         return gvo;
     }

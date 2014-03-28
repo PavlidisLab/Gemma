@@ -54,12 +54,6 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         super.setSessionFactory( sessionFactory );
     }
 
-    @Override
-    public Collection<? extends Gene2GeneProteinAssociation> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneProteinAssociationImpl where id in (:ids)",
-                "ids", ids );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -99,107 +93,6 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         this.getHibernateTemplate().save( gene2GeneProteinAssociation );
 
         return gene2GeneProteinAssociation;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
-     */
-    @Override
-    public Gene2GeneProteinAssociation load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get( Gene2GeneProteinAssociationImpl.class, id );
-        return ( Gene2GeneProteinAssociation ) entity;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#loadAll()
-     */
-    @Override
-    public Collection<? extends Gene2GeneProteinAssociation> loadAll() {
-        final Collection<? extends Gene2GeneProteinAssociation> results = this.getHibernateTemplate().loadAll(
-                Gene2GeneProteinAssociationImpl.class );
-        return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.remove - 'id' can not be null" );
-        }
-        Gene2GeneProteinAssociation entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( Collection<? extends Gene2GeneProteinAssociation> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
-     */
-    @Override
-    public void remove( Gene2GeneProteinAssociation Gene2GeneProteinAssociation ) {
-        if ( Gene2GeneProteinAssociation == null ) {
-            throw new IllegalArgumentException(
-                    "Gene2GeneProteinAssociation.remove - 'Gene2GeneProteinAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().delete( Gene2GeneProteinAssociation );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final Collection<? extends Gene2GeneProteinAssociation> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.update - 'entities' can not be null" );
-        }
-
-        for ( Iterator<? extends Gene2GeneProteinAssociation> entityIterator = entities.iterator(); entityIterator
-                .hasNext(); ) {
-            update( entityIterator.next() );
-        }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
-     */
-    @Override
-    public void update( Gene2GeneProteinAssociation Gene2GeneProteinAssociation ) {
-        if ( Gene2GeneProteinAssociation == null ) {
-            throw new IllegalArgumentException(
-                    "Gene2GeneProteinAssociation.update - 'Gene2GeneProteinAssociation' can not be null" );
-        }
-        this.getHibernateTemplate().update( Gene2GeneProteinAssociation );
     }
 
     /*
@@ -257,6 +150,81 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         return queryObject.list();
     }
 
+    @Override
+    public Collection<? extends Gene2GeneProteinAssociation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneProteinAssociationImpl where id in (:ids)",
+                "ids", ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
+     */
+    @Override
+    public Gene2GeneProteinAssociation load( final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.load - 'id' can not be null" );
+        }
+        final Object entity = this.getHibernateTemplate().get( Gene2GeneProteinAssociationImpl.class, id );
+        return ( Gene2GeneProteinAssociation ) entity;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#loadAll()
+     */
+    @Override
+    public Collection<? extends Gene2GeneProteinAssociation> loadAll() {
+        final Collection<? extends Gene2GeneProteinAssociation> results = this.getHibernateTemplate().loadAll(
+                Gene2GeneProteinAssociationImpl.class );
+        return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
+     */
+    @Override
+    public void remove( Collection<? extends Gene2GeneProteinAssociation> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
+     */
+    @Override
+    public void remove( Gene2GeneProteinAssociation Gene2GeneProteinAssociation ) {
+        if ( Gene2GeneProteinAssociation == null ) {
+            throw new IllegalArgumentException(
+                    "Gene2GeneProteinAssociation.remove - 'Gene2GeneProteinAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().delete( Gene2GeneProteinAssociation );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
+     */
+    @Override
+    public void remove( java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.remove - 'id' can not be null" );
+        }
+        Gene2GeneProteinAssociation entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -284,6 +252,38 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
 
         session.evict( gene2GeneProteinAssociation );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
+     */
+    @Override
+    public void update( final Collection<? extends Gene2GeneProteinAssociation> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.update - 'entities' can not be null" );
+        }
+
+        for ( Iterator<? extends Gene2GeneProteinAssociation> entityIterator = entities.iterator(); entityIterator
+                .hasNext(); ) {
+            update( entityIterator.next() );
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
+     */
+    @Override
+    public void update( Gene2GeneProteinAssociation Gene2GeneProteinAssociation ) {
+        if ( Gene2GeneProteinAssociation == null ) {
+            throw new IllegalArgumentException(
+                    "Gene2GeneProteinAssociation.update - 'Gene2GeneProteinAssociation' can not be null" );
+        }
+        this.getHibernateTemplate().update( Gene2GeneProteinAssociation );
     }
 
 }

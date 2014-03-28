@@ -18,8 +18,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisService;
@@ -40,7 +40,7 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
-    private ProbeCoexpressionAnalysisService coexpressionAnalysisService;
+    private CoexpressionAnalysisService coexpressionAnalysisService;
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
@@ -70,7 +70,7 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
                 removedAll = false;
             }
         }
-        for ( ProbeCoexpressionAnalysis coex : coexpressionAnalysisService.findByInvestigation( expExp ) ) {
+        for ( CoexpressionAnalysis coex : coexpressionAnalysisService.findByInvestigation( expExp ) ) {
             try {
                 coexpressionAnalysisService.delete( coex );
             } catch ( Exception e ) {

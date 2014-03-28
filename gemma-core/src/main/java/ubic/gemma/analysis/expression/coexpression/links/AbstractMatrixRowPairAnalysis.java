@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -32,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.Matrix2D;
+import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -45,16 +47,18 @@ import cern.colt.list.ObjectArrayList;
  * @version $Id$
  */
 public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnalysis {
-    protected static final int NUM_BINS = 2048;
-    protected static final int HALF_BIN = NUM_BINS / 2;
-    protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
-
     /**
      * Absolute lower limit to minNumUsed. (This used to be 3, and then 5). It doesn't make much sense to set this
      * higher than ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT
      */
-    private static final int HARD_LIMIT_MIN_NUM_USED = 15;
+    public static final int HARD_LIMIT_MIN_NUM_USED = 8;
+
+    protected static final int HALF_BIN = NUM_BINS / 2;
+
+    protected static final Log log = LogFactory.getLog( PearsonMetrics.class );
+
     protected ExpressionDataDoubleMatrix dataMatrix;
+
     protected int[] fastHistogram = new int[NUM_BINS];
     protected Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
     protected double globalMean = 0.0; // mean of the entire distribution.
@@ -63,7 +67,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected boolean[] hasMissing = null;
     protected boolean histogramIsFilled = false;
     protected ObjectArrayList keepers = null;
-
     protected double lowerTailThreshold = 0.0;
 
     /**
@@ -78,9 +81,9 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     protected int numVals = 0; // number of values actually stored in the matrix
 
-    protected Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = null;
-    protected double pValueThreshold = 0.0;
+    protected Map<CompositeSequence, Set<Gene>> probeToGeneMap = null;
 
+    protected double pValueThreshold = 0.0;
     protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
 
     protected Map<ExpressionDataMatrixRowElement, CompositeSequence> rowMapCache = new HashMap<>();
@@ -94,12 +97,13 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected BitMatrix used = null;
 
     protected boolean usePvalueThreshold = true;
-    private long crossHybridizationRejections = 0;
 
-    private Map<CompositeSequence, Collection<Gene>> flatProbe2GeneMap;
+    private long crossHybridizationRejections = 0;
     private int numUniqueGenes = 0;
+
     private boolean omitNegativeCorrelationLinks = false;
 
+    @Override
     public long getCrossHybridizationRejections() {
         return crossHybridizationRejections;
     }
@@ -210,7 +214,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * 
      */
     @Override
-    public void setDuplicateMap( Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap ) {
+    public void setDuplicateMap( Map<CompositeSequence, Set<Gene>> probeToGeneMap ) {
         this.probeToGeneMap = probeToGeneMap;
         init();
     }
@@ -302,6 +306,28 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
+     * Get correlation pvalue corrected for multiple testing of the genes by different probes.
+     * <p>
+     * Current implementation: We conservatively penalize the p-values for each additional test the gene received. For
+     * example, if correlation is between two genes that are each assayed twice on the platform, the pvalue is penalized
+     * by a factor of 4.0. If either probe assays more than one gene, we penalize according to the gene which is tested
+     * the most times on the platform.
+     * 
+     * @param i int
+     * @param j int
+     * @param correl double
+     * @param numused int
+     * @return double (can be greater than 1.0, we don't care)
+     */
+    double correctedPvalue( int i, int j, double correl, int numused ) {
+
+        // raw value.
+        double p = CorrelationStats.pvalue( correl, numused );
+
+        return p * numberOfTestsForGeneAtRow( i ) * numberOfTestsForGeneAtRow( j );
+    }
+
+    /**
      * Store information about whether data includes missing values.
      * 
      * @return int
@@ -351,7 +377,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * @param j
      * @return
      */
-    protected Collection<Collection<Gene>> getGenesForRow( int j ) {
+    protected Set<Gene> getGenesForRow( int j ) {
         return this.probeToGeneMap.get( getProbeForRow( dataMatrix.getRowElement( j ) ) );
     }
 
@@ -377,7 +403,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             CompositeSequence de = element.getDesignElement();
             rowMapCache.put( element, de );
 
-            Collection<Collection<Gene>> geneIdSet = this.probeToGeneMap.get( de );
+            Set<Gene> geneIdSet = this.probeToGeneMap.get( de );
             Integer i = element.getIndex();
             hasGenesCache[i] = geneIdSet != null && geneIdSet.size() > 0;
 
@@ -468,6 +494,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         return true;
     }
 
+    protected abstract void rowStatistics();
+
     /**
      * Checks for valid values of correlation and encoding.
      * 
@@ -539,7 +567,9 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * Determine if the probes at this location in the matrix assay any of the same gene(s). This has nothing to do with
-     * whether the probes are specific. FIXME this is going to be too slow.
+     * whether the probes are specific.
+     * <p>
+     * FIXME this is going to be slow? We call it for every cell.
      * 
      * @param i
      * @param j
@@ -551,58 +581,72 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         ExpressionDataMatrixRowElement itemA = this.dataMatrix.getRowElement( i );
         ExpressionDataMatrixRowElement itemB = this.dataMatrix.getRowElement( j );
 
-        Collection<Gene> genesA = this.flatProbe2GeneMap.get( itemA.getDesignElement() );
-        Collection<Gene> genesB = this.flatProbe2GeneMap.get( itemB.getDesignElement() );
+        Collection<Gene> genesA = this.probeToGeneMap.get( itemA.getDesignElement() );
+        Collection<Gene> genesB = this.probeToGeneMap.get( itemB.getDesignElement() );
 
         return CollectionUtils.containsAny( genesA, genesB );
-
     }
 
     /**
-     * populate geneToProbeMap and gather stats. Probes that do not map to any genes are still counted.
+     * Convert the probeToGeneMap to a geneToProbeMap and gather stats.
      */
     private void initGeneToProbeMap() {
-        int[] stats = new int[20]; // how many genes per probe
+
         this.numUniqueGenes = 0;
-        this.flatProbe2GeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
         this.geneToProbeMap = new HashMap<Gene, Collection<CompositeSequence>>();
         for ( CompositeSequence cs : probeToGeneMap.keySet() ) {
 
-            if ( !this.flatProbe2GeneMap.containsKey( cs ) ) {
-                this.flatProbe2GeneMap.put( cs, new HashSet<Gene>() );
-            }
-
-            Collection<Collection<Gene>> genes = probeToGeneMap.get( cs );
+            Set<Gene> genes = probeToGeneMap.get( cs );
 
             /*
              * Genes will be empty if the probe does not map to any genes.
              */
             if ( genes == null ) continue; // defensive.
-
-            for ( Collection<Gene> cluster : genes ) {
-                if ( cluster.isEmpty() ) continue;
+            for ( Gene g : genes ) {
                 numUniqueGenes++;
-                for ( Gene g : cluster ) {
-                    if ( !geneToProbeMap.containsKey( g ) ) {
-                        geneToProbeMap.put( g, new HashSet<CompositeSequence>() );
-                    }
-                    this.geneToProbeMap.get( g ).add( cs );
-                    this.flatProbe2GeneMap.get( cs ).add( g );
-                }
 
-                if ( cluster.size() >= stats.length ) {
-                    stats[stats.length - 1]++;
-                } else {
-                    stats[cluster.size()]++;
+                if ( !geneToProbeMap.containsKey( g ) ) {
+                    geneToProbeMap.put( g, new HashSet<CompositeSequence>() );
                 }
+                this.geneToProbeMap.get( g ).add( cs );
+
             }
         }
 
         if ( numUniqueGenes == 0 ) {
-            log.warn( "There are no genes for this data set, " + this.flatProbe2GeneMap.size() + " probes." );
+            log.warn( "There are no genes for this data set, " + this.probeToGeneMap.size() + " probes." );
         }
 
-        log.info( "Mapping Stats: " + numUniqueGenes + " unique genes; genes per probe distribution summary: "
+        int max = 0;
+        for ( Gene g : geneToProbeMap.keySet() ) {
+            int c = geneToProbeMap.get( g ).size();
+            if ( c > max ) {
+                max = c;
+            }
+        }
+        int[] stats = new int[max]; // how many probes have N genes that they hit.
+        for ( Gene g : geneToProbeMap.keySet() ) {
+            int c = geneToProbeMap.get( g ).size();
+            assert c > 0;
+            stats[c - 1]++;
+        }
+
+        log.info( "Mapping Stats: " + numUniqueGenes + " unique genes; gene representation summary: "
                 + ArrayUtils.toString( stats ) );
+    }
+
+    /**
+     * @param index
+     * @return
+     */
+    private double numberOfTestsForGeneAtRow( int index ) {
+        double testCount = 0;
+        Set<Gene> clusters = getGenesForRow( index );
+        for ( Gene geneId : clusters ) {
+            // how many probes assay that gene
+            int c = this.geneToProbeMap.get( geneId ).size();
+            if ( c > testCount ) testCount = c;
+        }
+        return testCount;
     }
 }

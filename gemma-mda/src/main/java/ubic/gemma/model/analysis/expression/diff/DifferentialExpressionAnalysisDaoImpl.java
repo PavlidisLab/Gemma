@@ -327,7 +327,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             if ( timer.getTime() > 1000 ) {
                 log.info( "Fetch " + count + " subset analyses for " + result.size() + " experiment subsets: "
                         + timer.getTime() + "ms" );
-                log.info( "Query for subsets was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), q2 ) );
+                log.debug( "Query for subsets was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), q2 ) );
             }
         }
 

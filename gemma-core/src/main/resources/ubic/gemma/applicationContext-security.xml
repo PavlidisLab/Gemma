@@ -89,7 +89,7 @@
 		<property name="key" value="${gemma.runas.password}" />
 	</bean>
 
-	<!-- declared separately so we can use it direclty. -->
+	<!-- declared separately so we can use it directly. -->
 	<bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
 
 

@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -38,6 +40,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * See bug 3466
@@ -93,6 +96,14 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysis analysis = result.iterator().next();
 
         assertNotNull( analysis );
+
+        Map<ExperimentalFactor, FactorValue> baselineLevels = ExpressionDataMatrixColumnSort.getBaselineLevels( ee
+                .getExperimentalDesign().getExperimentalFactors() );
+
+        assertEquals( 1, baselineLevels.size() );
+        FactorValue fv = baselineLevels.values().iterator().next();
+
+        assertEquals( 24.0, Double.parseDouble( fv.getMeasurement().getValue() ), 0.0001 );
 
         // checkResults( analysis );
     }

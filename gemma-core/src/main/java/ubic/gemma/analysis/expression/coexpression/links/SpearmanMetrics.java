@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import java.util.Collection;
+import java.util.Set;
 
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
@@ -35,21 +35,14 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
 /**
+ * Subclass that computes correlations using ranks.
+ * 
  * @author paul
  * @version $Id$
  */
-public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
+public class SpearmanMetrics extends PearsonMetrics {
 
     double[][] rankTransformedData = null;
-
-    /**
-     * This overrides value from AbstractMatrixRowPairAnalysis. If fewer than this number values are available, the
-     * correlation is rejected. This helps keep the correlation distribution reasonable.
-     * <p>
-     * FIXME we might want to set this even higher!
-     */
-    @SuppressWarnings("hiding")
-    protected int minNumUsed = 8;
 
     /**
      * @param
@@ -58,6 +51,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
         this( dataMatrix.rows() );
         this.dataMatrix = dataMatrix;
         this.numMissing = this.fillUsed();
+        assert this.minNumUsed >= 8; // we used to have a separate setting for this, but we raised it.
     }
 
     /**
@@ -178,31 +172,25 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
     public double correctedPvalue( int i, int j, double correl, int numused ) {
         double p = CorrelationStats.spearmanPvalue( correl, numused );
         double k = 1, m = 1;
-        Collection<Collection<Gene>> clusters = getGenesForRow( i );
+        Set<Gene> clusters = getGenesForRow( i );
 
         if ( clusters != null ) {
-            for ( Collection<Gene> geneIdSet : clusters ) {
-                /*
-                 * Note we break on the first iteration because the number of probes per gene in the same cluster is
-                 * constant.
-                 */
-                for ( Gene geneId : geneIdSet ) {
-                    int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
-                    if ( k < tmpK ) k = tmpK;
-                    break;
-                }
+
+            for ( Gene geneId : clusters ) {
+                int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
+                if ( k < tmpK ) k = tmpK;
+                break;
             }
         }
 
         clusters = getGenesForRow( j );
         if ( clusters != null ) {
-            for ( Collection<Gene> geneIdSet : clusters ) {
-                for ( Gene geneId : geneIdSet ) {
-                    int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
-                    if ( m < tmpM ) m = tmpM;
-                    break;
-                }
+            for ( Gene geneId : clusters ) {
+                int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
+                if ( m < tmpM ) m = tmpM;
+                break;
             }
+
         }
 
         return p * k * m;

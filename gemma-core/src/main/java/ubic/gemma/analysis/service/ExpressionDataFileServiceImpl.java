@@ -59,8 +59,8 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.association.coexpression.ProbeLink;
+import ubic.gemma.model.association.coexpression.CoexpressionService;
+import ubic.gemma.model.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -127,7 +127,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService = null;
+    private CoexpressionService gene2geneCoexpressionService = null;
 
     /*
      * (non-Javadoc)
@@ -1210,40 +1210,27 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         Taxon tax = expressionExperimentService.getTaxon( ee );
         assert tax != null;
-        Collection<ProbeLink> probeLinks = probe2ProbeCoexpressionService
-                .getProbeCoExpression( ee, tax.getCommonName() );
 
-        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
+        // FIXME TESTME
+        Collection<CoexpressionValueObject> geneLinks = gene2geneCoexpressionService
+                .getCoexpression( ee, true );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         StringBuffer buf = new StringBuffer();
 
         // Write header information
-        buf.append( "# Coexpression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
+        buf.append( "# Coexpression data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
         buf.append( "# Generated On: " + timestamp + " \n" );
+        buf.append( "# Links are listed in an arbitrary order with an indication of positive or negative correlation\n" );
         buf.append( DISCLAIMER );
-        if ( geneAnnotations.isEmpty() ) {
-            log.info( "Platform anotation File Missing for Experiment, unable to include annotation information" );
-            buf.append( "# The platform annotation file is missing for this Experiment, unable to include gene annotation information \n" );
-            buf.append( "probeId_1 \t probeId_2 \t score \n" );
-        } else
-            buf.append( "probe_1 \t gene_symbol_1 \t gene_name_1 \t probe_2 \t gene_symbol_2 \t gene_name_2 \t score \n" );
+        buf.append( "GeneSymbol1\tGeneSymbol2\tDirection\tSupport\n" );
 
         // Data
-        for ( ProbeLink link : probeLinks ) {
+        for ( CoexpressionValueObject link : geneLinks ) {
 
-            if ( geneAnnotations.isEmpty() ) {
-                buf.append( link.getFirstDesignElementId() + "\t" + link.getSecondDesignElementId() + "\t" );
-            } else {
-                String[] firstAnnotation = geneAnnotations.get( link.getFirstDesignElementId() );
-                String[] secondAnnotation = geneAnnotations.get( link.getSecondDesignElementId() );
+            buf.append( link.getQueryGeneSymbol() + "\t" + link.getCoexGeneSymbol() + "\t" );
 
-                buf.append( firstAnnotation[0] + "\t" + firstAnnotation[1] + "\t" + firstAnnotation[2] + "\t" );
-                buf.append( secondAnnotation[0] + "\t" + secondAnnotation[1] + "\t" + secondAnnotation[2] + "\t" );
-            }
-
-            buf.append( StringUtils.substring( link.getScore().toString(), 0, 5 ) + "\n" );
+            buf.append( link.isPositiveCorrelation() ? "+" : "-" + "\n" );
         }
 
         // Write coexpression data to file (zipped of course)

@@ -2036,7 +2036,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // for each Ontoly Term find in the search
         for ( OntologyTerm ontologyTerm : ontologyTermsFound ) {
 
-            Set<Integer> geneFoundForOntologyTerm = new HashSet<Integer>();
+            Set<Integer> geneFoundForOntologyTerm = new HashSet<>();
 
             if ( publicPhenotypesGenesAssociations.get( ontologyTerm.getUri() ) != null ) {
                 geneFoundForOntologyTerm.addAll( publicPhenotypesGenesAssociations.get( ontologyTerm.getUri() ) );

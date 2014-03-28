@@ -111,7 +111,8 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     @Override
     public T load( Long id ) {
         nullCheck( id );
-        T entity = ( T ) this.getSessionFactory().getCurrentSession().load( elementClass, id );
+        // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
+        T entity = ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
         return entity;
     }
 

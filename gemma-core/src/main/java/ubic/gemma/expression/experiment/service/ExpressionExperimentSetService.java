@@ -22,7 +22,6 @@ import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -79,11 +78,11 @@ public interface ExpressionExperimentSetService {
      */
     public Collection<Long> findIds( BioAssaySet bioAssaySet );
 
-    /**
-     * Get analyses that use this set. Note that if this collection is not empty, modification of the
-     * expressionexperimentset should be disallowed.
-     */
-    public Collection<ExpressionAnalysis> getAnalyses( ExpressionExperimentSet expressionExperimentSet );
+    // /**
+    // * Get analyses that use this set. Note that if this collection is not empty, modification of the
+    // * expressionexperimentset should be disallowed.
+    // */
+    // public Collection<ExpressionAnalysis> getAnalyses( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * Get the (security-filtered) list of experiments in a set.

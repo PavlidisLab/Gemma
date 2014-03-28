@@ -1,5 +1,6 @@
-if (typeof AnnotationController === 'undefined') {
-    var AnnotationController = {};
+if ( typeof AnnotationController === 'undefined' ) {
+   var AnnotationController =
+      {};
 }
 
 AnnotationController.autoTag = function(p0, callback) {
@@ -21,8 +22,9 @@ AnnotationController.validateTags = function(p0, callback) {
 AnnotationController.getCategoryTerms = function(callback) {
 };
 
-if (typeof ArrayDesignController === 'undefined') {
-    var ArrayDesignController = {};
+if ( typeof ArrayDesignController === 'undefined' ) {
+   var ArrayDesignController =
+      {};
 }
 ArrayDesignController.remove = function(p0, callback) {
 };
@@ -44,28 +46,32 @@ ArrayDesignController.loadArrayDesignsSummary = function(callback) {
 };
 ArrayDesignController.updateReportById = function(p0, callback) {
 };
-if (typeof ArrayDesignRepeatScanController === 'undefined') {
-    var ArrayDesignRepeatScanController = {};
+if ( typeof ArrayDesignRepeatScanController === 'undefined' ) {
+   var ArrayDesignRepeatScanController =
+      {};
 }
 ArrayDesignRepeatScanController.run = function(p0, callback) {
 };
 
-if (typeof AuditController === 'undefined') {
-    var AuditController = {};
+if ( typeof AuditController === 'undefined' ) {
+   var AuditController =
+      {};
 }
 AuditController.addAuditEvent = function(p0, p1, p2, p3, callback) {
-}; 
+};
 AuditController.getEvents = function(p0, callback) {
 };
 
-if (typeof BatchInfoFetchController === 'undefined') {
-    var BatchInfoFetchController = {};
+if ( typeof BatchInfoFetchController === 'undefined' ) {
+   var BatchInfoFetchController =
+      {};
 }
 BatchInfoFetchController.run = function(p0, callback) {
 };
 
-if (typeof BibliographicReferenceController === 'undefined') {
-    var BibliographicReferenceController = {};
+if ( typeof BibliographicReferenceController === 'undefined' ) {
+   var BibliographicReferenceController =
+      {};
 }
 BibliographicReferenceController.update = function(p0, callback) {
 };
@@ -78,8 +84,9 @@ BibliographicReferenceController.search = function(p0, callback) {
 BibliographicReferenceController.loadFromPubmedID = function(p0, callback) {
 };
 
-if (typeof BioAssayController === 'undefined') {
-    var BioAssayController = {};
+if ( typeof BioAssayController === 'undefined' ) {
+   var BioAssayController =
+      {};
 }
 BioAssayController.markOutlier = function(p0, callback) {
 };
@@ -90,8 +97,9 @@ BioAssayController.getBioAssays = function(p0, callback) {
 BioAssayController.getIdentifiedOutliers = function(p0, callback) {
 };
 
-if (typeof BioMaterialController === 'undefined') {
-    var BioMaterialController = {};
+if ( typeof BioMaterialController === 'undefined' ) {
+   var BioMaterialController =
+      {};
 }
 BioMaterialController.getAnnotation = function(p0, callback) {
 };
@@ -102,8 +110,9 @@ BioMaterialController.getBioMaterials = function(p0, callback) {
 BioMaterialController.addFactorValueTo = function(p0, p1, callback) {
 };
 
-if (typeof CharacteristicBrowserController === 'undefined') {
-    var CharacteristicBrowserController = {};
+if ( typeof CharacteristicBrowserController === 'undefined' ) {
+   var CharacteristicBrowserController =
+      {};
 }
 CharacteristicBrowserController.findCharacteristics = function(p0, callback) {
 };
@@ -118,8 +127,9 @@ CharacteristicBrowserController.browse = function(p0, callback) {
 CharacteristicBrowserController.count = function(callback) {
 };
 
-if (typeof CompositeSequenceController === 'undefined') {
-    var CompositeSequenceController = {};
+if ( typeof CompositeSequenceController === 'undefined' ) {
+   var CompositeSequenceController =
+      {};
 }
 CompositeSequenceController.search = function(p0, p1, callback) {
 };
@@ -128,14 +138,16 @@ CompositeSequenceController.getCsSummaries = function(p0, callback) {
 CompositeSequenceController.getGeneMappingSummary = function(p0, callback) {
 };
 
-if (typeof IndexService === 'undefined') {
-    var IndexService = {};
+if ( typeof IndexService === 'undefined' ) {
+   var IndexService =
+      {};
 }
 IndexService.index = function(p0, callback) {
 };
 
-if (typeof DEDVController === 'undefined') {
-    var DEDVController = {};
+if ( typeof DEDVController === 'undefined' ) {
+   var DEDVController =
+      {};
 }
 
 DEDVController.getDEDV = function(p0, p1, callback) {
@@ -148,15 +160,16 @@ DEDVController.getDEDVForVisualization = function(p0, p1, callback) {
 };
 DEDVController.getVectorData = function(p0, callback) {
 };
-DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1,  callback) {
+DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1, callback) {
 };
 DEDVController.getDEDVForPcaVisualization = function(p0, p1, p2, callback) {
 };
 DEDVController.getDEDVForDiffExVisualizationByExperiment = function(p0, p1, p2, p3, callback) {
 };
 
-if (typeof DifferentialExpressionAnalysisController === 'undefined') {
-    var DifferentialExpressionAnalysisController = {};
+if ( typeof DifferentialExpressionAnalysisController === 'undefined' ) {
+   var DifferentialExpressionAnalysisController =
+      {};
 }
 DifferentialExpressionAnalysisController.run = function(p0, callback) {
 };
@@ -171,8 +184,9 @@ DifferentialExpressionAnalysisController.redo = function(p0, p1, callback) {
 DifferentialExpressionAnalysisController.refreshStats = function(p0, p1, callback) {
 };
 
-if (typeof DifferentialExpressionSearchController === 'undefined') {
-    var DifferentialExpressionSearchController = {};
+if ( typeof DifferentialExpressionSearchController === 'undefined' ) {
+   var DifferentialExpressionSearchController =
+      {};
 }
 DifferentialExpressionSearchController.getDifferentialExpression = function(p0, p1, p2, callback) {
 };
@@ -185,8 +199,9 @@ DifferentialExpressionSearchController.getFactors = function(p0, callback) {
 DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function(p0, p1, p2, p3, p4, callback) {
 };
 
-if (typeof DiffExMetaAnalyzerController === 'undefined') {
-    var DiffExMetaAnalyzerController = {};
+if ( typeof DiffExMetaAnalyzerController === 'undefined' ) {
+   var DiffExMetaAnalyzerController =
+      {};
 }
 DiffExMetaAnalyzerController.analyzeResultSets = function(p0, callback) {
 };
@@ -199,8 +214,9 @@ DiffExMetaAnalyzerController.removeMetaAnalysis = function(p0, callback) {
 DiffExMetaAnalyzerController.saveResultSets = function(p0, p1, p2, callback) {
 };
 
-if (typeof ExperimentalDesignController === 'undefined') {
-    var ExperimentalDesignController = {};
+if ( typeof ExperimentalDesignController === 'undefined' ) {
+   var ExperimentalDesignController =
+      {};
 }
 ExperimentalDesignController.updateBioMaterials = function(p0, callback) {
 };
@@ -231,16 +247,18 @@ ExperimentalDesignController.updateExperimentalFactors = function(p0, callback) 
 ExperimentalDesignController.updateFactorValueCharacteristics = function(p0, callback) {
 };
 
-if (typeof ExpressionDataFileUploadController === 'undefined') {
-    var ExpressionDataFileUploadController = {};
+if ( typeof ExpressionDataFileUploadController === 'undefined' ) {
+   var ExpressionDataFileUploadController =
+      {};
 }
 ExpressionDataFileUploadController.load = function(p0, callback) {
 };
 ExpressionDataFileUploadController.validate = function(p0, callback) {
 };
 
-if (typeof ExpressionExperimentController === 'undefined') {
-    var ExpressionExperimentController = {};
+if ( typeof ExpressionExperimentController === 'undefined' ) {
+   var ExpressionExperimentController =
+      {};
 }
 ExpressionExperimentController.getAnnotation = function(p0, callback) {
 };
@@ -250,7 +268,7 @@ ExpressionExperimentController.searchExpressionExperiments = function(p0, callba
 };
 ExpressionExperimentController.getAllTaxonExperimentGroup = function(p0, callback) {
 };
-ExpressionExperimentController.searchExperimentsAndExperimentGroups = function(p0,p1, callback) {
+ExpressionExperimentController.searchExperimentsAndExperimentGroups = function(p0, p1, callback) {
 };
 ExpressionExperimentController.searchExperimentsAndExperimentGroupsGetIds = function(p0, p1, callback) {
 };
@@ -282,7 +300,7 @@ ExpressionExperimentController.updateAllReports = function(callback) {
 };
 ExpressionExperimentController.updateBasics = function(p0, callback) {
 };
-ExpressionExperimentController.clearFromCaches = function(p0, callback ) {
+ExpressionExperimentController.clearFromCaches = function(p0, callback) {
 };
 ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
 };
@@ -299,8 +317,9 @@ ExpressionExperimentController.loadCountsForDataSummaryTable = function(callback
 ExpressionExperimentController.loadExpressionExperimentsWithQcIssues = function(callback) {
 };
 
-if (typeof ExpressionExperimentDataFetchController === 'undefined') {
-    var ExpressionExperimentDataFetchController = {};
+if ( typeof ExpressionExperimentDataFetchController === 'undefined' ) {
+   var ExpressionExperimentDataFetchController =
+      {};
 }
 ExpressionExperimentDataFetchController.getDataFile = function(p0, callback) {
 };
@@ -309,14 +328,16 @@ ExpressionExperimentDataFetchController.getDiffExpressionDataFile = function(p0,
 ExpressionExperimentDataFetchController.getCoExpressionDataFile = function(p0, callback) {
 };
 
-if (typeof ExpressionExperimentLoadController === 'undefined') {
-    var ExpressionExperimentLoadController = {};
+if ( typeof ExpressionExperimentLoadController === 'undefined' ) {
+   var ExpressionExperimentLoadController =
+      {};
 }
 ExpressionExperimentLoadController.load = function(p0, callback) {
 };
 
-if (typeof ExpressionExperimentSetController === 'undefined') {
-    var ExpressionExperimentSetController = {};
+if ( typeof ExpressionExperimentSetController === 'undefined' ) {
+   var ExpressionExperimentSetController =
+      {};
 }
 ExpressionExperimentSetController.remove = function(p0, callback) {
 };
@@ -355,8 +376,9 @@ ExpressionExperimentSetController.getExperimentIdsInSet = function(p0, callback)
 ExpressionExperimentSetController.canCurrentUserEditGroup = function(p0, callback) {
 };
 
-if (typeof ExpressionExperimentReportGenerationController === 'undefined') {
-    var ExpressionExperimentReportGenerationController = {};
+if ( typeof ExpressionExperimentReportGenerationController === 'undefined' ) {
+   var ExpressionExperimentReportGenerationController =
+      {};
 }
 
 ExpressionExperimentReportGenerationController.run = function(p0, callback) {
@@ -364,32 +386,29 @@ ExpressionExperimentReportGenerationController.run = function(p0, callback) {
 ExpressionExperimentReportGenerationController.runAll = function(callback) {
 };
 
-if (typeof ExtCoexpressionSearchController === 'undefined') {
-    var ExtCoexpressionSearchController = {};
+if ( typeof CoexpressionSearchController === 'undefined' ) {
+   var CoexpressionSearchController =
+      {};
 }
-ExtCoexpressionSearchController.doSearch = function(p0, callback) {
+CoexpressionSearchController.doSearch = function(p0, callback) {
 };
-ExtCoexpressionSearchController.findExpressionExperiments = function(p0, p1, callback) {
+CoexpressionSearchController.doSearchQuickComplete = function(p0, p1, callback) {
 };
-ExtCoexpressionSearchController.doSearchQuick2Complete = function(p0, p1, callback) {
-};
-ExtCoexpressionSearchController.doSearchQuick2 = function(p0, callback) {
-};
-ExtCoexpressionSearchController.doSearchQuick = function(p0, callback) {
-};
-ExtCoexpressionSearchController.doBackgroundCoexSearch = function(p0, callback) {
+CoexpressionSearchController.doBackgroundCoexSearch = function(p0, callback) {
 };
 
-if (typeof FileUploadController === 'undefined') {
-    var FileUploadController = {};
+if ( typeof FileUploadController === 'undefined' ) {
+   var FileUploadController =
+      {};
 }
 FileUploadController.upload = function(p0, callback) {
 };
 FileUploadController.getUploadStatus = function(callback) {
 };
 
-if (typeof GeneController === 'undefined') {
-    var GeneController = {};
+if ( typeof GeneController === 'undefined' ) {
+   var GeneController =
+      {};
 }
 GeneController.findGOTerms = function(p0, callback) {
 };
@@ -400,8 +419,9 @@ GeneController.loadGeneEvidence = function(p0, p1, p2, p3, callback) {
 GeneController.loadAllenBrainImages = function(p0, callback) {
 };
 
-if (typeof GenePickerController === 'undefined') {
-    var GenePickerController = {};
+if ( typeof GenePickerController === 'undefined' ) {
+   var GenePickerController =
+      {};
 }
 GenePickerController.getGenes = function(p0, callback) {
 };
@@ -409,11 +429,11 @@ GenePickerController.getGenesByGOId = function(p0, p1, callback) {
 };
 GenePickerController.searchGenes = function(p0, p1, callback) {
 };
-GenePickerController.searchGenesAndGeneGroups= function(p0, p1, callback) {
+GenePickerController.searchGenesAndGeneGroups = function(p0, p1, callback) {
 };
-GenePickerController.searchGenesAndGeneGroupsGetIds= function(p0, p1, callback) {
+GenePickerController.searchGenesAndGeneGroupsGetIds = function(p0, p1, callback) {
 };
-GenePickerController.searchGenesWithNCBIId= function(p0, p1, callback) {
+GenePickerController.searchGenesWithNCBIId = function(p0, p1, callback) {
 };
 GenePickerController.getTaxa = function(callback) {
 };
@@ -434,8 +454,9 @@ GenePickerController.searchMultipleGenesGetMap = function(p0, p1, callback) {
 GenePickerController.getGeneSetByGOId = function(p0, p1, callback) {
 };
 
-if (typeof GeoRecordBrowserController === 'undefined') {
-    var GeoRecordBrowserController = {};
+if ( typeof GeoRecordBrowserController === 'undefined' ) {
+   var GeoRecordBrowserController =
+      {};
 }
 GeoRecordBrowserController.browse = function(p0, p1, p2, callback) {
 };
@@ -444,8 +465,9 @@ GeoRecordBrowserController.getDetails = function(p0, callback) {
 GeoRecordBrowserController.toggleUsability = function(p0, callback) {
 };
 
-if (typeof SecurityController === 'undefined') {
-    var SecurityController = {};
+if ( typeof SecurityController === 'undefined' ) {
+   var SecurityController =
+      {};
 }
 SecurityController.createGroup = function(p0, callback) {
 };
@@ -488,8 +510,9 @@ SecurityController.getAuthenticatedUserNames = function(callback) {
 SecurityController.getAuthenticatedUserCount = function(callback) {
 };
 
-if (typeof GeneSetController === 'undefined') {
-    var GeneSetController = {};
+if ( typeof GeneSetController === 'undefined' ) {
+   var GeneSetController =
+      {};
 }
 GeneSetController.getGenesInGroup = function(p0, callback) {
 };
@@ -532,8 +555,9 @@ GeneSetController.findGeneSetsByName = function(p0, p1, callback) {
 GeneSetController.canCurrentUserEditGroup = function(p0, callback) {
 };
 
-if (typeof SystemMonitorController === 'undefined') {
-    var SystemMonitorController = {};
+if ( typeof SystemMonitorController === 'undefined' ) {
+   var SystemMonitorController =
+      {};
 }
 SystemMonitorController.getHibernateStatus = function(callback) {
 };
@@ -552,20 +576,23 @@ SystemMonitorController.disableStatistics = function(callback) {
 SystemMonitorController.resetHibernateStatus = function(callback) {
 };
 
-if (typeof LinkAnalysisController === 'undefined') {
-    var LinkAnalysisController = {};
+if ( typeof LinkAnalysisController === 'undefined' ) {
+   var LinkAnalysisController =
+      {};
 }
 LinkAnalysisController.run = function(p0, callback) {
 };
 
-if (typeof ProcessedExpressionDataVectorCreateController === 'undefined') {
-    var ProcessedExpressionDataVectorCreateController = {};
+if ( typeof ProcessedExpressionDataVectorCreateController === 'undefined' ) {
+   var ProcessedExpressionDataVectorCreateController =
+      {};
 }
 ProcessedExpressionDataVectorCreateController.run = function(p0, callback) {
 };
 
-if (typeof ProgressStatusService === 'undefined') {
-    var ProgressStatusService = {};
+if ( typeof ProgressStatusService === 'undefined' ) {
+   var ProgressStatusService =
+      {};
 }
 ProgressStatusService.getProgressStatus = function(p0, callback) {
 };
@@ -578,60 +605,69 @@ ProgressStatusService.addEmailAlert = function(p0, callback) {
 ProgressStatusService.getSubmittedTasks = function(callback) {
 };
 
-if (typeof TwoChannelMissingValueController === 'undefined') {
-    var TwoChannelMissingValueController = {};
+if ( typeof TwoChannelMissingValueController === 'undefined' ) {
+   var TwoChannelMissingValueController =
+      {};
 }
 TwoChannelMissingValueController.run = function(p0, callback) {
 };
 TwoChannelMissingValueController.run = function(p0, callback) {
 };
 
-if (typeof SvdController === 'undefined') {
-    var SvdController = {};
+if ( typeof SvdController === 'undefined' ) {
+   var SvdController =
+      {};
 }
 SvdController.run = function(p0, callback) {
 };
 
-if (typeof SearchService === 'undefined') {
-    var SearchService = {};
+if ( typeof SearchService === 'undefined' ) {
+   var SearchService =
+      {};
 }
 SearchService.ajaxSearch = function(p0, callback) {
 };
 
-if (typeof TaskCompletionController === 'undefined') {
-    var TaskCompletionController = {};
+if ( typeof TaskCompletionController === 'undefined' ) {
+   var TaskCompletionController =
+      {};
 }
 TaskCompletionController.checkResult = function(p0, callback) {
 };
 
-if (typeof TestTaskController === 'undefined') {
-    var TestTaskController = {};
+if ( typeof TestTaskController === 'undefined' ) {
+   var TestTaskController =
+      {};
 }
 TestTaskController.run = function(p0, p1, p2, p3, callback) {
 };
 
-if (typeof FeedReader === 'undefined') {
-    var FeedReader = {};
+if ( typeof FeedReader === 'undefined' ) {
+   var FeedReader =
+      {};
 }
 FeedReader.getLatestNews = function(callback) {
 };
 
-if (typeof UserListController === 'undefined') {
-    var UserListController = {};
+if ( typeof UserListController === 'undefined' ) {
+   var UserListController =
+      {};
 }
 UserListController.getUsers = function(callback) {
 };
 UserListController.saveUser = function(p0, callback) {
 };
 
-if (typeof LinkOutController === 'undefined') {
-    var LinkOutController = {};
+if ( typeof LinkOutController === 'undefined' ) {
+   var LinkOutController =
+      {};
 }
 LinkOutController.getAllenBrainAtlasLink = function(p0, callback) {
 };
 
-if (typeof PhenotypeController === 'undefined') {
-    var PhenotypeController = {};
+if ( typeof PhenotypeController === 'undefined' ) {
+   var PhenotypeController =
+      {};
 }
 PhenotypeController.findEvidenceByFilters = function(p0, p1, p2, callback) {
 };
@@ -662,8 +698,9 @@ PhenotypeController.makeDifferentialExpressionEvidencesFromDiffExpressionMetaAna
 PhenotypeController.removeAllEvidenceFromMetaAnalysis = function(p0, callback) {
 };
 
-if (typeof JavascriptLogger === 'undefined') {
-    var JavascriptLogger = {};
+if ( typeof JavascriptLogger === 'undefined' ) {
+   var JavascriptLogger =
+      {};
 }
 JavascriptLogger.writeToLog = function(p0, p1, p2, p3, p4, callback) {
 };
@@ -678,8 +715,9 @@ JavascriptLogger.writeToErrorLog = function(p0, p1, p2, p3, p4, callback) {
 JavascriptLogger.writeToFatalLog = function(p0, p1, p2, p3, p4, callback) {
 };
 
-if (typeof SignupController === 'undefined') {
-    var SignupController = {};
+if ( typeof SignupController === 'undefined' ) {
+   var SignupController =
+      {};
 }
 SignupController.loginCheck = function(callback) {
 };

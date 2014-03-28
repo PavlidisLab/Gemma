@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
@@ -121,19 +120,19 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         }
     }
 
-    /**
-     * @see ExpressionExperimentSetDao#getAnalyses(ExpressionExperimentSet)
-     */
-    @Override
-    public Collection<ExpressionAnalysis> getAnalyses( final ExpressionExperimentSet expressionExperimentSet ) {
-        try {
-            return this.handleGetAnalyses( expressionExperimentSet );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ExpressionExperimentSetDao.getAnalyses(ExpressionExperimentSet expressionExperimentSet)' --> "
-                            + th, th );
-        }
-    }
+    // /**
+    // * @see ExpressionExperimentSetDao#getAnalyses(ExpressionExperimentSet)
+    // */
+    // @Override
+    // public Collection<ExpressionAnalysis> getAnalyses( final ExpressionExperimentSet expressionExperimentSet ) {
+    // try {
+    // return this.handleGetAnalyses( expressionExperimentSet );
+    // } catch ( Throwable th ) {
+    // throw new java.lang.RuntimeException(
+    // "Error performing 'ExpressionExperimentSetDao.getAnalyses(ExpressionExperimentSet expressionExperimentSet)' --> "
+    // + th, th );
+    // }
+    // }
 
     /*
      * (non-Javadoc)
@@ -329,19 +328,19 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
                 "query", name );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
-     * .expression.ExpressionExperimentSet)
-     */
-    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
-            throws Exception {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select a from ExpressionAnalysis a join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
-                "eeset", expressionExperimentSet );
-    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see
+    // * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
+    // * .expression.ExpressionExperimentSet)
+    // */
+    // protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
+    // throws Exception {
+    // return this.getHibernateTemplate().findByNamedParam(
+    // "select a from ExpressionAnalysis a join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
+    // "eeset", expressionExperimentSet );
+    // }
 
     /**
      * @param ids, if null fetch all.
@@ -390,6 +389,11 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         return result;
     }
 
+    /**
+     * FIXME not implemented!
+     * 
+     * @param eeSets
+     */
     private void populateModifiable( Collection<ExpressionExperimentSetValueObject> eeSets ) {
 
         /*
@@ -398,18 +402,20 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
 
         Map<Long, ExpressionExperimentSetValueObject> idMap = EntityUtils.getIdMap( eeSets );
 
-        Set<Long> ids = idMap.keySet();
+        // FIXME: do we need this for meta-analysis?
 
-        /*
-         * Currently the only type of analysis that ties up EEsets is the GenecoexpressionAnalysis.
-         */
-        List<Long> unmodifiable = this.getHibernateTemplate().findByNamedParam(
-                "select es.id from GeneCoexpressionAnalysisImpl m "
-                        + "join m.expressionExperimentSetAnalyzed es where es.id in (:ids)", "ids", ids );
+        // Set<Long> ids = idMap.keySet();
 
-        for ( Long id : unmodifiable ) {
-            idMap.get( id ).setModifiable( false );
-        }
+        // /*
+        // * Currently the only type of analysis that ties up EEsets is the GenecoexpressionAnalysis.
+        // */
+        // List<Long> unmodifiable = this.getHibernateTemplate().findByNamedParam(
+        // "select es.id from GeneCoexpressionAnalysisImpl m "
+        // + "join m.expressionExperimentSetAnalyzed es where es.id in (:ids)", "ids", ids );
+
+        // for ( Long id : unmodifiable ) {
+        // idMap.get( id ).setModifiable( false );
+        // }
 
     }
 

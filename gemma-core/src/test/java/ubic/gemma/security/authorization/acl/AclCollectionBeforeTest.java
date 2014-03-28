@@ -19,12 +19,13 @@
 package ubic.gemma.security.authorization.acl;
 
 import static org.junit.Assert.assertNotNull;
-
+import static org.junit.Assert.assertTrue;
 import gemma.gsec.SecurityService;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -33,10 +34,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -56,12 +58,10 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     private SecurityService securityService;
 
     @Autowired
-    private Probe2ProbeCoexpressionService ppcs;
+    private CoexpressionAnalysisService coexpressionAnalysisService;
 
     private ExpressionExperiment one;
     private ExpressionExperiment two;
-
-    private Gene g;
 
     private Collection<BioAssaySet> ees;
 
@@ -70,14 +70,13 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     @Before
     public final void setup() {
 
-        g = super.getTestPeristentGene();
         one = super.getTestPersistentBasicExpressionExperiment();
         two = super.getTestPersistentBasicExpressionExperiment();
 
         securityService.makePublic( one );
         securityService.makePublic( two );
 
-        ees = new HashSet<BioAssaySet>();
+        ees = new HashSet<>();
         ees.add( one );
         ees.add( two );
 
@@ -93,23 +92,18 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     @Test(expected = AccessDeniedException.class)
     public final void testAclCollectionEntryVoter() {
         securityService.makePrivate( one );
-
         super.runAsUser( userName );
-
-        ppcs.getExpressionExperimentsLinkTestedIn( g, ees, false );
-
+        assertTrue( securityService.isPrivate( one ) );
+        coexpressionAnalysisService.findByInvestigations( ees );
+        super.runAsUser( userName );
     }
 
     @Test
     public final void testAclCollectionEntryVoterOK() {
-
+        // both data sets are public here.
         super.runAsUser( userName );
-
-        Collection<BioAssaySet> r = ppcs.getExpressionExperimentsLinkTestedIn( g, ees, false );
-
-        // lack of an exception here is what we're really interested in.
+        Map<Investigation, Collection<CoexpressionAnalysis>> r = coexpressionAnalysisService.findByInvestigations( ees );
         assertNotNull( r );
 
     }
-
 }

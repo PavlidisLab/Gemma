@@ -18,38 +18,29 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import gemma.gsec.util.SecurityUtil;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.basecode.math.Rank;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
 import ubic.gemma.analysis.preprocess.OutlierDetectionService;
@@ -60,38 +51,22 @@ import ubic.gemma.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
-import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
-import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.Persister;
-import ubic.gemma.util.TaxonUtility;
-import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
@@ -107,48 +82,7 @@ import cern.jet.math.Functions;
 @Component
 public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
-    private static class Creator {
-
-        private Method factorymethod;
-        private Class<?> clazz;
-        private BioAssaySet ebas;
-
-        Creator( Class<?> clazz, BioAssaySet experiment ) {
-            this.ebas = experiment;
-            this.clazz = clazz;
-
-            try {
-                factorymethod = clazz.getMethod( "newInstance", new Class[] { Analysis.class, Double.class,
-                        BioAssaySet.class, ProcessedExpressionDataVector.class, ProcessedExpressionDataVector.class } );
-            } catch ( SecurityException e ) {
-                throw new RuntimeException( e );
-            } catch ( NoSuchMethodException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-
-        public Probe2ProbeCoexpression create( double w, ProbeCoexpressionAnalysis analysisObj,
-                ProcessedExpressionDataVector v1, ProcessedExpressionDataVector v2 ) {
-            Probe2ProbeCoexpression result = null;
-            try {
-                result = ( Probe2ProbeCoexpression ) factorymethod.invoke( clazz, new Object[] { analysisObj, w, ebas,
-                        v1, v2 } );
-                return result;
-            } catch ( IllegalArgumentException e ) {
-                throw new RuntimeException( e );
-            } catch ( IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            } catch ( InvocationTargetException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-    }
-
-    private static final int LINK_BATCH_SIZE = 5000;
-
     private static Log log = LogFactory.getLog( LinkAnalysisServiceImpl.class );
-
-    private static final boolean useDB = true; // false = print to stdout; useful for debugging.
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -166,153 +100,13 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private ExpressionExperimentReportService expressionExperimentReportService;
 
     @Autowired
-    private Persister persisterHelper;
+    private OutlierDetectionService outlierDetectionService;
 
     @Autowired
-    private Probe2ProbeCoexpressionService ppService;
-
-    @Autowired
-    private QuantitationTypeService quantitationTypeService;
+    private LinkAnalysisPersister persister;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
-
-    @Autowired
-    private OutlierDetectionService outlierDetectionService;
-
-    /**
-     * Perform the analysis. No hibernate session is used. This step is purely computational.
-     * 
-     * @param ee
-     * @param linkAnalysisConfig
-     * @param filterConfig
-     * @return
-     */
-    @Override
-    public LinkAnalysis doAnalysis( ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,
-            FilterConfig filterConfig ) {
-
-        if ( !filterConfig.isDistinctValueThresholdSet() ) {
-            filterConfig.setLowDistinctValueCut( FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION );
-        }
-
-        LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
-        la.clear();
-
-        try {
-
-            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
-            ee = eeService.thawLite( ee );
-            qcCheck( ee ); // could have a 'force' option.
-
-            /*
-             * Filter p
-             * 
-             * Are no-gene probes a good choice of "background" for setting a threshold? Should we not filter by
-             * expression level?
-             */
-            ExpressionDataDoubleMatrix dataMatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
-                    dataVectors );
-
-            setUpForAnalysis( ee, la, dataVectors, dataMatrix );
-
-            Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
-            assert !probeToGeneMap.isEmpty();
-
-            /*
-             * remove probes that have no gene mapped to them, not just those that have no sequence
-             */
-            dataMatrix = filterUnmappedProbes( dataMatrix, probeToGeneMap );
-
-            if ( dataMatrix.rows() == 0 ) {
-                log.info( "No rows left after filtering" );
-                throw new InsufficientProbesException( "No rows left after filtering" );
-            } else if ( dataMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-                throw new InsufficientProbesException( "To few rows (" + dataMatrix.rows()
-                        + "), data sets are not analyzed unless they have at least "
-                        + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
-            }
-
-            dataMatrix = this.normalize( dataMatrix, linkAnalysisConfig );
-
-            addAnalysisObj( ee, dataMatrix, filterConfig, linkAnalysisConfig, la );
-
-            /*
-             * Link analysis section.
-             */
-            log.info( "Starting link analysis... " + ee );
-            la.analyze();
-
-            if ( Thread.currentThread().isInterrupted() ) {
-                log.info( "Cancelled." );
-                return null;
-            }
-
-        } catch ( Exception e ) {
-
-            if ( linkAnalysisConfig.isUseDb() ) {
-                logFailure( ee, e );
-            }
-            throw new RuntimeException( e );
-        }
-
-        return la;
-    }
-
-    /**
-     * Reject if experiment has outliers or batch effects
-     * 
-     * @param ee
-     * @throws UnsuitableForAnalysisException
-     */
-    private void qcCheck( ExpressionExperiment ee ) throws UnsuitableForAnalysisException {
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
-        if ( !outliers.isEmpty() ) {
-            throw new UnsuitableForAnalysisException( ee, "Potential outlier samples detected" );
-        }
-
-        BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
-
-        if ( batchEffect != null && batchEffect.getPvalue() < 0.01 ) {
-            throw new UnsuitableForAnalysisException( ee, String.format( "Strong batch effect detected (%s)",
-                    batchEffect ) );
-        }
-    }
-
-    /**
-     * Remove rows corresponding to probes that don't map to genes. Row order may be changed.
-     * 
-     * @param dataMatrix
-     * @param probeToGeneMap
-     * @return
-     */
-    private ExpressionDataDoubleMatrix filterUnmappedProbes( ExpressionDataDoubleMatrix dataMatrix,
-            Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap ) {
-        return new ExpressionDataDoubleMatrix( dataMatrix, new ArrayList<CompositeSequence>( probeToGeneMap.keySet() ) );
-    }
-
-    /**
-     * Get data that will be used by analysis. We have to fetch/thaw all parts of EE that will be used later since
-     * analysis part doesn't have an open hibernate session.
-     * 
-     * @param eeId
-     * @param linkAnalysisConfig
-     * @return
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment loadDataForAnalysis( Long eeId ) {
-        ExpressionExperiment ee = eeService.load( eeId );
-
-        log.info( "Fetching expression data ... " + ee );
-
-        Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
-        processedExpressionDataVectorService.thaw( dataVectors );
-        return ee;
-    }
 
     /*
      * (non-Javadoc)
@@ -323,24 +117,29 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig)
      */
     @Override
-    public LinkAnalysis process( Long eeId, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
-
-        ExpressionExperiment ee = eeService.load( eeId );
+    public LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
+            LinkAnalysisConfig linkAnalysisConfig ) {
 
         try {
             LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
             la.clear();
 
-            log.info( "Fetching expression data ... " + ee );
+            /*
+             * TODO: make this possible for BioAssaySets rather than just ExpressionExperiments
+             */
+            log.info( "Fetching expression data for " + ee );
 
             Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
                     .getProcessedExpressionDataVectors( ee );
 
             processedExpressionDataVectorService.thaw( dataVectors );
 
-            process( ee, filterConfig, linkAnalysisConfig, la, dataVectors );
-
-            log.info( "Done with processing of " + ee );
+            log.info( "Starting analysis" );
+            analyze( ee, filterConfig, linkAnalysisConfig, la, dataVectors ); 
+            
+            log.info( "Done with analysis phase, starting persistence" );
+            saveResults( ee, la, linkAnalysisConfig, filterConfig );
+            log.info( "Done with saving results for " + ee );
             return la;
 
         } catch ( Exception e ) {
@@ -361,7 +160,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig)
      */
     @Override
-    public LinkAnalysis process( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
+    public LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix(
                 linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
@@ -392,52 +191,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     }
 
     /**
-     * Save the analysis data.
-     * 
-     * @param ee
-     * @param la
-     * @param linkAnalysisConfig
-     * @param filterConfig
-     */
-    @Override
-    public void saveResults( ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig,
-            FilterConfig filterConfig ) {
-        try {
-            Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
-            Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
-
-            if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
-
-                saveLinks( p2v, la );
-
-                audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
-
-            } else if ( linkAnalysisConfig.isTextOut() ) {
-                try {
-                    PrintWriter w = new PrintWriter( System.out );
-                    if ( linkAnalysisConfig.getOutputFile() != null ) {
-                        w = new PrintWriter( linkAnalysisConfig.getOutputFile() );
-                    }
-
-                    writeLinks( la, filterConfig, w );
-                } catch ( IOException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
-
-            log.info( "Done with processing of " + ee );
-
-        } catch ( Exception e ) {
-
-            if ( linkAnalysisConfig.isUseDb() ) {
-                logFailure( ee, e );
-            }
-            throw new RuntimeException( e );
-        }
-
-    }
-
-    /**
      * @param ee
      * @param eeDoubleMatrix
      * @param filterConfig
@@ -450,31 +203,88 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         /*
          * Set up basics.
          */
-        ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
+        CoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
 
         analysis.setExperimentAnalyzed( ee );
         analysis.setName( ee.getShortName() + " link analysis" );
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
 
-        /*
-         * Add probes used. Note that this includes probes that were not ......
-         */
-        List<ExpressionDataMatrixRowElement> rowElements = eeDoubleMatrix.getRowElements();
-        Collection<CoexpressionProbe> probesUsed = new HashSet<CoexpressionProbe>();
-        for ( ExpressionDataMatrixRowElement el : rowElements ) {
-            CoexpressionProbe p = CoexpressionProbe.Factory.newInstance();
-            p.setProbe( el.getDesignElement() );
-            /*
-             * later we set node degree.
-             */
-            assert p.getProbe().getId() != null;
-
-            probesUsed.add( p );
-        }
-        analysis.setProbesUsed( probesUsed );
+        // /*
+        // * Add probes used. Note that this includes probes that were not ......
+        // */
+        // List<ExpressionDataMatrixRowElement> rowElements = eeDoubleMatrix.getRowElements();
+        // Collection<CoexpressionProbe> probesUsed = new HashSet<CoexpressionProbe>();
+        // for ( ExpressionDataMatrixRowElement el : rowElements ) {
+        // CoexpressionProbe p = CoexpressionProbe.Factory.newInstance();
+        // p.setProbe( el.getDesignElement() );
+        // /*
+        // * later we set node degree.
+        // */
+        // assert p.getProbe().getId() != null;
+        //
+        // probesUsed.add( p );
+        // }
+        // analysis.setProbesUsed( probesUsed );
 
         la.setAnalysisObj( analysis );
+    }
+
+    /**
+     * @param ee
+     * @param filterConfig
+     * @param linkAnalysisConfig
+     * @param la
+     * @param dataVectors
+     */
+    private void analyze( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
+            LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) {
+
+        if ( !filterConfig.isDistinctValueThresholdSet() ) {
+            filterConfig.setLowDistinctValueCut( FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION );
+        }
+
+        qcCheck( ee ); // could have a 'force' option.
+
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
+                dataVectors );
+
+        setUpForAnalysis( ee, la, dataVectors, datamatrix );
+
+        Map<CompositeSequence, Set<Gene>> probeToGeneMap = la.getProbeToGeneMap();
+
+        assert !probeToGeneMap.isEmpty();
+
+        /*
+         * remove probes that have no gene mapped to them, not just those that have no sequence
+         */
+        datamatrix = filterUnmappedProbes( datamatrix, probeToGeneMap );
+
+        if ( datamatrix.rows() == 0 ) {
+            log.info( "No rows left after filtering" );
+            throw new InsufficientProbesException( "No rows left after filtering" );
+        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
+                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
+                    + " rows" );
+        }
+
+        log.info( "Starting link analysis... " + ee );
+
+        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+
+        /*
+         * Link analysis section.
+         */
+        addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
+        la.analyze();
+
+        CoexpCorrelationDistribution corrDist = la.getCorrelationDistribution();
+
+        // another qc check.
+        if ( linkAnalysisConfig.isCheckCorrelationDistribution() ) {
+            diagnoseCorrelationDistribution( ee, corrDist );
+        }
     }
 
     private void audit( ExpressionExperiment ee, String note, LinkAnalysisEvent eventType ) {
@@ -484,82 +294,111 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     }
 
     /**
-     * @param ee
-     * @param dataVectors
+     * @param bin
+     * @param numBins
+     * @return
      */
-    private void checkVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors ) {
-        if ( dataVectors == null || dataVectors.size() == 0 )
-            throw new IllegalArgumentException( "No data vectors in " + ee );
-    }
-
-    // Delete old links for this expressionexperiment, old analyses
-    private void deleteOldLinks( LinkAnalysis la ) {
-        ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
-        log.info( "Deleting any old links for " + expressionExperiment + " ..." );
-        ppService.deleteLinks( expressionExperiment );
-        log.info( "Deleting old analysis object(s)" );
-        for ( ProbeCoexpressionAnalysis old : probeCoexpressionAnalysisService
-                .findByInvestigation( expressionExperiment ) ) {
-            probeCoexpressionAnalysisService.delete( old );
-        }
+    private double binToCorrelation( int bin, int numBins ) {
+        return bin * 2.0 / numBins - 1.0;
     }
 
     /**
-     * Populates the analysis object with the node degrees for the probes.
+     * Check properties of the distribution TODO refactor this out.
      * 
-     * @param la
+     * @throws UnsuitableForAnalysisException
      */
-    private void fillInNodeDegree( LinkAnalysis la ) {
+    private void diagnoseCorrelationDistribution( ExpressionExperiment ee, CoexpCorrelationDistribution corrDist )
+            throws UnsuitableForAnalysisException {
 
-        Map<Long, Integer> pId2ND = new HashMap<>();
-        DoubleArrayList vals = new DoubleArrayList();
-        int j = la.getDataMatrix().rows();
+        /*
+         * Find the median, etc.
+         */
+        ByteArrayConverter bac = new ByteArrayConverter();
+        double[] binCounts = bac.byteArrayToDoubles( corrDist.getBinCounts() );
+        int numBins = binCounts.length;
+        DoubleMatrix1D histogram = new DenseDoubleMatrix1D( binCounts );
 
-        // pull out the raw node degrees.
-        for ( int i = 0; i < j; i++ ) {
-            int pd = la.getProbeDegree( i );
-            long id = la.getDataMatrix().getDesignElementForRow( i ).getId();
-            pId2ND.put( id, pd );
-            vals.add( pd );
-        }
+        // QC parameters; quantile, not correlation
+        double lowerLimitofMiddle = 0.45;
+        double upperLimitofMiddle = 0.55;
+        double tailFraction = 0.1;
 
-        // Note: There will be a lot of ties, especially at low node degrees.
-        DoubleArrayList ranks = Rank.rankTransform( vals );
+        // normalize
+        histogram.assign( Functions.div( histogram.zSum() ) );
 
-        // convert to relative ranks.
-        Map<Long, Double> pId2NDRank = new HashMap<>();
-        for ( int i = 0; i < j; i++ ) {
-            long id = la.getDataMatrix().getDesignElementForRow( i ).getId();
-            double rank = ranks.get( i );
-            rank = rank / j;
-            pId2NDRank.put( id, rank );
-        }
+        double lowerTailDensity = 0.0;
+        double upperTailDensity = 0.0;
+        double median = 0.0;
+        double s = 0.0; // cumulative
+        double middleDensity = 0.0;
+        for ( int bin = 0; bin < histogram.size(); bin++ ) {
 
-        boolean gotDegrees = false;
-        for ( CoexpressionProbe p : la.getAnalysisObj().getProbesUsed() ) {
-            Long pid = p.getProbe().getId();
-            assert pid != null;
-            if ( pId2ND.containsKey( pid ) ) {
-                p.setNodeDegree( pId2ND.get( pid ) );
-                p.setNodeDegreeRank( pId2NDRank.get( pid ) );
-                gotDegrees = true;
+            // cumulate
+            s += histogram.get( bin );
+
+            /*
+             * Perhaps these should be adjusted based on the sample size; for smaller data sets, more of the data is
+             * going to be above 0.9 etc. But in practice this can't have a very big effect.
+             */
+            if ( bin == ( int ) Math.floor( numBins * tailFraction ) ) {
+                lowerTailDensity = s;
+            } else if ( bin == ( int ) Math.floor( numBins * ( 1.0 - tailFraction ) ) ) {
+                upperTailDensity = 1.0 - s;
+            } else if ( bin > ( int ) Math.floor( lowerLimitofMiddle * numBins )
+                    && bin < ( int ) Math.floor( upperLimitofMiddle * numBins ) ) {
+                middleDensity += histogram.get( bin );
+            }
+
+            if ( s >= 0.2 ) {
+                // firstQuintile = binToCorrelation( i, numBins );
+            } else if ( s >= 0.5 ) {
+                median = binToCorrelation( bin, numBins );
+            } else if ( s >= 0.8 ) {
+                // lastQuintile = binToCorrelation( i, numBins );
             }
         }
-        assert gotDegrees : "No node degree information was in the data structures"; // this would be a BUG.
+
+        String message = "";
+        boolean bad = false;
+
+        if ( median > 0.2 || median < -0.2 ) {
+            bad = true;
+            message = "Correlation distribution fails QC: median far from center (" + median + ")";
+        } else if ( lowerTailDensity + upperTailDensity > middleDensity ) {
+
+            bad = true;
+            message = "Correlation distribution fails QC: tails too heavy";
+        }
+
+        if ( bad ) {
+            throw new UnsuitableForAnalysisException( ee, message );
+        }
+
     }
 
     /**
-     * Fills in the probe2gene map for the linkAnalysis. Note that the collection DOES NOT contain probes that have no
-     * genes mapped.
+     * Remove rows corresponding to probes that don't map to genes. Row order may be changed.
+     * 
+     * @param dataMatrix
+     * @param probeToGeneMap
+     * @return
+     */
+    private ExpressionDataDoubleMatrix filterUnmappedProbes( ExpressionDataDoubleMatrix dataMatrix,
+            Map<CompositeSequence, Set<Gene>> probeToGeneMap ) {
+        return new ExpressionDataDoubleMatrix( dataMatrix, new ArrayList<CompositeSequence>( probeToGeneMap.keySet() ) );
+    }
+
+    /**
+     * Fills in the probe2gene map for the linkAnalysis. Note that the collection DOES NOT contain probes that have NO
+     * genes mapped
      * 
      * @param la
      * @param dataVectors
-     * @param eeDoubleMatrix
+     * @param eeDoubleMatrix - used to make sure we don't use probes from vectors that are removed?
      */
     private void getProbe2GeneMap( LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors,
             ExpressionDataDoubleMatrix eeDoubleMatrix ) {
 
-        // This excludes probes that were filtered out
         Collection<CompositeSequence> probesForVectors = new HashSet<>();
         for ( DesignElementDataVector v : dataVectors ) {
             CompositeSequence cs = v.getDesignElement();
@@ -569,71 +408,51 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> specificityData = csService
                 .getGenesWithSpecificity( probesForVectors );
 
+        assert !specificityData.isEmpty();
+
         /*
          * Convert the specificity
          */
-        Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = new HashMap<>();
+        Map<CompositeSequence, Set<Gene>> probeToGeneMap = new HashMap<>();
         for ( CompositeSequence cs : specificityData.keySet() ) {
-            if ( !probeToGeneMap.containsKey( cs ) ) {
-                probeToGeneMap.put( cs, new HashSet<Collection<Gene>>() );
-            }
+
             Collection<BioSequence2GeneProduct> bioSequenceToGeneProducts = specificityData.get( cs );
 
-            Collection<Gene> cluster = new HashSet<>();
-            for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequenceToGeneProducts ) {
-                Gene gene = bioSequence2GeneProduct.getGeneProduct().getGene();
-                cluster.add( gene );
+            if ( !probeToGeneMap.containsKey( cs ) ) {
+                probeToGeneMap.put( cs, new HashSet<Gene>() );
             }
 
-            /*
-             * This is important. We leave the collection empty unless there are actually genes mapped.
-             */
-            if ( !cluster.isEmpty() ) probeToGeneMap.get( cs ).add( cluster );
+            for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequenceToGeneProducts ) {
+                Gene gene = bioSequence2GeneProduct.getGeneProduct().getGene();
+                probeToGeneMap.get( cs ).add( gene );
+            }
 
         }
 
         /*
          * Remove the probes that have no mapping
          */
+        int startingSize = probeToGeneMap.size();
+        int numRemoved = 0;
         for ( Iterator<CompositeSequence> it = probeToGeneMap.keySet().iterator(); it.hasNext(); ) {
             CompositeSequence cs = it.next();
             if ( probeToGeneMap.get( cs ).isEmpty() ) {
                 it.remove();
+                numRemoved++;
             }
         }
 
-        la.setProbeToGeneMap( probeToGeneMap );
-    }
-
-    /**
-     * @param dataVectors
-     * @return map of probes to vectors.
-     */
-    private Map<CompositeSequence, ProcessedExpressionDataVector> getProbe2VectorMap(
-            Collection<ProcessedExpressionDataVector> dataVectors ) {
-        Map<CompositeSequence, ProcessedExpressionDataVector> p2v = new HashMap<>();
-        for ( ProcessedExpressionDataVector v : dataVectors ) {
-            CompositeSequence cs = v.getDesignElement();
-            p2v.put( cs, v );
+        if ( numRemoved > 0 ) {
+            log.info( numRemoved + "/" + startingSize + " elements had no genes mapped and were removed." );
         }
-        return p2v;
-    }
 
-    /**
-     * @param numColumns
-     * @param w
-     * @param c helper class
-     * @param metric e.g. Pearson Correlation
-     * @param analysisObj
-     * @param v2
-     * @param v1
-     * @return
-     */
-    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, Creator c, QuantitationType metric,
-            ProbeCoexpressionAnalysis analysisObj, ProcessedExpressionDataVector v1, ProcessedExpressionDataVector v2 ) {
-        Probe2ProbeCoexpression ppCoexpression = c.create( w, analysisObj, v1, v2 );
+        // assert !probeToGeneMap.isEmpty();
+        if ( probeToGeneMap.isEmpty() ) {
+            throw new IllegalStateException( "No probes are mapped to genes; example="
+                    + probeToGeneMap.keySet().iterator().next() );
+        }
 
-        return ppCoexpression;
+        la.setProbeToGeneMap( probeToGeneMap );
     }
 
     /**
@@ -680,360 +499,73 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     }
 
     /**
-     * Process a new link, adding it to the p2plinks collection and persisting if the p2plinks collection is big enough
-     * ({@link LINK_BATCH_SIZE})
+     * Reject if experiment has outliers or batch effects. TODO use BioAssaySet instead.
      * 
-     * @param numColumns
-     * @param p2plinks
-     * @param w
-     * @param v1
-     * @param v2
-     * @param metric type of score (pearson correlation for example)
-     * @param analysisObj
-     * @param c class that can create instances of the correct type of probe2probecoexpression.
-     */
-    private void persist( int numColumns, List<Probe2ProbeCoexpression> p2plinks, double w,
-            ProcessedExpressionDataVector v1, ProcessedExpressionDataVector v2, QuantitationType metric,
-            ProbeCoexpressionAnalysis analysisObj, Creator c ) {
-
-        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric, analysisObj, v1, v2 );
-
-        p2plinks.add( ppCoexpression );
-
-        if ( p2plinks.size() >= LINK_BATCH_SIZE ) {
-            this.ppService.create( p2plinks );
-            p2plinks.clear();
-        }
-    }
-
-    /**
      * @param ee
-     * @param filterConfig
-     * @param linkAnalysisConfig
-     * @param la
-     * @param dataVectors
-     */
-    private void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
-            LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) {
-        checkVectors( ee, dataVectors );
-
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
-                dataVectors );
-
-        if ( datamatrix.rows() == 0 ) {
-            log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( "No rows left after filtering" );
-        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
-                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
-                    + " rows" );
-        }
-
-        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
-
-        /*
-         * Link analysis section.
-         */
-        log.info( "Starting link analysis... " + ee );
-        setUpForAnalysis( ee, la, dataVectors, datamatrix );
-        addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
-        Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
-        la.analyze();
-
-        CoexpCorrelationDistribution corrDist = la.getCorrelationDistribution();
-
-        diagnoseCorrelationDistribution( ee, corrDist );
-
-        if ( Thread.currentThread().isInterrupted() ) {
-            log.info( "Cancelled." );
-            return;
-        }
-
-        // Output
-        if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
-
-            Collection<ExpressionExperiment> ees = new HashSet<>();
-            ees.add( ee );
-
-            saveLinks( p2v, la );
-
-            audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
-
-        } else if ( linkAnalysisConfig.isTextOut() ) {
-            try {
-                PrintWriter w = new PrintWriter( System.out );
-                if ( linkAnalysisConfig.getOutputFile() != null ) {
-                    w = new PrintWriter( linkAnalysisConfig.getOutputFile() );
-                }
-
-                writeLinks( la, filterConfig, w );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-    }
-
-    /**
-     * Check properties of the distribution.
-     * 
      * @throws UnsuitableForAnalysisException
      */
-    private void diagnoseCorrelationDistribution( ExpressionExperiment ee, CoexpCorrelationDistribution corrDist )
-            throws UnsuitableForAnalysisException {
+    private void qcCheck( ExpressionExperiment ee ) throws UnsuitableForAnalysisException {
 
-        /*
-         * Find the median, etc.
-         */
-        ByteArrayConverter bac = new ByteArrayConverter();
-        double[] binCounts = bac.byteArrayToDoubles( corrDist.getBinCounts() );
-        int numBins = binCounts.length;
-        DoubleMatrix1D li = new DenseDoubleMatrix1D( binCounts );
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
+        if ( !outliers.isEmpty() ) {
+            throw new UnsuitableForAnalysisException( ee, "Potential outlier samples detected" );
+        }
 
-        li.assign( Functions.div( li.zSum() ) );
-        double lowerTailDensity = 0.0;
-        double upperTailDensity = 0.0;
-        // double firstQuintile = 0.0;
-        // double lastQuintile = 0.0;
-        double median = 0.0;
-        double s = 0.0; // cumulative
-        double middleDensity = 0.0;
-        for ( int i = 0; i < li.size(); i++ ) {
+        BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
+        // FIXME might want to adjust this stringency.
+        if ( batchEffect != null && batchEffect.getPvalue() < 0.001 ) {
 
-            s += li.get( i );
-
-            if ( i == ( int ) Math.floor( numBins / 10.0 ) ) {
-                lowerTailDensity = s;
-            } else if ( i == ( int ) Math.floor( 9.0 * numBins / 10.0 ) ) {
-                upperTailDensity = 1.0 - s;
-            } else if ( i > ( int ) Math.floor( 0.45 * numBins / 10 ) && i < ( int ) Math.floor( 0.55 * numBins / 10 ) ) {
-                middleDensity += li.get( i );
+            double componentVarianceProportion = batchEffect.getComponentVarianceProportion();
+            Integer component = batchEffect.getComponent();
+            // don't worry if it is a "minor" component. remember that is must be one of the first few to make it this
+            // far.
+            if ( component > 2 && componentVarianceProportion < 0.1 ) {
+                // FIXME might want to adjust this stringency
+                return;
             }
 
-            if ( s >= 0.2 ) {
-                // firstQuintile = binToCorrelation( i, numBins );
-            } else if ( s >= 0.5 ) {
-                median = binToCorrelation( i, numBins );
-            } else if ( s >= 0.8 ) {
-                // lastQuintile = binToCorrelation( i, numBins );
-            }
+            throw new UnsuitableForAnalysisException( ee, String.format( "Strong batch effect detected (%s)",
+                    batchEffect ) );
         }
-
-        String message = "";
-        boolean bad = false;
-        if ( median > 0.2 || median < -0.2 ) {
-            bad = true;
-            message = "Correlation distribution fails QC: median far from center (" + median + ")";
-        } else if ( lowerTailDensity + upperTailDensity > middleDensity ) {
-            bad = true;
-            message = "Correlation distribution fails QC: tails too heavy";
-        }
-
-        if ( bad ) {
-            throw new UnsuitableForAnalysisException( ee, message );
-        }
-
     }
 
     /**
-     * @param bin
-     * @param numBins
-     * @return
-     */
-    private double binToCorrelation( int bin, int numBins ) {
-        return bin * 2.0 / numBins - 1.0;
-    }
-
-    /**
-     * Persist the links to the database. This takes care of saving a 'flipped' version of the links.
-     * <p>
-     * Note that if "known genes only" is set, then links between probes that _only_ target other types of genes will
-     * not be stored. However, because the links are stored at the probe level, the links saved will potentially
-     * includes links between any type of gene (but always at least between two known genes).
+     * Save the analysis data, either to DB or a file.
      * 
-     * @param p2v
+     * @param ee
      * @param la
+     * @param linkAnalysisConfig
+     * @param filterConfig
      */
-    private void saveLinks( Map<CompositeSequence, ProcessedExpressionDataVector> p2v, LinkAnalysis la ) {
+    private void saveResults( ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig,
+            FilterConfig filterConfig ) {
+        try {
 
-        if ( useDB ) {
-            deleteOldLinks( la );
-            // Complete and persist the new analysis object.
-            fillInNodeDegree( la );
+            if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
+                persister.saveLinksToDb( la );
+                audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
+            } else if ( linkAnalysisConfig.isTextOut() ) {
+                try {
+                    PrintWriter w;
 
-            ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
-
-            analysisObj.setCoexpCorrelationDistribution( la.getCorrelationDistribution() );
-
-            analysisObj = ( ProbeCoexpressionAnalysis ) persisterHelper.persist( analysisObj );
-
-            /*
-             * At this point we have the populated analysis object, but no links.
-             */
-
-            la.setAnalysisObj( analysisObj );
-        }
-
-        log.info( "Start submitting data to database." );
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        ObjectArrayList links = la.getKeep();
-
-        /*
-         * Important implementation note: For efficiency reason, it is important that they be stored in order of "x"
-         * (where x is the index of the first DEDV in the correlation matrix, not the ID of the DEDV.) in the database:
-         * so all all links with probe=x are clustered. (the actual order of x1 vs x2 doesn't matter, just so long they
-         * are clustered). This makes retrievals much faster for the most common types of queries. Note that this relies
-         * on expected behavior that links.sort() will sort by the x coordinate. It also requires that when we persist
-         * the elements, we retain the order.
-         */
-        links.sort();
-
-        if ( log.isDebugEnabled() ) {
-            for ( Object link : links.elements() ) {
-                if ( link == null ) continue;
-                log.debug( ( ( Link ) link ).getx() + " " + ( ( Link ) link ).gety() );
-            }
-        }
-
-        if ( useDB ) {
-            saveLinks( p2v, la, links, false );
-        }
-
-        /*
-         * now create 'reversed' links, first by sorting by the 'y' coordinate. Again, this sort is critical to keep the
-         * links in an ordering that the RDBMS can use efficiently.
-         */
-        links.mergeSortFromTo( 0, links.size() - 1, new Comparator<Link>() {
-            @Override
-            public int compare( Link a, Link b ) {
-                if ( a == null || b == null ) return 1;
-
-                if ( a.gety() < b.gety() ) {
-                    return -1;
-                } else if ( a.gety() > b.gety() ) {
-                    return 1;
-                } else {
-                    if ( a.getx() < b.getx() ) {
-                        return -1;
-                    } else if ( a.getx() > b.getx() ) {
-                        return 1;
+                    if ( linkAnalysisConfig.getOutputFile() != null ) {
+                        w = new PrintWriter( linkAnalysisConfig.getOutputFile() );
+                    } else {
+                        w = new PrintWriter( System.out );
                     }
-                    return 0;
+                    writeLinks( la, filterConfig, w );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
                 }
             }
-        } );
 
-        log.info( "Saving flipped links" );
+            log.info( "Done with processing of " + ee );
 
-        if ( log.isDebugEnabled() ) {
-            for ( Object link : links.elements() ) {
-                if ( link == null ) continue;
-                log.debug( ( ( Link ) link ).getx() + " " + ( ( Link ) link ).gety() );
+        } catch ( Exception e ) {
+            if ( linkAnalysisConfig.isUseDb() ) {
+                logFailure( ee, e );
             }
-        }
-
-        if ( useDB ) {
-            saveLinks( p2v, la, links, true );
-        }
-
-        watch.stop();
-        log.info( "Seconds to process " + links.size() + " links plus flipped versions:" + watch.getTime() / 1000.0 );
-
-    }
-
-    /**
-     * @param p2v
-     * @param la
-     * @param links
-     * @boolean flip
-     */
-    private void saveLinks( Map<CompositeSequence, ProcessedExpressionDataVector> p2v, LinkAnalysis la,
-            ObjectArrayList links, boolean flip ) {
-        int numColumns = la.getDataMatrix().columns();
-
-        /*
-         * FIXME change this to be at the gene level, and update links instead of creating them if possible.
-         */
-
-        QuantitationType metric = quantitationTypeService.findOrCreate( la.getMetric() );
-
-        Taxon taxon = la.getTaxon();
-        Creator c;
-
-        if ( SecurityUtil.isUserAnonymous() ) {
-            throw new IllegalStateException( "Can't run link analysis anonymously" );
-        } else if ( TaxonUtility.isMouse( taxon ) ) {
-            c = new Creator( MouseProbeCoExpression.Factory.class, la.getExpressionExperiment() );
-        } else if ( TaxonUtility.isRat( taxon ) ) {
-            c = new Creator( RatProbeCoExpression.Factory.class, la.getExpressionExperiment() );
-        } else if ( TaxonUtility.isHuman( taxon ) ) {
-            c = new Creator( HumanProbeCoExpression.Factory.class, la.getExpressionExperiment() );
-        } else {
-            c = new Creator( OtherProbeCoExpression.Factory.class, la.getExpressionExperiment() );
-        }
-
-        Integer probeDegreeThreshold = la.getConfig().getProbeDegreeThreshold();
-        int skippedDueToDegree = 0;
-
-        List<Probe2ProbeCoexpression> p2plinkBatch = new ArrayList<>();
-        for ( int i = 0, n = links.size(); i < n; i++ ) {
-            Object val = links.getQuick( i );
-            if ( val == null ) continue;
-            Link m = ( Link ) val;
-            Double w = m.getWeight();
-
-            assert w != null;
-
-            int x = m.getx();
-            int y = m.gety();
-
-            /*
-             * Note that we use OR here - we don't require that _both_ probes have high degree.
-             */
-            if ( probeDegreeThreshold > 0
-                    && ( la.getProbeDegree( x ) > probeDegreeThreshold || la.getProbeDegree( y ) > probeDegreeThreshold ) ) {
-                skippedDueToDegree++;
-                continue;
-            }
-
-            CompositeSequence p1 = la.getProbe( x );
-            CompositeSequence p2 = la.getProbe( y );
-
-            ProcessedExpressionDataVector v1 = p2v.get( p1 );
-            ProcessedExpressionDataVector v2 = p2v.get( p2 );
-
-            if ( flip ) {
-                persist( numColumns, p2plinkBatch, w, v2, v1, metric, la.getAnalysisObj(), c );
-            } else {
-                persist( numColumns, p2plinkBatch, w, v1, v2, metric, la.getAnalysisObj(), c );
-            }
-
-            if ( i > 0 && i % 50000 == 0 ) {
-                log.info( i - skippedDueToDegree + " links persisted (" + skippedDueToDegree + " skipped so far)" );
-            }
-
-        }
-
-        log.info( skippedDueToDegree + " of " + links.size() + " links ("
-                + String.format( "%.1f", 100 * skippedDueToDegree / ( double ) links.size() )
-                + "%) skipped due to high probe node degree" );
-
-        // last batch.
-        if ( p2plinkBatch.size() > 0 ) {
-            this.ppService.create( p2plinkBatch );
-            p2plinkBatch.clear();
-        }
-
-        /*
-         * Update the meta-data about the analysis (but just do it once)
-         */
-        if ( !flip ) {
-            ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
-            assert analysisObj.getId() != null;
-            analysisObj.setNumberOfElementsAnalyzed( la.getDataMatrix().rows() );
-            analysisObj.setNumberOfLinks( links.size() - skippedDueToDegree );
-            probeCoexpressionAnalysisService.update( analysisObj );
+            throw new RuntimeException( e );
         }
 
     }
@@ -1048,7 +580,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      */
     private void setUpForAnalysis( ExpressionExperiment ee, LinkAnalysis la,
             Collection<ProcessedExpressionDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
-
+        if ( dataVectors == null || dataVectors.size() == 0 )
+            throw new IllegalArgumentException( "No data vectors in " + ee );
         la.setDataMatrix( eeDoubleMatrix );
 
         if ( ee != null ) {
@@ -1076,14 +609,13 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     }
 
     /**
-     * Write links as text. If "known genes only", only known genes will be displayed, even if the probe in question
-     * targets other "types" of genes.
+     * Write links as text.
      * 
      * @param la
      * @param wr
      */
     private void writeLinks( final LinkAnalysis la, FilterConfig filterConfig, Writer wr ) throws IOException {
-        Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
+        Map<CompositeSequence, Set<Gene>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
         double subsetSize = la.getConfig().getSubsetSize();
         List<String> buf = new ArrayList<>();
@@ -1096,15 +628,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         nf.setMaximumFractionDigits( 4 );
 
         Integer probeDegreeThreshold = la.getConfig().getProbeDegreeThreshold();
-
-        Transformer officialSymbolExtractor = new Transformer() {
-            @Override
-            public Object transform( Object input ) {
-                Gene g = ( Gene ) input;
-
-                return g.getOfficialSymbol();
-            }
-        };
 
         int i = 0;
         int keptLinksCount = 0;
@@ -1133,24 +656,18 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             CompositeSequence p1 = la.getProbe( x );
             CompositeSequence p2 = la.getProbe( y );
 
-            Collection<Collection<Gene>> g1 = probeToGeneMap.get( p1 );
-            Collection<Collection<Gene>> g2 = probeToGeneMap.get( p2 );
+            Set<Gene> g1 = probeToGeneMap.get( p1 );
+            Set<Gene> g2 = probeToGeneMap.get( p2 );
 
             List<String> genes1 = new ArrayList<String>();
-            for ( Collection<Gene> cluster : g1 ) {
-
-                if ( cluster.isEmpty() ) continue;
-
-                String t = StringUtils.join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," );
+            for ( Gene cluster : g1 ) {
+                String t = cluster.getOfficialSymbol();
                 genes1.add( t );
             }
 
             List<String> genes2 = new ArrayList<>();
-            for ( Collection<Gene> cluster : g2 ) {
-
-                if ( cluster.isEmpty() ) continue;
-
-                String t = StringUtils.join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," );
+            for ( Gene cluster : g2 ) {
+                String t = cluster.getOfficialSymbol();
                 genes2.add( t );
             }
 
@@ -1199,4 +716,5 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         wr.flush();
 
     }
+
 }

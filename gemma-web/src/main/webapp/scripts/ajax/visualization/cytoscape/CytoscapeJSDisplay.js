@@ -13,344 +13,393 @@
  * specific language governing permissions and limitations under the License.
  * 
  */
-Ext.namespace('Gemma');
+Ext.namespace( 'Gemma' );
 
+/**
+ * Component holding a Cytoscapejs canvas.
+ */
 Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 
-    initComponent: function () {
-        this.ready = false;
-       
-        this.emphasized = true;
-       
-        var display = this;
+   initComponent : function() {
+      this.ready = false;
 
-        Gemma.CytoscapeJSDisplay.superclass.initComponent.apply(this, arguments);
-        this.addEvents('selection_available', 'selection_unavailable', 'layout_complete');
+      this.emphasized = true;
 
-        display.coexDisplaySettings.on('stringency_change', function() {
-            display.filter();
-        });
+      var display = this;
 
-        display.coexDisplaySettings.on('query_genes_only_change', function() {
-            display.filter();
-        });
+      Gemma.CytoscapeJSDisplay.superclass.initComponent.apply( this, arguments );
+      this.addEvents( 'selection_available', 'selection_unavailable', 'layout_complete' );
 
-        display.coexDisplaySettings.on('gene_overlay', function() {
-            display.applyGeneListOverlay();
-        });
+      display.coexDisplaySettings.on( 'stringency_change', function() {
+         display.filter();
+      } );
 
-        display.coexDisplaySettings.on('search_text_change', function( text ) {
-            display.selectNodesMatchingText(text);
-        });
-    },
+      display.coexDisplaySettings.on( 'query_genes_only_change', function() {
+         display.filter();
+      } );
 
-    hideAll: function (){
-    	this.cy.elements().hide();    	
-    },    
-    
-    initializeGraph: function (graphData) {
-    	Gemma.CytoscapeJSCoexGraphInitializer(jQuery('#cy'), graphData, this.onGraphReady, this);
-    },
-    
-    //ownerRef refers to this
-    onGraphReady : function(ownerRef){    	
-	    
-    	ownerRef.cy.on('done', function(e){
-    		
-    		console.log('cytoscape event: done');
-    		ownerRef.cy.panningEnabled(true);
-    		ownerRef.fireEvent('selection_available');
-    		ownerRef.ready = true;
-	    });
-    	
-    	ownerRef.cy.on('layoutstop', function(e){
-    		
-    		 //this is a hack because in firefox the cytoscape code fires off two 'layoutstop' events for arbor when you use it for initialization
-    		//workaround is use grid layout in initializer, then once it finishes use arbor
-    		if(e.cy._private.layout.options.name=='grid'){
-    			console.log('cytoscape event: layoutstop, layout name:grid');
-    			ownerRef.refreshLayout();
-    		}
-    		else{//should be arbor
-    			console.log('cytoscape event: layoutstop, layout name: arbor');
-    			ownerRef.cytoscapePanel.loadMask.hide();
-    			ownerRef.nodeDegreeEmphasize(true); 
-    			ownerRef.zoomToFit();
-    			
-    		}
-    		
-	    });
-    },
-    
-    applyDefaultGraphStyle: function(isNodeDegreeEmphasis){
-    	
-    	this.cy.elements().toggleClass( 'emphasis' , isNodeDegreeEmphasis);    	
-    	this.cy.elements().toggleClass( 'basic' , !isNodeDegreeEmphasis);    	
-    	this.filter();
-    },
-    
-    nodeDegreeEmphasize: function (isNodeDegreeEmphasis) {
-         if (!this.ready) {return;}
-         
-         this.emphasized = isNodeDegreeEmphasis;
-         
-         this.applyGeneListOverlay();
-     },
-     
-     filter: function () {
-    	 if (!this.ready) {return;}
-	        
-         var stringency = this.coexDisplaySettings.getStringency();
-         var queryGenesOnly = this.coexDisplaySettings.getQueryGenesOnly();
+      display.coexDisplaySettings.on( 'gene_overlay', function() {
+         display.applyGeneListOverlay();
+      } );
 
-         var trimmed={};
-         if ( queryGenesOnly ) {
-         	trimmed.trimmedNodeIds = this.coexpressionSearchData.getQueryGeneIds();
-         } else {           
-              trimmed = Gemma.CoexVOUtil.trimKnownGeneResultsWithQueryGenes(
-                 this.coexpressionSearchData.getDisplayedResults(),
-                 this.coexpressionSearchData.getQueryGeneIds(),
-                 stringency );
-              
+      display.coexDisplaySettings.on( 'search_text_change', function( text ) {
+         display.selectNodesMatchingText( text );
+      } );
+   },
+
+   hideAll : function() {
+      this.cy.elements().hide();
+   },
+
+   /**
+    * 
+    * @param {Array}
+    *           graphData
+    */
+   initializeGraph : function( graphData ) {
+      Gemma.CytoscapeJSCoexGraphInitializer( jQuery( '#cy' ), graphData, this.onGraphReady, this );
+   },
+
+   /**
+    * ownerRef refers to 'this'. Attach lissteners
+    * 
+    * @param {Object}
+    *           ownerRef
+    */
+   onGraphReady : function( ownerRef ) {
+      ownerRef.cy.on( 'done', function( e ) {
+         console.log( 'cytoscape event: done' );
+         ownerRef.cy.panningEnabled( true );
+         ownerRef.fireEvent( 'selection_available' );
+         ownerRef.ready = true;
+      } );
+
+      ownerRef.cy.on( 'layoutstop', function( e ) {
+         // this is a hack because in firefox the cytoscape code fires off two 'layoutstop' events for arbor when you
+         // use it for initialization
+         // workaround is use a different layout in initializer, then once it finishes use one we want.
+         console.log( 'cytoscape event: layoutstop, layout name:' + e.cy._private.layout.options.name );
+         if ( e.cy._private.layout.options.name == 'null' ) {
+            ownerRef.refreshLayout();
+         } else {
+            ownerRef.cytoscapePanel.loadMask.hide();
+            ownerRef.nodeDegreeEmphasize( true ); // FIXME allow default to change.
+            ownerRef.zoomToFit();
          }
-         
-         var nodeIdsToHide = this.getNodeIdsToHide(trimmed.trimmedNodeIds, this.coexpressionSearchData.allGeneIdsSet);
-         
-         var nodeHideFunction = function(i, element){        	      	
-         	
-         	return element.isNode() && nodeIdsToHide.indexOf(element.data("geneid")) !== -1;
-         };
-         
-         var nodeShowFunction = function(i, element){ 
-         	
-         	return element.isNode() && trimmed.trimmedNodeIds.indexOf(element.data("geneid")) !== -1;
-         };
-         
-         
-         var nodesToHide = this.cy.filter(nodeHideFunction);
-         var nodesToShow = this.cy.filter(nodeShowFunction);
-         
-         nodesToHide.hide();         
-         nodesToHide.unselectify();
-         
-         nodesToShow.selectify();
-         nodesToShow.show();
-         
-         var edgeShowFunction = function(i, element){        	      	
-         	
-         	return element.isEdge() && element.data("support") >= stringency;
-         };
-         
-         var edgeHideFunction = function(i, element){ 
-         	
-         	return element.isEdge() && element.data("support") < stringency;
-         };
-         
-         var edgesToHide = this.cy.filter(edgeHideFunction);
-         var edgesToShow = this.cy.filter(edgeShowFunction);
-         
-         edgesToHide.hide();
-         edgesToShow.show();
-         
-     },
 
+      } );
+   },
 
-    getSelectedGeneIds: function () {
-        if (!this.ready) {return;}
-        
-        var nodes = this.cy.elements("node:selected:visible");
-        
-        var geneIds = [];
-        for (var i = 0; i < nodes.length; i++) {
-            geneIds.push(nodes[i].data("geneid"));
-        }
-        return geneIds;
-    },
+   /**
+    * 
+    * @param isNodeDegreeEmphasis
+    */
+   applyDefaultGraphStyle : function( isNodeDegreeEmphasis ) {
+      // switch nodes that have emphasis to the opposite; switch nodes that are basic to the opposite?
+      this.cy.elements().toggleClass( 'emphasis', isNodeDegreeEmphasis );
+      this.cy.elements().toggleClass( 'basic', !isNodeDegreeEmphasis );
+      this.filter();
+   },
 
-    refreshLayout: function () {
-        if (!this.ready) {return;}
-        this.hideAll();
-        this.cy.layout(Gemma.CytoscapejsSettings.arborLayout);
-        
-    },
-    
-    zoomToFit: function () {
-        if (!this.ready) {return;}        
-        this.cy.fit();      
-        
-    },
-    
-    /**
-     * @public
-     * @param {boolean} visible
-     */
-    toggleNodeLabels: function (visible) {
-        if (!this.ready) {return;}
-        console.log("toggleNodeLabels");
-        var content="";
-        if (visible){
-        	content='data(name)';        	
-        }
-        this.cy.style().selector('node').css({'content':content}).update();
-        
-    },   
+   /**
+    * 
+    * @param isNodeDegreeEmphasis
+    */
+   nodeDegreeEmphasize : function( isNodeDegreeEmphasis ) {
+      if ( !this.ready ) {
+         return;
+      }
 
-    /**
-     * @private
-     * @param nodeIds
-     */
-    selectNodes: function (nodeIds) {
-         
-         var nodeSelectFunction = function(i, element){         	
-         	return element.isNode() && nodeIds.indexOf(element.data("geneid")) !== -1;
-         };
-         
-         var nodesToSelect = this.cy.filter(nodeSelectFunction);
-         
-         nodesToSelect.select();
-         
-    },
+      this.emphasized = isNodeDegreeEmphasis;
+      this.applyGeneListOverlay();
+   },
 
-    /**
-     * @private
-     */
-    deselectNodesAndEdges: function () {    	
-    	this.cy.nodes().unselect();
-    	this.cy.edges().unselect();        
-    },    
+   /**
+    * 
+    */
+   filter : function() {
+      if ( !this.ready ) {
+         return;
+      }
 
-    /**
-     * @public
-     */
-    applyGeneListOverlay: function () {
-        if (!this.ready) {return;}
-        
-        this.applyDefaultGraphStyle(this.emphasized);
+      var stringency = this.coexDisplaySettings.getStringency();
+      var queryGenesOnly = this.coexDisplaySettings.getQueryGenesOnly();
 
-        var overlayIds = this.coexDisplaySettings.getOverlayGeneIds();
-        
-        var nodeOverlayFunction = function(i, element){        	      	
-         	
-         	return element.isNode() && overlayIds.indexOf(element.data("geneid")) !== -1;
-        };
-        
-        var nodesToOverlay = this.cy.filter(nodeOverlayFunction);
-        
-        this.cy.nodes().toggleClass( 'overlay' , false);
-        
-        if (nodesToOverlay.length > 0){
-        	nodesToOverlay.toggleClass('overlay', true);
-        }
-    	
-    	
-        
-    },
+      var trimmed = {};
+      if ( queryGenesOnly ) {
+         trimmed.trimmedNodeIds = this.coexpressionSearchData.getQueryGeneIds();
+      } else {
+         trimmed.trimmedNodeIds = Gemma.CoexVOUtil.trimResultsForQueryGenes( this.coexpressionSearchData.getResults(),
+            this.coexpressionSearchData.getQueryGeneIds(), stringency );
+      }
 
-    /**
-     * @public
-     * @param nodeIds
-     * @returns {{total: number, hidden: number}}
-     */
-    getNodesMatching: function (nodeIds) {
-        var matchingCounts = {
-            total: 0,
-            hidden: 0
-        };        
-        
-        var nodesMatchingFunction = function(i, element){        	      	
-         	
-         	return element.isNode() && nodeIds.indexOf(element.data("geneid")) !== -1;
-        };
-        
-        var nodesMatched = this.cy.filter(nodesMatchingFunction);
-        for (var i = 0; i < nodesMatched.length; i++) {
-            
-            if (nodesMatched[i] !== null) {
-                matchingCounts.total += 1;
-                if (!nodesMatched[i].visible()) {
-                    matchingCounts.hidden += 1;
-                }
+      var nodeIdsToHide = this.getNodeIdsToHide( trimmed.trimmedNodeIds, this.coexpressionSearchData.allGeneIdsSet );
+
+      var nodeHideFunction = function( i, element ) {
+         return element.isNode() && nodeIdsToHide.indexOf( element.data( "geneid" ) ) !== -1;
+      };
+
+      var nodeShowFunction = function( i, element ) {
+         return element.isNode() && trimmed.trimmedNodeIds.indexOf( element.data( "geneid" ) ) !== -1;
+      };
+
+      var nodesToHide = this.cy.filter( nodeHideFunction );
+      var nodesToShow = this.cy.filter( nodeShowFunction );
+
+      nodesToHide.hide();
+      nodesToHide.unselectify();
+
+      nodesToShow.selectify();
+      nodesToShow.show();
+
+      var edgeShowFunction = function( i, element ) {
+         return element.isEdge() && element.data( "support" ) >= stringency;
+      };
+
+      var edgeHideFunction = function( i, element ) {
+         return element.isEdge() && element.data( "support" ) < stringency;
+      };
+
+      var edgesToHide = this.cy.filter( edgeHideFunction );
+      var edgesToShow = this.cy.filter( edgeShowFunction );
+
+      edgesToHide.hide();
+      edgesToShow.show();
+
+   },
+
+   /**
+    * 
+    * @returns {Array}
+    */
+   getSelectedGeneIds : function() {
+      if ( !this.ready ) {
+         return;
+      }
+
+      var nodes = this.cy.elements( "node:selected:visible" );
+
+      var geneIds = [];
+      for ( var i = 0; i < nodes.length; i++) {
+         geneIds.push( nodes[i].data( "geneid" ) );
+      }
+      return geneIds;
+   },
+
+   /**
+    * 
+    */
+   refreshLayout : function() {
+      if ( !this.ready ) {
+         return;
+      }
+      this.hideAll();
+      this.cy.layout( Gemma.CytoscapejsSettings.arborLayout );
+   },
+
+   /**
+    * 
+    */
+   zoomToFit : function() {
+      if ( !this.ready ) {
+         return;
+      }
+      this.cy.fit();
+   },
+
+   /**
+    * @public
+    * @param {boolean}
+    *           visible
+    */
+   toggleNodeLabels : function( visible ) {
+      if ( !this.ready ) {
+         return;
+      }
+      console.log( "toggleNodeLabels" );
+      var content = "";
+      if ( visible ) {
+         content = 'data(name)';
+      }
+      this.cy.style().selector( 'node' ).css( {
+         'content' : content
+      } ).update();
+
+   },
+
+   /**
+    * @private
+    * @param nodeIds
+    */
+   selectNodes : function( nodeIds ) {
+
+      var nodeSelectFunction = function( i, element ) {
+         return element.isNode() && nodeIds.indexOf( element.data( "geneid" ) ) !== -1;
+      };
+
+      var nodesToSelect = this.cy.filter( nodeSelectFunction );
+
+      nodesToSelect.select();
+
+   },
+
+   /**
+    * @private
+    */
+   deselectNodesAndEdges : function() {
+      this.cy.nodes().unselect();
+      this.cy.edges().unselect();
+   },
+
+   /**
+    * @public
+    */
+   applyGeneListOverlay : function() {
+      if ( !this.ready ) {
+         return;
+      }
+
+      var overlayIds = this.coexDisplaySettings.getOverlayGeneIds();
+
+      // slow
+      this.applyDefaultGraphStyle( this.emphasized );
+
+      if ( overlayIds.length == 0 ) {
+         this.cy.nodes().toggleClass( 'overlay', false );
+         return;
+      }
+
+      var nodeOverlayFunction = function( i, element ) {
+         return element.isNode() && overlayIds.indexOf( element.data( "geneid" ) ) !== -1;
+      };
+
+      var nodesToOverlay = this.cy.filter( nodeOverlayFunction );
+      if ( nodesToOverlay.length > 0 ) {
+         nodesToOverlay.toggleClass( 'overlay', true );
+      }
+
+   },
+
+   /**
+    * @public
+    * @param nodeIds
+    * @returns {{total: number, hidden: number}}
+    */
+   getNodesMatching : function( nodeIds ) {
+      var matchingCounts = {
+         total : 0,
+         hidden : 0
+      };
+
+      var nodesMatchingFunction = function( i, element ) {
+
+         return element.isNode() && nodeIds.indexOf( element.data( "geneid" ) ) !== -1;
+      };
+
+      var nodesMatched = this.cy.filter( nodesMatchingFunction );
+      for ( var i = 0; i < nodesMatched.length; i++) {
+
+         if ( nodesMatched[i] !== null ) {
+            matchingCounts.total += 1;
+            if ( !nodesMatched[i].visible() ) {
+               matchingCounts.hidden += 1;
             }
-        }
-        return matchingCounts;
-    },
+         }
+      }
+      return matchingCounts;
+   },
 
-    /**
-     * @private
-     * @param text
-     */
-    selectNodesMatchingText: function (text) {
-        if (!this.ready) {return;}
+   /**
+    * @private
+    * @param text
+    */
+   selectNodesMatchingText : function( text ) {
+      if ( !this.ready ) {
+         return;
+      }
 
-        this.deselectNodesAndEdges();
-        if (text.length < 2) {
-            return;
-        }
-        var nodeIdsToSelect = this.coexpressionSearchData.getCytoscapeGeneSymbolsMatchingQuery( text );
-        this.selectNodes(nodeIdsToSelect);
-    },
-   
-    /**
-     * @private
-     */
-    applySelection: function () {
-        if (!this.ready) {return;}
+      this.deselectNodesAndEdges();
+      if ( text.length < 2 ) {
+         return;
+      }
+      var nodeIdsToSelect = this.coexpressionSearchData.getCytoscapeGeneSymbolsMatchingQuery( text );
+      this.selectNodes( nodeIdsToSelect );
+   },
 
-        this.selectNodesMatchingText( this.coexDisplaySettings.getSearchTextValue() );
-    },
-    
-    getNodeIdsToHide: function (nodesToShow, allNodes) {
-    	
-    	var nodeIdsToHide=[];
-    	
-    	var length = allNodes.length;
-    	
-    	for (var i = 0;i<length;i++){
-    		
-    		if (nodesToShow.indexOf(allNodes[i]) ==-1){
-    			nodeIdsToHide.push(allNodes[i]);
-    		}
-    		
-    	}
-    	
-    	return nodeIdsToHide;
-    	
-    },
+   /**
+    * @private
+    */
+   applySelection : function() {
+      if ( !this.ready ) {
+         return;
+      }
 
-    exportPNG: function () {
-    	
-        var htmlString = '<img src="'+this.cy.png()+'"/>';
+      this.selectNodesMatchingText( this.coexDisplaySettings.getSearchTextValue() );
+   },
 
-        var win = new Ext.Window({
-            title: Gemma.HelpText.WidgetDefaults.CytoscapePanel.exportPNGWindowTitle,
-            plain: true,
-            html: htmlString,
-            height: 700,
-            width: 900,
-            autoScroll: true
-        });
-        win.show();
-    },
-    
-    exportText : function() {
-        var filteredData;
-        var queryGenesOnly = this.coexDisplaySettings.getQueryGenesOnly();
-        var stringency = this.coexDisplaySettings.getStringency();
+   /**
+    * 
+    * @param nodesToShow
+    * @param allNodes
+    * @returns {Array}
+    */
+   getNodeIdsToHide : function( nodesToShow, allNodes ) {
 
-        if (queryGenesOnly  && !this.coexpressionSearchData.searchCommandUsed.queryGenesOnly) {
-           filteredData = Gemma.CoexVOUtil.trimKnownGeneResults(this.coexpressionSearchData.getQueryGenesOnlyResults(), stringency);
-        } 
-        else {
-        	filteredData = Gemma.CoexVOUtil.trimKnownGeneResults(this.coexpressionSearchData.getCytoscapeKnownGeneResults(), stringency);
-           
-        }
+      var nodeIdsToHide = [];
 
-        var win = new Gemma.CoexpressionDownloadWindow({
-              title : "Coexpression Data",
-              queryGenesOnlyResults: true
-           });
-        win.convertText(filteredData);
-     }
-    
-    
-});
+      var length = allNodes.length;
+
+      for ( var i = 0; i < length; i++) {
+
+         if ( nodesToShow.indexOf( allNodes[i] ) == -1 ) {
+            nodeIdsToHide.push( allNodes[i] );
+         }
+
+      }
+
+      return nodeIdsToHide;
+
+   },
+
+   /**
+    * Produce screen view
+    */
+   exportPNG : function() {
+
+      var htmlString = '<img src="' + this.cy.png() + '"/>';
+
+      var win = new Ext.Window( {
+         title : Gemma.HelpText.WidgetDefaults.CytoscapePanel.exportPNGWindowTitle,
+         plain : true,
+         html : htmlString,
+         height : 700,
+         width : 900,
+         autoScroll : true
+      } );
+      win.show();
+   },
+
+   /**
+    * Produce text version of graph
+    */
+   exportText : function() {
+      var filteredData;
+      var queryGenesOnly = this.coexDisplaySettings.getQueryGenesOnly();
+      var stringency = this.coexDisplaySettings.getStringency();
+
+      if ( queryGenesOnly && !this.coexpressionSearchData.searchCommandUsed.queryGenesOnly ) {
+         filteredData = Gemma.CoexVOUtil.trimResults( this.coexpressionSearchData.getQueryGenesOnlyResults(),
+            stringency );
+      } else {
+         filteredData = Gemma.CoexVOUtil.trimResults( this.coexpressionSearchData.getCytoscapeResults(), stringency );
+
+      }
+
+      var win = new Gemma.CoexpressionDownloadWindow( {
+         title : "Coexpression Data",
+         queryGenesOnlyResults : true
+      } );
+      win.convertText( filteredData );
+   }
+
+} );

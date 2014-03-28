@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -522,10 +521,10 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         return this.getExpressionExperimentSetDao().findByName( name );
     }
 
-    @Override
-    protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet ) {
-        return this.getExpressionExperimentSetDao().getAnalyses( expressionExperimentSet );
-    }
+    // @Override
+    // protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet ) {
+    // return this.getExpressionExperimentSetDao().getAnalyses( expressionExperimentSet );
+    // }
 
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)

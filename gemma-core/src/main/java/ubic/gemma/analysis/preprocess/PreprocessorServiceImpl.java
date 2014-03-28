@@ -29,7 +29,6 @@ import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -71,9 +70,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
     @Autowired
     private DifferentialExpressionAnalyzerService analyzerService;
-
-    @Autowired
-    private Probe2ProbeCoexpressionService coexpressionService;
 
     @Autowired
     private ExpressionDataFileService dataFileService;
@@ -244,7 +240,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * @param expExp
      */
     private void removeInvalidatedData( ExpressionExperiment expExp ) {
-        coexpressionService.deleteLinks( expExp );
 
         try {
             dataFileService.deleteAllFiles( expExp );

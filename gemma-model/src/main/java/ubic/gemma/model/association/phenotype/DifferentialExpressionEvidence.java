@@ -18,44 +18,34 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
+
 /**
  * Evidence documented by a differential expression result stored in the system
  */
 public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidence {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence}.
+     * Constructs new instances of {@link DifferentialExpressionEvidence}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence}.
+         * Constructs a new instance of {@link DifferentialExpressionEvidence}.
          */
-        public static ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence newInstance() {
-            return new ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl();
+        public static DifferentialExpressionEvidence newInstance() {
+            return new DifferentialExpressionEvidenceImpl();
         }
 
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2281091076210841860L;
     private Double selectionThreshold;
 
-    private ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public DifferentialExpressionEvidence() {
-    }
+    private GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult;
 
     /**
      * 
      */
-    public ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult getGeneDifferentialExpressionMetaAnalysisResult() {
+    public GeneDifferentialExpressionMetaAnalysisResult getGeneDifferentialExpressionMetaAnalysisResult() {
         return this.geneDifferentialExpressionMetaAnalysisResult;
     }
 
@@ -67,7 +57,7 @@ public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidenc
     }
 
     public void setGeneDifferentialExpressionMetaAnalysisResult(
-            ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult ) {
+            GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult ) {
         this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
     }
 

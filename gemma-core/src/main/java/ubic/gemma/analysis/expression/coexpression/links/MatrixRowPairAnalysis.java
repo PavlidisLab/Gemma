@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -33,27 +33,35 @@ import cern.colt.list.ObjectArrayList;
  * @version $Id$
  */
 public interface MatrixRowPairAnalysis {
-
-    /**
-     * Get pvalue corrected for multiple testing of the genes. We conservatively penalize the pvalues for each
-     * additional test the gene received. For example, if correlation is between two probes that each assay two genes,
-     * the pvalue is penalized by a factor of 4.0.
-     * 
-     * @param i int
-     * @param j int
-     * @param correl double
-     * @param numused int
-     * @return double
-     */
-    double correctedPvalue( int i, int j, double correl, int numused );
+    static final int NUM_BINS = 2048;
 
     public void calculateMetrics();
 
+    public DoubleArrayList getHistogramArrayList();
+
+    public ObjectArrayList getKeepers();
+
     public QuantitationType getMetricType();
 
-    public void setUseAbsoluteValue( boolean k );
+    public CompositeSequence getProbeForRow( ExpressionDataMatrixRowElement rowEl );
+
+    public double getScoreInBin( int i );
+
+    public int numCached();
+
+    public void setDuplicateMap( Map<CompositeSequence, Set<Gene>> probeToGeneMap );
+
+    public void setLowerTailThreshold( double k );
+
+    public void setMinNumpresent( int minSamplesToKeepCorrelation );
+
+    public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks );
 
     public void setPValueThreshold( double k );
+
+    public void setUpperTailThreshold( double k );
+
+    public void setUseAbsoluteValue( boolean k );
 
     /**
      * Default is true; set to false to disable use of the pvalue threshold, in which case only the upper and lower tail
@@ -63,30 +71,17 @@ public interface MatrixRowPairAnalysis {
      */
     public void setUsePvalueThreshold( boolean useIt );
 
-    public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks );
-
-    public void setDuplicateMap( Map<CompositeSequence, Collection<Collection<Gene>>> m1 );
-
-    public void setLowerTailThreshold( double k );
-
-    public void setUpperTailThreshold( double k );
-
-    public int numCached();
-
-    public ObjectArrayList getKeepers();
-
-    public DoubleArrayList getHistogramArrayList();
-
-    public double getScoreInBin( int i );
-
-    public CompositeSequence getProbeForRow( ExpressionDataMatrixRowElement rowEl );
-
-    public void setMinNumpresent( int minSamplesToKeepCorrelation );
+    /**
+     * Use after analysis.
+     * 
+     * @return how many pairs were rejected due to cross-hybridization potential
+     */
+    long getCrossHybridizationRejections();
 
     double getNumUniqueGenes();
 
     /**
-     * @return how many rows/columsn the matrix has.
+     * @return how many rows/columns the matrix has.
      */
     int size();
 

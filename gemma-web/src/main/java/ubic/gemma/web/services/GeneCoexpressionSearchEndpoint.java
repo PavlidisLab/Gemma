@@ -31,12 +31,13 @@ import org.w3c.dom.Element;
 
 import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
 import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
-import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
+import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.EntityUtils;
 
 public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 
@@ -44,7 +45,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 
     private GeneService geneService;
 
-    private GeneCoexpressionService geneCoexpressionService;
+    private GeneCoexpressionSearchService geneCoexpressionService;
 
     private ExpressionExperimentSetService expressionExperimentSetService;
 
@@ -63,7 +64,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
         expressionExperimentSetService = service;
     }
 
-    public void setGeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
+    public void setGeneCoexpressionService( GeneCoexpressionSearchService geneCoexpressionService ) {
         this.geneCoexpressionService = geneCoexpressionService;
     }
 
@@ -126,14 +127,14 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 
             CoexpressionMetaValueObject metaVO;
             if ( pairQueryGeneId == null ) {
-                metaVO = geneCoexpressionService.coexpressionSearch( inputEeIds, queryGenes,
-                        Integer.valueOf( stringency ), MAX_RESULTS, false, false );
+                metaVO = geneCoexpressionService.coexpressionSearch( inputEeIds, EntityUtils.getIds( queryGenes ),
+                        Integer.valueOf( stringency ), MAX_RESULTS, false );
             } else {
-                metaVO = geneCoexpressionService.coexpressionSearch( inputEeIds, queryGenes,
-                        Integer.valueOf( stringency ), MAX_RESULTS, true, false );
+                metaVO = geneCoexpressionService.coexpressionSearch( inputEeIds, EntityUtils.getIds( queryGenes ),
+                        Integer.valueOf( stringency ), MAX_RESULTS, true );
             }
 
-            Collection<CoexpressionValueObjectExt> coexpressedGenes = metaVO.getKnownGeneResults();
+            Collection<CoexpressionValueObjectExt> coexpressedGenes = metaVO.getResults();
 
             if ( coexpressedGenes.isEmpty() ) {
                 String msg = "No coexpressed genes found.";

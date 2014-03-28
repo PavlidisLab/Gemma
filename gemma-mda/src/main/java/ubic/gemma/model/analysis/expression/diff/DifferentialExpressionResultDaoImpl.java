@@ -405,14 +405,14 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     }
 
     /*
-     * Key method for getting diff ex results 'in bulk' (non-Javadoc)
+     * Key method for getting diff ex results 'in bulk'
      * 
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#
      * findDifferentialExpressionAnalysisResultIdsInResultSet(java.lang.Long, java.util.Collection,
      * java.util.Collection)
      */
     @Override
-    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds ) {
 
         Map<Long, Map<Long, DiffExprGeneSearchResult>> results = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
@@ -528,8 +528,8 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                  * Each query tuple are the probe, result, resultsSet, qvalue, pvalue.
                  */
                 for ( Object o : queryResult ) {
-//                    Long resultSetId = ( ( BigInteger )((Object[])o)[2] ).longValue();
-//                    if (!resultSetId.equals)
+                    // Long resultSetId = ( ( BigInteger )((Object[])o)[2] ).longValue();
+                    // if (!resultSetId.equals)
                     numResults += processResultTuple( o, resultsFromDb, cs2GeneIdMap );
                 }
 

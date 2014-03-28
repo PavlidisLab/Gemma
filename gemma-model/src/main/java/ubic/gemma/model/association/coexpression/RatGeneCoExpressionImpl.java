@@ -25,7 +25,7 @@ package ubic.gemma.model.association.coexpression;
 /**
  * @see ubic.gemma.model.association.coexpression.RatGeneCoExpression
  */
-public class RatGeneCoExpressionImpl extends ubic.gemma.model.association.coexpression.RatGeneCoExpression {
+public class RatGeneCoExpressionImpl extends RatGeneCoExpression {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

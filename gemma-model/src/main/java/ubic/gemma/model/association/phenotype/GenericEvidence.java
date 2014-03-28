@@ -22,32 +22,19 @@ package ubic.gemma.model.association.phenotype;
  * Evidence that is supported only by a free-text description. One of the other evidence types is always preferred if
  * possible.
  */
-public abstract class GenericEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
+public abstract class GenericEvidence extends PhenotypeAssociation {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.phenotype.GenericEvidence}.
+     * Constructs new instances of {@link GenericEvidence}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.phenotype.GenericEvidence}.
+         * Constructs a new instance of {@link GenericEvidence}.
          */
-        public static ubic.gemma.model.association.phenotype.GenericEvidence newInstance() {
-            return new ubic.gemma.model.association.phenotype.GenericEvidenceImpl();
+        public static GenericEvidence newInstance() {
+            return new GenericEvidenceImpl();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7669217119409126482L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public GenericEvidence() {
     }
 
 }

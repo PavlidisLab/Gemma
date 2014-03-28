@@ -13,107 +13,126 @@
  * specific language governing permissions and limitations under the License.
  * 
  */
-Ext.namespace('Gemma');
+Ext.namespace( 'Gemma' );
 
 Gemma.CoexpressionJSONUtils = {};
 
-Gemma.CoexpressionJSONUtils.constructJSONGraphData= function (currentQueryGeneIds, knowngenes) {
-    var elements = {
-            nodes: [],
-            edges: []
-        };
-        // helper array to prevent duplicate nodes from being
-        // entered
-        var graphNodeIds = [];
-        var edgeSet = [];
-        var kglength = knowngenes.length;
-        var i;
-        // populate node data plus populate edge data
-        for (i = 0; i < kglength; i++) {
+/**
+ * Convert our 'native' objects into Cytoscape data objects. The value generated becomes the 'elements' of the
+ * cytoscape() initialization.
+ * <p>
+ * See http://cytoscape.github.io/cytoscape.js/#notation/elements-json.
+ * 
+ * @param {Array}
+ *           currentQueryGeneIds
+ * @param {Array}
+ *           results from the server (CoexpressionValueObjectExts)
+ */
+Gemma.CoexpressionJSONUtils.constructJSONGraphData = function( currentQueryGeneIds, results ) {
+   var elements = [];
 
-            
-                if (graphNodeIds.indexOf(knowngenes[i].foundGene.id) === -1) {
-                    isQueryGene = false;
+   // helper array to prevent duplicate nodes from being entered
+   var graphNodeIds = {};
+   var edgeSet = {};
 
-                    if (currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) !== -1) {
-                        isQueryGene = true;
-                    }
-                    
-                    var data={data:{
-                            id: knowngenes[i].foundGene.officialSymbol,
-                            name: knowngenes[i].foundGene.officialSymbol,
-                            geneid: knowngenes[i].foundGene.id,
-                            queryflag: isQueryGene?1:0,
-                            officialName: Gemma.CytoscapePanelUtil.ttSubstring(knowngenes[i].foundGene.officialName),
-                            ncbiId: knowngenes[i].foundGene.ncbiId,
-                            nodeDegreeOpacity: Gemma.CytoscapePanelUtil.nodeDegreeOpacityMapper(knowngenes[i].foundGeneNodeDegree),
-                            nodeDegree: Gemma.CytoscapePanelUtil.decimalPlaceRounder(knowngenes[i].foundGeneNodeDegree)}
-                        };
+   // populate node data plus populate edge data
+   for ( var i = 0; i < results.length; i++) {
 
-                    elements.nodes.push(data);
+      var r = results[i];
 
-                    graphNodeIds.push(knowngenes[i].foundGene.id);
-                }
+      if ( !graphNodeIds[r.foundGene.id] ) {
+         var isQueryGene = currentQueryGeneIds.indexOf( r.foundGene.id ) !== -1;
 
-                if (graphNodeIds.indexOf(knowngenes[i].queryGene.id) === -1) {
-                    isQueryGene = false;
+         var data = {
+            group : 'nodes',
+            data : {
+               id : r.foundGene.officialSymbol,
+               name : r.foundGene.officialSymbol,
+               geneid : r.foundGene.id,
+               queryflag : isQueryGene ? 1 : 0,
+               officialName : Gemma.CytoscapePanelUtil.ttSubstring( r.foundGene.officialName ),
+               ncbiId : r.foundGene.ncbiId,
+               nodeDegreeColor : Gemma.CytoscapePanelUtil.nodeDegreeColorMapper( r.foundGeneNodeDegreeRank, 'node' ),
+               nodeDegree : Gemma.CytoscapePanelUtil.decimalPlaceRounder( r.foundGeneNodeDegreeRank )
+            }
+         };
 
-                    if (currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) !== -1) {
-                        isQueryGene = true;
-                    }
-                    
-                    var data = { data:{
-                            id: knowngenes[i].queryGene.officialSymbol,
-                            name: knowngenes[i].queryGene.officialSymbol,
-                            geneid: knowngenes[i].queryGene.id,
-                            queryflag: isQueryGene?1:0,                        
-                            officialName: Gemma.CytoscapePanelUtil.ttSubstring(knowngenes[i].queryGene.officialName),
-                            ncbiId: knowngenes[i].queryGene.ncbiId,
-                            nodeDegreeOpacity: Gemma.CytoscapePanelUtil.nodeDegreeOpacityMapper(knowngenes[i].queryGeneNodeDegree),
-                            nodeDegree: Gemma.CytoscapePanelUtil.decimalPlaceRounder(knowngenes[i].queryGeneNodeDegree)}
-                        };
+         elements.push( data );
 
-                    elements.nodes.push(data);
-                    graphNodeIds.push(knowngenes[i].queryGene.id);
-                }
+         graphNodeIds[r.foundGene.id] = 1;
+      } else {
+         // many duplicates.
+         // console.log( "duplicate: " + r.foundGene.officialSymbol );
+      }
 
-                var support;
-                var supportsign;
-                if (knowngenes[i].posSupp > 0 && knowngenes[i].negSupp > 0) {
-                    support = Math.max(knowngenes[i].posSupp, knowngenes[i].negSupp);
-                    supportsign = "both";
+      if ( !graphNodeIds[r.queryGene.id] ) {
+         var isQueryGene = currentQueryGeneIds.indexOf( r.queryGene.id ) !== -1;
 
-                } else if (knowngenes[i].posSupp > 0) {
-                    support = knowngenes[i].posSupp;
-                    supportsign = "positive";
-                }else {// if (knowngenes[i].negSupp > 0) {
-                    support = knowngenes[i].negSupp;
-                    supportsign = "negative";
-                }
-                // double edge check
-                if (edgeSet.indexOf(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol) == -1 && edgeSet.indexOf(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol) == -1) {
+         var data = {
+            group : 'nodes',
+            data : {
+               id : r.queryGene.officialSymbol,
+               name : r.queryGene.officialSymbol,
+               geneid : r.queryGene.id,
+               queryflag : isQueryGene ? 1 : 0,
+               officialName : Gemma.CytoscapePanelUtil.ttSubstring( r.queryGene.officialName ),
+               ncbiId : r.queryGene.ncbiId,
+               nodeDegreeColor : Gemma.CytoscapePanelUtil.nodeDegreeColorMapper( r.queryGeneNodeDegreeRank, 'node' ),
+               nodeDegree : Gemma.CytoscapePanelUtil.decimalPlaceRounder( r.queryGeneNodeDegreeRank )
+            }
+         };
 
-                	var nodeDegreeValue = Gemma.CytoscapePanelUtil.decimalPlaceRounder(Gemma.CytoscapePanelUtil.getMaxWithNull(
-                            knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree));
-                	
-                	var data = {data:{
-                            id: knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol,
-                            target: knowngenes[i].foundGene.officialSymbol,
-                            source: knowngenes[i].queryGene.officialSymbol,
-                            positiveSupport: knowngenes[i].posSupp,
-                            negativeSupport: knowngenes[i].negSupp,
-                            support: support,
-                            supportSign: supportsign,
-                            nodeDegree: nodeDegreeValue,
-                            nodeDegreeOpacity:Gemma.CytoscapePanelUtil.nodeDegreeOpacityMapper(knowngenes[i].foundGeneNodeDegree)}
-                        }; 
-                	
-                    elements.edges.push(data);
-                    edgeSet.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
-                    edgeSet.push(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol);
-                }
-           
-        } // end for (<kglength)
+         elements.push( data );
+         graphNodeIds[r.queryGene.id] = 1;
+      }
 
-        return elements;
-    };
+      /*
+       * Edges.
+       */
+
+      // double edge check (fixme, this is rather inefficient-looking; and we shouldn't have duplicates, right?)
+      var e1 = r.foundGene.officialSymbol + "to" + r.queryGene.officialSymbol;
+      var e2 = r.queryGene.officialSymbol + "to" + r.foundGene.officialSymbol;
+
+      // for edges we have not yet seen,
+      if ( edgeSet[e1] || edgeSet[e2] ) {
+         continue;
+      }
+
+      var support = r.support;
+      var supportsign;
+      if ( r.posSupp > 0 && r.negSupp > 0 ) {
+         supportsign = "both";
+      } else if ( r.posSupp > 0 ) {
+         supportsign = "positive";
+      } else {
+         supportsign = "negative";
+      }
+
+      // compute the nodeDegree of the highest (worst) of the two. Low values are "good".
+      var nodeDegreeValue = Gemma.CytoscapePanelUtil.decimalPlaceRounder( Gemma.CytoscapePanelUtil.getMaxWithNull(
+         r.queryGeneNodeDegreeRank, r.foundGeneNodeDegreeRank ) );
+
+      var data = {
+         group : 'edges',
+         data : {
+            id : r.foundGene.officialSymbol + "to" + r.queryGene.officialSymbol,
+            target : r.foundGene.officialSymbol,
+            source : r.queryGene.officialSymbol,
+            positiveSupport : r.posSupp,
+            negativeSupport : r.negSupp,
+            support : support,
+            supportSign : supportsign,
+            nodeDegree : nodeDegreeValue,
+            nodeDegreeColor : Gemma.CytoscapePanelUtil.nodeDegreeColorMapper( nodeDegreeValue, supportsign ),
+         }
+      };
+
+      elements.push( data );
+      edgeSet[e1] = 1;
+      edgeSet[e2] = 1;
+
+   } // end for (<results.length)
+
+   return elements;
+};

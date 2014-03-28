@@ -1,5 +1,13 @@
 -- Initialize the database with some scraps of data. See also init-indices.sql and mysql-acegi-acl.sql.
 
+-- hilo for generating IDs, under the MultipleHiLoPerTableGenerator method.
+-- See http://blog.eyallupu.com/2011/01/hibernatejpa-identity-generators.html
+drop table if exists hibernate_sequences;
+create table hibernate_sequences (
+	sequence_name VARCHAR(255) character set latin1 not null,
+	sequence_next_hi_value BIGINT not null
+);
+
 delete from CONTACT;
 delete from TAXON;
 delete from EXTERNAL_DATABASE;
@@ -102,7 +110,6 @@ insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABL
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Drosophila melanogaster","fly","7227",1,1);
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Caenorhabditis elegans","worm","6239",1,1);
 
-
 -- external databases
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION, WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("PubMed", "PubMed database from NCBI", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed", "ftp://ftp.ncbi.nlm.nih.gov/pubmed/", 6, "LITERATURE", 6);
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("GO", "Gene Ontology database", "http://www.godatabase.org/dev/database/", "http://archive.godatabase.org", 7, "ONTOLOGY", 7);
@@ -124,26 +131,4 @@ create table GENE2CS (
 	INDEX gene2cscsindex (CS),
 	INDEX gene2csgeneadindex (AD, GENE)
 );
-
--- denormalize probe2probe coexpressions
--- see init-triggers for triggers that populate these denormalized fields
-alter table HUMAN_PROBE_CO_EXPRESSION add column FIRST_DESIGN_ELEMENT_FK bigint(20), add column SECOND_DESIGN_ELEMENT_FK bigint(20);
-alter table MOUSE_PROBE_CO_EXPRESSION add column FIRST_DESIGN_ELEMENT_FK bigint(20), add column SECOND_DESIGN_ELEMENT_FK bigint(20);
-alter table RAT_PROBE_CO_EXPRESSION add column FIRST_DESIGN_ELEMENT_FK bigint(20), add column SECOND_DESIGN_ELEMENT_FK bigint(20);
-alter table OTHER_PROBE_CO_EXPRESSION add column FIRST_DESIGN_ELEMENT_FK bigint(20), add column SECOND_DESIGN_ELEMENT_FK bigint(20);
-
-update HUMAN_PROBE_CO_EXPRESSION p, PROCESSED_EXPRESSION_DATA_VECTOR dedvFirst, PROCESSED_EXPRESSION_DATA_VECTOR dedvSecond SET p.FIRST_DESIGN_ELEMENT_FK=dedvFirst.DESIGN_ELEMENT_FK, p.SECOND_DESIGN_ELEMENT_FK=dedvSecond.DESIGN_ELEMENT_FK WHERE p.FIRST_VECTOR_FK=dedvFirst.ID AND p.SECOND_VECTOR_FK=dedvSecond.ID;
-update MOUSE_PROBE_CO_EXPRESSION p, PROCESSED_EXPRESSION_DATA_VECTOR dedvFirst, PROCESSED_EXPRESSION_DATA_VECTOR dedvSecond SET p.FIRST_DESIGN_ELEMENT_FK=dedvFirst.DESIGN_ELEMENT_FK, p.SECOND_DESIGN_ELEMENT_FK=dedvSecond.DESIGN_ELEMENT_FK WHERE p.FIRST_VECTOR_FK=dedvFirst.ID AND p.SECOND_VECTOR_FK=dedvSecond.ID;
-update RAT_PROBE_CO_EXPRESSION p, PROCESSED_EXPRESSION_DATA_VECTOR dedvFirst, PROCESSED_EXPRESSION_DATA_VECTOR dedvSecond SET p.FIRST_DESIGN_ELEMENT_FK=dedvFirst.DESIGN_ELEMENT_FK, p.SECOND_DESIGN_ELEMENT_FK=dedvSecond.DESIGN_ELEMENT_FK WHERE p.FIRST_VECTOR_FK=dedvFirst.ID AND p.SECOND_VECTOR_FK=dedvSecond.ID;
-update OTHER_PROBE_CO_EXPRESSION p, PROCESSED_EXPRESSION_DATA_VECTOR dedvFirst, PROCESSED_EXPRESSION_DATA_VECTOR dedvSecond SET p.FIRST_DESIGN_ELEMENT_FK=dedvFirst.DESIGN_ELEMENT_FK, p.SECOND_DESIGN_ELEMENT_FK=dedvSecond.DESIGN_ELEMENT_FK WHERE p.FIRST_VECTOR_FK=dedvFirst.ID AND p.SECOND_VECTOR_FK=dedvSecond.ID;
-
-alter table HUMAN_PROBE_CO_EXPRESSION add index EEkey (EXPRESSION_EXPERIMENT_FK, FIRST_DESIGN_ELEMENT_FK);
-alter table MOUSE_PROBE_CO_EXPRESSION add index EEkey (EXPRESSION_EXPERIMENT_FK, FIRST_DESIGN_ELEMENT_FK);
-alter table RAT_PROBE_CO_EXPRESSION add index EEkey (EXPRESSION_EXPERIMENT_FK, FIRST_DESIGN_ELEMENT_FK);
-alter table OTHER_PROBE_CO_EXPRESSION add index EEkey (EXPRESSION_EXPERIMENT_FK, FIRST_DESIGN_ELEMENT_FK);
-
-alter table RAT_PROBE_CO_EXPRESSION add index fdeskey (FIRST_DESIGN_ELEMENT_FK);
-alter table OTHER_PROBE_CO_EXPRESSION add index fdeskey (FIRST_DESIGN_ELEMENT_FK);
-alter table MOUSE_PROBE_CO_EXPRESSION add index fdeskey (FIRST_DESIGN_ELEMENT_FK);
-alter table HUMAN_PROBE_CO_EXPRESSION add index fdeskey (FIRST_DESIGN_ELEMENT_FK);
 

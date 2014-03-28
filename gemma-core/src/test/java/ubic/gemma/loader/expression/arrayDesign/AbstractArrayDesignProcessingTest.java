@@ -55,24 +55,6 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
         return ad;
     }
 
-    @After
-    public void tearDown() {
-        Collection<Gene> genes = geneService.loadAll();
-        for ( Gene gene : genes ) {
-            try {
-                geneService.remove( gene );
-            } catch ( Exception e ) {
-
-            }
-        }
-
-        if ( ad != null ) try {
-            arrayDesignService.remove( ad );
-        } catch ( Exception e ) {
-
-        }
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -105,6 +87,24 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
 
         ad = arrayDesignService.thaw( ad );
 
+    }
+
+    @After
+    public void tearDown() {
+        Collection<Gene> genes = geneService.loadAll();
+        for ( Gene gene : genes ) {
+            try {
+                geneService.remove( gene );
+            } catch ( Exception e ) {
+
+            }
+        }
+
+        if ( ad != null ) try {
+            arrayDesignService.remove( ad );
+        } catch ( Exception e ) {
+
+        }
     }
 
 }

@@ -21,9 +21,13 @@ package ubic.gemma.apps;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.cli.Option;
@@ -33,13 +37,14 @@ import org.apache.commons.lang3.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysis;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
-import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisPersister;
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.model.association.coexpression.CoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -55,6 +60,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Commandline tool to conduct link analysis.
@@ -95,6 +102,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     private String analysisTaxon = null;
 
+    private boolean updateNodeDegree = false;
+
     @Override
     public String getShortDesc() {
         return "Analyze expression data sets for coexpressed genes";
@@ -111,6 +120,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         super.buildOptions();
 
         super.addDateOption();
+
+        Option nodeDegreeUpdate = OptionBuilder.withDescription(
+                "Update the node degree for taxon given by -t option. All other options ignored." ).create( 'n' );
+        addOption( nodeDegreeUpdate );
+
+        addOption( OptionBuilder.withDescription(
+                "Initialize links for taxon given by -t option, based on old data. All other options ignored." )
+                .create( "init" ) );
 
         Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Thresold" )
                 .withDescription( "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" )
@@ -149,8 +166,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( fileOpt );
 
         // supply taxon on command line
-        Option taxonNameOption = OptionBuilder.hasArg()
-                .withDescription( "Taxon species name e.g. 'chinook' has to be a species " ).create( "t" );
+        Option taxonNameOption = OptionBuilder.hasArg().withDescription( "Taxon species name e.g. 'mouse'" )
+                .create( "t" );
         addOption( taxonNameOption );
 
         Option arrayOpt = OptionBuilder
@@ -205,23 +222,40 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "choosecut" );
         addOption( chooseCutOption );
 
-        Option probeDegreeThresholdOption = OptionBuilder
-                .hasArg()
-                .withArgName( "threshold" )
-                .withDescription(
-                        "Probes with greater than this number of links will be ignored; default is "
-                                + LinkAnalysisConfig.DEFAULT_PROBE_DEGREE_THRESHOLD ).create( "probeDegreeLim" );
-        addOption( probeDegreeThresholdOption );
+        // Option probeDegreeThresholdOption = OptionBuilder
+        // .hasArg()
+        // .withArgName( "threshold" )
+        // .withDescription(
+        // "Probes with greater than this number of links will be ignored; default is "
+        // + LinkAnalysisConfig.DEFAULT_PROBE_DEGREE_THRESHOLD ).create( "probeDegreeLim" );
+        // addOption( probeDegreeThresholdOption );
 
         addForceOption();
         addAutoOption();
     }
+
+    private boolean initalizeFromOldData = false;
 
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Link Analysis Data Loader", args );
         if ( err != null ) {
             return err;
+        }
+
+        if ( initalizeFromOldData ) {
+            log.info( "Initializing links from old data for " + this.taxon );
+            LinkAnalysisPersister s = this.getBean( LinkAnalysisPersister.class );
+            s.initializeLinksFromOldData( this.taxon );
+            return null;
+        } else if ( updateNodeDegree ) {
+
+            // we waste some time here getting the experiments.
+            loadTaxon();
+
+            this.getBean( CoexpressionService.class ).updateNodeDegrees( this.taxon );
+
+            return null;
         }
 
         this.linkAnalysisService = this.getBean( LinkAnalysisService.class );
@@ -240,13 +274,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 return new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
             }
 
-            // this.taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
-            this.taxon = taxonService.findByCommonName( analysisTaxon );
-            if ( this.taxon == null || !this.taxon.getIsSpecies() ) {
-                return new IllegalArgumentException( "No such taxon held in system please check that it is a species: "
-                        + taxon );
-            }
-            log.debug( taxon + "is used" );
+            loadTaxon();
             arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
             Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<ProcessedExpressionDataVector>();
@@ -291,10 +319,39 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 return e;
             }
 
-            this.linkAnalysisService.process( this.taxon, dataVectors, filterConfig, linkAnalysisConfig );
+            this.linkAnalysisService.processVectors( this.taxon, dataVectors, filterConfig, linkAnalysisConfig );
         } else {
 
-            for ( BioAssaySet ee : expressionExperiments ) {
+            /*
+             * Do in decreasing order of size, to help capture more links earlier - reduces fragmentation.
+             */
+            List<BioAssaySet> sees = new ArrayList<>( expressionExperiments );
+
+            if ( expressionExperiments.size() > 1 ) {
+                log.info( "Sorting data sets by number of samples, doing large data sets first." );
+
+                Collection<ExpressionExperimentValueObject> vos = eeService.loadValueObjects(
+                        EntityUtils.getIds( expressionExperiments ), true );
+                final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
+
+                // FIXME this doesn't know how to deal with BioAssaySets yet.
+                Collections.sort( sees, new Comparator<BioAssaySet>() {
+                    @Override
+                    public int compare( BioAssaySet o1, BioAssaySet o2 ) {
+
+                        ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
+                        ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
+
+                        assert e1 != null : "No valueobject: " + e2;
+                        assert e2 != null : "No valueobject: " + e1;
+
+                        return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
+
+                    }
+                } );
+            }
+
+            for ( BioAssaySet ee : sees ) {
                 if ( ee instanceof ExpressionExperiment ) {
                     processExperiment( ( ExpressionExperiment ) ee );
                 } else {
@@ -307,10 +364,44 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         return null;
     }
 
+    /**
+     * 
+     */
+    private void loadTaxon() {
+        this.taxon = taxonService.findByCommonName( analysisTaxon );
+        if ( this.taxon == null || !this.taxon.getIsSpecies() ) {
+            throw new IllegalArgumentException( "No such taxon held in system please check that it is a species: "
+                    + taxon );
+        }
+        log.debug( taxon + "is used" );
+    }
+
     @Override
     protected void processOptions() {
         this.autoSeekEventType = LinkAnalysisEvent.class;
         super.processOptions();
+
+        if ( hasOption( "init" ) ) {
+            initalizeFromOldData = true;
+            if ( hasOption( 't' ) ) {
+                this.analysisTaxon = this.getOptionValue( 't' );
+            } else {
+                log.error( "Must provide 'taxon' option when initializing from old data" );
+                this.bail( ErrorCode.INVALID_OPTION );
+            }
+            // all other options ignored.
+            return;
+        } else if ( hasOption( 'n' ) ) {
+            this.updateNodeDegree = true;
+            if ( hasOption( 't' ) ) {
+                this.analysisTaxon = this.getOptionValue( 't' );
+            } else {
+                log.error( "Must provide 'taxon' option when updating node degree" );
+                this.bail( ErrorCode.INVALID_OPTION );
+            }
+            // all other options ignored.
+            return;
+        }
 
         if ( hasOption( "dataFile" ) ) {
             if ( this.expressionExperiments.size() > 0 ) {
@@ -532,8 +623,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                         + "-links.txt" ) );
             }
 
-            LinkAnalysis la = linkAnalysisService.doAnalysis( ee, linkAnalysisConfig, filterConfig );
-            linkAnalysisService.saveResults( ee, la, linkAnalysisConfig, filterConfig );
+            linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
 
             successObjects.add( ee.toString() );
         } catch ( Exception e ) {

@@ -20,8 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 
@@ -38,12 +36,6 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
 
     @Autowired
     private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
-
-    @Autowired
-    private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
-
-    @Autowired
-    private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
 
     @Override
     @Transactional
@@ -89,21 +81,6 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
             throw new IllegalArgumentException( "ExperimentSubSet cannot be null" );
         }
 
-        /*
-         * If we remove the experiment from the set, analyses that used the set have to cope with this. For G2G,the data
-         * sets are stored in order of IDs, but the actual ids are not stored (we refer back to the eeset), so coping
-         * will not be possible (at best we can mark it as troubled). If there is no analysis object using the set, it's
-         * okay. There are ways around this but it's messy, so for now we just refuse to delete such experiments.
-         */
-        Collection<GeneCoexpressionAnalysis> g2gAnalyses = this.geneCoexpressionAnalysisDao
-                .findByInvestigation( subset );
-
-        if ( g2gAnalyses.size() > 0 ) {
-            throw new IllegalArgumentException( "Sorry, you can't delete subset: " + subset
-                    + "; it is part of at least one coexpression meta analysis: "
-                    + g2gAnalyses.iterator().next().getName() );
-        }
-
         // Remove differential expression analyses
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
                 .findByInvestigation( subset );
@@ -112,10 +89,11 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
             this.differentialExpressionAnalysisDao.remove( toDelete );
         }
 
-        // Remove probe2probe links
-        this.probe2ProbeCoexpressionDao.deleteLinks( subset );
-
         this.expressionExperimentSubSetDao.remove( subset );
+
+        /*
+         * FIXME Coexpression involving this data set will linger on ...
+         */
     }
 
     /**

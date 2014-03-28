@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-cascade="none">
+
+	<!-- FIXME make separate for human etc.? -->
+	<class name="ubic.gemma.model.association.coexpression.MouseExperimentCoexpressionLinkImpl" table="MOUSE_EXPERIMENT_COEXPRESSION"
+		dynamic-insert="true" dynamic-update="true" mutable="true">
+		<cache usage="read-write" />
+		<id name="id" type="java.lang.Long" unsaved-value="null">
+			<column name="ID" sql-type="BIGINT" />
+			<generator class="org.hibernate.id.MultipleHiLoPerTableGenerator" />
+		</id>
+
+		<many-to-one name="experiment" class="ubic.gemma.model.expression.experiment.BioAssaySet" cascade="none"
+			lazy="proxy">
+			<column name="EXPERIMENT_FK" not-null="true" unique="false" sql-type="BIGINT" />
+		</many-to-one>
+		<property access="field" name="linkId" type="java.lang.Long">
+			<column name="LINK_FK" not-null="true" unique="false" sql-type="BIGINT" />
+		</property>
+		<property access="field" name="firstGene" type="java.lang.Long">
+			<column name="GENE1_FK" not-null="true" unique="false" sql-type="BIGINT" />
+		</property>
+		<property access="field" name="secondGene" type="java.lang.Long">
+			<column name="GENE2_FK" not-null="true" unique="false" sql-type="BIGINT" />
+		</property>
+	</class>
+
+</hibernate-mapping>

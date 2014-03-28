@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+          "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-cascade="none">
+	<class name="ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionTestedIn" table="GENE_COEX_TESTED_IN"
+		dynamic-insert="false" dynamic-update="false" mutable="true">
+		<cache usage="read-write" />
+		<id access="field" name="geneId" type="java.lang.Long" unsaved-value="null">
+			<column name="ID" sql-type="BIGINT" />
+			<generator class="assigned" />
+		</id>
+		<property name="numDatasetsTestedIn" type="java.lang.Integer">
+			<column name="NUM_TESTS" not-null="true" unique="false" sql-type="SMALLINT" />
+		</property>
+		<property name="bytes" type="byte[]">
+			<column name="BYTES" not-null="true" unique="false" sql-type="MEDIUMBLOB" />
+		</property>
+	</class>
+
+</hibernate-mapping>

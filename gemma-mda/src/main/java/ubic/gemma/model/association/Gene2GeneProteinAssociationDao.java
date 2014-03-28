@@ -41,14 +41,6 @@ public interface Gene2GeneProteinAssociationDao extends BaseDao<Gene2GeneProtein
     public Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
     /**
-     * Thaw the gene2GeneProteinAssociation genes are not automatically loaded, so this method thaws the genes.
-     * 
-     * @param gene2GeneProteinAssociation
-     * @throws Exception
-     */
-    public void thaw( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-
-    /**
      * Finder method that given a gene finds its interactions. The query checks if the gene matches either gene one or
      * gene two.
      * 
@@ -56,5 +48,13 @@ public interface Gene2GeneProteinAssociationDao extends BaseDao<Gene2GeneProtein
      * @return gene2GeneProteinAssociation Collection of associations assocaited with this gene
      */
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene );
+
+    /**
+     * Thaw the gene2GeneProteinAssociation genes are not automatically loaded, so this method thaws the genes.
+     * 
+     * @param gene2GeneProteinAssociation
+     * @throws Exception
+     */
+    public void thaw( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
 }

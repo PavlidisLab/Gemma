@@ -35,7 +35,8 @@ public interface LinkAnalysisService {
      * @param linkAnalysisConfig Configuration for the link analysis.
      * @throws Exception
      */
-    public abstract LinkAnalysis process( Long eeId, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
+    public abstract LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
+            LinkAnalysisConfig linkAnalysisConfig );
 
     /**
      * Used when the input is data vectors from another source, instead of from a DB-bound expressionExperiment. Example
@@ -47,14 +48,7 @@ public interface LinkAnalysisService {
      * @param filterConfig
      * @param linkAnalysisConfig - must include the array name.
      */
-    public abstract LinkAnalysis process( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
+    public abstract LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
-        
-    public ExpressionExperiment loadDataForAnalysis (Long eeId);
-    
-    public LinkAnalysis doAnalysis (ExpressionExperiment ee, LinkAnalysisConfig linkAnalysisConfig,  FilterConfig filterConfig);
-    
-    public void saveResults (ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig, FilterConfig filterConfig);
-
 
 }

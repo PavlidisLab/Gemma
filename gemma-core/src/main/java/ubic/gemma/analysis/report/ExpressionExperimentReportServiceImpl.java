@@ -50,7 +50,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.association.coexpression.CoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
@@ -111,7 +111,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
-    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
+    private CoexpressionService geneCoexpressionService;
 
     @Autowired
     private ProcessedDataVectorCache processedDataVectorCache;
@@ -588,7 +588,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         eeVo.setDifferentialExpressionAnalyses( differentialExpressionAnalysisService.getAnalysisValueObjects( id ) );
 
-        eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( id ) );
+        // FIXME could get this from the CoexpressionAnalysis.
+        // eeVo.setCoexpressionLinkCount( geneCoexpressionService.countLinks( id ) );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );

@@ -207,6 +207,11 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     }
 
+    /**
+     * FIXME this test occasionally fails on bamboo.
+     * 
+     * @throws Exception
+     */
     @Test
     public void testSimpleAuditCreateUpdateUser() throws Exception {
         String USERNAME = RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );

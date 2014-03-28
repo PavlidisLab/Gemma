@@ -793,32 +793,26 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         /*
-         * Initialize data structures we need to hold results
+         * Initialize data structures we need to hold results.
          */
 
         // this used to be a Set, but a List is much faster.
-        Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, List<DifferentialExpressionAnalysisResult>>();
+        Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<>();
         Map<String, List<Double>> pvaluesForQvalue = new HashMap<String, List<Double>>();
+
         for ( String factorName : label2Factors.keySet() ) {
-            // if ( properDesignMatrix.getDroppedFactors().contains( factorName ) ) {
-            // continue;
-            // }
             resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
         }
-        addinteraction: for ( String[] fs : interactionFactorLists ) {
-            for ( String f : fs ) {
-                // if ( properDesignMatrix.getDroppedFactors().contains( f ) ) {
-                // continue addinteraction;
-                // }
-            }
+
+        for ( String[] fs : interactionFactorLists ) {
             String intF = StringUtils.join( fs, ":" );
             resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( intF, new ArrayList<Double>() );
         }
 
         if ( pvaluesForQvalue.isEmpty() ) {
-            log.warn( "No results were obtained for the current stage of analysis, possibly due to dropped factors." );
+            log.warn( "No results were obtained for the current stage of analysis." );
             return null;
         }
 

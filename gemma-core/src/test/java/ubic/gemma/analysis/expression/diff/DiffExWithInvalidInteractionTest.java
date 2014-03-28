@@ -39,6 +39,12 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+/**
+ * TODO Document Me
+ * 
+ * @author Paul
+ * @version $Id$
+ */
 public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
 
     @Autowired

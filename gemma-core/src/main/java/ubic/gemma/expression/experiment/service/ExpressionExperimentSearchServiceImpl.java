@@ -82,74 +82,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService#searchExpressionExperiments(java.lang
-     * .String)
-     */
-    @Override
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
-
-        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
-        List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
-
-        if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
-            log.info( "No experiments for search: " + query );
-            return new HashSet<ExpressionExperimentValueObject>();
-        }
-
-        log.info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
-        Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
-                .loadValueObjects( EntityUtils.getIds( experimentSearchResults ), true );
-        log.info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
-        return experimentValueObjects;
-    }
-
-    /**
-     * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent session-bound
-     * sets called by ubic.gemma.web.controller .expression.experiment.ExpressionExperimentController.
-     * searchExperimentsAndExperimentGroup(String, Long) does not include session bound sets
-     * 
-     * @param taxonId
-     * @return
-     */
-    private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( Long taxonId ) {
-        boolean taxonLimited = taxonId != null;
-
-        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
-
-        // These are widely considered to be the most important results and
-        // therefore need to be at the top
-        List<SearchResultDisplayObject> masterResults = new LinkedList<SearchResultDisplayObject>();
-
-        Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
-                .loadAllExperimentSetValueObjects();
-
-        for ( ExpressionExperimentSetValueObject evo : evos ) {
-            SearchResultDisplayObject srdvo = new SearchResultDisplayObject( evo );
-
-            if ( taxonLimited && !evo.getTaxonId().equals( taxonId ) ) {
-                continue;
-            }
-            // could be spoofed by other users 'Master sets'
-            if ( evo.getName().startsWith( arbitraryMasterSetPrefix ) ) {
-                masterResults.add( srdvo );
-            } else {
-                displayResults.add( srdvo );
-            }
-        }
-
-        Collections.sort( displayResults );
-
-        // should we also sort by which species is most important(humans obviously) or is that not politically
-        // correct???
-        displayResults.addAll( 0, masterResults );
-
-        return displayResults;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
      * ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService#getAllTaxonExperimentGroup(java.lang
      * .Long)
      */
@@ -295,6 +227,31 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return displayResults;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService#searchExpressionExperiments(java.lang
+     * .String)
+     */
+    @Override
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
+
+        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
+        List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
+
+        if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
+            log.info( "No experiments for search: " + query );
+            return new HashSet<ExpressionExperimentValueObject>();
+        }
+
+        log.info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
+        Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
+                .loadValueObjects( EntityUtils.getIds( experimentSearchResults ), true );
+        log.info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
+        return experimentValueObjects;
+    }
+
     /**
      * @param results
      * @return
@@ -320,23 +277,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     /**
-     * @param query
-     * @param taxonId
-     * @return
-     */
-    private Map<Class<?>, List<SearchResult>> initialSearch( String query, Long taxonId ) {
-        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
-        settings.setSearchExperimentSets( true ); // add searching for experimentSets
-        Taxon taxonParam = null;
-        if ( taxonId != null ) {
-            taxonParam = taxonService.load( taxonId );
-            settings.setTaxon( taxonParam );
-        }
-        Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
-        return results;
-    }
-
-    /**
      * @param results
      * @return
      */
@@ -358,5 +298,65 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             }
         }
         return experimentSets;
+    }
+
+    /**
+     * @param query
+     * @param taxonId
+     * @return
+     */
+    private Map<Class<?>, List<SearchResult>> initialSearch( String query, Long taxonId ) {
+        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
+        settings.setSearchExperimentSets( true ); // add searching for experimentSets
+        Taxon taxonParam = null;
+        if ( taxonId != null ) {
+            taxonParam = taxonService.load( taxonId );
+            settings.setTaxon( taxonParam );
+        }
+        Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
+        return results;
+    }
+
+    /**
+     * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent session-bound
+     * sets called by ubic.gemma.web.controller .expression.experiment.ExpressionExperimentController.
+     * searchExperimentsAndExperimentGroup(String, Long) does not include session bound sets
+     * 
+     * @param taxonId
+     * @return
+     */
+    private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( Long taxonId ) {
+        boolean taxonLimited = taxonId != null;
+
+        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+
+        // These are widely considered to be the most important results and
+        // therefore need to be at the top
+        List<SearchResultDisplayObject> masterResults = new LinkedList<SearchResultDisplayObject>();
+
+        Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
+                .loadAllExperimentSetValueObjects();
+
+        for ( ExpressionExperimentSetValueObject evo : evos ) {
+            SearchResultDisplayObject srdvo = new SearchResultDisplayObject( evo );
+
+            if ( taxonLimited && !evo.getTaxonId().equals( taxonId ) ) {
+                continue;
+            }
+            // could be spoofed by other users 'Master sets'
+            if ( evo.getName().startsWith( arbitraryMasterSetPrefix ) ) {
+                masterResults.add( srdvo );
+            } else {
+                displayResults.add( srdvo );
+            }
+        }
+
+        Collections.sort( displayResults );
+
+        // should we also sort by which species is most important(humans obviously) or is that not politically
+        // correct???
+        displayResults.addAll( 0, masterResults );
+
+        return displayResults;
     }
 }

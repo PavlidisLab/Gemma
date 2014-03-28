@@ -54,12 +54,6 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
         return entities;
     }
 
-    @Override
-    public Collection<? extends ReferenceAssociation> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ReferenceAssociationImpl where id in (:ids)", "ids",
-                ids );
-    }
-
     /**
      * @see ReferenceAssociationDao#create(int transform, ReferenceAssociation)
      */
@@ -70,6 +64,12 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
         }
         this.getHibernateTemplate().save( referenceAssociation );
         return referenceAssociation;
+    }
+
+    @Override
+    public Collection<? extends ReferenceAssociation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ReferenceAssociationImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**
@@ -95,6 +95,18 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     }
 
     /**
+     * @see RelationshipDao#remove(Collection)
+     */
+
+    @Override
+    public void remove( Collection<? extends ReferenceAssociation> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "ReferenceAssociation.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
      * @see ReferenceAssociationDao#remove(java.lang.Long)
      */
 
@@ -107,18 +119,6 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
         if ( entity != null ) {
             this.remove( entity );
         }
-    }
-
-    /**
-     * @see RelationshipDao#remove(Collection)
-     */
-
-    @Override
-    public void remove( Collection<? extends ReferenceAssociation> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "ReferenceAssociation.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
     }
 
     /**

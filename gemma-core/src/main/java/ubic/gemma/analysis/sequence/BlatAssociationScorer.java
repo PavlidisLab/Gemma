@@ -45,6 +45,18 @@ public class BlatAssociationScorer {
     private static Log log = LogFactory.getLog( BlatAssociationScorer.class.getName() );
 
     /**
+     * Compute how much the BLAT alignment with the target gene product is as a fraction of the query sequence length.
+     * Assumes that the overlap with a transcript has already been computed.
+     * 
+     * @param blatAssociation
+     * @return
+     */
+    public static double computeOverlapFraction( BlatAssociation blatAssociation ) {
+        return ( double ) blatAssociation.getOverlap()
+                / ( double ) blatAssociation.getBlatResult().getQuerySequence().getLength();
+    }
+
+    /**
      * From a collection of BlatAssociations from a single BioSequence, reduce redundancy, fill in the specificity and
      * score and pick the one with the best scoring statistics.
      * <p>
@@ -204,18 +216,6 @@ public class BlatAssociationScorer {
 
         blatAssociation.setScore( score );
         return score;
-    }
-
-    /**
-     * Compute how much the BLAT alignment with the target gene product is as a fraction of the query sequence length.
-     * Assumes that the overlap with a transcript has already been computed.
-     * 
-     * @param blatAssociation
-     * @return
-     */
-    public static double computeOverlapFraction( BlatAssociation blatAssociation ) {
-        return ( double ) blatAssociation.getOverlap()
-                / ( double ) blatAssociation.getBlatResult().getQuerySequence().getLength();
     }
 
     /**

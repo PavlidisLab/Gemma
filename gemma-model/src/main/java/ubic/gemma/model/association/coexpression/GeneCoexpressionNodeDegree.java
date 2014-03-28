@@ -18,258 +18,100 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.io.Serializable;
+
+import ubic.gemma.model.genome.Gene;
+
 /**
- * <p>
- * Represents the aggregated node degree for a gene. Note that all node degrees are computed as normalized ranks within
- * an ExpressionExperiment, so a rank of 1.0 means the highest node degree probe in the Experiment. When converting to
- * genes, we compute the median of those values across all Experiments.
- * </p>
+ * Represents the coexpression node degree for a gene summarized across experiments, at each level of support.
+ * 
+ * @author paul
  */
-public abstract class GeneCoexpressionNodeDegree implements java.io.Serializable {
+public abstract class GeneCoexpressionNodeDegree implements Serializable {
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree}.
-         */
-        public static ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree newInstance() {
-            return new ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree},
-         * taking all possible properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree newInstance( Double median,
-                Double medianDeviation, String distribution, Integer numTests, Double rank, Double pvalue,
-                Integer numLinks, Double rankNumLinks, ubic.gemma.model.genome.Gene gene ) {
-            final ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree entity = new ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeImpl();
-            entity.setMedian( median );
-            entity.setMedianDeviation( medianDeviation );
-            entity.setDistribution( distribution );
-            entity.setNumTests( numTests );
-            entity.setRank( rank );
-            entity.setPvalue( pvalue );
-            entity.setNumLinks( numLinks );
-            entity.setRankNumLinks( rankNumLinks );
-            entity.setGene( gene );
-            return entity;
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree},
-         * taking all required and/or read-only properties as arguments.
-         */
-        public static ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree newInstance( Double median,
-                Double medianDeviation, String distribution, Integer numTests, Double rank, Double pvalue,
-                ubic.gemma.model.genome.Gene gene ) {
-            final ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree entity = new ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeImpl();
-            entity.setMedian( median );
-            entity.setMedianDeviation( medianDeviation );
-            entity.setDistribution( distribution );
-            entity.setNumTests( numTests );
-            entity.setRank( rank );
-            entity.setPvalue( pvalue );
-            entity.setGene( gene );
-            return entity;
+        public static GeneCoexpressionNodeDegree newInstance( Gene g ) {
+            return new GeneCoexpressionNodeDegreeImpl( g );
         }
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5947391450315581639L;
-    private Double median;
-
-    private Double medianDeviation;
-
-    private String distribution;
-
-    private Integer numTests;
-
-    private Double rank;
-
-    private Double pvalue;
-
-    private Integer numLinks;
-
-    private Double rankNumLinks;
-
-    private Long id;
-
-    private ubic.gemma.model.genome.Gene gene;
+    // our primary key
+    private Long geneId = null;
 
     /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
+     * Byte format of a int array. the first value is 0; the other values is the number of links at support=index.
+     * Unlike the relativeLinkRanks these are not cumulative.
      */
-    public GeneCoexpressionNodeDegree() {
-    }
+    private byte[] linkCounts;
 
     /**
-     * Returns <code>true</code> if the argument is an GeneCoexpressionNodeDegree instance and all identifiers for this
-     * entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     * Normalized rank values for the node degree of this gene at each threshold of support; that is, "at or above" the
+     * threshold. The ranking is among all other genes for the taxon; the normalization factor is the node degree of the
+     * most hubby gene (computed separately for each support threshold).
      */
+    private byte[] relativeLinkRanks;
+
     @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof GeneCoexpressionNodeDegree ) ) {
-            return false;
-        }
-        final GeneCoexpressionNodeDegree that = ( GeneCoexpressionNodeDegree ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        GeneCoexpressionNodeDegree other = ( GeneCoexpressionNodeDegree ) obj;
+        if ( geneId == null ) {
+            if ( other.geneId != null ) return false;
+        } else if ( !geneId.equals( other.geneId ) ) return false;
         return true;
     }
 
     /**
-     * <p>
-     * A string representation of the node degree distribution.
-     * </p>
+     * @return
      */
-    public String getDistribution() {
-        return this.distribution;
+    public Long getGeneId() {
+        return geneId;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene getGene() {
-        return this.gene;
-    }
-
-    /**
-     * 
-     */
     public Long getId() {
-        return this.id;
+        return geneId;
     }
 
     /**
-     * <p>
-     * The median of the distribution of node degree ranks for this gene across data sets, based on probe-level analysis
-     * of each data set.
-     * </p>
+     * @return
      */
-    public Double getMedian() {
-        return this.median;
+    public byte[] getLinkCounts() {
+        return linkCounts;
     }
 
     /**
-     * <p>
-     * The median absolute deviation from the median (MAD) of the distribution of node degrees
-     * </p>
+     * Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
+     * support.
+     * 
+     * @return
      */
-    public Double getMedianDeviation() {
-        return this.medianDeviation;
+    public byte[] getRelativeLinkRanks() {
+        return relativeLinkRanks;
     }
 
-    /**
-     * <p>
-     * The number of links we have stored for this gene. This is subject to any filtering/selection criteria reflected
-     * in the Gene2GeneCoexpression analysis, such as that the link appear in at least two data sets. This measure is an
-     * alternative to the median value based on the per-data set probe-level analysis.
-     * </p>
-     */
-    public Integer getNumLinks() {
-        return this.numLinks;
-    }
-
-    /**
-     * <p>
-     * In how many experiments the gene was tested for node degree
-     * </p>
-     */
-    public Integer getNumTests() {
-        return this.numTests;
-    }
-
-    /**
-     * <p>
-     * The pvalue for the combined ranks of the node degrees, based on the per-data set probe-level analysis
-     * </p>
-     */
-    public Double getPvalue() {
-        return this.pvalue;
-    }
-
-    /**
-     * <p>
-     * The relative rank of the node degree of this gene compared to other genes from the same taxon, based on the
-     * per-data set probe-level analysis.
-     * </p>
-     */
-    public Double getRank() {
-        return this.rank;
-    }
-
-    /**
-     * <p>
-     * See numLinks. This is the relative ranking corresponding to numLinks, where a value of 0 means "lowest number of
-     * links in that taxon" and 1 means "highest number of links in that taxon" (ties are broken using the mean rank
-     * approach). This is an alternative to the other rank this stores, which is based on the per-data set probe-level
-     * analysis.
-     * </p>
-     */
-    public Double getRankNumLinks() {
-        return this.rankNumLinks;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
+        return result;
     }
 
-    public void setDistribution( String distribution ) {
-        this.distribution = distribution;
+    /**
+     * @param geneId
+     */
+    public void setGeneId( Long geneId ) {
+        this.geneId = geneId;
     }
 
-    public void setGene( ubic.gemma.model.genome.Gene gene ) {
-        this.gene = gene;
+    public void setLinkCounts( byte[] linkCounts ) {
+        this.linkCounts = linkCounts;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setMedian( Double median ) {
-        this.median = median;
-    }
-
-    public void setMedianDeviation( Double medianDeviation ) {
-        this.medianDeviation = medianDeviation;
-    }
-
-    public void setNumLinks( Integer numLinks ) {
-        this.numLinks = numLinks;
-    }
-
-    public void setNumTests( Integer numTests ) {
-        this.numTests = numTests;
-    }
-
-    public void setPvalue( Double pvalue ) {
-        this.pvalue = pvalue;
-    }
-
-    public void setRank( Double rank ) {
-        this.rank = rank;
-    }
-
-    public void setRankNumLinks( Double rankNumLinks ) {
-        this.rankNumLinks = rankNumLinks;
+    public void setRelativeLinkRanks( byte[] relativeLinkRanks ) {
+        this.relativeLinkRanks = relativeLinkRanks;
     }
 
 }

@@ -10,7 +10,7 @@ Gemma.CoexpressionSearch = {
     search: function (searchCommand) {
         var observableSearchResults;
 
-        ExtCoexpressionSearchController.doBackgroundCoexSearch( searchCommand,
+        CoexpressionSearchController.doBackgroundCoexSearch( searchCommand,
             {
                 callback: function (taskId) {
                     var task = new Gemma.ObservableSubmittedTask({'taskId': taskId});

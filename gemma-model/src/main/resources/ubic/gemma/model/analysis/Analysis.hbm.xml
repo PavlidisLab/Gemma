@@ -69,18 +69,11 @@
 					fetch="select">
 					<column name="EXPERIMENT_ANALYZED_FK" not-null="false" sql-type="BIGINT" />
 				</many-to-one>
-				<subclass name="ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl"
-					discriminator-value="ProbeCoexpressionAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+				<subclass name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisImpl"
+					discriminator-value="CoexpressionAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
 					<property name="numberOfLinks" type="java.lang.Integer">
 						<column name="NUMBER_OF_LINKS" not-null="false" unique="false" sql-type="INTEGER" />
 					</property>
-					<set name="probesUsed" lazy="false" fetch="select" inverse="false" cascade="all">
-						<cache usage="read-write" />
-						<key foreign-key="COEXPRESSION_PROBE_PROBE_COEXPRESSION_ANALYSIS_FKC">
-							<column name="PROBE_COEXPRESSION_ANALYSIS_FK" sql-type="BIGINT" />
-						</key>
-						<one-to-many class="ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbeImpl" />
-					</set>
 					<many-to-one name="coexpCorrelationDistribution" class="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistributionImpl"
 						cascade="all" lazy="proxy" fetch="select">
 						<column name="COEXP_CORRELATION_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT" />
@@ -140,24 +133,6 @@
 						</key>
 						<one-to-many class="ubic.gemma.model.analysis.expression.pca.EigenvectorImpl" />
 					</set>
-				</subclass>
-			</subclass>
-			<subclass name="ubic.gemma.model.analysis.MultiExperimentAnalysis" abstract="true">
-				<many-to-one name="expressionExperimentSetAnalyzed" class="ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl"
-					lazy="proxy" fetch="select">
-					<column name="EXPRESSION_EXPERIMENT_SET_ANALYZED_FK" not-null="false" sql-type="BIGINT" />
-				</many-to-one>
-				<subclass name="ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisImpl"
-					discriminator-value="GeneCoexpressionAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-					<property name="stringency" type="java.lang.Integer">
-						<column name="STRINGENCY" not-null="false" unique="false" sql-type="INTEGER" />
-					</property>
-					<property name="enabled" type="java.lang.Boolean">
-						<column name="ENABLED" not-null="false" unique="false" sql-type="TINYINT" />
-					</property>
-					<many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl" lazy="proxy" fetch="select">
-						<column name="TAXON_FK" not-null="false" sql-type="BIGINT" />
-					</many-to-one>
 				</subclass>
 			</subclass>
 		</subclass>

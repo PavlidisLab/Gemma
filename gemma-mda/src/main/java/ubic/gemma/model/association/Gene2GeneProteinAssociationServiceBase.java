@@ -54,32 +54,16 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements Gene2Gen
     }
 
     /**
-     * @see Gene2GeneProteinAssociationService#find(Gene2GeneProteinAssociation)
+     * @see Gene2GeneProteinAssociationService#handleDelete()
      */
     @Override
-    @Transactional(readOnly = true)
-    public Gene2GeneProteinAssociation find( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+    @Transactional
+    public void delete( Gene2GeneProteinAssociation association ) {
         try {
-            return this.handleFind( gene2GeneProteinAssociation );
+            this.handleDelete( association );
         } catch ( Throwable th ) {
             throw new Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'Gene2GeneProteinAssociationServiceBase.find(Gene2GeneProteinAssociation)' --> "
-                            + th, th );
-        }
-
-    }
-
-    /**
-     * @see Gene2GeneProteinAssociationService#loadAll()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Gene2GeneProteinAssociation> loadAll() {
-        try {
-            return this.handleLoadAll();
-        } catch ( Throwable th ) {
-            throw new Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'Gene2GeneProteinAssociationServiceBase.loadAll(Gene2GeneProteinAssociation)' --> "
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.deleteAll(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
 
@@ -102,32 +86,16 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements Gene2Gen
     }
 
     /**
-     * @see Gene2GeneProteinAssociationService#handleDelete()
-     */
-    @Override
-    @Transactional
-    public void delete( Gene2GeneProteinAssociation association ) {
-        try {
-            this.handleDelete( association );
-        } catch ( Throwable th ) {
-            throw new Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'Gene2GeneProteinAssociationServiceBase.deleteAll(Gene2GeneProteinAssociation)' --> "
-                            + th, th );
-        }
-
-    }
-
-    /**
-     * @see Gene2GeneProteinAssociationService#handleThaw()
+     * @see Gene2GeneProteinAssociationService#find(Gene2GeneProteinAssociation)
      */
     @Override
     @Transactional(readOnly = true)
-    public void thaw( Gene2GeneProteinAssociation association ) {
+    public Gene2GeneProteinAssociation find( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
-            this.handleThaw( association );
+            return this.handleFind( gene2GeneProteinAssociation );
         } catch ( Throwable th ) {
             throw new Gene2GeneProteinAssociationServiceException(
-                    "Error performing 'Gene2GeneProteinAssociationServiceBase.thaw(Gene2GeneProteinAssociation)' --> "
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.find(Gene2GeneProteinAssociation)' --> "
                             + th, th );
         }
 
@@ -150,10 +118,42 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements Gene2Gen
     }
 
     /**
+     * @see Gene2GeneProteinAssociationService#loadAll()
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Gene2GeneProteinAssociation> loadAll() {
+        try {
+            return this.handleLoadAll();
+        } catch ( Throwable th ) {
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.loadAll(Gene2GeneProteinAssociation)' --> "
+                            + th, th );
+        }
+
+    }
+
+    /**
      * Sets the reference to <code>gene2GeneProteinAssociation</code>'s DAO.
      */
     public void setGene2GeneProteinAssociationDao( Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao ) {
         this.gene2GeneProteinAssociationDao = gene2GeneProteinAssociationDao;
+    }
+
+    /**
+     * @see Gene2GeneProteinAssociationService#handleThaw()
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public void thaw( Gene2GeneProteinAssociation association ) {
+        try {
+            this.handleThaw( association );
+        } catch ( Throwable th ) {
+            throw new Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'Gene2GeneProteinAssociationServiceBase.thaw(Gene2GeneProteinAssociation)' --> "
+                            + th, th );
+        }
+
     }
 
     /**
@@ -170,9 +170,26 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements Gene2Gen
             throws Exception;
 
     /**
+     * Performs the core logic for {@link #delete(Gene2GeneProteinAssociation)}
+     */
+    protected abstract void handleDelete( Gene2GeneProteinAssociation associations ) throws Exception;
+
+    /**
+     * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}
+     */
+    protected abstract void handleDeleteAll( Collection<Gene2GeneProteinAssociation> associations ) throws Exception;
+
+    /**
      * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}
      */
     protected abstract Gene2GeneProteinAssociation handleFind( Gene2GeneProteinAssociation gene2GeneProteinAssociation )
+            throws Exception;
+
+    /**
+     * 
+     Performs the core logic for {@link #findProteinInteractionsForGene(ubic.gemma.model.genome.Gene)}
+     */
+    protected abstract Collection<Gene2GeneProteinAssociation> handleFindProteinInteractionsForGene( Gene gene )
             throws Exception;
 
     /**
@@ -181,25 +198,8 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements Gene2Gen
     protected abstract Collection<Gene2GeneProteinAssociation> handleLoadAll() throws Exception;
 
     /**
-     * Performs the core logic for {@link #update(Gene2GeneProteinAssociation)}
-     */
-    protected abstract void handleDeleteAll( Collection<Gene2GeneProteinAssociation> associations ) throws Exception;
-
-    /**
-     * Performs the core logic for {@link #delete(Gene2GeneProteinAssociation)}
-     */
-    protected abstract void handleDelete( Gene2GeneProteinAssociation associations ) throws Exception;
-
-    /**
      * Performs the core logic for {@link #thaw(Gene2GeneProteinAssociation)}
      */
     protected abstract void handleThaw( Gene2GeneProteinAssociation associations ) throws Exception;
-
-    /**
-     * 
-     Performs the core logic for {@link #findProteinInteractionsForGene(ubic.gemma.model.genome.Gene)}
-     */
-    protected abstract Collection<Gene2GeneProteinAssociation> handleFindProteinInteractionsForGene( Gene gene )
-            throws Exception;
 
 }

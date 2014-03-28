@@ -97,7 +97,7 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		var geneDetails = [5, "Query Gene", "Details"];
 
 		for (var i = 0; i < genes.length; ++i) {
-			var thisSummary = summary[genes[i].officialSymbol] || {};
+			var thisSummary = summary[genes[i].id] || {};
 			datasetsAvailable.push(thisSummary.datasetsAvailable);
 			datasetsTested.push(thisSummary.datasetsTested);
 			linksFound.push(thisSummary.linksFound);

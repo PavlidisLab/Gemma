@@ -317,6 +317,8 @@ public interface ExpressionExperimentService {
     public String getBatchConfound( ExpressionExperiment ee );
 
     /**
+     * TODO allow this for BioAssaySets.
+     * 
      * @param ee
      * @return details for the principal component most associated with batches (even if it isn't "significant"), or
      *         null if there was no batch information available. Note that we don't look at every component, just the

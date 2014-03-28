@@ -1225,14 +1225,14 @@ public class ExpressionExperimentController {
      */
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
         boolean taxonLimited = ( taxonId != null ) ? true : false;
-        List<SearchResultDisplayObject> displayResults = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> displayResults = new ArrayList<>();
 
         // add session bound sets
         // get any session-bound groups
         Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager
                 .getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
 
-        List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
         // create SearchResultDisplayObjects
         if ( sessionResult != null && sessionResult.size() > 0 ) {

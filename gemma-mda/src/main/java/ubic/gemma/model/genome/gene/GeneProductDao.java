@@ -25,7 +25,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.BaseDao;
 
 /**
- * @see ubic.gemma.model.genome.gene.GeneProduct
+ * @see GeneProduct
  */
 public interface GeneProductDao extends BaseDao<GeneProduct> {
 
@@ -39,22 +39,22 @@ public interface GeneProductDao extends BaseDao<GeneProduct> {
     /**
      * 
      */
-    public ubic.gemma.model.genome.gene.GeneProduct find( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    public GeneProduct find( GeneProduct geneProduct );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    public GeneProduct findOrCreate( GeneProduct geneProduct );
 
     /**
      * 
      */
-    public java.util.Collection<Gene> getGenesByName( java.lang.String search );
+    public java.util.Collection<Gene> getGenesByName( String search );
 
     /**
      * TODO: this really should return a unique gene only.
      */
-    public java.util.Collection<Gene> getGenesByNcbiId( java.lang.String search );
+    public Collection<Gene> getGenesByNcbiId( String search );
 
     public GeneProduct thaw( GeneProduct existing );
 

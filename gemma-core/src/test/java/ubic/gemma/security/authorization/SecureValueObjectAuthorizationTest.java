@@ -20,7 +20,6 @@ package ubic.gemma.security.authorization;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
 import gemma.gsec.SecurityService;
 
 import java.util.ArrayList;
@@ -64,15 +63,6 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
     private Long publicExpressionExperimentId;
 
     private ExpressionExperiment ee;
-
-    private void makeUser( String username ) {
-        try {
-            this.userManager.loadUserByUsername( username );
-        } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
-        }
-    }
 
     /*
      * (non-Javadoc)
@@ -127,6 +117,15 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
         assertEquals( 2, valueObjects.size() );
 
+    }
+
+    private void makeUser( String username ) {
+        try {
+            this.userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
+                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+        }
     }
 
 }

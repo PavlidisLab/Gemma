@@ -50,6 +50,15 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
 
     private static final String G2G_CACHE_NAME = "Gene2GoServiceCache";
 
+    @Autowired
+    private ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao;
+
+    @Autowired
+    private ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao;
+
+    @Autowired
+    private CacheManager cacheManager;
+
     @Override
     public void afterPropertiesSet() throws Exception {
 
@@ -90,15 +99,6 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
         this.gene2goCache = cacheManager.getCache( G2G_CACHE_NAME );
 
     }
-
-    @Autowired
-    private ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao;
-
-    @Autowired
-    private ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao;
-
-    @Autowired
-    private CacheManager cacheManager;
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
@@ -161,6 +161,18 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Collection<Gene> findByGOTerm( final java.lang.String goID ) {
+        try {
+            return this.getGene2GOAssociationDao().findByGoTerm( goID );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findByGOTerm(java.lang.String goID, ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerm(java.lang.String,
      *      ubic.gemma.model.genome.Taxon)
@@ -171,18 +183,6 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
             final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByGOTerm( goID, taxon );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findByGOTerm(java.lang.String goID, ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<Gene> findByGOTerm( final java.lang.String goID ) {
-        try {
-            return this.getGene2GOAssociationDao().findByGoTerm( goID );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
                     "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findByGOTerm(java.lang.String goID, ubic.gemma.model.genome.Taxon taxon)' --> "

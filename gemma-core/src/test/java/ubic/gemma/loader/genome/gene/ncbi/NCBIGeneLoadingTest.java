@@ -33,8 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -49,9 +47,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
     private Gene g = null;
-
-    @Autowired
-    private GeneCoexpressionAnalysisService g2gAnalysisService;
 
     @Autowired
     private GeneService geneService;
@@ -157,9 +152,6 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     }
 
     private void clean() {
-        for ( GeneCoexpressionAnalysis a : g2gAnalysisService.loadAll() ) {
-            g2gAnalysisService.delete( a );
-        }
 
         if ( g != null ) {
             try {

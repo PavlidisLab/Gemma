@@ -197,23 +197,30 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search( ss,
                 BibliographicReference.class );
 
-        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
+        List<BibliographicReferenceValueObject> results = new ArrayList<>();
 
         // only return associations with the selected entity types.
         for ( BibliographicReference entity : resultEntities ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
-            if ( settings.getSearchPhenotypes() ) {
+
+            if ( settings.getSearchPhenotypes() || settings.getSearchBibrefs() ) {
                 this.populateBibliographicPhenotypes( vo );
-                if ( !vo.getBibliographicPhenotypes().isEmpty() ) {
+                if ( !vo.getBibliographicPhenotypes().isEmpty() || settings.getSearchBibrefs() ) {
                     results.add( vo );
                 }
             }
-            if ( settings.getSearchExperiments() ) {
+
+            if ( settings.getSearchExperiments() || settings.getSearchBibrefs() ) {
                 this.populateRelatedExperiments( entity, vo );
-                if ( !vo.getExperiments().isEmpty() ) {
+                if ( !vo.getExperiments().isEmpty() || settings.getSearchBibrefs() ) {
                     results.add( vo );
                 }
             }
+
+            if ( settings.getSearchBibrefs() && !settings.getSearchPhenotypes() && !settings.getSearchExperiments() ) {
+                results.add( vo );
+            }
+
         }
 
         return results;

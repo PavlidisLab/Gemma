@@ -54,12 +54,6 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
         return entities;
     }
 
-    @Override
-    public Collection<? extends Gene2GOAssociation> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from Gene2GOAssociationImpl where id in (:ids)", "ids",
-                ids );
-    }
-
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int transform,
      *      ubic.gemma.model.association.Gene2GOAssociation)
@@ -129,6 +123,12 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
 
     }
 
+    @Override
+    public Collection<Gene> findByGoTerm( final java.lang.String goId ) {
+        return this.handleFindByGoTerm( goId );
+
+    }
+
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGoTerm(java.lang.String,
      *      ubic.gemma.model.genome.Taxon)
@@ -136,12 +136,6 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     @Override
     public Collection<Gene> findByGoTerm( final java.lang.String goId, final ubic.gemma.model.genome.Taxon taxon ) {
         return this.handleFindByGoTerm( goId, taxon );
-
-    }
-
-    @Override
-    public Collection<Gene> findByGoTerm( final java.lang.String goId ) {
-        return this.handleFindByGoTerm( goId );
 
     }
 
@@ -194,6 +188,12 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
                         gene2GOAssociation );
     }
 
+    @Override
+    public Collection<? extends Gene2GOAssociation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from Gene2GOAssociationImpl where id in (:ids)", "ids",
+                ids );
+    }
+
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#load(int, java.lang.Long)
      */
@@ -219,6 +219,17 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     }
 
     /**
+     * @see ubic.gemma.model.association.RelationshipDao#remove(Collection)
+     */
+    @Override
+    public void remove( Collection<? extends Gene2GOAssociation> entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Gene2GOAssociation.remove - 'entities' can not be null" );
+        }
+        this.getHibernateTemplate().deleteAll( entities );
+    }
+
+    /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#remove(java.lang.Long)
      */
     @Override
@@ -230,17 +241,6 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
         if ( entity != null ) {
             this.remove( entity );
         }
-    }
-
-    /**
-     * @see ubic.gemma.model.association.RelationshipDao#remove(Collection)
-     */
-    @Override
-    public void remove( Collection<? extends Gene2GOAssociation> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene2GOAssociation.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
     }
 
     /**
@@ -293,12 +293,12 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      */
     protected abstract Collection<VocabCharacteristic> handleFindByGene( ubic.gemma.model.genome.Gene gene );
 
+    protected abstract Collection<Gene> handleFindByGoTerm( java.lang.String goId );
+
     /**
      * Performs the core logic for {@link #findByGoTerm(java.lang.String, ubic.gemma.model.genome.Taxon)}
      */
     protected abstract Collection<Gene> handleFindByGoTerm( java.lang.String goId, ubic.gemma.model.genome.Taxon taxon );
-
-    protected abstract Collection<Gene> handleFindByGoTerm( java.lang.String goId );
 
     /**
      * Performs the core logic for {@link #findByGOTerm(Collection, ubic.gemma.model.genome.Taxon)}

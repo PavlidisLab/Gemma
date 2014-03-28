@@ -19,14 +19,10 @@
 package ubic.gemma.model.genome;
 
 import java.util.Collection;
-import java.util.Map;
 
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
-import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -107,28 +103,29 @@ public interface GeneDao extends BaseDao<Gene> {
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
 
-    /**
-     * Function to get coexpressed genes given a set of genes and a collection of expressionExperiments. The return
-     * value is a Map of CoexpressionCollectionValueObjects.
-     * 
-     * @param genes
-     * @param ees
-     * @param stringency
-     * @param interGeneOnly if true, only links among the query genes will be returned. This is ingored if only a single
-     *        gene is entered
-     * @return
-     */
-    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<ubic.gemma.model.genome.Gene> genes,
-            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean interGeneOnly );
-
-    /**
-     * <p>
-     * Function to get coexpressed genes given a gene and a collection of expressionExperiments. The return value is a
-     * CoexpressionCollectionValueObject.
-     * </p>
-     */
-    public QueryGeneCoexpression getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
+    // /**
+    // * Function to get coexpressed genes given a set of genes and a collection of expressionExperiments. The return
+    // * value is a Map of CoexpressionCollectionValueObjects.
+    // *
+    // * @param genes
+    // * @param ees
+    // * @param stringency
+    // * @param interGeneOnly if true, only links among the query genes will be returned. This is ingored if only a
+    // single
+    // * gene is entered
+    // * @return
+    // */
+    // public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<ubic.gemma.model.genome.Gene> genes,
+    // java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean interGeneOnly );
+    //
+    // /**
+    // * <p>
+    // * Function to get coexpressed genes given a gene and a collection of expressionExperiments. The return value is a
+    // * CoexpressionCollectionValueObject.
+    // * </p>
+    // */
+    // public QueryGeneCoexpression getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
+    // java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
 
     /**
      * 
@@ -144,46 +141,6 @@ public interface GeneDao extends BaseDao<Gene> {
      * 
      */
     public Collection<CompositeSequence> getCompositeSequencesById( long id );
-
-    /**
-     * Get precomputed node degree based on all available data sets.
-     * 
-     * @param genes
-     * @return
-     */
-    public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes );
-    
-    public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds);
-
-    /**
-     * Get aggregated node degree based on a selected set of data sets. Likely to be slow.
-     * 
-     * @param genes
-     * @param ees
-     * @return
-     */
-    @Deprecated
-    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees );
-
-    /**
-     * Get precomputed node degree based on all available data sets.
-     * 
-     * @param gene
-     * @return
-     */
-    public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene );
-
-    /**
-     * Get node degree information for genes for specified experiments. Likely to be slow, used for populating the data
-     * for the faster methods.
-     * 
-     * @param gene
-     * @param ees
-     * @return map of bioassay set to the node degree computed for the gene at the probe level. The value returned is
-     *         the node degree rank.
-     */
-    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
 
     /**
      * returns a collections of genes that match the given taxon
@@ -206,7 +163,7 @@ public interface GeneDao extends BaseDao<Gene> {
      * @return
      */
     public Collection<Gene> loadThawed( Collection<Long> ids );
-    
+
     public Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
     /**
@@ -226,7 +183,7 @@ public interface GeneDao extends BaseDao<Gene> {
      * @return
      */
     public Gene thawLite( Gene gene );
-    
+
     public Gene thawLiter( Gene gene );
 
     /**

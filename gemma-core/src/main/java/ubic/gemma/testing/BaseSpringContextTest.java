@@ -445,6 +445,15 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
+     * @param prototype used to choose the platform
+     * @return
+     */
+    protected ExpressionExperiment getTestPersistentCompleteExpressionExperimentWithSequences(
+            ExpressionExperiment prototype ) {
+        return testHelper.getTestExpressionExperimentWithAllDependencies( prototype );
+    }
+
+    /**
      * Convenience method to provide a Contact that can be used to fill non-nullable associations in test objects.
      * 
      * @return

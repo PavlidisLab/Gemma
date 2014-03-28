@@ -376,13 +376,16 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             log.warn( "All rows filtered out!" );
             return;
         }
-        NumberFormat nf = NumberFormat.getNumberInstance();
-        nf.setMaximumFractionDigits( 2 );
 
-        double fracFiltered = ( double ) ( numRows - kept.size() ) / numRows;
+        if ( log.isDebugEnabled() ) {
+            NumberFormat nf = NumberFormat.getNumberInstance();
+            nf.setMaximumFractionDigits( 2 );
 
-        log.info( "There are " + kept.size() + " rows left after " + this.method + " filtering. Filtered out "
-                + ( numRows - kept.size() ) + " rows " + nf.format( 100 * fracFiltered ) + "%" );
+            double fracFiltered = ( double ) ( numRows - kept.size() ) / numRows;
+
+            log.debug( "There are " + kept.size() + " rows left after " + this.method + " filtering. Filtered out "
+                    + ( numRows - kept.size() ) + " rows " + nf.format( 100 * fracFiltered ) + "%" );
+        }
     }
 
     public enum Method {

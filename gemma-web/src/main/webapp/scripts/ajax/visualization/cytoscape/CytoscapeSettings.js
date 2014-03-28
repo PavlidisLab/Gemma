@@ -13,173 +13,107 @@
  * specific language governing permissions and limitations under the License.
  * 
  */
-Ext.namespace('Gemma');
+Ext.namespace( 'Gemma' );
 
-
+/**
+ * Style and layout parameters for cytoscape.js
+ */
 Gemma.CytoscapeSettings = {
 
-   backgroundColor : "#FFF7FB",
+   // white, for the display bkg
+   backgroundColor : "#FFFFFF",
 
    // node color stuff
    labelFontName : 'Arial',
-   labelFontColor : "#252525",
-   nodeColor : "#969696",  
-   nodeColorOverlay : "#000099",
-      
-   //size stuff (edge size is in the cytoscapeJSCoexGraphInitializer
-   labelFontSize : 100,
-   nodeSize : 120,
-  
-   nodeQueryColorTrue : "#E41A1C",
-   
+
+   // grey
+   labelFontColor : "#4F4F4F",
+
+   // grey; modified by 'overlays' and 'emphasis'
+   nodeColor : "#222222",
+
+   nodeColorOverlay : "#66ACDE", // baby blue
+
+   // size stuff (edge size is in the cytoscapeJSCoexGraphInitializer)
+   labelFontSize : 12,
+   nodeSize : 18,
+
+   nodeQueryColorTrue : "#AB1AE4", // purple
+
    // edge color stuff
-   supportColorBoth : "#CCCCCC",
-   supportColorPositive : "#E66101",
-   supportColorNegative : "#5E3C99",
+   supportColorBoth : "#CCCCCC", // grey
 
-   selectionGlowColor : "#00CC00",
+   supportColorPositive : "#059900", // greenish
+   supportColorNegative : "#E81C7B", // reddish
 
+   selectionGlowColor : "#CC9C00", // gold
+
+   /*
+    * This is the few values here that is not for style, has nothing to do with visualization per se - consider moving.
+    */
    maxGeneIdsPerCoexVisQuery : 200,
 
+   // inoperative in cytoscape.js as of 2.2
    nodeTooltipText : "${id} (${officialName})<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
 
+   // inoperative in cytoscape.js as of 2.2
    edgeTooltipText : "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
 
-   // e.g. dark colour is >dark value and <moderate value, darkest is <=0.2
-   // darkest : most specificity, lightest: least specificity
+   // thresholds e.g. dark colour is >dark value and <moderate value
+   // high values mean high node degree.
    nodeDegreeValue : {
-      lightest : 0.7,
-      light : 0.6,
-      moderate : 0.35,
-      dark : 0.25
+      highest : 0.9,
+      high : 0.8,
+      moderate : 0.7,
+      low : 0.5,
+      lowest : 0.3
    },
-   
-   nodeDegreeOpacity : {
-	      lightest : 0.15,
-	      light : 0.35,
-	      moderate : 0.5,
-	      dark : 0.65,
-	      darkest : 1
-	   },
 
-   // note that high node degree means low specificity(see nodeDegreeValue above)
+   // alpha values. We're blending in white, so low numbers translate to dark
    nodeDegreeColor : {
-      lightest : {
-         name : "Lowest",
-         value : "#DEDEDE"
-      },
-      light : {
-         name : "Low",
-         value : "#C9C9C9"
-      },
-      moderate : {
-         name : "Moderate",
-         value : "#737373"
-      },
-      dark : {
-         name : "High",
-         value : "#404040"
-      },
-      darkest : {
-         name : "Highest",
-         value : "#000000"
-      }
-
+      lightest : 0.85,
+      light : 0.65,
+      moderate : 0.5,
+      dark : 0.35,
+      darkest : 0.0
    },
 
-   nodeDegreeColorSecondGeneList : {
-      lightest : {
-         value : "#B2B2FF"
-      },
-      light : {
-         value : "#8080FF"
-      },
-      moderate : {
-         value : "#4D4DFF"
-      },
-      dark : {
-         value : "#0000FF"
-      },
-      darkest : {
-         value : "#000099"
-      }
+};
 
+/**
+ * Todo: make negative correlations cause repulsion?
+ */
+Gemma.CytoscapejsSettings = {
+
+   nodeSettings : {},
+
+   coseLayout : {
+      name : 'cose',
+      refresh : 0,
+      fit : true,
+   },
+
+   // See also http://arborjs.org/reference
+   arborLayout : {
+      name : 'arbor',
+      // liveUpdate : true,
+      // edgeLength:100,
+      // nodeMass : 2,
+      // maxSimulationTime : 4000,
+      repulsion : 100,
+      stiffness : 60,
+      // edgeLength : function( el ) {
+      // return 5.0 / el.support;
+      // },
+      //
+      // nodeMass : function( el ) {
+      // return 1.0;
+      // },
+
+      // gravity: false,
+      friction : 0.1,
+      // simulationBounds : [ 0, 0, 7000, 5000 ],
+      fit : true
    }
 
 };
-
-
-Gemma.CytoscapejsSettings = {
-		
-		nodeSettings:{
-			
-		},
-		
-		arborLayout : {
-			    name: 'arbor',
-			    liveUpdate: false,
-			    
-			    //edgeLength:100,
-			    nodeMass: 2,
-			    
-			    maxSimulationTime: 6000,
-			    repulsion: 10,
-			    //stiffness:100,
-			    //gravity: false,
-			    friction:0.2,			    
-			    simulationBounds: [0, 0, 7000, 5000],
-			    fit: true
-			    //dt:0.2
-		
-			    /*nodeMass: function(data){
-			    	
-			    	if (data.nodeDegree < 0.4) return 2;
-			        return 50; // use the weight attribute in the node's data as mass
-			    },
-			    
-			    repulsion: 1500
-				/*,
-			    repulsion: 1, // whether to show the layout as it's running
-			    ready: undefined, // callback on layoutready 
-			    stop: undefined, // callback on layoutstop
-			    maxSimulationTime: 5000, // max length in ms to run the layout
-			    fit: true, // fit to viewport
-			    padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
-			    ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
-
-			    // forces used by arbor (use arbor default on undefined)
-			    //defaults:
-			    //repulsion: 600,
-			    //stiffness: 1000,
-			    //friction: 0.3,
-			    //gravity: false,
-			    
-			    repulsion: 1,
-			    stiffness: 1,
-			    friction: 0.1,
-			    gravity: true,
-			    
-			    fps: undefined,
-			    
-			    precision: undefined,
-
-			    // static numbers or functions that dynamically return what these
-			    // values should be for each element
-			    //nodeMass: 2, 
-			    edgeLength: undefined,
-
-			    stepSize: 1, // size of timestep in simulation
-
-			    // function that returns true if the system is stable to indicate
-			    // that the layout can be stopped
-			    //stableEnergy: function( energy ){
-			    //    var e = energy; 
-			    //    return (e.max <= 0.1) || (e.mean <= 0.05);
-			    //}*/
-			}
-		
-};
-
-
-
-

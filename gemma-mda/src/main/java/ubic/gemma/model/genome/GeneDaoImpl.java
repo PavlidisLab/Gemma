@@ -17,14 +17,11 @@ package ubic.gemma.model.genome;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
@@ -37,34 +34,19 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.type.DoubleType;
-import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
-import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
-import ubic.gemma.util.CommonQueries;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
-import ubic.gemma.util.NativeQueryUtils;
 import ubic.gemma.util.SequenceBinUtils;
-import ubic.gemma.util.TaxonUtility;
-import cern.colt.list.DoubleArrayList;
+import ubic.gemma.util.Settings;
 
 /**
  * @author pavlidis
@@ -72,7 +54,7 @@ import cern.colt.list.DoubleArrayList;
  * @see ubic.gemma.model.genome.Gene
  */
 @Repository
-public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
+public class GeneDaoImpl extends GeneDaoBase {
 
     private static final int BATCH_SIZE = 100;
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
@@ -374,170 +356,171 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util.Collection)
-     */
-    @Override
-    public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes ) {
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util.Collection)
+    // */
+    // @Override
+    // public Map<Long, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes ) {
+    //
+    // List<?> r = this.getHibernateTemplate().findByNamedParam(
+    // "from GeneCoexpressionNodeDegreeImpl n where n.gene in (:g)", "g", genes );
+    //
+    // Map<Long, GeneCoexpressionNodeDegree> result = new HashMap<>();
+    // for ( Object o : r ) {
+    // GeneCoexpressionNodeDegree n = ( GeneCoexpressionNodeDegree ) o;
+    // result.put( n.getGeneId(), n );
+    // }
+    //
+    // return result;
+    // }
 
-        List<?> r = this.getHibernateTemplate().findByNamedParam(
-                "from GeneCoexpressionNodeDegreeImpl n where n.gene in (:g)", "g", genes );
+    // @Override
+    // public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
+    //
+    // List<?> r = this.getHibernateTemplate().findByNamedParam(
+    // "from GeneCoexpressionNodeDegreeImpl n where n.gene.id in (:g)", "g", geneIds );
+    //
+    // Map<Long, GeneCoexpressionNodeDegree> result = new HashMap<Long, GeneCoexpressionNodeDegree>();
+    // for ( Object o : r ) {
+    // GeneCoexpressionNodeDegree n = ( GeneCoexpressionNodeDegree ) o;
+    // result.put( n.getGeneId(), n );
+    // }
+    //
+    // return result;
+    // }
 
-        Map<Gene, GeneCoexpressionNodeDegree> result = new HashMap<Gene, GeneCoexpressionNodeDegree>();
-        for ( Object o : r ) {
-            GeneCoexpressionNodeDegree n = ( GeneCoexpressionNodeDegree ) o;
-            result.put( n.getGene(), n );
-        }
-
-        return result;
-    }
-
-    @Override
-    public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds ) {
-
-        List<?> r = this.getHibernateTemplate().findByNamedParam(
-                "from GeneCoexpressionNodeDegreeImpl n where n.gene.id in (:g)", "g", geneIds );
-
-        Map<Long, GeneCoexpressionNodeDegree> result = new HashMap<Long, GeneCoexpressionNodeDegree>();
-        for ( Object o : r ) {
-            GeneCoexpressionNodeDegree n = ( GeneCoexpressionNodeDegree ) o;
-            result.put( n.getGene().getId(), n );
-        }
-
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util .Collection, java.util.Collection)
-     */
-    @Override
-    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees ) {
-        org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch( "getCoexpressionNodeDegree" );
-
-        Map<Long, Gene> idMap = EntityUtils.getIdMap( genes );
-        Map<Long, Collection<Long>> cs2GeneMap = CommonQueries.getCs2GeneIdMap( idMap.keySet(), this
-                .getSessionFactory().getCurrentSession() );
-
-        /*
-         * When we aggregate, it's only over data sets that had the gene tested (inner join)
-         */
-        watch.start( "DB query: " + ees.size() + " experiments, " + cs2GeneMap.keySet().size() + " probes." );
-        List<?> r = this.getHibernateTemplate().findByNamedParam(
-                "select p.probe, p.nodeDegreeRank from ProbeCoexpressionAnalysisImpl pca "
-                        + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe.id in (:ps)",
-                new String[] { "ps", "ees" }, new Object[] { cs2GeneMap.keySet(), ees } );
-        watch.stop();
-        watch.start( "Post processs " + r.size() + " results" );
-
-        Map<Long, DoubleArrayList> interm = new HashMap<>();
-        for ( Gene g : genes ) {
-            interm.put( g.getId(), new DoubleArrayList() );
-        }
-
-        for ( Object o : r ) {
-            Object[] oa = ( Object[] ) o;
-            CompositeSequence cs = ( CompositeSequence ) oa[0];
-            Double nodeDegreeRank = ( Double ) oa[1];
-
-            Collection<Long> gs = cs2GeneMap.get( cs.getId() );
-
-            // if ( gs.size() > 1 ) continue; // nonspecific - perhaps control
-            // this.
-            interm.get( gs.iterator().next() ).add( nodeDegreeRank );
-        }
-
-        // aggregate.
-        Map<Gene, Double> result = new HashMap<Gene, Double>();
-        for ( Long g : interm.keySet() ) {
-            DoubleArrayList vals = interm.get( g );
-            /*
-             * Note: under the null, each node degree is drawn from a uniform(0,1); sampling properties for the mean of
-             * this are the same as for pvalues, so we treat them thusly. (My first pass implementation just used the
-             * mean). Note we don't do 1 - fp here -- high node degrees are still represented as values near 1 after
-             * this transformation. See bug 2379
-             */
-            Gene gene = idMap.get( g );
-            if ( vals.size() == 0 ) {
-                result.put( gene, null );
-            } else {
-                result.put( gene, MetaAnalysis.fisherCombinePvalues( vals ) );
-            }
-
-        }
-        watch.stop();
-        log.info( watch.prettyPrint() );
-        return result;
-    }
-
-    @Override
-    public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene ) {
-
-        List<?> r = this.getHibernateTemplate().findByNamedParam(
-                "from GeneCoexpressionNodeDegreeImpl n where n.gene = :g", "g", gene );
-
-        if ( r.isEmpty() ) return null;
-        if ( r.size() > 1 ) log.warn( "More than one node degree record found for " + gene );
-        return ( GeneCoexpressionNodeDegree ) r.get( 0 );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(ubic.gemma.model.genome.Gene,
-     * java.util.Collection)
-     */
-    @Override
-    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        /*
-         * Typically this is being run for all data sets for a taxon, so this unconstrained query is okay.
-         */
-        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSessionFactory()
-                .getCurrentSession() );
-
-        if ( ees.isEmpty() ) throw new IllegalArgumentException( "You must provide at least one experiment" );
-
-        if ( probes.isEmpty() ) {
-            return null;
-        }
-
-        Map<Long, BioAssaySet> eeidmap = EntityUtils.getIdMap( ees );
-        Map<Long, CompositeSequence> pidmap = EntityUtils.getIdMap( probes );
-
-        String queryString = "select pca.experimentAnalyzed.id, avg(p.nodeDegreeRank) from ProbeCoexpressionAnalysisImpl pca "
-                + "join pca.probesUsed p where pca.experimentAnalyzed.id in (:ees) and p.probe.id in (:ps) "
-                + "group by pca.experimentAnalyzed.id";
-
-        if ( log.isDebugEnabled() ) log.debug( NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
-
-        List<?> r = this.getHibernateTemplate().findByNamedParam(
-        /* Note the avg() ... group by operation here on the rank */
-        queryString, new String[] { "ps", "ees" }, new Object[] { pidmap.keySet(), eeidmap.keySet() } );
-
-        Map<BioAssaySet, Double> result = new HashMap<BioAssaySet, Double>();
-        for ( Object o : r ) {
-            Object[] oa = ( Object[] ) o;
-            Long ee = ( Long ) oa[0];
-
-            // See query above: this is the mean for the probes for the gene.
-            Double nodeDegreeRank = ( Double ) oa[1];
-            if ( nodeDegreeRank == null ) continue; // should not happen!
-
-            result.put( eeidmap.get( ee ), nodeDegreeRank );
-        }
-        if ( timer.getTime() > 1000 ) {
-            log.info( "getGeneCoexpressionNodeDegree " + gene + ": " + timer.getTime() + "ms; query was: "
-                    + NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
-        }
-        return result;
-
-    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util .Collection, java.util.Collection)
+    // */
+    // @Override
+    // public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
+    // Collection<? extends BioAssaySet> ees ) {
+    // org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch( "getCoexpressionNodeDegree" );
+    //
+    // Map<Long, Gene> idMap = EntityUtils.getIdMap( genes );
+    // Map<Long, Collection<Long>> cs2GeneMap = CommonQueries.getCs2GeneIdMap( idMap.keySet(), this
+    // .getSessionFactory().getCurrentSession() );
+    //
+    // /*
+    // * When we aggregate, it's only over data sets that had the gene tested (inner join)
+    // */
+    // watch.start( "DB query: " + ees.size() + " experiments, " + cs2GeneMap.keySet().size() + " probes." );
+    // List<?> r = this.getHibernateTemplate().findByNamedParam(
+    // "select p.probe, p.nodeDegreeRank from CoexpressionAnalysisImpl pca "
+    // + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe.id in (:ps)",
+    // new String[] { "ps", "ees" }, new Object[] { cs2GeneMap.keySet(), ees } );
+    // watch.stop();
+    // watch.start( "Post processs " + r.size() + " results" );
+    //
+    // Map<Long, DoubleArrayList> interm = new HashMap<>();
+    // for ( Gene g : genes ) {
+    // interm.put( g.getId(), new DoubleArrayList() );
+    // }
+    //
+    // for ( Object o : r ) {
+    // Object[] oa = ( Object[] ) o;
+    // CompositeSequence cs = ( CompositeSequence ) oa[0];
+    // Double nodeDegreeRank = ( Double ) oa[1];
+    //
+    // Collection<Long> gs = cs2GeneMap.get( cs.getId() );
+    //
+    // // if ( gs.size() > 1 ) continue; // nonspecific - perhaps control
+    // // this.
+    // interm.get( gs.iterator().next() ).add( nodeDegreeRank );
+    // }
+    //
+    // // aggregate.
+    // Map<Gene, Double> result = new HashMap<Gene, Double>();
+    // for ( Long g : interm.keySet() ) {
+    // DoubleArrayList vals = interm.get( g );
+    // /*
+    // * Note: under the null, each node degree is drawn from a uniform(0,1); sampling properties for the mean of
+    // * this are the same as for pvalues, so we treat them thusly. (My first pass implementation just used the
+    // * mean). Note we don't do 1 - fp here -- high node degrees are still represented as values near 1 after
+    // * this transformation. See bug 2379
+    // */
+    // Gene gene = idMap.get( g );
+    // if ( vals.size() == 0 ) {
+    // result.put( gene, null );
+    // } else {
+    // result.put( gene, MetaAnalysis.fisherCombinePvalues( vals ) );
+    // }
+    //
+    // }
+    // watch.stop();
+    // log.info( watch.prettyPrint() );
+    // return result;
+    // }
+    //
+    // @Override
+    // public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene ) {
+    //
+    // List<?> r = this.getHibernateTemplate().findByNamedParam(
+    // "from GeneCoexpressionNodeDegreeImpl n where n.gene = :g", "g", gene );
+    //
+    // if ( r.isEmpty() ) return null;
+    // if ( r.size() > 1 ) log.warn( "More than one node degree record found for " + gene );
+    // return ( GeneCoexpressionNodeDegree ) r.get( 0 );
+    // }
+    //
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(ubic.gemma.model.genome.Gene,
+    // * java.util.Collection)
+    // */
+    // @Override
+    // public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees )
+    // {
+    // StopWatch timer = new StopWatch();
+    // timer.start();
+    // /*
+    // * Typically this is being run for all data sets for a taxon, so this unconstrained query is okay.
+    // */
+    // Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSessionFactory()
+    // .getCurrentSession() );
+    //
+    // if ( ees.isEmpty() ) throw new IllegalArgumentException( "You must provide at least one experiment" );
+    //
+    // if ( probes.isEmpty() ) {
+    // return null;
+    // }
+    //
+    // Map<Long, BioAssaySet> eeidmap = EntityUtils.getIdMap( ees );
+    // Map<Long, CompositeSequence> pidmap = EntityUtils.getIdMap( probes );
+    //
+    // String queryString = "select pca.experimentAnalyzed.id, avg(p.nodeDegreeRank) from CoexpressionAnalysisImpl pca "
+    // + "join pca.probesUsed p where pca.experimentAnalyzed.id in (:ees) and p.probe.id in (:ps) "
+    // + "group by pca.experimentAnalyzed.id";
+    //
+    // if ( log.isDebugEnabled() ) log.debug( NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
+    //
+    // List<?> r = this.getHibernateTemplate().findByNamedParam(
+    // /* Note the avg() ... group by operation here on the rank */
+    // queryString, new String[] { "ps", "ees" }, new Object[] { pidmap.keySet(), eeidmap.keySet() } );
+    //
+    // Map<BioAssaySet, Double> result = new HashMap<BioAssaySet, Double>();
+    // for ( Object o : r ) {
+    // Object[] oa = ( Object[] ) o;
+    // Long ee = ( Long ) oa[0];
+    //
+    // // See query above: this is the mean for the probes for the gene.
+    // Double nodeDegreeRank = ( Double ) oa[1];
+    // if ( nodeDegreeRank == null ) continue; // should not happen!
+    //
+    // result.put( eeidmap.get( ee ), nodeDegreeRank );
+    // }
+    // if ( timer.getTime() > 1000 ) {
+    // log.info( "getGeneCoexpressionNodeDegree " + gene + ": " + timer.getTime() + "ms; query was: "
+    // + NativeQueryUtils.toSql( getHibernateTemplate(), queryString ) );
+    // }
+    // return result;
+    //
+    // }
 
     /*
      * (non-Javadoc)
@@ -727,170 +710,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return ( Gene ) results.iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCoexpressedGenes(java.util.Collection, java.util.Collection,
-     * java.lang.Integer, boolean)
-     */
-    @Override
-    protected Map<Gene, QueryGeneCoexpression> handleGetCoexpressedGenes( final Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly ) {
-
-        if ( genes.size() == 0 || ees.size() == 0 ) {
-            throw new IllegalArgumentException( "nothing to search" );
-        }
-
-        final Map<Gene, QueryGeneCoexpression> coexpressions = new HashMap<Gene, QueryGeneCoexpression>();
-
-        if ( genes.size() == 1 ) {
-            Gene soleQueryGene = genes.iterator().next();
-            QueryGeneCoexpression coexpressedGenes = this.getCoexpressedGenes( soleQueryGene, ees, stringency );
-            coexpressions.put( soleQueryGene, coexpressedGenes );
-            return coexpressions;
-        }
-
-        Map<Long, Gene> queryGenes = new HashMap<Long, Gene>();
-        for ( Gene g : genes ) {
-            queryGenes.put( g.getId(), g );
-            coexpressions.put( g, new QueryGeneCoexpression( g.getId(), stringency ) );
-        }
-
-        /*
-         * NOTE: assuming all genes are from the same taxon!
-         */
-        Gene givenG = genes.iterator().next();
-        log.debug( "Gene: " + givenG.getName() );
-
-        final String p2pClassName = getP2PClassName( givenG );
-        final Collection<Long> eeIds = EntityUtils.getIds( ees );
-
-        String queryString = getNativeBatchQueryString( p2pClassName, "firstVector", "secondVector", eeIds,
-                interGeneOnly );
-
-        Session session = this.getSessionFactory().getCurrentSession();
-        org.hibernate.Query queryObject = setCoexpQueryParameters( session, genes, queryString );
-
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
-        // This is the actual business of querying the database.
-        processCoexpQuery( queryGenes, queryObject, coexpressions );
-
-        overallWatch.stop();
-        if ( overallWatch.getTime() > 3000 ) {
-            log.info( "Raw query for " + genes.size() + " genes in batch: " + overallWatch.getTime()
-                    + "ms;\n Query was: " + queryObject.getQueryString() );
-        }
-
-        for ( QueryGeneCoexpression coexp : coexpressions.values() ) {
-            postProcessSpecificity( coexp );
-        }
-
-        return coexpressions;
-
-    }
-
-    /**
-     * Gets all the genes that are coexpressed with another gene based on stored coexpression 'links', essentially as
-     * described in Lee et al. (2004) Genome Research.
-     * 
-     * @param gene to use as the query
-     * @param ees Data sets to restrict the search to.
-     * @param stringency minimum number of data sets the coexpression has to occur in before it 'counts'.
-     * @return Collection of QueryGeneCoexpression. This needs to be 'postprocessed' before it has all the data needed
-     *         for web display.
-     */
-    @Override
-    protected QueryGeneCoexpression handleGetCoexpressedGenes( final Gene gene, Collection<? extends BioAssaySet> ees,
-            Integer stringency ) {
-
-        log.debug( "Gene: " + gene.getName() );
-
-        final String p2pClassName = getP2PClassName( gene );
-
-        final QueryGeneCoexpression coexpressions = new QueryGeneCoexpression( gene.getId(), stringency );
-
-        if ( ees.size() == 0 ) {
-            log.debug( "No experiments selected" );
-            coexpressions.setErrorState( "No experiments were selected" );
-            return coexpressions;
-        }
-
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
-        /*
-         * Check cache first, if we have already queried experiment X for the query, then we don't need to query
-         * experiment X at all.
-         */
-        Collection<BioAssaySet> eesToSearch = new HashSet<BioAssaySet>();
-        Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults = new HashMap<Long, Collection<CoexpressionCacheValueObject>>();
-
-        if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
-            for ( BioAssaySet ee : ees ) {
-                Collection<CoexpressionCacheValueObject> eeResults = this.getProbe2ProbeCoexpressionCache().get( ee,
-                        gene );
-
-                if ( eeResults != null ) {
-                    cachedResults.put( ee.getId(), eeResults );
-                    if ( log.isDebugEnabled() ) log.debug( "Cache hit! for ee=" + ee.getId() );
-                } else {
-                    eesToSearch.add( ee );
-                }
-            }
-            overallWatch.stop();
-            if ( overallWatch.getTime() > 100 ) {
-                if ( log.isInfoEnabled() )
-                    log.info( "Probe2probe cache check: " + overallWatch.getTime() + "ms for " + ees.size()
-                            + " EEs, found " + cachedResults.size() + " results in cache; must still search "
-                            + eesToSearch.size() );
-            }
-            overallWatch.reset();
-            overallWatch.start();
-        } else {
-            eesToSearch.addAll( ees );
-        }
-
-        if ( eesToSearch.size() > 0 ) {
-
-            final Collection<Long> eeIds = EntityUtils.getIds( eesToSearch );
-
-            String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
-
-            Session session = this.getSession( false );
-            Query queryObject = setCoexpQueryParameters( session, gene, queryString );
-
-            // This is the actual business of querying the database.
-            processCoexpQuery( gene, queryObject, coexpressions );
-        }
-
-        overallWatch.stop();
-        if ( overallWatch.getTime() > 2000 ) {
-            log.info( "Raw query: " + overallWatch.getTime() + "ms" );
-        }
-
-        if ( cachedResults.size() > 0 ) {
-            overallWatch.reset();
-            overallWatch.start();
-            mergeCachedCoexpressionResults( coexpressions, cachedResults );
-            overallWatch.stop();
-            if ( overallWatch.getTime() > 100 ) {
-                log.info( "Merge " + cachedResults.size() + " cached results in: " + overallWatch.getTime() + "ms" );
-            }
-        }
-
-        if ( coexpressions.getQueryGeneProbes().size() == 0 ) {
-            if ( log.isDebugEnabled() ) log.debug( "Coexpression query gene " + gene + " has no probes" );
-            coexpressions.setErrorState( "Query gene " + gene + " has no probes" );
-            return coexpressions;
-        }
-
-        postProcessSpecificity( coexpressions );
-
-        return coexpressions;
-    }
-
     /**
      * Gets a count of the CompositeSequences related to the gene identified by the given id.
      * 
@@ -1011,20 +830,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             log.info( "Loading " + ids.size() + " genes ..." );
         }
 
-        final String queryString = "select gene from GeneImpl gene where gene.id in (:ids)";
-        Collection<Long> batch = new HashSet<Long>();
-        Collection<Gene> genes = new HashSet<Gene>();
+        final String queryString = "from GeneImpl where id in (:ids)";
+        Collection<Gene> genes = new HashSet<>();
 
-        for ( Long gene : ids ) {
-            batch.add( gene );
-            if ( batch.size() == batchSize ) {
-                genes.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
-                batch.clear();
-            }
-        }
-
-        if ( batch.size() > 0 ) {
-            genes.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
+        BatchIterator<Long> it = BatchIterator.batches( ids, batchSize );
+        for ( ; it.hasNext(); ) {
+            genes.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", it.next() ) );
         }
 
         if ( ids.size() > batchSize ) {
@@ -1194,452 +1005,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             vals = new Object[] { chrom, targetStart, targetEnd };
         }
         return getHibernateTemplate().findByNamedParam( query, params, vals );
-    }
-
-    /**
-     * @param css
-     * @return map
-     */
-    private Map<Long, Collection<Long>> getCS2GeneMap( Collection<Long> css ) {
-        Map<Long, Collection<Long>> csId2geneIds = new HashMap<Long, Collection<Long>>();
-        if ( css == null || css.size() == 0 ) {
-            return csId2geneIds;
-        }
-
-        int CHUNK_SIZE = 1000;
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        for ( Collection<Long> chunk : new BatchIterator<Long>( css, CHUNK_SIZE ) ) {
-            csId2geneIds.putAll( processCS2GeneChunk( chunk, session ) );
-        }
-
-        return csId2geneIds;
-
-    }
-
-    /**
-     * For queries involving multiple genes as inputs.
-     * 
-     * @param p2pClassName
-     * @param in
-     * @param out
-     * @param eeIds this is required.
-     * @param interGeneOnly true to restrict to links among the query genes only (this will not work correctly if you
-     *        only put in one gene!)
-     * @return
-     */
-    private String getNativeBatchQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds,
-            boolean interGeneOnly ) {
-        String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
-        String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
-        String eeClause = "";
-
-        if ( eeIds.size() > 0 ) {
-            eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
-            eeClause += StringUtils.join( eeIds, "," );
-            eeClause += ") AND ";
-        }
-
-        String interGeneOnlyClause = "";
-
-        if ( interGeneOnly ) {
-            interGeneOnlyClause = " AND gcOut.GENE in (:ids) ";
-        }
-
-        String p2pClass = getP2PTableNameForClassName( p2pClassName );
-
-        /**
-         * Fields:
-         * 
-         * <pre>
-         * 0 Geneid
-         * 1 exper 
-         * 2 score
-         * 3 csin
-         * 4 csout
-         * 5 queryGene id
-         * </pre>
-         */
-        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcIn.GENE as queryGeneId FROM GENE2CS gcIn STRAIGHT_JOIN "
-                + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
-                + outKey + " WHERE " + eeClause + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
-
-        if ( log.isDebugEnabled() ) log.debug( query );
-        return query;
-    }
-
-    /**
-     * @param p2pClassName
-     * @param in
-     * @param out
-     * @param eeIds this is required.
-     * @return
-     */
-    private String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
-        String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
-        String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
-        String eeClause = "";
-
-        if ( eeIds.size() > 0 ) {
-            eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
-            eeClause += StringUtils.join( eeIds, "," );
-            eeClause += ") AND ";
-        }
-
-        String p2pClass = getP2PTableNameForClassName( p2pClassName );
-
-        /**
-         * Fields:
-         * 
-         * <pre>
-         * 0 Geneid
-         * 1 exper 
-         * 2 score
-         * 3 csin
-         * 4 csout
-         * </pre>
-         */
-        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper,  coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut FROM GENE2CS gcIn STRAIGHT_JOIN " + p2pClass
-                + " coexp ON gcIn.CS=coexp." + inKey + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey
-                + " WHERE " + eeClause + " gcIn.GENE=:id ";
-
-        // AND gcOut.GENE <> :id // Omit , see below!
-
-        /*
-         * Important Implementation Note: The clause to exclude self-hits actually causes problems. When a self-match
-         * happens, it means that the probe in question hybridizes to the query gene. When the probe in question also
-         * hybridizes to other genes, we need to know that that 'link' is potentially due to a self-match. Such probes
-         * are excluded from later analysis. If we throw those matches out at the SQL query stage, it is hard for us to
-         * detect such crosshybridization problems later.
-         */
-
-        if ( log.isDebugEnabled() ) log.debug( query );
-        return query;
-    }
-
-    /**
-     * @param givenG
-     * @return
-     */
-    private String getP2PClassName( Gene givenG ) {
-        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
-            return "HumanProbeCoExpressionImpl";
-        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
-            return "MouseProbeCoExpressionImpl";
-        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
-            return "RatProbeCoExpressionImpl";
-        else
-            return "OtherProbeCoExpressionImpl";
-    }
-
-    /**
-     * @param className
-     * @return
-     */
-    private String getP2PTableNameForClassName( String className ) {
-        if ( className.equals( "StagingProbeCoExpressionImpl" ) ) {
-            return "STAGING_PROBE_CO_EXPRESSION";
-        } else if ( className.equals( "HumanProbeCoExpressionImpl" ) )
-            return "HUMAN_PROBE_CO_EXPRESSION";
-        else if ( className.equals( "MouseProbeCoExpressionImpl" ) )
-            return "MOUSE_PROBE_CO_EXPRESSION";
-        else if ( className.equals( "RatProbeCoExpressionImpl" ) )
-            return "RAT_PROBE_CO_EXPRESSION";
-        else
-            return "OTHER_PROBE_CO_EXPRESSION";
-    }
-
-    /**
-     * Merge in the cached results. The CVOs that are cached only contain results for a single expression experiment.
-     * 
-     * @param coexpressions
-     * @param cachedResults
-     */
-    private void mergeCachedCoexpressionResults( QueryGeneCoexpression coexpressions,
-            Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults ) {
-        for ( Long eeid : cachedResults.keySet() ) {
-            Collection<CoexpressionCacheValueObject> cache = cachedResults.get( eeid );
-
-            for ( CoexpressionCacheValueObject cachedCVO : cache ) {
-                assert cachedCVO.getQueryProbe() != null;
-                assert cachedCVO.getCoexpressedProbe() != null;
-                if ( cachedCVO.getQueryGene().equals( cachedCVO.getCoexpressedGene() ) ) {
-                    // defensive check against self-links being in the cache
-                    // (shouldn't happen)
-                    continue;
-                }
-
-                coexpressions.addLink( eeid, cachedCVO.getScore(), cachedCVO.getQueryProbe(),
-                        cachedCVO.getCoexpressedGene(), cachedCVO.getCoexpressedProbe() );
-
-                assert coexpressions.contains( cachedCVO.getCoexpressedGene() );
-            }
-        }
-    }
-
-    /**
-     * Fill in specificity information.
-     * <p>
-     * Performance notes: This seems to rarely take more than 1 sec. But this is also the site of a major memory leak.
-     * 
-     * @param coexpressions
-     */
-    private void postProcessSpecificity( final QueryGeneCoexpression coexpressions ) {
-        // fill in information about the query gene
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
-        Collection<Long> targetGeneProbeIds = coexpressions.getTargetGeneProbes();
-
-        Map<Long, Collection<Long>> querySpecificity = getCS2GeneMap( queryGeneProbeIds );
-        Map<Long, Collection<Long>> targetSpecificity = getCS2GeneMap( targetGeneProbeIds );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Specificity postprocess CS2GeneMap: " + timer.getTime() + "ms" );
-        }
-
-        coexpressions.postProcess( querySpecificity, targetSpecificity );
-    }
-
-    /**
-     * Perform and process the coexpression query.
-     * 
-     * @param queryGene
-     * @param geneMap
-     * @param queryObject
-     */
-    private void processCoexpQuery( Gene queryGene, Query queryObject, QueryGeneCoexpression coexpressions ) {
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( scroll.next() ) {
-            processCoexpQueryResult( queryGene, scroll, coexpressions );
-        }
-
-    }
-
-    /**
-     * @param queryGenes
-     * @param queryObject
-     * @param coexpressions
-     */
-    private void processCoexpQuery( Map<Long, Gene> queryGenes, Query queryObject,
-            Map<Gene, QueryGeneCoexpression> coexpressions ) {
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( scroll.next() ) {
-            processCoexpQueryResult( queryGenes, scroll, coexpressions );
-        }
-
-    }
-
-    /**
-     * Process a single query result from the coexpression search, converting it into a
-     * CoexpressionCollectionValueObject
-     * 
-     * @param queryGene
-     * @param geneMap
-     * @param resultSet
-     * @see getFastNativeQueryString for the parameterization of the query output.
-     */
-    private void processCoexpQueryResult( Gene queryGene, ScrollableResults resultSet,
-            QueryGeneCoexpression coexpressions ) {
-
-        Long coexpressedGene = resultSet.getLong( 0 );
-
-        if ( coexpressedGene.equals( queryGene.getId() ) ) {
-            return;
-        }
-
-        Long eeID = resultSet.getLong( 1 );
-        Double score = resultSet.getDouble( 2 );
-        Long queryProbe = resultSet.getLong( 3 );
-        Long coexpressedProbe = resultSet.getLong( 4 );
-        coexpressions.addLink( eeID, score, queryProbe, coexpressedGene, coexpressedProbe );
-
-        /*
-         * Cache the result. Note that this will be disabled during 'large' analyses.
-         */
-        if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
-            CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
-            coExVOForCache.setQueryGene( queryGene.getId() );
-            coExVOForCache.setCoexpressedGene( coexpressedGene );
-            coExVOForCache.setExpressionExperiment( eeID );
-            coExVOForCache.setScore( score );
-            coExVOForCache.setQueryProbe( queryProbe );
-            coExVOForCache.setCoexpressedProbe( coexpressedProbe );
-            if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
-
-            this.getProbe2ProbeCoexpressionCache().addToCache( coExVOForCache );
-        }
-
-    }
-
-    /**
-     * @param queryGenes
-     * @param resultSet
-     * @param coexpressions
-     */
-    private void processCoexpQueryResult( Map<Long, Gene> queryGenes, ScrollableResults resultSet,
-            Map<Gene, QueryGeneCoexpression> coexpressions ) {
-
-        Long coexpressedGene = resultSet.getLong( 0 );
-        Long eeID = resultSet.getLong( 1 );
-        Double score = resultSet.getDouble( 2 );
-        Long queryProbe = resultSet.getLong( 3 );
-        Long coexpressedProbe = resultSet.getLong( 4 );
-        Long queryGeneId = resultSet.getLong( 5 );
-
-        if ( queryGeneId.equals( coexpressedGene ) ) {
-            return;
-        }
-
-        Gene queryGene = queryGenes.get( queryGeneId );
-        assert queryGene != null : queryGeneId + " did not match given queries";
-        QueryGeneCoexpression ccvo = coexpressions.get( queryGene );
-        assert ccvo != null;
-        ccvo.addLink( eeID, score, queryProbe, coexpressedGene, coexpressedProbe );
-
-        /*
-         * Cache the result.
-         */
-        if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
-            CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
-            coExVOForCache.setQueryGene( queryGene.getId() );
-            coExVOForCache.setCoexpressedGene( coexpressedGene );
-            coExVOForCache.setExpressionExperiment( eeID );
-            coExVOForCache.setScore( score );
-            coExVOForCache.setQueryProbe( queryProbe );
-            coExVOForCache.setCoexpressedProbe( coexpressedProbe );
-            if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
-            this.getProbe2ProbeCoexpressionCache().addToCache( coExVOForCache );
-        }
-    }
-
-    /**
-     * @param csId2geneIds
-     * @param csIdChunk
-     * @param session
-     */
-    private Map<Long, Collection<Long>> processCS2GeneChunk( Collection<Long> csIdChunk, Session session ) {
-        assert csIdChunk.size() > 0;
-        Map<Long, Collection<Long>> csId2geneIds = new HashMap<Long, Collection<Long>>();
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        /*
-         * Check the cache first.
-         */
-        Collection<Long> neededCs = new HashSet<Long>();
-        for ( Long csid : csIdChunk ) {
-            Element element = gene2CsCache.get( csid );
-            if ( element != null ) {
-                csId2geneIds.put( csid, ( Collection<Long> ) element.getValue() );
-            } else {
-                neededCs.add( csid );
-            }
-        }
-
-        if ( neededCs.size() == 0 ) {
-            return csId2geneIds;
-        }
-
-        if ( timer.getTime() > 100 ) {
-            log.info( "Gene2Cs Cache check: " + timer.getTime() + "ms" );
-        }
-        timer.reset();
-        timer.start();
-
-        String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE CS in ("
-                + StringUtils.join( neededCs, "," ) + ")";
-
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "id", new LongType() );
-        queryObject.addScalar( "geneId", new LongType() );
-
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-        Map<Long, Collection<Long>> newitems = new HashMap<Long, Collection<Long>>();
-
-        while ( scroll.next() ) {
-            Long csid = scroll.getLong( 0 );
-            Long geneId = scroll.getLong( 1 );
-            if ( !csId2geneIds.containsKey( csid ) ) {
-                csId2geneIds.put( csid, new HashSet<Long>() );
-
-            }
-            if ( !newitems.containsKey( csid ) ) {
-                newitems.put( csid, new HashSet<Long>() );
-            }
-
-            csId2geneIds.get( csid ).add( geneId );
-            newitems.get( csid ).add( geneId );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Gene2Cs batch fetch " + newitems.size() + " elements: " + timer.getTime() + "ms" );
-        }
-        timer.reset();
-        timer.start();
-
-        for ( Long csid : newitems.keySet() ) {
-            gene2CsCache.put( new Element( csid, newitems.get( csid ) ) );
-        }
-
-        if ( timer.getTime() > 200 ) {
-            log.info( "Gene2Cs cache fill " + newitems.size() + " elements: " + timer.getTime() + "ms" );
-            try {
-                log.info( gene2CsCache.getMemoryStoreSize() + " items in cache memory; " );
-            } catch ( Exception e ) {
-                // no big deal.
-                log.info( "Was unable to get Gene2CS cache stats:  " + e.getMessage() );
-            }
-        }
-        return csId2geneIds;
-    }
-
-    /**
-     * For batch queries
-     * 
-     * @param genes
-     * @param ees
-     * @param eeIds
-     * @param queryString
-     * @return
-     */
-    private org.hibernate.Query setCoexpQueryParameters( Session session, Collection<Gene> genes, String queryString ) {
-        SQLQuery queryObject;
-        queryObject = session.createSQLQuery( queryString ); // for native query.
-        queryObject.addScalar( "id", new LongType() ); // gene out.
-        queryObject.addScalar( "exper", new LongType() );
-        queryObject.addScalar( "score", new DoubleType() );
-        queryObject.addScalar( "csIdIn", new LongType() );
-        queryObject.addScalar( "csIdOut", new LongType() );
-        queryObject.addScalar( "queryGeneId", new LongType() );
-        queryObject.setParameterList( "ids", EntityUtils.getIds( genes ) );
-
-        return queryObject;
-    }
-
-    /**
-     * @param gene
-     * @param ees
-     * @param eeIds
-     * @param queryString
-     * @return
-     */
-    private org.hibernate.Query setCoexpQueryParameters( Session session, Gene gene, String queryString ) {
-        org.hibernate.SQLQuery queryObject;
-        queryObject = session.createSQLQuery( queryString ); // for native query.
-
-        queryObject.addScalar( "id", new LongType() ); // gene out.
-        queryObject.addScalar( "exper", new LongType() );
-        queryObject.addScalar( "score", new DoubleType() );
-        queryObject.addScalar( "csIdIn", new LongType() );
-        queryObject.addScalar( "csIdOut", new LongType() );
-        queryObject.setLong( "id", gene.getId() );
-
-        return queryObject;
     }
 
 }

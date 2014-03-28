@@ -20,7 +20,6 @@ package ubic.gemma.model.association.coexpression;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
-import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -34,28 +33,20 @@ public abstract class HumanGeneCoExpression extends Gene2GeneCoexpression {
     public static final class Factory {
 
         /**
-         * @param sourceAnalysis
-         * @param secondGene
-         * @param firstGene
          * @param effect
-         * @param numDataSets
-         * @param datasetsTestedVector
-         * @param datasetsSupportingVector
-         * @param specificityVector
+         * @param firstGene
+         * @param secondGene
          * @return
          */
-        public static HumanGeneCoExpression newInstance( Analysis sourceAnalysis, Gene secondGene, Gene firstGene,
-                Double effect, Integer numDataSets, byte[] datasetsTestedVector, byte[] datasetsSupportingVector ) {
+        public static HumanGeneCoExpression newInstance( Double effect, Gene firstGene, Gene secondGene ) {
             final HumanGeneCoExpression entity = new HumanGeneCoExpressionImpl();
+            assert effect != null && firstGene != null && secondGene != null;
             try {
-                FieldUtils.writeField( entity, "sourceAnalysis", sourceAnalysis, true );
                 FieldUtils.writeField( entity, "secondGene", secondGene, true );
                 FieldUtils.writeField( entity, "firstGene", firstGene, true );
-                FieldUtils.writeField( entity, "effect", effect, true );
-                FieldUtils.writeField( entity, "numDataSets", numDataSets, true );
-                FieldUtils.writeField( entity, "datasetsTestedVector", datasetsTestedVector, true );
-                FieldUtils.writeField( entity, "datasetsSupportingVector", datasetsSupportingVector, true );
- 
+                FieldUtils.writeField( entity, "positiveCorrelation", effect > 0, true );
+                FieldUtils.writeField( entity, "numDataSetsSupporting", 1, true );
+
             } catch ( IllegalAccessException e ) {
                 System.err.println( e );
             }

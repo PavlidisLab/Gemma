@@ -91,9 +91,9 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDifferentialExpressionAnalysisResultIdsInResultSet(
+    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds ) {
-        return this.getDifferentialExpressionResultDao().findDifferentialExpressionAnalysisResultIdsInResultSet(
+        return this.getDifferentialExpressionResultDao().findDiffExAnalysisResultIdsInResultSets(
                 resultSetIdsToArrayDesignsUsed, geneIds );
     }
 

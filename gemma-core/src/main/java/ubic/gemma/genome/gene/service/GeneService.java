@@ -19,16 +19,13 @@
 package ubic.gemma.genome.gene.service;
 
 import java.util.Collection;
-import java.util.Map;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
-import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.RelativeLocationData;
@@ -145,31 +142,31 @@ public interface GeneService {
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
 
-    /**
-     * @param genes
-     * @param ees
-     * @param stringency
-     * @param knownGenesOnly
-     * @param interGenesOnly
-     * @param interGenesOnly if true, only links among the query genes will be returned. This is ingored if only a
-     *        single gene is entered
-     * @return
-     */
-    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly );
-
-    /**
-     * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
-     * object:: CoexpressionCollectionValueObject
-     * 
-     * @param gene
-     * @param ees
-     * @param stringency
-     * @param knownGenesOnly
-     * @return
-     */
-    public QueryGeneCoexpression getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
-            Integer stringency );
+    // /**
+    // * @param genes
+    // * @param ees
+    // * @param stringency
+    // * @param knownGenesOnly
+    // * @param interGenesOnly
+    // * @param interGenesOnly if true, only links among the query genes will be returned. This is ingored if only a
+    // * single gene is entered
+    // * @return
+    // */
+    // public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<Gene> genes,
+    // Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly );
+    //
+    // /**
+    // * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
+    // * object:: CoexpressionCollectionValueObject
+    // *
+    // * @param gene
+    // * @param ees
+    // * @param stringency
+    // * @param knownGenesOnly
+    // * @return
+    // */
+    // public QueryGeneCoexpression getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
+    // Integer stringency );
 
     /**
      * @param id
@@ -189,34 +186,6 @@ public interface GeneService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     public Collection<CompositeSequence> getCompositeSequencesById( Long id );
-
-    /**
-     * Get summarized node degree
-     * 
-     * @param genes
-     * @return
-     */
-    public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes );
-
-    public Map<Long, GeneCoexpressionNodeDegree> getGeneIdCoexpressionNodeDegree( Collection<Long> geneIds );
-
-    /**
-     * Get summarized node degree
-     * 
-     * @param gene
-     * @return
-     */
-    public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene );
-
-    /**
-     * Get dataset-by-dataset node degree information -- used to populate the tables for faster access methods. This
-     * method is likely to be slow.
-     * 
-     * @param gene
-     * @param ees
-     * @return map of BioAssaySet to relative rank.
-     */
-    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
 
     /**
      * Gets all the genes for a given taxon

@@ -26,6 +26,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author paul
@@ -36,7 +37,7 @@ public interface CompositeSequenceService {
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public Integer countAll();
 
     /**
      * 
@@ -60,39 +61,37 @@ public interface CompositeSequenceService {
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    public Collection<CompositeSequence> findByBioSequence( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence );
 
     /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    public Collection<CompositeSequence> findByBioSequenceName( java.lang.String name );
+    public Collection<CompositeSequence> findByBioSequenceName( String name );
 
     /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    public Collection<CompositeSequence> findByGene( ubic.gemma.model.genome.Gene gene );
+    public Collection<CompositeSequence> findByGene( Gene gene );
 
     /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    public Collection<CompositeSequence> findByGene( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    public Collection<CompositeSequence> findByName( java.lang.String name );
+    public Collection<CompositeSequence> findByName( String name );
 
     /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    public CompositeSequence findByName( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            java.lang.String name );
+    public CompositeSequence findByName( ArrayDesign arrayDesign, String name );
 
     /**
      * 
@@ -118,7 +117,7 @@ public interface CompositeSequenceService {
     public Collection<Gene> getGenes( CompositeSequence compositeSequence );
 
     /**
-     * Returns a map of CompositeSequences to PhysicalLocation to BlatAssociations at each location.
+     * Returns a map of CompositeSequences to collection of BioSequence2GeneProducts at each location.
      */
     public Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences );
@@ -126,25 +125,23 @@ public interface CompositeSequenceService {
     /**
      * 
      */
-    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences,
-            java.lang.Integer numResults );
+    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults );
 
     /**
      * 
      */
-    public Collection<Object[]> getRawSummary( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            java.lang.Integer numResults );
+    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
 
     /**
      * @deprecated Not used?
      */
     @Deprecated
-    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, java.lang.Integer numResults );
+    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
 
     /**
      * 
      */
-    public CompositeSequence load( java.lang.Long id );
+    public CompositeSequence load( Long id );
 
     /**
      * <p>

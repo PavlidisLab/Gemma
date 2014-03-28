@@ -27,10 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDao;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationDao;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
@@ -51,10 +49,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private Gene2GOAssociationDao gene2GoAssociationDao;
 
     @Autowired
-    private ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
-
-    @Autowired
-    private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
+    private CoexpressionAnalysisDao probeCoexpressionAnalysisDao;
 
     @Autowired
     private TfGeneAssociationDao tfGeneAssociationDao;
@@ -64,10 +59,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     @Autowired
     private Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao;
-
-    // public RelationshipPersister( SessionFactory sessionFactory ) {
-    // super( sessionFactory );
-    // }
 
     /*
      * (non-Javadoc)
@@ -81,10 +72,8 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
         if ( entity instanceof Gene2GOAssociation ) {
             return persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
-        } else if ( entity instanceof ProbeCoexpressionAnalysis ) {
-            return persistProbeCoexpressionAnalysis( ( ProbeCoexpressionAnalysis ) entity );
-        } else if ( entity instanceof GeneCoexpressionAnalysis ) {
-            return persistGeneCoexpressionAnalysis( ( GeneCoexpressionAnalysis ) entity );
+        } else if ( entity instanceof CoexpressionAnalysis ) {
+            return persistProbeCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
             return persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
         } else if ( entity instanceof Gene2GeneProteinAssociation ) {
@@ -161,21 +150,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
      * @param entity
      * @return
      */
-    protected GeneCoexpressionAnalysis persistGeneCoexpressionAnalysis( GeneCoexpressionAnalysis entity ) {
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
-        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
-        entity.setExpressionExperimentSetAnalyzed( persistExpressionExperimentSet( entity
-                .getExpressionExperimentSetAnalyzed() ) );
-
-        return geneCoexpressionAnalysisDao.create( entity );
-    }
-
-    /**
-     * @param entity
-     * @return
-     */
-    protected ProbeCoexpressionAnalysis persistProbeCoexpressionAnalysis( ProbeCoexpressionAnalysis entity ) {
+    protected CoexpressionAnalysis persistProbeCoexpressionAnalysis( CoexpressionAnalysis entity ) {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );

@@ -236,7 +236,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             }
         } else {
             if ( !hasOption( "dataFile" ) ) {
-                log.info( "Processing all experiments (futher filtering may modify)" );
+                log.info( "Processing all experiments (further filtering may modify)" );
                 this.expressionExperiments = new HashSet<BioAssaySet>( eeService.loadAll() );
             }
         }

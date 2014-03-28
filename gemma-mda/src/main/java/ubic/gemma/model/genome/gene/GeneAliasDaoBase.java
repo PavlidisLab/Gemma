@@ -19,38 +19,38 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
+import java.util.Iterator;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.gene.GeneAlias</code>.
- * </p>
  * 
  * @see ubic.gemma.model.genome.gene.GeneAlias
  */
-public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate3.support.HibernateDaoSupport implements
-        ubic.gemma.model.genome.gene.GeneAliasDao {
+public abstract class GeneAliasDaoBase extends HibernateDaoSupport implements GeneAliasDao {
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#create(int, Collection)
      */
     @Override
-    public java.util.Collection<? extends GeneAlias> create( final java.util.Collection<? extends GeneAlias> entities ) {
+    public Collection<? extends GeneAlias> create( final Collection<? extends GeneAlias> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneAlias.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends GeneAlias> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+            @Override
+            public Object doInHibernate( Session session ) throws HibernateException {
+                for ( Iterator<? extends GeneAlias> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    create( entityIterator.next() );
+                }
+                return null;
+            }
+        } );
         return entities;
     }
 
@@ -88,8 +88,8 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
      */
     @SuppressWarnings("unchecked")
     @Override
-    public java.util.Collection<GeneAlias> loadAll() {
-        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
+    public Collection<GeneAlias> loadAll() {
+        final Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.gene.GeneAliasImpl.class );
         return ( Collection<GeneAlias> ) results;
     }
@@ -109,10 +109,10 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#remove(java.util.Collection)
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#remove(Collection)
      */
     @Override
-    public void remove( java.util.Collection<? extends GeneAlias> entities ) {
+    public void remove( Collection<? extends GeneAlias> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneAlias.remove - 'entities' can not be null" );
         }
@@ -131,19 +131,18 @@ public abstract class GeneAliasDaoBase extends org.springframework.orm.hibernate
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneAliasDao#update(java.util.Collection)
+     * @see ubic.gemma.model.genome.gene.GeneAliasDao#update(Collection)
      */
     @Override
-    public void update( final java.util.Collection<? extends GeneAlias> entities ) {
+    public void update( final Collection<? extends GeneAlias> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneAlias.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<?> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                    public Object doInHibernate( Session session ) throws HibernateException {
+                        for ( Iterator<?> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
                             update( ( ubic.gemma.model.genome.gene.GeneAlias ) entityIterator.next() );
                         }
                         return null;

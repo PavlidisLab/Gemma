@@ -39,6 +39,18 @@ public interface Gene2GeneProteinAssociationService {
     public Gene2GeneProteinAssociation create( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
     /**
+     * delete the given gene2geneProteinAssociation
+     */
+    @Secured({ "GROUP_ADMIN" })
+    public void delete( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
+
+    /**
+     * Delete all gene2geneProteinAssociation
+     */
+    @Secured({ "GROUP_ADMIN" })
+    public void deleteAll( Collection<Gene2GeneProteinAssociation> gene2GeneProteinAssociation );
+
+    /**
      * Find a gene2geneProteinAssociation
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -49,18 +61,6 @@ public interface Gene2GeneProteinAssociationService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public Collection<Gene2GeneProteinAssociation> loadAll();
-
-    /**
-     * Delete all gene2geneProteinAssociation
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public void deleteAll( Collection<Gene2GeneProteinAssociation> gene2GeneProteinAssociation );
-
-    /**
-     * delete the given gene2geneProteinAssociation
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public void delete( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
     /**
      * Does a 'thaw' of a Gene2GeneProteinAssociation

@@ -18,10 +18,10 @@
  */
 package ubic.gemma.job;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.commons.lang3.RandomStringUtils;
 
 /**
  * @author paul

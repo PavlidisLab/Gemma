@@ -22,20 +22,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-import ubic.gemma.model.analysis.expression.coexpression.QueryGeneCoexpression;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.util.Settings;
 
 /**
@@ -44,9 +39,6 @@ import ubic.gemma.util.Settings;
  * @see Gene
  */
 public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao {
-
-    @Autowired
-    private Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache;
 
     /**
      * @see GeneDao#countAll()
@@ -229,25 +221,26 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
         return this.findByPhysicalLocation( "from Gene as gene where gene.location = :location", location );
     }
 
-    /**
-     * @see GeneDao#getCoexpressedGenes(Gene, Collection, Integer, boolean)
-     */
-    @Override
-    public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( final Collection<Gene> genes,
-            final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGeneOnly ) {
-
-        return this.handleGetCoexpressedGenes( genes, ees, stringency, interGeneOnly );
-
-    }
-
-    /**
-     * @see GeneDao#getCoexpressedGenes(Gene, Collection, Integer, boolean)
-     */
-    @Override
-    public QueryGeneCoexpression getCoexpressedGenes( final Gene gene, final Collection<? extends BioAssaySet> ees,
-            final Integer stringency ) {
-        return this.handleGetCoexpressedGenes( gene, ees, stringency );
-    }
+    //
+    // /**
+    // * @see GeneDao#getCoexpressedGenes(Gene, Collection, Integer, boolean)
+    // */
+    // @Override
+    // public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( final Collection<Gene> genes,
+    // final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGeneOnly ) {
+    //
+    // return this.handleGetCoexpressedGenes( genes, ees, stringency, interGeneOnly );
+    //
+    // }
+    //
+    // /**
+    // * @see GeneDao#getCoexpressedGenes(Gene, Collection, Integer, boolean)
+    // */
+    // @Override
+    // public QueryGeneCoexpression getCoexpressedGenes( final Gene gene, final Collection<? extends BioAssaySet> ees,
+    // final Integer stringency ) {
+    // return this.handleGetCoexpressedGenes( gene, ees, stringency );
+    // }
 
     /**
      * @see GeneDao#getCompositeSequenceCountById(long)
@@ -292,13 +285,6 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
     public Collection<Gene> getMicroRnaByTaxon( final Taxon taxon ) {
         return this.handleGetMicroRnaByTaxon( taxon );
 
-    }
-
-    /**
-     * @return the probe2ProbeCoexpressionCache
-     */
-    public Probe2ProbeCoexpressionCache getProbe2ProbeCoexpressionCache() {
-        return probe2ProbeCoexpressionCache;
     }
 
     /**
@@ -355,13 +341,6 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
         if ( entity != null ) {
             this.remove( entity );
         }
-    }
-
-    /**
-     * @param probe2ProbeCoexpressionCache the probe2ProbeCoexpressionCache to set
-     */
-    public void setProbe2ProbeCoexpressionCache( Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache ) {
-        this.probe2ProbeCoexpressionCache = probe2ProbeCoexpressionCache;
     }
 
     /**
@@ -453,14 +432,14 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements GeneDao
      */
     protected abstract Gene handleFindByOfficialSymbol( String symbol, Taxon taxon );
 
-    protected abstract Map<Gene, QueryGeneCoexpression> handleGetCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly );
-
-    /**
-     * Performs the core logic for {@link #getCoexpressedGenes(Gene, Collection, Integer, boolean)}
-     */
-    protected abstract QueryGeneCoexpression handleGetCoexpressedGenes( Gene gene,
-            Collection<? extends BioAssaySet> ees, Integer stringency );
+    // protected abstract Map<Gene, QueryGeneCoexpression> handleGetCoexpressedGenes( Collection<Gene> genes,
+    // Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly );
+    //
+    // /**
+    // * Performs the core logic for {@link #getCoexpressedGenes(Gene, Collection, Integer, boolean)}
+    // */
+    // protected abstract QueryGeneCoexpression handleGetCoexpressedGenes( Gene gene,
+    // Collection<? extends BioAssaySet> ees, Integer stringency );
 
     /**
      * Performs the core logic for {@link #getCompositeSequenceCountById(long)}

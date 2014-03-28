@@ -49,14 +49,14 @@ public interface GeneOntologyService extends InitializingBean {
      */
     public abstract Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection<Long> geneIds );
 
-    public abstract Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Long queryGene, Collection<Long> geneIds );
-
     /**
      * @param queryGene1
      * @param queryGene2
      * @returns Collection<OntologyEntries>
      */
     public abstract Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 );
+
+    public abstract Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Long queryGene, Collection<Long> geneIds );
 
     /**
      * @param masterOntos
@@ -143,8 +143,6 @@ public interface GeneOntologyService extends InitializingBean {
      */
     public abstract Collection<OntologyTerm> getGOTerms( Gene gene );
 
-    public abstract Collection<OntologyTerm> getGOTerms( Long geneId );
-
     /**
      * Get all GO terms for a gene, including parents of terms via is-a relationships; and optionally also parents via
      * part-of relationships.
@@ -166,6 +164,8 @@ public interface GeneOntologyService extends InitializingBean {
      */
     public abstract Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, GOAspect goAspect );
 
+    public abstract Collection<OntologyTerm> getGOTerms( Long geneId );
+
     /**
      * Return the immediate parent(s) of the given entry. The root node is never returned.
      * 
@@ -181,6 +181,18 @@ public interface GeneOntologyService extends InitializingBean {
      *         included in the returned information
      */
     public abstract Collection<OntologyTerm> getParents( OntologyTerm entry, boolean includePartOf );
+
+    /**
+     * @param goId
+     * @return
+     */
+    public GOAspect getTermAspect( String goId );
+
+    /**
+     * @param goId
+     * @return
+     */
+    public GOAspect getTermAspect( VocabCharacteristic goId );
 
     /**
      * Return a definition for a GO Id.
@@ -260,17 +272,5 @@ public interface GeneOntologyService extends InitializingBean {
      * Primarily here for testing, to recover memory.
      */
     public abstract void shutDown();
-
-    /**
-     * @param goId
-     * @return
-     */
-    public GOAspect getTermAspect( VocabCharacteristic goId );
-
-    /**
-     * @param goId
-     * @return
-     */
-    public GOAspect getTermAspect( String goId );
 
 }

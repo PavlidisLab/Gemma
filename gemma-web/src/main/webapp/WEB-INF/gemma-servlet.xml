@@ -245,11 +245,9 @@
 	</bean>
 
 	<bean id="coexpressionSearchController" class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchController">
-		<dwr:remote javascript="ExtCoexpressionSearchController">
+		<dwr:remote javascript="CoexpressionSearchController">
 			<dwr:include method="doSearch" />
-			<dwr:include method="doSearchQuick2" />
-			<dwr:include method="doSearchQuick" />
-			<dwr:include method="findExpressionExperiments" />
+			<dwr:include method="doSearchQuickComplete" /> 
 			<dwr:include method="doBackgroundCoexSearch" />
 		</dwr:remote>
 	</bean>
@@ -804,12 +802,12 @@
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand" />
+		
+		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionSearchCommand" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt" />
-		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionDatasetValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionSummaryValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.loader.expression.geo.model.GeoRecord">
 			<dwr:exclude method="contact" />

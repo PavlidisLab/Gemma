@@ -22,6 +22,17 @@ public class Gene2GeneProteinAssociationServiceImpl extends
     }
 
     @Override
+    protected void handleDelete( Gene2GeneProteinAssociation association ) {
+        this.gene2GeneProteinAssociationDao().remove( association );
+
+    }
+
+    @Override
+    protected void handleDeleteAll( Collection<Gene2GeneProteinAssociation> associations ) {
+        this.gene2GeneProteinAssociationDao().remove( associations );
+    }
+
+    @Override
     protected Gene2GeneProteinAssociation handleFind( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         return this.gene2GeneProteinAssociationDao().find( gene2GeneProteinAssociation );
     }
@@ -39,17 +50,6 @@ public class Gene2GeneProteinAssociationServiceImpl extends
     @Override
     protected void handleThaw( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         this.gene2GeneProteinAssociationDao().thaw( gene2GeneProteinAssociation );
-    }
-
-    @Override
-    protected void handleDelete( Gene2GeneProteinAssociation association ) {
-        this.gene2GeneProteinAssociationDao().remove( association );
-
-    }
-
-    @Override
-    protected void handleDeleteAll( Collection<Gene2GeneProteinAssociation> associations ) {
-        this.gene2GeneProteinAssociationDao().remove( associations );
     }
 
 }

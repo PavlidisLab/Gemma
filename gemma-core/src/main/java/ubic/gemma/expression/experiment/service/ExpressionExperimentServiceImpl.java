@@ -43,8 +43,6 @@ import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
@@ -136,9 +134,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Autowired
     private RawExpressionDataVectorDao rawExpressionDataVectorDao;
 
-    @Autowired
-    private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
-
     private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
@@ -146,9 +141,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
-
-    @Autowired
-    private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
 
     @Autowired
     private ProcessedExpressionDataVectorDao processedVectorDao;
@@ -776,10 +768,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return expressionExperimentSetDao;
     }
 
-    public GeneCoexpressionAnalysisDao getGeneCoexpressionAnalysisDao() {
-        return geneCoexpressionAnalysisDao;
-    }
-
     /**
      * @see ExpressionExperimentService#getLastArrayDesignUpdate(Collection, java.lang.Class)
      */
@@ -1275,21 +1263,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             throw new IllegalArgumentException( "Experiment cannot be null" );
         }
 
-        /*
-         * If we remove the experiment from the set, analyses that used the set have to cope with this. For G2G,the data
-         * sets are stored in order of IDs, but the actual ids are not stored (we refer back to the eeset), so coping
-         * will not be possible (at best we can mark it as troubled). If there is no analysis object using the set, it's
-         * okay. There are ways around this but it's messy, so for now we just refuse to delete such experiments.
-         */
-        Collection<GeneCoexpressionAnalysis> g2gAnalyses = this.getGeneCoexpressionAnalysisDao().findByInvestigation(
-                ee );
-
-        if ( g2gAnalyses.size() > 0 ) {
-            throw new IllegalArgumentException( "Sorry, you can't delete " + ee
-                    + "; it is part of at least one coexpression meta analysis: "
-                    + g2gAnalyses.iterator().next().getName() );
-        }
-
         // Remove subsets
         Collection<ExpressionExperimentSubSet> subsets = getSubSets( ee );
         for ( ExpressionExperimentSubSet subset : subsets ) {
@@ -1313,8 +1286,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             this.getPrincipalComponentAnalysisDao().remove( pca );
         }
 
-        // Remove probe2probe links
-        this.probe2ProbeCoexpressionDao.deleteLinks( ee );
+        /*
+         * FIXME: delete probecoexpression analysis; gene coexexpression will linger.
+         */
 
         /*
          * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment

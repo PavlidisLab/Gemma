@@ -49,19 +49,15 @@ public abstract class GeneDifferentialExpressionMetaAnalysis extends
     private Collection<GeneDifferentialExpressionMetaAnalysisResult> results = new HashSet<>();
 
     /**
-     * <p>
      * How many genes were included in the meta-analysis. This does not mean that all genes were analyzed in all the
      * experiments.
-     * </p>
      */
     public Integer getNumGenesAnalyzed() {
         return this.numGenesAnalyzed;
     }
 
     /**
-     * <p>
      * The threshold, if any, used to determine which of the metaAnalysis results are persisted to the system.
-     * </p>
      */
     public Double getQvalueThresholdForStorage() {
         return this.qvalueThresholdForStorage;

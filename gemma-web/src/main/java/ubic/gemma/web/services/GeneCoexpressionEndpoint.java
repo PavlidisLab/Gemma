@@ -29,11 +29,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
-import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
+import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Allows access to the gene co-expression analysis. Given 1) a collection of gene ids, 2) a taxon id, 3) a stringency,
@@ -58,14 +59,14 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
     private GeneService geneService;
 
-    private GeneCoexpressionService geneCoexpressionService;
+    private GeneCoexpressionSearchService geneCoexpressionService;
 
     /**
      * The local name of the expected request/response.
      */
     public static final String LOCAL_NAME = "geneCoexpression";
 
-    public void setGeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
+    public void setGeneCoexpressionService( GeneCoexpressionSearchService geneCoexpressionService ) {
         this.geneCoexpressionService = geneCoexpressionService;
     }
 
@@ -75,7 +76,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
      */
     public static final int MAX_RESULTS = 100;
 
-    public void setgeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
+    public void setgeneCoexpressionService( GeneCoexpressionSearchService geneCoexpressionService ) {
         this.geneCoexpressionService = geneCoexpressionService;
     }
 
@@ -116,11 +117,11 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
                 taxonId = id;
             }
 
-            Collection<String> analysisInput = getSingleNodeValue( requestElement, "expression_experiment_set_id" );
-            String analysisId = "";
-            for ( String id : analysisInput ) {
-                analysisId = id;
-            }
+            // Collection<String> analysisInput = getSingleNodeValue( requestElement, "expression_experiment_set_id" );
+            // String analysisId = "";
+            // for ( String id : analysisInput ) {
+            // analysisId = id;
+            // }
 
             Collection<String> stringencyInput = getSingleNodeValue( requestElement, "stringency" );
             String string = "";
@@ -158,9 +159,9 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
             int stringency = Integer.parseInt( string );
 
-            // get Gene2GeneCoexpressio objects canned analysis
+            // get Gene2GeneCoexpression objects canned analysis
             Collection<CoexpressionValueObjectExt> coexpressedGenes = geneCoexpressionService.coexpressionSearchQuick(
-                    Long.parseLong( analysisId ), geneCol, stringency, MAX_RESULTS, queryGenesOnly, false );
+                    null, EntityUtils.getIds( geneCol ), stringency, MAX_RESULTS, queryGenesOnly ).getResults();
 
             if ( coexpressedGenes.isEmpty() ) {
                 String msg = "No coexpressed genes found.";

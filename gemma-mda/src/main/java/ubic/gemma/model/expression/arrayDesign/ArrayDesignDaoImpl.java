@@ -827,6 +827,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 return null;
             }
         } );
+        
+        /*
+         * FIXME this is very slow. I think we need to delete the compositesequences first, flushing along the way.
+         */
 
         this.getHibernateTemplate().delete( arrayDesign );
     }

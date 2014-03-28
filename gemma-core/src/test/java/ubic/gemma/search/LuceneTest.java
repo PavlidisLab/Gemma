@@ -95,27 +95,6 @@ public class LuceneTest {
         }
     }
 
-    @Test
-    public void testEnglishAnalyzer() throws Exception {
-        try (Analyzer analyzer = new EnglishAnalyzer( Version.LUCENE_36 );) {
-            luceneTestB( analyzer );
-        }
-    }
-
-    // @Test
-    // public void testSnowBallAnalyzer() throws Exception {
-    // works, but deprecated
-    // Analyzer analyzer = new SnowballAnalyzer( Version.LUCENE_36, "English" );
-    // luceneTestB( analyzer );
-    // }
-
-    // @Test
-    // public void testStandardAnalyzer() throws Exception {
-    // // this will fail.
-    // Analyzer analyzer = new StandardAnalyzer( Version.LUCENE_36 );
-    // luceneTestB( analyzer );
-    // }
-
     public void luceneTestB( Analyzer analyzer ) throws Exception {
 
         IndexWriterConfig iwc = new IndexWriterConfig( Version.LUCENE_36, analyzer );
@@ -248,6 +227,27 @@ public class LuceneTest {
                 // assertTrue( hitcount > 0 );
                 // log.info( searcher.doc( topDocs.scoreDocs[0].doc ).getFieldable( "content" ) );
             }
+        }
+    }
+
+    // @Test
+    // public void testSnowBallAnalyzer() throws Exception {
+    // works, but deprecated
+    // Analyzer analyzer = new SnowballAnalyzer( Version.LUCENE_36, "English" );
+    // luceneTestB( analyzer );
+    // }
+
+    // @Test
+    // public void testStandardAnalyzer() throws Exception {
+    // // this will fail.
+    // Analyzer analyzer = new StandardAnalyzer( Version.LUCENE_36 );
+    // luceneTestB( analyzer );
+    // }
+
+    @Test
+    public void testEnglishAnalyzer() throws Exception {
+        try (Analyzer analyzer = new EnglishAnalyzer( Version.LUCENE_36 );) {
+            luceneTestB( analyzer );
         }
     }
 }
