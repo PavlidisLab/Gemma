@@ -19,6 +19,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -110,7 +111,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends
             if ( taskCommand.isUpdateStatsOnly() ) {
                 log.info( "Refreshing stats" );
                 differentialExpressionAnalyzerService.updateSummaries( taskCommand.getToRedo() );
-                Collection<DifferentialExpressionAnalysis> result = new HashSet<DifferentialExpressionAnalysis>();
+                Collection<DifferentialExpressionAnalysis> result = new HashSet<>();
                 result.add( taskCommand.getToRedo() );
                 return result;
             }
@@ -133,26 +134,12 @@ public class DifferentialExpressionAnalysisTaskImpl extends
         Collection<DifferentialExpressionAnalysis> results;
 
         Collection<ExperimentalFactor> factors = taskCommand.getFactors();
-        DifferentialExpressionAnalyzerServiceImpl.AnalysisType analyzer = analysisSelectionAndExecutionService
-                .determineAnalysis( ee, factors, taskCommand.getSubsetFactor(), taskCommand.isIncludeInteractions() );
 
-        if ( analyzer == null ) {
-            throw new IllegalStateException( "Data set cannot be analyzed" );
-        }
-
-        assert factors != null;
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-
-        config.setAnalysisType( analyzer );
         config.setFactorsToInclude( factors );
         config.setQvalueThreshold( taskCommand.getQvalueThreshold() );
         config.setSubsetFactor( taskCommand.getSubsetFactor() );
-
-        /*
-         * We only support interactions when there are exactly two factors.
-         */
         if ( taskCommand.isIncludeInteractions() && factors.size() == 2 ) {
-
             /*
              * We should not include 'batch' in an interaction. But I don't want to enforce that here.
              */
@@ -161,12 +148,17 @@ public class DifferentialExpressionAnalysisTaskImpl extends
                     log.warn( "Batch is included in the interaction!" );
                 }
             }
-
-            config.addInteractionToInclude( factors );
-            config.setAnalysisType( DifferentialExpressionAnalyzerServiceImpl.AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION );
-        } else {
-            config.setInteractionsToInclude( new HashSet<Collection<ExperimentalFactor>>() );
+            config.addInteractionToInclude( factors ); // might get dropped.
         }
+
+        DifferentialExpressionAnalyzerServiceImpl.AnalysisType analyzer = analysisSelectionAndExecutionService
+                .determineAnalysis( ee, config );
+
+        if ( analyzer == null ) {
+            throw new IllegalStateException( "Data set cannot be analyzed" );
+        }
+
+        config.setAnalysisType( analyzer );
 
         results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
 
