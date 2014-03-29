@@ -23,7 +23,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -68,17 +70,19 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
         Gene secondGene = Gene.Factory.newInstance();
         secondGene.setName( "test_gene2geneCoexpression2" );
+        secondGene.setTaxon( mouseTaxon );
         secondGene = geneS.create( secondGene );
 
-        Gene2GeneCoexpression g2gCoexpression = MouseGeneCoExpression.Factory.newInstance( 0.9, secondGene, firstGene );
-        g2gCoexpression.setNumDatasetsSupporting( 3 );
-
         List<NonPersistentNonOrderedCoexpLink> links = new ArrayList<>();
-        links.add( new NonPersistentNonOrderedCoexpLink( g2gCoexpression ) );
+        links.add( new NonPersistentNonOrderedCoexpLink( MouseGeneCoExpression.Factory.newInstance( 0.9, secondGene,
+                firstGene ) ) );
 
         ee = this.getTestPersistentBasicExpressionExperiment();
 
-        g2gCoexpressionService.createOrUpdate( ee, links, new LinkCreator( mouseTaxon ), null );
+        Set<Gene> genesTested = new HashSet<>();
+        genesTested.add( firstGene );
+        genesTested.add( secondGene );
+        g2gCoexpressionService.createOrUpdate( ee, links, new LinkCreator( mouseTaxon ), genesTested );
 
     }
 
@@ -87,7 +91,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
         Collection<Long> ees = EntityUtils.getIds( ee );
         Collection<CoexpressionValueObject> results = g2gCoexpressionService.findCoexpressionRelationships( firstGene,
-                ees, 3, 100, true );
+                ees, 1, 100, true );
         assertEquals( 1, results.size() );
 
     }
