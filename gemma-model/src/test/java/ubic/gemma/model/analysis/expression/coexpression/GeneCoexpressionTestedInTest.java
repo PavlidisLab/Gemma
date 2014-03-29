@@ -45,7 +45,7 @@ public class GeneCoexpressionTestedInTest {
     @Test
     public void testSpeedA() {
         IdArray f = new GeneCoexpressionTestedIn( 1L );
-        int n = 100000;
+        int n = 1000;
         for ( long l = 1; l <= n; l++ ) {
             f.addEntity( l );
             if ( l % ( n / 10 ) == 0 ) {
@@ -66,7 +66,7 @@ public class GeneCoexpressionTestedInTest {
     public void testSpeedB() {
         Random r = new Random();
         IdArray f = new GeneCoexpressionTestedIn( 1L );
-        int n = 100000;
+        int n = 1000;
         for ( long l = 1; l <= n; l++ ) {
             long g = Math.abs( r.nextInt( n ) + 1L );
             f.addEntity( g );
