@@ -21,10 +21,12 @@ package ubic.gemma.apps;
 
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix;
 import ubic.basecode.math.RandomChooser;
@@ -395,19 +397,18 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
      * @return
      */
     public Serializable getCacheFromDisk( File f ) {
+
+        if ( !f.exists() ) return null;
         Serializable returnObject = null;
-        try {
-            if ( f.exists() ) {
-                FileInputStream fis = new FileInputStream( f );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-                returnObject = ( Serializable ) ois.readObject();
-                ois.close();
-                fis.close();
-            }
-        } catch ( Throwable e ) {
+
+        try (ObjectInputStream ois = new ObjectInputStream( new FileInputStream( f ) );) {
+
+            returnObject = ( Serializable ) ois.readObject();
+
+            return returnObject;
+        } catch ( IOException | ClassNotFoundException e ) {
             return null;
         }
-        return returnObject;
     }
 
     /**
@@ -417,18 +418,13 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
     public void saveCacheToDisk( Object toSave, String filename ) {
 
         log.info( "Generating file ... " );
-
-        try {
-            // remove file first
-            File f = new File( HOME_DIR + File.separatorChar + filename );
-            if ( f.exists() ) {
-                f.delete();
-            }
-            FileOutputStream fos = new FileOutputStream( f );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
+        File f = new File( HOME_DIR + File.separatorChar + filename );
+        if ( f.exists() ) {
+            f.delete();
+        }
+        try (ObjectOutputStream oos = new ObjectOutputStream( new FileOutputStream( f ) );) {
             oos.writeObject( toSave );
             oos.flush();
-            oos.close();
         } catch ( Throwable e ) {
             log.error( "Cannot write to file." );
             return;
@@ -1255,83 +1251,84 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
     private Collection<GenePair> loadLinks( File f ) throws IOException {
 
         log.info( "Loading data from " + f );
-        BufferedReader in = new BufferedReader( new FileReader( f ) );
+        try (BufferedReader in = new BufferedReader( new FileReader( f ) );) {
 
-        Collection<GenePair> geneMap = new HashSet<GenePair>();
-        String line;
-        Double printedLinks = -1.0;
-        Random generator = new Random();
-        double rand = 0.0;
-        double fraction = 0.0;
-        boolean alreadyWarned = false;
+            Collection<GenePair> geneMap = new HashSet<GenePair>();
+            String line;
+            Double printedLinks = -1.0;
+            Random generator = new Random();
+            double rand = 0.0;
+            double fraction = 0.0;
+            boolean alreadyWarned = false;
 
-        while ( ( line = in.readLine() ) != null ) {
-            line = line.trim();
-            if ( line.startsWith( "#" ) ) {
-                if ( line.contains( "printedLinks" ) ) {
-                    int ind = line.indexOf( ':' );
-                    printedLinks = Double.parseDouble( line.substring( ind + 1 ) );
-                    fraction = this.subsetSize / printedLinks;
+            while ( ( line = in.readLine() ) != null ) {
+                line = line.trim();
+                if ( line.startsWith( "#" ) ) {
+                    if ( line.contains( "printedLinks" ) ) {
+                        int ind = line.indexOf( ':' );
+                        printedLinks = Double.parseDouble( line.substring( ind + 1 ) );
+                        fraction = this.subsetSize / printedLinks;
+                    }
+                    continue;
                 }
-                continue;
-            }
-            if ( printedLinks == -1.0 ) {
-                System.out.println( "Printed link count not found in file header" );
-                System.exit( 0 );
-            }
-            if ( selectSubset && printedLinks > this.subsetSize ) {
-                this.subsetUsed = true;
-                rand = generator.nextDouble();
-                if ( rand > fraction ) continue;
-            }
-            String[] fields = StringUtils.split( line, "\t" );
-
-            if ( fields.length < 2 ) {
-                if ( !alreadyWarned ) {
-                    log.warn( "Bad field on line: " + line + " (subsequent errors suppressed)" );
-                    alreadyWarned = true;
+                if ( printedLinks == -1.0 ) {
+                    System.out.println( "Printed link count not found in file header" );
+                    System.exit( 0 );
                 }
-                continue;
+                if ( selectSubset && printedLinks > this.subsetSize ) {
+                    this.subsetUsed = true;
+                    rand = generator.nextDouble();
+                    if ( rand > fraction ) continue;
+                }
+                String[] fields = StringUtils.split( line, "\t" );
+
+                if ( fields.length < 2 ) {
+                    if ( !alreadyWarned ) {
+                        log.warn( "Bad field on line: " + line + " (subsequent errors suppressed)" );
+                        alreadyWarned = true;
+                    }
+                    continue;
+                }
+
+                String g1 = fields[firstProbeColumn];
+                String g2 = fields[secondProbeColumn];
+
+                /*
+                 * Use the probe field, get the gene mapping from the probemap
+                 */
+                CompositeSequence cs1 = css.load( Long.parseLong( g1 ) );
+                CompositeSequence cs2 = css.load( Long.parseLong( g2 ) );
+
+                Collection<Gene> genes1 = probemap.get( cs1 );
+                Collection<Gene> genes2 = probemap.get( cs2 );
+
+                GenePair genePair = null;
+
+                if ( genes1 == null ) {
+                    log.warn( "No genes found for probe ID " + g1 + " in array design" );
+                } else if ( genes2 == null ) {
+                    log.warn( "No genes found for probe ID " + g2 + " in array design" );
+                } else {
+                    genePair = makeGenePair( genes1, genes2 );
+                }
+
+                if ( !this.checkGenePair( genePair ) ) {
+                    continue;
+                }
+
+                geneMap.add( genePair );
+
+                if ( geneMap.size() % 50000 == 0 ) {
+                    log.info( "Loaded " + geneMap.size() + " links" );
+                }
+                // compute the median of gooverlaps and do something with the
+                // result.
+
             }
-
-            String g1 = fields[firstProbeColumn];
-            String g2 = fields[secondProbeColumn];
-
-            /*
-             * Use the probe field, get the gene mapping from the probemap
-             */
-            CompositeSequence cs1 = css.load( Long.parseLong( g1 ) );
-            CompositeSequence cs2 = css.load( Long.parseLong( g2 ) );
-
-            Collection<Gene> genes1 = probemap.get( cs1 );
-            Collection<Gene> genes2 = probemap.get( cs2 );
-
-            GenePair genePair = null;
-
-            if ( genes1 == null ) {
-                log.warn( "No genes found for probe ID " + g1 + " in array design" );
-            } else if ( genes2 == null ) {
-                log.warn( "No genes found for probe ID " + g2 + " in array design" );
-            } else {
-                genePair = makeGenePair( genes1, genes2 );
-            }
-
-            if ( !this.checkGenePair( genePair ) ) {
-                continue;
-            }
-
-            geneMap.add( genePair );
-
-            if ( geneMap.size() % 50000 == 0 ) {
-                log.info( "Loaded " + geneMap.size() + " links" );
-            }
-            // compute the median of gooverlaps and do something with the
-            // result.
-
+            log.info( "Loaded " + geneMap.size() + " links" );
+            saveCacheToDisk( geneCache, GENE_CACHE );
+            return geneMap;
         }
-        log.info( "Loaded " + geneMap.size() + " links" );
-        saveCacheToDisk( geneCache, GENE_CACHE );
-        return geneMap;
     }
 
     /**
@@ -1673,37 +1670,37 @@ public class LinkEvalCli extends AbstractCLIContextCLI {
      */
     private void writeGoMap() throws IOException {
 
-        Writer w = new FileWriter( new File( this.termsOutPath ) );
-        w.write( "# Go terms for probes used in linkeval\n" );
-        w.write( "ProbeId\tProbeName\tGene\tGoTermCount\tGoTerms\n" );
-        Set<String> seenProbes = new HashSet<String>();
-        for ( CompositeSequence cs : this.probemap.keySet() ) {
+        try (Writer w = new FileWriter( new File( this.termsOutPath ) );) {
+            w.write( "# Go terms for probes used in linkeval\n" );
+            w.write( "ProbeId\tProbeName\tGene\tGoTermCount\tGoTerms\n" );
+            Set<String> seenProbes = new HashSet<String>();
+            for ( CompositeSequence cs : this.probemap.keySet() ) {
 
-            if ( seenProbes.contains( cs.getName() ) ) {
-                log.info( "Skipping duplicate probe name " + cs.getName() );
-                continue;
-            }
-            seenProbes.add( cs.getName() );
-
-            w.write( cs.getId() + "\t" + cs.getName() + "\t" );
-            Collection<Gene> genes = this.probemap.get( cs );
-            Set<String> goTerms = new HashSet<String>();
-            Set<String> geneSymbs = new HashSet<String>();
-            for ( Gene gene : genes ) {
-                if ( geneGoMap.containsKey( gene.getId() ) ) {
-                    for ( String go : geneGoMap.get( gene.getId() ) ) {
-                        goTerms.add( GeneOntologyServiceImpl.asRegularGoId( go ) );
-                    }
+                if ( seenProbes.contains( cs.getName() ) ) {
+                    log.info( "Skipping duplicate probe name " + cs.getName() );
+                    continue;
                 }
-                geneSymbs.add( gene.getOfficialSymbol() );
+                seenProbes.add( cs.getName() );
+
+                w.write( cs.getId() + "\t" + cs.getName() + "\t" );
+                Collection<Gene> genes = this.probemap.get( cs );
+                Set<String> goTerms = new HashSet<String>();
+                Set<String> geneSymbs = new HashSet<String>();
+                for ( Gene gene : genes ) {
+                    if ( geneGoMap.containsKey( gene.getId() ) ) {
+                        for ( String go : geneGoMap.get( gene.getId() ) ) {
+                            goTerms.add( GeneOntologyServiceImpl.asRegularGoId( go ) );
+                        }
+                    }
+                    geneSymbs.add( gene.getOfficialSymbol() );
+                }
+
+                w.write( StringUtils.join( geneSymbs, "|" ) + "\t" );
+                w.write( goTerms.size() + "\t" );
+                w.write( StringUtils.join( goTerms, "|" ) + "\n" );
             }
 
-            w.write( StringUtils.join( geneSymbs, "|" ) + "\t" );
-            w.write( goTerms.size() + "\t" );
-            w.write( StringUtils.join( goTerms, "|" ) + "\n" );
         }
-
-        w.close();
     }
 
     /**

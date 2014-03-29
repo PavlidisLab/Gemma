@@ -56,7 +56,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    private ExpressionExperiment ee;
+    private ExpressionExperiment ee = null;
 
     @Autowired
     private ExpressionExperimentPlatformSwitchService eePlatformSwitchService;
@@ -67,7 +67,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
-    private ArrayDesign mergedAA;
+    private ArrayDesign mergedAA = null;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -78,22 +78,24 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @After
     public void tearDown() {
         try {
-            eeService.delete( ee );
-            Collection<ArrayDesign> mergees = mergedAA.getMergees();
-            mergedAA.setMergees( new HashSet<ArrayDesign>() );
-            arrayDesignService.update( mergedAA );
+            if ( ee != null ) eeService.delete( ee );
+            if ( mergedAA != null ) {
+                Collection<ArrayDesign> mergees = mergedAA.getMergees();
+                mergedAA.setMergees( new HashSet<ArrayDesign>() );
+                arrayDesignService.update( mergedAA );
 
-            for ( ArrayDesign arrayDesign : mergees ) {
-                arrayDesign.setMergedInto( null );
-                arrayDesignService.update( arrayDesign );
-            }
-            arrayDesignService.remove( mergedAA );
-            for ( ArrayDesign arrayDesign : mergees ) {
-                arrayDesignService.remove( arrayDesign );
+                for ( ArrayDesign arrayDesign : mergees ) {
+                    arrayDesign.setMergedInto( null );
+                    arrayDesignService.update( arrayDesign );
+                }
+                arrayDesignService.remove( mergedAA );
+                for ( ArrayDesign arrayDesign : mergees ) {
+                    arrayDesignService.remove( arrayDesign );
+                }
             }
         } catch ( Exception e ) {
             // oh well.
-            log.info( e.getMessage() );
+            log.info( e.getMessage(), e );
         }
     }
 
@@ -188,7 +190,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = vectorMergingService.mergeVectors( ee );
-        ee = eeService.thaw( ee );
+        // ee = eeService.thaw( ee );
 
         // check we got the right processed data
         Collection<ProcessedExpressionDataVector> pvs = processedExpressionDataVectorService

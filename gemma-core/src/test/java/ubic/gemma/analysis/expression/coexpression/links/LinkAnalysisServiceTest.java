@@ -180,12 +180,17 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     public void checkUnsupportedLinksHaveNoSupport() {
         JdbcTemplate jt = new JdbcTemplate( dataSource );
 
-        // see SupportDetailsText for validation that these strings represent empty byte arrays. I think the 1 at
-        // position 12 is important?
+        // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
+        // position 12 is important.
         final Collection<Long> checkme = new HashSet<Long>();
+        // maybe these patterns aren't this reproducible.
         jt.query(
-                "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) in ('0000000200000001000000000000000200000000',"
-                        + " '000006AA00000001000000000000003600000000', '0000000000000001000000000000000000000000')",
+                // "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) in ('0000000200000001000000000000000200000000',"
+                // + " '000006AA00000001000000000000003600000000', '0000000000000001000000000000000000000000',"
+                // + "'0000003E00000001000000000000000200000000','0000003F00000001000000000000000200000000',"
+                // + "'0000000500000001000000000000000200000000')", new RowCallbackHandler() {
+
+                "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '000000__00000001000000000000000%'",
                 new RowCallbackHandler() {
 
                     @Override
@@ -195,7 +200,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                     }
                 } );
 
-        // we should definitely have these
+        // we should definitely have some of these
         assertTrue( checkme.size() > 0 );
 
         jt.query( "SELECT SUPPORT FROM MOUSE_GENE_COEXPRESSION WHERE SUPPORT_DETAILS_FK in (?) AND SUPPORT > 0",

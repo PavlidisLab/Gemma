@@ -96,6 +96,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     public void createOrUpdate( BioAssaySet bioAssaySet, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
             Set<Gene> genesTested ) {
         assert bioAssaySet != null;
+        assert genesTested != null;
         this.gene2GeneCoexpressionDao.createOrUpdate( bioAssaySet, links, c, genesTested );
 
         // remove these from the queue, in case they are there.

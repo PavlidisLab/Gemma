@@ -89,6 +89,56 @@ public class SupportDetailsTest {
         f.deserialize( di );
         assertTrue( f.getPositions().isEmpty() );
 
+        // 00000002000000020000000200000000000000000000000200000000: 1
+        // or = new Byte[] { 00, 00, 00, 02, 00, 00, 00, 02, 00, 00, 00, 02, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+        // 02, 00, 00, 00, 00 };
+        // System.err.println( StringUtils.join( or, "," ) );
+        // c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
+        // ff = new EWAHCompressedBitmap();
+        // ff.deserialize( c );
+        // assertTrue( "" + ff.getPositions(), ff.getPositions().isEmpty() );
+
+        // 00000003000000020000000200000000000000000000000600000000: 1,2
+        or = new Byte[] { 00, 00, 00, 03, 00, 00, 00, 02, 00, 00, 00, 02, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+                06, 00, 00, 00, 00 };
+        System.err.println( StringUtils.join( or, "," ) );
+        c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
+        ff = new EWAHCompressedBitmap();
+        ff.deserialize( c );
+        // assertTrue( "" + ff.getPositions(), ff.getPositions().isEmpty() );
+
+        // 00000003000000020000000200000000000000000000000400000000: 2
+        or = new Byte[] { 00, 00, 00, 03, 00, 00, 00, 02, 00, 00, 00, 02, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+                04, 00, 00, 00, 00 };
+        System.err.println( StringUtils.join( or, "," ) );
+        c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
+        ff = new EWAHCompressedBitmap();
+        ff.deserialize( c );
+        // assertTrue( "" + ff.getPositions(), ff.getPositions().isEmpty() );
+
+        // 0000003E00000001000000000000000200000000
+        or = new Byte[] { 00, 00, 00, ( byte ) 0x3E, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 02, 00, 00, 00, 00 };
+        System.err.println( StringUtils.join( or, "," ) );
+        c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
+        ff = new EWAHCompressedBitmap();
+        ff.deserialize( c );
+        assertTrue( ff.getPositions().isEmpty() );
+
+        // 0000003F00000001000000000000000200000000
+        or = new Byte[] { 00, 00, 00, ( byte ) 0x3F, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 02, 00, 00, 00, 00 };
+        System.err.println( StringUtils.join( or, "," ) );
+        c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
+        ff = new EWAHCompressedBitmap();
+        ff.deserialize( c );
+        assertTrue( ff.getPositions().isEmpty() );
+
+        // 0000000500000001000000000000000200000000
+        or = new Byte[] { 00, 00, 00, 05, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 02, 00, 00, 00, 00 };
+        System.err.println( StringUtils.join( or, "," ) );
+        c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
+        ff = new EWAHCompressedBitmap();
+        ff.deserialize( c );
+        assertTrue( ff.getPositions().isEmpty() );
     }
 
     @Test

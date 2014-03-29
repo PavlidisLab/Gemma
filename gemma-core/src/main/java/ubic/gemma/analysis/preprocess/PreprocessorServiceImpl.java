@@ -194,7 +194,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private boolean processForMissingValues( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         if ( arrayDesignsUsed.size() > 1 ) {
-            log.warn( "Skipping postprocessing because experiment uses "
+            throw new UnsupportedOperationException( "Skipping postprocessing because experiment uses "
                     + "multiple platform types. Please check valid entry and run postprocessing separately." );
         }
 
