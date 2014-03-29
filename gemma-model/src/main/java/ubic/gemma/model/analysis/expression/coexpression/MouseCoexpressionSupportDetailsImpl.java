@@ -34,5 +34,12 @@ public class MouseCoexpressionSupportDetailsImpl extends SupportDetails {
     public MouseCoexpressionSupportDetailsImpl( Gene firstGene, Gene secondGene, Boolean isPositive ) {
         super( firstGene, secondGene, isPositive );
     }
- 
+
+    public MouseCoexpressionSupportDetailsImpl( Long firstGene, Long secondGene, Boolean isPositive ) {
+        super( firstGene, secondGene, isPositive );
+    }
+
+    public MouseCoexpressionSupportDetailsImpl() {
+        this( ( Long ) null, null, null );
+    }
 }

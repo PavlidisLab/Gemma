@@ -46,6 +46,20 @@ public abstract class SupportDetails extends IdArray {
         if ( isPositive != null ) this.isPositive = isPositive;
     }
 
+    /**
+     * Note that the gene information and isPositive is only used for bookkeeping during creation; it is not part of the
+     * persistent entity. Used by LinkCreator.
+     * 
+     * @param firstGene
+     * @param secondGene
+     * @param isPositive
+     */
+    public SupportDetails( Long firstGene, Long secondGene, Boolean isPositive ) {
+        if ( firstGene != null ) this.firstGeneId = firstGene;
+        if ( secondGene != null ) this.secondGeneId = secondGene;
+        if ( isPositive != null ) this.isPositive = isPositive;
+    }
+
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;

@@ -35,4 +35,12 @@ public class OtherCoexpressionSupportDetailsImpl extends SupportDetails {
         super( firstGene, secondGene, isPositive );
     }
 
+    public OtherCoexpressionSupportDetailsImpl( Long firstGene, Long secondGene, Boolean isPositive ) {
+        super( firstGene, secondGene, isPositive );
+    }
+
+    public OtherCoexpressionSupportDetailsImpl() {
+        this( ( Long ) null, null, null );
+    }
+
 }

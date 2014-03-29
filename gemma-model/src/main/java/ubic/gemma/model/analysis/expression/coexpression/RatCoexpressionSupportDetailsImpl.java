@@ -34,5 +34,11 @@ public class RatCoexpressionSupportDetailsImpl extends SupportDetails {
     public RatCoexpressionSupportDetailsImpl( Gene firstGene, Gene secondGene, Boolean isPositive ) {
         super( firstGene, secondGene, isPositive );
     }
+    public RatCoexpressionSupportDetailsImpl( Long firstGene, Long secondGene, Boolean isPositive ) {
+        super( firstGene, secondGene, isPositive );
+    }
+    public RatCoexpressionSupportDetailsImpl() {
+        this( (Long)null, null, null );
 
+    }
 }
