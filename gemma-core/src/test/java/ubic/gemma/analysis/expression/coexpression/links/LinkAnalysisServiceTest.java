@@ -190,7 +190,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                 // + "'0000003E00000001000000000000000200000000','0000003F00000001000000000000000200000000',"
                 // + "'0000000500000001000000000000000200000000')", new RowCallbackHandler() {
 
-                "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '000000__00000001000000000000000%'",
+                "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '00000___00000001000000000000000%'",
                 new RowCallbackHandler() {
 
                     @Override
