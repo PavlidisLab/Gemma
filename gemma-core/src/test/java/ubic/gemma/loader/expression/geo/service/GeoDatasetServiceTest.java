@@ -251,7 +251,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = eeService.load( ee.getId() );
         ee = eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
-        assertEquals( 16, qts.size() );
+        assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
