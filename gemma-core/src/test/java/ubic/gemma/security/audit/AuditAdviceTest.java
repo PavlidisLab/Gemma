@@ -214,44 +214,43 @@ public class AuditAdviceTest extends BaseSpringContextTest {
      */
     @Test
     public void testSimpleAuditCreateUpdateUser() throws Exception {
-        for ( int i = 0; i < 10; i++ ) {
 
-            String USERNAME = RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
-            try {
-                userManager.loadUserByUsername( USERNAME );
-            } catch ( UsernameNotFoundException e ) {
-                String encodedPassword = passwordEncoder.encodePassword( USERNAME, USERNAME );
-                UserDetailsImpl u = new UserDetailsImpl( encodedPassword, USERNAME, true, null, null, null, new Date() );
-                userManager.createUser( u );
-            }
-            User user = userService.findByUserName( USERNAME );
+        String USERNAME = RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
 
-            List<AuditEvent> events = auditTrailService.getEvents( user );
+        String encodedPassword = passwordEncoder.encodePassword( USERNAME, USERNAME );
+        UserDetailsImpl u = new UserDetailsImpl( encodedPassword, USERNAME, true, null, null, null, new Date() );
+        userManager.createUser( u );
 
-            assertEquals( "Should have a 'create'", 1, events.size() );
+        User user = userService.findByUserName( USERNAME );
 
-            assertNotNull( events.get( 0 ).getId() );
+        List<AuditEvent> events = auditTrailService.getEvents( user );
 
-            user.setEmail( RandomStringUtils.randomNumeric( 10 ) ); // change something.
-            userService.update( user );
+        assertEquals( "Should have just one event, a 'create'", 1, events.size() );
+        assertEquals( AuditAction.CREATE, events.get( 0 ).getAction() );
 
-            events = auditTrailService.getEvents( user );
+        assertNotNull( events.get( 0 ).getId() );
 
-            int sizeAfterFirstUpdate = events.size();
+        user.setEmail( RandomStringUtils.randomNumeric( 10 ) ); // change something.
+        userService.update( user );
 
-            assertEquals( "Should have a 'create' and an 'update'", 2, sizeAfterFirstUpdate );
+        events = auditTrailService.getEvents( user );
 
-            assertEquals( AuditAction.UPDATE, events.get( sizeAfterFirstUpdate - 1 ).getAction() );
+        int sizeAfterFirstUpdate = events.size();
 
-            // third time.
-            user.setEmail( RandomStringUtils.randomNumeric( 10 ) ); // change something.
-            userService.update( user );
+        assertEquals( "Should have a 'create' and an 'update'", 2, sizeAfterFirstUpdate );
 
-            events = auditTrailService.getEvents( user );
+        assertEquals( AuditAction.CREATE, events.get( 0 ).getAction() );
+        assertEquals( AuditAction.UPDATE, events.get( sizeAfterFirstUpdate - 1 ).getAction() );
 
-            // assertEquals( 3, user.getAuditTrail().getEvents().size() );
-            assertTrue( sizeAfterFirstUpdate < events.size() );
-        }
+        // third time.
+        user.setEmail( RandomStringUtils.randomNumeric( 10 ) ); // change something.
+        userService.update( user );
+
+        events = auditTrailService.getEvents( user );
+
+        assertEquals( 3, user.getAuditTrail().getEvents().size() );
+        assertEquals( AuditAction.UPDATE, events.get( 2 ).getAction() );
+
     }
 
     @Test
