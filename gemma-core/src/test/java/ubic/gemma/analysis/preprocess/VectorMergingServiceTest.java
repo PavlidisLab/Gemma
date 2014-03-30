@@ -78,23 +78,31 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @After
     public void tearDown() {
         try {
-            if ( ee != null ) eeService.delete( ee );
-            if ( mergedAA != null ) {
-                Collection<ArrayDesign> mergees = mergedAA.getMergees();
-                mergedAA.setMergees( new HashSet<ArrayDesign>() );
-                arrayDesignService.update( mergedAA );
+            ee = eeService.findByShortName( "GSE3443" );
 
-                for ( ArrayDesign arrayDesign : mergees ) {
-                    arrayDesign.setMergedInto( null );
-                    arrayDesignService.update( arrayDesign );
+            if ( ee != null ) {
+                mergedAA = eeService.getArrayDesignsUsed( ee ).iterator().next();
+                eeService.delete( ee );
+
+                if ( mergedAA != null ) {
+                    mergedAA.setMergees( new HashSet<ArrayDesign>() );
+                    arrayDesignService.update( mergedAA );
+
+                    mergedAA = arrayDesignService.thawLite( mergedAA );
+
+                    for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
+                        arrayDesign.setMergedInto( null );
+                        arrayDesignService.update( arrayDesign );
+                    }
+                    arrayDesignService.remove( mergedAA );
+                    for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
+                        arrayDesignService.remove( arrayDesign );
+                    }
                 }
-                arrayDesignService.remove( mergedAA );
-                for ( ArrayDesign arrayDesign : mergees ) {
-                    arrayDesignService.remove( arrayDesign );
-                }
+
             }
         } catch ( Exception e ) {
-            // oh well.
+            // oh well. Test might fail, it might not.
             log.info( e.getMessage(), e );
         }
     }
@@ -114,10 +122,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
          * 
          * Example of a sequence appearing on more than one platform: N57553
          */
-        ee = eeService.findByShortName( "GSE3443" );
-        if ( ee != null ) {
-            eeService.delete( ee ); // might work, but array designs might be in the way.
-        }
 
         geoService
                 .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse3443merge" ) ) );
@@ -158,6 +162,8 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         ArrayDesign firstaa = taas.iterator().next();
         aas.remove( firstaa );
+
+        assertEquals( null, firstaa.getMergedInto() );
 
         mergedAA = arrayDesignMergeService.merge( firstaa, taas, "testMerge" + RandomStringUtils.randomAlphabetic( 5 ),
                 "merged" + RandomStringUtils.randomAlphabetic( 5 ), false );

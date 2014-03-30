@@ -138,7 +138,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         Collection<BioAssayDimension> dims = builder.getBioAssayDimensions();
-        Collection<RawExpressionDataVector> finalResults = new HashSet<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> finalResults = new HashSet<>();
 
         /*
          * Note we have to do this one array design at a time, because we are producing DesignElementDataVectors which
@@ -146,7 +146,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
          */
         log.info( "Study has " + dims.size() + " bioassaydimensions" );
         Collection<BioAssay> bioAssays = expExp.getBioAssays();
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> ads = new HashSet<>();
         for ( BioAssay ba : bioAssays ) {
             ads.add( ba.getArrayDesignUsed() );
         }
@@ -229,7 +229,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
         boolean okToProceed = validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB,
                 signalToNoiseThreshold );
-        Collection<RawExpressionDataVector> results = new HashSet<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> results = new HashSet<>();
 
         if ( !okToProceed ) {
             log.warn( "Missing value computation cannot proceed" );

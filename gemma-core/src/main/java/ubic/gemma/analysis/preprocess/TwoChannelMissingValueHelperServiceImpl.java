@@ -59,8 +59,7 @@ public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissin
     @Transactional
     public Collection<RawExpressionDataVector> persist( ExpressionExperiment source,
             Collection<RawExpressionDataVector> results ) {
-
-        source = expressionExperimentService.load( source.getId() );
+        expressionExperimentService.update( source );
         log.info( "Persisting " + results.size() + " vectors ... " );
         source.getRawExpressionDataVectors().addAll( results );
         expressionExperimentService.update( source ); // this is needed to get the QT filled in properly.

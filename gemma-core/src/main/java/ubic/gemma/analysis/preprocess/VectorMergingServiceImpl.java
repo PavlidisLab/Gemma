@@ -121,13 +121,13 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             throw new IllegalArgumentException( "Cannot cope with more than one platform" );
         }
 
-        expExp = expressionExperimentService.thawLite( expExp );
+        expExp = expressionExperimentService.thaw( expExp );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
         log.info( qts.size() + " quantitation types for potential merge" );
         /*
          * Load all the bioassay dimensions, which will be merged.
          */
-        Collection<BioAssayDimension> allOldBioAssayDims = new HashSet<BioAssayDimension>();
+        Collection<BioAssayDimension> allOldBioAssayDims = new HashSet<>();
         for ( BioAssay ba : expExp.getBioAssays() ) {
             Collection<BioAssayDimension> oldBioAssayDims = bioAssayService.findBioAssayDimensions( ba );
             for ( BioAssayDimension bioAssayDim : oldBioAssayDims ) {
@@ -165,14 +165,14 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         int numSuccessfulMergers = 0;
         for ( QuantitationType type : qt2Vec.keySet() ) {
 
-            Collection<DesignElementDataVector> vecs = qt2Vec.get( type );
+            Collection<DesignElementDataVector> oldVecs = qt2Vec.get( type );
 
-            if ( vecs.isEmpty() ) {
+            if ( oldVecs.isEmpty() ) {
                 log.warn( "No vectors for " + type );
                 continue;
             }
 
-            Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = getDevMap( vecs );
+            Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = getDevMap( oldVecs );
 
             if ( deVMap == null ) {
                 log.info( "Vector merging will not be done for " + type
@@ -180,14 +180,14 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                 continue;
             }
 
-            log.info( "Processing " + vecs.size() + " vectors  for " + type );
+            log.info( "Processing " + oldVecs.size() + " vectors  for " + type );
 
-            Collection<DesignElementDataVector> newVectors = new HashSet<DesignElementDataVector>();
+            Collection<DesignElementDataVector> newVectors = new HashSet<>();
             int numAllMissing = 0;
             int missingValuesForQt = 0;
             for ( CompositeSequence de : deVMap.keySet() ) {
 
-                DesignElementDataVector vector = initializeNewVector( expExp, newBioAd, type, de );
+                RawExpressionDataVector vector = initializeNewVector( expExp, newBioAd, type, de );
                 Collection<DesignElementDataVector> dedvs = deVMap.get( de );
 
                 /*
@@ -229,14 +229,18 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                 log.info( missingValuesForQt + " total missing values: " + type );
             }
 
-            log.info( "Removing " + vecs.size() + " old vectors for " + type );
-            designElementDataVectorService.remove( vecs );
+            log.info( "Removing " + oldVecs.size() + " old vectors for " + type );
+            designElementDataVectorService.remove( oldVecs );
+
+            expExp.getRawExpressionDataVectors().removeAll( oldVecs );
             numSuccessfulMergers++;
         } // for each quantitation type
 
         if ( numSuccessfulMergers == 0 ) {
             throw new IllegalStateException( "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
+
+        expressionExperimentService.update( expExp );
 
         // Several transactions
         cleanUp( expExp, allOldBioAssayDims, newBioAd );
@@ -248,6 +252,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
         // several transactions
         try {
+
             preprocessorService.process( expExp );
         } catch ( PreprocessingException e ) {
             log.error( "Error during postprocessing", e );
@@ -473,9 +478,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
      * @param de
      * @return
      */
-    private DesignElementDataVector initializeNewVector( ExpressionExperiment expExp, BioAssayDimension newBioAd,
+    private RawExpressionDataVector initializeNewVector( ExpressionExperiment expExp, BioAssayDimension newBioAd,
             QuantitationType type, CompositeSequence de ) {
-        DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
+        RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
         vector.setBioAssayDimension( newBioAd );
         vector.setDesignElement( de );
         vector.setQuantitationType( type );
