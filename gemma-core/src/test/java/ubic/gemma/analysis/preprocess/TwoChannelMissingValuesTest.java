@@ -41,6 +41,8 @@ import ubic.gemma.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.loader.expression.geo.GeoParseResult;
 import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -130,8 +132,11 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     }
 
     /**
+     * Debug code.
+     * 
      * @param calls
      */
+    @SuppressWarnings("unused")
     private void print( Collection<RawExpressionDataVector> calls ) {
         ByteArrayConverter bac = new ByteArrayConverter();
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
@@ -204,9 +209,21 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
         expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
-        print( calls );
+        // print( calls );
         assertEquals( 20, calls.size() );
+
+        boolean hasNewQT = false;
+        Collection<QuantitationType> qts = eeService.getQuantitationTypes( expExp );
+        for ( QuantitationType qt : qts ) {
+            if ( qt.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
+                hasNewQT = true;
+                break;
+            }
+        }
+
+        assertTrue( hasNewQT );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( calls );
 
@@ -256,6 +273,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 10, calls.size() );
+
     }
 
     /**
