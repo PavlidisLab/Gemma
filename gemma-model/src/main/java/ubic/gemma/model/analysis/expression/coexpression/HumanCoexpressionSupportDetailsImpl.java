@@ -34,4 +34,12 @@ public class HumanCoexpressionSupportDetailsImpl extends SupportDetails {
     public HumanCoexpressionSupportDetailsImpl( Gene firstGene, Gene secondGene, Boolean isPositive ) {
         super( firstGene, secondGene, isPositive );
     }
+
+    public HumanCoexpressionSupportDetailsImpl( Long firstGene, Long secondGene, Boolean isPositive ) {
+        super( firstGene, secondGene, isPositive );
+    }
+
+    public HumanCoexpressionSupportDetailsImpl() {
+        this( ( Long ) null, null, null );
+    }
 }
