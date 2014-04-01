@@ -215,10 +215,17 @@ public class CoexpressionSearchController {
             addMyDataFlag( result, myEE );
         }
 
-        if ( result.getResults() == null || result.getResults().isEmpty() ) {
+        // make sure to create an empty list instead of null for front-end
+        if ( result.getResults() == null ) {
+            List<CoexpressionValueObjectExt> res = new ArrayList<>();
+            result.setResults( res );
+        }
+
+        if ( result.getResults().isEmpty() ) {
             result.setErrorState( NOTHING_FOUND_MESSAGE );
             log.info( "No search results for query: " + searchOptions );
         }
+
         return result;
 
     }
