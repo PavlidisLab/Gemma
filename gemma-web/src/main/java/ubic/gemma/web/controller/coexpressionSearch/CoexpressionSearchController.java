@@ -79,7 +79,7 @@ public class CoexpressionSearchController {
 
     private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = 200;
 
-    private static final int DEFAULT_MAX_GENES_PER_QUERY = 20;
+    private static final int DEFAULT_MAX_GENES_PER_QUERY = 500;
 
     private static final int DEFAULT_MAX_RESULTS = 200;
 

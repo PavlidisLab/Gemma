@@ -15,6 +15,10 @@ Gemma.CoexVOUtil = {
    getAllGeneIds : function( results ) {
 
       var geneIdSet = [];
+      
+      if ( results == null ) {
+        return geneIdSet;
+      }
 
       for ( var i = 0; i < results.length; i++) {
          geneIdSet.push( results[i].foundGene.id );

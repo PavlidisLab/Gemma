@@ -302,11 +302,19 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
             Ext.getBody().unmask();
             // results is a CoexpressionMetaValueObject
             task.on( 'task-completed', function( results ) {
-               ref.searchResults = results;
-               ref.allGeneIdsSet = Gemma.CoexVOUtil.getAllGeneIds( ref.getResults() );
-               ref.cytoscapeResultsUpToDate = false;
-               ref.fireEvent( 'aftersearch' );
-               ref.fireEvent( 'search-results-ready' );
+               
+               if ( results.errorState != null || results == null ) {
+                  Ext.getBody().unmask();                    
+                  ref.fireEvent( 'aftersearch', results.errorState, true );
+                  ref.fireEvent( 'search-error', results.errorState );
+               } else {
+                   ref.searchResults = results;
+                   ref.allGeneIdsSet = Gemma.CoexVOUtil.getAllGeneIds( ref.getResults() );
+                   ref.cytoscapeResultsUpToDate = false;
+                   ref.fireEvent( 'aftersearch' );
+                   ref.fireEvent( 'search-results-ready' );
+               }
+               
             } );
             task.on( 'task-failed', function( error ) {
                ref.fireEvent( 'aftersearch', error, true );
