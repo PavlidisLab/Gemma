@@ -251,6 +251,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         assertEquals( 3, user.getAuditTrail().getEvents().size() );
         assertEquals( AuditAction.UPDATE, events.get( 2 ).getAction() );
 
+        // cleanup
+        userManager.deleteUser( USERNAME );
     }
 
     @Test
