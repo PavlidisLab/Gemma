@@ -170,7 +170,7 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
             throw new IllegalArgumentException( "User.remove - 'user' can not be null" );
         }
 
-        if ( user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
+        if ( user.getName() != null && user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
             throw new IllegalArgumentException( "Cannot delete user "
                     + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
         }
