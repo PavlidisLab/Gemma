@@ -26,9 +26,9 @@ public class ProbeMapperConfig {
     public static final boolean DEFAULT_ALLOW_PREDICTED = false;
 
     /**
-     * Sequence identity below which we throw hits away.
+     * Sequence identity below which we throw hits away (expressed as a fraction)
      */
-    public static final double DEFAULT_IDENTITY_THRESHOLD = 80;
+    public static final double DEFAULT_IDENTITY_THRESHOLD = 0.8;
 
     /**
      * Fraction of bases which must overlap with an annotated exon. This should probably be higher than zero, to avoid
