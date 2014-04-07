@@ -388,6 +388,11 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
      */
     private Collection<BlatResult> persistBlatResults( Collection<BlatResult> brs ) {
         for ( BlatResult br : brs ) {
+            
+            /*
+             * FIXME are we getting duplicates?
+             */
+            
             assert br.getQuerySequence() != null;
             assert br.getQuerySequence().getName() != null;
             Taxon taxon = br.getQuerySequence().getTaxon();
@@ -409,7 +414,6 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
                 pl.setNucleotideLength( br.getTargetEnd().intValue() - br.getTargetStart().intValue() );
                 pl.setStrand( br.getStrand() );
                 br.setTargetAlignedRegion( pl );
-
                 pl.setBin( SequenceBinUtils.binFromRange( br.getTargetStart().intValue(), br.getTargetEnd().intValue() ) );
             }
 

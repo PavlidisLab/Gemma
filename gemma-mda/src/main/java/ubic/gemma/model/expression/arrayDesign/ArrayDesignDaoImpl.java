@@ -223,9 +223,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      */
     @Override
     public void deleteGeneProductAssociations( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-
         this.handleDeleteGeneProductAssociations( arrayDesign );
-
     }
 
     /*
@@ -827,7 +825,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 return null;
             }
         } );
-        
+
         /*
          * FIXME this is very slow. I think we need to delete the compositesequences first, flushing along the way.
          */
@@ -1039,10 +1037,11 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         final String queryString = "select br from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br "
                 + "where br.querySequence = bs and ad=:arrayDesign";
-        getHibernateTemplate().deleteAll(
-                getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
+        List<?> toDelete = getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign );
+        log.info( "Deleting " + toDelete + " alignments for sequences on " + arrayDesign
+                + " (will affect other designs that use any of the same sequences)" );
 
-        log.info( "Deleting BlatResults for " + arrayDesign );
+        getHibernateTemplate().deleteAll( toDelete );
 
     }
 
@@ -1061,7 +1060,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         List<?> blatAssociations = getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign );
         if ( !blatAssociations.isEmpty() ) {
             getHibernateTemplate().deleteAll( blatAssociations );
-            log.info( "Done deleting " + blatAssociations.size() + "  Associations for " + arrayDesign );
+            log.info( "Done deleting " + blatAssociations.size() + " Associations for " + arrayDesign );
         }
 
         this.getSessionFactory().getCurrentSession().flush();
