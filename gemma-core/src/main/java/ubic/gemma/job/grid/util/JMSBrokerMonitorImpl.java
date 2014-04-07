@@ -43,6 +43,11 @@ import ubic.gemma.util.Settings;
  */
 @Component
 public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
+    /**
+     * 
+     */
+    private static final String ACTIVE_MQ_QUEUE_NAME = "ActiveMQ.Statistics.Destination.tasks.submit";
+
     protected static Log log = LogFactory.getLog( JMSBrokerMonitorImpl.class );
 
     @Autowired(required = false)
@@ -64,6 +69,7 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
     @Override
     public int getNumberOfWorkerHosts() throws JMSException {
         MapMessage reply = sendTaskSubmissionQueueDiagnosticMessage();
+        if ( reply == null ) return 0;
         return ( int ) reply.getLong( "consumerCount" );
     }
 
@@ -74,7 +80,7 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
         if ( reply == null ) return "Statistics plugin appears to be turned off or is too slow";
 
         String message = "";
-        for ( Enumeration e = reply.getMapNames(); e.hasMoreElements(); ) {
+        for ( Enumeration<?> e = reply.getMapNames(); e.hasMoreElements(); ) {
             String name = e.nextElement().toString();
             message += name + "=" + reply.getObject( name ) + "\n";
         }
@@ -93,6 +99,10 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
         return Settings.isRemoteTasksEnabled();
     }
 
+    /**
+     * @return the next message produced for this message consumer, or null if the timeout expires or this message
+     *         consumer is concurrently closed
+     */
     private MapMessage sendTaskSubmissionQueueDiagnosticMessage() {
         MapMessage reply = jmsTemplate.execute( new SessionCallback<MapMessage>() {
             @Override
@@ -100,7 +110,7 @@ public class JMSBrokerMonitorImpl implements JMSBrokerMonitor {
                 Queue replyTo = session.createTemporaryQueue();
                 Message message = session.createMessage();
                 message.setJMSReplyTo( replyTo );
-                Queue queryQueue = session.createQueue( "ActiveMQ.Statistics.Destination.tasks.submit" );
+                Queue queryQueue = session.createQueue( ACTIVE_MQ_QUEUE_NAME );
                 MessageProducer producer = session.createProducer( queryQueue );
                 MessageConsumer consumer = session.createConsumer( replyTo );
                 producer.send( message );
