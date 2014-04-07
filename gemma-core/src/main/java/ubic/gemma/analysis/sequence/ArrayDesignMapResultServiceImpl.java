@@ -23,11 +23,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -99,8 +101,8 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
     @Override
     public Collection<CompositeSequenceMapValueObject> getSmallerSummaryMapValueObjects(
             Collection<Object[]> sequenceData ) {
-        Map<Long, CompositeSequenceMapValueObject> summary = new HashMap<Long, CompositeSequenceMapValueObject>();
-        Map<Long, HashSet<Long>> blatResultCount = new HashMap<Long, HashSet<Long>>();
+        Map<Long, CompositeSequenceMapValueObject> summary = new HashMap<>();
+        Map<Long, Set<Long>> blatResultCount = new HashMap<>();
 
         for ( Object o : sequenceData ) {
             Object[] row = ( Object[] ) o;
@@ -161,15 +163,15 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
      * @param vo
      * @param blatId
      */
-    private void countBlatHits( Map<Long, HashSet<Long>> blatResultCount, Long csId,
-            CompositeSequenceMapValueObject vo, Object blatId ) {
+    private void countBlatHits( Map<Long, Set<Long>> blatResultCount, Long csId, CompositeSequenceMapValueObject vo,
+            Object blatId ) {
         // count the number of blat hits
         if ( blatId != null ) {
             Long blatIdObj = ( ( BigInteger ) blatId ).longValue();
             if ( blatResultCount.containsKey( csId ) ) {
                 blatResultCount.get( csId ).add( blatIdObj );
             } else {
-                HashSet<Long> blatResultHash = new HashSet<Long>();
+                Set<Long> blatResultHash = new HashSet<>();
                 blatResultHash.add( blatIdObj );
                 blatResultCount.put( csId, blatResultHash );
             }
@@ -189,8 +191,8 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
      */
     @Override
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection<Object[]> sequenceData ) {
-        Map<Long, CompositeSequenceMapValueObject> summary = new HashMap<Long, CompositeSequenceMapValueObject>();
-        Map<Long, HashSet<Long>> blatResultCount = new HashMap<Long, HashSet<Long>>();
+        Map<Long, CompositeSequenceMapValueObject> summary = new HashMap<>();
+        Map<Long, Set<Long>> blatResultCount = new HashMap<>();
 
         for ( Object o : sequenceData ) {
             Object[] row = ( Object[] ) o;

@@ -36,8 +36,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
- * 
- * 
  * @author ptan
  * @version $Id$
  */
@@ -78,8 +76,8 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
 
         // Negative limit, assumes IDs have been sorted in decreasing order
         limit = -1;
-        ArrayList<Long> idsRev = ( ArrayList<Long> ) ids.clone();
-        Collections.reverse( ( List<?> ) idsRev );
+        List<Long> idsRev = ( ArrayList<Long> ) ids.clone();
+        Collections.reverse( idsRev );
         ret = eeController.loadStatusSummaries( -1L, idsRev, limit, null, true );
         out = ret.iterator();
         assertEquals( 1, ret.size() );
