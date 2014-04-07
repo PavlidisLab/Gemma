@@ -20,7 +20,6 @@ package ubic.gemma.analysis.report;
 
 import gemma.gsec.SecurityService;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -515,7 +514,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             Element cachedElement = this.statsCache.get( id );
             if ( cachedElement != null ) {
                 incache++;
-                Serializable el = cachedElement.getValue();
+                Object el = cachedElement.getObjectValue();
                 assert el instanceof ExpressionExperimentValueObject;
 
                 eeValueObjects.add( ( ExpressionExperimentValueObject ) el );
