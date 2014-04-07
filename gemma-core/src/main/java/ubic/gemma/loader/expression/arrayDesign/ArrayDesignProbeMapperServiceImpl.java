@@ -467,8 +467,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         }
 
-        if ( blatResults.size() < init ) {
-            log.info( "Pruned " + ( init - blatResults.size() ) + "/" + init + " duplicates" );
+        if ( blatResults.size() < init && log.isDebugEnabled() ) {
+            log.debug( "Pruned " + ( init - blatResults.size() ) + "/" + init + " duplicates" );
         }
 
     }
