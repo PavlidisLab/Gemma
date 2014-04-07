@@ -329,7 +329,7 @@ public class BlatResultValueObject {
     }
 
     /**
-     * @param identity the identity to set
+     * @param identity the identity to set (0-1)
      */
     public void setIdentity( Double identity ) {
         this.identity = identity;

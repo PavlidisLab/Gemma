@@ -61,7 +61,7 @@ public class BlatResultImpl extends BlatResult {
         }
         assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad + " for result "
                 + this;
-        return 100.0 - milliBad * 0.1;
+        return ( 100.0 - milliBad * 0.1 ) / 100.0;
     }
 
     /**

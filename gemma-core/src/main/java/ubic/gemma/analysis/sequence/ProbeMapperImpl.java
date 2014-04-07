@@ -82,31 +82,30 @@ public class ProbeMapperImpl implements ProbeMapper {
         }
 
         assert goldenPathDb != null;
-        Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
+        Map<String, Collection<BlatAssociation>> allRes = new HashMap<>();
         int count = 0;
-        int skipped = 0;
-        int skippedDueToRepeat = 0;
-        int skippedDueToNonSpecific = 0;
 
         Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = groupBlatResultsByBioSequence( blatResults );
 
-        /*
-         * Temporary code!!
-         */
-        if ( goldenPathDb.getDatabaseName().equals( "hg19" ) ) {
-            log.debug( "Disabling  acembly as hg19 doesn't have them" );
-            config.setUseAcembly( false );
-        }
+        assert !biosequenceToBlatResults.isEmpty();
 
         // Do them one sequence at a time.
         for ( BioSequence sequence : biosequenceToBlatResults.keySet() ) {
+
             Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
+
+            if ( sequence.getName().equals( "ILMN_1791332" ) ) {
+                log.info( "We are here" );
+            }
 
             if ( log.isDebugEnabled() ) {
                 log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );
             }
 
-            if ( blatResultsForSequence.size() == 0 ) continue;
+            if ( blatResultsForSequence.size() == 0 ) { // will this happen at this point? I think not.
+                log.info( "No blat hits for " + sequence );
+                continue;
+            }
 
             Collection<BlatResult> trimmedBlatResultsForSequence = trimNonCanonicalChromosomeHits(
                     blatResultsForSequence, config );
@@ -117,8 +116,7 @@ public class ProbeMapperImpl implements ProbeMapper {
             Double fractionRepeats = sequence.getFractionRepeats();
             if ( fractionRepeats != null && fractionRepeats > config.getMaximumRepeatFraction()
                     && trimmedBlatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
-                skippedDueToRepeat++;
-                skipped++;
+                log.info( "Skipped " + sequence + " due to repeat content (" + fractionRepeats + ")" );
                 continue;
             }
 
@@ -128,24 +126,27 @@ public class ProbeMapperImpl implements ProbeMapper {
              * is to the site of a known gene.
              */
             if ( trimmedBlatResultsForSequence.size() >= config.getNonRepeatNonSpecificSiteCountThreshold() ) {
-                skippedDueToNonSpecific++;
-                skipped++;
+                log.info( "Skipped " + sequence + " due to non-specificity (" + trimmedBlatResultsForSequence.size()
+                        + " hits)" );
                 continue;
             }
 
             /*
              * Sanity check to make sure user is paying attention to what they are putting in.
              */
-            if ( blatResultsForSequence.size() > 25 ) {
-                log.warn( sequence + " has " + trimmedBlatResultsForSequence.size() + " raw blat associations" );
+            if ( trimmedBlatResultsForSequence.size() > 25 ) {
+                log.warn( sequence + " has " + trimmedBlatResultsForSequence.size()
+                        + " blat associations (after trimming non-canonical chromosome hits)" );
             }
 
-            Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<BlatAssociation>();
-
+            Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<>();
+            int skipped = 0;
             // map each blat result.
             for ( BlatResult blatResult : trimmedBlatResultsForSequence ) {
-                assert blatResult.score() >= 0 : "Score was " + blatResult.score();
-                assert blatResult.identity() >= 0 : "Identity was " + blatResult.identity();
+                assert blatResult.score() >= 0 && blatResult.score() <= 1.0 : "Score was " + blatResult.score();
+                assert blatResult.identity() >= 0 && blatResult.identity() <= 1.0 : "Identity was "
+                        + blatResult.identity();
+
                 if ( blatResult.score() < config.getBlatScoreThreshold()
                         || blatResult.identity() < config.getIdentityThreshold() ) {
                     if ( log.isDebugEnabled() )
@@ -167,6 +168,7 @@ public class ProbeMapperImpl implements ProbeMapper {
 
                 if ( resultsForOneBlatResult != null && resultsForOneBlatResult.size() > 0 ) {
 
+                    // would be very unlikely.
                     if ( resultsForOneBlatResult.size() > 100 ) {
                         log.warn( blatResult + " for " + sequence + " has " + resultsForOneBlatResult.size()
                                 + " blat associations" );
@@ -181,39 +183,44 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             } // end of iteration over results for this sequence.
 
-            if ( log.isDebugEnabled() ) {
+            // Another important step: fill in the specificity, remove duplicates
+            if ( !blatAssociationsForSequence.isEmpty() ) {
+                BlatAssociationScorer.scoreResults( blatAssociationsForSequence, config );
+                // Remove hits not meeting criteria
+                blatAssociationsForSequence = filterOnScores( blatAssociationsForSequence, config );
+            }
+
+            // it might be empty now...
+            if ( blatAssociationsForSequence.isEmpty() ) {
+                log.info( "No mappings for " + sequence + "; " + trimmedBlatResultsForSequence.size()
+                        + " individual blat results checked; " + skipped
+                        + " had identity or score below threshold, rest had no mapping" );
+                continue;
+            } else if ( log.isDebugEnabled() ) {
                 log.debug( blatAssociationsForSequence.size() + " associations for " + sequence );
             }
 
-            if ( blatAssociationsForSequence.size() == 0 ) continue;
+            if ( skipped > 0 ) {
+                if ( log.isDebugEnabled() )
+                    log.debug( "Skipped " + skipped + "/" + blatResults.size()
+                            + " individual blat results that didn't meet criteria" );
+            } else {
+                String queryName = sequence.getName();
+                assert StringUtils.isNotBlank( queryName );
+                if ( !allRes.containsKey( queryName ) ) {
+                    allRes.put( queryName, blatAssociationsForSequence );
+                }
+                allRes.get( queryName ).addAll( blatAssociationsForSequence );
 
-            // Another important step: fill in the specificity, remove duplicates
-            BlatAssociationScorer.scoreResults( blatAssociationsForSequence, config );
+                // if ( log.isDebugEnabled() ) {
+                // log.info( blatAssociationsForSequence.size() + " associations for " + sequence
+                // + " after redundancy reduction and score filtering; "
+                // + ( scored - blatAssociationsForSequence.size() ) + " not used" );
+                // }
 
-            // Remove hits not meeting criteria
-            blatAssociationsForSequence = filterOnScores( blatAssociationsForSequence, config );
-
-            if ( log.isDebugEnabled() ) {
-                log.debug( blatAssociationsForSequence.size() + " associations for " + sequence
-                        + " after redundancy reduction and score filtering" );
             }
 
-            String queryName = sequence.getName();
-            assert StringUtils.isNotBlank( queryName );
-            if ( !allRes.containsKey( queryName ) ) {
-                allRes.put( queryName, new HashSet<BlatAssociation>() );
-            }
-
-            allRes.get( queryName ).addAll( blatAssociationsForSequence );
-
-        } // end of iteration over sequence
-
-        if ( log.isDebugEnabled() && skipped > 0 ) {
-            log.debug( "Skipped " + skipped + "/" + blatResults.size()
-                    + " individual blat results that didn't meet criteria; " + skippedDueToRepeat
-                    + " were skipped due to repeat or low complexity content; " + skippedDueToNonSpecific
-                    + " were skipped because they align to too many places in the genome (even if not a repeat)" );
-        }
+        } // end of iteration over sequences
 
         return allRes;
     }
@@ -362,7 +369,7 @@ public class ProbeMapperImpl implements ProbeMapper {
         double minimumExonOverlapFraction = config.getMinimumExonOverlapFraction();
         if ( minimumExonOverlapFraction == 0 ) return blatAssociationsForSequence;
 
-        Collection<BlatAssociation> result = new HashSet<BlatAssociation>();
+        Collection<BlatAssociation> result = new HashSet<>();
 
         for ( BlatAssociation ba : blatAssociationsForSequence ) {
             if ( BlatAssociationScorer.computeOverlapFraction( ba ) < minimumExonOverlapFraction ) {
@@ -383,7 +390,7 @@ public class ProbeMapperImpl implements ProbeMapper {
      */
     private Map<BioSequence, Collection<BlatResult>> groupBlatResultsByBioSequence( Collection<BlatResult> blatResults ) {
 
-        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<BioSequence, Collection<BlatResult>>();
+        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<>();
 
         for ( BlatResult blatResult : blatResults ) {
             if ( !biosequenceToBlatResults.containsKey( blatResult.getQuerySequence() ) ) {
