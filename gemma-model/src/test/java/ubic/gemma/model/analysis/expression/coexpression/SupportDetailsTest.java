@@ -139,6 +139,14 @@ public class SupportDetailsTest {
         ff = new EWAHCompressedBitmap();
         ff.deserialize( c );
         assertTrue( ff.getPositions().isEmpty() );
+
+        // 0000015300000001000000000000000C00000000
+        or = new Byte[] { 00, 00, 01, 53, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, ( byte ) 0x0C, 00, 00, 00, 00 };
+        System.err.println( StringUtils.join( or, "," ) );
+        c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
+        ff = new EWAHCompressedBitmap();
+        ff.deserialize( c );
+        assertTrue( ff.getPositions().isEmpty() );
     }
 
     @Test
