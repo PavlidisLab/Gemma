@@ -39,7 +39,6 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
 
     private File file = null;
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         OptionBuilder.isRequired();

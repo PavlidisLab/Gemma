@@ -80,12 +80,11 @@ public class MirBaseLoader extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        try {
-            Exception err = processCommandLine( "Mir loader", args );
-            if ( err != null ) return err;
 
+        Exception err = processCommandLine( "Mir loader", args );
+        if ( err != null ) return err;
+        try (InputStream gffFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( fileName )) {
             GffParser parser = new GffParser();
-            InputStream gffFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
 
             if ( gffFileIs == null ) {
                 log.error( "No file " + fileName + " was readable" );

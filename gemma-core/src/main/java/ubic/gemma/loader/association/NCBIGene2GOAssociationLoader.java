@@ -204,21 +204,15 @@ public class NCBIGene2GOAssociationLoader {
 
     protected void load( LocalFile ncbiFile ) {
 
-        final InputStream inputStream;
-        try {
-            inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() );
+        try (InputStream inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile()
+                .getAbsolutePath() );) {
+            load( inputStream );
+
         } catch ( IOException e ) {
             log.error( e, e );
             throw new RuntimeException( e );
         }
 
-        load( inputStream );
-
-        try {
-            inputStream.close();
-        } catch ( IOException e ) {
-            log.warn( e, e );
-        }
     }
 
     private void setCount( int count ) {

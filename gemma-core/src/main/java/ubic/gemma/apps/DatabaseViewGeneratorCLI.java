@@ -60,7 +60,6 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
         return "Generate views of the database in flat files";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildStandardOptions();
